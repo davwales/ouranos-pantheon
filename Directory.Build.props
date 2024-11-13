@@ -1,0 +1,25 @@
+<Project>
+    <PropertyGroup>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <TargetFramework>net8.0</TargetFramework>
+        <Version>1.0.0</Version>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.*"/>
+    </ItemGroup>
+
+    <PropertyGroup>
+        <MediatrVersion>12.3.*</MediatrVersion>
+        <MicrosoftConfigurationBinderVersion>8.0.*</MicrosoftConfigurationBinderVersion>
+        <MicrosoftExtensionsConfigurationVersion>8.0.*</MicrosoftExtensionsConfigurationVersion>
+        <MicrosoftExtensionsDependencyInjectionVersion>8.0.*</MicrosoftExtensionsDependencyInjectionVersion>
+        <MongoDriverVersion>2.27.*</MongoDriverVersion>
+        <HotChocolateVersion>14.0.*</HotChocolateVersion>
+        <SerilogAspNetCoreVersion>8.0.*</SerilogAspNetCoreVersion>
+        <SerilogSinksConsoleVersion>6.0.*</SerilogSinksConsoleVersion>
+        <SerilogSinksGrafanaLokiVersion>8.3.*</SerilogSinksGrafanaLokiVersion>
+    </PropertyGroup>
+</Project>
