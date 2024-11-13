@@ -45,24 +45,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Directory.Build.props = Directory.Build.props
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "automation", "automation", "{69922DF1-AB45-46B0-915A-E02833610227}"
-	ProjectSection(SolutionItems) = preProject
-		src\core\automation\pre-commit = src\core\automation\pre-commit
-		src\core\automation\pre-push = src\core\automation\pre-push
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "automation", "automation", "{59BBBA39-FB72-4DCB-97C1-8C16F87978CC}"
-	ProjectSection(SolutionItems) = preProject
-		src\services\aphrodite\automation\pre-commit = src\services\aphrodite\automation\pre-commit
-		src\services\aphrodite\automation\pre-push = src\services\aphrodite\automation\pre-push
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "automation", "automation", "{49A0C7E1-39EF-4405-B8CA-ED39CB5A48FC}"
-	ProjectSection(SolutionItems) = preProject
-		src\services\plutus\automation\pre-commit = src\services\plutus\automation\pre-commit
-		src\services\plutus\automation\pre-push = src\services\plutus\automation\pre-push
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "data-loaders", "data-loaders", "{DDE15ED7-21D6-4AC1-8536-B833DA144125}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "plutus", "plutus", "{DBE7C5CA-24A4-4277-8F46-8043EE66C167}"
@@ -79,6 +61,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "gateway", "gateway", "{1A97
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Talos.Olympus.Gateway.API", "src\gateway\Talos.Olympus.Gateway.API\Talos.Olympus.Gateway.API.csproj", "{55B203CA-1BAD-485E-9828-C9B59187C013}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "automation", "automation", "{E0913C48-3A0F-485E-967D-10D82EEA01F7}"
+	ProjectSection(SolutionItems) = preProject
+		automation\pre-commit = automation\pre-commit
+		automation\pre-push = automation\pre-push
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -161,9 +149,6 @@ Global
 		{1A65C5FA-3121-4737-B49D-73920F76EC2F} = {128A9F3B-4D1A-4A93-A0EC-2426770786AC}
 		{F5EDC1BA-0974-48C7-8628-DCE5AFC484FF} = {128A9F3B-4D1A-4A93-A0EC-2426770786AC}
 		{45BFA704-C089-4EB3-BE40-18ADD0617E82} = {128A9F3B-4D1A-4A93-A0EC-2426770786AC}
-		{69922DF1-AB45-46B0-915A-E02833610227} = {128A9F3B-4D1A-4A93-A0EC-2426770786AC}
-		{59BBBA39-FB72-4DCB-97C1-8C16F87978CC} = {CEC7CE2F-45F1-4BBB-B1D0-E7BCAFEADB7D}
-		{49A0C7E1-39EF-4405-B8CA-ED39CB5A48FC} = {64F2EE35-47B2-45E2-8ADE-D989156D68DE}
 		{DDE15ED7-21D6-4AC1-8536-B833DA144125} = {24007BE7-AE6D-46D3-B37A-522FE3EF0D9C}
 		{DBE7C5CA-24A4-4277-8F46-8043EE66C167} = {DDE15ED7-21D6-4AC1-8536-B833DA144125}
 		{EFED1D76-F469-42BE-AB4A-2C99C48F786E} = {DBE7C5CA-24A4-4277-8F46-8043EE66C167}

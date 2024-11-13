@@ -22,4 +22,13 @@
         <SerilogSinksConsoleVersion>6.0.*</SerilogSinksConsoleVersion>
         <SerilogSinksGrafanaLokiVersion>8.3.*</SerilogSinksGrafanaLokiVersion>
     </PropertyGroup>
+
+    <Target Name="CopyGitHooks" AfterTargets="AfterBuild">
+        <ItemGroup>
+            <_CustomFiles Include="$(SolutionDir)/automation/pre-commit"/>
+            <_CustomFiles Include="$(SolutionDir)/automation/pre-push"/>
+        </ItemGroup>
+        <Copy SourceFiles="@(_CustomFiles)" DestinationFolder="./.git/hooks"/>
+    </Target>
+    
 </Project>

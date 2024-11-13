@@ -18,12 +18,5 @@
         <PackageReference Include="HotChocolate.Data" Version="$(HotChocolateVersion)"/>
         <PackageReference Include="Serilog.AspNetCore" Version="$(SerilogAspNetCoreVersion)"/>
     </ItemGroup>
-
-    <Target Name="CopyGitHooks" AfterTargets="AfterBuild">
-        <ItemGroup>
-            <_CustomFiles Include="./../automation/pre-commit"/>
-            <_CustomFiles Include="./../automation/pre-push"/>
-        </ItemGroup>
-        <Copy SourceFiles="@(_CustomFiles)" DestinationFolder="./.git/hooks"/>
-    </Target>
+    
 </Project>

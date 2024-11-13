@@ -20,12 +20,4 @@
         <ProjectReference Include="..\Talos.Olympus.Service.Aphrodite.Infra.TalosMl\Talos.Olympus.Service.Aphrodite.Infra.TalosMl.csproj"/>
     </ItemGroup>
 
-    <Target Name="CopyGitHooks" AfterTargets="AfterBuild">
-        <ItemGroup>
-            <_CustomFiles Include="./../automation/pre-commit"/>
-            <_CustomFiles Include="./../automation/pre-push"/>
-        </ItemGroup>
-        <Copy SourceFiles="@(_CustomFiles)" DestinationFolder="./.git/hooks"/>
-    </Target>
-
 </Project>

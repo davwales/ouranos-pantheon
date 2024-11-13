@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
 # Run dotnet format to check for formatting issues
-dotnet format Talos.Service.Aphrodite.sln --verify-no-changes --verbosity diagnostic --severity error
+dotnet format Talos.Olympus.sln --verify-no-changes --verbosity diagnostic --severity error
 
 # Check if dotnet format found any issues
 if [ $? -ne 0 ]; then
