@@ -1,0 +1,836 @@
+/* eslint-disable */
+import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
+export type Maybe<T> = T | null;
+export type InputMaybe<T> = Maybe<T>;
+export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
+export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
+export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
+export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
+/** All built-in and custom scalars, mapped to their actual values */
+export type Scalars = {
+  ID: { input: string; output: string; }
+  String: { input: string; output: string; }
+  Boolean: { input: boolean; output: boolean; }
+  Int: { input: number; output: number; }
+  Float: { input: number; output: number; }
+  /** The `DateTime` scalar represents an ISO-8601 compliant date time type. */
+  DateTime: { input: any; output: any; }
+  /** The built-in `Decimal` scalar type. */
+  Decimal: { input: any; output: any; }
+};
+
+/** A connection to a list of items. */
+export type AllMarketsConnection = {
+  __typename?: 'AllMarketsConnection';
+  /** A list of edges. */
+  edges?: Maybe<Array<AllMarketsEdge>>;
+  /** A flattened list of the nodes. */
+  nodes?: Maybe<Array<Market>>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** Identifies the total count of items in the connection. */
+  totalCount: Scalars['Int']['output'];
+};
+
+/** An edge in a connection. */
+export type AllMarketsEdge = {
+  __typename?: 'AllMarketsEdge';
+  /** A cursor for use in pagination. */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of the edge. */
+  node: Market;
+};
+
+/** A connection to a list of items. */
+export type AllSymbolsConnection = {
+  __typename?: 'AllSymbolsConnection';
+  /** A list of edges. */
+  edges?: Maybe<Array<AllSymbolsEdge>>;
+  /** A flattened list of the nodes. */
+  nodes?: Maybe<Array<Symbol>>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** Identifies the total count of items in the connection. */
+  totalCount: Scalars['Int']['output'];
+};
+
+/** An edge in a connection. */
+export type AllSymbolsEdge = {
+  __typename?: 'AllSymbolsEdge';
+  /** A cursor for use in pagination. */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of the edge. */
+  node: Symbol;
+};
+
+export type Character = {
+  __typename?: 'Character';
+  age: Scalars['Int']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  details: Array<CharacterDetail>;
+  id: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type CharacterDetail = {
+  __typename?: 'CharacterDetail';
+  key: Scalars['String']['output'];
+  value: Scalars['String']['output'];
+};
+
+export type CharacterDetailFilterInput = {
+  and?: InputMaybe<Array<CharacterDetailFilterInput>>;
+  key?: InputMaybe<StringOperationFilterInput>;
+  or?: InputMaybe<Array<CharacterDetailFilterInput>>;
+  value?: InputMaybe<StringOperationFilterInput>;
+};
+
+export type CharacterDetailInput = {
+  key: Scalars['String']['input'];
+  value: Scalars['String']['input'];
+};
+
+export type CharacterFilterInput = {
+  age?: InputMaybe<IntOperationFilterInput>;
+  and?: InputMaybe<Array<CharacterFilterInput>>;
+  createdAt?: InputMaybe<DateTimeOperationFilterInput>;
+  details?: InputMaybe<ListFilterInputTypeOfCharacterDetailFilterInput>;
+  id?: InputMaybe<IdOfCharacterFilterInput>;
+  name?: InputMaybe<StringOperationFilterInput>;
+  or?: InputMaybe<Array<CharacterFilterInput>>;
+  updatedAt?: InputMaybe<DateTimeOperationFilterInput>;
+};
+
+export type CharacterSortInput = {
+  age?: InputMaybe<SortEnumType>;
+  createdAt?: InputMaybe<SortEnumType>;
+  id?: InputMaybe<SortEnumType>;
+  name?: InputMaybe<SortEnumType>;
+  updatedAt?: InputMaybe<SortEnumType>;
+};
+
+export type CompletionResponse = {
+  __typename?: 'CompletionResponse';
+  content: Array<GetCompletionResponse>;
+  role: Role;
+};
+
+export type CreateCharacterInput = {
+  age: Scalars['Int']['input'];
+  details: Array<CharacterDetailInput>;
+  name: Scalars['String']['input'];
+};
+
+export type CreateCharacterPayload = {
+  __typename?: 'CreateCharacterPayload';
+  idResponseOfCharacter?: Maybe<IdResponseOfCharacter>;
+};
+
+export type CreateMarketInput = {
+  name: Scalars['String']['input'];
+  taxes: TaxesInput;
+};
+
+export type CreateMarketPayload = {
+  __typename?: 'CreateMarketPayload';
+  string?: Maybe<Scalars['String']['output']>;
+};
+
+export type DateTimeOperationFilterInput = {
+  eq?: InputMaybe<Scalars['DateTime']['input']>;
+  gt?: InputMaybe<Scalars['DateTime']['input']>;
+  gte?: InputMaybe<Scalars['DateTime']['input']>;
+  in?: InputMaybe<Array<InputMaybe<Scalars['DateTime']['input']>>>;
+  lt?: InputMaybe<Scalars['DateTime']['input']>;
+  lte?: InputMaybe<Scalars['DateTime']['input']>;
+  neq?: InputMaybe<Scalars['DateTime']['input']>;
+  ngt?: InputMaybe<Scalars['DateTime']['input']>;
+  ngte?: InputMaybe<Scalars['DateTime']['input']>;
+  nin?: InputMaybe<Array<InputMaybe<Scalars['DateTime']['input']>>>;
+  nlt?: InputMaybe<Scalars['DateTime']['input']>;
+  nlte?: InputMaybe<Scalars['DateTime']['input']>;
+};
+
+export type DecimalOperationFilterInput = {
+  eq?: InputMaybe<Scalars['Decimal']['input']>;
+  gt?: InputMaybe<Scalars['Decimal']['input']>;
+  gte?: InputMaybe<Scalars['Decimal']['input']>;
+  in?: InputMaybe<Array<InputMaybe<Scalars['Decimal']['input']>>>;
+  lt?: InputMaybe<Scalars['Decimal']['input']>;
+  lte?: InputMaybe<Scalars['Decimal']['input']>;
+  neq?: InputMaybe<Scalars['Decimal']['input']>;
+  ngt?: InputMaybe<Scalars['Decimal']['input']>;
+  ngte?: InputMaybe<Scalars['Decimal']['input']>;
+  nin?: InputMaybe<Array<InputMaybe<Scalars['Decimal']['input']>>>;
+  nlt?: InputMaybe<Scalars['Decimal']['input']>;
+  nlte?: InputMaybe<Scalars['Decimal']['input']>;
+};
+
+export type DeleteCharacterInput = {
+  /** Id of the character to delete. */
+  characterId: Scalars['String']['input'];
+};
+
+export type DeleteCharacterPayload = {
+  __typename?: 'DeleteCharacterPayload';
+  idResponseOfCharacter?: Maybe<IdResponseOfCharacter>;
+};
+
+export type DeleteMarketInput = {
+  /** Id of the market to delete. */
+  marketId: Scalars['String']['input'];
+};
+
+export type DeleteMarketPayload = {
+  __typename?: 'DeleteMarketPayload';
+  string?: Maybe<Scalars['String']['output']>;
+};
+
+export type FlatTax = {
+  __typename?: 'FlatTax';
+  minimum: Scalars['Decimal']['output'];
+  rate: Scalars['Decimal']['output'];
+};
+
+export type FlatTaxFilterInput = {
+  and?: InputMaybe<Array<FlatTaxFilterInput>>;
+  minimum?: InputMaybe<DecimalOperationFilterInput>;
+  or?: InputMaybe<Array<FlatTaxFilterInput>>;
+  rate?: InputMaybe<DecimalOperationFilterInput>;
+};
+
+export type FlatTaxInput = {
+  minimum: Scalars['Decimal']['input'];
+  rate: Scalars['Decimal']['input'];
+};
+
+export type FlatTaxSortInput = {
+  minimum?: InputMaybe<SortEnumType>;
+  rate?: InputMaybe<SortEnumType>;
+};
+
+export type GetCompletionInput = {
+  messages: Array<MessageInput>;
+};
+
+export type GetCompletionResponse = {
+  __typename?: 'GetCompletionResponse';
+  chunk: Scalars['String']['output'];
+};
+
+export type GetMarketTradesInput = {
+  marketId: Scalars['String']['input'];
+  seconds?: InputMaybe<Scalars['Float']['input']>;
+};
+
+export type GetMarketTradesResponse = {
+  __typename?: 'GetMarketTradesResponse';
+  averagePrice: Scalars['Decimal']['output'];
+  limit: Scalars['Decimal']['output'];
+  margin: Scalars['Decimal']['output'];
+  maxPrice: Scalars['Decimal']['output'];
+  minPrice: Scalars['Decimal']['output'];
+  numTransactions: Scalars['Int']['output'];
+  roi: Scalars['Decimal']['output'];
+  symbolCode: Scalars['String']['output'];
+  symbolId: Scalars['String']['output'];
+  symbolName: Scalars['String']['output'];
+  symbolSubcode?: Maybe<Scalars['String']['output']>;
+  totalGain: Scalars['Decimal']['output'];
+  totalSpent: Scalars['Decimal']['output'];
+  totalVolume: Scalars['Decimal']['output'];
+};
+
+export type GetMarketTradesResponseFilterInput = {
+  and?: InputMaybe<Array<GetMarketTradesResponseFilterInput>>;
+  averagePrice?: InputMaybe<DecimalOperationFilterInput>;
+  limit?: InputMaybe<DecimalOperationFilterInput>;
+  margin?: InputMaybe<DecimalOperationFilterInput>;
+  maxPrice?: InputMaybe<DecimalOperationFilterInput>;
+  minPrice?: InputMaybe<DecimalOperationFilterInput>;
+  numTransactions?: InputMaybe<IntOperationFilterInput>;
+  or?: InputMaybe<Array<GetMarketTradesResponseFilterInput>>;
+  roi?: InputMaybe<DecimalOperationFilterInput>;
+  symbolCode?: InputMaybe<StringOperationFilterInput>;
+  symbolId?: InputMaybe<IdOfSymbolFilterInput>;
+  symbolName?: InputMaybe<StringOperationFilterInput>;
+  symbolSubcode?: InputMaybe<StringOperationFilterInput>;
+  totalGain?: InputMaybe<DecimalOperationFilterInput>;
+  totalSpent?: InputMaybe<DecimalOperationFilterInput>;
+  totalVolume?: InputMaybe<DecimalOperationFilterInput>;
+};
+
+export type GetMarketTradesResponseSortInput = {
+  averagePrice?: InputMaybe<SortEnumType>;
+  limit?: InputMaybe<SortEnumType>;
+  margin?: InputMaybe<SortEnumType>;
+  maxPrice?: InputMaybe<SortEnumType>;
+  minPrice?: InputMaybe<SortEnumType>;
+  numTransactions?: InputMaybe<SortEnumType>;
+  roi?: InputMaybe<SortEnumType>;
+  symbolCode?: InputMaybe<SortEnumType>;
+  symbolId?: InputMaybe<SortEnumType>;
+  symbolName?: InputMaybe<SortEnumType>;
+  symbolSubcode?: InputMaybe<SortEnumType>;
+  totalGain?: InputMaybe<SortEnumType>;
+  totalSpent?: InputMaybe<SortEnumType>;
+  totalVolume?: InputMaybe<SortEnumType>;
+};
+
+export type GetSymbolTradeBucketsResponse = {
+  __typename?: 'GetSymbolTradeBucketsResponse';
+  date: Scalars['DateTime']['output'];
+  margin: Scalars['Decimal']['output'];
+  maxPrice: Scalars['Decimal']['output'];
+  minPrice: Scalars['Decimal']['output'];
+  numTransactions: Scalars['Int']['output'];
+  price: Scalars['Decimal']['output'];
+  totalSpent: Scalars['Decimal']['output'];
+  volume: Scalars['Decimal']['output'];
+};
+
+export type GetSymbolTradesInput = {
+  marketId: Scalars['String']['input'];
+  numBuckets?: Scalars['Int']['input'];
+  seconds?: InputMaybe<Scalars['Float']['input']>;
+  symbolId: Scalars['String']['input'];
+};
+
+export type GetSymbolTradesResponse = {
+  __typename?: 'GetSymbolTradesResponse';
+  averageGain: Scalars['Decimal']['output'];
+  averagePrice: Scalars['Decimal']['output'];
+  margin: Scalars['Decimal']['output'];
+  maxPrice: Scalars['Decimal']['output'];
+  minPrice: Scalars['Decimal']['output'];
+  numTransactions: Scalars['Int']['output'];
+  tax: Scalars['Decimal']['output'];
+  totalGain: Scalars['Decimal']['output'];
+  totalSpent: Scalars['Decimal']['output'];
+  trades: Array<GetSymbolTradeBucketsResponse>;
+};
+
+export type IdOfCharacterFilterInput = {
+  and?: InputMaybe<Array<IdOfCharacterFilterInput>>;
+  or?: InputMaybe<Array<IdOfCharacterFilterInput>>;
+  value?: InputMaybe<StringOperationFilterInput>;
+};
+
+export type IdOfMarketFilterInput = {
+  and?: InputMaybe<Array<IdOfMarketFilterInput>>;
+  or?: InputMaybe<Array<IdOfMarketFilterInput>>;
+  value?: InputMaybe<StringOperationFilterInput>;
+};
+
+export type IdOfSymbolFilterInput = {
+  and?: InputMaybe<Array<IdOfSymbolFilterInput>>;
+  or?: InputMaybe<Array<IdOfSymbolFilterInput>>;
+  value?: InputMaybe<StringOperationFilterInput>;
+};
+
+export type IdResponseOfCharacter = {
+  __typename?: 'IdResponseOfCharacter';
+  id: Scalars['String']['output'];
+};
+
+export type IntOperationFilterInput = {
+  eq?: InputMaybe<Scalars['Int']['input']>;
+  gt?: InputMaybe<Scalars['Int']['input']>;
+  gte?: InputMaybe<Scalars['Int']['input']>;
+  in?: InputMaybe<Array<InputMaybe<Scalars['Int']['input']>>>;
+  lt?: InputMaybe<Scalars['Int']['input']>;
+  lte?: InputMaybe<Scalars['Int']['input']>;
+  neq?: InputMaybe<Scalars['Int']['input']>;
+  ngt?: InputMaybe<Scalars['Int']['input']>;
+  ngte?: InputMaybe<Scalars['Int']['input']>;
+  nin?: InputMaybe<Array<InputMaybe<Scalars['Int']['input']>>>;
+  nlt?: InputMaybe<Scalars['Int']['input']>;
+  nlte?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type KeyValuePairOfStringAndObject = {
+  __typename?: 'KeyValuePairOfStringAndObject';
+  key: Scalars['String']['output'];
+};
+
+export type KeyValuePairOfStringAndObjectFilterInput = {
+  and?: InputMaybe<Array<KeyValuePairOfStringAndObjectFilterInput>>;
+  key?: InputMaybe<StringOperationFilterInput>;
+  or?: InputMaybe<Array<KeyValuePairOfStringAndObjectFilterInput>>;
+};
+
+export type ListFilterInputTypeOfCharacterDetailFilterInput = {
+  all?: InputMaybe<CharacterDetailFilterInput>;
+  any?: InputMaybe<Scalars['Boolean']['input']>;
+  none?: InputMaybe<CharacterDetailFilterInput>;
+  some?: InputMaybe<CharacterDetailFilterInput>;
+};
+
+export type ListFilterInputTypeOfKeyValuePairOfStringAndObjectFilterInput = {
+  all?: InputMaybe<KeyValuePairOfStringAndObjectFilterInput>;
+  any?: InputMaybe<Scalars['Boolean']['input']>;
+  none?: InputMaybe<KeyValuePairOfStringAndObjectFilterInput>;
+  some?: InputMaybe<KeyValuePairOfStringAndObjectFilterInput>;
+};
+
+export type Market = {
+  __typename?: 'Market';
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  taxes: Taxes;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type MarketFilterInput = {
+  and?: InputMaybe<Array<MarketFilterInput>>;
+  createdAt?: InputMaybe<DateTimeOperationFilterInput>;
+  id?: InputMaybe<IdOfMarketFilterInput>;
+  name?: InputMaybe<StringOperationFilterInput>;
+  or?: InputMaybe<Array<MarketFilterInput>>;
+  taxes?: InputMaybe<TaxesFilterInput>;
+  updatedAt?: InputMaybe<DateTimeOperationFilterInput>;
+};
+
+export type MarketSortInput = {
+  createdAt?: InputMaybe<SortEnumType>;
+  id?: InputMaybe<SortEnumType>;
+  name?: InputMaybe<SortEnumType>;
+  taxes?: InputMaybe<TaxesSortInput>;
+  updatedAt?: InputMaybe<SortEnumType>;
+};
+
+/** A connection to a list of items. */
+export type MarketTradesConnection = {
+  __typename?: 'MarketTradesConnection';
+  /** A list of edges. */
+  edges?: Maybe<Array<MarketTradesEdge>>;
+  /** A flattened list of the nodes. */
+  nodes?: Maybe<Array<GetMarketTradesResponse>>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** Identifies the total count of items in the connection. */
+  totalCount: Scalars['Int']['output'];
+};
+
+/** An edge in a connection. */
+export type MarketTradesEdge = {
+  __typename?: 'MarketTradesEdge';
+  /** A cursor for use in pagination. */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of the edge. */
+  node: GetMarketTradesResponse;
+};
+
+export type MessageInput = {
+  content: Scalars['String']['input'];
+  role: Role;
+};
+
+export type Mutation = {
+  __typename?: 'Mutation';
+  /**
+   * Creates a character.
+   *
+   *
+   * **Returns:**
+   * The id of the newly created character.
+   */
+  createCharacter: CreateCharacterPayload;
+  /**
+   * Creates a market.
+   *
+   *
+   * **Returns:**
+   * Response containing the created market's identifier.
+   */
+  createMarket: CreateMarketPayload;
+  /**
+   * Deletes a character.
+   *
+   *
+   * **Returns:**
+   * The id of the recently deleted character.
+   */
+  deleteCharacter: DeleteCharacterPayload;
+  /**
+   * Deletes a market by it's identifier.
+   *
+   *
+   * **Returns:**
+   * Status code.
+   */
+  deleteMarket: DeleteMarketPayload;
+  /**
+   * Updates a character.
+   *
+   *
+   * **Returns:**
+   * The id of the updated character.
+   */
+  updateCharacter: UpdateCharacterPayload;
+  /**
+   * Updates a market by it's identifier.
+   *
+   *
+   * **Returns:**
+   * Status code.
+   */
+  updateMarket: UpdateMarketPayload;
+};
+
+
+export type MutationCreateCharacterArgs = {
+  input: CreateCharacterInput;
+};
+
+
+export type MutationCreateMarketArgs = {
+  input: CreateMarketInput;
+};
+
+
+export type MutationDeleteCharacterArgs = {
+  input: DeleteCharacterInput;
+};
+
+
+export type MutationDeleteMarketArgs = {
+  input: DeleteMarketInput;
+};
+
+
+export type MutationUpdateCharacterArgs = {
+  input: UpdateCharacterInput;
+};
+
+
+export type MutationUpdateMarketArgs = {
+  input: UpdateMarketInput;
+};
+
+/** Information about pagination in a connection. */
+export type PageInfo = {
+  __typename?: 'PageInfo';
+  /** When paginating forwards, the cursor to continue. */
+  endCursor?: Maybe<Scalars['String']['output']>;
+  /** Indicates whether more edges exist following the set defined by the clients arguments. */
+  hasNextPage: Scalars['Boolean']['output'];
+  /** Indicates whether more edges exist prior the set defined by the clients arguments. */
+  hasPreviousPage: Scalars['Boolean']['output'];
+  /** When paginating backwards, the cursor to continue. */
+  startCursor?: Maybe<Scalars['String']['output']>;
+};
+
+export type Query = {
+  __typename?: 'Query';
+  /**
+   * Gets a queryable list of characters.
+   *
+   *
+   * **Returns:**
+   * A list of characters.
+   */
+  allCharacters: Array<Character>;
+  /**
+   * Gets all markets.
+   *
+   *
+   * **Returns:**
+   * List of all markets.
+   */
+  allMarkets?: Maybe<AllMarketsConnection>;
+  /**
+   * Gets all symbols.
+   *
+   *
+   * **Returns:**
+   * Queryable list of all symbols.
+   */
+  allSymbols?: Maybe<AllSymbolsConnection>;
+  /**
+   * Gets a character.
+   *
+   *
+   * **Returns:**
+   * The character matching the given query.
+   */
+  character: Character;
+  /**
+   * Generates a completion given some conversation input.
+   *
+   *
+   * **Returns:**
+   * Generated completion stream and accompanying role.
+   */
+  completion: CompletionResponse;
+  /**
+   * Retrieves a market by it's identifier.
+   *
+   *
+   * **Returns:**
+   * The market matching the given query.
+   */
+  market: Market;
+  /**
+   * Retrieves information about the symbols in a market.
+   *
+   *
+   * **Returns:**
+   * Trade statistics for the symbols in a market.
+   */
+  marketTrades?: Maybe<MarketTradesConnection>;
+  /**
+   * Gets a symbol by its identifier.
+   *
+   *
+   * **Returns:**
+   * The symbol matching the given query.
+   */
+  symbol: Symbol;
+  /**
+   * Retrieves information about the trades for a given symbol.
+   *
+   *
+   * **Returns:**
+   * Trade statistics for a symbol.
+   */
+  symbolTrades: GetSymbolTradesResponse;
+};
+
+
+export type QueryAllCharactersArgs = {
+  order?: InputMaybe<Array<CharacterSortInput>>;
+  where?: InputMaybe<CharacterFilterInput>;
+};
+
+
+export type QueryAllMarketsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  order?: InputMaybe<Array<MarketSortInput>>;
+  where?: InputMaybe<MarketFilterInput>;
+};
+
+
+export type QueryAllSymbolsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  order?: InputMaybe<Array<SymbolSortInput>>;
+  where?: InputMaybe<SymbolFilterInput>;
+};
+
+
+export type QueryCharacterArgs = {
+  characterId: Scalars['String']['input'];
+};
+
+
+export type QueryCompletionArgs = {
+  input: GetCompletionInput;
+};
+
+
+export type QueryMarketArgs = {
+  marketId: Scalars['String']['input'];
+};
+
+
+export type QueryMarketTradesArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  input: GetMarketTradesInput;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  order?: InputMaybe<Array<GetMarketTradesResponseSortInput>>;
+  where?: InputMaybe<GetMarketTradesResponseFilterInput>;
+};
+
+
+export type QuerySymbolArgs = {
+  symbolId: Scalars['String']['input'];
+};
+
+
+export type QuerySymbolTradesArgs = {
+  input: GetSymbolTradesInput;
+};
+
+export enum Role {
+  Assistant = 'ASSISTANT',
+  System = 'SYSTEM',
+  User = 'USER'
+}
+
+export enum SortEnumType {
+  Asc = 'ASC',
+  Desc = 'DESC'
+}
+
+export type StringOperationFilterInput = {
+  and?: InputMaybe<Array<StringOperationFilterInput>>;
+  contains?: InputMaybe<Scalars['String']['input']>;
+  endsWith?: InputMaybe<Scalars['String']['input']>;
+  eq?: InputMaybe<Scalars['String']['input']>;
+  in?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+  ncontains?: InputMaybe<Scalars['String']['input']>;
+  nendsWith?: InputMaybe<Scalars['String']['input']>;
+  neq?: InputMaybe<Scalars['String']['input']>;
+  nin?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+  nstartsWith?: InputMaybe<Scalars['String']['input']>;
+  or?: InputMaybe<Array<StringOperationFilterInput>>;
+  startsWith?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type Symbol = {
+  __typename?: 'Symbol';
+  additionalFields: Array<KeyValuePairOfStringAndObject>;
+  code: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  marketId: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  subcode?: Maybe<Scalars['String']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type SymbolFilterInput = {
+  additionalFields?: InputMaybe<ListFilterInputTypeOfKeyValuePairOfStringAndObjectFilterInput>;
+  and?: InputMaybe<Array<SymbolFilterInput>>;
+  code?: InputMaybe<StringOperationFilterInput>;
+  createdAt?: InputMaybe<DateTimeOperationFilterInput>;
+  id?: InputMaybe<IdOfSymbolFilterInput>;
+  marketId?: InputMaybe<IdOfMarketFilterInput>;
+  name?: InputMaybe<StringOperationFilterInput>;
+  or?: InputMaybe<Array<SymbolFilterInput>>;
+  subcode?: InputMaybe<StringOperationFilterInput>;
+  updatedAt?: InputMaybe<DateTimeOperationFilterInput>;
+};
+
+export type SymbolSortInput = {
+  code?: InputMaybe<SortEnumType>;
+  createdAt?: InputMaybe<SortEnumType>;
+  id?: InputMaybe<SortEnumType>;
+  marketId?: InputMaybe<SortEnumType>;
+  name?: InputMaybe<SortEnumType>;
+  subcode?: InputMaybe<SortEnumType>;
+  updatedAt?: InputMaybe<SortEnumType>;
+};
+
+export type Taxes = {
+  __typename?: 'Taxes';
+  flat?: Maybe<FlatTax>;
+};
+
+export type TaxesFilterInput = {
+  and?: InputMaybe<Array<TaxesFilterInput>>;
+  flat?: InputMaybe<FlatTaxFilterInput>;
+  or?: InputMaybe<Array<TaxesFilterInput>>;
+};
+
+export type TaxesInput = {
+  flat?: InputMaybe<FlatTaxInput>;
+};
+
+export type TaxesSortInput = {
+  flat?: InputMaybe<FlatTaxSortInput>;
+};
+
+export type UpdateCharacterInput = {
+  age: Scalars['Int']['input'];
+  characterId: Scalars['String']['input'];
+  details: Array<CharacterDetailInput>;
+  name: Scalars['String']['input'];
+};
+
+export type UpdateCharacterPayload = {
+  __typename?: 'UpdateCharacterPayload';
+  idResponseOfCharacter?: Maybe<IdResponseOfCharacter>;
+};
+
+export type UpdateMarketInput = {
+  marketId: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  taxes: TaxesInput;
+};
+
+export type UpdateMarketPayload = {
+  __typename?: 'UpdateMarketPayload';
+  string?: Maybe<Scalars['String']['output']>;
+};
+
+export type DeleteCharacterMutationVariables = Exact<{
+  input: DeleteCharacterInput;
+}>;
+
+
+export type DeleteCharacterMutation = { __typename?: 'Mutation', deleteCharacter: { __typename?: 'DeleteCharacterPayload', idResponseOfCharacter?: { __typename?: 'IdResponseOfCharacter', id: string } | null } };
+
+export type CreateCharacterMutationVariables = Exact<{
+  input: CreateCharacterInput;
+}>;
+
+
+export type CreateCharacterMutation = { __typename?: 'Mutation', createCharacter: { __typename?: 'CreateCharacterPayload', idResponseOfCharacter?: { __typename?: 'IdResponseOfCharacter', id: string } | null } };
+
+export type UpdateCharacterMutationVariables = Exact<{
+  input: UpdateCharacterInput;
+}>;
+
+
+export type UpdateCharacterMutation = { __typename?: 'Mutation', updateCharacter: { __typename?: 'UpdateCharacterPayload', idResponseOfCharacter?: { __typename?: 'IdResponseOfCharacter', id: string } | null } };
+
+export type CharacterListQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type CharacterListQuery = { __typename?: 'Query', allCharacters: Array<{ __typename?: 'Character', id: string, name: string, age: number }> };
+
+export type GetCharacterQueryVariables = Exact<{
+  characterId: Scalars['String']['input'];
+}>;
+
+
+export type GetCharacterQuery = { __typename?: 'Query', character: { __typename?: 'Character', id: string, name: string, age: number, details: Array<{ __typename?: 'CharacterDetail', key: string, value: string }> } };
+
+export type GetMarketsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetMarketsQuery = { __typename?: 'Query', allMarkets?: { __typename?: 'AllMarketsConnection', nodes?: Array<{ __typename?: 'Market', id: string, name: string }> | null } | null };
+
+export type GetMarketTradesQueryVariables = Exact<{
+  input: GetMarketTradesInput;
+  where?: InputMaybe<GetMarketTradesResponseFilterInput>;
+  order?: InputMaybe<Array<GetMarketTradesResponseSortInput> | GetMarketTradesResponseSortInput>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  after?: InputMaybe<Scalars['String']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type GetMarketTradesQuery = { __typename?: 'Query', marketTrades?: { __typename?: 'MarketTradesConnection', totalCount: number, nodes?: Array<{ __typename?: 'GetMarketTradesResponse', averagePrice: any, limit: any, margin: any, maxPrice: any, minPrice: any, numTransactions: number, roi: any, symbolCode: string, symbolId: string, symbolName: string, symbolSubcode?: string | null, totalGain: any, totalSpent: any, totalVolume: any }> | null, pageInfo: { __typename?: 'PageInfo', endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean, startCursor?: string | null } } | null };
+
+export type GetSymbolDetailsQueryVariables = Exact<{
+  marketId: Scalars['String']['input'];
+  symbolId: Scalars['String']['input'];
+  seconds?: InputMaybe<Scalars['Float']['input']>;
+}>;
+
+
+export type GetSymbolDetailsQuery = { __typename?: 'Query', symbol: { __typename?: 'Symbol', code: string, createdAt: any, id: string, marketId: string, name: string, subcode?: string | null, updatedAt: any }, symbolTrades: { __typename?: 'GetSymbolTradesResponse', averageGain: any, averagePrice: any, margin: any, maxPrice: any, minPrice: any, numTransactions: number, tax: any, totalGain: any, totalSpent: any, trades: Array<{ __typename?: 'GetSymbolTradeBucketsResponse', date: any, margin: any, maxPrice: any, minPrice: any, numTransactions: number, price: any, totalSpent: any, volume: any }> } };
+
+
+export const DeleteCharacterDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"deleteCharacter"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"DeleteCharacterInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteCharacter"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"idResponseOfCharacter"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]} as unknown as DocumentNode<DeleteCharacterMutation, DeleteCharacterMutationVariables>;
+export const CreateCharacterDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"createCharacter"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateCharacterInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createCharacter"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"idResponseOfCharacter"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]} as unknown as DocumentNode<CreateCharacterMutation, CreateCharacterMutationVariables>;
+export const UpdateCharacterDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"updateCharacter"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateCharacterInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateCharacter"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"idResponseOfCharacter"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]} as unknown as DocumentNode<UpdateCharacterMutation, UpdateCharacterMutationVariables>;
+export const CharacterListDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"characterList"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"allCharacters"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"age"}}]}}]}}]} as unknown as DocumentNode<CharacterListQuery, CharacterListQueryVariables>;
+export const GetCharacterDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getCharacter"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"characterId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"character"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"characterId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"characterId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"age"}},{"kind":"Field","name":{"kind":"Name","value":"details"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"key"}},{"kind":"Field","name":{"kind":"Name","value":"value"}}]}}]}}]}}]} as unknown as DocumentNode<GetCharacterQuery, GetCharacterQueryVariables>;
+export const GetMarketsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetMarkets"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"allMarkets"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"nodes"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]}}]} as unknown as DocumentNode<GetMarketsQuery, GetMarketsQueryVariables>;
+export const GetMarketTradesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetMarketTrades"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"GetMarketTradesInput"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"where"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"GetMarketTradesResponseFilterInput"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"order"}},"type":{"kind":"ListType","type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"GetMarketTradesResponseSortInput"}}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"first"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"after"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"last"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"before"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"marketTrades"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}},{"kind":"Argument","name":{"kind":"Name","value":"where"},"value":{"kind":"Variable","name":{"kind":"Name","value":"where"}}},{"kind":"Argument","name":{"kind":"Name","value":"order"},"value":{"kind":"Variable","name":{"kind":"Name","value":"order"}}},{"kind":"Argument","name":{"kind":"Name","value":"first"},"value":{"kind":"Variable","name":{"kind":"Name","value":"first"}}},{"kind":"Argument","name":{"kind":"Name","value":"after"},"value":{"kind":"Variable","name":{"kind":"Name","value":"after"}}},{"kind":"Argument","name":{"kind":"Name","value":"last"},"value":{"kind":"Variable","name":{"kind":"Name","value":"last"}}},{"kind":"Argument","name":{"kind":"Name","value":"before"},"value":{"kind":"Variable","name":{"kind":"Name","value":"before"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"totalCount"}},{"kind":"Field","name":{"kind":"Name","value":"nodes"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"averagePrice"}},{"kind":"Field","name":{"kind":"Name","value":"limit"}},{"kind":"Field","name":{"kind":"Name","value":"margin"}},{"kind":"Field","name":{"kind":"Name","value":"maxPrice"}},{"kind":"Field","name":{"kind":"Name","value":"minPrice"}},{"kind":"Field","name":{"kind":"Name","value":"numTransactions"}},{"kind":"Field","name":{"kind":"Name","value":"roi"}},{"kind":"Field","name":{"kind":"Name","value":"symbolCode"}},{"kind":"Field","name":{"kind":"Name","value":"symbolId"}},{"kind":"Field","name":{"kind":"Name","value":"symbolName"}},{"kind":"Field","name":{"kind":"Name","value":"symbolSubcode"}},{"kind":"Field","name":{"kind":"Name","value":"totalGain"}},{"kind":"Field","name":{"kind":"Name","value":"totalSpent"}},{"kind":"Field","name":{"kind":"Name","value":"totalVolume"}}]}},{"kind":"Field","name":{"kind":"Name","value":"pageInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"endCursor"}},{"kind":"Field","name":{"kind":"Name","value":"hasNextPage"}},{"kind":"Field","name":{"kind":"Name","value":"hasPreviousPage"}},{"kind":"Field","name":{"kind":"Name","value":"startCursor"}}]}}]}}]}}]} as unknown as DocumentNode<GetMarketTradesQuery, GetMarketTradesQueryVariables>;
+export const GetSymbolDetailsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetSymbolDetails"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"marketId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"symbolId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"seconds"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Float"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"symbol"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"symbolId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"symbolId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"code"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"marketId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"subcode"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"symbolTrades"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"marketId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"marketId"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"symbolId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"symbolId"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"seconds"},"value":{"kind":"Variable","name":{"kind":"Name","value":"seconds"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"averageGain"}},{"kind":"Field","name":{"kind":"Name","value":"averagePrice"}},{"kind":"Field","name":{"kind":"Name","value":"margin"}},{"kind":"Field","name":{"kind":"Name","value":"maxPrice"}},{"kind":"Field","name":{"kind":"Name","value":"minPrice"}},{"kind":"Field","name":{"kind":"Name","value":"numTransactions"}},{"kind":"Field","name":{"kind":"Name","value":"tax"}},{"kind":"Field","name":{"kind":"Name","value":"totalGain"}},{"kind":"Field","name":{"kind":"Name","value":"totalSpent"}},{"kind":"Field","name":{"kind":"Name","value":"trades"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"date"}},{"kind":"Field","name":{"kind":"Name","value":"margin"}},{"kind":"Field","name":{"kind":"Name","value":"maxPrice"}},{"kind":"Field","name":{"kind":"Name","value":"minPrice"}},{"kind":"Field","name":{"kind":"Name","value":"numTransactions"}},{"kind":"Field","name":{"kind":"Name","value":"price"}},{"kind":"Field","name":{"kind":"Name","value":"totalSpent"}},{"kind":"Field","name":{"kind":"Name","value":"volume"}}]}}]}}]}}]} as unknown as DocumentNode<GetSymbolDetailsQuery, GetSymbolDetailsQueryVariables>;
