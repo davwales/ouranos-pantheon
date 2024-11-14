@@ -15,7 +15,7 @@ build_aphrodite:
   stage: build_aphrodite
   image: docker:latest
   variables: 
-    IMAGE_NAME: "Talos.Olympus.Service.Aphrodite"
+    IMAGE_NAME: "talos-olympus-service-aphrodite"
   services:
     - docker:dind
   before_script:
@@ -38,7 +38,7 @@ build_plutus:
   stage: build_plutus
   image: docker:latest
   variables:
-    IMAGE_NAME: "Talos.Olympus.Service.Plutus"
+    IMAGE_NAME: "talos-olympus-service-plutus"
   services:
     - docker:dind
   before_script:
@@ -61,7 +61,7 @@ build_gateway:
   stage: build_gateway
   image: mcr.microsoft.com/dotnet/sdk:8.0
   variables:
-    IMAGE_NAME: "Talos.Olympus.Gateway"
+    IMAGE_NAME: "talos-olympus-gateway"
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
   script:
@@ -80,7 +80,7 @@ build_interface:
   stage: build_interface
   image: docker:stable
   variables:
-    IMAGE_NAME: "Talos.Olympus.Interface"
+    IMAGE_NAME: "talos-olympus-interface"
   services:
     - docker:dind
   before_script:
