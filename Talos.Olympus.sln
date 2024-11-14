@@ -9,8 +9,14 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "services", "services", "{3718B2D4-51F6-40AC-8360-6635988D47DE}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "aphrodite", "aphrodite", "{CEC7CE2F-45F1-4BBB-B1D0-E7BCAFEADB7D}"
+	ProjectSection(SolutionItems) = preProject
+		src\services\aphrodite\Dockerfile = src\services\aphrodite\Dockerfile
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "plutus", "plutus", "{64F2EE35-47B2-45E2-8ADE-D989156D68DE}"
+	ProjectSection(SolutionItems) = preProject
+		src\services\plutus\Dockerfile = src\services\plutus\Dockerfile
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Talos.Olympus.Service.Aphrodite.API", "src\services\aphrodite\Talos.Olympus.Service.Aphrodite.API\Talos.Olympus.Service.Aphrodite.API.csproj", "{DF3245BD-7D2E-4972-846E-473AE4046FB6}"
 EndProject
@@ -43,6 +49,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 		.gitignore = .gitignore
 		Directory.Build.props = Directory.Build.props
+		.gitlab-ci.yml = .gitlab-ci.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "data-loaders", "data-loaders", "{DDE15ED7-21D6-4AC1-8536-B833DA144125}"

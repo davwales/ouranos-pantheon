@@ -1,0 +1,96 @@
+stages:
+  - configure_nuget
+  - build_aphrodite
+  - build_plutus
+  - build_gateway
+  - build_interface
+    
+configure_nuget:
+  stage: configure_nuget
+  image: mcr.microsoft.com/dotnet/sdk:8.0
+  script:
+    - dotnet nuget add source $NUGET_SOURCE --username $NUGET_USERNAME --password $NUGET_PASSWORD --store-password-in-clear-text --name GitLab
+
+build_aphrodite:
+  stage: build_aphrodite
+  image: docker:latest
+  variables: 
+    IMAGE_NAME: "Talos.Olympus.Service.Aphrodite"
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - cd ./src/services/aphrodite
+    - docker build --build-arg NUGET_SOURCE="$NUGET_SOURCE" --build-arg NUGET_USERNAME="$NUGET_USERNAME" --build-arg NUGET_PASSWORD="$NUGET_PASSWORD" -t "$IMAGE_NAME" .
+    - docker push "$IMAGE_NAME"
+    - dotnet run --project ./Talos.Olympus.Service.Aphrodite.API/Talos.Olympus.Service.Aphrodite.API.csproj -- schema export --output schema.graphql
+    - dotnet fusion subgraph pack -p Aphrodite -s ./Talos.Olympus.Service.Aphrodite.API/schema.graphql
+  artifacts: 
+    paths:
+      - Aphrodite.fsp
+  dependencies:
+    - configure_nuget
+  only:
+    - main
+
+build_plutus:
+  stage: build_plutus
+  image: docker:latest
+  variables:
+    IMAGE_NAME: "Talos.Olympus.Service.Plutus"
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - cd ./src/services/plutus
+    - docker build --build-arg NUGET_SOURCE="$NUGET_SOURCE" --build-arg NUGET_USERNAME="$NUGET_USERNAME" --build-arg NUGET_PASSWORD="$NUGET_PASSWORD" -t "$IMAGE_NAME" .
+    - docker push "$IMAGE_NAME"
+    - dotnet run --project ./Talos.Olympus.Service.Plutus.API/Talos.Olympus.Service.Plutus.API.csproj -- schema export --output schema.graphql
+    - dotnet fusion subgraph pack -p Plutus -s ./Talos.Olympus.Service.Plutus.API/schema.graphql
+  artifacts: 
+    paths:
+      - Plutus.fsp
+  dependencies:
+    - configure_nuget
+  only:
+    - main
+
+build_gateway:
+  stage: build_gateway
+  image: mcr.microsoft.com/dotnet/sdk:8.0
+  variables:
+    IMAGE_NAME: "Talos.Olympus.Gateway"
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - dotnet tool restore
+    - dotnet fusion compose -p ./src/gateway/Talos.Olympus.Gateway.API/Gateway -w ./subgraphs
+    - docker build --build-arg NUGET_SOURCE="$NUGET_SOURCE" --build-arg NUGET_USERNAME="$NUGET_USERNAME" --build-arg NUGET_PASSWORD="$NUGET_PASSWORD" -t "$IMAGE_NAME" ./src/gateway
+    - docker push "$IMAGE_NAME"
+  dependencies:
+    - configure_nuget
+    - build_aphrodite
+    - build_plutus
+  only:
+    - main
+
+build_interface:
+  stage: build_interface
+  image: docker:stable
+  variables:
+    IMAGE_NAME: "Talos.Olympus.Interface"
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - docker build -t "$IMAGE_NAME" ./src/interface
+    - docker push "$IMAGE_NAME"
+  cache:
+    key: "$CI_COMMIT_REF_SLUG"
+    paths:
+      - node_modules
+  only:
+    - main
