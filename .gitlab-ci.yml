@@ -4,36 +4,47 @@ stages:
   - compose_subgraphs
   - build_gateway
   - build_interface
-    
-before_script: 
-  - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  - push_images
+
+variables:
+  DOCKER_IMAGE_APHRODITE: "$CI_REGISTRY_IMAGE/aphrodite-service"
+  DOCKER_IMAGE_PLUTUS: "$CI_REGISTRY_IMAGE/plutus-service"
+  DOCKER_IMAGE_GATEWAY: "$CI_REGISTRY_IMAGE/gateway"
+  DOCKER_IMAGE_INTERFACE: "$CI_REGISTRY_IMAGE/interface"
+
+  DOCKER_TAR_APHRODITE: "aphrodite-service.tar"
+  DOCKER_TAR_PLUTUS: "plutus-service.tar"
+  DOCKER_TAR_GATEWAY: "gateway.tar"
+  DOCKER_TAR_INTERFACE: "interface.tar"
 
 build_aphrodite:
   stage: build_aphrodite
   image: docker:latest
-  variables: 
-    IMAGE_NAME: $CI_REGISTRY_IMAGE/aphrodite-service
   services:
     - docker:dind
   script:
-    - docker build -f ./src/services/aphrodite/Dockerfile -t "$IMAGE_NAME" .
-    - docker push "$IMAGE_NAME"
+    - docker build -f ./src/services/aphrodite/Dockerfile -t "$DOCKER_IMAGE_APHRODITE" .
+    - docker save "$DOCKER_IMAGE_APHRODITE" -o "$DOCKER_TAR_APHRODITE"
+  artifacts:
+    paths:
+      - "$DOCKER_TAR_APHRODITE"
   only:
     - main
 
 build_plutus:
   stage: build_plutus
   image: docker:latest
-  variables:
-    IMAGE_NAME: $CI_REGISTRY_IMAGE/plutus-service
   services:
     - docker:dind
   script:
-    - docker build -f ./src/services/plutus/Dockerfile -t "$IMAGE_NAME" .
-    - docker push "$IMAGE_NAME"
+    - docker build -f ./src/services/plutus/Dockerfile -t "$DOCKER_IMAGE_PLUTUS" .
+    - docker save "$DOCKER_IMAGE_PLUTUS" -o "$DOCKER_TAR_PLUTUS"
+  artifacts:
+    paths:
+      - "$DOCKER_TAR_PLUTUS"
   only:
     - main
-      
+
 compose_subgraphs:
   stage: compose_subgraphs
   image: mcr.microsoft.com/dotnet/sdk:8.0
@@ -54,29 +65,55 @@ compose_subgraphs:
 build_gateway:
   stage: build_gateway
   image: docker:latest
-  variables:
-    IMAGE_NAME: $CI_REGISTRY_IMAGE/gateway
   services:
     - docker:dind
   script:
-    - docker build -f ./src/gateway/Dockerfile -t "$IMAGE_NAME" .
-    - docker push "$IMAGE_NAME"
+    - docker build -f ./src/gateway/Dockerfile -t "$DOCKER_IMAGE_GATEWAY" .
+    - docker save "$DOCKER_IMAGE_GATEWAY" -o "$DOCKER_TAR_GATEWAY"
+  artifacts:
+    paths:
+      - "$DOCKER_TAR_GATEWAY"
   only:
     - main
 
 build_interface:
   stage: build_interface
   image: docker:stable
-  variables:
-    IMAGE_NAME: $CI_REGISTRY_IMAGE/interface
   services:
     - docker:dind
   script:
-    - docker build -t "$IMAGE_NAME" ./src/interface
-    - docker push "$IMAGE_NAME"
+    - docker build -t "$DOCKER_IMAGE_INTERFACE" ./src/interface
+    - docker save "$DOCKER_IMAGE_INTERFACE" -o "$DOCKER_TAR_INTERFACE"
+  artifacts:
+    paths:
+      - "$DOCKER_TAR_INTERFACE"
   cache:
     key: "$CI_COMMIT_REF_SLUG"
     paths:
       - node_modules
+  only:
+    - main
+
+push_images:
+  stage: push_images
+  image: docker:latest
+  services:
+    - docker:dind
+  dependencies:
+    - build_aphrodite
+    - build_plutus
+    - build_gateway
+    - build_interface
+  before_script: 
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+  script:
+    - docker load -i "$DOCKER_TAR_APHRODITE"
+    - docker push "$DOCKER_IMAGE_APHRODITE"
+    - docker load -i "$DOCKER_TAR_PLUTUS"
+    - docker push "$DOCKER_IMAGE_PLUTUS"
+    - docker load -i "$DOCKER_TAR_GATEWAY"
+    - docker push "$DOCKER_IMAGE_GATEWAY"
+    - docker load -i "$DOCKER_TAR_INTERFACE"
+    - docker push "$DOCKER_IMAGE_INTERFACE"
   only:
     - main

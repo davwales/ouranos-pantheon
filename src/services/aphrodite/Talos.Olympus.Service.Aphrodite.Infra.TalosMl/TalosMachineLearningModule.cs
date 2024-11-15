@@ -10,11 +10,11 @@ public static class TalosMachineLearningModule
     public static IServiceCollection AddTalosMachineLearningModule(this IServiceCollection services,
         IConfiguration configuration)
     {
-        var url = configuration.GetValue<string?>("TALOS_ML_URL");
-        if (string.IsNullOrWhiteSpace(url)) throw new InvalidOperationException("Invalid Talos Machine Learning URL.");
-
         services.AddHttpClient<ITalosMachineLearningClient, TalosMachineLearningClient>(client =>
         {
+            var url = configuration.GetValue<string?>("TALOS_ML_URL")
+                ?? throw new InvalidOperationException("Invalid Talos Machine Learning URL.");
+            
             client.BaseAddress = new Uri(url);
         });
 
