@@ -3,16 +3,19 @@ stages:
   - build_plutus
   - build_gateway
   - build_interface
+    
+before_script: 
+  - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
 
 build_aphrodite:
   stage: build_aphrodite
   image: docker:latest
   variables: 
-    IMAGE_NAME: "talos-olympus-service-aphrodite"
+    IMAGE_NAME: $CI_REGISTRY_IMAGE/aphrodite-service
   services:
     - docker:dind
-  before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  before_script: 
+    - dotnet tool restore
   script:
     - docker build -f ./src/services/aphrodite/Dockerfile -t "$IMAGE_NAME" .
     - docker push "$IMAGE_NAME"
@@ -28,11 +31,11 @@ build_plutus:
   stage: build_plutus
   image: docker:latest
   variables:
-    IMAGE_NAME: "talos-olympus-service-plutus"
+    IMAGE_NAME: $CI_REGISTRY_IMAGE/plutus-service
   services:
     - docker:dind
   before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+    - dotnet tool restore
   script:
     - docker build -f ./src/services/plutus/Dockerfile -t "$IMAGE_NAME" .
     - docker push "$IMAGE_NAME"
@@ -48,9 +51,9 @@ build_gateway:
   stage: build_gateway
   image: mcr.microsoft.com/dotnet/sdk:8.0
   variables:
-    IMAGE_NAME: "talos-olympus-gateway"
+    IMAGE_NAME: $CI_REGISTRY_IMAGE/gateway
   before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+    - dotnet tool restore
   script:
     - dotnet tool restore
     - dotnet fusion compose -p ./src/gateway/Talos.Olympus.Gateway.API/Gateway -w ./subgraphs
@@ -66,11 +69,9 @@ build_interface:
   stage: build_interface
   image: docker:stable
   variables:
-    IMAGE_NAME: "talos-olympus-interface"
+    IMAGE_NAME: $CI_REGISTRY_IMAGE/interface
   services:
     - docker:dind
-  before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
   script:
     - docker build -t "$IMAGE_NAME" ./src/interface
     - docker push "$IMAGE_NAME"
