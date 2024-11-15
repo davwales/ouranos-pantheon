@@ -1,15 +1,8 @@
 stages:
-  - configure_nuget
   - build_aphrodite
   - build_plutus
   - build_gateway
   - build_interface
-    
-configure_nuget:
-  stage: configure_nuget
-  image: mcr.microsoft.com/dotnet/sdk:8.0
-  script:
-    - dotnet nuget add source $NUGET_SOURCE --username $NUGET_USERNAME --password $NUGET_PASSWORD --store-password-in-clear-text --name GitLab
 
 build_aphrodite:
   stage: build_aphrodite
@@ -21,16 +14,13 @@ build_aphrodite:
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
   script:
-    - cd ./src/services/aphrodite/Talos.Olympus.Service.Aphrodite.API
     - docker build --build-arg NUGET_SOURCE="$NUGET_SOURCE" --build-arg NUGET_USERNAME="$NUGET_USERNAME" --build-arg NUGET_PASSWORD="$NUGET_PASSWORD" -t "$IMAGE_NAME" .
     - docker push "$IMAGE_NAME"
-    - dotnet run --project Talos.Olympus.Service.Aphrodite.API.csproj -- schema export --output schema.graphql
-    - dotnet fusion subgraph pack -p Aphrodite -s schema.graphql
+    - dotnet run --project ./src/services/aphrodite/Talos.Olympus.Service.Aphrodite.API/Talos.Olympus.Service.Aphrodite.API.csproj -- schema export --output schema.graphql
+    - dotnet fusion subgraph pack -p Aphrodite -s ./src/services/aphrodite/Talos.Olympus.Service.Aphrodite.API/schema.graphql
   artifacts: 
     paths:
       - Aphrodite.fsp
-  dependencies:
-    - configure_nuget
   only:
     - main
 
@@ -44,16 +34,13 @@ build_plutus:
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
   script:
-    - cd ./src/services/plutus/Talos.Olympus.Service.Plutus.API
     - docker build --build-arg NUGET_SOURCE="$NUGET_SOURCE" --build-arg NUGET_USERNAME="$NUGET_USERNAME" --build-arg NUGET_PASSWORD="$NUGET_PASSWORD" -t "$IMAGE_NAME" .
     - docker push "$IMAGE_NAME"
-    - dotnet run --project Talos.Olympus.Service.Plutus.API.csproj -- schema export --output schema.graphql
-    - dotnet fusion subgraph pack -p Plutus -s schema.graphql
+    - dotnet run --project ./src/services/plutus/Talos.Olympus.Service.Plutus.API/Talos.Olympus.Service.Plutus.API.csproj -- schema export --output schema.graphql
+    - dotnet fusion subgraph pack -p Plutus -s ./src/services/plutus/Talos.Olympus.Service.Plutus.API/schema.graphql
   artifacts: 
     paths:
       - Plutus.fsp
-  dependencies:
-    - configure_nuget
   only:
     - main
 
@@ -70,7 +57,6 @@ build_gateway:
     - docker build --build-arg NUGET_SOURCE="$NUGET_SOURCE" --build-arg NUGET_USERNAME="$NUGET_USERNAME" --build-arg NUGET_PASSWORD="$NUGET_PASSWORD" -t "$IMAGE_NAME" ./src/gateway
     - docker push "$IMAGE_NAME"
   dependencies:
-    - configure_nuget
     - build_aphrodite
     - build_plutus
   only:
