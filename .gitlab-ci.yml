@@ -1,6 +1,7 @@
 stages:
   - build_aphrodite
   - build_plutus
+  - compose_subgraphs
   - build_gateway
   - build_interface
     
@@ -14,13 +15,9 @@ build_aphrodite:
     IMAGE_NAME: $CI_REGISTRY_IMAGE/aphrodite-service
   services:
     - docker:dind
-  before_script: 
-    - dotnet tool restore
   script:
     - docker build -f ./src/services/aphrodite/Dockerfile -t "$IMAGE_NAME" .
     - docker push "$IMAGE_NAME"
-    - dotnet run --project ./src/services/aphrodite/Talos.Olympus.Service.Aphrodite.API/Talos.Olympus.Service.Aphrodite.API.csproj -- schema export --output schema.graphql
-    - dotnet fusion subgraph pack -p Aphrodite -s ./src/services/aphrodite/Talos.Olympus.Service.Aphrodite.API/schema.graphql
   artifacts: 
     paths:
       - Aphrodite.fsp
@@ -39,16 +36,14 @@ build_plutus:
   script:
     - docker build -f ./src/services/plutus/Dockerfile -t "$IMAGE_NAME" .
     - docker push "$IMAGE_NAME"
-    - dotnet run --project ./src/services/plutus/Talos.Olympus.Service.Plutus.API/Talos.Olympus.Service.Plutus.API.csproj -- schema export --output schema.graphql
-    - dotnet fusion subgraph pack -p Plutus -s ./src/services/plutus/Talos.Olympus.Service.Plutus.API/schema.graphql
   artifacts: 
     paths:
       - Plutus.fsp
   only:
     - main
-
-build_gateway:
-  stage: build_gateway
+      
+compose_subgraphs:
+  stage: compose_subgraphs
   image: mcr.microsoft.com/dotnet/sdk:8.0
   variables:
     IMAGE_NAME: $CI_REGISTRY_IMAGE/gateway
@@ -56,12 +51,32 @@ build_gateway:
     - dotnet tool restore
   script:
     - dotnet tool restore
+    - dotnet run --project ./src/services/plutus/Talos.Olympus.Service.Plutus.API/Talos.Olympus.Service.Plutus.API.csproj -- schema export --output plutus-schema.graphql
+    - dotnet run --project ./src/services/aphrodite/Talos.Olympus.Service.Aphrodite.API/Talos.Olympus.Service.Aphrodite.API.csproj -- schema export --output aphrodite-schema.graphql
+    - dotnet fusion subgraph pack -p Plutus -s ./src/services/plutus/Talos.Olympus.Service.Plutus.API/plutus-schema.graphql -w ./subgraphs
+    - dotnet fusion subgraph pack -p Aphrodite -s ./src/services/aphrodite/Talos.Olympus.Service.Aphrodite.API/aphrodite-schema.graphql -w ./subgraphs
     - dotnet fusion compose -p ./src/gateway/Talos.Olympus.Gateway.API/Gateway -w ./subgraphs
-    - docker build -f ./src/gateway/Dockerfile -t "$IMAGE_NAME" .
-    - docker push "$IMAGE_NAME"
   dependencies:
     - build_aphrodite
     - build_plutus
+  only:
+    - main
+
+build_gateway:
+  stage: build_gateway
+  image: docker:latest
+  variables:
+    IMAGE_NAME: $CI_REGISTRY_IMAGE/plutus-service
+  services:
+    - docker:dind
+  before_script:
+    - dotnet tool restore
+  script:
+    - docker build -f ./src/gateway/Dockerfile -t "$IMAGE_NAME" .
+    - docker push "$IMAGE_NAME"
+  artifacts:
+    paths:
+      - Plutus.fsp
   only:
     - main
 
