@@ -29,22 +29,22 @@ export default function DesktopNavigation() {
                 onClick={handleMenuOpen}
                 endIcon={<ExpandMore />}
             >
-                Aphrodite
+                Hermes
             </Button>
             <Menu
                 anchorEl={anchorEl}
                 open={Boolean(anchorEl)}
                 onClose={handleMenuClose}
                 MenuListProps={{
-                    'aria-labelledby': 'aphrodite-button',
+                    'aria-labelledby': 'hermes-button',
                 }}
             >
-                <Link href="/aphrodite/conversation" passHref legacyBehavior>
+                <Link href="/hermes/conversation" passHref legacyBehavior>
                     <MenuItem onClick={handleMenuClose} component="a">
                         Create Conversation
                     </MenuItem>
                 </Link>
-                <Link href="/aphrodite/characters" passHref legacyBehavior>
+                <Link href="/hermes/characters" passHref legacyBehavior>
                     <MenuItem onClick={handleMenuClose} component="a">
                         Manage Character
                     </MenuItem>

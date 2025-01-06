@@ -13,7 +13,7 @@ export default function CharactersPage() {
         <Grid2 container spacing={2}>
             {data?.allCharacters.map(c => (
                 <Grid2 key={c.id} size={{ sm: 12, md: 6, lg: 4, xl: 2 }}>
-                    <LinkCard href={`/aphrodite/characters/${c.id}`}>
+                    <LinkCard href={`/hermes/characters/${c.id}`}>
                         <CardContent>
                             <Typography variant="h4" sx={{ mb: "0.5rem" }}>
                                 {c.name}
@@ -26,7 +26,7 @@ export default function CharactersPage() {
                 </Grid2>
             ))}
             <Grid2 size={{ sm: 12, md: 6, lg: 4, xl: 2 }}>
-                <LinkCard href="/aphrodite/characters/create">
+                <LinkCard href="/hermes/characters/create">
                     <CardContent>
                         <Typography variant="h4" sx={{ mb: "0.5rem" }}>
                             Create New

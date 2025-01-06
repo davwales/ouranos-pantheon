@@ -17,7 +17,7 @@ import Link from 'next/link';
 
 export default function MobileNavigation() {
     const [drawerOpen, setDrawerOpen] = useState(false);
-    const [aphroditeOpen, setAphroditeOpen] = useState(false);
+    const [hermesOpen, setHermesOpen] = useState(false);
 
     const toggleDrawer =
         (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
@@ -31,8 +31,8 @@ export default function MobileNavigation() {
             setDrawerOpen(open);
         };
 
-    const handleAphroditeClick = () => {
-        setAphroditeOpen(!aphroditeOpen);
+    const handleHermesClick = () => {
+        setHermesOpen(!hermesOpen);
     };
 
     return (
@@ -62,13 +62,13 @@ export default function MobileNavigation() {
                                 <ListItemText primary="Plutus" />
                             </ListItemButton>
                         </Link>
-                        <ListItemButton onClick={handleAphroditeClick}>
-                            <ListItemText primary="Aphrodite" />
-                            {aphroditeOpen ? <ExpandLess /> : <ExpandMore />}
+                        <ListItemButton onClick={handleHermesClick}>
+                            <ListItemText primary="Hermes" />
+                            {hermesOpen ? <ExpandLess /> : <ExpandMore />}
                         </ListItemButton>
-                        <Collapse in={aphroditeOpen} timeout="auto" unmountOnExit>
+                        <Collapse in={hermesOpen} timeout="auto" unmountOnExit>
                             <List component="div" disablePadding>
-                                <Link href="/aphrodite/conversation" passHref legacyBehavior>
+                                <Link href="/hermes/conversation" passHref legacyBehavior>
                                     <ListItemButton
                                         component="a"
                                         onClick={toggleDrawer(false)}
@@ -77,7 +77,7 @@ export default function MobileNavigation() {
                                         <ListItemText primary="Create Conversation" />
                                     </ListItemButton>
                                 </Link>
-                                <Link href="/aphrodite/characters" passHref legacyBehavior>
+                                <Link href="/hermes/characters" passHref legacyBehavior>
                                     <ListItemButton
                                         component="a"
                                         onClick={toggleDrawer(false)}

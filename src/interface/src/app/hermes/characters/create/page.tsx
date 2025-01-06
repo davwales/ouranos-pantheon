@@ -21,7 +21,7 @@ export default function CreateCharacterPage() {
         try {
             await createCharacter({ input });
             setLoading(false);
-            router.push("/aphrodite/characters");
+            router.push("/hermes/characters");
         } catch (err: any) {
             setLoading(false);
         }
@@ -30,7 +30,7 @@ export default function CreateCharacterPage() {
     return (
         <>
             <Box sx={{ width: "100%", mb: "1rem" }}>
-                <Button LinkComponent={Link} href="/aphrodite/characters" variant="outlined">
+                <Button LinkComponent={Link} href="/hermes/characters" variant="outlined">
                     Back
                 </Button>
             </Box>

@@ -1,15 +1,15 @@
 import { CardContent, Grid2, Typography } from "@mui/material";
 import LinkCard from "../components/link_card";
 
-export default function Aphrodite() {
+export default function Hermes() {
     const modules = [
         {
             title: "Create Conversation",
-            href: "/aphrodite/conversation"
+            href: "/hermes/conversation"
         },
         {
             title: "Manage Characters",
-            href: "/aphrodite/characters"
+            href: "/hermes/characters"
         }
     ];
 

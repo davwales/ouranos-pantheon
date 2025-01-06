@@ -43,7 +43,7 @@ export default function EditCharacterPage() {
         try {
             deleteCharacter({ input: { characterId } })
             setLoading(false);
-            router.push("/aphrodite/characters");
+            router.push("/hermes/characters");
         } catch (err: any) {
             setLoading(false);
         }
@@ -55,7 +55,7 @@ export default function EditCharacterPage() {
         try {
             await updateCharacter({ input: { characterId, ...input } });
             setLoading(false);
-            router.push("/aphrodite/characters");
+            router.push("/hermes/characters");
         } catch (err: any) {
             setLoading(false);
         }
@@ -68,7 +68,7 @@ export default function EditCharacterPage() {
     return (
         <>
             <Box sx={{ width: "100%", mb: "1rem" }}>
-                <Button LinkComponent={Link} href="/aphrodite/characters" variant="outlined">
+                <Button LinkComponent={Link} href="/hermes/characters" variant="outlined">
                     Back
                 </Button>
                 <Button variant="outlined" color="error" onClick={handleDelete} sx={{ float: "right" }}>

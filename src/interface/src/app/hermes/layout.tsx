@@ -1,6 +1,6 @@
 import { OuranosProvider } from '../services/gql_client';
 
-export default function AphroditeLayout({ children }: React.PropsWithChildren) {
+export default function HermesLayout({ children }: React.PropsWithChildren) {
     return (
         <>
             <OuranosProvider>
