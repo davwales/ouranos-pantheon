@@ -8,9 +8,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "core", "core", "{128A9F3B-4
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "services", "services", "{3718B2D4-51F6-40AC-8360-6635988D47DE}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "aphrodite", "aphrodite", "{CEC7CE2F-45F1-4BBB-B1D0-E7BCAFEADB7D}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "hermes", "hermes", "{CEC7CE2F-45F1-4BBB-B1D0-E7BCAFEADB7D}"
 	ProjectSection(SolutionItems) = preProject
-		src\services\aphrodite\Dockerfile = src\services\aphrodite\Dockerfile
+		src\services\hermes\Dockerfile = src\services\hermes\Dockerfile
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "plutus", "plutus", "{64F2EE35-47B2-45E2-8ADE-D989156D68DE}"
@@ -18,15 +18,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "plutus", "plutus", "{64F2EE
 		src\services\plutus\Dockerfile = src\services\plutus\Dockerfile
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Service.Aphrodite.API", "src\services\aphrodite\Ouranos.Pantheon.Service.Aphrodite.API\Ouranos.Pantheon.Service.Aphrodite.API.csproj", "{DF3245BD-7D2E-4972-846E-473AE4046FB6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Service.Hermes.API", "src\services\hermes\Ouranos.Pantheon.Service.Hermes.API\Ouranos.Pantheon.Service.Hermes.API.csproj", "{DF3245BD-7D2E-4972-846E-473AE4046FB6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Service.Aphrodite.Application", "src\services\aphrodite\Ouranos.Pantheon.Service.Aphrodite.Application\Ouranos.Pantheon.Service.Aphrodite.Application.csproj", "{FA83243E-89E1-43BC-AA6C-6BAE88F847F7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Service.Hermes.Application", "src\services\hermes\Ouranos.Pantheon.Service.Hermes.Application\Ouranos.Pantheon.Service.Hermes.Application.csproj", "{FA83243E-89E1-43BC-AA6C-6BAE88F847F7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Service.Aphrodite.Domain", "src\services\aphrodite\Ouranos.Pantheon.Service.Aphrodite.Domain\Ouranos.Pantheon.Service.Aphrodite.Domain.csproj", "{96B239B6-E37A-497B-81A8-70156DD0C5FB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Service.Hermes.Domain", "src\services\hermes\Ouranos.Pantheon.Service.Hermes.Domain\Ouranos.Pantheon.Service.Hermes.Domain.csproj", "{96B239B6-E37A-497B-81A8-70156DD0C5FB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Service.Aphrodite.Infra.Mongo", "src\services\aphrodite\Ouranos.Pantheon.Service.Aphrodite.Infra.Mongo\Ouranos.Pantheon.Service.Aphrodite.Infra.Mongo.csproj", "{C8979767-A2B2-4C29-B95F-58C94FD7E328}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Service.Hermes.Infra.Mongo", "src\services\hermes\Ouranos.Pantheon.Service.Hermes.Infra.Mongo\Ouranos.Pantheon.Service.Hermes.Infra.Mongo.csproj", "{C8979767-A2B2-4C29-B95F-58C94FD7E328}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Service.Aphrodite.Infra.OuranosMl", "src\services\aphrodite\Ouranos.Pantheon.Service.Aphrodite.Infra.OuranosMl\Ouranos.Pantheon.Service.Aphrodite.Infra.OuranosMl.csproj", "{F063E7F9-5853-4E42-853E-8C3E9C9A7CC5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Service.Hermes.Infra.OuranosMl", "src\services\hermes\Ouranos.Pantheon.Service.Hermes.Infra.OuranosMl\Ouranos.Pantheon.Service.Hermes.Infra.OuranosMl.csproj", "{F063E7F9-5853-4E42-853E-8C3E9C9A7CC5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Service.Plutus.API", "src\services\plutus\Ouranos.Pantheon.Service.Plutus.API\Ouranos.Pantheon.Service.Plutus.API.csproj", "{7259D26F-9BF6-423E-ACB2-0383CD130E6E}"
 EndProject
