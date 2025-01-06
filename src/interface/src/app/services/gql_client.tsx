@@ -16,7 +16,7 @@ const makeClient = () => {
 
 export const { getClient } = registerUrql(makeClient);
 
-export function TalosProvider({ children }: React.PropsWithChildren) {
+export function OuranosProvider({ children }: React.PropsWithChildren) {
     const [client, ssr] = useMemo(() => {
         const ssr = ssrExchange({
             isClient: typeof window !== 'undefined',

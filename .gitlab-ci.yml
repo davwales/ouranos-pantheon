@@ -52,11 +52,11 @@ compose_subgraphs:
     - dotnet tool restore
   script:
     - mkdir subgraphs
-    - dotnet run --project ./src/services/plutus/Talos.Olympus.Service.Plutus.API/Talos.Olympus.Service.Plutus.API.csproj -- schema export --output schema.graphql
-    - dotnet run --project ./src/services/aphrodite/Talos.Olympus.Service.Aphrodite.API/Talos.Olympus.Service.Aphrodite.API.csproj -- schema export --output schema.graphql
-    - dotnet fusion subgraph pack -p ./subgraphs/Plutus -w ./src/services/plutus/Talos.Olympus.Service.Plutus.API
-    - dotnet fusion subgraph pack -p ./subgraphs/Aphrodite -w ./src/services/aphrodite/Talos.Olympus.Service.Aphrodite.API
-    - dotnet fusion compose -p ./src/gateway/Talos.Olympus.Gateway.API/Gateway -w ./subgraphs
+    - dotnet run --project ./src/services/plutus/Ouranos.Pantheon.Service.Plutus.API/Ouranos.Pantheon.Service.Plutus.API.csproj -- schema export --output schema.graphql
+    - dotnet run --project ./src/services/aphrodite/Ouranos.Pantheon.Service.Aphrodite.API/Ouranos.Pantheon.Service.Aphrodite.API.csproj -- schema export --output schema.graphql
+    - dotnet fusion subgraph pack -p ./subgraphs/Plutus -w ./src/services/plutus/Ouranos.Pantheon.Service.Plutus.API
+    - dotnet fusion subgraph pack -p ./subgraphs/Aphrodite -w ./src/services/aphrodite/Ouranos.Pantheon.Service.Aphrodite.API
+    - dotnet fusion compose -p ./src/gateway/Ouranos.Pantheon.Gateway.API/Gateway -w ./subgraphs
   dependencies:
     - build_aphrodite
     - build_plutus

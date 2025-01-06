@@ -5,7 +5,7 @@ import React from 'react';
 import { AppBar, Toolbar, Typography, Box, useMediaQuery, useTheme } from '@mui/material';
 import MobileNavigation from './mobile_navigation';
 import DesktopNavigation from './desktop_navigation';
-import TalosIcon from './talos_icon';
+import OuranosIcon from './ouranos_icon';
 
 export default function ResponsiveNavigationBar() {
   const theme = useTheme();
@@ -19,9 +19,9 @@ export default function ResponsiveNavigationBar() {
         </Box>
         <Box display="flex" alignItems="center">
           <Typography variant="h4" component="div">
-            Talos
+            Ouranos
           </Typography>
-          <TalosIcon sx={{ ml: "1rem" }} />
+          <OuranosIcon sx={{ ml: "1rem" }} />
         </Box>
       </Toolbar>
     </AppBar>

@@ -1,11 +1,11 @@
-import { TalosProvider } from '../services/gql_client';
+import { OuranosProvider } from '../services/gql_client';
 
 export default function AphroditeLayout({ children }: React.PropsWithChildren) {
     return (
         <>
-            <TalosProvider>
+            <OuranosProvider>
                 {children}
-            </TalosProvider>
+            </OuranosProvider>
         </>
     )
 }

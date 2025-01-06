@@ -5,7 +5,7 @@ WORKDIR /app
 COPY . ./
 
 RUN dotnet restore
-RUN dotnet publish ./src/services/plutus/Talos.Olympus.Service.Plutus.API/Talos.Olympus.Service.Plutus.API.csproj -c Release -o /app/publish
+RUN dotnet publish ./src/services/plutus/Ouranos.Pantheon.Service.Plutus.API/Ouranos.Pantheon.Service.Plutus.API.csproj -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 
@@ -15,4 +15,4 @@ COPY --from=build /app/publish .
 
 EXPOSE 8300
 
-ENTRYPOINT ["dotnet", "Talos.Olympus.Service.Plutus.API.dll"]
+ENTRYPOINT ["dotnet", "Ouranos.Pantheon.Service.Plutus.API.dll"]

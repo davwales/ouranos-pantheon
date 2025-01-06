@@ -5,7 +5,7 @@ WORKDIR /app
 COPY . ./
 
 RUN dotnet restore
-RUN dotnet publish ./src/services/aphrodite/Talos.Olympus.Service.Aphrodite.API/Talos.Olympus.Service.Aphrodite.API.csproj -c Release -o /app/publish
+RUN dotnet publish ./src/services/aphrodite/Ouranos.Pantheon.Service.Aphrodite.API/Ouranos.Pantheon.Service.Aphrodite.API.csproj -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 
@@ -15,4 +15,4 @@ COPY --from=build /app/publish .
 
 EXPOSE 8300
 
-ENTRYPOINT ["dotnet", "Talos.Olympus.Service.Aphrodite.API.dll"]
+ENTRYPOINT ["dotnet", "Ouranos.Pantheon.Service.Aphrodite.API.dll"]

@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Configuration.Binder"
+                          Version="$(MicrosoftConfigurationBinderVersion)"/>
+        <PackageReference Include="MongoDB.Driver" Version="$(MongoDriverVersion)"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Ouranos.Pantheon.Service.Plutus.Application\Ouranos.Pantheon.Service.Plutus.Application.csproj"/>
+    </ItemGroup>
+</Project>

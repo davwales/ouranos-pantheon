@@ -7,8 +7,8 @@ import { Box, CssBaseline } from '@mui/material';
 import ResponsiveNavigationBar from './components/responsive_navigation_bar';
 
 export const metadata: Metadata = {
-  title: 'Talos',
-  description: 'UI to interact with Talos applications.'
+  title: 'Ouranos',
+  description: 'UI to interact with Ouranos applications.'
 }
 
 export default function RootLayout({ children }: React.PropsWithChildren) {

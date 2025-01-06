@@ -1,7 +1,7 @@
 import { GridColDef, GridFilterModel, GridLogicOperator, GridPaginationModel, GridSortModel } from "@mui/x-data-grid";
 import { getFieldType } from "./material_helpers";
 import { PageInfo, SortEnumType } from "@/gql/graphql";
-import TalosPaginationInfo from "../models/talos_pagination_info";
+import OuranosPaginationInfo from "../models/ouranos_pagination_info";
 
 export function mapFilter(
     model: GridFilterModel,
@@ -77,7 +77,7 @@ export function mapPagination(
     paginationModel: GridPaginationModel,
     previousPaginationModel: GridPaginationModel,
     pageInfo?: PageInfo
-): TalosPaginationInfo {
+): OuranosPaginationInfo {
     // Page size has changed, return the first page again
     if (paginationModel.pageSize != previousPaginationModel.pageSize) {
         return {

@@ -62,4 +62,4 @@ class ApiService {
     }
 }
 
-export const talos_api = new ApiService(`${process.env.NEXT_PUBLIC_API_HOST}`);
+export const ouranos_api = new ApiService(`${process.env.NEXT_PUBLIC_API_HOST}`);
