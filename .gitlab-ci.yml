@@ -1,67 +1,14 @@
 stages:
-  - build_hermes
-  - build_plutus
-  - compose_subgraphs
   - build_gateway
   - build_interface
   - push_images
 
 variables:
-  DOCKER_IMAGE_HERMES: "$CI_REGISTRY_IMAGE/hermes-service"
-  DOCKER_IMAGE_PLUTUS: "$CI_REGISTRY_IMAGE/plutus-service"
-  DOCKER_IMAGE_GATEWAY: "$CI_REGISTRY_IMAGE/gateway"
-  DOCKER_IMAGE_INTERFACE: "$CI_REGISTRY_IMAGE/interface"
+  DOCKER_IMAGE_GATEWAY: "$CI_REGISTRY_IMAGE/pantheon-gateway"
+  DOCKER_IMAGE_INTERFACE: "$CI_REGISTRY_IMAGE/pantheon-interface"
 
-  DOCKER_TAR_HERMES: "hermes-service.tar"
-  DOCKER_TAR_PLUTUS: "plutus-service.tar"
-  DOCKER_TAR_GATEWAY: "gateway.tar"
-  DOCKER_TAR_INTERFACE: "interface.tar"
-
-build_hermes:
-  stage: build_hermes
-  image: docker:latest
-  services:
-    - docker:dind
-  script:
-    - docker build -f ./src/services/hermes/Dockerfile -t "$DOCKER_IMAGE_HERMES" .
-    - docker save "$DOCKER_IMAGE_HERMES" -o "$DOCKER_TAR_HERMES"
-  artifacts:
-    paths:
-      - "$DOCKER_TAR_HERMES"
-  only:
-    - main
-
-build_plutus:
-  stage: build_plutus
-  image: docker:latest
-  services:
-    - docker:dind
-  script:
-    - docker build -f ./src/services/plutus/Dockerfile -t "$DOCKER_IMAGE_PLUTUS" .
-    - docker save "$DOCKER_IMAGE_PLUTUS" -o "$DOCKER_TAR_PLUTUS"
-  artifacts:
-    paths:
-      - "$DOCKER_TAR_PLUTUS"
-  only:
-    - main
-
-compose_subgraphs:
-  stage: compose_subgraphs
-  image: mcr.microsoft.com/dotnet/sdk:8.0
-  before_script:
-    - dotnet tool restore
-  script:
-    - mkdir subgraphs
-    - dotnet run --project ./src/services/plutus/Ouranos.Pantheon.Service.Plutus.API/Ouranos.Pantheon.Service.Plutus.API.csproj -- schema export --output schema.graphql
-    - dotnet run --project ./src/services/hermes/Ouranos.Pantheon.Service.Hermes.API/Ouranos.Pantheon.Service.Hermes.API.csproj -- schema export --output schema.graphql
-    - dotnet fusion subgraph pack -p ./subgraphs/Plutus -w ./src/services/plutus/Ouranos.Pantheon.Service.Plutus.API
-    - dotnet fusion subgraph pack -p ./subgraphs/Hermes -w ./src/services/hermes/Ouranos.Pantheon.Service.Hermes.API
-    - dotnet fusion compose -p ./src/gateway/Ouranos.Pantheon.Gateway.API/Gateway -w ./subgraphs
-  dependencies:
-    - build_hermes
-    - build_plutus
-  only:
-    - main
+  DOCKER_TAR_GATEWAY: "pantheon-gateway.tar"
+  DOCKER_TAR_INTERFACE: "pantheon-interface.tar"
 
 build_gateway:
   stage: build_gateway
@@ -101,17 +48,11 @@ push_images:
   services:
     - docker:dind
   dependencies:
-    - build_hermes
-    - build_plutus
     - build_gateway
     - build_interface
   before_script: 
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
   script:
-    - docker load -i "$DOCKER_TAR_HERMES"
-    - docker push "$DOCKER_IMAGE_HERMES"
-    - docker load -i "$DOCKER_TAR_PLUTUS"
-    - docker push "$DOCKER_IMAGE_PLUTUS"
     - docker load -i "$DOCKER_TAR_GATEWAY"
     - docker push "$DOCKER_IMAGE_GATEWAY"
     - docker load -i "$DOCKER_TAR_INTERFACE"

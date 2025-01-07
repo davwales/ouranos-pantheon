@@ -1,6 +1,0 @@
-{
-    "subgraph": "Plutus",
-    "http": {
-        "baseAddress": "https://localhost:9302/graphql"
-    }
-}

@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Conventions;
@@ -16,20 +17,16 @@ public static class MongoExtensions
 {
     public static IServiceCollection AddMongo(this IServiceCollection services, IConfiguration configuration)
     {
-        var url = configuration.GetValue<string?>("MONGO_URL");
-
-        services.AddSingleton<IMongoClient>(_ =>
+        services.Configure<MongoOptions>(configuration.GetSection(MongoOptions.SectionName));
+        
+        services.AddSingleton<IMongoClient>(sp =>
         {
-            var mongoClientSettings = MongoClientSettings.FromConnectionString(url);
+            var options = sp.GetRequiredService<IOptions<MongoOptions>>();
+            var mongoClientSettings = MongoClientSettings.FromConnectionString(options.Value.ConnectionString);
             return new MongoClient(mongoClientSettings);
         });
 
-        services.AddSingleton<IMongoDatabase>(sp =>
-        {
-            var mongoUrl = new MongoUrl(url);
-            return sp.GetRequiredService<IMongoClient>().GetDatabase(mongoUrl.DatabaseName);
-        });
-
+        services.AddSingleton<IMongoDatabaseManager, MongoDatabaseManager>();
         services.AddSingleton(typeof(IMongoRepository<>), typeof(MongoRepository<>));
         services.AddScoped<IQueryExecutor, QueryExecutor>();
 

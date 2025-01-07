@@ -7,11 +7,11 @@ public sealed class MongoRepository<T> : IMongoRepository<T> where T : class
 {
     private readonly IMongoDatabase _mongoDatabase;
 
-    public MongoRepository(IMongoDatabase mongoDatabase)
+    public MongoRepository(IMongoDatabaseManager mongoDatabaseManager)
     {
-        ArgumentNullException.ThrowIfNull(mongoDatabase);
-
-        _mongoDatabase = mongoDatabase;
+        ArgumentNullException.ThrowIfNull(mongoDatabaseManager);
+        
+        _mongoDatabase = mongoDatabaseManager.GetDatabase<T>();
     }
 
     public IMongoCollection<T> GetCollection()

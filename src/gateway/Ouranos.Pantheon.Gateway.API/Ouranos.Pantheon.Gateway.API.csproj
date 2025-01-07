@@ -7,7 +7,6 @@
   <ItemGroup>
     <PackageReference Include="HotChocolate.AspNetCore" Version="$(HotChocolateVersion)" />
     <PackageReference Include="HotChocolate.AspNetCore.CommandLine" Version="$(HotChocolateVersion)" />
-    <PackageReference Include="HotChocolate.Fusion" Version="$(HotChocolateVersion)" />
     <PackageReference Include="Serilog.AspNetCore" Version="$(SerilogAspNetCoreVersion)"/>
     <PackageReference Include="Serilog.Sinks.Grafana.Loki"
       Version="$(SerilogSinksGrafanaLokiVersion)" />
@@ -18,6 +17,12 @@
     <None Update="Gateway.fgp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\core\Ouranos.Pantheon.Core.API\Ouranos.Pantheon.Core.API.csproj" />
+    <ProjectReference Include="..\..\services\hermes\Ouranos.Pantheon.Service.Hermes.API\Ouranos.Pantheon.Service.Hermes.API.csproj" />
+    <ProjectReference Include="..\..\services\plutus\Ouranos.Pantheon.Service.Plutus.API\Ouranos.Pantheon.Service.Plutus.API.csproj" />
   </ItemGroup>
 
 </Project>

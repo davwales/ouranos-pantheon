@@ -6,8 +6,8 @@ namespace Ouranos.Pantheon.Service.Plutus.Infra.Mongo;
 
 public static class MongoExtensions
 {
-    public static void RegisterMongoBehaviors(this IServiceCollection services)
+    public static IServiceCollection RegisterMongoBehaviors(this IServiceCollection services)
     {
-        services.AddScoped<IBucketTrades, BucketTrades>();
+        return services.AddScoped<IBucketTrades, BucketTrades>();
     }
 }

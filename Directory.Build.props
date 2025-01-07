@@ -16,6 +16,7 @@
         <MicrosoftConfigurationBinderVersion>8.0.*</MicrosoftConfigurationBinderVersion>
         <MicrosoftExtensionsConfigurationVersion>8.0.*</MicrosoftExtensionsConfigurationVersion>
         <MicrosoftExtensionsDependencyInjectionVersion>8.0.*</MicrosoftExtensionsDependencyInjectionVersion>
+        <MicrosoftExtensionsOptionsConfigurationExtensionsVersion>8.0.*</MicrosoftExtensionsOptionsConfigurationExtensionsVersion>
         <MongoDriverVersion>2.27.*</MongoDriverVersion>
         <HotChocolateVersion>14.0.*</HotChocolateVersion>
         <SerilogAspNetCoreVersion>8.0.*</SerilogAspNetCoreVersion>
