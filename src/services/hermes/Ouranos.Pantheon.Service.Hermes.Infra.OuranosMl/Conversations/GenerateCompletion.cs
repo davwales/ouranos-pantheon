@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Service.Hermes.Application.Interfaces.Conversations;
-using Ouranos.Pantheon.Service.Hermes.Domain.Characters;
+using Ouranos.Pantheon.Service.Hermes.Application.Queries.Conversations.GetCompletion;
 using Ouranos.Pantheon.Service.Hermes.Domain.Conversations;
 using Ouranos.Pantheon.Service.Hermes.Infra.OuranosMl.Requests;
 
@@ -25,7 +25,7 @@ public sealed class GenerateCompletion : IGenerateCompletion
     }
 
     public async IAsyncEnumerable<string> GenerateCompletionStream(
-        Conversation conversation,
+        ConversationInput conversation,
         [EnumeratorCancellation] CancellationToken cancellationToken = default
     )
     {
@@ -42,7 +42,7 @@ public sealed class GenerateCompletion : IGenerateCompletion
         _logger.LogDebug("Successfully generated a completion.");
     }
 
-    private static GenerateCompletionRequest GetRequest(Conversation conversation)
+    private static GenerateCompletionRequest GetRequest(ConversationInput conversation)
     {
         var conversationVariables = GetConversationVariables(conversation);
 
@@ -60,12 +60,10 @@ public sealed class GenerateCompletion : IGenerateCompletion
             new Message(cleanedContext, Role.System),
             .. cleanedMessages
         ]);
-        ;
     }
 
-    private static Dictionary<string, string> GetConversationVariables(Conversation conversation)
-    {
-        return new Dictionary<string, string>
+    private static Dictionary<string, string> GetConversationVariables(ConversationInput conversation) =>
+        new()
         {
             { "{{user}}", conversation.User.Name },
             { "{{assistant}}", conversation.Assistant.Name },
@@ -74,14 +72,14 @@ public sealed class GenerateCompletion : IGenerateCompletion
             { "{{user_details}}", GetCharacterDescription(conversation.User) },
             { "{{assistant_details}}", GetCharacterDescription(conversation.Assistant) }
         };
-    }
 
-    private static string GetCharacterDescription(Character character)
+    private static string GetCharacterDescription(CharacterInput character)
     {
-        List<string> details = [];
-
-        details.Add($"{character.Name} is {character.Age} years old.");
-        foreach (var d in character.Details) details.Add($"{character.Name}'s {d.Key} is {d.Value}");
+        List<string> details =
+        [
+            $"{character.Name} is {character.Age} years old."
+        ];
+        details.AddRange(character.Details.Select(d => $"{character.Name}'s {d.Key} is {d.Value}"));
 
         return string.Join(". ", details);
     }

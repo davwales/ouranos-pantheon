@@ -6,9 +6,9 @@ using Ouranos.Pantheon.Core.API.Queries;
 
 namespace Ouranos.Pantheon.Core.API.Extensions;
 
-public static class GraphQLExtentions
+public static class GraphQlExtentions
 {
-    public static IRequestExecutorBuilder ConfigureGraphQL(
+    public static IRequestExecutorBuilder ConfigureGraphQl(
         this IServiceCollection services,
         IConfiguration configuration
     )
@@ -25,8 +25,8 @@ public static class GraphQLExtentions
             .BindCommonTypes()
             .ModifyRequestOptions(o =>
             {
-                var IncludeExceptionDetails = configuration.GetValue("Ouranos:IncludeExceptionDetails", false);
-                o.IncludeExceptionDetails = IncludeExceptionDetails;
+                var includeExceptionDetails = configuration.GetValue("Ouranos:IncludeExceptionDetails", false);
+                o.IncludeExceptionDetails = includeExceptionDetails;
             });
     }
 
@@ -36,14 +36,11 @@ public static class GraphQLExtentions
         var types = assemblies.SelectMany(x => x.GetTypes());
 
         var matchingTypes = types.Where(t =>
-            t.IsClass &&
-            t.IsSealed &&
+            t is { IsClass: true, IsSealed: true } &&
             t.GetCustomAttributes(typeof(ExtendObjectTypeAttribute<T>), false).Length != 0
         );
 
-        foreach (var type in matchingTypes) builder = builder.AddTypeExtension(type);
-
-        return builder;
+        return matchingTypes.Aggregate(builder, (current, type) => current.AddTypeExtension(type));
     }
 
     private static IRequestExecutorBuilder BindCommonTypes(this IRequestExecutorBuilder builder)

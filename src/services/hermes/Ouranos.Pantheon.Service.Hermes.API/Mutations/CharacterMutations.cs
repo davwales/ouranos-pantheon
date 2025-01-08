@@ -27,7 +27,10 @@ public sealed class CharacterMutations
         [Service] IMediator mediator,
         CreateCharacterInput input,
         CancellationToken cancellationToken = default
-    ) => await mediator.Send(input, cancellationToken);
+    )
+    {
+        return await mediator.Send(input, cancellationToken);
+    }
 
     /// <summary>
     ///     Updates a character.
@@ -44,7 +47,10 @@ public sealed class CharacterMutations
         [Service] IMediator mediator,
         UpdateCharacterInput input,
         CancellationToken cancellationToken = default
-    ) => await mediator.Send(input, cancellationToken);
+    )
+    {
+        return await mediator.Send(input, cancellationToken);
+    }
 
     /// <summary>
     ///     Deletes a character.
@@ -61,5 +67,8 @@ public sealed class CharacterMutations
         [Service] IMediator mediator,
         Id<Character> characterId,
         CancellationToken cancellationToken = default
-    ) => await mediator.Send(new DeleteEntityInput<Character>(characterId), cancellationToken);
+    )
+    {
+        return await mediator.Send(new DeleteEntityInput<Character>(characterId), cancellationToken);
+    }
 }

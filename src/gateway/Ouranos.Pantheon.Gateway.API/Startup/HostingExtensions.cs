@@ -7,13 +7,18 @@ namespace Ouranos.Pantheon.Gateway.API.Startup;
 public static class HostingExtensions
 {
     private const string CorsPolicy = "AllowLocalAndServer";
-    
+
     public static WebApplication ConfigureBuilder(this WebApplicationBuilder builder)
     {
         builder.Services
             .ConfigureCors(builder.Configuration)
             .AddOuranosCore(builder.Configuration, gql => gql
-                .ModifyOptions(o => { o.EnableStream = true; })
+                .ModifyOptions(o =>
+                {
+                    o.EnableStream = true;
+                    o.DefaultQueryDependencyInjectionScope = DependencyInjectionScope.Request;
+                    o.DefaultMutationDependencyInjectionScope = DependencyInjectionScope.Request;
+                })
                 .ModifyCostOptions(o => o.EnforceCostLimits = false) // TODO - Refactor queries for lower cost
                 .AddHermesSchema()
                 .AddPlutusSchema()
@@ -30,7 +35,7 @@ public static class HostingExtensions
         app.UseOuranosCore();
         return app;
     }
-    
+
     private static IServiceCollection ConfigureCors(
         this IServiceCollection services,
         IConfiguration configuration
@@ -47,5 +52,4 @@ public static class HostingExtensions
             )
         );
     }
-
 }

@@ -2,8 +2,8 @@ using HotChocolate.Execution.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Serilog;
 using Ouranos.Pantheon.Core.Infra.Mongo;
+using Serilog;
 
 namespace Ouranos.Pantheon.Core.API.Extensions;
 
@@ -20,7 +20,7 @@ public static class CoreExtensions
         logger?.Invoke(loggerConfig);
         Log.Logger = loggerConfig.CreateLogger();
 
-        var gqlBuilder = services.ConfigureGraphQL(configuration);
+        var gqlBuilder = services.ConfigureGraphQl(configuration);
         gql?.Invoke(gqlBuilder);
 
         return services
@@ -31,8 +31,8 @@ public static class CoreExtensions
 
     public static WebApplication UseOuranosCore(this WebApplication app)
     {
-        app.MapGraphQL();
         app.UseSerilogRequestLogging();
+        app.MapGraphQL();
         return app;
     }
 }

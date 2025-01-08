@@ -25,7 +25,10 @@ public sealed class CharacterQueries
         [Service] IMediator mediator,
         Id<Character> characterId,
         CancellationToken cancellationToken = default
-    ) => await mediator.Send(new GetEntityInput<Character>(characterId), cancellationToken);
+    )
+    {
+        return await mediator.Send(new GetEntityInput<Character>(characterId), cancellationToken);
+    }
 
     /// <summary>
     ///     Gets a queryable list of characters.
@@ -40,5 +43,8 @@ public sealed class CharacterQueries
     public async Task<IQueryable<Character>> GetAllCharacters(
         [Service] IMediator mediator,
         CancellationToken cancellationToken = default
-    ) => await mediator.Send(new GetAllEntitiesInput<Character>(), cancellationToken);
+    )
+    {
+        return await mediator.Send(new GetAllEntitiesInput<Character>(), cancellationToken);
+    }
 }

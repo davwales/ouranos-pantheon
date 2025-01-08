@@ -1,18 +1,18 @@
 using System.Runtime.CompilerServices;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Ouranos.Pantheon.Core.Application.Common;
 using Ouranos.Pantheon.Service.Hermes.Application.Interfaces.Conversations;
 
-namespace Ouranos.Pantheon.Service.Hermes.Application.Commands.Conversations.GenerateCompletion;
+namespace Ouranos.Pantheon.Service.Hermes.Application.Queries.Conversations.GetCompletion;
 
-public sealed class
-    GenerateCompletionHandler : IStreamRequestHandler<GenerateCompletionInput, GenerateCompletionResponse>
+public sealed class GetCompletionHandler : IStreamRequestHandler<GetCompletionInput, Chunk<string>>
 {
     private readonly IGenerateCompletion _generateCompletion;
-    private readonly ILogger<GenerateCompletionHandler> _logger;
+    private readonly ILogger<GetCompletionHandler> _logger;
 
-    public GenerateCompletionHandler(
-        ILogger<GenerateCompletionHandler> logger,
+    public GetCompletionHandler(
+        ILogger<GetCompletionHandler> logger,
         IGenerateCompletion generateCompletion
     )
     {
@@ -23,19 +23,18 @@ public sealed class
         _generateCompletion = generateCompletion;
     }
 
-    public async IAsyncEnumerable<GenerateCompletionResponse> Handle(
-        GenerateCompletionInput request,
+    public async IAsyncEnumerable<Chunk<string>> Handle(
+        GetCompletionInput request,
         [EnumeratorCancellation] CancellationToken cancellationToken = default
     )
     {
-        _logger.LogTrace("Attempting to handle generate completion request '{@request}'.", request);
+        _logger.LogTrace("Attempting to handle get completion request '{@request}'.", request);
         cancellationToken.ThrowIfCancellationRequested();
 
         await foreach (var chunk in _generateCompletion.GenerateCompletionStream(request.Conversation,
                            cancellationToken))
         {
-            yield return new GenerateCompletionResponse(chunk);
-
+            yield return new Chunk<string>(chunk);
             cancellationToken.ThrowIfCancellationRequested();
         }
 

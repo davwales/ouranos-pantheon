@@ -24,7 +24,10 @@ public static class MediatrExtensions
         var types = assemblies.SelectMany(x => x.GetTypes());
 
         var entityTypes = types.Where(t =>
-            !t.IsAbstract && !t.IsInterface && t.IsSubclassOfRawGeneric(typeof(BaseEntity<>)));
+            t is { IsAbstract: false, IsInterface: false } &&
+            t.IsSubclassOfRawGeneric(typeof(BaseEntity<>))
+        );
+
         foreach (var entityType in entityTypes)
         foreach (var handlerType in handlerTypes)
         {

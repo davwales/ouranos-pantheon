@@ -12,9 +12,9 @@ public static class OuranosMachineLearningModule
     {
         services.AddHttpClient<IOuranosMachineLearningClient, OuranosMachineLearningClient>(client =>
         {
-            var url = configuration.GetValue<string?>("OURANOS_ML_URL")
-                ?? throw new InvalidOperationException("Invalid Ouranos Machine Learning URL.");
-            
+            var url = configuration.GetValue<string?>("Hermes:OuranosMl:ConnectionString")
+                      ?? throw new InvalidOperationException("Invalid Ouranos Machine Learning URL.");
+
             client.BaseAddress = new Uri(url);
         });
 
