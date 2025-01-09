@@ -6,8 +6,9 @@ public sealed record MongoOptions(
     Dictionary<string, string> TypeDatabases
 )
 {
-    public const string SectionName = "Mongo";
-    
-    public MongoOptions() : this("", [], [])
-    {}
+    public const string SectionName = "Ouranos:Mongo";
+
+    public MongoOptions() : this(string.Empty, [], [])
+    {
+    }
 }

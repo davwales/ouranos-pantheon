@@ -27,6 +27,9 @@ public static class GraphQlExtentions
             {
                 var includeExceptionDetails = configuration.GetValue("Ouranos:IncludeExceptionDetails", false);
                 o.IncludeExceptionDetails = includeExceptionDetails;
+
+                var requestTimeoutSeconds = configuration.GetValue("Ouranos:RequestTimeout", 30);
+                o.ExecutionTimeout = TimeSpan.FromSeconds(requestTimeoutSeconds);
             });
     }
 

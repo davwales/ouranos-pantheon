@@ -19,7 +19,7 @@ public static class HermesModule
         return services
             .AddApplicationModule()
             .RegisterMongoBehaviors()
-            .AddOuranosMachineLearningModule(configuration);
+            .AddOuranosMachineLearningModule();
     }
 
     public static IRequestExecutorBuilder AddHermesSchema(this IRequestExecutorBuilder builder)

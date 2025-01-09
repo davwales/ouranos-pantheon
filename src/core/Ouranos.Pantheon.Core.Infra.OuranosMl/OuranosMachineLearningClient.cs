@@ -4,9 +4,9 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Service.Hermes.Infra.OuranosMl.Requests;
+using Ouranos.Pantheon.Core.Infra.OuranosMl.Requests;
 
-namespace Ouranos.Pantheon.Service.Hermes.Infra.OuranosMl;
+namespace Ouranos.Pantheon.Core.Infra.OuranosMl;
 
 public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
 {
@@ -53,7 +53,7 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
             await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         response.EnsureSuccessStatusCode();
 
-        using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
 
         var buffer = new byte[1024];
         int bytesRead;

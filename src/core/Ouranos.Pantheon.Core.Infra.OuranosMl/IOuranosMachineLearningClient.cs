@@ -1,6 +1,6 @@
-using Ouranos.Pantheon.Service.Hermes.Infra.OuranosMl.Requests;
+using Ouranos.Pantheon.Core.Infra.OuranosMl.Requests;
 
-namespace Ouranos.Pantheon.Service.Hermes.Infra.OuranosMl;
+namespace Ouranos.Pantheon.Core.Infra.OuranosMl;
 
 public interface IOuranosMachineLearningClient
 {

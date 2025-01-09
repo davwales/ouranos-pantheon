@@ -7,6 +7,7 @@
     <ItemGroup>
         <ProjectReference Include="..\Ouranos.Pantheon.Core.Application\Ouranos.Pantheon.Core.Application.csproj"/>
         <ProjectReference Include="..\Ouranos.Pantheon.Core.Infra.Mongo\Ouranos.Pantheon.Core.Infra.Mongo.csproj"/>
+        <ProjectReference Include="..\Ouranos.Pantheon.Core.Infra.OuranosMl\Ouranos.Pantheon.Core.Infra.OuranosMl.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -18,5 +19,5 @@
         <PackageReference Include="HotChocolate.Data" Version="$(HotChocolateVersion)"/>
         <PackageReference Include="Serilog.AspNetCore" Version="$(SerilogAspNetCoreVersion)"/>
     </ItemGroup>
-    
+
 </Project>

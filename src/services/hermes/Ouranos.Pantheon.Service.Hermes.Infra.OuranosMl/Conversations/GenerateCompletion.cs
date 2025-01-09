@@ -1,9 +1,11 @@
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging;
+using Ouranos.Pantheon.Core.Infra.OuranosMl;
+using Ouranos.Pantheon.Core.Infra.OuranosMl.Dtos;
+using Ouranos.Pantheon.Core.Infra.OuranosMl.Requests;
 using Ouranos.Pantheon.Service.Hermes.Application.Commands.Conversations.GenerateCompletion;
 using Ouranos.Pantheon.Service.Hermes.Application.Interfaces.Conversations;
 using Ouranos.Pantheon.Service.Hermes.Domain.Conversations;
-using Ouranos.Pantheon.Service.Hermes.Infra.OuranosMl.Requests;
 
 namespace Ouranos.Pantheon.Service.Hermes.Infra.OuranosMl.Conversations;
 
@@ -52,12 +54,23 @@ public sealed class GenerateCompletion : IGenerateCompletion
         var cleanedContext = CleanContent(conversation.Context, conversationVariables);
 
         var cleanedMessages = conversation.Messages
-            .Select(m => new Message(CleanContent(m.Content, conversationVariables), m.Role))
+            .Select(m =>
+            {
+                var role = m.Role switch
+                {
+                    Role.System => RoleDto.System,
+                    Role.User => RoleDto.User,
+                    Role.Assistant => RoleDto.Assistant,
+                    _ => throw new InvalidOperationException($"Unsupported message role '{m.Role}'.")
+                };
+
+                return new MessageDto(CleanContent(m.Content, conversationVariables), role);
+            })
             .ToList();
 
         return new GenerateCompletionRequest([
-            new Message(cleanedSystemPrompt, Role.System),
-            new Message(cleanedContext, Role.System),
+            new MessageDto(cleanedSystemPrompt, RoleDto.System),
+            new MessageDto(cleanedContext, RoleDto.System),
             .. cleanedMessages
         ]);
     }

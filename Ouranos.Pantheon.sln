@@ -75,6 +75,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "automation", "automation", 
 		automation\pre-push = automation\pre-push
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Core.Infra.OuranosMl", "src\core\Ouranos.Pantheon.Core.Infra.OuranosMl\Ouranos.Pantheon.Core.Infra.OuranosMl.csproj", "{FAD49603-31FE-4551-8FF7-538768E20D5B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -137,6 +139,10 @@ Global
 		{55B203CA-1BAD-485E-9828-C9B59187C013}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{55B203CA-1BAD-485E-9828-C9B59187C013}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{55B203CA-1BAD-485E-9828-C9B59187C013}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FAD49603-31FE-4551-8FF7-538768E20D5B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FAD49603-31FE-4551-8FF7-538768E20D5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FAD49603-31FE-4551-8FF7-538768E20D5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FAD49603-31FE-4551-8FF7-538768E20D5B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{128A9F3B-4D1A-4A93-A0EC-2426770786AC} = {24007BE7-AE6D-46D3-B37A-522FE3EF0D9C}
@@ -163,5 +169,6 @@ Global
 		{CDF2D307-FB11-48E5-AA9A-233CBC6DDA2B} = {DBE7C5CA-24A4-4277-8F46-8043EE66C167}
 		{1A979A22-F861-4AF7-A575-864325889FB3} = {24007BE7-AE6D-46D3-B37A-522FE3EF0D9C}
 		{55B203CA-1BAD-485E-9828-C9B59187C013} = {1A979A22-F861-4AF7-A575-864325889FB3}
+		{FAD49603-31FE-4551-8FF7-538768E20D5B} = {128A9F3B-4D1A-4A93-A0EC-2426770786AC}
 	EndGlobalSection
 EndGlobal
