@@ -1,13 +1,12 @@
 using MediatR;
-using Ouranos.Pantheon.Core.API.Models;
-using Ouranos.Pantheon.Core.API.Queries;
-using Ouranos.Pantheon.Core.Application.Common;
-using Ouranos.Pantheon.Service.Hermes.Application.Queries.Conversations.GetCompletion;
+using Ouranos.Pantheon.Core.API.Mutations;
+using Ouranos.Pantheon.Service.Hermes.API.Models;
+using Ouranos.Pantheon.Service.Hermes.Application.Commands.Conversations.GenerateCompletion;
 
-namespace Ouranos.Pantheon.Service.Hermes.API.Queries;
+namespace Ouranos.Pantheon.Service.Hermes.API.Mutations;
 
-[ExtendObjectType<Query>]
-public sealed class ConversationQueries
+[ExtendObjectType<Mutation>]
+public sealed class ConversationMutations
 {
     /// <summary>
     ///     Generates a completion given some conversation input.
@@ -20,12 +19,12 @@ public sealed class ConversationQueries
     ///     <see cref="CancellationToken" />
     /// </param>
     /// <returns>Generated completion response.</returns>
-    public StreamResponse<Chunk<string>> GetCompletion(
+    public CompletionResponse GenerateCompletion(
         [Service] IMediator mediator,
-        GetCompletionInput input,
+        GenerateCompletionInput input,
         CancellationToken cancellationToken = default
     )
     {
-        return new StreamResponse<Chunk<string>>(mediator.CreateStream(input, cancellationToken));
+        return new CompletionResponse(mediator.CreateStream(input, cancellationToken));
     }
 }

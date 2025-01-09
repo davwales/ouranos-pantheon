@@ -1,6 +1,6 @@
 ﻿using Ouranos.Pantheon.Service.Hermes.Domain.Conversations;
 
-namespace Ouranos.Pantheon.Service.Hermes.Application.Queries.Conversations.GetCompletion;
+namespace Ouranos.Pantheon.Service.Hermes.Application.Commands.Conversations.GenerateCompletion;
 
 public sealed record ConversationInput(
     CharacterInput User,

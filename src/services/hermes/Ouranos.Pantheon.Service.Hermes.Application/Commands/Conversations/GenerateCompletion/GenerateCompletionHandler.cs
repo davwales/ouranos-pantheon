@@ -1,18 +1,18 @@
 using System.Runtime.CompilerServices;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Core.Application.Common;
 using Ouranos.Pantheon.Service.Hermes.Application.Interfaces.Conversations;
 
-namespace Ouranos.Pantheon.Service.Hermes.Application.Queries.Conversations.GetCompletion;
+namespace Ouranos.Pantheon.Service.Hermes.Application.Commands.Conversations.GenerateCompletion;
 
-public sealed class GetCompletionHandler : IStreamRequestHandler<GetCompletionInput, Chunk<string>>
+public sealed class
+    GenerateCompletionHandler : IStreamRequestHandler<GenerateCompletionInput, GenerateCompletionResponse>
 {
     private readonly IGenerateCompletion _generateCompletion;
-    private readonly ILogger<GetCompletionHandler> _logger;
+    private readonly ILogger<GenerateCompletionHandler> _logger;
 
-    public GetCompletionHandler(
-        ILogger<GetCompletionHandler> logger,
+    public GenerateCompletionHandler(
+        ILogger<GenerateCompletionHandler> logger,
         IGenerateCompletion generateCompletion
     )
     {
@@ -23,21 +23,21 @@ public sealed class GetCompletionHandler : IStreamRequestHandler<GetCompletionIn
         _generateCompletion = generateCompletion;
     }
 
-    public async IAsyncEnumerable<Chunk<string>> Handle(
-        GetCompletionInput request,
+    public async IAsyncEnumerable<GenerateCompletionResponse> Handle(
+        GenerateCompletionInput request,
         [EnumeratorCancellation] CancellationToken cancellationToken = default
     )
     {
-        _logger.LogTrace("Attempting to handle get completion request '{@request}'.", request);
+        _logger.LogTrace("Attempting to handle generate completion request '{@request}'.", request);
         cancellationToken.ThrowIfCancellationRequested();
 
         await foreach (var chunk in _generateCompletion.GenerateCompletionStream(request.Conversation,
                            cancellationToken))
         {
-            yield return new Chunk<string>(chunk);
+            yield return new GenerateCompletionResponse(chunk);
             cancellationToken.ThrowIfCancellationRequested();
         }
 
-        _logger.LogDebug("Successfully handled get completion request.");
+        _logger.LogDebug("Successfully handled generate completion request.");
     }
 }

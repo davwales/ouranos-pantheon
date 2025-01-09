@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging;
+using Ouranos.Pantheon.Service.Hermes.Application.Commands.Conversations.GenerateCompletion;
 using Ouranos.Pantheon.Service.Hermes.Application.Interfaces.Conversations;
-using Ouranos.Pantheon.Service.Hermes.Application.Queries.Conversations.GetCompletion;
 using Ouranos.Pantheon.Service.Hermes.Domain.Conversations;
 using Ouranos.Pantheon.Service.Hermes.Infra.OuranosMl.Requests;
 
@@ -62,8 +62,9 @@ public sealed class GenerateCompletion : IGenerateCompletion
         ]);
     }
 
-    private static Dictionary<string, string> GetConversationVariables(ConversationInput conversation) =>
-        new()
+    private static Dictionary<string, string> GetConversationVariables(ConversationInput conversation)
+    {
+        return new Dictionary<string, string>
         {
             { "{{user}}", conversation.User.Name },
             { "{{assistant}}", conversation.Assistant.Name },
@@ -72,6 +73,7 @@ public sealed class GenerateCompletion : IGenerateCompletion
             { "{{user_details}}", GetCharacterDescription(conversation.User) },
             { "{{assistant_details}}", GetCharacterDescription(conversation.Assistant) }
         };
+    }
 
     private static string GetCharacterDescription(CharacterInput character)
     {
