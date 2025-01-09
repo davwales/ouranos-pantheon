@@ -16,7 +16,7 @@ export type Scalars = {
   Float: { input: number; output: number; }
   /** The `DateTime` scalar represents an ISO-8601 compliant date time type. */
   DateTime: { input: any; output: any; }
-  /** The built-in `Decimal` scalar type. */
+  /** The `Decimal` scalar type represents a decimal floating-point number. */
   Decimal: { input: any; output: any; }
 };
 
@@ -103,6 +103,13 @@ export type CharacterFilterInput = {
   updatedAt?: InputMaybe<DateTimeOperationFilterInput>;
 };
 
+export type CharacterInput = {
+  age: Scalars['Int']['input'];
+  details: Array<CharacterDetailInput>;
+  id: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+};
+
 export type CharacterSortInput = {
   age?: InputMaybe<SortEnumType>;
   createdAt?: InputMaybe<SortEnumType>;
@@ -113,8 +120,14 @@ export type CharacterSortInput = {
 
 export type CompletionResponse = {
   __typename?: 'CompletionResponse';
-  content: Array<GetCompletionResponse>;
-  role: Role;
+  chunks: Array<GenerateCompletionResponse>;
+};
+
+export type ConversationInput = {
+  assistant: CharacterInput;
+  context: Scalars['String']['input'];
+  messages: Array<MessageInput>;
+  user: CharacterInput;
 };
 
 export type CreateCharacterInput = {
@@ -135,7 +148,7 @@ export type CreateMarketInput = {
 
 export type CreateMarketPayload = {
   __typename?: 'CreateMarketPayload';
-  string?: Maybe<Scalars['String']['output']>;
+  idResponseOfMarket?: Maybe<IdResponseOfMarket>;
 };
 
 export type DateTimeOperationFilterInput = {
@@ -185,7 +198,7 @@ export type DeleteMarketInput = {
 
 export type DeleteMarketPayload = {
   __typename?: 'DeleteMarketPayload';
-  string?: Maybe<Scalars['String']['output']>;
+  idResponseOfMarket?: Maybe<IdResponseOfMarket>;
 };
 
 export type FlatTax = {
@@ -211,13 +224,18 @@ export type FlatTaxSortInput = {
   rate?: InputMaybe<SortEnumType>;
 };
 
-export type GetCompletionInput = {
-  messages: Array<MessageInput>;
+export type GenerateCompletionInput = {
+  conversation: ConversationInput;
 };
 
-export type GetCompletionResponse = {
-  __typename?: 'GetCompletionResponse';
-  chunk: Scalars['String']['output'];
+export type GenerateCompletionPayload = {
+  __typename?: 'GenerateCompletionPayload';
+  completionResponse?: Maybe<CompletionResponse>;
+};
+
+export type GenerateCompletionResponse = {
+  __typename?: 'GenerateCompletionResponse';
+  content: Scalars['String']['output'];
 };
 
 export type GetMarketTradesInput = {
@@ -332,6 +350,11 @@ export type IdOfSymbolFilterInput = {
 
 export type IdResponseOfCharacter = {
   __typename?: 'IdResponseOfCharacter';
+  id: Scalars['String']['output'];
+};
+
+export type IdResponseOfMarket = {
+  __typename?: 'IdResponseOfMarket';
   id: Scalars['String']['output'];
 };
 
@@ -464,6 +487,14 @@ export type Mutation = {
    */
   deleteMarket: DeleteMarketPayload;
   /**
+   * Generates a completion given some conversation input.
+   *
+   *
+   * **Returns:**
+   * Generated completion response.
+   */
+  generateCompletion: GenerateCompletionPayload;
+  /**
    * Updates a character.
    *
    *
@@ -499,6 +530,11 @@ export type MutationDeleteCharacterArgs = {
 
 export type MutationDeleteMarketArgs = {
   input: DeleteMarketInput;
+};
+
+
+export type MutationGenerateCompletionArgs = {
+  input: GenerateCompletionInput;
 };
 
 
@@ -558,14 +594,6 @@ export type Query = {
    * The character matching the given query.
    */
   character: Character;
-  /**
-   * Generates a completion given some conversation input.
-   *
-   *
-   * **Returns:**
-   * Generated completion stream and accompanying role.
-   */
-  completion: CompletionResponse;
   /**
    * Retrieves a market by it's identifier.
    *
@@ -629,11 +657,6 @@ export type QueryAllSymbolsArgs = {
 
 export type QueryCharacterArgs = {
   characterId: Scalars['String']['input'];
-};
-
-
-export type QueryCompletionArgs = {
-  input: GetCompletionInput;
 };
 
 
@@ -762,7 +785,7 @@ export type UpdateMarketInput = {
 
 export type UpdateMarketPayload = {
   __typename?: 'UpdateMarketPayload';
-  string?: Maybe<Scalars['String']['output']>;
+  idResponseOfMarket?: Maybe<IdResponseOfMarket>;
 };
 
 export type DeleteCharacterMutationVariables = Exact<{
@@ -786,10 +809,22 @@ export type UpdateCharacterMutationVariables = Exact<{
 
 export type UpdateCharacterMutation = { __typename?: 'Mutation', updateCharacter: { __typename?: 'UpdateCharacterPayload', idResponseOfCharacter?: { __typename?: 'IdResponseOfCharacter', id: string } | null } };
 
+export type GenerateCompletionMutationVariables = Exact<{
+  input: GenerateCompletionInput;
+}>;
+
+
+export type GenerateCompletionMutation = { __typename?: 'Mutation', generateCompletion: { __typename?: 'GenerateCompletionPayload', completionResponse?: { __typename?: 'CompletionResponse', chunks: Array<{ __typename?: 'GenerateCompletionResponse', content: string }> } | null } };
+
 export type CharacterListQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type CharacterListQuery = { __typename?: 'Query', allCharacters: Array<{ __typename?: 'Character', id: string, name: string, age: number }> };
+
+export type DetailedCharacterListQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type DetailedCharacterListQuery = { __typename?: 'Query', allCharacters: Array<{ __typename?: 'Character', id: string, name: string, age: number, details: Array<{ __typename?: 'CharacterDetail', key: string, value: string }> }> };
 
 export type GetCharacterQueryVariables = Exact<{
   characterId: Scalars['String']['input'];
@@ -829,7 +864,9 @@ export type GetSymbolDetailsQuery = { __typename?: 'Query', symbol: { __typename
 export const DeleteCharacterDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"deleteCharacter"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"DeleteCharacterInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteCharacter"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"idResponseOfCharacter"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]} as unknown as DocumentNode<DeleteCharacterMutation, DeleteCharacterMutationVariables>;
 export const CreateCharacterDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"createCharacter"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateCharacterInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createCharacter"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"idResponseOfCharacter"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]} as unknown as DocumentNode<CreateCharacterMutation, CreateCharacterMutationVariables>;
 export const UpdateCharacterDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"updateCharacter"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateCharacterInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateCharacter"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"idResponseOfCharacter"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]} as unknown as DocumentNode<UpdateCharacterMutation, UpdateCharacterMutationVariables>;
+export const GenerateCompletionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"generateCompletion"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"GenerateCompletionInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"generateCompletion"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"completionResponse"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"chunks"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"content"}}]}}]}}]}}]}}]} as unknown as DocumentNode<GenerateCompletionMutation, GenerateCompletionMutationVariables>;
 export const CharacterListDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"characterList"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"allCharacters"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"age"}}]}}]}}]} as unknown as DocumentNode<CharacterListQuery, CharacterListQueryVariables>;
+export const DetailedCharacterListDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"detailedCharacterList"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"allCharacters"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"age"}},{"kind":"Field","name":{"kind":"Name","value":"details"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"key"}},{"kind":"Field","name":{"kind":"Name","value":"value"}}]}}]}}]}}]} as unknown as DocumentNode<DetailedCharacterListQuery, DetailedCharacterListQueryVariables>;
 export const GetCharacterDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getCharacter"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"characterId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"character"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"characterId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"characterId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"age"}},{"kind":"Field","name":{"kind":"Name","value":"details"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"key"}},{"kind":"Field","name":{"kind":"Name","value":"value"}}]}}]}}]}}]} as unknown as DocumentNode<GetCharacterQuery, GetCharacterQueryVariables>;
 export const GetMarketsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetMarkets"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"allMarkets"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"nodes"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]}}]} as unknown as DocumentNode<GetMarketsQuery, GetMarketsQueryVariables>;
 export const GetMarketTradesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetMarketTrades"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"GetMarketTradesInput"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"where"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"GetMarketTradesResponseFilterInput"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"order"}},"type":{"kind":"ListType","type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"GetMarketTradesResponseSortInput"}}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"first"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"after"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"last"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"before"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"marketTrades"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}},{"kind":"Argument","name":{"kind":"Name","value":"where"},"value":{"kind":"Variable","name":{"kind":"Name","value":"where"}}},{"kind":"Argument","name":{"kind":"Name","value":"order"},"value":{"kind":"Variable","name":{"kind":"Name","value":"order"}}},{"kind":"Argument","name":{"kind":"Name","value":"first"},"value":{"kind":"Variable","name":{"kind":"Name","value":"first"}}},{"kind":"Argument","name":{"kind":"Name","value":"after"},"value":{"kind":"Variable","name":{"kind":"Name","value":"after"}}},{"kind":"Argument","name":{"kind":"Name","value":"last"},"value":{"kind":"Variable","name":{"kind":"Name","value":"last"}}},{"kind":"Argument","name":{"kind":"Name","value":"before"},"value":{"kind":"Variable","name":{"kind":"Name","value":"before"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"totalCount"}},{"kind":"Field","name":{"kind":"Name","value":"nodes"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"averagePrice"}},{"kind":"Field","name":{"kind":"Name","value":"limit"}},{"kind":"Field","name":{"kind":"Name","value":"margin"}},{"kind":"Field","name":{"kind":"Name","value":"maxPrice"}},{"kind":"Field","name":{"kind":"Name","value":"minPrice"}},{"kind":"Field","name":{"kind":"Name","value":"numTransactions"}},{"kind":"Field","name":{"kind":"Name","value":"roi"}},{"kind":"Field","name":{"kind":"Name","value":"symbolCode"}},{"kind":"Field","name":{"kind":"Name","value":"symbolId"}},{"kind":"Field","name":{"kind":"Name","value":"symbolName"}},{"kind":"Field","name":{"kind":"Name","value":"symbolSubcode"}},{"kind":"Field","name":{"kind":"Name","value":"totalGain"}},{"kind":"Field","name":{"kind":"Name","value":"totalSpent"}},{"kind":"Field","name":{"kind":"Name","value":"totalVolume"}}]}},{"kind":"Field","name":{"kind":"Name","value":"pageInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"endCursor"}},{"kind":"Field","name":{"kind":"Name","value":"hasNextPage"}},{"kind":"Field","name":{"kind":"Name","value":"hasPreviousPage"}},{"kind":"Field","name":{"kind":"Name","value":"startCursor"}}]}}]}}]}}]} as unknown as DocumentNode<GetMarketTradesQuery, GetMarketTradesQueryVariables>;

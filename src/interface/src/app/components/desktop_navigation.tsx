@@ -1,10 +1,10 @@
 // components/DesktopNavigation.tsx
 "use client";
 
-import React, { useState } from 'react';
+import { ExpandMore } from '@mui/icons-material';
 import { Box, Button, Menu, MenuItem } from '@mui/material';
 import Link from 'next/link';
-import { ExpandMore } from '@mui/icons-material';
+import React, { useState } from 'react';
 
 export default function DesktopNavigation() {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -46,7 +46,7 @@ export default function DesktopNavigation() {
                 </Link>
                 <Link href="/hermes/characters" passHref legacyBehavior>
                     <MenuItem onClick={handleMenuClose} component="a">
-                        Manage Character
+                        Manage Characters
                     </MenuItem>
                 </Link>
             </Menu>

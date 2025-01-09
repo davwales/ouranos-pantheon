@@ -1,19 +1,19 @@
 // components/MobileNavigation.tsx
 "use client";
 
-import React, { useState } from 'react';
+import { ExpandLess, ExpandMore } from '@mui/icons-material';
+import MenuIcon from '@mui/icons-material/Menu';
 import {
+    Box,
+    Collapse,
     Drawer,
     IconButton,
     List,
-    ListItemText,
     ListItemButton,
-    Collapse,
-    Box,
+    ListItemText,
 } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import Link from 'next/link';
+import React, { useState } from 'react';
 
 export default function MobileNavigation() {
     const [drawerOpen, setDrawerOpen] = useState(false);
@@ -83,7 +83,7 @@ export default function MobileNavigation() {
                                         onClick={toggleDrawer(false)}
                                         sx={{ pl: 4 }}
                                     >
-                                        <ListItemText primary="Manage Character" />
+                                        <ListItemText primary="Manage Characters" />
                                     </ListItemButton>
                                 </Link>
                             </List>

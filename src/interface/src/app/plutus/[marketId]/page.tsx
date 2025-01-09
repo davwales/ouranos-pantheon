@@ -1,18 +1,18 @@
 "use client";
 
+import { OuranosDataGrid } from "@/app/components/ouranos_data_grid";
+import OuranosGridModel from "@/app/models/ouranos_grid_model";
+import OuranosPaginationInfo from "@/app/models/ouranos_pagination_info";
+import { mapFilter, mapOrder, mapPagination } from "@/app/utilities/graphql_mappers";
+import { GetMarketTradesResponse } from "@/gql/graphql";
+import { Box, Button } from "@mui/material";
+import { useQuery } from "@urql/next";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { GetMarketTradesResponse } from "@/gql/graphql";
-import OuranosPaginationInfo from "@/app/models/ouranos_pagination_info";
-import OuranosGridModel from "@/app/models/ouranos_grid_model";
-import { mapFilter, mapOrder, mapPagination } from "@/app/utilities/graphql_mappers";
-import { getMarketTradesQuery } from "../queries";
-import { plutusColumns } from "../constants/plutus_columns";
-import { OuranosDataGrid } from "@/app/components/ouranos_data_grid";
-import { Box, Button } from "@mui/material";
 import TimeFrameSelection from "../components/time_frame_selection";
+import { plutusColumns } from "../constants/plutus_columns";
 import { PlutusState, usePlutusStore } from "../constants/plutus_store";
-import { useQuery } from "@urql/next";
+import { getMarketTradesQuery } from "../queries";
 
 export default function MarketDetail() {
     const router = useRouter();

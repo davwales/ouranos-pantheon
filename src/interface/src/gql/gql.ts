@@ -16,7 +16,9 @@ const documents = {
     "\n    mutation deleteCharacter($input: DeleteCharacterInput!) {\n        deleteCharacter(input: $input) {\n            idResponseOfCharacter {\n                id\n            }\n        }\n    } \n": types.DeleteCharacterDocument,
     "\n    mutation createCharacter($input: CreateCharacterInput!) {\n        createCharacter(input: $input) {\n            idResponseOfCharacter {\n                id\n            }\n        }\n    } \n": types.CreateCharacterDocument,
     "\n    mutation updateCharacter($input: UpdateCharacterInput!) {\n        updateCharacter(input: $input) {\n            idResponseOfCharacter {\n                id\n            }\n        }\n    } \n": types.UpdateCharacterDocument,
+    "\n    mutation generateCompletion($input: GenerateCompletionInput!) {\n        generateCompletion(input: $input) {\n            completionResponse {\n                chunks {\n                    content\n                }\n            }\n        }\n    }\n": types.GenerateCompletionDocument,
     "\n    query characterList {\n        allCharacters {\n            id\n            name\n            age\n        }\n    }\n": types.CharacterListDocument,
+    "\n    query detailedCharacterList {\n        allCharacters {\n            id\n            name\n            age\n            details {\n                key\n                value\n            }\n        }\n    }\n": types.DetailedCharacterListDocument,
     "\n    query getCharacter($characterId: String!) {\n        character(characterId: $characterId) {\n            id\n            name\n            age\n            details {\n                key\n                value\n            }\n        }\n    }\n": types.GetCharacterDocument,
     "\n    query GetMarkets {\n        allMarkets {\n            nodes {\n                id\n                name\n            }\n        }\n    }\n": types.GetMarketsDocument,
     "\n    query GetMarketTrades($input: GetMarketTradesInput!, $where: GetMarketTradesResponseFilterInput, $order: [GetMarketTradesResponseSortInput!], $first: Int, $after: String, $last: Int, $before: String) {\n        marketTrades(input: $input, where: $where, order: $order, first: $first, after: $after, last: $last, before: $before) {\n            totalCount\n            nodes {\n                averagePrice\n                limit\n                margin\n                maxPrice\n                minPrice\n                numTransactions\n                roi\n                symbolCode\n                symbolId\n                symbolName\n                symbolSubcode\n                totalGain\n                totalSpent\n                totalVolume\n            }\n            pageInfo {\n                endCursor\n                hasNextPage\n                hasPreviousPage\n                startCursor\n            }\n        }\n    }\n": types.GetMarketTradesDocument,
@@ -52,7 +54,15 @@ export function graphql(source: "\n    mutation updateCharacter($input: UpdateCh
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n    mutation generateCompletion($input: GenerateCompletionInput!) {\n        generateCompletion(input: $input) {\n            completionResponse {\n                chunks {\n                    content\n                }\n            }\n        }\n    }\n"): (typeof documents)["\n    mutation generateCompletion($input: GenerateCompletionInput!) {\n        generateCompletion(input: $input) {\n            completionResponse {\n                chunks {\n                    content\n                }\n            }\n        }\n    }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n    query characterList {\n        allCharacters {\n            id\n            name\n            age\n        }\n    }\n"): (typeof documents)["\n    query characterList {\n        allCharacters {\n            id\n            name\n            age\n        }\n    }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n    query detailedCharacterList {\n        allCharacters {\n            id\n            name\n            age\n            details {\n                key\n                value\n            }\n        }\n    }\n"): (typeof documents)["\n    query detailedCharacterList {\n        allCharacters {\n            id\n            name\n            age\n            details {\n                key\n                value\n            }\n        }\n    }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

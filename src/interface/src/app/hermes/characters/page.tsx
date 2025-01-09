@@ -1,10 +1,9 @@
 "use client";
 
+import LinkCard from "@/app/components/link_card";
+import { CardContent, Grid2, Typography } from "@mui/material";
 import { useQuery } from "@urql/next";
 import { getCharacterListQuery } from "../queries";
-import LinkCard from "@/app/components/link_card";
-import { Box, Button, CardContent, Grid2, Typography } from "@mui/material";
-import Link from "next/link";
 
 export default function CharactersPage() {
     const [{ data, fetching }] = useQuery({ query: getCharacterListQuery })

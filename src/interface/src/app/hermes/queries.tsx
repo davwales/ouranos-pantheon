@@ -10,6 +10,20 @@ export const getCharacterListQuery = graphql(`
     }
 `);
 
+export const getDetailedCharacterListQuery = graphql(`
+    query detailedCharacterList {
+        allCharacters {
+            id
+            name
+            age
+            details {
+                key
+                value
+            }
+        }
+    }
+`);
+
 export const getCharacterQuery = graphql(`
     query getCharacter($characterId: String!) {
         character(characterId: $characterId) {
