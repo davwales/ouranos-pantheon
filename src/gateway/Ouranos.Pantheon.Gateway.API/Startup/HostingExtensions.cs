@@ -19,6 +19,11 @@ public static class HostingExtensions
                     o.DefaultQueryDependencyInjectionScope = DependencyInjectionScope.Request;
                     o.DefaultMutationDependencyInjectionScope = DependencyInjectionScope.Request;
                 })
+                .ModifyRequestOptions(o =>
+                {
+                    o.ExecutionTimeout =
+                        TimeSpan.FromMinutes(2); // TODO: Remove this once streaming completions is properly working.
+                })
                 .ModifyCostOptions(o => o.EnforceCostLimits = false) // TODO - Refactor queries for lower cost
                 .AddHermesSchema()
                 .AddPlutusSchema()
