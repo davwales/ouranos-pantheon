@@ -14,5 +14,7 @@ public interface ICrudRepository<T> where T : BaseEntity<Id<T>>
 
     Task Delete(Id<T> id, CancellationToken cancellationToken = default);
 
+    Task Upsert(T entity, CancellationToken cancellationToken = default);
+
     IQueryable<T> AsQueryable(CancellationToken cancellationToken = default);
 }

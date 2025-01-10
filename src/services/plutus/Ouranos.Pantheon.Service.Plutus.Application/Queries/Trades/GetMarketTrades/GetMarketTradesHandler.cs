@@ -32,8 +32,8 @@ public sealed class GetMarketTradesHandler : IRequestHandler<GetMarketTradesInpu
         _logger.LogTrace("Attempting to handle symbol statistics request '{@request}'.", request);
         cancellationToken.ThrowIfCancellationRequested();
 
-        DateTime? since = request.Seconds.HasValue
-            ? DateTime.UtcNow - TimeSpan.FromSeconds(request.Seconds.Value)
+        DateTimeOffset? since = request.Seconds.HasValue
+            ? DateTimeOffset.UtcNow - TimeSpan.FromSeconds(request.Seconds.Value)
             : null;
 
         var query = _tradeRepository.AsQueryable(cancellationToken)

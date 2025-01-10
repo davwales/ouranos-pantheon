@@ -67,7 +67,9 @@ public sealed class CrudRepository<T> : ICrudRepository<T> where T : BaseEntity<
         var result = await collection.ReplaceOneAsync(filter, entity, new ReplaceOptions(), cancellationToken);
 
         if (result.ModifiedCount == 0)
+        {
             throw new KeyNotFoundException($"Could not find {typeof(T).Name} '{entity.Id}' to update.");
+        }
 
         _logger.LogDebug("Successfully updated {type} '{id}'.", typeof(T).Name, entity.Id);
     }
@@ -82,9 +84,26 @@ public sealed class CrudRepository<T> : ICrudRepository<T> where T : BaseEntity<
         var result = await collection.DeleteOneAsync(filter, cancellationToken);
 
         if (result.DeletedCount == 0)
+        {
             throw new KeyNotFoundException($"Could not find {typeof(T).Name} '{id}' to delete.");
+        }
 
         _logger.LogDebug("Successfully deleted {type} '{id}'.", typeof(T).Name, id);
+    }
+
+    public async Task Upsert(T entity, CancellationToken cancellationToken = default)
+    {
+        _logger.LogTrace("Attempting to upsert {type} '{@entity}'.", typeof(T).Name, entity);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var collection = _mongoRepository.GetCollection();
+        var filter = Builders<T>.Filter.Eq(x => x.Id, entity.Id);
+        await collection.ReplaceOneAsync(filter, entity, new ReplaceOptions
+        {
+            IsUpsert = true
+        }, cancellationToken);
+
+        _logger.LogDebug("Successfully performed upsert for {type} '{id}'.", typeof(T).Name, entity.Id);
     }
 
     public IQueryable<T> AsQueryable(CancellationToken cancellationToken = default)

@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\..\core\Ouranos.Pantheon.Core.Infra.RabbitMq\Ouranos.Pantheon.Core.Infra.RabbitMq.csproj"/>
+    </ItemGroup>
+
+</Project>

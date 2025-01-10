@@ -12,7 +12,9 @@ public sealed class QueryExecutor : IQueryExecutor
     )
     {
         if (queryable is not IMongoQueryable<T> mongoQueryable)
+        {
             throw new InvalidOperationException("Cannot perform CountAsync on a non-Mongo queryable.");
+        }
 
         return mongoQueryable.CountAsync(cancellationToken);
     }
@@ -23,7 +25,9 @@ public sealed class QueryExecutor : IQueryExecutor
     )
     {
         if (queryable is not IMongoQueryable<T> mongoQueryable)
+        {
             throw new InvalidOperationException("Cannot perform FirstOrDefaultAsync on a non-Mongo queryable.");
+        }
 
         return mongoQueryable.FirstOrDefaultAsync(cancellationToken);
     }
@@ -34,7 +38,9 @@ public sealed class QueryExecutor : IQueryExecutor
     )
     {
         if (queryable is not IMongoQueryable<T> mongoQueryable)
+        {
             throw new InvalidOperationException("Cannot perform ToListAsync on a non-Mongo queryable.");
+        }
 
         return mongoQueryable.ToListAsync(cancellationToken);
     }

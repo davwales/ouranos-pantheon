@@ -13,12 +13,12 @@ using Ouranos.Pantheon.Core.Infra.Mongo.Serializers;
 
 namespace Ouranos.Pantheon.Core.Infra.Mongo;
 
-public static class MongoExtensions
+public static class MongoModule
 {
-    public static IServiceCollection AddMongo(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddCoreMongo(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<MongoOptions>(configuration.GetSection(MongoOptions.SectionName));
-        
+
         services.AddSingleton<IMongoClient>(sp =>
         {
             var options = sp.GetRequiredService<IOptions<MongoOptions>>();
@@ -51,6 +51,7 @@ public static class MongoExtensions
 
         ConventionRegistry.Register("Custom Conventions", conventions, _ => true);
         BsonSerializer.RegisterGenericSerializerDefinition(typeof(Id<>), typeof(IdSerializer<>));
+        BsonSerializer.RegisterSerializer(typeof(DateTimeOffset), new DateTimeOffsetSerializer(BsonType.DateTime));
         BsonSerializer.RegisterSerializer(typeof(decimal), new DecimalSerializer(BsonType.Decimal128));
     }
 }

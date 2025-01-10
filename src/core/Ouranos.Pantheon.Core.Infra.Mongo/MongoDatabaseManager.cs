@@ -6,13 +6,12 @@ namespace Ouranos.Pantheon.Core.Infra.Mongo;
 
 public sealed class MongoDatabaseManager : IMongoDatabaseManager
 {
-    private readonly IMongoClient _client;
-    private readonly MongoOptions _options;
-    private readonly Dictionary<Type, IMongoDatabase> _databases = [];
-    private readonly Dictionary<Type, string> _typeMappings = [];
-    private readonly Dictionary<Assembly, string> _assemblyMappings = [];
-
     private const string DefaultDatabase = "ouranos";
+    private readonly Dictionary<Assembly, string> _assemblyMappings = [];
+    private readonly IMongoClient _client;
+    private readonly Dictionary<Type, IMongoDatabase> _databases = [];
+    private readonly MongoOptions _options;
+    private readonly Dictionary<Type, string> _typeMappings = [];
 
     public MongoDatabaseManager(
         IMongoClient client,
@@ -21,15 +20,15 @@ public sealed class MongoDatabaseManager : IMongoDatabaseManager
     {
         ArgumentNullException.ThrowIfNull(client);
         ArgumentNullException.ThrowIfNull(options?.Value);
-        
+
         _client = client;
         _options = options.Value;
-        
+
         var assemblies = AppDomain.CurrentDomain.GetAssemblies();
         SetupAssemblyMappings(assemblies);
         SetupTypeMappings(assemblies);
     }
-    
+
     public IMongoDatabase GetDatabase<T>() where T : class
     {
         var type = typeof(T);
@@ -49,21 +48,21 @@ public sealed class MongoDatabaseManager : IMongoDatabaseManager
         {
             return _client.GetDatabase(typeDatabase);
         }
-        
+
         if (_assemblyMappings.TryGetValue(type.Assembly, out var assemblyDatabase))
         {
             return _client.GetDatabase(assemblyDatabase);
         }
-        
+
         return _client.GetDatabase(DefaultDatabase);
     }
-    
+
     private void SetupAssemblyMappings(Assembly[] assemblies)
     {
         foreach (var (assemblyName, dbName) in _options.AssemblyDatabases)
         {
             var assembly = assemblies.FirstOrDefault(a => a.GetName().Name == assemblyName);
-            
+
             if (assembly is not null)
             {
                 _assemblyMappings[assembly] = dbName;
@@ -77,7 +76,7 @@ public sealed class MongoDatabaseManager : IMongoDatabaseManager
         foreach (var (typeName, dbName) in _options.TypeDatabases)
         {
             var type = assemblyTypes.FirstOrDefault(t => t.FullName == typeName);
-            
+
             if (type is not null)
             {
                 _typeMappings[type] = dbName;

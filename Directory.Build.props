@@ -12,10 +12,12 @@
     </ItemGroup>
 
     <PropertyGroup>
+        <MassTransitRabbitMQVersion>8.3.*</MassTransitRabbitMQVersion>
         <MediatrVersion>12.4.*</MediatrVersion>
         <MicrosoftConfigurationBinderVersion>8.0.*</MicrosoftConfigurationBinderVersion>
         <MicrosoftExtensionsConfigurationVersion>8.0.*</MicrosoftExtensionsConfigurationVersion>
         <MicrosoftExtensionsDependencyInjectionVersion>8.0.*</MicrosoftExtensionsDependencyInjectionVersion>
+        <MicrosoftExtensionsHostingVersion>8.0.*</MicrosoftExtensionsHostingVersion>
         <MicrosoftExtensionsHttpVersion>8.0.*</MicrosoftExtensionsHttpVersion>
         <MicrosoftExtensionsOptionsConfigurationExtensionsVersion>8.0.*</MicrosoftExtensionsOptionsConfigurationExtensionsVersion>
         <MongoDriverVersion>2.27.*</MongoDriverVersion>

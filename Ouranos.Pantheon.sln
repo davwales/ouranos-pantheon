@@ -77,6 +77,26 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "automation", "automation", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Core.Infra.OuranosMl", "src\core\Ouranos.Pantheon.Core.Infra.OuranosMl\Ouranos.Pantheon.Core.Infra.OuranosMl.csproj", "{FAD49603-31FE-4551-8FF7-538768E20D5B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Core.Infra.RabbitMq", "src\core\Ouranos.Pantheon.Core.Infra.RabbitMq\Ouranos.Pantheon.Core.Infra.RabbitMq.csproj", "{E3E76A67-F5A8-410B-B92C-1CCD54336070}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "consumer", "consumer", "{7AA6C4E7-1F7A-4AAF-B70B-730A237D1F24}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.DataLoader.Plutus.Domain", "src\data-loaders\plutus\Ouranos.Pantheon.DataLoader.Plutus.Domain\Ouranos.Pantheon.DataLoader.Plutus.Domain.csproj", "{B5290E6D-0B48-4AE3-9E5D-5E87DD6F850A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.DataLoader.Plutus.Consumer", "src\data-loaders\plutus\Ouranos.Pantheon.DataLoader.Plutus.Consumer\Ouranos.Pantheon.DataLoader.Plutus.Consumer.csproj", "{8FBCE24E-974F-41BC-B780-3C4F40473FC5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.DataLoader.Plutus.Osrs.Worker", "src\data-loaders\plutus\Ouranos.Pantheon.DataLoader.Plutus.Osrs.Worker\Ouranos.Pantheon.DataLoader.Plutus.Osrs.Worker.csproj", "{4D1625DA-23B9-4E93-AD08-20CE2E41F839}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.DataLoader.Plutus.Osrs.Infra.OsrsWiki", "src\data-loaders\plutus\osrs\Ouranos.Pantheon.DataLoader.Plutus.Osrs.Infra.OsrsWiki\Ouranos.Pantheon.DataLoader.Plutus.Osrs.Infra.OsrsWiki.csproj", "{A10F7EC0-E6F6-4F3A-9135-9212C3EEA007}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.DataLoader.Plutus.Osrs.Application", "src\data-loaders\plutus\osrs\Ouranos.Pantheon.DataLoader.Plutus.Osrs.Application\Ouranos.Pantheon.DataLoader.Plutus.Osrs.Application.csproj", "{3C55CE99-A32F-4EDF-A0DA-82C23556A3EA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.DataLoader.Plutus.Osrs.Infra.RabbitMq", "src\data-loaders\plutus\osrs\Ouranos.Pantheon.DataLoader.Plutus.Osrs.Infra.RabbitMq\Ouranos.Pantheon.DataLoader.Plutus.Osrs.Infra.RabbitMq.csproj", "{823DAA83-EFF6-415B-B00A-B8DC0307D176}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.DataLoader.Plutus.Consumer.Infra.RabbitMq", "src\data-loaders\plutus\consumer\Ouranos.Pantheon.DataLoader.Plutus.Consumer.Infra.RabbitMq\Ouranos.Pantheon.DataLoader.Plutus.Consumer.Infra.RabbitMq.csproj", "{C699F84B-231B-4E03-8F4D-F73FFCDE6F39}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.DataLoader.Plutus.Consumer.Application", "src\data-loaders\plutus\consumer\Ouranos.Pantheon.DataLoader.Plutus.Consumer.Application\Ouranos.Pantheon.DataLoader.Plutus.Consumer.Application.csproj", "{D63BF481-91BF-425D-BACF-6104956501AA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -143,6 +163,42 @@ Global
 		{FAD49603-31FE-4551-8FF7-538768E20D5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FAD49603-31FE-4551-8FF7-538768E20D5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FAD49603-31FE-4551-8FF7-538768E20D5B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3E76A67-F5A8-410B-B92C-1CCD54336070}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3E76A67-F5A8-410B-B92C-1CCD54336070}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3E76A67-F5A8-410B-B92C-1CCD54336070}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3E76A67-F5A8-410B-B92C-1CCD54336070}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B5290E6D-0B48-4AE3-9E5D-5E87DD6F850A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B5290E6D-0B48-4AE3-9E5D-5E87DD6F850A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B5290E6D-0B48-4AE3-9E5D-5E87DD6F850A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B5290E6D-0B48-4AE3-9E5D-5E87DD6F850A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8FBCE24E-974F-41BC-B780-3C4F40473FC5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8FBCE24E-974F-41BC-B780-3C4F40473FC5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8FBCE24E-974F-41BC-B780-3C4F40473FC5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8FBCE24E-974F-41BC-B780-3C4F40473FC5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D1625DA-23B9-4E93-AD08-20CE2E41F839}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D1625DA-23B9-4E93-AD08-20CE2E41F839}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D1625DA-23B9-4E93-AD08-20CE2E41F839}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D1625DA-23B9-4E93-AD08-20CE2E41F839}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A10F7EC0-E6F6-4F3A-9135-9212C3EEA007}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A10F7EC0-E6F6-4F3A-9135-9212C3EEA007}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A10F7EC0-E6F6-4F3A-9135-9212C3EEA007}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A10F7EC0-E6F6-4F3A-9135-9212C3EEA007}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3C55CE99-A32F-4EDF-A0DA-82C23556A3EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C55CE99-A32F-4EDF-A0DA-82C23556A3EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C55CE99-A32F-4EDF-A0DA-82C23556A3EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C55CE99-A32F-4EDF-A0DA-82C23556A3EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{823DAA83-EFF6-415B-B00A-B8DC0307D176}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{823DAA83-EFF6-415B-B00A-B8DC0307D176}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{823DAA83-EFF6-415B-B00A-B8DC0307D176}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{823DAA83-EFF6-415B-B00A-B8DC0307D176}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C699F84B-231B-4E03-8F4D-F73FFCDE6F39}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C699F84B-231B-4E03-8F4D-F73FFCDE6F39}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C699F84B-231B-4E03-8F4D-F73FFCDE6F39}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C699F84B-231B-4E03-8F4D-F73FFCDE6F39}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D63BF481-91BF-425D-BACF-6104956501AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D63BF481-91BF-425D-BACF-6104956501AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D63BF481-91BF-425D-BACF-6104956501AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D63BF481-91BF-425D-BACF-6104956501AA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{128A9F3B-4D1A-4A93-A0EC-2426770786AC} = {24007BE7-AE6D-46D3-B37A-522FE3EF0D9C}
@@ -170,5 +226,15 @@ Global
 		{1A979A22-F861-4AF7-A575-864325889FB3} = {24007BE7-AE6D-46D3-B37A-522FE3EF0D9C}
 		{55B203CA-1BAD-485E-9828-C9B59187C013} = {1A979A22-F861-4AF7-A575-864325889FB3}
 		{FAD49603-31FE-4551-8FF7-538768E20D5B} = {128A9F3B-4D1A-4A93-A0EC-2426770786AC}
+		{E3E76A67-F5A8-410B-B92C-1CCD54336070} = {128A9F3B-4D1A-4A93-A0EC-2426770786AC}
+		{7AA6C4E7-1F7A-4AAF-B70B-730A237D1F24} = {DBE7C5CA-24A4-4277-8F46-8043EE66C167}
+		{B5290E6D-0B48-4AE3-9E5D-5E87DD6F850A} = {DBE7C5CA-24A4-4277-8F46-8043EE66C167}
+		{4D1625DA-23B9-4E93-AD08-20CE2E41F839} = {EFED1D76-F469-42BE-AB4A-2C99C48F786E}
+		{A10F7EC0-E6F6-4F3A-9135-9212C3EEA007} = {EFED1D76-F469-42BE-AB4A-2C99C48F786E}
+		{3C55CE99-A32F-4EDF-A0DA-82C23556A3EA} = {EFED1D76-F469-42BE-AB4A-2C99C48F786E}
+		{823DAA83-EFF6-415B-B00A-B8DC0307D176} = {EFED1D76-F469-42BE-AB4A-2C99C48F786E}
+		{C699F84B-231B-4E03-8F4D-F73FFCDE6F39} = {7AA6C4E7-1F7A-4AAF-B70B-730A237D1F24}
+		{8FBCE24E-974F-41BC-B780-3C4F40473FC5} = {7AA6C4E7-1F7A-4AAF-B70B-730A237D1F24}
+		{D63BF481-91BF-425D-BACF-6104956501AA} = {7AA6C4E7-1F7A-4AAF-B70B-730A237D1F24}
 	EndGlobalSection
 EndGlobal

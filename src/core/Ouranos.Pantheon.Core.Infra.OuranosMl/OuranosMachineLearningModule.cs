@@ -5,7 +5,7 @@ namespace Ouranos.Pantheon.Core.Infra.OuranosMl;
 
 public static class OuranosMachineLearningModule
 {
-    public static IServiceCollection AddOuranosMachineLearningModule(
+    public static IServiceCollection AddCoreOuranosMachineLearningModule(
         this IServiceCollection services,
         IConfiguration configuration
     )

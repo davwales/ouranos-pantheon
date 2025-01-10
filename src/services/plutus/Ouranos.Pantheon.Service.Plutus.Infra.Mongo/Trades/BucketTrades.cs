@@ -27,7 +27,9 @@ public sealed class BucketTrades : IBucketTrades
         cancellationToken.ThrowIfCancellationRequested();
 
         if (query is not IMongoQueryable<Trade> mongoQuery)
+        {
             throw new InvalidOperationException("The input query does not support Mongo bucketing!");
+        }
 
         var bucketQuery = mongoQuery.AppendStage<Trade, BucketDto>(new BsonDocument("$bucketAuto", new BsonDocument
         {

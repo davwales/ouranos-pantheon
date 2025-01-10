@@ -12,7 +12,7 @@ namespace Ouranos.Pantheon.Service.Plutus.API;
 public static class PlutusModule
 {
     public static IServiceCollection AddPlutusModule(
-        this IServiceCollection services, 
+        this IServiceCollection services,
         IConfiguration configuration
     )
     {

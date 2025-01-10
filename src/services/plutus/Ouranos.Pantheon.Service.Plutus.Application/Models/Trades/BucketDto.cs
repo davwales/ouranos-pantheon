@@ -5,7 +5,7 @@ namespace Ouranos.Pantheon.Service.Plutus.Application.Models.Trades;
 
 public sealed record BucketDto(
     Id<Symbol> SymbolId,
-    DateTime Date,
+    DateTimeOffset Date,
     decimal TotalSpent,
     decimal Volume,
     decimal MinPrice,

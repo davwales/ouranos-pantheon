@@ -7,7 +7,10 @@ public static class TaxesExtensions
 {
     public static List<BsonDocument> ToAggregateStages(this Taxes taxes, string salePriceField = "$max_price")
     {
-        if (taxes is null || taxes.Flat is null) return [new BsonDocument("$addFields", new BsonDocument("tax", 0.0))];
+        if (taxes is null || taxes.Flat is null)
+        {
+            return [new BsonDocument("$addFields", new BsonDocument("tax", 0.0))];
+        }
 
         var appliedTaxes = new List<string>();
         var calculatedTaxes = new BsonDocument();
@@ -19,7 +22,10 @@ public static class TaxesExtensions
             calculatedTaxes.Merge(flatTax, true);
         }
 
-        if (appliedTaxes.Count == 0) return [new BsonDocument("$addFields", new BsonDocument("tax", 0.0))];
+        if (appliedTaxes.Count == 0)
+        {
+            return [new BsonDocument("$addFields", new BsonDocument("tax", 0.0))];
+        }
 
         return
         [

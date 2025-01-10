@@ -25,7 +25,10 @@ public sealed class MarketMutations
         [Service] IMediator mediator,
         CreateMarketInput input,
         CancellationToken cancellationToken = default
-    ) => await mediator.Send(input, cancellationToken);
+    )
+    {
+        return await mediator.Send(input, cancellationToken);
+    }
 
     /// <summary>
     ///     Updates a market by it's identifier.
@@ -40,7 +43,10 @@ public sealed class MarketMutations
         [Service] IMediator mediator,
         UpdateMarketInput input,
         CancellationToken cancellationToken = default
-    ) => await mediator.Send(input, cancellationToken);
+    )
+    {
+        return await mediator.Send(input, cancellationToken);
+    }
 
     /// <summary>
     ///     Deletes a market by it's identifier.
@@ -55,5 +61,8 @@ public sealed class MarketMutations
         [Service] IMediator mediator,
         Id<Market> marketId,
         CancellationToken cancellationToken = default
-    ) => await mediator.Send(new DeleteEntityInput<Market>(marketId), cancellationToken);
+    )
+    {
+        return await mediator.Send(new DeleteEntityInput<Market>(marketId), cancellationToken);
+    }
 }

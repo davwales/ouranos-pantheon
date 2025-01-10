@@ -9,6 +9,6 @@ public sealed record TradeSymbolMetadata(
     Id<Market> MarketId,
     string Name,
     string Code,
-    string Subcode,
+    string? Subcode,
     AdditionalFields AdditionalFields
 );

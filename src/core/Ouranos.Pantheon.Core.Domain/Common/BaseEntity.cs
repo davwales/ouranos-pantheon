@@ -7,18 +7,18 @@ public abstract class BaseEntity<TId>
         ArgumentNullException.ThrowIfNull(id);
 
         Id = id;
-        CreatedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        CreatedAt = DateTimeOffset.UtcNow;
+        UpdatedAt = DateTimeOffset.UtcNow;
     }
 
     public TId Id { get; init; }
 
-    public DateTime CreatedAt { get; init; }
+    public DateTimeOffset CreatedAt { get; init; }
 
-    public DateTime UpdatedAt { get; protected set; }
+    public DateTimeOffset UpdatedAt { get; protected set; }
 
     protected void Update()
     {
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = DateTimeOffset.UtcNow;
     }
 }

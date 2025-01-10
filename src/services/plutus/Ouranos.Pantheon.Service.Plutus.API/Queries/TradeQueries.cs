@@ -24,7 +24,10 @@ public sealed class TradeQueries
         [Service] IMediator mediator,
         GetMarketTradesInput input,
         CancellationToken cancellationToken = default
-    ) => await mediator.Send(input, cancellationToken);
+    )
+    {
+        return await mediator.Send(input, cancellationToken);
+    }
 
     /// <summary>
     ///     Retrieves information about the trades for a given symbol.
@@ -41,5 +44,8 @@ public sealed class TradeQueries
         [Service] IMediator mediator,
         GetSymbolTradesInput input,
         CancellationToken cancellationToken = default
-    ) => await mediator.Send(input, cancellationToken);
+    )
+    {
+        return await mediator.Send(input, cancellationToken);
+    }
 }

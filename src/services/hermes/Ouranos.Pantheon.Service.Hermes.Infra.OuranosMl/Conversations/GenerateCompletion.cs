@@ -102,7 +102,11 @@ public sealed class GenerateCompletion : IGenerateCompletion
     private static string CleanContent(string content, Dictionary<string, string> variables)
     {
         var result = content;
-        foreach (var (variableKey, variableValue) in variables) result = result.Replace(variableKey, variableValue);
+        foreach (var (variableKey, variableValue) in variables)
+        {
+            result = result.Replace(variableKey, variableValue);
+        }
+
         return result;
     }
 }

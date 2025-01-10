@@ -11,7 +11,7 @@ public sealed class Symbol : BaseEntity<Id<Symbol>>
         string? subcode,
         string name,
         Id<Market> marketId,
-        Dictionary<string, object> additionalFields
+        Dictionary<string, object?> additionalFields
     ) : base(id)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(code);
@@ -34,5 +34,5 @@ public sealed class Symbol : BaseEntity<Id<Symbol>>
 
     public Id<Market> MarketId { get; init; }
 
-    public Dictionary<string, object> AdditionalFields { get; init; }
+    public Dictionary<string, object?> AdditionalFields { get; init; }
 }

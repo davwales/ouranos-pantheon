@@ -24,7 +24,10 @@ public sealed class MarketQueries
     public async Task<IQueryable<Market>> GetAllMarkets(
         [Service] IMediator mediator,
         CancellationToken cancellationToken = default
-    ) => await mediator.Send(new GetAllEntitiesInput<Market>(), cancellationToken);
+    )
+    {
+        return await mediator.Send(new GetAllEntitiesInput<Market>(), cancellationToken);
+    }
 
     /// <summary>
     ///     Retrieves a market by it's identifier.
@@ -39,5 +42,8 @@ public sealed class MarketQueries
         [Service] IMediator mediator,
         Id<Market> marketId,
         CancellationToken cancellationToken = default
-    ) => await mediator.Send(new GetEntityInput<Market>(marketId), cancellationToken);
+    )
+    {
+        return await mediator.Send(new GetEntityInput<Market>(marketId), cancellationToken);
+    }
 }

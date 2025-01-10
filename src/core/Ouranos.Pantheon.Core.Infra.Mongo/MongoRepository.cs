@@ -10,7 +10,7 @@ public sealed class MongoRepository<T> : IMongoRepository<T> where T : class
     public MongoRepository(IMongoDatabaseManager mongoDatabaseManager)
     {
         ArgumentNullException.ThrowIfNull(mongoDatabaseManager);
-        
+
         _mongoDatabase = mongoDatabaseManager.GetDatabase<T>();
     }
 

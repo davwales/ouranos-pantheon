@@ -26,8 +26,8 @@ public static class CoreExtensions
 
         return services
             .AddSerilog()
-            .AddMongo(configuration)
-            .AddOuranosMachineLearningModule(configuration)
+            .AddCoreMongo(configuration)
+            .AddCoreOuranosMachineLearningModule(configuration)
             .AddDefaultMediatrHandlers();
     }
 

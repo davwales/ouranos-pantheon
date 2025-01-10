@@ -65,7 +65,10 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
             var chunk = Encoding.UTF8.GetString(buffer, 0, bytesRead);
             _logger.LogTrace("Read chunk: {Chunk}", chunk);
 
-            if (!string.IsNullOrWhiteSpace(chunk)) yield return chunk;
+            if (!string.IsNullOrWhiteSpace(chunk))
+            {
+                yield return chunk;
+            }
         }
 
         _logger.LogDebug("Successfully generated completion using Ouranos ML.");

@@ -26,7 +26,10 @@ public sealed class SymbolQueries
     public async Task<IQueryable<Symbol>> GetAllSymbols(
         [Service] IMediator mediator,
         CancellationToken cancellationToken = default
-    ) => await mediator.Send(new GetAllEntitiesInput<Symbol>(), cancellationToken);
+    )
+    {
+        return await mediator.Send(new GetAllEntitiesInput<Symbol>(), cancellationToken);
+    }
 
     /// <summary>
     ///     Gets a symbol by its identifier.
@@ -41,5 +44,8 @@ public sealed class SymbolQueries
         [Service] IMediator mediator,
         Id<Symbol> symbolId,
         CancellationToken cancellationToken = default
-    ) => await mediator.Send(new GetEntityInput<Symbol>(symbolId), cancellationToken);
+    )
+    {
+        return await mediator.Send(new GetEntityInput<Symbol>(symbolId), cancellationToken);
+    }
 }

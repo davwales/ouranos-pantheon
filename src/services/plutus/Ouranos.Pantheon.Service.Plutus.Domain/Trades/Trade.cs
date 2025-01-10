@@ -8,7 +8,8 @@ public sealed class Trade : BaseEntity<Id<Trade>>
         Id<Trade> id,
         decimal price,
         decimal volume,
-        TradeMetadata metadata
+        TradeMetadata metadata,
+        DateTimeOffset timestamp
     ) : base(id)
     {
         ArgumentNullException.ThrowIfNull(metadata);
@@ -16,6 +17,7 @@ public sealed class Trade : BaseEntity<Id<Trade>>
         Price = price;
         Volume = volume;
         Metadata = metadata;
+        CreatedAt = timestamp;
     }
 
     public decimal Price { get; init; }

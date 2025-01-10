@@ -36,7 +36,10 @@ public static class MediatrExtensions
             var interfaceType = genericHandlerType.GetInterfaces()
                 .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IRequestHandler<,>));
 
-            if (interfaceType != null) services.AddTransient(interfaceType, genericHandlerType);
+            if (interfaceType != null)
+            {
+                services.AddTransient(interfaceType, genericHandlerType);
+            }
         }
 
         return services;
@@ -47,7 +50,11 @@ public static class MediatrExtensions
         while (toCheck != null && toCheck != typeof(object))
         {
             var cur = toCheck.IsGenericType ? toCheck.GetGenericTypeDefinition() : toCheck;
-            if (generic == cur) return true;
+            if (generic == cur)
+            {
+                return true;
+            }
+
             toCheck = toCheck.BaseType;
         }
 
