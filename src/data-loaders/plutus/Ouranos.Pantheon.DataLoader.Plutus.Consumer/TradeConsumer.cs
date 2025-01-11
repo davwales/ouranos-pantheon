@@ -62,6 +62,8 @@ public sealed class TradeConsumer : IConsumer<TradeMessage>
         );
         var trade = await _mediator.Send(insertTradeRequest);
 
-        _logger.LogInformation("Successfully consumed trade message for trade '{tradeId}'.", trade.Id);
+        _logger.LogInformation(
+            "Successfully consumed trade message for trade '{tradeId}', symbol '{symbolId}', and market '{marketId}'.",
+            trade.Id, symbol.Id, marketId);
     }
 }

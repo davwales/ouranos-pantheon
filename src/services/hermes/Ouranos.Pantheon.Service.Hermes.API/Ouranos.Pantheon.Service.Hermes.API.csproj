@@ -13,7 +13,6 @@
     <ItemGroup>
         <ProjectReference Include="..\..\..\core\Ouranos.Pantheon.Core.API\Ouranos.Pantheon.Core.API.csproj"/>
         <ProjectReference Include="..\Ouranos.Pantheon.Service.Hermes.Application\Ouranos.Pantheon.Service.Hermes.Application.csproj"/>
-        <ProjectReference Include="..\Ouranos.Pantheon.Service.Hermes.Infra.Mongo\Ouranos.Pantheon.Service.Hermes.Infra.Mongo.csproj"/>
         <ProjectReference Include="..\Ouranos.Pantheon.Service.Hermes.Infra.OuranosMl\Ouranos.Pantheon.Service.Hermes.Infra.OuranosMl.csproj"/>
     </ItemGroup>
 

@@ -4,7 +4,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Ouranos.Pantheon.Core.API.Extensions;
 using Ouranos.Pantheon.Service.Hermes.Application;
 using Ouranos.Pantheon.Service.Hermes.Domain.Characters;
-using Ouranos.Pantheon.Service.Hermes.Infra.Mongo;
 using Ouranos.Pantheon.Service.Hermes.Infra.OuranosMl;
 
 namespace Ouranos.Pantheon.Service.Hermes.API;
@@ -18,7 +17,6 @@ public static class HermesModule
     {
         return services
             .AddApplicationModule()
-            .RegisterMongoBehaviors()
             .AddOuranosMachineLearningModule();
     }
 
