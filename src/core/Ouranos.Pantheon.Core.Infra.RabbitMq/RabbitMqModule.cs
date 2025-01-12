@@ -29,6 +29,11 @@ public static class RabbitMqModule
                     });
 
                     cfg.ConfigureEndpoints(context);
+
+                    if (options.ConcurrencyLimit.HasValue)
+                    {
+                        cfg.UseConcurrencyLimit(options.ConcurrencyLimit.Value);
+                    }
                 });
             });
     }

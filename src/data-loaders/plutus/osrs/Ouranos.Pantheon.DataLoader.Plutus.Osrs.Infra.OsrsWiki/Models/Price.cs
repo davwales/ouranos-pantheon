@@ -1,4 +1,4 @@
-﻿namespace Ouranos.Pantheon.DataLoader.Plutus.Osrs.Application.Dtos;
+﻿namespace Ouranos.Pantheon.DataLoader.Plutus.Osrs.Infra.OsrsWiki.Models;
 
 public sealed record Price(
     int? AvgHighPrice,

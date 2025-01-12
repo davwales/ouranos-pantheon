@@ -1,4 +1,4 @@
-﻿using Ouranos.Pantheon.DataLoader.Plutus.Osrs.Application.Dtos;
+﻿using Ouranos.Pantheon.DataLoader.Plutus.Osrs.Infra.OsrsWiki.Models;
 
 namespace Ouranos.Pantheon.DataLoader.Plutus.Osrs.Infra.OsrsWiki;
 

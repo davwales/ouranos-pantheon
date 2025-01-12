@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\core\Ouranos.Pantheon.Core.Infra.RabbitMq\Ouranos.Pantheon.Core.Infra.RabbitMq.csproj"/>
+        <ProjectReference Include="..\Ouranos.Pantheon.DataLoader.Plutus.Application\Ouranos.Pantheon.DataLoader.Plutus.Application.csproj"/>
+    </ItemGroup>
+
+</Project>

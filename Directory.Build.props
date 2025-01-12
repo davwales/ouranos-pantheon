@@ -12,9 +12,11 @@
     </ItemGroup>
 
     <PropertyGroup>
+        <CsvHelperVersion>33.0.*</CsvHelperVersion>
         <MassTransitRabbitMQVersion>8.3.*</MassTransitRabbitMQVersion>
         <MediatrVersion>12.4.*</MediatrVersion>
         <MicrosoftConfigurationBinderVersion>8.0.*</MicrosoftConfigurationBinderVersion>
+        <MicrosoftExtensionsCachingMemoryVersion>8.0.*</MicrosoftExtensionsCachingMemoryVersion>
         <MicrosoftExtensionsConfigurationVersion>8.0.*</MicrosoftExtensionsConfigurationVersion>
         <MicrosoftExtensionsDependencyInjectionVersion>8.0.*</MicrosoftExtensionsDependencyInjectionVersion>
         <MicrosoftExtensionsHostingVersion>8.0.*</MicrosoftExtensionsHostingVersion>

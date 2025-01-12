@@ -1,7 +1,8 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Logging;
+using Ouranos.Pantheon.DataLoader.Plutus.Application.Interfaces.Trades;
+using Ouranos.Pantheon.DataLoader.Plutus.Domain;
 using Ouranos.Pantheon.DataLoader.Plutus.Domain.Trades;
-using Ouranos.Pantheon.DataLoader.Plutus.Osrs.Application.Interfaces.Trades;
 
 namespace Ouranos.Pantheon.DataLoader.Plutus.Osrs.Application.Commands.Trades.ProcessTrades;
 

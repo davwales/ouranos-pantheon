@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <UserSecretsId>dotnet-Ouranos.Pantheon.DataLoader.Plutus.Consumer-f021c234-2ec1-474c-8feb-175a63b0e245</UserSecretsId>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="..\..\..\..\.dockerignore">
+            <Link>.dockerignore</Link>
+        </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\..\core\Ouranos.Pantheon.Core.Infra.Mongo\Ouranos.Pantheon.Core.Infra.Mongo.csproj"/>
+        <ProjectReference Include="..\..\..\..\core\Ouranos.Pantheon.Core.Infra.RabbitMq\Ouranos.Pantheon.Core.Infra.RabbitMq.csproj"/>
+        <ProjectReference Include="..\Ouranos.Pantheon.DataLoader.Plutus.Consumer.Application\Ouranos.Pantheon.DataLoader.Plutus.Consumer.Application.csproj"/>
+        <ProjectReference Include="..\..\Ouranos.Pantheon.DataLoader.Plutus.Domain\Ouranos.Pantheon.DataLoader.Plutus.Domain.csproj"/>
+    </ItemGroup>
+</Project>

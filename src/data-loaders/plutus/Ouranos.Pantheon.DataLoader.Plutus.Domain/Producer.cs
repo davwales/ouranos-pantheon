@@ -1,4 +1,4 @@
-﻿namespace Ouranos.Pantheon.DataLoader.Plutus.Domain.Trades;
+﻿namespace Ouranos.Pantheon.DataLoader.Plutus.Domain;
 
 public enum Producer
 {

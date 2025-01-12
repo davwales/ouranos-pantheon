@@ -3,12 +3,13 @@
 public sealed record RabbitMqOptions(
     string Host,
     string Username,
-    string Password
+    string Password,
+    int? ConcurrencyLimit
 )
 {
     public const string SectionName = "Ouranos:RabbitMq";
 
-    public RabbitMqOptions() : this(string.Empty, string.Empty, string.Empty)
+    public RabbitMqOptions() : this(string.Empty, string.Empty, string.Empty, null)
     {
     }
 }

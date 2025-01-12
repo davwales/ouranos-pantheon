@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Ouranos.Pantheon.DataLoader.Plutus.Osrs.Application.Dtos;
 using Ouranos.Pantheon.DataLoader.Plutus.Osrs.Application.Interfaces.Trades;
 using Ouranos.Pantheon.DataLoader.Plutus.Osrs.Application.Queries.Trades.GetTrades;
+using Ouranos.Pantheon.DataLoader.Plutus.Osrs.Infra.OsrsWiki.Models;
 
 namespace Ouranos.Pantheon.DataLoader.Plutus.Osrs.Infra.OsrsWiki.Trades;
 
