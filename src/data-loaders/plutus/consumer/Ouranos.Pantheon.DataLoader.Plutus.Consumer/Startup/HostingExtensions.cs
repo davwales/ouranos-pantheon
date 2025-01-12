@@ -1,4 +1,5 @@
-﻿using Ouranos.Pantheon.Core.Infra.Mongo;
+﻿using Ouranos.Pantheon.Core.Common.AsyncLocks;
+using Ouranos.Pantheon.Core.Infra.Mongo;
 using Ouranos.Pantheon.Core.Infra.RabbitMq;
 using Ouranos.Pantheon.DataLoader.Plutus.Consumer.Application;
 
@@ -9,6 +10,7 @@ public static class HostingExtensions
     public static IHost ConfigureBuilder(this HostApplicationBuilder builder)
     {
         builder.Services
+            .AddSingleton<IKeyedAsyncLock<string>, KeyedAsyncLock<string>>()
             .AddApplicationModule()
             .AddCoreMongo(builder.Configuration)
             .AddCoreRabbitMqModule(builder.Configuration,
