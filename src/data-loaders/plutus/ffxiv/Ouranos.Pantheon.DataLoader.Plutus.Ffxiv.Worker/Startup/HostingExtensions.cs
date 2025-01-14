@@ -1,7 +1,9 @@
 ﻿using Ouranos.Pantheon.Core.WebSockets;
 using Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Application;
-using Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Infra.Universalis;
 using Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Infra.XivApi;
+using Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Worker.Initializers;
+using Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Worker.Messages;
+using Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Worker.Serializers;
 using Ouranos.Pantheon.DataLoader.Plutus.Infra.RabbitMq;
 
 namespace Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Worker.Startup;
@@ -12,10 +14,11 @@ public static class HostingExtensions
     {
         builder.Services
             .AddWebSockets(builder.Configuration, x => x
-                .AddListener<Listener>()
+                .UseConverter<BsonMessageConverter>()
+                .UseInitializer<SubscriptionInitializer>()
+                .UseConstantMessage<SaleMessage>(m => m.UseListener<Listener>())
             )
             .AddApplicationModule()
-            .AddUniversalisModule(builder.Configuration)
             .AddXivApiModule(builder.Configuration)
             .AddPlutusDataLoaderRabbitMqModule(builder.Configuration);
 

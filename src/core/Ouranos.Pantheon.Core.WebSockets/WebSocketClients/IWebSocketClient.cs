@@ -8,7 +8,7 @@ public interface IWebSocketClient
 
     Task ConnectAsync(CancellationToken cancellationToken = default);
 
-    Task SendAsync(string message, CancellationToken cancellationToken = default);
+    Task SendAsync<T>(T message, CancellationToken cancellationToken = default);
 
     Task SendAsync(byte[] message, CancellationToken cancellationToken = default);
 

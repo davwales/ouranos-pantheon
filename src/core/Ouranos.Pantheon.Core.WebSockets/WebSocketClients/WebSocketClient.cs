@@ -1,7 +1,7 @@
 ﻿using System.Net.WebSockets;
-using System.Text;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Core.WebSockets.Interfaces;
+using Ouranos.Pantheon.Core.WebSockets.Listeners;
+using Ouranos.Pantheon.Core.WebSockets.Serializers;
 
 namespace Ouranos.Pantheon.Core.WebSockets.WebSocketClients;
 
@@ -9,8 +9,10 @@ public class WebSocketClient : IDisposable, IWebSocketClient
 {
     private readonly uint _bufferSize;
     private readonly Uri _host;
-    private readonly IReadOnlyCollection<IListener> _listeners;
+    private readonly IReadOnlyCollection<IWebSocketInitializer> _initializers;
+    private readonly IListenerRegistry _listenerRegistry;
     private readonly ILogger<WebSocketClient> _logger;
+    private readonly IMessageSerializer _serializer;
     private readonly ClientWebSocket _webSocket = new();
     private Task? _listeningTask;
 
@@ -18,17 +20,22 @@ public class WebSocketClient : IDisposable, IWebSocketClient
         ILogger<WebSocketClient> logger,
         string host,
         uint bufferSize,
-        IReadOnlyCollection<IListener> listeners
+        IMessageSerializer serializer,
+        IReadOnlyCollection<IWebSocketInitializer>? initializers,
+        IListenerRegistry listenerRegistry
     )
     {
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentException.ThrowIfNullOrWhiteSpace(host);
-        ArgumentNullException.ThrowIfNull(listeners);
+        ArgumentNullException.ThrowIfNull(serializer);
+        ArgumentNullException.ThrowIfNull(listenerRegistry);
 
         _logger = logger;
         _host = new Uri(host);
-        _listeners = listeners;
+        _listenerRegistry = listenerRegistry;
         _bufferSize = bufferSize;
+        _initializers = initializers ?? [];
+        _serializer = serializer;
     }
 
     public void Dispose()
@@ -43,7 +50,7 @@ public class WebSocketClient : IDisposable, IWebSocketClient
         _logger.LogTrace("Attempting to connect to web socket.");
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (_webSocket.State != WebSocketState.None)
+        if (_webSocket.State is not WebSocketState.None)
         {
             const string errorMessage = "The web socket is already connected.";
             _logger.LogError(errorMessage);
@@ -51,21 +58,10 @@ public class WebSocketClient : IDisposable, IWebSocketClient
         }
 
         await _webSocket.ConnectAsync(_host, cancellationToken);
-        await NotifyListenersOfConnection(cancellationToken);
+        await RunInitializers(cancellationToken);
         _listeningTask = Listen(cancellationToken);
 
         _logger.LogDebug("Connected to web socket.");
-    }
-
-    public async Task SendAsync(string message, CancellationToken cancellationToken = default)
-    {
-        _logger.LogTrace("Attempting to send message '{message}' to web socket.", message);
-        cancellationToken.ThrowIfCancellationRequested();
-
-        var messageBytes = Encoding.UTF8.GetBytes(message);
-        await SendAsync(messageBytes, cancellationToken);
-
-        _logger.LogDebug("Successfully sent message to web socket.");
     }
 
     public async Task DisconnectAsync(CancellationToken cancellationToken = default)
@@ -113,6 +109,22 @@ public class WebSocketClient : IDisposable, IWebSocketClient
         _logger.LogDebug("Successfully sent message bytes to web socket.");
     }
 
+    public async Task SendAsync<T>(T message, CancellationToken cancellationToken = default)
+    {
+        _logger.LogTrace("Attempting to send message '{message}' to web socket.", message);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (message is null)
+        {
+            return;
+        }
+
+        var messageBytes = _serializer.Serialize(message);
+        await SendAsync(messageBytes, cancellationToken);
+
+        _logger.LogDebug("Successfully sent message to web socket.");
+    }
+
     private async Task Listen(CancellationToken cancellationToken)
     {
         var buffer = new byte[_bufferSize];
@@ -140,8 +152,8 @@ public class WebSocketClient : IDisposable, IWebSocketClient
                     memoryStream.Write(buffer, 0, receiveResult.Count);
                 } while (!receiveResult.EndOfMessage);
 
-                var messageBytes = memoryStream.ToArray();
-                await NotifyListenersOfMessage(messageBytes, cancellationToken);
+                var messageData = memoryStream.ToArray();
+                await _listenerRegistry.HandleMessageAsync(messageData, this, cancellationToken);
             }
         }
         catch (Exception ex)
@@ -155,6 +167,7 @@ public class WebSocketClient : IDisposable, IWebSocketClient
     {
         if (_webSocket.State == WebSocketState.Open)
         {
+            _logger.LogWarning("CLosing WebSocket connection due to a close message.");
             await _webSocket.CloseAsync(
                 WebSocketCloseStatus.NormalClosure,
                 "Closing connection",
@@ -167,6 +180,7 @@ public class WebSocketClient : IDisposable, IWebSocketClient
     {
         if (_webSocket.State == WebSocketState.Open)
         {
+            _logger.LogError("Closing WebSocket connection due to an error.");
             await _webSocket.CloseAsync(
                 WebSocketCloseStatus.InternalServerError,
                 "Error occurred",
@@ -175,16 +189,9 @@ public class WebSocketClient : IDisposable, IWebSocketClient
         }
     }
 
-    private async Task NotifyListenersOfConnection(CancellationToken cancellationToken)
+    private async Task RunInitializers(CancellationToken cancellationToken)
     {
-        var initializeTasks = _listeners.Select(listener => listener.OnConnectedAsync(cancellationToken));
-        await Task.WhenAll(initializeTasks);
-    }
-
-    private async Task NotifyListenersOfMessage(byte[] message, CancellationToken cancellationToken)
-    {
-        var notificationTasks =
-            _listeners.Select(listener => listener.HandleMessageAsync(message, cancellationToken));
-        await Task.WhenAll(notificationTasks);
+        var tasks = _initializers.Select(i => i.OnConnectedAsync(this, cancellationToken));
+        await Task.WhenAll(tasks);
     }
 }

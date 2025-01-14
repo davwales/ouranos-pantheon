@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="MediatR " Version="$(MediatrVersion)"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Ouranos.Pantheon.DataLoader.Plutus.Application\Ouranos.Pantheon.DataLoader.Plutus.Application.csproj"/>
+    </ItemGroup>
+
+</Project>
