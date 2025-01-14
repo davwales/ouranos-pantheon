@@ -3,6 +3,7 @@ using Ouranos.Pantheon.Core.WebSockets.WebSocketClients;
 using Ouranos.Pantheon.DataLoader.Plutus.Application.Interfaces.Trades;
 using Ouranos.Pantheon.DataLoader.Plutus.Domain.Trades;
 using Ouranos.Pantheon.DataLoader.Plutus.Stocks.Producer.Messages;
+using Ouranos.Pantheon.Service.Plutus.Domain.Trades;
 
 namespace Ouranos.Pantheon.DataLoader.Plutus.Stocks.Producer.Listeners;
 
@@ -37,16 +38,14 @@ public sealed class TradeListener : IListener<AlpacaTradeMessage>
             message.SymbolCode,
             null,
             message.SymbolCode,
-            null,
             message.Price,
             message.Size,
             message.Timestamp,
-            new Dictionary<string, object?>
-            {
-                { "exchange", message.ExchangeCode },
-                { "tape", message.Tape },
-                { "alpacaTradeId", message.TradeId }
-            }
+            new AdditionalFields(
+                Exchange: message.ExchangeCode,
+                Tape: message.Tape,
+                ExternalTradeId: message.TradeId.ToString()
+            )
         );
 
         await _queueTradeMessage.QueueMessage(tradeMessage, cancellationToken);

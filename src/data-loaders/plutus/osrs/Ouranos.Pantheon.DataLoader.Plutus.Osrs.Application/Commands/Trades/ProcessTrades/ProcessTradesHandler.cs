@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.DataLoader.Plutus.Application.Interfaces.Trades;
 using Ouranos.Pantheon.DataLoader.Plutus.Domain;
 using Ouranos.Pantheon.DataLoader.Plutus.Domain.Trades;
+using Ouranos.Pantheon.Service.Plutus.Domain.Trades;
 
 namespace Ouranos.Pantheon.DataLoader.Plutus.Osrs.Application.Commands.Trades.ProcessTrades;
 
@@ -41,16 +42,14 @@ public sealed class ProcessTradesHandler : IRequestHandler<ProcessTradesInput>
                 trade.SymbolCode,
                 trade.SymbolSubCode,
                 trade.SymbolName,
-                trade.GetTradesAdditionalFieldsResponse.Limit,
                 trade.Price,
                 trade.Volume,
                 trade.Timestamp,
-                new Dictionary<string, object?>
-                {
-                    { "highalch", trade.GetTradesAdditionalFieldsResponse.HighAlch },
-                    { "lowalch", trade.GetTradesAdditionalFieldsResponse.LowAlch },
-                    { "limit", trade.GetTradesAdditionalFieldsResponse.Limit }
-                }
+                new AdditionalFields(
+                    trade.GetTradesAdditionalFieldsResponse.Limit,
+                    trade.GetTradesAdditionalFieldsResponse.HighAlch,
+                    trade.GetTradesAdditionalFieldsResponse.LowAlch
+                )
             );
 
             await _queueTradeMessage.QueueMessage(message, cancellationToken);

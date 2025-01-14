@@ -64,7 +64,6 @@ public sealed class ProcessTradeHandler : IRequestHandler<ProcessTradeInput>
                 request.ItemCode,
                 sale.IsHighQuality ? hqCode : lqCode,
                 item.SymbolName,
-                null,
                 sale.Price,
                 sale.Volume,
                 sale.Timestamp,

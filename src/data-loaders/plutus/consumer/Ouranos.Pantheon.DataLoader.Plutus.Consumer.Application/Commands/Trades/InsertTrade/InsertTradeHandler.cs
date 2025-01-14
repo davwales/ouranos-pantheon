@@ -39,14 +39,12 @@ public sealed class InsertTradeHandler : IRequestHandler<InsertTradeInput, Trade
             request.Price,
             request.Volume,
             new TradeMetadata(
-                new TradeSymbolMetadata(
-                    request.SymbolId,
-                    request.MarketId,
-                    request.SymbolName,
-                    request.SymbolCode,
-                    request.SymbolSubCode,
-                    new AdditionalFields(request.Limit)
-                )
+                request.MarketId,
+                request.SymbolId,
+                request.SymbolName,
+                request.SymbolCode,
+                request.SymbolSubCode,
+                request.AdditionalFields
             ),
             request.Timestamp
         );

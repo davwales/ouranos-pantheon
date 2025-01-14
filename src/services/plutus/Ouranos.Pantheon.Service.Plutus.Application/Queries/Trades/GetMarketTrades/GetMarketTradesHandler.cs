@@ -37,22 +37,28 @@ public sealed class GetMarketTradesHandler : IRequestHandler<GetMarketTradesInpu
             : null;
 
         var query = _tradeRepository.AsQueryable(cancellationToken)
-            .Where(x => x.Metadata.Symbol.MarketId == request.MarketId &&
+            .Where(x => x.Metadata.MarketId == request.MarketId &&
                         (since == null || x.CreatedAt >= since))
-            .GroupBy(t => t.Metadata.Symbol.Id)
+            .GroupBy(t => t.Metadata.SymbolId)
             .Select(g => new
             {
-                g.First().Metadata.Symbol,
+                g.First().Metadata.SymbolId,
+                g.First().Metadata.SymbolName,
+                g.First().Metadata.SymbolCode,
+                g.First().Metadata.SymbolSubCode,
                 TotalSpent = g.Sum(t => t.Price * t.Volume),
                 MinPrice = g.Min(t => t.Price),
                 MaxPrice = g.Max(t => t.Price),
                 TotalVolume = g.Sum(t => t.Volume),
                 NumTransactions = g.Count(),
-                g.First().Metadata.Symbol.AdditionalFields.Limit
+                g.First().Metadata.AdditionalFields.Limit
             })
             .Select(x => new
             {
-                x.Symbol,
+                x.SymbolId,
+                x.SymbolName,
+                x.SymbolCode,
+                x.SymbolSubCode,
                 x.TotalSpent,
                 x.MinPrice,
                 x.MaxPrice,
@@ -63,7 +69,10 @@ public sealed class GetMarketTradesHandler : IRequestHandler<GetMarketTradesInpu
             })
             .Select(x => new
             {
-                x.Symbol,
+                x.SymbolId,
+                x.SymbolName,
+                x.SymbolCode,
+                x.SymbolSubCode,
                 x.TotalSpent,
                 x.MinPrice,
                 x.MaxPrice,
@@ -78,7 +87,10 @@ public sealed class GetMarketTradesHandler : IRequestHandler<GetMarketTradesInpu
             })
             .Select(x => new
             {
-                x.Symbol,
+                x.SymbolId,
+                x.SymbolName,
+                x.SymbolCode,
+                x.SymbolSubCode,
                 x.TotalSpent,
                 x.MinPrice,
                 x.MaxPrice,
@@ -93,10 +105,10 @@ public sealed class GetMarketTradesHandler : IRequestHandler<GetMarketTradesInpu
                 Roi = x.Margin / x.MinPrice * 100
             })
             .Select(x => new GetMarketTradesResponse(
-                x.Symbol.Id,
-                x.Symbol.Name,
-                x.Symbol.Code,
-                x.Symbol.Subcode,
+                x.SymbolId,
+                x.SymbolName,
+                x.SymbolCode,
+                x.SymbolSubCode,
                 x.TotalSpent,
                 x.MinPrice,
                 x.MaxPrice,

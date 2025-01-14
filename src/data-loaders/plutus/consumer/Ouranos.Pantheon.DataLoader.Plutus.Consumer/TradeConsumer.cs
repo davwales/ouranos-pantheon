@@ -50,7 +50,8 @@ public sealed class TradeConsumer : IConsumer<TradeMessage>
         // If we allow multiple messages for the same symbol to be processed concurrently, we run the risk of 
         // multiple symbols being inserted. Thus, we lock the upsert for messages that have the same symbol.
         Symbol symbol;
-        using (await _itemLock.LockAsync(context.Message.SymbolCode))
+        var lockKey = $"{nameof(TradeConsumer)}:{marketId}:{context.Message.SymbolCode}";
+        using (await _itemLock.LockAsync(lockKey))
         {
             var upsertSymbolRequest = new UpsertSymbolInput(
                 marketId,
@@ -68,11 +69,11 @@ public sealed class TradeConsumer : IConsumer<TradeMessage>
             symbol.Id,
             symbol.Name,
             symbol.Code,
-            symbol.Subcode,
-            context.Message.Limit,
+            symbol.SubCode,
             context.Message.Price,
             context.Message.Volume,
-            context.Message.Timestamp
+            context.Message.Timestamp,
+            context.Message.AdditionalFields
         );
         var trade = await _mediator.Send(insertTradeRequest);
 

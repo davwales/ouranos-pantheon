@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Application.Dtos;
 using Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Application.Interfaces.Items;
 using Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Infra.XivApi.Models;
+using Ouranos.Pantheon.Service.Plutus.Domain.Trades;
 
 namespace Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Infra.XivApi.Items;
 
@@ -64,7 +65,7 @@ public sealed class GetItems : IGetItems
             itemResponse.Key.ToString(),
             isHighQuality,
             itemResponse.Name,
-            []
+            new AdditionalFields()
         );
     }
 }

@@ -44,7 +44,7 @@ public sealed class GetSymbolTradesHandler : IRequestHandler<GetSymbolTradesInpu
             : null;
 
         var tradesQuery = _tradeRepository.AsQueryable(cancellationToken)
-            .Where(t => t.Metadata.Symbol.Id == request.SymbolId && (since == null || t.CreatedAt >= since));
+            .Where(t => t.Metadata.SymbolId == request.SymbolId && (since == null || t.CreatedAt >= since));
 
         var symbolTradesQuery = _bucketTrades.GetBucketedTradesQuery(tradesQuery, request.NumBuckets, cancellationToken)
             .Select(x => new

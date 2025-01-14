@@ -12,8 +12,8 @@ public sealed record InsertTradeInput(
     string SymbolName,
     string SymbolCode,
     string? SymbolSubCode,
-    long? Limit,
     decimal Price,
     decimal Volume,
-    DateTimeOffset Timestamp
+    DateTimeOffset Timestamp,
+    AdditionalFields AdditionalFields
 ) : IRequest<Trade>;
