@@ -40,7 +40,7 @@ public sealed class ProcessTradesHandler : IRequestHandler<ProcessTradesInput>
             var message = new TradeMessage(
                 Producer.Osrs,
                 trade.SymbolCode,
-                trade.SymbolSubCode,
+                trade.SymbolSubcode,
                 trade.SymbolName,
                 trade.Price,
                 trade.Volume,

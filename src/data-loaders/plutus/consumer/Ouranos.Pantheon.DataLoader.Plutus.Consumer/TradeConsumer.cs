@@ -56,7 +56,7 @@ public sealed class TradeConsumer : IConsumer<TradeMessage>
             var upsertSymbolRequest = new UpsertSymbolInput(
                 marketId,
                 context.Message.SymbolCode,
-                context.Message.SymbolSubCode,
+                context.Message.SymbolSubcode,
                 context.Message.SymbolName,
                 context.Message.AdditionalFields
             );
@@ -69,7 +69,7 @@ public sealed class TradeConsumer : IConsumer<TradeMessage>
             symbol.Id,
             symbol.Name,
             symbol.Code,
-            symbol.SubCode,
+            symbol.Subcode,
             context.Message.Price,
             context.Message.Volume,
             context.Message.Timestamp,

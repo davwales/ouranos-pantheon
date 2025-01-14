@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
@@ -19,15 +20,15 @@ public static class MongoModule
     {
         services.Configure<MongoOptions>(configuration.GetSection(MongoOptions.SectionName));
 
-        services.AddSingleton<IMongoClient>(sp =>
+        services.TryAddSingleton<IMongoClient>(sp =>
         {
             var options = sp.GetRequiredService<IOptions<MongoOptions>>();
             var mongoClientSettings = MongoClientSettings.FromConnectionString(options.Value.ConnectionString);
             return new MongoClient(mongoClientSettings);
         });
 
-        services.AddSingleton<IMongoDatabaseManager, MongoDatabaseManager>();
-        services.AddSingleton(typeof(IMongoRepository<>), typeof(MongoRepository<>));
+        services.TryAddSingleton<IMongoDatabaseManager, MongoDatabaseManager>();
+        services.TryAddSingleton(typeof(IMongoRepository<>), typeof(MongoRepository<>));
         services.AddScoped<IQueryExecutor, QueryExecutor>();
 
         RegisterInfrastructureBehaviors(services);
@@ -37,8 +38,8 @@ public static class MongoModule
 
     private static void RegisterInfrastructureBehaviors(IServiceCollection services)
     {
-        services.AddScoped(typeof(ICrudRepository<>), typeof(CrudRepository<>));
-        services.AddScoped(typeof(ICreateDatabaseId<>), typeof(CreateDatabaseId<>));
+        services.TryAddScoped(typeof(ICrudRepository<>), typeof(CrudRepository<>));
+        services.TryAddScoped(typeof(ICreateDatabaseId<>), typeof(CreateDatabaseId<>));
     }
 
     private static void RegisterConventions()
@@ -51,7 +52,7 @@ public static class MongoModule
 
         ConventionRegistry.Register("Custom Conventions", conventions, _ => true);
         BsonSerializer.RegisterGenericSerializerDefinition(typeof(Id<>), typeof(IdSerializer<>));
-        BsonSerializer.RegisterSerializer(typeof(DateTimeOffset), new DateTimeOffsetSerializer(BsonType.DateTime));
-        BsonSerializer.RegisterSerializer(typeof(decimal), new DecimalSerializer(BsonType.Decimal128));
+        BsonSerializer.TryRegisterSerializer(typeof(DateTimeOffset), new DateTimeOffsetSerializer(BsonType.DateTime));
+        BsonSerializer.TryRegisterSerializer(typeof(decimal), new DecimalSerializer(BsonType.Decimal128));
     }
 }

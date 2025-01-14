@@ -1,7 +1,7 @@
 ﻿{
   "$schema": "http://json.schemastore.org/launchsettings.json",
   "profiles": {
-    "Ouranos.Pantheon.DataLoader.Plutus.Publisher.Osrs": {
+    "Ouranos.Pantheon.DataLoader.Plutus.Osrs.Producer": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "environmentVariables": {

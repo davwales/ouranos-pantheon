@@ -20,6 +20,36 @@ export type Scalars = {
   Decimal: { input: any; output: any; }
 };
 
+export type AdditionalFields = {
+  __typename?: 'AdditionalFields';
+  exchange?: Maybe<Scalars['String']['output']>;
+  externalTradeId?: Maybe<Scalars['String']['output']>;
+  highAlch?: Maybe<Scalars['Int']['output']>;
+  limit?: Maybe<Scalars['Decimal']['output']>;
+  lowAlch?: Maybe<Scalars['Int']['output']>;
+  tape?: Maybe<Scalars['String']['output']>;
+};
+
+export type AdditionalFieldsFilterInput = {
+  and?: InputMaybe<Array<AdditionalFieldsFilterInput>>;
+  exchange?: InputMaybe<StringOperationFilterInput>;
+  externalTradeId?: InputMaybe<StringOperationFilterInput>;
+  highAlch?: InputMaybe<IntOperationFilterInput>;
+  limit?: InputMaybe<DecimalOperationFilterInput>;
+  lowAlch?: InputMaybe<IntOperationFilterInput>;
+  or?: InputMaybe<Array<AdditionalFieldsFilterInput>>;
+  tape?: InputMaybe<StringOperationFilterInput>;
+};
+
+export type AdditionalFieldsSortInput = {
+  exchange?: InputMaybe<SortEnumType>;
+  externalTradeId?: InputMaybe<SortEnumType>;
+  highAlch?: InputMaybe<SortEnumType>;
+  limit?: InputMaybe<SortEnumType>;
+  lowAlch?: InputMaybe<SortEnumType>;
+  tape?: InputMaybe<SortEnumType>;
+};
+
 /** A connection to a list of items. */
 export type AllMarketsConnection = {
   __typename?: 'AllMarketsConnection';
@@ -373,29 +403,11 @@ export type IntOperationFilterInput = {
   nlte?: InputMaybe<Scalars['Int']['input']>;
 };
 
-export type KeyValuePairOfStringAndObject = {
-  __typename?: 'KeyValuePairOfStringAndObject';
-  key: Scalars['String']['output'];
-};
-
-export type KeyValuePairOfStringAndObjectFilterInput = {
-  and?: InputMaybe<Array<KeyValuePairOfStringAndObjectFilterInput>>;
-  key?: InputMaybe<StringOperationFilterInput>;
-  or?: InputMaybe<Array<KeyValuePairOfStringAndObjectFilterInput>>;
-};
-
 export type ListFilterInputTypeOfCharacterDetailFilterInput = {
   all?: InputMaybe<CharacterDetailFilterInput>;
   any?: InputMaybe<Scalars['Boolean']['input']>;
   none?: InputMaybe<CharacterDetailFilterInput>;
   some?: InputMaybe<CharacterDetailFilterInput>;
-};
-
-export type ListFilterInputTypeOfKeyValuePairOfStringAndObjectFilterInput = {
-  all?: InputMaybe<KeyValuePairOfStringAndObjectFilterInput>;
-  any?: InputMaybe<Scalars['Boolean']['input']>;
-  none?: InputMaybe<KeyValuePairOfStringAndObjectFilterInput>;
-  some?: InputMaybe<KeyValuePairOfStringAndObjectFilterInput>;
 };
 
 export type Market = {
@@ -713,7 +725,7 @@ export type StringOperationFilterInput = {
 
 export type Symbol = {
   __typename?: 'Symbol';
-  additionalFields: Array<KeyValuePairOfStringAndObject>;
+  additionalFields: AdditionalFields;
   code: Scalars['String']['output'];
   createdAt: Scalars['DateTime']['output'];
   id: Scalars['String']['output'];
@@ -724,7 +736,7 @@ export type Symbol = {
 };
 
 export type SymbolFilterInput = {
-  additionalFields?: InputMaybe<ListFilterInputTypeOfKeyValuePairOfStringAndObjectFilterInput>;
+  additionalFields?: InputMaybe<AdditionalFieldsFilterInput>;
   and?: InputMaybe<Array<SymbolFilterInput>>;
   code?: InputMaybe<StringOperationFilterInput>;
   createdAt?: InputMaybe<DateTimeOperationFilterInput>;
@@ -737,6 +749,7 @@ export type SymbolFilterInput = {
 };
 
 export type SymbolSortInput = {
+  additionalFields?: InputMaybe<AdditionalFieldsSortInput>;
   code?: InputMaybe<SortEnumType>;
   createdAt?: InputMaybe<SortEnumType>;
   id?: InputMaybe<SortEnumType>;

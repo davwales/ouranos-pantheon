@@ -11,7 +11,7 @@ public sealed record InsertTradeInput(
     Id<Symbol> SymbolId,
     string SymbolName,
     string SymbolCode,
-    string? SymbolSubCode,
+    string? SymbolSubcode,
     decimal Price,
     decimal Volume,
     DateTimeOffset Timestamp,

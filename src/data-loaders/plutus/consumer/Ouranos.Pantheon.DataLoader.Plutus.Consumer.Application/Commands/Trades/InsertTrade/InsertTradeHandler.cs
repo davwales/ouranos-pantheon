@@ -43,7 +43,7 @@ public sealed class InsertTradeHandler : IRequestHandler<InsertTradeInput, Trade
                 request.SymbolId,
                 request.SymbolName,
                 request.SymbolCode,
-                request.SymbolSubCode,
+                request.SymbolSubcode,
                 request.AdditionalFields
             ),
             request.Timestamp

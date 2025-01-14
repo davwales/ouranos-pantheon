@@ -1,14 +1,14 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import { Box, Button, Grid2, Typography } from "@mui/material";
 import { PrettyNumber } from "@/app/components/pretty_number";
-import TimeFrameSelection from "../../components/time_frame_selection";
-import DetailChart from "./components/detail_chart";
-import { PlutusState, usePlutusStore } from "../../constants/plutus_store";
 import useInterval from "@/app/utilities/use_interval";
-import { getSymbolDetailsQuery } from "../../queries";
+import { Box, Button, Grid2, Typography } from "@mui/material";
 import { useQuery } from "@urql/next";
+import { useParams, useRouter } from "next/navigation";
+import TimeFrameSelection from "../../components/time_frame_selection";
+import { PlutusState, usePlutusStore } from "../../constants/plutus_store";
+import { getSymbolDetailsQuery } from "../../queries";
+import DetailChart from "./components/detail_chart";
 
 export default function SymbolDetail() {
     const router = useRouter();

@@ -17,7 +17,7 @@ public static class HermesModule
     {
         return services
             .AddApplicationModule()
-            .AddOuranosMachineLearningModule();
+            .AddOuranosMachineLearningModule(configuration);
     }
 
     public static IRequestExecutorBuilder AddHermesSchema(this IRequestExecutorBuilder builder)

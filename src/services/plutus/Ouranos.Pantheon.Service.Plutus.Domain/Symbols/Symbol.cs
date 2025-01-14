@@ -9,7 +9,7 @@ public sealed class Symbol : BaseEntity<Id<Symbol>>
     public Symbol(
         Id<Symbol> id,
         string code,
-        string? subCode,
+        string? subcode,
         string name,
         Id<Market> marketId,
         AdditionalFields additionalFields
@@ -21,7 +21,7 @@ public sealed class Symbol : BaseEntity<Id<Symbol>>
         ArgumentNullException.ThrowIfNull(additionalFields);
 
         Code = code;
-        SubCode = subCode;
+        Subcode = subcode;
         Name = name;
         MarketId = marketId;
         AdditionalFields = additionalFields;
@@ -29,7 +29,7 @@ public sealed class Symbol : BaseEntity<Id<Symbol>>
 
     public string Code { get; init; }
 
-    public string? SubCode { get; init; }
+    public string? Subcode { get; init; }
 
     public string Name { get; init; }
 

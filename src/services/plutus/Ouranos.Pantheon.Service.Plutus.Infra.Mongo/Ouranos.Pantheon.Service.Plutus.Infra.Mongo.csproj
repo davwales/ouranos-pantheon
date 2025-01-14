@@ -10,6 +10,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\..\..\core\Ouranos.Pantheon.Core.Infra.Mongo\Ouranos.Pantheon.Core.Infra.Mongo.csproj"/>
         <ProjectReference Include="..\Ouranos.Pantheon.Service.Plutus.Application\Ouranos.Pantheon.Service.Plutus.Application.csproj"/>
     </ItemGroup>
 </Project>

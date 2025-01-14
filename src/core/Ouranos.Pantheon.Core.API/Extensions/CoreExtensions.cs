@@ -2,8 +2,6 @@ using HotChocolate.Execution.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Ouranos.Pantheon.Core.Infra.Mongo;
-using Ouranos.Pantheon.Core.Infra.OuranosMl;
 using Serilog;
 
 namespace Ouranos.Pantheon.Core.API.Extensions;
@@ -26,8 +24,6 @@ public static class CoreExtensions
 
         return services
             .AddSerilog()
-            .AddCoreMongo(configuration)
-            .AddCoreOuranosMachineLearningModule(configuration)
             .AddDefaultMediatrHandlers();
     }
 

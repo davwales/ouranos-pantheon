@@ -41,13 +41,13 @@ public sealed class UpsertSymbolHandler : IRequestHandler<UpsertSymbolInput, Sym
         var query = _symbolRepository.AsQueryable(cancellationToken)
             .Where(s => s.MarketId == request.MarketId
                         && s.Code == request.SymbolCode
-                        && s.SubCode == request.SymbolSubCode);
+                        && s.Subcode == request.SymbolSubcode);
         var existingSymbol = await _queryExecutor.FirstOrDefaultAsync<Symbol?>(query, cancellationToken);
 
         var symbol = new Symbol(
             existingSymbol?.Id ?? _createDatabaseId.CreateId(),
             request.SymbolCode,
-            request.SymbolSubCode,
+            request.SymbolSubcode,
             request.SymbolName,
             request.MarketId,
             request.AdditionalFields

@@ -18,7 +18,7 @@ public static class PlutusModule
     {
         return services
             .AddApplicationModule()
-            .RegisterMongoBehaviors();
+            .AddMongoModule(configuration);
     }
 
     public static IRequestExecutorBuilder AddPlutusSchema(this IRequestExecutorBuilder builder)

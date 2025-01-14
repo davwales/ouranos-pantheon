@@ -99,12 +99,12 @@ public sealed class GetTrades : IGetTrades
         DateTimeOffset timestamp
     )
     {
-        const string payToPlaySubCode = "p2p";
-        const string freeToPlaySubCode = "f2p";
+        const string payToPlaySubcode = "p2p";
+        const string freeToPlaySubcode = "f2p";
 
         return new GetTradesResponse(
             mapping.Id.ToString(),
-            mapping.Members ? payToPlaySubCode : freeToPlaySubCode,
+            mapping.Members ? payToPlaySubcode : freeToPlaySubcode,
             mapping.Name,
             price,
             volume,

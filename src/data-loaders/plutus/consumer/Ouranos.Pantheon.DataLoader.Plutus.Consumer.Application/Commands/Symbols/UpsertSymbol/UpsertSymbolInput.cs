@@ -9,7 +9,7 @@ namespace Ouranos.Pantheon.DataLoader.Plutus.Consumer.Application.Commands.Symbo
 public sealed record UpsertSymbolInput(
     Id<Market> MarketId,
     string SymbolCode,
-    string? SymbolSubCode,
+    string? SymbolSubcode,
     string SymbolName,
     AdditionalFields AdditionalFields
 ) : IRequest<Symbol>;

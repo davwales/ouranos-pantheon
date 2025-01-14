@@ -2,7 +2,7 @@
 
 public sealed record GetTradesResponse(
     string SymbolCode,
-    string SymbolSubCode,
+    string SymbolSubcode,
     string SymbolName,
     decimal Price,
     decimal Volume,
