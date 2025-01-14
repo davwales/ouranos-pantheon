@@ -7,7 +7,6 @@ public sealed class JsonMessageConverter(JsonSerializerOptions? options = defaul
 {
     private readonly JsonSerializerOptions _options = options ?? new JsonSerializerOptions
     {
-        PropertyNameCaseInsensitive = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 

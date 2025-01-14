@@ -4,5 +4,5 @@ public enum Producer
 {
     Osrs,
     Ffxiv,
-    Alpaca
+    Stocks
 }

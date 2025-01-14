@@ -1,0 +1,26 @@
+﻿using Ouranos.Pantheon.Core.WebSockets.Listeners;
+using Ouranos.Pantheon.Core.WebSockets.WebSocketClients;
+using Ouranos.Pantheon.DataLoader.Plutus.Stocks.Producer.Messages;
+
+namespace Ouranos.Pantheon.DataLoader.Plutus.Stocks.Producer.Listeners;
+
+public sealed class ErrorListener : IListener<ErrorMessage>
+{
+    private readonly ILogger<ErrorListener> _logger;
+
+    public ErrorListener(ILogger<ErrorListener> logger)
+    {
+        ArgumentNullException.ThrowIfNull(logger);
+        _logger = logger;
+    }
+
+    public async Task HandleMessageAsync(
+        ErrorMessage message,
+        IWebSocketClient client,
+        CancellationToken cancellationToken = default
+    )
+    {
+        _logger.LogError("Received error message with code '{code}', msg '{msg}'.", message.Code, message.Msg);
+        await Task.CompletedTask;
+    }
+}

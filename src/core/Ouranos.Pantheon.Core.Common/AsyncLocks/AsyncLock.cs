@@ -8,8 +8,8 @@ public sealed class AsyncLock(int initialCount, int maxCount) : IAsyncLock
 
     public async Task<IDisposable> LockAsync(Action? onRelease = null)
     {
-        await _semaphore.WaitAsync();
         Interlocked.Increment(ref _refCount);
+        await _semaphore.WaitAsync();
         return new AsyncLockReleaser(this, onRelease);
     }
 
