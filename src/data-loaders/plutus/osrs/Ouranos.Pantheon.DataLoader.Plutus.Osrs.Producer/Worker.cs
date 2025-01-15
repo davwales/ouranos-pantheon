@@ -45,6 +45,10 @@ public class Worker : BackgroundService
             catch (Exception e)
             {
                 _logger.LogError(e, "An unexpected error occured during worker execution.");
+
+                // Add a delay so we do not continuously spam our dependencies with requests on failures.
+                var errorDelay = _interval ?? TimeSpan.FromSeconds(30);
+                await Task.Delay(errorDelay, cancellationToken);
             }
         }
 
