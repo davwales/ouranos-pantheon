@@ -14,6 +14,8 @@ public static class OuranosMachineLearningModule
     )
     {
         return services
+            .Configure<OuranosMachineLearningOptions>(
+                configuration.GetSection(OuranosMachineLearningOptions.SectionName))
             .AddCoreOuranosMachineLearningModule(configuration)
             .AddScoped<IGenerateCompletion, GenerateCompletion>();
     }

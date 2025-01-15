@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Core.Infra.OuranosMl;
 using Ouranos.Pantheon.Core.Infra.OuranosMl.Dtos;
 using Ouranos.Pantheon.Core.Infra.OuranosMl.Requests;
@@ -13,17 +14,21 @@ public sealed class GenerateCompletion : IGenerateCompletion
 {
     private readonly ILogger<GenerateCompletion> _logger;
     private readonly IOuranosMachineLearningClient _ouranosClient;
+    private readonly string _systemPrompt;
 
     public GenerateCompletion(
         ILogger<GenerateCompletion> logger,
-        IOuranosMachineLearningClient ouranosClient
+        IOuranosMachineLearningClient ouranosClient,
+        IOptions<OuranosMachineLearningOptions> options
     )
     {
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(ouranosClient);
+        ArgumentNullException.ThrowIfNull(options.Value);
 
         _logger = logger;
         _ouranosClient = ouranosClient;
+        _systemPrompt = options.Value.SystemPrompt;
     }
 
     public async IAsyncEnumerable<string> GenerateCompletionStream(
@@ -44,13 +49,11 @@ public sealed class GenerateCompletion : IGenerateCompletion
         _logger.LogDebug("Successfully generated a completion.");
     }
 
-    private static GenerateCompletionRequest GetRequest(ConversationInput conversation)
+    private GenerateCompletionRequest GetRequest(ConversationInput conversation)
     {
         var conversationVariables = GetConversationVariables(conversation);
 
-        var systemPrompt = "{{user_details}}\n{{assistant_details}}"; // TODO - Retrieve system prompt from somewhere.
-
-        var cleanedSystemPrompt = CleanContent(systemPrompt, conversationVariables);
+        var cleanedSystemPrompt = CleanContent(_systemPrompt, conversationVariables);
         var cleanedContext = CleanContent(conversation.Context, conversationVariables);
 
         var cleanedMessages = conversation.Messages
