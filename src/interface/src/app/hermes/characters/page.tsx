@@ -17,21 +17,15 @@ export default function CharactersPage() {
                             <Typography variant="h4" sx={{ mb: "0.5rem" }}>
                                 {c.name}
                             </Typography>
-                            <Typography variant="body2">
-                                Age: {c.age}
-                            </Typography>
                         </CardContent>
                     </LinkCard>
                 </Grid2>
             ))}
-            <Grid2 size={{ sm: 12, md: 6, lg: 4, xl: 2 }}>
+            <Grid2 size={{ xs: 12, sm: 12, md: 6, lg: 4, xl: 2 }}>
                 <LinkCard href="/hermes/characters/create">
                     <CardContent>
                         <Typography variant="h4" sx={{ mb: "0.5rem" }}>
                             Create New
-                        </Typography>
-                        <Typography variant="body2">
-                            Create your own character!
                         </Typography>
                     </CardContent>
                 </LinkCard>

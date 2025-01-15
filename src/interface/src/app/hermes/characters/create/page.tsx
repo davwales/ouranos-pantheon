@@ -1,13 +1,14 @@
 // CreateCharacterPage.tsx
 "use client";
 
-import React, { useState } from 'react';
-import { useMutation } from 'urql';
-import { createCharacterMutation } from '../../mutations';
-import CharacterForm, { CharacterInput } from '../components/character_form';
+import { CreateCharacterInput } from '@/gql/graphql';
 import { Box, Button, Typography } from '@mui/material';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useMutation } from 'urql';
+import CharacterForm, { CharacterInput } from '../../components/character_form';
+import { createCharacterMutation } from '../../mutations';
 
 export default function CreateCharacterPage() {
     const router = useRouter();
@@ -19,7 +20,18 @@ export default function CreateCharacterPage() {
         setLoading(true);
 
         try {
-            await createCharacter({ input });
+            const createCharacterInput: CreateCharacterInput = {
+                name: input.name,
+                age: input.age,
+                details: input.details.map(d => {
+                    return {
+                        key: d.key,
+                        value: d.value
+                    }
+                }),
+            };
+
+            await createCharacter({ input: createCharacterInput });
             setLoading(false);
             router.push("/hermes/characters");
         } catch (err: any) {

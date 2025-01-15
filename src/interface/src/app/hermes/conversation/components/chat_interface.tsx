@@ -1,4 +1,4 @@
-import { CharacterInput, GenerateCompletionInput, Role } from '@/gql/graphql';
+import { GenerateCompletionInput, Role } from '@/gql/graphql';
 import {
     Box,
     Button,
@@ -10,12 +10,13 @@ import {
 import { useState } from 'react';
 import { useMutation } from 'urql';
 import { generateCompletion } from '../../mutations';
+import ConversationCharacter from '../models/conversation_character';
 import Message from '../models/message';
 
 interface ChatInterfaceProps {
     context: string;
-    userCharacter: CharacterInput;
-    assistantCharacter: CharacterInput;
+    userCharacter: ConversationCharacter;
+    assistantCharacter: ConversationCharacter;
 }
 
 export default function ChatInterface(props: ChatInterfaceProps) {
@@ -38,7 +39,6 @@ export default function ChatInterface(props: ChatInterfaceProps) {
             conversation: {
                 context: props.context,
                 user: {
-                    id: props.userCharacter.id,
                     name: props.userCharacter.name,
                     age: props.userCharacter.age,
                     details: props.userCharacter.details.map(d => {
@@ -49,7 +49,6 @@ export default function ChatInterface(props: ChatInterfaceProps) {
                     }),
                 },
                 assistant: {
-                    id: props.assistantCharacter.id,
                     name: props.assistantCharacter.name,
                     age: props.assistantCharacter.age,
                     details: props.assistantCharacter.details.map(d => {

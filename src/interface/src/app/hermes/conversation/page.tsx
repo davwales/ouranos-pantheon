@@ -1,17 +1,18 @@
 "use client";
 
 import OuranosStepper from '@/app/components/ouranos_stepper';
-import { CharacterInput, Role } from '@/gql/graphql';
+import { Role } from '@/gql/graphql';
 import { Box } from '@mui/material';
 import { useState } from 'react';
 import ChatInterface from './components/chat_interface';
 import StepContext from './components/step_context';
 import StepSelectCharacter from './components/step_select_character';
+import ConversationCharacter from './models/conversation_character';
 
 export default function Conversation() {
     const [context, setContext] = useState('');
-    const [userCharacter, setUserCharacter] = useState<CharacterInput | null>(null);
-    const [assistantCharacter, setAssistantCharacter] = useState<CharacterInput | null>(null);
+    const [userCharacter, setUserCharacter] = useState<ConversationCharacter | undefined>();
+    const [assistantCharacter, setAssistantCharacter] = useState<ConversationCharacter | undefined>();
     const [setupComplete, setSetupComplete] = useState(false);
 
     const steps = [

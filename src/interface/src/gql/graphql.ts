@@ -136,7 +136,6 @@ export type CharacterFilterInput = {
 export type CharacterInput = {
   age: Scalars['Int']['input'];
   details: Array<CharacterDetailInput>;
-  id: Scalars['String']['input'];
   name: Scalars['String']['input'];
 };
 

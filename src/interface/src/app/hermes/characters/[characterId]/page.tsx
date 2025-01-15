@@ -1,14 +1,15 @@
 // EditCharacterPage.tsx
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { useMutation, useQuery } from 'urql';
-import { deleteCharacterMutation, updateCharacterMutation } from '../../mutations';
-import { getCharacterQuery } from '../../queries';
-import { useParams, useRouter } from 'next/navigation';
-import CharacterForm, { CharacterInput } from '../components/character_form';
+import { UpdateCharacterInput } from '@/gql/graphql';
 import { Box, Button, Typography } from '@mui/material';
 import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useMutation, useQuery } from 'urql';
+import CharacterForm, { CharacterInput } from '../../components/character_form';
+import { deleteCharacterMutation, updateCharacterMutation } from '../../mutations';
+import { getCharacterQuery } from '../../queries';
 
 export default function EditCharacterPage() {
     const router = useRouter();
@@ -53,7 +54,19 @@ export default function EditCharacterPage() {
         setLoading(true);
 
         try {
-            await updateCharacter({ input: { characterId, ...input } });
+            const updateCharacterInput: UpdateCharacterInput = {
+                characterId,
+                name: input.name,
+                age: input.age,
+                details: input.details.map(d => {
+                    return {
+                        key: d.key,
+                        value: d.value
+                    }
+                }),
+            };
+
+            await updateCharacter({ input: updateCharacterInput });
             setLoading(false);
             router.push("/hermes/characters");
         } catch (err: any) {

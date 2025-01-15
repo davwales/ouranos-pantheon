@@ -1,18 +1,19 @@
 // CharacterForm.tsx
 "use client";
 
-import React, { useState } from 'react';
+import { CharacterDetail } from '@/gql/graphql';
+import { Add, Remove } from '@mui/icons-material';
 import {
     Box,
     Button,
+    IconButton,
     TextField,
     Typography,
-    IconButton,
 } from '@mui/material';
-import { Add, Remove } from '@mui/icons-material';
-import { CharacterDetail } from '@/gql/graphql';
+import React, { useState } from 'react';
 
 export interface CharacterInput {
+    id?: string;
     name: string;
     age: number;
     details: CharacterDetail[];
@@ -20,7 +21,7 @@ export interface CharacterInput {
 
 interface CharacterFormProps {
     initialValues?: CharacterInput;
-    onSubmit: (input: CharacterInput) => Promise<void>;
+    onSubmit: (input: CharacterInput) => void;
     loading?: boolean;
 }
 
@@ -56,14 +57,15 @@ export default function CharacterForm(props: CharacterFormProps) {
         setDetails(newDetails);
     };
 
-    const handleSubmit = async (event: React.FormEvent) => {
+    const handleSubmit = (event: React.FormEvent) => {
         event.preventDefault();
         const input: CharacterInput = {
+            id: props.initialValues?.id,
             name,
             age: age === '' ? 0 : Number(age),
             details,
         };
-        await props.onSubmit(input);
+        props.onSubmit(input);
     };
 
     return (
