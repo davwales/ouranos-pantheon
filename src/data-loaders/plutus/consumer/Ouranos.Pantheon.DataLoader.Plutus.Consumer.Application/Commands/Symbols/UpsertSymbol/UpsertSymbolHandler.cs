@@ -1,6 +1,8 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Interfaces.Common;
+using Ouranos.Pantheon.Core.Domain.Common;
+using Ouranos.Pantheon.Service.Plutus.Domain.Markets;
 using Ouranos.Pantheon.Service.Plutus.Domain.Symbols;
 
 namespace Ouranos.Pantheon.DataLoader.Plutus.Consumer.Application.Commands.Symbols.UpsertSymbol;
@@ -38,14 +40,21 @@ public sealed class UpsertSymbolHandler : IRequestHandler<UpsertSymbolInput, Sym
         _logger.LogTrace("Attempting to handle upsert symbol request '{@request}'.", request);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var query = _symbolRepository.AsQueryable(cancellationToken)
-            .Where(s => s.MarketId == request.MarketId
-                        && s.Code == request.SymbolCode
-                        && s.Subcode == request.SymbolSubcode);
-        var existingSymbol = await _queryExecutor.FirstOrDefaultAsync<Symbol?>(query, cancellationToken);
+        var existingSymbol = await _queryExecutor.FirstOrDefaultAsync<Symbol?>(
+            GetSymbolQuery(request.MarketId, request.SymbolCode, request.SymbolSubcode),
+            cancellationToken
+        );
 
-        var symbol = new Symbol(
-            existingSymbol?.Id ?? _createDatabaseId.CreateId(),
+        if (existingSymbol is not null)
+        {
+            existingSymbol.Update(request.SymbolName, request.AdditionalFields);
+            await _symbolRepository.Update(existingSymbol, cancellationToken);
+            _logger.LogDebug("Successfully updated symbol '{symbolId}'.", existingSymbol.Id);
+            return existingSymbol;
+        }
+
+        var newSymbol = new Symbol(
+            _createDatabaseId.CreateId(),
             request.SymbolCode,
             request.SymbolSubcode,
             request.SymbolName,
@@ -53,9 +62,15 @@ public sealed class UpsertSymbolHandler : IRequestHandler<UpsertSymbolInput, Sym
             request.AdditionalFields
         );
 
-        await _symbolRepository.Upsert(symbol, cancellationToken);
+        await _symbolRepository.Create(newSymbol, cancellationToken);
 
-        _logger.LogDebug("Successfully handled upsert symbol request.");
-        return symbol;
+        _logger.LogDebug("Successfully inserted new symbol '{symbolId}'.", newSymbol.Id);
+        return newSymbol;
+    }
+
+    private IQueryable<Symbol> GetSymbolQuery(Id<Market> marketId, string symbolCode, string? symbolSubcode)
+    {
+        return _symbolRepository.AsQueryable()
+            .Where(s => s.MarketId == marketId && s.Code == symbolCode && s.Subcode == symbolSubcode);
     }
 }

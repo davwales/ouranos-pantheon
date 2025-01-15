@@ -10,18 +10,18 @@ namespace Ouranos.Pantheon.DataLoader.Plutus.Stocks.Producer.Listeners;
 public sealed class TradeListener : IListener<AlpacaTradeMessage>
 {
     private readonly ILogger<TradeListener> _logger;
-    private readonly IQueueTradeMessage _queueTradeMessage;
+    private readonly IQueueTradeMessages _queueTradeMessages;
 
     public TradeListener(
         ILogger<TradeListener> logger,
-        IQueueTradeMessage queueTradeMessage
+        IQueueTradeMessages queueTradeMessages
     )
     {
         ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(queueTradeMessage);
+        ArgumentNullException.ThrowIfNull(queueTradeMessages);
 
         _logger = logger;
-        _queueTradeMessage = queueTradeMessage;
+        _queueTradeMessages = queueTradeMessages;
     }
 
     public async Task HandleMessageAsync(
@@ -48,7 +48,7 @@ public sealed class TradeListener : IListener<AlpacaTradeMessage>
             )
         );
 
-        await _queueTradeMessage.QueueMessage(tradeMessage, cancellationToken);
+        await _queueTradeMessages.QueueMessages([tradeMessage], cancellationToken);
 
         _logger.LogInformation("Successfully handled Alpaca trade message.");
     }

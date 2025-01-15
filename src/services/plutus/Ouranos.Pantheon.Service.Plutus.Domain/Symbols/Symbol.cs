@@ -31,9 +31,19 @@ public sealed class Symbol : BaseEntity<Id<Symbol>>
 
     public string? Subcode { get; init; }
 
-    public string Name { get; init; }
+    public string Name { get; private set; }
 
     public Id<Market> MarketId { get; init; }
 
-    public AdditionalFields AdditionalFields { get; init; }
+    public AdditionalFields AdditionalFields { get; private set; }
+
+    public void Update(string name, AdditionalFields additionalFields)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentNullException.ThrowIfNull(additionalFields);
+
+        Name = name;
+        AdditionalFields = additionalFields;
+        base.Update();
+    }
 }

@@ -15,6 +15,6 @@ public static class RabbitMqModule
     {
         return services
             .AddCoreRabbitMqModule(configuration)
-            .AddSingleton<IQueueTradeMessage, QueueTradeMessage>();
+            .AddSingleton<IQueueTradeMessages, QueueTradeMessages>();
     }
 }

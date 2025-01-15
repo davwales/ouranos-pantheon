@@ -11,21 +11,21 @@ public sealed class ProcessTradeHandler : IRequestHandler<ProcessTradeInput>
 {
     private readonly IGetItems _getItems;
     private readonly ILogger<ProcessTradeHandler> _logger;
-    private readonly IQueueTradeMessage _queueTradeMessage;
+    private readonly IQueueTradeMessages _queueTradeMessages;
 
     public ProcessTradeHandler(
         ILogger<ProcessTradeHandler> logger,
         IGetItems getItems,
-        IQueueTradeMessage queueTradeMessage
+        IQueueTradeMessages queueTradeMessages
     )
     {
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(getItems);
-        ArgumentNullException.ThrowIfNull(queueTradeMessage);
+        ArgumentNullException.ThrowIfNull(queueTradeMessages);
 
         _logger = logger;
         _getItems = getItems;
-        _queueTradeMessage = queueTradeMessage;
+        _queueTradeMessages = queueTradeMessages;
     }
 
     public async Task Handle(
@@ -44,36 +44,40 @@ public sealed class ProcessTradeHandler : IRequestHandler<ProcessTradeInput>
 
         var itemDtos = await _getItems.GetItemsAsync(cancellationToken);
 
-        var processedCount = 0;
-        foreach (var sale in request.Sales)
-        {
-            var item = itemDtos.FirstOrDefault(i =>
-                i.SymbolCode == request.ItemCode && i.IsHighQuality == sale.IsHighQuality);
-            if (item is null)
+        const string hqCode = "hq";
+        var hqItem = itemDtos.FirstOrDefault(i => i.SymbolCode == request.ItemCode && i.IsHighQuality);
+
+        const string lqCode = "lq";
+        var lqItem = itemDtos.FirstOrDefault(i => i.SymbolCode == request.ItemCode && !i.IsHighQuality);
+
+        var messages = request.Sales
+            .Select(sale =>
             {
+                var item = sale.IsHighQuality ? hqItem : lqItem;
+                if (item is not null)
+                {
+                    return new TradeMessage(
+                        Producer.Ffxiv,
+                        request.ItemCode,
+                        sale.IsHighQuality ? hqCode : lqCode,
+                        item.SymbolName,
+                        sale.Price,
+                        sale.Volume,
+                        sale.Timestamp,
+                        item.AdditionalFields
+                    );
+                }
+
                 _logger.LogWarning("Trade item '{itemCode}' '{isHighQuality}' is missing.", request.ItemCode,
                     sale.IsHighQuality);
-                continue;
-            }
+                return null;
+            })
+            .Where(x => x is not null)
+            .OfType<TradeMessage>()
+            .ToList();
 
-            const string hqCode = "hq";
-            const string lqCode = "lq";
+        await _queueTradeMessages.QueueMessages(messages, cancellationToken);
 
-            var tradeMessage = new TradeMessage(
-                Producer.Ffxiv,
-                request.ItemCode,
-                sale.IsHighQuality ? hqCode : lqCode,
-                item.SymbolName,
-                sale.Price,
-                sale.Volume,
-                sale.Timestamp,
-                item.AdditionalFields
-            );
-
-            await _queueTradeMessage.QueueMessage(tradeMessage, cancellationToken);
-            processedCount++;
-        }
-
-        _logger.LogInformation("Successfully processed '{processedCount}' trades.", processedCount);
+        _logger.LogInformation("Successfully processed '{messageCount}' trades.", messages.Count);
     }
 }

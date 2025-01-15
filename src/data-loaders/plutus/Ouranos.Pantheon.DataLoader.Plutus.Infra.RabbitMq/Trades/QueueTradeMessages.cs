@@ -5,12 +5,12 @@ using Ouranos.Pantheon.DataLoader.Plutus.Domain.Trades;
 
 namespace Ouranos.Pantheon.DataLoader.Plutus.Infra.RabbitMq.Trades;
 
-public sealed class QueueTradeMessage : IQueueTradeMessage
+public sealed class QueueTradeMessages : IQueueTradeMessages
 {
     private readonly IBus _bus;
-    private readonly ILogger<QueueTradeMessage> _logger;
+    private readonly ILogger<QueueTradeMessages> _logger;
 
-    public QueueTradeMessage(ILogger<QueueTradeMessage> logger, IBus bus)
+    public QueueTradeMessages(ILogger<QueueTradeMessages> logger, IBus bus)
     {
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(bus);
@@ -19,15 +19,15 @@ public sealed class QueueTradeMessage : IQueueTradeMessage
         _bus = bus;
     }
 
-    public async Task QueueMessage(
-        TradeMessage message,
+    public async Task QueueMessages(
+        IReadOnlyCollection<TradeMessage> messages,
         CancellationToken cancellationToken = default
     )
     {
-        _logger.LogTrace("Attempting to queue trade message '{@message}'.", message);
+        _logger.LogTrace("Attempting to queue '{messageCount}' trade messages.", messages.Count);
         cancellationToken.ThrowIfCancellationRequested();
 
-        await _bus.Publish(message, cancellationToken);
+        await _bus.PublishBatch(messages, cancellationToken);
 
         _logger.LogDebug("Successfully queued trade message.");
     }

@@ -2,10 +2,10 @@
 
 namespace Ouranos.Pantheon.DataLoader.Plutus.Application.Interfaces.Trades;
 
-public interface IQueueTradeMessage
+public interface IQueueTradeMessages
 {
-    Task QueueMessage(
-        TradeMessage message,
+    Task QueueMessages(
+        IReadOnlyCollection<TradeMessage> messages,
         CancellationToken cancellationToken = default
     );
 }
