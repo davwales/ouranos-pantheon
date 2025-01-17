@@ -1,15 +1,19 @@
-﻿using MediatR;
+﻿using Ouranos.Pantheon.Core.Application.Interfaces.Mediator;
 using Ouranos.Pantheon.Core.Domain.Common;
 using Ouranos.Pantheon.Service.Plutus.Domain.Markets;
 using Ouranos.Pantheon.Service.Plutus.Domain.Symbols;
 using Ouranos.Pantheon.Service.Plutus.Domain.Trades;
 
-namespace Ouranos.Pantheon.DataLoader.Plutus.Consumer.Application.Commands.Symbols.UpsertSymbol;
+namespace Ouranos.Pantheon.DataLoader.Plutus.Consumer.Messages;
 
-public sealed record UpsertSymbolInput(
+public sealed record InsertTradeMessage(
     Id<Market> MarketId,
+    Id<Symbol> SymbolId,
+    string SymbolName,
     string SymbolCode,
     string? SymbolSubcode,
-    string SymbolName,
+    decimal Price,
+    decimal Volume,
+    DateTimeOffset Timestamp,
     AdditionalFields AdditionalFields
-) : IRequest<Symbol>;
+) : ICommand<Trade>;

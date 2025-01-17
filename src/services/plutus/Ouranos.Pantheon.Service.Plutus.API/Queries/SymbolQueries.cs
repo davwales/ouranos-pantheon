@@ -1,5 +1,5 @@
-﻿using MediatR;
-using Ouranos.Pantheon.Core.API.Queries;
+﻿using Ouranos.Pantheon.Core.API.Queries;
+using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Core.Application.Queries.Common.GetAllEntities;
 using Ouranos.Pantheon.Core.Application.Queries.Common.GetEntity;
 using Ouranos.Pantheon.Core.Domain.Common;
@@ -13,8 +13,8 @@ public sealed class SymbolQueries
     /// <summary>
     ///     Gets all symbols.
     /// </summary>
-    /// <param name="mediator">
-    ///     <see cref="IMediator" />
+    /// <param name="dispatcher">
+    ///     <see cref="IDispatcher" />
     /// </param>
     /// <param name="cancellationToken">
     ///     <see cref="CancellationToken" />
@@ -24,28 +24,29 @@ public sealed class SymbolQueries
     [UseFiltering]
     [UseSorting]
     public async Task<IQueryable<Symbol>> GetAllSymbols(
-        [Service] IMediator mediator,
+        [Service] IDispatcher dispatcher,
         CancellationToken cancellationToken = default
     )
     {
-        return await mediator.Send(new GetAllEntitiesInput<Symbol>(), cancellationToken);
+        var wrapper = await dispatcher.Send(new GetAllEntitiesInput<Symbol>(), cancellationToken);
+        return wrapper.Value;
     }
 
     /// <summary>
     ///     Gets a symbol by its identifier.
     /// </summary>
-    /// <param name="mediator">
-    ///     <see cref="IMediator" />
+    /// <param name="dispatcher">
+    ///     <see cref="IDispatcher" />
     /// </param>
     /// <param name="symbolId">Id of the symbol to get.</param>
     /// <param name="cancellationToken"><see cref="CancellationToken" />.</param>
     /// <returns>The symbol matching the given query.</returns>
     public async Task<Symbol> GetSymbol(
-        [Service] IMediator mediator,
+        [Service] IDispatcher dispatcher,
         Id<Symbol> symbolId,
         CancellationToken cancellationToken = default
     )
     {
-        return await mediator.Send(new GetEntityInput<Symbol>(symbolId), cancellationToken);
+        return await dispatcher.Send(new GetEntityInput<Symbol>(symbolId), cancellationToken);
     }
 }

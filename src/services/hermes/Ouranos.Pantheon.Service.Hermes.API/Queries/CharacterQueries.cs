@@ -1,5 +1,5 @@
-using MediatR;
 using Ouranos.Pantheon.Core.API.Queries;
+using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Core.Application.Queries.Common.GetAllEntities;
 using Ouranos.Pantheon.Core.Application.Queries.Common.GetEntity;
 using Ouranos.Pantheon.Core.Domain.Common;
@@ -13,8 +13,8 @@ public sealed class CharacterQueries
     /// <summary>
     ///     Gets a character.
     /// </summary>
-    /// <param name="mediator">
-    ///     <see cref="IMediator" />
+    /// <param name="dispatcher">
+    ///     <see cref="IDispatcher" />
     /// </param>
     /// <param name="characterId">The query to be executed.</param>
     /// <param name="cancellationToken">
@@ -22,18 +22,20 @@ public sealed class CharacterQueries
     /// </param>
     /// <returns>The character matching the given query.</returns>
     public async Task<Character> GetCharacter(
-        [Service] IMediator mediator,
+        [Service] IDispatcher dispatcher,
         Id<Character> characterId,
         CancellationToken cancellationToken = default
     )
     {
-        return await mediator.Send(new GetEntityInput<Character>(characterId), cancellationToken);
+        return await dispatcher.Send(new GetEntityInput<Character>(characterId), cancellationToken);
     }
 
     /// <summary>
     ///     Gets a queryable list of characters.
     /// </summary>
-    /// <param name="mediator"><see cref="IMediator" />.</param>
+    /// <param name="dispatcher">
+    ///     <see cref="IDispatcher" />.
+    /// </param>
     /// <param name="cancellationToken">
     ///     <see cref="CancellationToken" />
     /// </param>
@@ -41,10 +43,11 @@ public sealed class CharacterQueries
     [UseFiltering]
     [UseSorting]
     public async Task<IQueryable<Character>> GetAllCharacters(
-        [Service] IMediator mediator,
+        [Service] IDispatcher dispatcher,
         CancellationToken cancellationToken = default
     )
     {
-        return await mediator.Send(new GetAllEntitiesInput<Character>(), cancellationToken);
+        var wrapper = await dispatcher.Send(new GetAllEntitiesInput<Character>(), cancellationToken);
+        return wrapper.Value;
     }
 }

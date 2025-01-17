@@ -1,12 +1,13 @@
-using System.Runtime.CompilerServices;
-using MediatR;
+using MassTransit;
 using Microsoft.Extensions.Logging;
+using Ouranos.Pantheon.Core.Application.Common;
+using Ouranos.Pantheon.Core.Application.Interfaces.Mediator;
 using Ouranos.Pantheon.Service.Hermes.Application.Interfaces.Conversations;
 
 namespace Ouranos.Pantheon.Service.Hermes.Application.Commands.Conversations.GenerateCompletion;
 
-public sealed class
-    GenerateCompletionHandler : IStreamRequestHandler<GenerateCompletionInput, GenerateCompletionResponse>
+public sealed class GenerateCompletionHandler :
+    IQueryHandler<GenerateCompletionInput, StreamResponse<string, GenerateCompletionResponse>>
 {
     private readonly IGenerateCompletion _generateCompletion;
     private readonly ILogger<GenerateCompletionHandler> _logger;
@@ -23,21 +24,19 @@ public sealed class
         _generateCompletion = generateCompletion;
     }
 
-    public async IAsyncEnumerable<GenerateCompletionResponse> Handle(
-        GenerateCompletionInput request,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default
-    )
+    public async Task Consume(ConsumeContext<GenerateCompletionInput> context)
     {
-        _logger.LogTrace("Attempting to handle generate completion request '{@request}'.", request);
-        cancellationToken.ThrowIfCancellationRequested();
+        _logger.LogTrace("Attempting to handle generate completion query '{@query}'.", context.Message);
+        context.CancellationToken.ThrowIfCancellationRequested();
 
-        await foreach (var chunk in _generateCompletion.GenerateCompletionStream(request.Conversation,
-                           cancellationToken))
-        {
-            yield return new GenerateCompletionResponse(chunk);
-            cancellationToken.ThrowIfCancellationRequested();
-        }
+        var stream = new StreamResponse<string, GenerateCompletionResponse>(
+            async token => await Task.FromResult(
+                _generateCompletion.GenerateCompletionStream(context.Message.Conversation, token)
+            ),
+            async chunk => await Task.FromResult(new GenerateCompletionResponse(chunk))
+        );
 
         _logger.LogDebug("Successfully handled generate completion request.");
+        await context.RespondAsync(stream);
     }
 }

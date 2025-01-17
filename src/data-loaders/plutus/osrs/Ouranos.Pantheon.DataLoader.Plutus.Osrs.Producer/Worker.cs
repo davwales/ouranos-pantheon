@@ -1,4 +1,4 @@
-using MediatR;
+using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.DataLoader.Plutus.Osrs.Application.Commands.Trades.ProcessTrades;
 using Ouranos.Pantheon.DataLoader.Plutus.Osrs.Application.Queries.Trades.GetTrades;
 
@@ -6,22 +6,22 @@ namespace Ouranos.Pantheon.DataLoader.Plutus.Osrs.Producer;
 
 public class Worker : BackgroundService
 {
+    private readonly IDispatcher _dispatcher;
     private readonly TimeSpan? _interval;
     private readonly ILogger<Worker> _logger;
-    private readonly IMediator _mediator;
 
     public Worker(
         ILogger<Worker> logger,
-        IMediator mediator,
+        IDispatcher dispatcher,
         IConfiguration configuration
     )
     {
         ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(mediator);
+        ArgumentNullException.ThrowIfNull(dispatcher);
         ArgumentNullException.ThrowIfNull(configuration);
 
         _logger = logger;
-        _mediator = mediator;
+        _dispatcher = dispatcher;
 
         var intervalSeconds = configuration.GetValue<int?>("Ouranos:IntervalSeconds", null);
         _interval = intervalSeconds.HasValue ? TimeSpan.FromSeconds(intervalSeconds.Value) : null;
@@ -58,9 +58,9 @@ public class Worker : BackgroundService
     private async Task ProcessTrades(CancellationToken cancellationToken)
     {
         var getTradesRequest = new GetTradesInput();
-        var trades = await _mediator.Send(getTradesRequest, cancellationToken);
+        var tradeWrapper = await _dispatcher.Send(getTradesRequest, cancellationToken);
 
-        var processTradesRequest = new ProcessTradesInput(trades);
-        await _mediator.Send(processTradesRequest, cancellationToken);
+        var processTradesRequest = new ProcessTradesInput(tradeWrapper.Value);
+        await _dispatcher.Send(processTradesRequest, cancellationToken);
     }
 }

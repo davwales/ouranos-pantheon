@@ -1,4 +1,4 @@
-﻿using MediatR;
+﻿using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Core.WebSockets.Listeners;
 using Ouranos.Pantheon.Core.WebSockets.WebSocketClients;
 using Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Application.Commands.Trades.ProcessTrade;
@@ -8,19 +8,19 @@ namespace Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Producer;
 
 public sealed class Listener : IListener<SaleMessage>
 {
+    private readonly IDispatcher _dispatcher;
     private readonly ILogger<Listener> _logger;
-    private readonly IMediator _mediator;
 
     public Listener(
         ILogger<Listener> logger,
-        IMediator mediator
+        IDispatcher dispatcher
     )
     {
         ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(mediator);
+        ArgumentNullException.ThrowIfNull(dispatcher);
 
         _logger = logger;
-        _mediator = mediator;
+        _dispatcher = dispatcher;
     }
 
     public async Task HandleMessageAsync(
@@ -41,7 +41,7 @@ public sealed class Listener : IListener<SaleMessage>
                 DateTimeOffset.FromUnixTimeSeconds(s.Timestamp)
             )).ToList()
         );
-        await _mediator.Send(processMessageRequest, cancellationToken);
+        await _dispatcher.Send(processMessageRequest, cancellationToken);
 
         _logger.LogDebug("Successfully handled message.");
         await Task.CompletedTask;

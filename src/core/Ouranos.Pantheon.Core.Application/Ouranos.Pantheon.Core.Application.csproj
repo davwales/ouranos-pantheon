@@ -9,6 +9,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="MediatR" Version="$(MediatrVersion)"/>
+        <PackageReference Include="MassTransit" Version="$(MassTransitVersion)"/>
     </ItemGroup>
 </Project>

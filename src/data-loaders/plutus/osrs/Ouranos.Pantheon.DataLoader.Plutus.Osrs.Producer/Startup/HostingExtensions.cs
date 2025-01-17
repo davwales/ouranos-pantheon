@@ -1,4 +1,5 @@
-﻿using Ouranos.Pantheon.DataLoader.Plutus.Infra.RabbitMq;
+﻿using MassTransit;
+using Ouranos.Pantheon.DataLoader.Plutus.Infra.RabbitMq;
 using Ouranos.Pantheon.DataLoader.Plutus.Osrs.Application;
 using Ouranos.Pantheon.DataLoader.Plutus.Osrs.Infra.OsrsWiki;
 
@@ -12,7 +13,9 @@ public static class HostingExtensions
             .AddHostedService<Worker>()
             .AddApplicationModule()
             .AddOsrsWikiModule(builder.Configuration)
-            .AddPlutusDataLoaderRabbitMqModule(builder.Configuration);
+            .AddPlutusDataLoaderRabbitMqModule(builder.Configuration, b => b
+                .AddMediator(m => m.AddModuleConsumers())
+            );
 
         return builder.Build();
     }

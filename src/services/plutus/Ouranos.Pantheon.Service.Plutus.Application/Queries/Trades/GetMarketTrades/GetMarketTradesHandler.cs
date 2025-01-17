@@ -1,12 +1,15 @@
-using MediatR;
+using MassTransit;
 using Microsoft.Extensions.Logging;
+using Ouranos.Pantheon.Core.Application.Common;
 using Ouranos.Pantheon.Core.Application.Interfaces.Common;
+using Ouranos.Pantheon.Core.Application.Interfaces.Mediator;
 using Ouranos.Pantheon.Service.Plutus.Domain.Markets;
 using Ouranos.Pantheon.Service.Plutus.Domain.Trades;
 
 namespace Ouranos.Pantheon.Service.Plutus.Application.Queries.Trades.GetMarketTrades;
 
-public sealed class GetMarketTradesHandler : IRequestHandler<GetMarketTradesInput, IQueryable<GetMarketTradesResponse>>
+public sealed class
+    GetMarketTradesHandler : IQueryHandler<GetMarketTradesInput, WrapperResponse<IQueryable<GetMarketTradesResponse>>>
 {
     private readonly ILogger<GetMarketTradesHandler> _logger;
     private readonly ICrudRepository<Trade> _tradeRepository;
@@ -24,20 +27,17 @@ public sealed class GetMarketTradesHandler : IRequestHandler<GetMarketTradesInpu
         _tradeRepository = tradeRepository;
     }
 
-    public async Task<IQueryable<GetMarketTradesResponse>> Handle(
-        GetMarketTradesInput request,
-        CancellationToken cancellationToken
-    )
+    public async Task Consume(ConsumeContext<GetMarketTradesInput> context)
     {
-        _logger.LogTrace("Attempting to handle symbol statistics request '{@request}'.", request);
-        cancellationToken.ThrowIfCancellationRequested();
+        _logger.LogTrace("Attempting to handle symbol statistics query '{@query}'.", context.Message);
+        context.CancellationToken.ThrowIfCancellationRequested();
 
-        DateTimeOffset? since = request.Seconds.HasValue
-            ? DateTimeOffset.UtcNow - TimeSpan.FromSeconds(request.Seconds.Value)
+        DateTimeOffset? since = context.Message.Seconds.HasValue
+            ? DateTimeOffset.UtcNow - TimeSpan.FromSeconds(context.Message.Seconds.Value)
             : null;
 
-        var query = _tradeRepository.AsQueryable(cancellationToken)
-            .Where(x => x.Metadata.MarketId == request.MarketId &&
+        var query = _tradeRepository.AsQueryable(context.CancellationToken)
+            .Where(x => x.Metadata.MarketId == context.Message.MarketId &&
                         (since == null || x.CreatedAt >= since))
             .GroupBy(t => t.Metadata.SymbolId)
             .Select(g => new
@@ -122,6 +122,6 @@ public sealed class GetMarketTradesHandler : IRequestHandler<GetMarketTradesInpu
             );
 
         _logger.LogDebug("Successfully handled symbol statistics request.");
-        return await Task.FromResult(query);
+        await context.RespondAsync(new WrapperResponse<IQueryable<GetMarketTradesResponse>>(query));
     }
 }

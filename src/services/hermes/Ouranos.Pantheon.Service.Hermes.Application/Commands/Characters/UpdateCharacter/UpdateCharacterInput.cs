@@ -1,5 +1,5 @@
-using MediatR;
 using Ouranos.Pantheon.Core.Application.Common;
+using Ouranos.Pantheon.Core.Application.Interfaces.Mediator;
 using Ouranos.Pantheon.Core.Domain.Common;
 using Ouranos.Pantheon.Service.Hermes.Domain.Characters;
 
@@ -10,4 +10,4 @@ public sealed record UpdateCharacterInput(
     string Name,
     int Age,
     List<CharacterDetail> Details
-) : IRequest<IdResponse<Character>>;
+) : ICommand<IdResponse<Character>>;

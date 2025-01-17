@@ -1,12 +1,13 @@
-using MediatR;
+using MassTransit;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Common;
 using Ouranos.Pantheon.Core.Application.Interfaces.Common;
+using Ouranos.Pantheon.Core.Application.Interfaces.Mediator;
 using Ouranos.Pantheon.Service.Hermes.Domain.Characters;
 
 namespace Ouranos.Pantheon.Service.Hermes.Application.Commands.Characters.CreateCharacter;
 
-public sealed class CreateCharacterHandler : IRequestHandler<CreateCharacterInput, IdResponse<Character>>
+public sealed class CreateCharacterHandler : ICommandHandler<CreateCharacterInput, IdResponse<Character>>
 {
     private readonly ICrudRepository<Character> _characterRepository;
     private readonly ICreateDatabaseId<Character> _createDatabaseId;
@@ -27,19 +28,16 @@ public sealed class CreateCharacterHandler : IRequestHandler<CreateCharacterInpu
         _characterRepository = characterRepository;
     }
 
-    public async Task<IdResponse<Character>> Handle(
-        CreateCharacterInput request,
-        CancellationToken cancellationToken = default
-    )
+    public async Task Consume(ConsumeContext<CreateCharacterInput> context)
     {
-        _logger.LogTrace("Attempting to handle create character request '{@request}'.", request);
-        cancellationToken.ThrowIfCancellationRequested();
+        _logger.LogTrace("Attempting to handle create character command '{@command}'.", context.Message);
+        context.CancellationToken.ThrowIfCancellationRequested();
 
         var characterId = _createDatabaseId.CreateId();
-        var character = new Character(characterId, request.Name, request.Age, request.Details);
-        await _characterRepository.Create(character, cancellationToken);
+        var character = new Character(characterId, context.Message.Name, context.Message.Age, context.Message.Details);
+        await _characterRepository.Create(character, context.CancellationToken);
 
         _logger.LogDebug("Successfully handled create character request for character '{characterId}'.", characterId);
-        return new IdResponse<Character>(characterId);
+        await context.RespondAsync(new IdResponse<Character>(characterId));
     }
 }

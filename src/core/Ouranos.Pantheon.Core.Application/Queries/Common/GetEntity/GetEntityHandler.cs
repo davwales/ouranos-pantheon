@@ -1,11 +1,12 @@
-using MediatR;
+using MassTransit;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Interfaces.Common;
+using Ouranos.Pantheon.Core.Application.Interfaces.Mediator;
 using Ouranos.Pantheon.Core.Domain.Common;
 
 namespace Ouranos.Pantheon.Core.Application.Queries.Common.GetEntity;
 
-public sealed class GetEntityHandler<T> : IRequestHandler<GetEntityInput<T>, T> where T : BaseEntity<Id<T>>
+public sealed class GetEntityHandler<T> : IQueryHandler<GetEntityInput<T>, T> where T : BaseEntity<Id<T>>
 {
     private readonly ILogger<GetEntityHandler<T>> _logger;
     private readonly ICrudRepository<T> _repository;
@@ -22,18 +23,15 @@ public sealed class GetEntityHandler<T> : IRequestHandler<GetEntityInput<T>, T> 
         _repository = repository;
     }
 
-    public async Task<T> Handle(
-        GetEntityInput<T> request,
-        CancellationToken cancellationToken = default
-    )
+    public async Task Consume(ConsumeContext<GetEntityInput<T>> context)
     {
-        _logger.LogTrace("Attempting to handle get entity request '{@request}' for type '{type}'.", request,
+        _logger.LogTrace("Attempting to handle get entity query '{@query}' for type '{type}'.", context.Message,
             typeof(T).Name);
-        cancellationToken.ThrowIfCancellationRequested();
+        context.CancellationToken.ThrowIfCancellationRequested();
 
-        var entity = await _repository.Read(request.EntityId, cancellationToken);
+        var entity = await _repository.Read(context.Message.EntityId, context.CancellationToken);
 
-        _logger.LogDebug("Successfully handled get entity request.");
-        return entity;
+        _logger.LogDebug("Successfully handled get entity query.");
+        await context.RespondAsync(entity);
     }
 }

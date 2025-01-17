@@ -1,4 +1,4 @@
-using MediatR;
+using Ouranos.Pantheon.Core.Application.Interfaces.Mediator;
 using Ouranos.Pantheon.Core.Domain.Common;
 using Ouranos.Pantheon.Service.Plutus.Domain.Markets;
 using Ouranos.Pantheon.Service.Plutus.Domain.Symbols;
@@ -10,4 +10,4 @@ public sealed record GetSymbolTradesInput(
     Id<Market> MarketId,
     int NumBuckets = 100,
     double? Seconds = null
-) : IRequest<GetSymbolTradesResponse>;
+) : IQuery<GetSymbolTradesResponse>;

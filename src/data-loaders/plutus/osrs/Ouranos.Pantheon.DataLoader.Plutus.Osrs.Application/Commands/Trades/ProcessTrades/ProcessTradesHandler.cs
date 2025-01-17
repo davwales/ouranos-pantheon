@@ -1,5 +1,6 @@
-﻿using MediatR;
+﻿using MassTransit;
 using Microsoft.Extensions.Logging;
+using Ouranos.Pantheon.Core.Application.Interfaces.Mediator;
 using Ouranos.Pantheon.DataLoader.Plutus.Application.Interfaces.Trades;
 using Ouranos.Pantheon.DataLoader.Plutus.Domain;
 using Ouranos.Pantheon.DataLoader.Plutus.Domain.Trades;
@@ -7,7 +8,7 @@ using Ouranos.Pantheon.Service.Plutus.Domain.Trades;
 
 namespace Ouranos.Pantheon.DataLoader.Plutus.Osrs.Application.Commands.Trades.ProcessTrades;
 
-public sealed class ProcessTradesHandler : IRequestHandler<ProcessTradesInput>
+public sealed class ProcessTradesHandler : ICommandHandler<ProcessTradesInput>
 {
     private readonly ILogger<ProcessTradesHandler> _logger;
     private readonly IQueueTradeMessages _queueTradeMessages;
@@ -24,15 +25,12 @@ public sealed class ProcessTradesHandler : IRequestHandler<ProcessTradesInput>
         _queueTradeMessages = queueTradeMessages;
     }
 
-    public async Task Handle(
-        ProcessTradesInput request,
-        CancellationToken cancellationToken = default
-    )
+    public async Task Consume(ConsumeContext<ProcessTradesInput> context)
     {
-        _logger.LogTrace("Attempting to handle process trades request '{@request}'", request);
-        cancellationToken.ThrowIfCancellationRequested();
+        _logger.LogTrace("Attempting to handle process trades command '{@command}'", context.Message);
+        context.CancellationToken.ThrowIfCancellationRequested();
 
-        var messages = request.Trades.Select(trade => new TradeMessage(
+        var messages = context.Message.Trades.Select(trade => new TradeMessage(
             Producer.Osrs,
             trade.SymbolCode,
             trade.SymbolSubcode,
@@ -47,8 +45,7 @@ public sealed class ProcessTradesHandler : IRequestHandler<ProcessTradesInput>
             )
         )).ToList();
 
-        await _queueTradeMessages.QueueMessages(messages, cancellationToken);
-
+        await _queueTradeMessages.QueueMessages(messages, context.CancellationToken);
         _logger.LogInformation("Successfully processed '{messageCount}' trades.", messages.Count);
     }
 }

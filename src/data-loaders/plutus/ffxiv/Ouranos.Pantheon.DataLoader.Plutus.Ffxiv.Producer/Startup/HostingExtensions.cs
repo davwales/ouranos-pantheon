@@ -1,4 +1,5 @@
-﻿using Ouranos.Pantheon.Core.WebSockets;
+﻿using MassTransit;
+using Ouranos.Pantheon.Core.WebSockets;
 using Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Application;
 using Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Infra.XivApi;
 using Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Producer.Initializers;
@@ -20,7 +21,9 @@ public static class HostingExtensions
             )
             .AddApplicationModule()
             .AddXivApiModule(builder.Configuration)
-            .AddPlutusDataLoaderRabbitMqModule(builder.Configuration);
+            .AddPlutusDataLoaderRabbitMqModule(builder.Configuration, b => b
+                .AddMediator(m => m.AddModuleConsumers())
+            );
 
         return builder.Build();
     }

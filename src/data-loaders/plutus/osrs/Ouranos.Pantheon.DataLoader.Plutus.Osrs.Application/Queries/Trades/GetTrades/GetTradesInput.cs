@@ -1,5 +1,6 @@
-﻿using MediatR;
+﻿using Ouranos.Pantheon.Core.Application.Common;
+using Ouranos.Pantheon.Core.Application.Interfaces.Mediator;
 
 namespace Ouranos.Pantheon.DataLoader.Plutus.Osrs.Application.Queries.Trades.GetTrades;
 
-public sealed record GetTradesInput : IRequest<List<GetTradesResponse>>;
+public sealed record GetTradesInput : IQuery<WrapperResponse<List<GetTradesResponse>>>;

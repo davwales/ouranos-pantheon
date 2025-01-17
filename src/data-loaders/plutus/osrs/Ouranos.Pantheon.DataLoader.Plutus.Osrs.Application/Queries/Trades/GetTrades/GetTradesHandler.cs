@@ -1,10 +1,12 @@
-﻿using MediatR;
+﻿using MassTransit;
 using Microsoft.Extensions.Logging;
+using Ouranos.Pantheon.Core.Application.Common;
+using Ouranos.Pantheon.Core.Application.Interfaces.Mediator;
 using Ouranos.Pantheon.DataLoader.Plutus.Osrs.Application.Interfaces.Trades;
 
 namespace Ouranos.Pantheon.DataLoader.Plutus.Osrs.Application.Queries.Trades.GetTrades;
 
-public sealed class GetTradesHandler : IRequestHandler<GetTradesInput, List<GetTradesResponse>>
+public sealed class GetTradesHandler : IQueryHandler<GetTradesInput, WrapperResponse<List<GetTradesResponse>>>
 {
     private readonly IGetTrades _getTrades;
     private readonly ILogger<GetTradesHandler> _logger;
@@ -21,17 +23,14 @@ public sealed class GetTradesHandler : IRequestHandler<GetTradesInput, List<GetT
         _getTrades = getTrades;
     }
 
-    public async Task<List<GetTradesResponse>> Handle(
-        GetTradesInput request,
-        CancellationToken cancellationToken = default
-    )
+    public async Task Consume(ConsumeContext<GetTradesInput> context)
     {
-        _logger.LogTrace("Attempting to handle get trades request '{@request}'.", request);
-        cancellationToken.ThrowIfCancellationRequested();
+        _logger.LogTrace("Attempting to handle get trades query '{@query}'.", context.Message);
+        context.CancellationToken.ThrowIfCancellationRequested();
 
-        var trades = await _getTrades.GetTradesAsync(cancellationToken);
+        var trades = await _getTrades.GetTradesAsync(context.CancellationToken);
 
         _logger.LogDebug("Successfully retrieves '{tradeCount}' trades.", trades.Count);
-        return trades;
+        await context.RespondAsync(new WrapperResponse<List<GetTradesResponse>>(trades));
     }
 }

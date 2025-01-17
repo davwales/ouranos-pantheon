@@ -1,4 +1,5 @@
 ﻿using Ouranos.Pantheon.Core.API.Extensions;
+using Ouranos.Pantheon.Core.API.Interfaces;
 using Ouranos.Pantheon.Service.Hermes.API;
 using Ouranos.Pantheon.Service.Plutus.API;
 
@@ -10,21 +11,23 @@ public static class HostingExtensions
 
     public static WebApplication ConfigureBuilder(this WebApplicationBuilder builder)
     {
+        List<IOuranosModule> modules =
+        [
+            new HermesModule(),
+            new PlutusModule()
+        ];
+
         builder.Services
             .ConfigureCors(builder.Configuration)
-            .AddOuranosCore(builder.Configuration, gql => gql
-                .ModifyOptions(o =>
-                {
-                    o.EnableStream = true;
-                    o.DefaultQueryDependencyInjectionScope = DependencyInjectionScope.Request;
-                    o.DefaultMutationDependencyInjectionScope = DependencyInjectionScope.Request;
-                })
-                .ModifyCostOptions(o => o.EnforceCostLimits = false) // TODO - Refactor queries for lower cost
-                .AddHermesSchema()
-                .AddPlutusSchema()
-            )
-            .AddHermesModule(builder.Configuration)
-            .AddPlutusModule(builder.Configuration);
+            .AddOuranosCore(builder.Configuration, modules, gql => gql
+                    .ModifyOptions(o =>
+                    {
+                        o.EnableStream = true;
+                        o.DefaultQueryDependencyInjectionScope = DependencyInjectionScope.Request;
+                        o.DefaultMutationDependencyInjectionScope = DependencyInjectionScope.Request;
+                    })
+                    .ModifyCostOptions(o => o.EnforceCostLimits = false) // TODO - Refactor queries for lower cost
+            );
 
         return builder.Build();
     }

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using MassTransit;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Ouranos.Pantheon.Core.Infra.RabbitMq;
 using Ouranos.Pantheon.DataLoader.Plutus.Application.Interfaces.Trades;
@@ -10,11 +11,12 @@ public static class RabbitMqModule
 {
     public static IServiceCollection AddPlutusDataLoaderRabbitMqModule(
         this IServiceCollection services,
-        IConfiguration configuration
+        IConfiguration configuration,
+        Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null
     )
     {
         return services
-            .AddCoreRabbitMqModule(configuration)
+            .AddCoreRabbitMqModule(configuration, busRegistrationConfigurator)
             .AddSingleton<IQueueTradeMessages, QueueTradeMessages>();
     }
 }

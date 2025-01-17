@@ -1,12 +1,13 @@
-using MediatR;
+using MassTransit;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Common;
 using Ouranos.Pantheon.Core.Application.Interfaces.Common;
+using Ouranos.Pantheon.Core.Application.Interfaces.Mediator;
 using Ouranos.Pantheon.Core.Domain.Common;
 
 namespace Ouranos.Pantheon.Core.Application.Commands.Common.DeleteEntity;
 
-public sealed class DeleteEntityHandler<T> : IRequestHandler<DeleteEntityInput<T>, IdResponse<T>>
+public sealed class DeleteEntityHandler<T> : ICommandHandler<DeleteEntityInput<T>, IdResponse<T>>
     where T : BaseEntity<Id<T>>
 {
     private readonly ILogger<T> _logger;
@@ -24,18 +25,15 @@ public sealed class DeleteEntityHandler<T> : IRequestHandler<DeleteEntityInput<T
         _repository = repository;
     }
 
-    public async Task<IdResponse<T>> Handle(
-        DeleteEntityInput<T> request,
-        CancellationToken cancellationToken = default
-    )
+    public async Task Consume(ConsumeContext<DeleteEntityInput<T>> context)
     {
-        _logger.LogTrace("Attempting to handle delete entity request '{@request}' for type '{type}'.", request,
+        _logger.LogTrace("Attempting to handle delete entity command '{@command}' for type '{type}'.", context.Message,
             typeof(T).Name);
-        cancellationToken.ThrowIfCancellationRequested();
+        context.CancellationToken.ThrowIfCancellationRequested();
 
-        await _repository.Delete(request.EntityId, cancellationToken);
+        await _repository.Delete(context.Message.EntityId, context.CancellationToken);
 
-        _logger.LogDebug("Successfully handled delete entity request.");
-        return new IdResponse<T>(request.EntityId);
+        _logger.LogDebug("Successfully handled delete entity command.");
+        await context.RespondAsync(new IdResponse<T>(context.Message.EntityId));
     }
 }
