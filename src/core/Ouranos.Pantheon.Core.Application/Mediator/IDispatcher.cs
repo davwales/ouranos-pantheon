@@ -1,5 +1,4 @@
 ﻿using Ouranos.Pantheon.Core.Application.Common;
-using Ouranos.Pantheon.Core.Application.Interfaces.Mediator;
 
 namespace Ouranos.Pantheon.Core.Application.Mediator;
 

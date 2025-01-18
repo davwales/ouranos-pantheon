@@ -1,7 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using MassTransit.Mediator;
 using Ouranos.Pantheon.Core.Application.Common;
-using Ouranos.Pantheon.Core.Application.Interfaces.Mediator;
 
 namespace Ouranos.Pantheon.Core.Application.Mediator;
 

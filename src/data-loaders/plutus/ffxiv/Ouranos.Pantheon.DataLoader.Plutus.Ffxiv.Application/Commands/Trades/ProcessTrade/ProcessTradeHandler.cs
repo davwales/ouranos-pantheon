@@ -1,6 +1,5 @@
-﻿using MassTransit;
-using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Core.Application.Interfaces.Mediator;
+﻿using Microsoft.Extensions.Logging;
+using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.DataLoader.Plutus.Application.Interfaces.Trades;
 using Ouranos.Pantheon.DataLoader.Plutus.Domain;
 using Ouranos.Pantheon.DataLoader.Plutus.Domain.Trades;
@@ -8,7 +7,7 @@ using Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Application.Interfaces.Items;
 
 namespace Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Application.Commands.Trades.ProcessTrade;
 
-public sealed class ProcessTradeHandler : ICommandHandler<ProcessTradeInput>
+public sealed class ProcessTradeHandler : CommandHandler<ProcessTradeInput>
 {
     private readonly IGetItems _getItems;
     private readonly ILogger<ProcessTradeHandler> _logger;
@@ -29,26 +28,29 @@ public sealed class ProcessTradeHandler : ICommandHandler<ProcessTradeInput>
         _queueTradeMessages = queueTradeMessages;
     }
 
-    public async Task Consume(ConsumeContext<ProcessTradeInput> context)
+    protected override async Task Handle(
+        ProcessTradeInput command,
+        CancellationToken cancellationToken = default
+    )
     {
-        _logger.LogTrace("Attempting to handle process message command '{@command}'.", context.Message);
-        context.CancellationToken.ThrowIfCancellationRequested();
+        _logger.LogTrace("Attempting to handle process message command '{@command}'.", command);
+        cancellationToken.ThrowIfCancellationRequested();
 
-        if (context.Message.Sales.Count == 0)
+        if (command.Sales.Count == 0)
         {
             _logger.LogDebug("There are no sales to process.");
             return;
         }
 
-        var itemDtos = await _getItems.GetItemsAsync(context.CancellationToken);
+        var itemDtos = await _getItems.GetItemsAsync(cancellationToken);
 
         const string hqCode = "hq";
-        var hqItem = itemDtos.FirstOrDefault(i => i.SymbolCode == context.Message.ItemCode && i.IsHighQuality);
+        var hqItem = itemDtos.FirstOrDefault(i => i.SymbolCode == command.ItemCode && i.IsHighQuality);
 
         const string lqCode = "lq";
-        var lqItem = itemDtos.FirstOrDefault(i => i.SymbolCode == context.Message.ItemCode && !i.IsHighQuality);
+        var lqItem = itemDtos.FirstOrDefault(i => i.SymbolCode == command.ItemCode && !i.IsHighQuality);
 
-        var messages = context.Message.Sales
+        var messages = command.Sales
             .Select(sale =>
             {
                 var item = sale.IsHighQuality ? hqItem : lqItem;
@@ -56,7 +58,7 @@ public sealed class ProcessTradeHandler : ICommandHandler<ProcessTradeInput>
                 {
                     return new TradeMessage(
                         Producer.Ffxiv,
-                        context.Message.ItemCode,
+                        command.ItemCode,
                         sale.IsHighQuality ? hqCode : lqCode,
                         item.SymbolName,
                         sale.Price,
@@ -66,7 +68,7 @@ public sealed class ProcessTradeHandler : ICommandHandler<ProcessTradeInput>
                     );
                 }
 
-                _logger.LogWarning("Trade item '{itemCode}' '{isHighQuality}' is missing.", context.Message.ItemCode,
+                _logger.LogWarning("Trade item '{itemCode}' '{isHighQuality}' is missing.", command.ItemCode,
                     sale.IsHighQuality);
                 return null;
             })
@@ -74,7 +76,7 @@ public sealed class ProcessTradeHandler : ICommandHandler<ProcessTradeInput>
             .OfType<TradeMessage>()
             .ToList();
 
-        await _queueTradeMessages.QueueMessages(messages, context.CancellationToken);
+        await _queueTradeMessages.QueueMessages(messages, cancellationToken);
 
         _logger.LogInformation("Successfully processed '{messageCount}' trades.", messages.Count);
     }

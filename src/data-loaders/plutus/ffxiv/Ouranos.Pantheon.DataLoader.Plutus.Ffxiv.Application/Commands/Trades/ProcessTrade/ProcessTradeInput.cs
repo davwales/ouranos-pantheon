@@ -1,4 +1,4 @@
-﻿using Ouranos.Pantheon.Core.Application.Interfaces.Mediator;
+﻿using Ouranos.Pantheon.Core.Application.Mediator;
 
 namespace Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Application.Commands.Trades.ProcessTrade;
 

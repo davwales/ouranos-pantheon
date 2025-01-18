@@ -1,13 +1,12 @@
-using MassTransit;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Common;
 using Ouranos.Pantheon.Core.Application.Interfaces.Common;
-using Ouranos.Pantheon.Core.Application.Interfaces.Mediator;
+using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Service.Hermes.Domain.Characters;
 
 namespace Ouranos.Pantheon.Service.Hermes.Application.Commands.Characters.UpdateCharacter;
 
-public sealed class UpdateCharacterHandler : ICommandHandler<UpdateCharacterInput, IdResponse<Character>>
+public sealed class UpdateCharacterHandler : CommandHandler<UpdateCharacterInput, IdResponse<Character>>
 {
     private readonly ICrudRepository<Character> _characterRepository;
     private readonly ILogger<UpdateCharacterHandler> _logger;
@@ -24,16 +23,20 @@ public sealed class UpdateCharacterHandler : ICommandHandler<UpdateCharacterInpu
         _characterRepository = characterRepository;
     }
 
-    public async Task Consume(ConsumeContext<UpdateCharacterInput> context)
+    protected override async Task<IdResponse<Character>> Handle(
+        UpdateCharacterInput command,
+        CancellationToken cancellationToken = default
+    )
     {
-        _logger.LogTrace("Attempting to handle update character command '{@command}'.", context.Message);
-        context.CancellationToken.ThrowIfCancellationRequested();
+        _logger.LogTrace("Attempting to handle update character command '{@command}'.", command);
+        cancellationToken.ThrowIfCancellationRequested();
 
-        var character = await _characterRepository.Read(context.Message.CharacterId, context.CancellationToken);
-        character.Update(context.Message.Name, context.Message.Age, context.Message.Details);
-        await _characterRepository.Update(character, context.CancellationToken);
+        var character = await _characterRepository.Read(command.CharacterId, cancellationToken);
+        character.Update(command.Name, command.Age, command.Details);
+        await _characterRepository.Update(character, cancellationToken);
+        var response = new IdResponse<Character>(command.CharacterId);
 
         _logger.LogDebug("Successfully handled update character request.");
-        await context.RespondAsync(new IdResponse<Character>(context.Message.CharacterId));
+        return response;
     }
 }

@@ -1,13 +1,12 @@
-using MassTransit;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Common;
 using Ouranos.Pantheon.Core.Application.Interfaces.Common;
-using Ouranos.Pantheon.Core.Application.Interfaces.Mediator;
+using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Core.Domain.Common;
 
 namespace Ouranos.Pantheon.Core.Application.Queries.Common.GetAllEntities;
 
-public sealed class GetAllEntitiesHandler<T> : IQueryHandler<GetAllEntitiesInput<T>, WrapperResponse<IQueryable<T>>>
+public sealed class GetAllEntitiesHandler<T> : QueryHandler<GetAllEntitiesInput<T>, WrapperResponse<IQueryable<T>>>
     where T : BaseEntity<Id<T>>
 {
     private readonly ILogger<T> _logger;
@@ -25,15 +24,19 @@ public sealed class GetAllEntitiesHandler<T> : IQueryHandler<GetAllEntitiesInput
         _repository = repository;
     }
 
-    public async Task Consume(ConsumeContext<GetAllEntitiesInput<T>> context)
+    protected override Task<WrapperResponse<IQueryable<T>>> Handle(
+        GetAllEntitiesInput<T> query,
+        CancellationToken cancellationToken = default
+    )
     {
-        _logger.LogTrace("Attempting to handle get all entities query '{@query}' for type '{type}'.", context.Message,
+        _logger.LogTrace("Attempting to handle get all entities query '{@query}' for type '{type}'.", query,
             typeof(T).Name);
-        context.CancellationToken.ThrowIfCancellationRequested();
+        cancellationToken.ThrowIfCancellationRequested();
 
-        var result = _repository.AsQueryable(context.CancellationToken);
+        var entityQuery = _repository.AsQueryable(cancellationToken);
+        var response = new WrapperResponse<IQueryable<T>>(entityQuery);
 
         _logger.LogDebug("Successfully handled get all entities query.");
-        await context.RespondAsync(new WrapperResponse<IQueryable<T>>(result));
+        return Task.FromResult(response);
     }
 }

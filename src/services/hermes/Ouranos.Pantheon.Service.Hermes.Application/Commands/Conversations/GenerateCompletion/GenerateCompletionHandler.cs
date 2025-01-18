@@ -1,13 +1,12 @@
-using MassTransit;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Common;
-using Ouranos.Pantheon.Core.Application.Interfaces.Mediator;
+using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Service.Hermes.Application.Interfaces.Conversations;
 
 namespace Ouranos.Pantheon.Service.Hermes.Application.Commands.Conversations.GenerateCompletion;
 
 public sealed class GenerateCompletionHandler :
-    IQueryHandler<GenerateCompletionInput, StreamResponse<string, GenerateCompletionResponse>>
+    CommandHandler<GenerateCompletionInput, StreamResponse<string, GenerateCompletionResponse>>
 {
     private readonly IGenerateCompletion _generateCompletion;
     private readonly ILogger<GenerateCompletionHandler> _logger;
@@ -24,19 +23,22 @@ public sealed class GenerateCompletionHandler :
         _generateCompletion = generateCompletion;
     }
 
-    public async Task Consume(ConsumeContext<GenerateCompletionInput> context)
+    protected override async Task<StreamResponse<string, GenerateCompletionResponse>> Handle(
+        GenerateCompletionInput command,
+        CancellationToken cancellationToken = default
+    )
     {
-        _logger.LogTrace("Attempting to handle generate completion query '{@query}'.", context.Message);
-        context.CancellationToken.ThrowIfCancellationRequested();
+        _logger.LogTrace("Attempting to handle generate completion query '{@query}'.", command);
+        cancellationToken.ThrowIfCancellationRequested();
 
         var stream = new StreamResponse<string, GenerateCompletionResponse>(
             async token => await Task.FromResult(
-                _generateCompletion.GenerateCompletionStream(context.Message.Conversation, token)
+                _generateCompletion.GenerateCompletionStream(command.Conversation, token)
             ),
             async chunk => await Task.FromResult(new GenerateCompletionResponse(chunk))
         );
 
         _logger.LogDebug("Successfully handled generate completion request.");
-        await context.RespondAsync(stream);
+        return await Task.FromResult(stream);
     }
 }

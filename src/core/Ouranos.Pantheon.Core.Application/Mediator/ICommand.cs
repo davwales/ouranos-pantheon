@@ -1,4 +1,4 @@
-﻿namespace Ouranos.Pantheon.Core.Application.Interfaces.Mediator;
+﻿namespace Ouranos.Pantheon.Core.Application.Mediator;
 
 public interface ICommand<TOutput> : IRequest<TOutput> where TOutput : class;
 

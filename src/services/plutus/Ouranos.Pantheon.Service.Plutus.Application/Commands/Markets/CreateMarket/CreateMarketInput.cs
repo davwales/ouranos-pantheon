@@ -1,5 +1,5 @@
 using Ouranos.Pantheon.Core.Application.Common;
-using Ouranos.Pantheon.Core.Application.Interfaces.Mediator;
+using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Service.Plutus.Domain.Markets;
 
 namespace Ouranos.Pantheon.Service.Plutus.Application.Commands.Markets.CreateMarket;

@@ -1,6 +1,5 @@
-﻿using MassTransit;
-using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Core.Application.Interfaces.Mediator;
+﻿using Microsoft.Extensions.Logging;
+using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.DataLoader.Plutus.Application.Interfaces.Trades;
 using Ouranos.Pantheon.DataLoader.Plutus.Domain;
 using Ouranos.Pantheon.DataLoader.Plutus.Domain.Trades;
@@ -8,7 +7,7 @@ using Ouranos.Pantheon.Service.Plutus.Domain.Trades;
 
 namespace Ouranos.Pantheon.DataLoader.Plutus.Osrs.Application.Commands.Trades.ProcessTrades;
 
-public sealed class ProcessTradesHandler : ICommandHandler<ProcessTradesInput>
+public sealed class ProcessTradesHandler : CommandHandler<ProcessTradesInput>
 {
     private readonly ILogger<ProcessTradesHandler> _logger;
     private readonly IQueueTradeMessages _queueTradeMessages;
@@ -25,12 +24,15 @@ public sealed class ProcessTradesHandler : ICommandHandler<ProcessTradesInput>
         _queueTradeMessages = queueTradeMessages;
     }
 
-    public async Task Consume(ConsumeContext<ProcessTradesInput> context)
+    protected override async Task Handle(
+        ProcessTradesInput command,
+        CancellationToken cancellationToken = default
+    )
     {
-        _logger.LogTrace("Attempting to handle process trades command '{@command}'", context.Message);
-        context.CancellationToken.ThrowIfCancellationRequested();
+        _logger.LogTrace("Attempting to handle process trades command '{@command}'", command);
+        cancellationToken.ThrowIfCancellationRequested();
 
-        var messages = context.Message.Trades.Select(trade => new TradeMessage(
+        var messages = command.Trades.Select(trade => new TradeMessage(
             Producer.Osrs,
             trade.SymbolCode,
             trade.SymbolSubcode,
@@ -45,7 +47,7 @@ public sealed class ProcessTradesHandler : ICommandHandler<ProcessTradesInput>
             )
         )).ToList();
 
-        await _queueTradeMessages.QueueMessages(messages, context.CancellationToken);
+        await _queueTradeMessages.QueueMessages(messages, cancellationToken);
         _logger.LogInformation("Successfully processed '{messageCount}' trades.", messages.Count);
     }
 }

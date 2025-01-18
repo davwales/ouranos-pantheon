@@ -1,14 +1,13 @@
-﻿using MassTransit;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Interfaces.Common;
-using Ouranos.Pantheon.Core.Application.Interfaces.Mediator;
+using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Service.Plutus.Application.Interfaces.Trades;
 using Ouranos.Pantheon.Service.Plutus.Domain.Trades;
 
 namespace Ouranos.Pantheon.Service.Plutus.Application.Queries.Trades.GetSymbolTrades;
 
-public sealed class
-    GetSymbolTradesHandler : IQueryHandler<GetSymbolTradesInput, GetSymbolTradesResponse>
+public sealed class GetSymbolTradesHandler :
+    QueryHandler<GetSymbolTradesInput, GetSymbolTradesResponse>
 {
     private readonly IBucketTrades _bucketTrades;
     private readonly ILogger<GetSymbolTradesHandler> _logger;
@@ -33,20 +32,23 @@ public sealed class
         _queryExecutor = queryExecutor;
     }
 
-    public async Task Consume(ConsumeContext<GetSymbolTradesInput> context)
+    protected override async Task<GetSymbolTradesResponse> Handle(
+        GetSymbolTradesInput query,
+        CancellationToken cancellationToken = default
+    )
     {
-        _logger.LogTrace("Attempting to handle get symbol trades query '{@query}'.", context.Message);
-        context.CancellationToken.ThrowIfCancellationRequested();
+        _logger.LogTrace("Attempting to handle get symbol trades query '{@query}'.", query);
+        cancellationToken.ThrowIfCancellationRequested();
 
-        DateTimeOffset? since = context.Message.Seconds.HasValue
-            ? DateTimeOffset.UtcNow - TimeSpan.FromSeconds(context.Message.Seconds.Value)
+        DateTimeOffset? since = query.Seconds.HasValue
+            ? DateTimeOffset.UtcNow - TimeSpan.FromSeconds(query.Seconds.Value)
             : null;
 
-        var tradesQuery = _tradeRepository.AsQueryable(context.CancellationToken)
-            .Where(t => t.Metadata.SymbolId == context.Message.SymbolId && (since == null || t.CreatedAt >= since));
+        var tradesQuery = _tradeRepository.AsQueryable(cancellationToken)
+            .Where(t => t.Metadata.SymbolId == query.SymbolId && (since == null || t.CreatedAt >= since));
 
         var symbolTradesQuery = _bucketTrades
-            .GetBucketedTradesQuery(tradesQuery, context.Message.NumBuckets, context.CancellationToken)
+            .GetBucketedTradesQuery(tradesQuery, query.NumBuckets, cancellationToken)
             .Select(x => new
             {
                 x.SymbolId,
@@ -107,12 +109,12 @@ public sealed class
                 )).ToList()
             ));
 
-        var symbolTrades =
-            await _queryExecutor.FirstOrDefaultAsync<GetSymbolTradesResponse?>(symbolTradesQuery,
-                context.CancellationToken);
+        var symbolTrades = await _queryExecutor.FirstOrDefaultAsync<GetSymbolTradesResponse?>(
+            symbolTradesQuery,
+            cancellationToken
+        );
 
-        _logger.LogDebug("Successfully handled get symbol trades request.");
-        await context.RespondAsync(symbolTrades ?? new GetSymbolTradesResponse(
+        var response = symbolTrades ?? new GetSymbolTradesResponse(
             0m,
             0m,
             0m,
@@ -123,6 +125,9 @@ public sealed class
             0,
             0m,
             []
-        ));
+        );
+
+        _logger.LogDebug("Successfully handled get symbol trades request.");
+        return response;
     }
 }

@@ -1,8 +1,8 @@
 using Ouranos.Pantheon.Core.Application.Common;
-using Ouranos.Pantheon.Core.Application.Interfaces.Mediator;
+using Ouranos.Pantheon.Core.Application.Mediator;
 
 namespace Ouranos.Pantheon.Service.Hermes.Application.Commands.Conversations.GenerateCompletion;
 
 public sealed record GenerateCompletionInput(
     ConversationInput Conversation
-) : IQuery<StreamResponse<string, GenerateCompletionResponse>>;
+) : ICommand<StreamResponse<string, GenerateCompletionResponse>>;

@@ -1,12 +1,11 @@
-﻿using MassTransit;
-using Ouranos.Pantheon.Core.Application.Interfaces.Common;
-using Ouranos.Pantheon.Core.Application.Interfaces.Mediator;
+﻿using Ouranos.Pantheon.Core.Application.Interfaces.Common;
+using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.DataLoader.Plutus.Consumer.Messages;
 using Ouranos.Pantheon.Service.Plutus.Domain.Trades;
 
 namespace Ouranos.Pantheon.DataLoader.Plutus.Consumer;
 
-public sealed class InsertTradeConsumer : ICommandHandler<InsertTradeMessage, Trade>
+public sealed class InsertTradeConsumer : CommandHandler<InsertTradeMessage, Trade>
 {
     private readonly ICreateDatabaseId<Trade> _createDatabaseId;
     private readonly ILogger<InsertTradeConsumer> _logger;
@@ -27,29 +26,32 @@ public sealed class InsertTradeConsumer : ICommandHandler<InsertTradeMessage, Tr
         _tradeRepository = tradeRepository;
     }
 
-    public async Task Consume(ConsumeContext<InsertTradeMessage> context)
+    protected override async Task<Trade> Handle(
+        InsertTradeMessage command,
+        CancellationToken cancellationToken = default
+    )
     {
-        _logger.LogTrace("Attempting to handle process insert trade command '{@command}'.", context.Message);
-        context.CancellationToken.ThrowIfCancellationRequested();
+        _logger.LogTrace("Attempting to handle process insert trade command '{@command}'.", command);
+        cancellationToken.ThrowIfCancellationRequested();
 
         var trade = new Trade(
             _createDatabaseId.CreateId(),
-            context.Message.Price,
-            context.Message.Volume,
+            command.Price,
+            command.Volume,
             new TradeMetadata(
-                context.Message.MarketId,
-                context.Message.SymbolId,
-                context.Message.SymbolName,
-                context.Message.SymbolCode,
-                context.Message.SymbolSubcode,
-                context.Message.AdditionalFields
+                command.MarketId,
+                command.SymbolId,
+                command.SymbolName,
+                command.SymbolCode,
+                command.SymbolSubcode,
+                command.AdditionalFields
             ),
-            context.Message.Timestamp
+            command.Timestamp
         );
 
-        await _tradeRepository.Create(trade, context.CancellationToken);
+        await _tradeRepository.Create(trade, cancellationToken);
 
         _logger.LogDebug("Successfully handled insert trade command.");
-        await context.RespondAsync(trade);
+        return trade;
     }
 }
