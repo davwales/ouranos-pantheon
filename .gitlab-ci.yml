@@ -1,61 +1,84 @@
 stages:
-  - build_gateway
-  - build_interface
+  - build
   - push_images
 
 variables:
-  DOCKER_IMAGE_GATEWAY: "$CI_REGISTRY_IMAGE/pantheon-gateway"
-  DOCKER_IMAGE_INTERFACE: "$CI_REGISTRY_IMAGE/pantheon-interface"
+  REGISTRY_PREFIX: "$CI_REGISTRY_IMAGE/pantheon"
 
-  DOCKER_TAR_GATEWAY: "pantheon-gateway.tar"
-  DOCKER_TAR_INTERFACE: "pantheon-interface.tar"
-
-build_gateway:
-  stage: build_gateway
-  image: docker:latest
-  services:
-    - docker:dind
-  script:
-    - docker build -f ./src/gateway/Dockerfile -t "$DOCKER_IMAGE_GATEWAY" .
-    - docker save "$DOCKER_IMAGE_GATEWAY" -o "$DOCKER_TAR_GATEWAY"
-  artifacts:
-    paths:
-      - "$DOCKER_TAR_GATEWAY"
-  only:
-    - main
-
-build_interface:
-  stage: build_interface
+.build_template: &build_template
   image: docker:stable
+  stage: build
   services:
     - docker:dind
-  script:
-    - docker build -t "$DOCKER_IMAGE_INTERFACE" ./src/interface
-    - docker save "$DOCKER_IMAGE_INTERFACE" -o "$DOCKER_TAR_INTERFACE"
-  artifacts:
-    paths:
-      - "$DOCKER_TAR_INTERFACE"
   cache:
     key: "$CI_COMMIT_REF_SLUG"
     paths:
       - node_modules
+  script:
+    - docker build -f ${DOCKERFILE_PATH} -t "${REGISTRY_PREFIX}-${IMAGE_NAME}" .
+    - docker save "${REGISTRY_PREFIX}-${IMAGE_NAME}" -o "${IMAGE_NAME}.tar"
+  artifacts:
+    paths:
+      - "${IMAGE_NAME}.tar"
   only:
     - main
 
+build_gateway:
+  <<: *build_template
+  variables:
+    IMAGE_NAME: "gateway"
+    DOCKERFILE_PATH: "./src/gateway/Dockerfile"
+
+build_interface:
+  <<: *build_template
+  variables:
+    IMAGE_NAME: "interface"
+    DOCKERFILE_PATH: "./src/interface/Dockerfile"
+
+build_plutus_data_loader_ffxiv:
+  <<: *build_template
+  variables:
+    IMAGE_NAME: "plutus-data-loader-ffxiv"
+    DOCKERFILE_PATH: "./src/data-loaders/plutus/ffxiv/Dockerfile"
+
+build_plutus_data_loader_osrs:
+  <<: *build_template
+  variables:
+    IMAGE_NAME: "plutus-data-loader-osrs"
+    DOCKERFILE_PATH: "./src/data-loaders/plutus/osrs/Dockerfile"
+
+build_plutus_data_loader_stocks:
+  <<: *build_template
+  variables:
+    IMAGE_NAME: "plutus-data-loader-stocks"
+    DOCKERFILE_PATH: "./src/data-loaders/plutus/stocks/Dockerfile"
+
+build_plutus_data_loader_consumer:
+  <<: *build_template
+  variables:
+    IMAGE_NAME: "plutus-data-loader-consumer"
+    DOCKERFILE_PATH: "./src/data-loaders/plutus/consumer/Dockerfile"
+
 push_images:
   stage: push_images
-  image: docker:latest
+  image: docker:stable
   services:
     - docker:dind
   dependencies:
     - build_gateway
     - build_interface
+    - build_plutus_data_loader_ffxiv
+    - build_plutus_data_loader_osrs
+    - build_plutus_data_loader_stocks
+    - build_plutus_data_loader_consumer
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
   script:
-    - docker load -i "$DOCKER_TAR_GATEWAY"
-    - docker push "$DOCKER_IMAGE_GATEWAY"
-    - docker load -i "$DOCKER_TAR_INTERFACE"
-    - docker push "$DOCKER_IMAGE_INTERFACE"
+    - |
+      for tar in *.tar; do
+        IMAGE_NAME=$(basename $tar .tar)
+        docker load -i "$tar"
+        docker push "${REGISTRY_PREFIX}-${IMAGE_NAME}"
+      done
   only:
     - main

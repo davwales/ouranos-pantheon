@@ -55,10 +55,22 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "plutus", "plutus", "{DBE7C5CA-24A4-4277-8F46-8043EE66C167}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "osrs", "osrs", "{EFED1D76-F469-42BE-AB4A-2C99C48F786E}"
+	ProjectSection(SolutionItems) = preProject
+		src\data-loaders\plutus\osrs\.dockerignore = src\data-loaders\plutus\osrs\.dockerignore
+		src\data-loaders\plutus\osrs\Dockerfile = src\data-loaders\plutus\osrs\Dockerfile
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ffxiv", "ffxiv", "{80277236-416A-4B1C-B32E-01AADF1552D0}"
+	ProjectSection(SolutionItems) = preProject
+		src\data-loaders\plutus\ffxiv\.dockerignore = src\data-loaders\plutus\ffxiv\.dockerignore
+		src\data-loaders\plutus\ffxiv\Dockerfile = src\data-loaders\plutus\ffxiv\Dockerfile
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "stocks", "stocks", "{CDF2D307-FB11-48E5-AA9A-233CBC6DDA2B}"
+	ProjectSection(SolutionItems) = preProject
+		src\data-loaders\plutus\stocks\.dockerignore = src\data-loaders\plutus\stocks\.dockerignore
+		src\data-loaders\plutus\stocks\Dockerfile = src\data-loaders\plutus\stocks\Dockerfile
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "gateway", "gateway", "{1A979A22-F861-4AF7-A575-864325889FB3}"
 	ProjectSection(SolutionItems) = preProject
@@ -78,6 +90,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Core.Infra.RabbitMq", "src\core\Ouranos.Pantheon.Core.Infra.RabbitMq\Ouranos.Pantheon.Core.Infra.RabbitMq.csproj", "{E3E76A67-F5A8-410B-B92C-1CCD54336070}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "consumer", "consumer", "{7AA6C4E7-1F7A-4AAF-B70B-730A237D1F24}"
+	ProjectSection(SolutionItems) = preProject
+		src\data-loaders\plutus\consumer\.dockerignore = src\data-loaders\plutus\consumer\.dockerignore
+		src\data-loaders\plutus\consumer\Dockerfile = src\data-loaders\plutus\consumer\Dockerfile
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.DataLoader.Plutus.Domain", "src\data-loaders\plutus\Ouranos.Pantheon.DataLoader.Plutus.Domain\Ouranos.Pantheon.DataLoader.Plutus.Domain.csproj", "{B5290E6D-0B48-4AE3-9E5D-5E87DD6F850A}"
 EndProject
