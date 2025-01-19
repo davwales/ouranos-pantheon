@@ -6,6 +6,7 @@ using Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Producer.Initializers;
 using Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Producer.Messages;
 using Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Producer.Serializers;
 using Ouranos.Pantheon.DataLoader.Plutus.Infra.RabbitMq;
+using Ouranos.Pantheon.DataLoader.Plutus.Worker;
 
 namespace Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Producer.Startup;
 
@@ -14,6 +15,7 @@ public static class HostingExtensions
     public static IHost ConfigureBuilder(this HostApplicationBuilder builder)
     {
         builder.Services
+            .ConfigureWorker(builder.Configuration)
             .AddWebSockets(builder.Configuration, x => x
                 .UseConverter<BsonMessageConverter>()
                 .UseInitializer<SubscriptionInitializer>()

@@ -125,6 +125,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Core.Commo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.DataLoader.Plutus.Stocks.Producer", "src\data-loaders\plutus\stocks\Ouranos.Pantheon.DataLoader.Plutus.Stocks.Producer\Ouranos.Pantheon.DataLoader.Plutus.Stocks.Producer.csproj", "{C7207F55-3427-4193-BC2D-E95AB6184EE1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.DataLoader.Plutus.Worker", "src\data-loaders\plutus\Ouranos.Pantheon.DataLoader.Plutus.Worker\Ouranos.Pantheon.DataLoader.Plutus.Worker.csproj", "{18ACC0D0-8E98-4C21-83C7-B7F4E9CCB718}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -247,6 +249,10 @@ Global
 		{C7207F55-3427-4193-BC2D-E95AB6184EE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C7207F55-3427-4193-BC2D-E95AB6184EE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C7207F55-3427-4193-BC2D-E95AB6184EE1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{18ACC0D0-8E98-4C21-83C7-B7F4E9CCB718}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{18ACC0D0-8E98-4C21-83C7-B7F4E9CCB718}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{18ACC0D0-8E98-4C21-83C7-B7F4E9CCB718}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{18ACC0D0-8E98-4C21-83C7-B7F4E9CCB718}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{128A9F3B-4D1A-4A93-A0EC-2426770786AC} = {24007BE7-AE6D-46D3-B37A-522FE3EF0D9C}
@@ -289,5 +295,6 @@ Global
 		{D2C34FAF-06AD-4A88-A506-7628A66DFE2D} = {128A9F3B-4D1A-4A93-A0EC-2426770786AC}
 		{E1444F75-80F2-4C62-9100-E5A69836AC1A} = {065EDAE0-BA88-43B0-8C19-0A1221AA7B09}
 		{C7207F55-3427-4193-BC2D-E95AB6184EE1} = {CDF2D307-FB11-48E5-AA9A-233CBC6DDA2B}
+		{18ACC0D0-8E98-4C21-83C7-B7F4E9CCB718} = {DBE7C5CA-24A4-4277-8F46-8043EE66C167}
 	EndGlobalSection
 EndGlobal

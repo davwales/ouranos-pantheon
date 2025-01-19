@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Serilog" Version="$(SerilogVersion)"/>
+        <PackageReference Include="Serilog.Extensions.Logging" Version="$(SerilogExtensionsLoggingVersion)"/>
+        <PackageReference Include="Serilog.Settings.Configuration" Version="$(SerilogSettingsConfigurationVersion)"/>
+        <PackageReference Include="Serilog.Sinks.Grafana.Loki"
+                          Version="$(SerilogSinksGrafanaLokiVersion)"/>
+        <PackageReference Include="Serilog.Sinks.Console" Version="$(SerilogSinksConsoleVersion)"/>
+    </ItemGroup>
+
+</Project>

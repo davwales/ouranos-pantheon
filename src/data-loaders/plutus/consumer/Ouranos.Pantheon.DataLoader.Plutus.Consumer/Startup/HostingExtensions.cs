@@ -4,7 +4,7 @@ using Ouranos.Pantheon.Core.Application;
 using Ouranos.Pantheon.Core.Common.AsyncLocks;
 using Ouranos.Pantheon.Core.Infra.Mongo;
 using Ouranos.Pantheon.Core.Infra.RabbitMq;
-using Serilog;
+using Ouranos.Pantheon.DataLoader.Plutus.Worker;
 
 namespace Ouranos.Pantheon.DataLoader.Plutus.Consumer.Startup;
 
@@ -12,10 +12,8 @@ public static class HostingExtensions
 {
     public static IHost ConfigureBuilder(this HostApplicationBuilder builder)
     {
-        var loggerConfig = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration);
-        Log.Logger = loggerConfig.CreateLogger();
-
         builder.Services
+            .ConfigureWorker(builder.Configuration)
             .AddSingleton<IKeyedAsyncLock<string>, KeyedAsyncLock<string>>()
             .AddCoreApplicationModule()
             .AddCoreMongo(builder.Configuration)

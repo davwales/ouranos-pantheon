@@ -14,6 +14,7 @@
         <ProjectReference Include="..\..\..\..\core\Ouranos.Pantheon.Core.Application\Ouranos.Pantheon.Core.Application.csproj"/>
         <ProjectReference Include="..\..\..\..\core\Ouranos.Pantheon.Core.WebSockets\Ouranos.Pantheon.Core.WebSockets.csproj"/>
         <ProjectReference Include="..\..\Ouranos.Pantheon.DataLoader.Plutus.Infra.RabbitMq\Ouranos.Pantheon.DataLoader.Plutus.Infra.RabbitMq.csproj"/>
+        <ProjectReference Include="..\..\Ouranos.Pantheon.DataLoader.Plutus.Worker\Ouranos.Pantheon.DataLoader.Plutus.Worker.csproj"/>
         <ProjectReference Include="..\Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Application\Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Application.csproj"/>
         <ProjectReference Include="..\Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Infra.XivApi\Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Infra.XivApi.csproj"/>
     </ItemGroup>

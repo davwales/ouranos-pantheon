@@ -2,6 +2,7 @@
 using Ouranos.Pantheon.DataLoader.Plutus.Infra.RabbitMq;
 using Ouranos.Pantheon.DataLoader.Plutus.Stocks.Producer.Listeners;
 using Ouranos.Pantheon.DataLoader.Plutus.Stocks.Producer.Messages;
+using Ouranos.Pantheon.DataLoader.Plutus.Worker;
 
 namespace Ouranos.Pantheon.DataLoader.Plutus.Stocks.Producer.Startup;
 
@@ -10,6 +11,7 @@ public static class HostingExtensions
     public static IHost ConfigureBuilder(this HostApplicationBuilder builder)
     {
         builder.Services
+            .ConfigureWorker(builder.Configuration)
             .Configure<AlpacaOptions>(builder.Configuration.GetSection(AlpacaOptions.SectionName))
             .AddWebSockets(builder.Configuration, x => x
                 .UseDiscriminatedMessages(d => d

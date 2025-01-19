@@ -12,5 +12,6 @@
     <ItemGroup>
         <ProjectReference Include="..\..\..\..\core\Ouranos.Pantheon.Core.WebSockets\Ouranos.Pantheon.Core.WebSockets.csproj"/>
         <ProjectReference Include="..\..\Ouranos.Pantheon.DataLoader.Plutus.Infra.RabbitMq\Ouranos.Pantheon.DataLoader.Plutus.Infra.RabbitMq.csproj"/>
+        <ProjectReference Include="..\..\Ouranos.Pantheon.DataLoader.Plutus.Worker\Ouranos.Pantheon.DataLoader.Plutus.Worker.csproj"/>
     </ItemGroup>
 </Project>

@@ -12,6 +12,7 @@
     <ItemGroup>
         <ProjectReference Include="..\..\..\..\core\Ouranos.Pantheon.Core.Application\Ouranos.Pantheon.Core.Application.csproj"/>
         <ProjectReference Include="..\..\Ouranos.Pantheon.DataLoader.Plutus.Infra.RabbitMq\Ouranos.Pantheon.DataLoader.Plutus.Infra.RabbitMq.csproj"/>
+        <ProjectReference Include="..\..\Ouranos.Pantheon.DataLoader.Plutus.Worker\Ouranos.Pantheon.DataLoader.Plutus.Worker.csproj"/>
         <ProjectReference Include="..\Ouranos.Pantheon.DataLoader.Plutus.Osrs.Application\Ouranos.Pantheon.DataLoader.Plutus.Osrs.Application.csproj"/>
         <ProjectReference Include="..\Ouranos.Pantheon.DataLoader.Plutus.Osrs.Infra.OsrsWiki\Ouranos.Pantheon.DataLoader.Plutus.Osrs.Infra.OsrsWiki.csproj"/>
     </ItemGroup>
