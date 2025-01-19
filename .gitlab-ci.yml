@@ -10,10 +10,6 @@ variables:
   stage: build
   services:
     - docker:dind
-  cache:
-    key: "$CI_COMMIT_REF_SLUG"
-    paths:
-      - node_modules
   script:
     - docker build -f ${DOCKERFILE_PATH} -t "${REGISTRY_PREFIX}-${IMAGE_NAME}" .
     - docker save "${REGISTRY_PREFIX}-${IMAGE_NAME}" -o "${IMAGE_NAME}.tar"
@@ -34,6 +30,11 @@ build_interface:
   variables:
     IMAGE_NAME: "interface"
     DOCKERFILE_PATH: "./src/interface/Dockerfile"
+  cache:
+    key: "$CI_COMMIT_REF_SLUG-interface"
+    paths:
+      - node_modules
+    when: always
 
 build_plutus_data_loader_ffxiv:
   <<: *build_template

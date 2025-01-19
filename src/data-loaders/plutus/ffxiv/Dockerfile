@@ -5,7 +5,7 @@ WORKDIR /app
 COPY . ./
 
 RUN dotnet restore
-RUN dotnet publish ./src/data-loaders/plutus/ffxiv/Ouranos.Pantheon.DataLoader.Plutus.Ffxiv/Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Producer.csproj -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish ./src/data-loaders/plutus/ffxiv/Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Producer/Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Producer.csproj -c Release -o /app/publish /p:UseAppHost=false
 
 FROM mcr.microsoft.com/dotnet/runtime:8.0 AS base
 
