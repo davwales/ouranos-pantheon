@@ -53,21 +53,7 @@ public sealed class GetMarketTradesHandler :
                 MaxPrice = g.Max(t => t.Price),
                 TotalVolume = g.Sum(t => t.Volume),
                 NumTransactions = g.Count(),
-                g.First().Metadata.AdditionalFields.Limit
-            })
-            .Select(x => new
-            {
-                x.SymbolId,
-                x.SymbolName,
-                x.SymbolCode,
-                x.SymbolSubcode,
-                x.TotalSpent,
-                x.MinPrice,
-                x.MaxPrice,
-                x.TotalVolume,
-                x.NumTransactions,
-                Limit = x.Limit ?? x.TotalVolume,
-                FlatTax = x.MaxPrice >= 100m ? x.MaxPrice * 0.01m : 0m
+                Limit = g.First().Metadata.AdditionalFields.Limit ?? g.Sum(t => t.Volume)
             })
             .Select(x => new
             {
@@ -81,30 +67,7 @@ public sealed class GetMarketTradesHandler :
                 x.TotalVolume,
                 x.NumTransactions,
                 x.Limit,
-                EffectiveLimit = x.TotalVolume > x.Limit ? x.Limit : x.TotalVolume,
-                x.FlatTax,
-                Tax = x.FlatTax,
-                Margin = x.MaxPrice - x.MinPrice - x.FlatTax,
-                AveragePrice = x.TotalSpent / x.TotalVolume
-            })
-            .Select(x => new
-            {
-                x.SymbolId,
-                x.SymbolName,
-                x.SymbolCode,
-                x.SymbolSubcode,
-                x.TotalSpent,
-                x.MinPrice,
-                x.MaxPrice,
-                x.TotalVolume,
-                x.NumTransactions,
-                x.Limit,
-                x.FlatTax,
-                x.Tax,
-                x.Margin,
-                x.AveragePrice,
-                TotalGain = x.Margin * x.EffectiveLimit,
-                Roi = x.Margin / x.MinPrice * 100
+                Tax = x.MaxPrice >= 100m ? x.MaxPrice * 0.01m : 0m
             })
             .Select(x => new GetMarketTradesResponse(
                 x.SymbolId,
@@ -116,12 +79,12 @@ public sealed class GetMarketTradesHandler :
                 x.MaxPrice,
                 x.TotalVolume,
                 x.NumTransactions,
-                x.Margin,
-                x.AveragePrice,
-                x.Roi,
-                x.TotalGain,
-                x.Limit)
-            );
+                x.MaxPrice - x.MinPrice - x.Tax, // margin
+                x.TotalSpent / x.TotalVolume, // average price
+                (x.MaxPrice - x.MinPrice - x.Tax) / x.MinPrice * 100, // roi
+                (x.MaxPrice - x.MinPrice - x.Tax) * (x.TotalVolume > x.Limit ? x.Limit : x.TotalVolume), // total gain
+                x.Limit
+            ));
 
         var response = new WrapperResponse<IQueryable<GetMarketTradesResponse>>(tradeQuery);
 
