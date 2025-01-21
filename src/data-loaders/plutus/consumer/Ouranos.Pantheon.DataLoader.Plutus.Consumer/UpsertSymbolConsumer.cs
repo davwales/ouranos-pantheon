@@ -1,4 +1,5 @@
-﻿using Ouranos.Pantheon.Core.Application.Interfaces.Common;
+﻿using Ardalis.GuardClauses;
+using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Core.Common.AsyncLocks;
 using Ouranos.Pantheon.Core.Domain.Common;
@@ -24,11 +25,11 @@ public sealed class UpsertSymbolConsumer : CommandHandler<UpsertSymbolMessage, S
         IKeyedAsyncLock<string> itemLock
     )
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(queryExecutor);
-        ArgumentNullException.ThrowIfNull(symbolRepository);
-        ArgumentNullException.ThrowIfNull(createDatabaseId);
-        ArgumentNullException.ThrowIfNull(itemLock);
+        Guard.Against.Null(logger);
+        Guard.Against.Null(queryExecutor);
+        Guard.Against.Null(symbolRepository);
+        Guard.Against.Null(createDatabaseId);
+        Guard.Against.Null(itemLock);
 
         _logger = logger;
         _queryExecutor = queryExecutor;

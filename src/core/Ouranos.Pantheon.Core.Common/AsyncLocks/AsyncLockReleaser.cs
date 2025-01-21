@@ -1,4 +1,6 @@
-﻿namespace Ouranos.Pantheon.Core.Common.AsyncLocks;
+﻿using Ardalis.GuardClauses;
+
+namespace Ouranos.Pantheon.Core.Common.AsyncLocks;
 
 internal sealed class AsyncLockReleaser : IDisposable
 {
@@ -8,7 +10,7 @@ internal sealed class AsyncLockReleaser : IDisposable
 
     public AsyncLockReleaser(AsyncLock asyncLock, Action? onRelease = null)
     {
-        ArgumentNullException.ThrowIfNull(asyncLock);
+        Guard.Against.Null(asyncLock);
 
         _asyncLock = asyncLock;
         _onRelease = onRelease;

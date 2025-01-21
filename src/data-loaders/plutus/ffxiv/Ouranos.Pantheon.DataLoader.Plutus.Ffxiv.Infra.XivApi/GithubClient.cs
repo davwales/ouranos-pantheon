@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Ardalis.GuardClauses;
+using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Infra.XivApi.Models;
 using Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Infra.XivApi.Parsers;
 
@@ -14,8 +15,8 @@ public sealed class GithubClient : IGithubClient
         HttpClient httpClient
     )
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(httpClient);
+        Guard.Against.Null(logger);
+        Guard.Against.Null(httpClient);
 
         _logger = logger;
         _httpClient = httpClient;

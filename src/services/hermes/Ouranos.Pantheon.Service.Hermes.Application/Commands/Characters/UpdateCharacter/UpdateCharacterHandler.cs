@@ -1,3 +1,4 @@
+using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Common;
 using Ouranos.Pantheon.Core.Application.Interfaces.Common;
@@ -16,8 +17,8 @@ public sealed class UpdateCharacterHandler : CommandHandler<UpdateCharacterInput
         ICrudRepository<Character> characterRepository
     )
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(characterRepository);
+        Guard.Against.Null(logger);
+        Guard.Against.Null(characterRepository);
 
         _logger = logger;
         _characterRepository = characterRepository;

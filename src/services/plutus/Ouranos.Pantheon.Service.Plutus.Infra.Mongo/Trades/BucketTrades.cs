@@ -1,3 +1,4 @@
+using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver.Linq;
@@ -13,7 +14,7 @@ public sealed class BucketTrades : IBucketTrades
 
     public BucketTrades(ILogger<BucketTrades> logger)
     {
-        ArgumentNullException.ThrowIfNull(logger);
+        Guard.Against.Null(logger);
         _logger = logger;
     }
 

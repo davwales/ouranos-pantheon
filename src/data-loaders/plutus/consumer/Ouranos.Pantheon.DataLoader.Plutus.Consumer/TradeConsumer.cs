@@ -1,3 +1,4 @@
+using Ardalis.GuardClauses;
 using MassTransit;
 using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Core.Domain.Common;
@@ -20,9 +21,9 @@ public sealed class TradeConsumer : IConsumer<TradeMessage>
         IConfiguration configuration
     )
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(dispatcher);
-        ArgumentNullException.ThrowIfNull(configuration);
+        Guard.Against.Null(logger);
+        Guard.Against.Null(dispatcher);
+        Guard.Against.Null(configuration);
 
         _logger = logger;
         _dispatcher = dispatcher;

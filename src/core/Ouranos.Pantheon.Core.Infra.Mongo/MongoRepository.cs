@@ -1,3 +1,4 @@
+using Ardalis.GuardClauses;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 
@@ -9,7 +10,7 @@ public sealed class MongoRepository<T> : IMongoRepository<T> where T : class
 
     public MongoRepository(IMongoDatabaseManager mongoDatabaseManager)
     {
-        ArgumentNullException.ThrowIfNull(mongoDatabaseManager);
+        Guard.Against.Null(mongoDatabaseManager);
 
         _mongoDatabase = mongoDatabaseManager.GetDatabase<T>();
     }

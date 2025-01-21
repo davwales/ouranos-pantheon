@@ -1,4 +1,6 @@
-﻿namespace Ouranos.Pantheon.Core.WebSockets.Serializers;
+﻿using Ardalis.GuardClauses;
+
+namespace Ouranos.Pantheon.Core.WebSockets.Serializers;
 
 public sealed class MessageSerializer : IMessageSerializer
 {
@@ -10,8 +12,8 @@ public sealed class MessageSerializer : IMessageSerializer
         IMessageConverter messageConverter
     )
     {
-        ArgumentNullException.ThrowIfNull(messageConverter);
-        ArgumentNullException.ThrowIfNull(typeResolver);
+        Guard.Against.Null(messageConverter);
+        Guard.Against.Null(typeResolver);
 
         _typeResolver = typeResolver;
         _messageConverter = messageConverter;

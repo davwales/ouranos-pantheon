@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Core.Infra.OuranosMl;
@@ -22,9 +23,10 @@ public sealed class GenerateCompletion : IGenerateCompletion
         IOptions<OuranosMachineLearningOptions> options
     )
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(ouranosClient);
-        ArgumentNullException.ThrowIfNull(options.Value);
+        Guard.Against.Null(logger);
+        Guard.Against.Null(ouranosClient);
+        Guard.Against.Null(options);
+        Guard.Against.Null(options.Value);
 
         _logger = logger;
         _ouranosClient = ouranosClient;

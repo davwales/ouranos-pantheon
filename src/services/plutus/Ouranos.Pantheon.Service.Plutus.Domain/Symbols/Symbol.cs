@@ -1,3 +1,4 @@
+using Ardalis.GuardClauses;
 using Ouranos.Pantheon.Core.Domain.Common;
 using Ouranos.Pantheon.Service.Plutus.Domain.Markets;
 using Ouranos.Pantheon.Service.Plutus.Domain.Trades;
@@ -15,10 +16,10 @@ public sealed class Symbol : BaseEntity<Id<Symbol>>
         AdditionalFields additionalFields
     ) : base(id)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(code);
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        ArgumentNullException.ThrowIfNull(marketId);
-        ArgumentNullException.ThrowIfNull(additionalFields);
+        Guard.Against.NullOrWhiteSpace(code);
+        Guard.Against.NullOrWhiteSpace(name);
+        Guard.Against.Null(marketId);
+        Guard.Against.Null(additionalFields);
 
         Code = code;
         Subcode = subcode;
@@ -39,8 +40,8 @@ public sealed class Symbol : BaseEntity<Id<Symbol>>
 
     public void Update(string name, AdditionalFields additionalFields)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        ArgumentNullException.ThrowIfNull(additionalFields);
+        Guard.Against.NullOrWhiteSpace(name);
+        Guard.Against.Null(additionalFields);
 
         Name = name;
         AdditionalFields = additionalFields;

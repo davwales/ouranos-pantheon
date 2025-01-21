@@ -1,4 +1,5 @@
-﻿using Ouranos.Pantheon.Core.WebSockets.WebSocketClients;
+﻿using Ardalis.GuardClauses;
+using Ouranos.Pantheon.Core.WebSockets.WebSocketClients;
 
 namespace Ouranos.Pantheon.Core.WebSockets.Listeners;
 
@@ -8,7 +9,7 @@ public sealed class ListenerDispatcher<T> : IListenerDispatcher
 
     public ListenerDispatcher(IListener<T> listener)
     {
-        ArgumentNullException.ThrowIfNull(listener);
+        Guard.Against.Null(listener);
         _listener = listener;
     }
 

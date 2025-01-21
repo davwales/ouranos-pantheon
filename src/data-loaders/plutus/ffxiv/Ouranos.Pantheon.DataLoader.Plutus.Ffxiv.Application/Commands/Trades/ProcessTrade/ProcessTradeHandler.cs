@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Ardalis.GuardClauses;
+using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.DataLoader.Plutus.Application.Interfaces.Trades;
 using Ouranos.Pantheon.DataLoader.Plutus.Domain;
@@ -19,9 +20,9 @@ public sealed class ProcessTradeHandler : CommandHandler<ProcessTradeInput>
         IQueueTradeMessages queueTradeMessages
     )
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(getItems);
-        ArgumentNullException.ThrowIfNull(queueTradeMessages);
+        Guard.Against.Null(logger);
+        Guard.Against.Null(getItems);
+        Guard.Against.Null(queueTradeMessages);
 
         _logger = logger;
         _getItems = getItems;

@@ -1,3 +1,4 @@
+using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Common;
 using Ouranos.Pantheon.Core.Application.Interfaces.Common;
@@ -18,9 +19,9 @@ public sealed class GetMarketTradesHandler :
         ICrudRepository<Market> marketRepository,
         ICrudRepository<Trade> tradeRepository)
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(marketRepository);
-        ArgumentNullException.ThrowIfNull(tradeRepository);
+        Guard.Against.Null(logger);
+        Guard.Against.Null(marketRepository);
+        Guard.Against.Null(tradeRepository);
 
         _logger = logger;
         _tradeRepository = tradeRepository;

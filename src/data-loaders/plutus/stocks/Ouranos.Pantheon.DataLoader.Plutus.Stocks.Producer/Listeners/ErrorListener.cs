@@ -1,4 +1,5 @@
-﻿using Ouranos.Pantheon.Core.WebSockets.Listeners;
+﻿using Ardalis.GuardClauses;
+using Ouranos.Pantheon.Core.WebSockets.Listeners;
 using Ouranos.Pantheon.Core.WebSockets.WebSocketClients;
 using Ouranos.Pantheon.DataLoader.Plutus.Stocks.Producer.Messages;
 
@@ -10,7 +11,7 @@ public sealed class ErrorListener : IListener<ErrorMessage>
 
     public ErrorListener(ILogger<ErrorListener> logger)
     {
-        ArgumentNullException.ThrowIfNull(logger);
+        Guard.Against.Null(logger);
         _logger = logger;
     }
 

@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using Ardalis.GuardClauses;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 
@@ -18,8 +19,9 @@ public sealed class MongoDatabaseManager : IMongoDatabaseManager
         IOptions<MongoOptions> options
     )
     {
-        ArgumentNullException.ThrowIfNull(client);
-        ArgumentNullException.ThrowIfNull(options?.Value);
+        Guard.Against.Null(client);
+        Guard.Against.Null(options);
+        Guard.Against.Null(options.Value);
 
         _client = client;
         _options = options.Value;

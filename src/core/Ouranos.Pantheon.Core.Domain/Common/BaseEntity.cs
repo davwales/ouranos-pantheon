@@ -1,10 +1,12 @@
+using Ardalis.GuardClauses;
+
 namespace Ouranos.Pantheon.Core.Domain.Common;
 
 public abstract class BaseEntity<TId>
 {
     public BaseEntity(TId id)
     {
-        ArgumentNullException.ThrowIfNull(id);
+        Guard.Against.Null(id);
 
         Id = id;
         CreatedAt = DateTimeOffset.UtcNow;

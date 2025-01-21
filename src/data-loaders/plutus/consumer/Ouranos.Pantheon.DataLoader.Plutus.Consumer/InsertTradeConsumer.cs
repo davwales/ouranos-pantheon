@@ -1,4 +1,5 @@
-﻿using Ouranos.Pantheon.Core.Application.Interfaces.Common;
+﻿using Ardalis.GuardClauses;
+using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.DataLoader.Plutus.Consumer.Messages;
 using Ouranos.Pantheon.Service.Plutus.Domain.Trades;
@@ -17,9 +18,9 @@ public sealed class InsertTradeConsumer : CommandHandler<InsertTradeMessage, Tra
         ICrudRepository<Trade> tradeRepository
     )
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(createDatabaseId);
-        ArgumentNullException.ThrowIfNull(tradeRepository);
+        Guard.Against.Null(logger);
+        Guard.Against.Null(createDatabaseId);
+        Guard.Against.Null(tradeRepository);
 
         _logger = logger;
         _createDatabaseId = createDatabaseId;

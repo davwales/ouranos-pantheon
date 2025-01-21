@@ -1,3 +1,4 @@
+using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Common;
 using Ouranos.Pantheon.Core.Application.Interfaces.Common;
@@ -13,8 +14,8 @@ public sealed class UpdateMarketHandler : CommandHandler<UpdateMarketInput, IdRe
 
     public UpdateMarketHandler(ILogger<UpdateMarketHandler> logger, ICrudRepository<Market> marketRepository)
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(marketRepository);
+        Guard.Against.Null(logger);
+        Guard.Against.Null(marketRepository);
 
         _logger = logger;
         _marketRepository = marketRepository;

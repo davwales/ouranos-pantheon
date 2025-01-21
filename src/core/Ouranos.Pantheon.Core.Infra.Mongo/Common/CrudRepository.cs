@@ -1,3 +1,4 @@
+using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using Ouranos.Pantheon.Core.Application.Interfaces.Common;
@@ -12,8 +13,8 @@ public sealed class CrudRepository<T> : ICrudRepository<T> where T : BaseEntity<
 
     public CrudRepository(ILogger<CrudRepository<T>> logger, IMongoRepository<T> mongoRepository)
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(mongoRepository);
+        Guard.Against.Null(logger);
+        Guard.Against.Null(mongoRepository);
 
         _logger = logger;
         _mongoRepository = mongoRepository;

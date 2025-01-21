@@ -1,4 +1,5 @@
-﻿using Ouranos.Pantheon.Core.Application.Mediator;
+﻿using Ardalis.GuardClauses;
+using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Core.WebSockets.Listeners;
 using Ouranos.Pantheon.Core.WebSockets.WebSocketClients;
 using Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Application.Commands.Trades.ProcessTrade;
@@ -16,8 +17,8 @@ public sealed class Listener : IListener<SaleMessage>
         IDispatcher dispatcher
     )
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(dispatcher);
+        Guard.Against.Null(logger);
+        Guard.Against.Null(dispatcher);
 
         _logger = logger;
         _dispatcher = dispatcher;

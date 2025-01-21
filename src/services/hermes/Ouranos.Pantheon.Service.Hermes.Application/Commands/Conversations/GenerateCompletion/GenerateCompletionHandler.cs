@@ -1,3 +1,4 @@
+using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Common;
 using Ouranos.Pantheon.Core.Application.Mediator;
@@ -16,8 +17,8 @@ public sealed class GenerateCompletionHandler :
         IGenerateCompletion generateCompletion
     )
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(generateCompletion);
+        Guard.Against.Null(logger);
+        Guard.Against.Null(generateCompletion);
 
         _logger = logger;
         _generateCompletion = generateCompletion;

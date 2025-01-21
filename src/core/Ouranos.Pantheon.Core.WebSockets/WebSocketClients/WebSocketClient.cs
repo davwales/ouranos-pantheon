@@ -1,4 +1,5 @@
 ﻿using System.Net.WebSockets;
+using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.WebSockets.Listeners;
 using Ouranos.Pantheon.Core.WebSockets.Serializers;
@@ -25,10 +26,10 @@ public class WebSocketClient : IDisposable, IWebSocketClient
         IListenerRegistry listenerRegistry
     )
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentException.ThrowIfNullOrWhiteSpace(host);
-        ArgumentNullException.ThrowIfNull(serializer);
-        ArgumentNullException.ThrowIfNull(listenerRegistry);
+        Guard.Against.Null(logger);
+        Guard.Against.NullOrWhiteSpace(host);
+        Guard.Against.Null(serializer);
+        Guard.Against.Null(listenerRegistry);
 
         _logger = logger;
         _host = new Uri(host);

@@ -1,4 +1,5 @@
-﻿using MassTransit;
+﻿using Ardalis.GuardClauses;
+using MassTransit;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.DataLoader.Plutus.Application.Interfaces.Trades;
 using Ouranos.Pantheon.DataLoader.Plutus.Domain.Trades;
@@ -12,8 +13,8 @@ public sealed class QueueTradeMessages : IQueueTradeMessages
 
     public QueueTradeMessages(ILogger<QueueTradeMessages> logger, IBus bus)
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(bus);
+        Guard.Against.Null(logger);
+        Guard.Against.Null(bus);
 
         _logger = logger;
         _bus = bus;

@@ -1,3 +1,4 @@
+using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Common;
 using Ouranos.Pantheon.Core.Application.Interfaces.Common;
@@ -17,8 +18,8 @@ public sealed class GetAllEntitiesHandler<T> : QueryHandler<GetAllEntitiesInput<
         ICrudRepository<T> repository
     )
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(repository);
+        Guard.Against.Null(logger);
+        Guard.Against.Null(repository);
 
         _logger = logger;
         _repository = repository;

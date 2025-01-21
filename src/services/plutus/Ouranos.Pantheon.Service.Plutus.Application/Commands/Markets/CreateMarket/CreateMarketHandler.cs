@@ -1,3 +1,4 @@
+using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Common;
 using Ouranos.Pantheon.Core.Application.Interfaces.Common;
@@ -17,9 +18,9 @@ public sealed class CreateMarketHandler : CommandHandler<CreateMarketInput, IdRe
         ICreateDatabaseId<Market> createDatabaseId,
         ICrudRepository<Market> marketRepository)
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(createDatabaseId);
-        ArgumentNullException.ThrowIfNull(marketRepository);
+        Guard.Against.Null(logger);
+        Guard.Against.Null(createDatabaseId);
+        Guard.Against.Null(marketRepository);
 
         _logger = logger;
         _createDatabaseId = createDatabaseId;

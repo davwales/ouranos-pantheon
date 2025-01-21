@@ -1,3 +1,4 @@
+using Ardalis.GuardClauses;
 using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.DataLoader.Plutus.Osrs.Application.Commands.Trades.ProcessTrades;
 using Ouranos.Pantheon.DataLoader.Plutus.Osrs.Application.Queries.Trades.GetTrades;
@@ -16,9 +17,9 @@ public class Worker : BackgroundService
         IConfiguration configuration
     )
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(dispatcher);
-        ArgumentNullException.ThrowIfNull(configuration);
+        Guard.Against.Null(logger);
+        Guard.Against.Null(dispatcher);
+        Guard.Against.Null(configuration);
 
         _logger = logger;
         _dispatcher = dispatcher;

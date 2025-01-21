@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Infra.OuranosMl.Requests;
 
@@ -19,8 +20,8 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
         HttpClient httpClient
     )
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(httpClient);
+        Guard.Against.Null(logger);
+        Guard.Against.Null(httpClient);
 
         _logger = logger;
         _httpClient = httpClient;

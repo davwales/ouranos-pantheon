@@ -1,4 +1,5 @@
-﻿using Ouranos.Pantheon.Core.WebSockets.Listeners;
+﻿using Ardalis.GuardClauses;
+using Ouranos.Pantheon.Core.WebSockets.Listeners;
 using Ouranos.Pantheon.Core.WebSockets.WebSocketClients;
 using Ouranos.Pantheon.DataLoader.Plutus.Application.Interfaces.Trades;
 using Ouranos.Pantheon.DataLoader.Plutus.Domain.Trades;
@@ -17,8 +18,8 @@ public sealed class TradeListener : IListener<AlpacaTradeMessage>
         IQueueTradeMessages queueTradeMessages
     )
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(queueTradeMessages);
+        Guard.Against.Null(logger);
+        Guard.Against.Null(queueTradeMessages);
 
         _logger = logger;
         _queueTradeMessages = queueTradeMessages;

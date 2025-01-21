@@ -1,3 +1,4 @@
+using Ardalis.GuardClauses;
 using Ouranos.Pantheon.Core.Domain.Common;
 
 namespace Ouranos.Pantheon.Service.Plutus.Domain.Trades;
@@ -12,7 +13,7 @@ public sealed class Trade : BaseEntity<Id<Trade>>
         DateTimeOffset timestamp
     ) : base(id)
     {
-        ArgumentNullException.ThrowIfNull(metadata);
+        Guard.Against.Null(metadata);
 
         Price = price;
         Volume = volume;

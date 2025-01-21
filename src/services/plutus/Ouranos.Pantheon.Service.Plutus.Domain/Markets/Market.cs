@@ -1,3 +1,4 @@
+using Ardalis.GuardClauses;
 using Ouranos.Pantheon.Core.Domain.Common;
 
 namespace Ouranos.Pantheon.Service.Plutus.Domain.Markets;
@@ -10,8 +11,8 @@ public sealed class Market : BaseEntity<Id<Market>>
         Taxes taxes
     ) : base(id)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        ArgumentNullException.ThrowIfNull(taxes);
+        Guard.Against.NullOrWhiteSpace(name);
+        Guard.Against.Null(taxes);
 
         Name = name;
         Taxes = taxes;
@@ -23,8 +24,8 @@ public sealed class Market : BaseEntity<Id<Market>>
 
     public void Update(string name, Taxes taxes)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        ArgumentNullException.ThrowIfNull(taxes);
+        Guard.Against.NullOrWhiteSpace(name);
+        Guard.Against.Null(taxes);
 
         Name = name;
         Taxes = taxes;

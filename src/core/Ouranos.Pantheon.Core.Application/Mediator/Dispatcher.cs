@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using Ardalis.GuardClauses;
 using MassTransit.Mediator;
 using Ouranos.Pantheon.Core.Application.Common;
 
@@ -10,7 +11,7 @@ public sealed class Dispatcher : IDispatcher
 
     public Dispatcher(IMediator mediator)
     {
-        ArgumentNullException.ThrowIfNull(mediator);
+        Guard.Against.Null(mediator);
         _mediator = mediator;
     }
 

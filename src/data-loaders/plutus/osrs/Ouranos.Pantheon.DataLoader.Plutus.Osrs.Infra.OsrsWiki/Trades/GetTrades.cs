@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Ardalis.GuardClauses;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.DataLoader.Plutus.Osrs.Application.Interfaces.Trades;
 using Ouranos.Pantheon.DataLoader.Plutus.Osrs.Application.Queries.Trades.GetTrades;
@@ -19,9 +20,10 @@ public sealed class GetTrades : IGetTrades
         IOptions<OsrsWikiOptions> options
     )
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(wikiClient);
-        ArgumentNullException.ThrowIfNull(options);
+        Guard.Against.Null(logger);
+        Guard.Against.Null(wikiClient);
+        Guard.Against.Null(options);
+        Guard.Against.Null(options.Value);
 
         _logger = logger;
         _wikiClient = wikiClient;

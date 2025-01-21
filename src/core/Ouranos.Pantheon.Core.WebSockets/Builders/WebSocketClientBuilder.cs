@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Ardalis.GuardClauses;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.WebSockets.Listeners;
@@ -20,7 +21,7 @@ public sealed class WebSocketClientBuilder : IWebSocketClientBuilder
         WebSocketOptions? options = default
     )
     {
-        ArgumentNullException.ThrowIfNull(services);
+        Guard.Against.Null(services);
         _services = services;
 
         if (options is null)
@@ -34,7 +35,7 @@ public sealed class WebSocketClientBuilder : IWebSocketClientBuilder
 
     public IWebSocketClientBuilder ConfigureHost(string host)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(host);
+        Guard.Against.NullOrWhiteSpace(host);
         _host = host;
         return this;
     }

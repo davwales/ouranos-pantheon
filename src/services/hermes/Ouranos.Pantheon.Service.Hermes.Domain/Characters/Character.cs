@@ -1,3 +1,4 @@
+using Ardalis.GuardClauses;
 using Ouranos.Pantheon.Core.Domain.Common;
 
 namespace Ouranos.Pantheon.Service.Hermes.Domain.Characters;
@@ -11,7 +12,7 @@ public sealed class Character : BaseEntity<Id<Character>>
         List<CharacterDetail> details
     ) : base(id)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        Guard.Against.NullOrWhiteSpace(name);
 
         Name = name;
         Age = age;
@@ -30,7 +31,7 @@ public sealed class Character : BaseEntity<Id<Character>>
         List<CharacterDetail> details
     )
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        Guard.Against.NullOrWhiteSpace(name);
 
         Update();
         Name = name;

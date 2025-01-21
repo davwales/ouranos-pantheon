@@ -1,4 +1,5 @@
 ﻿using System.Net.WebSockets;
+using Ardalis.GuardClauses;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.WebSockets.WebSocketClients;
@@ -15,8 +16,8 @@ public sealed class WebSocketWorker : BackgroundService
         IWebSocketClient client
     )
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(client);
+        Guard.Against.Null(logger);
+        Guard.Against.Null(client);
 
         _logger = logger;
         _client = client;

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Caching.Memory;
+﻿using Ardalis.GuardClauses;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Application.Dtos;
@@ -23,10 +24,11 @@ public sealed class GetItems : IGetItems
         IOptions<XivApiOptions> options
     )
     {
-        ArgumentNullException.ThrowIfNull(cache);
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(githubClient);
-        ArgumentNullException.ThrowIfNull(options.Value);
+        Guard.Against.Null(cache);
+        Guard.Against.Null(logger);
+        Guard.Against.Null(githubClient);
+        Guard.Against.Null(options);
+        Guard.Against.Null(options.Value);
 
         _cache = cache;
         _logger = logger;

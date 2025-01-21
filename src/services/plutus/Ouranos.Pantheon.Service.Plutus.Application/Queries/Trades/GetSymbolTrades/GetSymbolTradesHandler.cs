@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Ardalis.GuardClauses;
+using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Service.Plutus.Application.Interfaces.Trades;
@@ -21,10 +22,10 @@ public sealed class GetSymbolTradesHandler :
         IQueryExecutor queryExecutor
     )
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(tradeRepository);
-        ArgumentNullException.ThrowIfNull(bucketTrades);
-        ArgumentNullException.ThrowIfNull(queryExecutor);
+        Guard.Against.Null(logger);
+        Guard.Against.Null(tradeRepository);
+        Guard.Against.Null(bucketTrades);
+        Guard.Against.Null(queryExecutor);
 
         _logger = logger;
         _tradeRepository = tradeRepository;

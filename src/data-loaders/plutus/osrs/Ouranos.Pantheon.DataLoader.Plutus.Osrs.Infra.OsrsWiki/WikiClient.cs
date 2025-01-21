@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.DataLoader.Plutus.Osrs.Infra.OsrsWiki.Models;
@@ -16,8 +17,10 @@ public sealed class WikiClient : IWikiClient
         IOptions<OsrsWikiOptions> options
     )
     {
-        ArgumentNullException.ThrowIfNull(httpClient);
-        ArgumentNullException.ThrowIfNull(logger);
+        Guard.Against.Null(httpClient);
+        Guard.Against.Null(logger);
+        Guard.Against.Null(options);
+        Guard.Against.Null(options.Value);
 
         _httpClient = httpClient;
         _logger = logger;

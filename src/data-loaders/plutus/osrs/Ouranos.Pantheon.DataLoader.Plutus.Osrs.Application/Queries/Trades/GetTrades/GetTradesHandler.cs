@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Ardalis.GuardClauses;
+using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Common;
 using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.DataLoader.Plutus.Osrs.Application.Interfaces.Trades;
@@ -15,8 +16,8 @@ public sealed class GetTradesHandler : QueryHandler<GetTradesInput, WrapperRespo
         IGetTrades getTrades
     )
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(getTrades);
+        Guard.Against.Null(logger);
+        Guard.Against.Null(getTrades);
 
         _logger = logger;
         _getTrades = getTrades;

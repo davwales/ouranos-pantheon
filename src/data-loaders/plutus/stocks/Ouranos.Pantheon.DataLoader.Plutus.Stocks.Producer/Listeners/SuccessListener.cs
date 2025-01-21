@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Ardalis.GuardClauses;
+using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Core.WebSockets.Listeners;
 using Ouranos.Pantheon.Core.WebSockets.WebSocketClients;
 using Ouranos.Pantheon.DataLoader.Plutus.Stocks.Producer.Messages;
@@ -17,8 +18,9 @@ public sealed class SuccessListener : IListener<SuccessMessage>
         IOptions<AlpacaOptions> options
     )
     {
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(options.Value);
+        Guard.Against.Null(logger);
+        Guard.Against.Null(options);
+        Guard.Against.Null(options.Value);
 
         _logger = logger;
         _symbols = options.Value.Symbols;

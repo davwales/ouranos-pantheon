@@ -1,4 +1,5 @@
-﻿using Ouranos.Pantheon.Core.WebSockets.WebSocketClients;
+﻿using Ardalis.GuardClauses;
+using Ouranos.Pantheon.Core.WebSockets.WebSocketClients;
 using Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Producer.Messages;
 
 namespace Ouranos.Pantheon.DataLoader.Plutus.Ffxiv.Producer.Initializers;
@@ -13,7 +14,7 @@ public sealed class SubscriptionInitializer : IWebSocketInitializer
         IConfiguration configuration
     )
     {
-        ArgumentNullException.ThrowIfNull(logger);
+        Guard.Against.Null(logger);
 
         _logger = logger;
         _worlds = configuration.GetSection("Ouranos:Universalis:Worlds").Get<List<int>>() ?? [];

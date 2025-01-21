@@ -1,4 +1,5 @@
-﻿using Ouranos.Pantheon.Core.WebSockets.Serializers;
+﻿using Ardalis.GuardClauses;
+using Ouranos.Pantheon.Core.WebSockets.Serializers;
 using Ouranos.Pantheon.Core.WebSockets.WebSocketClients;
 
 namespace Ouranos.Pantheon.Core.WebSockets.Listeners;
@@ -10,7 +11,7 @@ public sealed class ListenerRegistry : IListenerRegistry
 
     public ListenerRegistry(IMessageSerializer serializer)
     {
-        ArgumentNullException.ThrowIfNull(serializer);
+        Guard.Against.Null(serializer);
         _serializer = serializer;
     }
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Ardalis.GuardClauses;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Ouranos.Pantheon.Core.WebSockets.Listeners;
 
@@ -11,8 +12,8 @@ public sealed class DiscriminatedMessagingBuilder<TMessage> : IDiscriminatedMess
 
     public DiscriminatedMessagingBuilder(string discriminator, IServiceCollection services)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(discriminator);
-        ArgumentNullException.ThrowIfNull(services);
+        Guard.Against.NullOrWhiteSpace(discriminator);
+        Guard.Against.Null(services);
 
         Discriminator = discriminator;
         _services = services;

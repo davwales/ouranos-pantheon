@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Ardalis.GuardClauses;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Ouranos.Pantheon.Core.WebSockets.Listeners;
 using Ouranos.Pantheon.Core.WebSockets.Serializers;
@@ -13,7 +14,7 @@ public sealed class ConstantMessagingBuilder<TMessage> : IConstantMessagingBuild
 
     public ConstantMessagingBuilder(IServiceCollection services)
     {
-        ArgumentNullException.ThrowIfNull(services);
+        Guard.Against.Null(services);
         _services = services;
     }
 
