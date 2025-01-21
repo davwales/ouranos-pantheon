@@ -34,7 +34,7 @@ export const generateCompletion = graphql(`
     mutation generateCompletion($input: GenerateCompletionInput!) {
         generateCompletion(input: $input) {
             completionResponse {
-                chunks {
+                chunks @stream {
                     content
                 }
             }

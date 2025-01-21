@@ -3,15 +3,14 @@ import {
     Box,
     Button,
     List,
-    ListItem,
-    ListItemText,
-    TextField,
+    TextField
 } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation } from 'urql';
 import { generateCompletion } from '../../mutations';
 import ConversationCharacter from '../models/conversation_character';
 import Message from '../models/message';
+import MessageDisplay from './message_display';
 
 interface ChatInterfaceProps {
     context: string;
@@ -24,7 +23,18 @@ export default function ChatInterface(props: ChatInterfaceProps) {
     const [inputText, setInputText] = useState('');
     const [sending, setSending] = useState(false);
 
-    const [, sendMessage] = useMutation(generateCompletion);
+    const [result, sendMessage] = useMutation(generateCompletion);
+
+    useEffect(() => {
+        if (!result.data?.generateCompletion.completionResponse?.chunks) {
+            return;
+        }
+
+        const message = result.data?.generateCompletion.completionResponse?.chunks.map(c => c.content).join('');
+        const updatedMessages = [...messages];
+        updatedMessages[updatedMessages.length - 1].content = message;
+        setMessages(updatedMessages);
+    }, [result.data?.generateCompletion.completionResponse?.chunks])
 
     const handleSendMessage = async () => {
         if (!inputText.trim()) return;
@@ -68,14 +78,13 @@ export default function ChatInterface(props: ChatInterfaceProps) {
         };
 
         try {
-            const result = await sendMessage({ input: variables });
-            if (result.data?.generateCompletion?.completionResponse) {
-                const assistantMessage: Message = {
-                    role: Role.Assistant,
-                    content: result.data?.generateCompletion.completionResponse?.chunks.map(c => c.content).join('') || "Failed to process response."
-                };
-                setMessages((prev) => [...prev, assistantMessage]);
-            }
+            const assistantMessage: Message = {
+                role: Role.Assistant,
+                content: "..."
+            };
+            setMessages((prev) => [...prev, assistantMessage]);
+            setSending(true);
+            await sendMessage({ input: variables });
         } catch (error) {
             console.error('Error sending message:', error);
         } finally {
@@ -93,13 +102,12 @@ export default function ChatInterface(props: ChatInterfaceProps) {
                 overflow: 'auto'
             }}>
                 {messages.map((msg, index) => (
-                    <ListItem key={index}>
-                        <ListItemText
-                            primary={msg.content}
-                            secondary={msg.role === Role.User ? props.userCharacter.name : props.assistantCharacter.name}
-                            sx={{ textAlign: msg.role === Role.User ? 'right' : 'left' }}
-                        />
-                    </ListItem>
+                    <MessageDisplay
+                        key={index}
+                        message={msg}
+                        userCharacter={props.userCharacter}
+                        assistantCharacter={props.assistantCharacter}
+                    />
                 ))}
             </List>
 
