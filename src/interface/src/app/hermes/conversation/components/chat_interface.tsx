@@ -84,8 +84,14 @@ export default function ChatInterface(props: ChatInterfaceProps) {
     };
 
     return (
-        <Box sx={{ height: "100%" }}>
-            <List sx={{ maxHeight: '50vh', overflow: 'auto' }}>
+        <Box sx={{
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column'
+        }}>
+            <List sx={{
+                overflow: 'auto'
+            }}>
                 {messages.map((msg, index) => (
                     <ListItem key={index}>
                         <ListItemText
@@ -96,13 +102,20 @@ export default function ChatInterface(props: ChatInterfaceProps) {
                     </ListItem>
                 ))}
             </List>
+
             <Box
                 component="form"
                 onSubmit={(e) => {
                     e.preventDefault();
                     handleSendMessage();
                 }}
-                sx={{ display: 'flex', mt: 2 }}
+                sx={{
+                    display: 'flex',
+                    p: 2,
+                    gap: 1,
+                    borderTop: 1,
+                    borderColor: 'divider'
+                }}
             >
                 <TextField
                     value={inputText}
@@ -111,7 +124,12 @@ export default function ChatInterface(props: ChatInterfaceProps) {
                     placeholder="Type your message..."
                     disabled={sending}
                 />
-                <Button type="submit" variant="contained" color="primary" disabled={sending || !inputText.trim()}>
+                <Button
+                    type="submit"
+                    variant="contained"
+                    color="primary"
+                    disabled={sending || !inputText.trim()}
+                >
                     Send
                 </Button>
             </Box>
