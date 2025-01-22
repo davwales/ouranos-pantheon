@@ -10,5 +10,6 @@ public sealed record TradeMetadata(
     string SymbolName,
     string SymbolCode,
     string? SymbolSubcode,
-    AdditionalFields AdditionalFields
+    AdditionalFields AdditionalFields,
+    Guid? MessageId
 );

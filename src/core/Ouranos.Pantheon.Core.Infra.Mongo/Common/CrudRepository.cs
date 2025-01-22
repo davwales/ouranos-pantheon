@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
@@ -26,9 +27,20 @@ public sealed class CrudRepository<T> : ICrudRepository<T> where T : BaseEntity<
         cancellationToken.ThrowIfCancellationRequested();
 
         var collection = _mongoRepository.GetCollection();
-        await collection.InsertOneAsync(entity, default, cancellationToken);
+        await collection.InsertOneAsync(entity, cancellationToken: cancellationToken);
 
         _logger.LogDebug("Successfully created {type} '{id}'.", typeof(T).Name, entity.Id);
+    }
+
+    public async Task CreateMany(IEnumerable<T> entities, CancellationToken cancellationToken = default)
+    {
+        _logger.LogTrace("Attempting to create many {type}.", typeof(T).Name);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var collection = _mongoRepository.GetCollection();
+        await collection.InsertManyAsync(entities, cancellationToken: cancellationToken);
+
+        _logger.LogDebug("Successfully created many {type}.", typeof(T).Name);
     }
 
     public async Task<T> Read(Id<T> id, CancellationToken cancellationToken = default)
@@ -67,7 +79,7 @@ public sealed class CrudRepository<T> : ICrudRepository<T> where T : BaseEntity<
         var filter = Builders<T>.Filter.Eq(x => x.Id, entity.Id);
         var result = await collection.ReplaceOneAsync(filter, entity, new ReplaceOptions(), cancellationToken);
 
-        if (result.ModifiedCount == 0)
+        if (result.MatchedCount == 0)
         {
             throw new KeyNotFoundException($"Could not find {typeof(T).Name} '{entity.Id}' to update.");
         }
@@ -116,5 +128,21 @@ public sealed class CrudRepository<T> : ICrudRepository<T> where T : BaseEntity<
 
         _logger.LogDebug("Successfully retrieved queryable for type {type}.", typeof(T).Name);
         return query;
+    }
+
+    public async Task<T?> FirstOrDefault(
+        Expression<Func<T, bool>> predicate,
+        CancellationToken cancellationToken = default
+    )
+    {
+        _logger.LogTrace("Attempting to find {type} or default using a predicate in Mongo.", typeof(T).Name);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var collection = _mongoRepository.GetCollection();
+        var filter = Builders<T>.Filter.Where(predicate);
+        var entity = await collection.Find(filter).FirstOrDefaultAsync(cancellationToken);
+
+        _logger.LogDebug("Successfully find {type} or default using a predicate in Mongo.", typeof(T).Name);
+        return entity;
     }
 }

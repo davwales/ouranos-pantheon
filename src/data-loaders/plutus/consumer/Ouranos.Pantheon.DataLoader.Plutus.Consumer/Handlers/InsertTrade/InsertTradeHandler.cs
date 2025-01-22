@@ -1,19 +1,18 @@
 ﻿using Ardalis.GuardClauses;
 using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Core.Application.Mediator;
-using Ouranos.Pantheon.DataLoader.Plutus.Consumer.Messages;
 using Ouranos.Pantheon.Service.Plutus.Domain.Trades;
 
-namespace Ouranos.Pantheon.DataLoader.Plutus.Consumer;
+namespace Ouranos.Pantheon.DataLoader.Plutus.Consumer.Handlers.InsertTrade;
 
-public sealed class InsertTradeConsumer : CommandHandler<InsertTradeMessage, Trade>
+public sealed class InsertTradeHandler : CommandHandler<InsertTradeInput, Trade>
 {
     private readonly ICreateDatabaseId<Trade> _createDatabaseId;
-    private readonly ILogger<InsertTradeConsumer> _logger;
+    private readonly ILogger<InsertTradeHandler> _logger;
     private readonly ICrudRepository<Trade> _tradeRepository;
 
-    public InsertTradeConsumer(
-        ILogger<InsertTradeConsumer> logger,
+    public InsertTradeHandler(
+        ILogger<InsertTradeHandler> logger,
         ICreateDatabaseId<Trade> createDatabaseId,
         ICrudRepository<Trade> tradeRepository
     )
@@ -28,7 +27,7 @@ public sealed class InsertTradeConsumer : CommandHandler<InsertTradeMessage, Tra
     }
 
     protected override async Task<Trade> Handle(
-        InsertTradeMessage command,
+        InsertTradeInput command,
         CancellationToken cancellationToken = default
     )
     {
@@ -45,7 +44,8 @@ public sealed class InsertTradeConsumer : CommandHandler<InsertTradeMessage, Tra
                 command.SymbolName,
                 command.SymbolCode,
                 command.SymbolSubcode,
-                command.AdditionalFields
+                command.AdditionalFields,
+                command.MessageId
             ),
             command.Timestamp
         );

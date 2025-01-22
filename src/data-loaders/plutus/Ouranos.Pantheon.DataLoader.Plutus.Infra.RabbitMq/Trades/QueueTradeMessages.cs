@@ -28,6 +28,12 @@ public sealed class QueueTradeMessages : IQueueTradeMessages
         _logger.LogTrace("Attempting to queue '{messageCount}' trade messages.", messages.Count);
         cancellationToken.ThrowIfCancellationRequested();
 
+        if (messages.Count == 0)
+        {
+            _logger.LogDebug("No trade messages to queue.");
+            return;
+        }
+
         await _bus.PublishBatch(messages, cancellationToken);
 
         _logger.LogDebug("Successfully queued trade message.");

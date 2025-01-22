@@ -42,9 +42,9 @@ public sealed class ProcessTradesHandler : CommandHandler<ProcessTradesInput>
             trade.Volume,
             trade.Timestamp,
             new AdditionalFields(
-                trade.GetTradesAdditionalFieldsResponse.Limit,
-                trade.GetTradesAdditionalFieldsResponse.HighAlch,
-                trade.GetTradesAdditionalFieldsResponse.LowAlch
+                Limit: trade.GetTradesAdditionalFieldsResponse.Limit,
+                HighAlch: trade.GetTradesAdditionalFieldsResponse.HighAlch,
+                LowAlch: trade.GetTradesAdditionalFieldsResponse.LowAlch
             )
         )).ToList();
 

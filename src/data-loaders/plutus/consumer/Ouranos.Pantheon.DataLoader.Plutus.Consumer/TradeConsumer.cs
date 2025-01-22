@@ -2,7 +2,9 @@ using Ardalis.GuardClauses;
 using MassTransit;
 using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Core.Domain.Common;
-using Ouranos.Pantheon.DataLoader.Plutus.Consumer.Messages;
+using Ouranos.Pantheon.DataLoader.Plutus.Consumer.Handlers.CheckDuplication;
+using Ouranos.Pantheon.DataLoader.Plutus.Consumer.Handlers.InsertTrade;
+using Ouranos.Pantheon.DataLoader.Plutus.Consumer.Handlers.UpsertSymbol;
 using Ouranos.Pantheon.DataLoader.Plutus.Domain;
 using Ouranos.Pantheon.DataLoader.Plutus.Domain.Trades;
 using Ouranos.Pantheon.Service.Plutus.Domain.Markets;
@@ -41,7 +43,19 @@ public sealed class TradeConsumer : IConsumer<TradeMessage>
             throw new InvalidOperationException("Cannot find market for this message.");
         }
 
-        var upsertSymbolRequest = new UpsertSymbolMessage(
+        if (context.MessageId is not null)
+        {
+            var checkDuplicationInput = new CheckDuplicationInput(context.MessageId.Value);
+            var checkDuplicationResponse = await _dispatcher.Send(checkDuplicationInput, context.CancellationToken);
+
+            if (checkDuplicationResponse.IsDuplicate)
+            {
+                _logger.LogInformation("Skipping message '{messageId}' because it is a duplicate.", context.MessageId);
+                return;
+            }
+        }
+
+        var upsertSymbolRequest = new UpsertSymbolInput(
             marketId,
             context.Message.SymbolCode,
             context.Message.SymbolSubcode,
@@ -51,7 +65,7 @@ public sealed class TradeConsumer : IConsumer<TradeMessage>
 
         var symbol = await _dispatcher.Send(upsertSymbolRequest, context.CancellationToken);
 
-        var insertTradeRequest = new InsertTradeMessage(
+        var insertTradeRequest = new InsertTradeInput(
             marketId,
             symbol.Id,
             symbol.Name,
@@ -60,12 +74,13 @@ public sealed class TradeConsumer : IConsumer<TradeMessage>
             context.Message.Price,
             context.Message.Volume,
             context.Message.Timestamp,
-            context.Message.AdditionalFields
+            context.Message.AdditionalFields,
+            context.MessageId
         );
         var trade = await _dispatcher.Send(insertTradeRequest);
 
         _logger.LogInformation(
-            "Successfully consumed trade message for trade '{tradeId}', symbol '{symbolId}', and market '{marketId}'.",
-            trade.Id, symbol.Id, marketId);
+            "Successfully consumed trade message '{messageId}' for trade '{tradeId}', symbol '{symbolId}', and market '{marketId}'.",
+            context.MessageId, trade.Id, symbol.Id, marketId);
     }
 }

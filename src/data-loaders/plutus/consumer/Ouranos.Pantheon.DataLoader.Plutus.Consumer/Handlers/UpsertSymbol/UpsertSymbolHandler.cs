@@ -3,22 +3,21 @@ using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Core.Common.AsyncLocks;
 using Ouranos.Pantheon.Core.Domain.Common;
-using Ouranos.Pantheon.DataLoader.Plutus.Consumer.Messages;
 using Ouranos.Pantheon.Service.Plutus.Domain.Markets;
 using Ouranos.Pantheon.Service.Plutus.Domain.Symbols;
 
-namespace Ouranos.Pantheon.DataLoader.Plutus.Consumer;
+namespace Ouranos.Pantheon.DataLoader.Plutus.Consumer.Handlers.UpsertSymbol;
 
-public sealed class UpsertSymbolConsumer : CommandHandler<UpsertSymbolMessage, Symbol>
+public sealed class UpsertSymbolHandler : CommandHandler<UpsertSymbolInput, Symbol>
 {
     private readonly ICreateDatabaseId<Symbol> _createDatabaseId;
     private readonly IKeyedAsyncLock<string> _itemLock;
-    private readonly ILogger<UpsertSymbolConsumer> _logger;
+    private readonly ILogger<UpsertSymbolHandler> _logger;
     private readonly IQueryExecutor _queryExecutor;
     private readonly ICrudRepository<Symbol> _symbolRepository;
 
-    public UpsertSymbolConsumer(
-        ILogger<UpsertSymbolConsumer> logger,
+    public UpsertSymbolHandler(
+        ILogger<UpsertSymbolHandler> logger,
         IQueryExecutor queryExecutor,
         ICrudRepository<Symbol> symbolRepository,
         ICreateDatabaseId<Symbol> createDatabaseId,
@@ -39,7 +38,7 @@ public sealed class UpsertSymbolConsumer : CommandHandler<UpsertSymbolMessage, S
     }
 
     protected override async Task<Symbol> Handle(
-        UpsertSymbolMessage command,
+        UpsertSymbolInput command,
         CancellationToken cancellationToken = default
     )
     {
