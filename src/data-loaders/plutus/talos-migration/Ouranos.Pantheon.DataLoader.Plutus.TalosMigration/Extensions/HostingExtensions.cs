@@ -1,11 +1,10 @@
-﻿using System.Reflection;
-using MassTransit;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Ouranos.Pantheon.Core.Application;
 using Ouranos.Pantheon.Core.Infra.Mongo;
 using Ouranos.Pantheon.DataLoader.Plutus.Infra.RabbitMq;
+using Ouranos.Pantheon.DataLoader.Plutus.TalosMigration.Actions.ConvertTrade;
+using Ouranos.Pantheon.DataLoader.Plutus.TalosMigration.Actions.GetTrades;
 
 namespace Ouranos.Pantheon.DataLoader.Plutus.TalosMigration.Extensions;
 
@@ -17,11 +16,10 @@ public static class HostingExtensions
 
         builder.ConfigureServices((_, services) => services
             .AddHostedService<TalosProducer>()
-            .AddCoreApplicationModule()
+            .AddSingleton<IGetTradesAction, GetTradesAction>()
+            .AddSingleton<IConvertTradeAction, ConvertTradeAction>()
             .AddCoreMongo(configuration)
-            .AddPlutusDataLoaderRabbitMqModule(configuration, x => x
-                .AddMediator(m => m.AddConsumers(Assembly.GetExecutingAssembly()))
-            )
+            .AddPlutusDataLoaderRabbitMqModule(configuration)
         );
 
         return builder.Build();

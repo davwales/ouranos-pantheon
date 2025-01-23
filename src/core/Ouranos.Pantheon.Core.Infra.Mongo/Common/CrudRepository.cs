@@ -145,4 +145,20 @@ public sealed class CrudRepository<T> : ICrudRepository<T> where T : BaseEntity<
         _logger.LogDebug("Successfully find {type} or default using a predicate in Mongo.", typeof(T).Name);
         return entity;
     }
+
+    public async Task<bool> Any(
+        Expression<Func<T, bool>> predicate,
+        CancellationToken cancellationToken = default
+    )
+    {
+        _logger.LogTrace("Attempting to see if any {type} match the given predicate in Mongo.", typeof(T).Name);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var collection = _mongoRepository.GetCollection();
+        var filter = Builders<T>.Filter.Where(predicate);
+        var wasFound = await collection.Find(filter).AnyAsync(cancellationToken);
+
+        _logger.LogDebug("Successfully determined if any {type} matched the given predicate in Mongo.", typeof(T).Name);
+        return wasFound;
+    }
 }

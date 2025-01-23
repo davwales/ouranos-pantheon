@@ -16,6 +16,11 @@ public interface ICrudRepository<T> where T : BaseEntity<Id<T>>
         CancellationToken cancellationToken = default
     );
 
+    Task<bool> Any(
+        Expression<Func<T, bool>> predicate,
+        CancellationToken cancellationToken = default
+    );
+
     Task<IEnumerable<T>> ReadAll(CancellationToken cancellationToken = default);
 
     Task Update(T entity, CancellationToken cancellationToken = default);

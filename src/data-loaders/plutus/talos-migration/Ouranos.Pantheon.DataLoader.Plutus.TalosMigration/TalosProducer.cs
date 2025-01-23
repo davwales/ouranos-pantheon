@@ -1,68 +1,75 @@
 ﻿using Ardalis.GuardClauses;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Core.Application.Mediator;
+using Ouranos.Pantheon.Core.Infra.Mongo;
 using Ouranos.Pantheon.DataLoader.Plutus.Application.Interfaces.Trades;
-using Ouranos.Pantheon.DataLoader.Plutus.TalosMigration.Handlers.GetTrades;
-using Ouranos.Pantheon.DataLoader.Plutus.TalosMigration.Handlers.ProcessTrade;
+using Ouranos.Pantheon.DataLoader.Plutus.TalosMigration.Actions.ConvertTrade;
+using Ouranos.Pantheon.DataLoader.Plutus.TalosMigration.Actions.GetTrades;
 using Ouranos.Pantheon.DataLoader.Plutus.TalosMigration.Models;
 
 namespace Ouranos.Pantheon.DataLoader.Plutus.TalosMigration;
 
 public sealed class TalosProducer : IHostedService
 {
-    private readonly IDispatcher _dispatcher;
+    private readonly IConvertTradeAction _convertTrade;
+    private readonly IGetTradesAction _getTrades;
     private readonly ILogger<TalosProducer> _logger;
     private readonly IQueueTradeMessages _queueTradeMessages;
+    private readonly IMongoRepository<TradeMigration> _tradeMigrationRepository;
 
     public TalosProducer(
-        IDispatcher dispatcher,
         ILogger<TalosProducer> logger,
-        IQueueTradeMessages queueTradeMessages
+        IGetTradesAction getTrades,
+        IConvertTradeAction convertTrade,
+        IQueueTradeMessages queueTradeMessages,
+        IMongoRepository<TradeMigration> tradeMigrationRepository
     )
     {
-        Guard.Against.Null(dispatcher);
         Guard.Against.Null(logger);
+        Guard.Against.Null(getTrades);
+        Guard.Against.Null(convertTrade);
         Guard.Against.Null(queueTradeMessages);
+        Guard.Against.Null(tradeMigrationRepository);
 
         _logger = logger;
-        _dispatcher = dispatcher;
+        _getTrades = getTrades;
+        _convertTrade = convertTrade;
         _queueTradeMessages = queueTradeMessages;
+        _tradeMigrationRepository = tradeMigrationRepository;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        var getTalosTradesInput = new GetTradesInput();
-        var tradeResponse = await _dispatcher.Send(getTalosTradesInput, cancellationToken);
+        _logger.LogTrace("Starting trade producer...");
+        var tradeCursor = await _getTrades.GetTradesAsync(cancellationToken);
 
-        var batch = 0;
-        var tradesProcessed = 0;
-        while (await tradeResponse.Cursor.MoveNextAsync(cancellationToken))
+        long numProcessed = 0;
+        var start = DateTimeOffset.UtcNow;
+
+        while (await tradeCursor.MoveNextAsync(cancellationToken))
         {
-            var start = DateTimeOffset.UtcNow;
-            var tasks = tradeResponse.Cursor.Current.Select(t => ProcessTrade(t, cancellationToken));
-            var responses = await Task.WhenAll(tasks);
-            var duration = DateTimeOffset.UtcNow.Subtract(start);
+            var migrations = tradeCursor.Current.Select(t => new TradeMigration(t.Id)).ToList();
+            var convertedTrades = tradeCursor.Current.Select(_convertTrade.ConvertTrade).ToList();
+            var messages = convertedTrades.Where(t => t is not null).Select(t => t!).ToList();
 
-            batch++;
-            tradesProcessed += responses.Count(r => r.WasProcessed);
+            await _queueTradeMessages.QueueMessages(messages, cancellationToken);
+            await _tradeMigrationRepository.GetCollection().InsertManyAsync(migrations, null, cancellationToken);
+
+            numProcessed += migrations.Count;
+            var duration = DateTimeOffset.UtcNow.Subtract(start);
             _logger.LogInformation(
-                "Processed '{tradeCount}' trades in '{seconds}' seconds for batch '{batchCount}'.",
-                tradesProcessed, duration.Seconds, batch
+                "Processed '{count}' trades after a total of '{seconds}' seconds. Throughput: '{throughput}' trades/s.",
+                numProcessed,
+                duration.TotalSeconds,
+                duration.TotalSeconds > 0 ? numProcessed / duration.TotalSeconds : 0
             );
         }
 
-        _logger.LogInformation("Completed Talos trade migration.");
+        _logger.LogInformation("Completed producing trades.");
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
         await Task.CompletedTask;
-    }
-
-    private async Task<ProcessTradeResponse> ProcessTrade(TalosTrade? trade, CancellationToken cancellationToken)
-    {
-        var convertTradeInput = new ProcessTradeInput(trade);
-        return await _dispatcher.Send(convertTradeInput, cancellationToken);
     }
 }
