@@ -6,7 +6,7 @@ import {
     Typography
 } from '@mui/material';
 import { useQuery } from 'urql';
-import { getDetailedCharacterListQuery } from '../../queries';
+import { GET_DETAILED_CHARACTER_LIST } from '../../queries';
 import ConversationCharacter from '../models/conversation_character';
 
 interface StepSelectCharacterProps {
@@ -18,7 +18,7 @@ interface StepSelectCharacterProps {
 
 export default function CharacterList(props: StepSelectCharacterProps) {
     const [{ data, fetching }] = useQuery({
-        query: getDetailedCharacterListQuery,
+        query: GET_DETAILED_CHARACTER_LIST,
     });
 
     const handleCharacterSelect = (char: ConversationCharacter) => {

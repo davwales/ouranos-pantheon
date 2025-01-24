@@ -12,7 +12,7 @@ import { useState } from "react";
 import TimeFrameSelection from "../components/time_frame_selection";
 import { plutusColumns } from "../constants/plutus_columns";
 import { PlutusState, usePlutusStore } from "../constants/plutus_store";
-import { getMarketTradesQuery } from "../queries";
+import { GET_MARKET_TRADES } from "../queries";
 
 export default function MarketDetail() {
     const router = useRouter();
@@ -44,7 +44,7 @@ export default function MarketDetail() {
     };
 
     const [{ data, fetching }] = useQuery({
-        query: getMarketTradesQuery,
+        query: GET_MARKET_TRADES,
         variables: {
             input: {
                 marketId: marketId,

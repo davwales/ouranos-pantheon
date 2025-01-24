@@ -8,8 +8,9 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from 'urql';
 import CharacterForm, { CharacterInput } from '../../components/character_form';
-import { deleteCharacterMutation, updateCharacterMutation } from '../../mutations';
-import { getCharacterQuery } from '../../queries';
+import { DELETE_CHARACTER, UPDATE_CHARACTER } from '../../mutations';
+import { GET_CHARACTER } from '../../queries';
+import { mapDetails } from '../../utilities/map_details';
 
 export default function EditCharacterPage() {
     const router = useRouter();
@@ -21,7 +22,7 @@ export default function EditCharacterPage() {
 
     // Fetch character data
     const [{ data, fetching, error: fetchError }] = useQuery({
-        query: getCharacterQuery,
+        query: GET_CHARACTER,
         variables: { characterId },
     });
 
@@ -35,8 +36,8 @@ export default function EditCharacterPage() {
         }
     }, [data, fetchError]);
 
-    const [, updateCharacter] = useMutation(updateCharacterMutation);
-    const [, deleteCharacter] = useMutation(deleteCharacterMutation);
+    const [, updateCharacter] = useMutation(UPDATE_CHARACTER);
+    const [, deleteCharacter] = useMutation(DELETE_CHARACTER);
 
     const handleDelete = () => {
         setLoading(true);
@@ -58,12 +59,7 @@ export default function EditCharacterPage() {
                 characterId,
                 name: input.name,
                 age: input.age,
-                details: input.details.map(d => {
-                    return {
-                        key: d.key,
-                        value: d.value
-                    }
-                }),
+                details: mapDetails(input.details)
             };
 
             await updateCharacter({ input: updateCharacterInput });

@@ -1,6 +1,6 @@
 import { graphql } from "@/gql";
 
-export const deleteCharacterMutation = graphql(`
+export const DELETE_CHARACTER = graphql(`
     mutation deleteCharacter($input: DeleteCharacterInput!) {
         deleteCharacter(input: $input) {
             idResponseOfCharacter {
@@ -10,7 +10,7 @@ export const deleteCharacterMutation = graphql(`
     } 
 `);
 
-export const createCharacterMutation = graphql(`
+export const CREATE_CHARACTER = graphql(`
     mutation createCharacter($input: CreateCharacterInput!) {
         createCharacter(input: $input) {
             idResponseOfCharacter {
@@ -20,7 +20,7 @@ export const createCharacterMutation = graphql(`
     } 
 `);
 
-export const updateCharacterMutation = graphql(`
+export const UPDATE_CHARACTER = graphql(`
     mutation updateCharacter($input: UpdateCharacterInput!) {
         updateCharacter(input: $input) {
             idResponseOfCharacter {
@@ -30,7 +30,7 @@ export const updateCharacterMutation = graphql(`
     } 
 `);
 
-export const generateCompletion = graphql(`
+export const GENERATE_COMPLETION = graphql(`
     mutation generateCompletion($input: GenerateCompletionInput!) {
         generateCompletion(input: $input) {
             completionResponse {

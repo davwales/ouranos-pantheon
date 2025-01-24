@@ -1,12 +1,12 @@
 "use client";
 
 import { CardContent, Grid2, Typography } from "@mui/material";
-import { getAllMarketsQuery } from "./queries";
 import { useQuery } from "@urql/next";
 import LinkCard from "../components/link_card";
+import { GET_ALL_MARKETS } from "./queries";
 
 export default function Plutus() {
-    const [{ data }] = useQuery({ query: getAllMarketsQuery })
+    const [{ data }] = useQuery({ query: GET_ALL_MARKETS })
 
     return (
         <>

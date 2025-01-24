@@ -1,16 +1,13 @@
 import { GenerateCompletionInput, Role } from '@/gql/graphql';
-import {
-    Box,
-    Button,
-    List,
-    TextField
-} from '@mui/material';
+import { Box } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useMutation } from 'urql';
-import { generateCompletion } from '../../mutations';
+import { GENERATE_COMPLETION } from '../../mutations';
+import { mapDetails } from '../../utilities/map_details';
 import ConversationCharacter from '../models/conversation_character';
 import Message from '../models/message';
-import MessageDisplay from './message_display';
+import ChatInput from './chat_input';
+import ChatMessageList from './chat_message_list';
 
 interface ChatInterfaceProps {
     context: string;
@@ -21,9 +18,10 @@ interface ChatInterfaceProps {
 export default function ChatInterface(props: ChatInterfaceProps) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputText, setInputText] = useState('');
-    const [sending, setSending] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [editingMessageIndex, setEditingMessageIndex] = useState<number | null>(null);
 
-    const [result, sendMessage] = useMutation(generateCompletion);
+    const [result, sendMessage] = useMutation(GENERATE_COMPLETION);
 
     useEffect(() => {
         if (!result.data?.generateCompletion.completionResponse?.chunks) {
@@ -36,44 +34,24 @@ export default function ChatInterface(props: ChatInterfaceProps) {
         setMessages(updatedMessages);
     }, [result.data?.generateCompletion.completionResponse?.chunks])
 
-    const handleSendMessage = async () => {
-        if (!inputText.trim()) return;
-        const userMessage: Message = { role: Role.User, content: inputText };
-        const updatedMessages = [...messages, userMessage];
-        setMessages(updatedMessages);
-        setInputText('');
-        setSending(true);
+    const generateCompletion = async (currentMessages: Message[]) => {
+        if (isGenerating) return;
+        setIsGenerating(true);
 
-        // Send message to the assistant
         const variables: GenerateCompletionInput = {
             conversation: {
                 context: props.context,
                 user: {
                     name: props.userCharacter.name,
                     age: props.userCharacter.age,
-                    details: props.userCharacter.details.map(d => {
-                        return {
-                            key: d.key,
-                            value: d.value
-                        }
-                    }),
+                    details: mapDetails(props.userCharacter.details),
                 },
                 assistant: {
                     name: props.assistantCharacter.name,
                     age: props.assistantCharacter.age,
-                    details: props.assistantCharacter.details.map(d => {
-                        return {
-                            key: d.key,
-                            value: d.value
-                        }
-                    })
+                    details: mapDetails(props.assistantCharacter.details),
                 },
-                messages: updatedMessages.map(m => {
-                    return {
-                        role: m.role,
-                        content: m.content
-                    }
-                })
+                messages: currentMessages.map(({ role, content }) => ({ role, content })),
             },
         };
 
@@ -83,64 +61,81 @@ export default function ChatInterface(props: ChatInterfaceProps) {
                 content: "..."
             };
             setMessages((prev) => [...prev, assistantMessage]);
-            setSending(true);
+            setIsGenerating(true);
             await sendMessage({ input: variables });
         } catch (error) {
             console.error('Error sending message:', error);
         } finally {
-            setSending(false);
+            setIsGenerating(false);
         }
+    };
+
+    const handleUpdateMessage = () => {
+        if (!editingMessageIndex || !inputText.trim()) return;
+        setMessages(prev => {
+            const updatedMessages = [...prev];
+            updatedMessages[editingMessageIndex].content = inputText;
+            return updatedMessages;
+        });
+        setEditingMessageIndex(null);
+        setInputText('');
+    };
+
+    const handleNewMessage = async () => {
+        if (!inputText.trim()) return;
+        const userMessage: Message = { role: Role.User, content: inputText };
+        const updatedMessages = [...messages, userMessage];
+        setMessages(updatedMessages);
+        setInputText('');
+        await generateCompletion(updatedMessages);
+    };
+
+    const handleMessageEdit = (index: number) => {
+        setInputText(messages[index].content);
+        setEditingMessageIndex(index);
+    };
+
+    const handleCancelEdit = () => {
+        setEditingMessageIndex(null);
+        setInputText('');
+    };
+
+    const handleMessageDeleted = (index: number) => {
+        setMessages((prev) => prev.filter((_, i) => i < index));
+    };
+
+    const handleMessageRetry = async (index: number) => {
+        const updatedMessages = messages.filter((_, i) => i < index);
+        setMessages(updatedMessages);
+        await generateCompletion(updatedMessages);
     };
 
     return (
         <Box sx={{
             height: '100%',
             display: 'flex',
-            flexDirection: 'column'
+            flexDirection: 'column',
+            position: 'relative',
         }}>
-            <List sx={{
-                overflow: 'auto'
-            }}>
-                {messages.map((msg, index) => (
-                    <MessageDisplay
-                        key={index}
-                        message={msg}
-                        userCharacter={props.userCharacter}
-                        assistantCharacter={props.assistantCharacter}
-                    />
-                ))}
-            </List>
+            <ChatMessageList
+                messages={messages}
+                userCharacter={props.userCharacter}
+                assistantCharacter={props.assistantCharacter}
+                onDeleteMessage={handleMessageDeleted}
+                onEditMessage={handleMessageEdit}
+                onRetryMessage={handleMessageRetry}
+                isGenerating={isGenerating}
+            />
 
-            <Box
-                component="form"
-                onSubmit={(e) => {
-                    e.preventDefault();
-                    handleSendMessage();
-                }}
-                sx={{
-                    display: 'flex',
-                    p: 2,
-                    gap: 1,
-                    borderTop: 1,
-                    borderColor: 'divider'
-                }}
-            >
-                <TextField
-                    value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
-                    fullWidth
-                    placeholder="Type your message..."
-                    disabled={sending}
-                />
-                <Button
-                    type="submit"
-                    variant="contained"
-                    color="primary"
-                    disabled={sending || !inputText.trim()}
-                >
-                    Send
-                </Button>
-            </Box>
+            <ChatInput
+                inputText={inputText}
+                isGenerating={isGenerating}
+                isEditing={editingMessageIndex !== null}
+                onInputChange={setInputText}
+                onNewMessage={handleNewMessage}
+                onUpdateMessage={handleUpdateMessage}
+                onCancelEdit={handleCancelEdit}
+            />
         </Box>
     );
 };

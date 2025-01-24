@@ -8,13 +8,13 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useMutation } from 'urql';
 import CharacterForm, { CharacterInput } from '../../components/character_form';
-import { createCharacterMutation } from '../../mutations';
+import { CREATE_CHARACTER } from '../../mutations';
 
 export default function CreateCharacterPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
 
-    const [, createCharacter] = useMutation(createCharacterMutation);
+    const [, createCharacter] = useMutation(CREATE_CHARACTER);
 
     const handleSubmit = async (input: CharacterInput) => {
         setLoading(true);

@@ -7,7 +7,7 @@ import { useQuery } from "@urql/next";
 import { useParams, useRouter } from "next/navigation";
 import TimeFrameSelection from "../../components/time_frame_selection";
 import { PlutusState, usePlutusStore } from "../../constants/plutus_store";
-import { getSymbolDetailsQuery } from "../../queries";
+import { GET_SYMBOL_DETAILS } from "../../queries";
 import DetailChart from "./components/detail_chart";
 
 export default function SymbolDetail() {
@@ -16,7 +16,7 @@ export default function SymbolDetail() {
     const [timeFrameSeconds, setTimeFrameSeconds] = usePlutusStore((state: PlutusState) => [state.timeFrameSeconds, state.setTimeFrameSeconds]);
 
     const [{ data }, reexecuteQuery] = useQuery({
-        query: getSymbolDetailsQuery,
+        query: GET_SYMBOL_DETAILS,
         variables: {
             marketId: marketId,
             symbolId: symbolId,

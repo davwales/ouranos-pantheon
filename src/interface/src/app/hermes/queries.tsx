@@ -1,6 +1,6 @@
 import { graphql } from "@/gql";
 
-export const getCharacterListQuery = graphql(`
+export const GET_CHARACTER_LIST = graphql(`
     query characterList {
         allCharacters {
             id
@@ -10,7 +10,7 @@ export const getCharacterListQuery = graphql(`
     }
 `);
 
-export const getDetailedCharacterListQuery = graphql(`
+export const GET_DETAILED_CHARACTER_LIST = graphql(`
     query detailedCharacterList {
         allCharacters {
             id
@@ -24,7 +24,7 @@ export const getDetailedCharacterListQuery = graphql(`
     }
 `);
 
-export const getCharacterQuery = graphql(`
+export const GET_CHARACTER = graphql(`
     query getCharacter($characterId: String!) {
         character(characterId: $characterId) {
             id

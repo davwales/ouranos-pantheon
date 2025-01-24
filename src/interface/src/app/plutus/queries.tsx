@@ -1,6 +1,6 @@
 import { graphql } from "@/gql";
 
-export const getAllMarketsQuery = graphql(`
+export const GET_ALL_MARKETS = graphql(`
     query GetMarkets {
         allMarkets {
             nodes {
@@ -11,7 +11,7 @@ export const getAllMarketsQuery = graphql(`
     }
 `);
 
-export const getMarketTradesQuery = graphql(`
+export const GET_MARKET_TRADES = graphql(`
     query GetMarketTrades($input: GetMarketTradesInput!, $where: GetMarketTradesResponseFilterInput, $order: [GetMarketTradesResponseSortInput!], $first: Int, $after: String, $last: Int, $before: String) {
         marketTrades(input: $input, where: $where, order: $order, first: $first, after: $after, last: $last, before: $before) {
             totalCount
@@ -41,7 +41,7 @@ export const getMarketTradesQuery = graphql(`
     }
 `);
 
-export const getSymbolDetailsQuery = graphql(`
+export const GET_SYMBOL_DETAILS = graphql(`
     query GetSymbolDetails($marketId: String!, $symbolId: String!, $seconds: Float) {
         symbol(symbolId: $symbolId) {
             code
