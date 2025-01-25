@@ -46,6 +46,8 @@ public class WebSocketClient : IDisposable, IWebSocketClient
 
     public WebSocketState State => _webSocket.State;
 
+    public bool IsListening => _listeningTask is not null && !_listeningTask.IsCompleted;
+
     public async Task ConnectAsync(CancellationToken cancellationToken = default)
     {
         _logger.LogTrace("Attempting to connect to web socket.");
@@ -53,7 +55,7 @@ public class WebSocketClient : IDisposable, IWebSocketClient
 
         if (_webSocket.State is not WebSocketState.None)
         {
-            const string errorMessage = "The web socket is already connected.";
+            const string errorMessage = "The web socket cannot be connected.";
             _logger.LogError(errorMessage);
             throw new InvalidOperationException(errorMessage);
         }

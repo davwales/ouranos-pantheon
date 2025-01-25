@@ -1,5 +1,4 @@
-﻿using System.Net.WebSockets;
-using Ardalis.GuardClauses;
+﻿using Ardalis.GuardClauses;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.WebSockets.WebSocketClients;
@@ -9,6 +8,7 @@ namespace Ouranos.Pantheon.Core.WebSockets;
 public sealed class WebSocketWorker : BackgroundService
 {
     private readonly IWebSocketClient _client;
+    private readonly TimeSpan _healthCheckInterval = TimeSpan.FromSeconds(5);
     private readonly ILogger<WebSocketWorker> _logger;
 
     public WebSocketWorker(
@@ -25,25 +25,28 @@ public sealed class WebSocketWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
+        await _client.ConnectAsync(cancellationToken);
+
         while (!cancellationToken.IsCancellationRequested)
         {
             try
             {
-                if (_client.State != WebSocketState.Open)
+                if (!_client.IsListening)
                 {
-                    _logger.LogDebug("Web socket client was not open, attempting to reconnect.");
-                    await _client.ConnectAsync(cancellationToken);
+                    _logger.LogError("Web socket client is not listening, exiting.");
+                    break;
                 }
 
-                await Task.Delay(Timeout.Infinite, cancellationToken);
+                await Task.Delay(_healthCheckInterval, cancellationToken);
             }
             catch (OperationCanceledException)
             {
+                _logger.LogInformation("Cancellation requested, exiting.");
                 break;
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Web socket connection error.");
+                _logger.LogError(e, "Unhandled exception encountered, restarting.");
                 await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
             }
         }

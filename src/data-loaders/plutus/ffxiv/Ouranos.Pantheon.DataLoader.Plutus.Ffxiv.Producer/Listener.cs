@@ -45,6 +45,5 @@ public sealed class Listener : IListener<SaleMessage>
         await _dispatcher.Send(processMessageRequest, cancellationToken);
 
         _logger.LogDebug("Successfully handled message.");
-        await Task.CompletedTask;
     }
 }

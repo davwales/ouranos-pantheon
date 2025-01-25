@@ -6,6 +6,8 @@ public interface IWebSocketClient
 {
     WebSocketState State { get; }
 
+    bool IsListening { get; }
+
     Task ConnectAsync(CancellationToken cancellationToken = default);
 
     Task SendAsync<T>(T message, CancellationToken cancellationToken = default);
