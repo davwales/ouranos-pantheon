@@ -33,6 +33,12 @@ public sealed class ProcessTradesHandler : CommandHandler<ProcessTradesInput>
         _logger.LogTrace("Attempting to handle process trades command '{@command}'", command);
         cancellationToken.ThrowIfCancellationRequested();
 
+        if (command.Trades.Count == 0)
+        {
+            _logger.LogDebug("There are no trades to process.");
+            return;
+        }
+
         var messages = command.Trades.Select(trade => new TradeMessage(
             Producer.Osrs,
             trade.SymbolCode,
@@ -42,9 +48,9 @@ public sealed class ProcessTradesHandler : CommandHandler<ProcessTradesInput>
             trade.Volume,
             trade.Timestamp,
             new AdditionalFields(
-                Limit: trade.GetTradesAdditionalFieldsResponse.Limit,
-                HighAlch: trade.GetTradesAdditionalFieldsResponse.HighAlch,
-                LowAlch: trade.GetTradesAdditionalFieldsResponse.LowAlch
+                trade.GetTradesAdditionalFieldsResponse.Limit,
+                trade.GetTradesAdditionalFieldsResponse.HighAlch,
+                trade.GetTradesAdditionalFieldsResponse.LowAlch
             )
         )).ToList();
 
