@@ -5,7 +5,8 @@ import OuranosGridModel from "@/app/models/ouranos_grid_model";
 import OuranosPaginationInfo from "@/app/models/ouranos_pagination_info";
 import { mapFilter, mapOrder, mapPagination } from "@/app/utilities/graphql_mappers";
 import { GetMarketTradesResponse } from "@/gql/graphql";
-import { Box, Button } from "@mui/material";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import { Box, Button, IconButton } from "@mui/material";
 import { useQuery } from "@urql/next";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -43,7 +44,11 @@ export default function MarketDetail() {
         setGridModel(model);
     };
 
-    const [{ data, fetching }] = useQuery({
+    const handleRefreshClicked = () => {
+        reexecute();
+    };
+
+    const [{ data, fetching }, reexecute] = useQuery({
         query: GET_MARKET_TRADES,
         variables: {
             input: {
@@ -61,9 +66,36 @@ export default function MarketDetail() {
 
     return (
         <>
-            <Box sx={{ width: "100%", m: "auto" }}>
-                <Button variant="outlined" onClick={handleBackClicked}>Back</Button>
-                <TimeFrameSelection onChange={handleTimeFrameChange} seconds={timeFrameSeconds} sx={{ float: "right" }} />
+            <Box
+                sx={{
+                    width: "100%",
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    m: "auto"
+                }}
+            >
+                <Box>
+                    <Button variant="outlined" onClick={handleBackClicked}>
+                        Back
+                    </Button>
+                </Box>
+
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 2
+                    }}
+                >
+                    <IconButton onClick={handleRefreshClicked}>
+                        <RefreshIcon />
+                    </IconButton>
+                    <TimeFrameSelection
+                        onChange={handleTimeFrameChange}
+                        seconds={timeFrameSeconds}
+                    />
+                </Box>
             </Box>
             <OuranosDataGrid
                 rows={data?.marketTrades?.nodes}
