@@ -1,6 +1,9 @@
+using HotChocolate.Data.Filters;
+using HotChocolate.Data.Filters.Expressions;
 using HotChocolate.Execution.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Ouranos.Pantheon.Core.API.FieldHandlers;
 using Ouranos.Pantheon.Core.API.Mutations;
 using Ouranos.Pantheon.Core.API.Queries;
 
@@ -23,6 +26,7 @@ public static class GraphQlExtentions
             .AddTypeExtensions<Mutation>()
             .AddMutationConventions()
             .BindCommonTypes()
+            .AddOuranosConventions()
             .ModifyRequestOptions(o =>
             {
                 var includeExceptionDetails = configuration.GetValue("Ouranos:IncludeExceptionDetails", false);
@@ -49,5 +53,15 @@ public static class GraphQlExtentions
     private static IRequestExecutorBuilder BindCommonTypes(this IRequestExecutorBuilder builder)
     {
         return builder.BindRuntimeType(typeof(object), typeof(AnyType));
+    }
+
+    private static IRequestExecutorBuilder AddOuranosConventions(this IRequestExecutorBuilder builder)
+    {
+        return builder
+            .AddConvention<IFilterConvention>(new FilterConventionExtension(x => x
+                .AddProviderExtension(new QueryableFilterProviderExtension(e => e
+                    .AddFieldHandler<QueryableStringInvariantHandler>()
+                ))
+            ));
     }
 }
