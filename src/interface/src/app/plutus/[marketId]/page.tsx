@@ -88,7 +88,7 @@ export default function MarketDetail() {
                         gap: 2
                     }}
                 >
-                    <IconButton onClick={handleRefreshClicked}>
+                    <IconButton disabled={fetching} onClick={handleRefreshClicked}>
                         <RefreshIcon />
                     </IconButton>
                     <TimeFrameSelection

@@ -82,7 +82,7 @@ public sealed class GetMarketTradesHandler :
                 x.NumTransactions,
                 x.MaxPrice - x.MinPrice - x.Tax, // margin
                 x.TotalSpent / x.TotalVolume, // average price
-                (x.MaxPrice - x.MinPrice - x.Tax) / x.MinPrice * 100, // roi
+                (x.MaxPrice - x.MinPrice - x.Tax) / x.MinPrice, // roi
                 (x.MaxPrice - x.MinPrice - x.Tax) * (x.TotalVolume > x.Limit ? x.Limit : x.TotalVolume), // total gain
                 x.Limit
             ));
