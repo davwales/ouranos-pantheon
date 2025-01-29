@@ -1,7 +1,7 @@
-import { GridColDef, GridFilterModel, GridLogicOperator, GridPaginationModel, GridSortModel } from "@mui/x-data-grid";
-import { getFieldType } from "./material_helpers";
 import { PageInfo, SortEnumType } from "@/gql/graphql";
+import { GridColDef, GridFilterModel, GridLogicOperator, GridPaginationModel, GridSortModel } from "@mui/x-data-grid";
 import OuranosPaginationInfo from "../models/ouranos_pagination_info";
+import { getFieldType } from "./material_helpers";
 
 export function mapFilter(
     model: GridFilterModel,
@@ -98,4 +98,12 @@ export function mapPagination(
             last: paginationModel.pageSize
         }
     }
+}
+
+export function hasPaginationChanged(
+    paginationModel: GridPaginationModel,
+    previousPaginationModel: GridPaginationModel
+): boolean {
+    return paginationModel.page !== previousPaginationModel.page ||
+        paginationModel.pageSize !== previousPaginationModel.pageSize;
 }

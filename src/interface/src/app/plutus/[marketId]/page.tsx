@@ -3,7 +3,7 @@
 import { OuranosDataGrid } from "@/app/components/ouranos_data_grid";
 import OuranosGridModel from "@/app/models/ouranos_grid_model";
 import OuranosPaginationInfo from "@/app/models/ouranos_pagination_info";
-import { mapFilter, mapOrder, mapPagination } from "@/app/utilities/graphql_mappers";
+import { hasPaginationChanged, mapFilter, mapOrder, mapPagination } from "@/app/utilities/graphql_mappers";
 import { GetMarketTradesResponse } from "@/gql/graphql";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { Box, Button, IconButton } from "@mui/material";
@@ -39,8 +39,11 @@ export default function MarketDetail() {
     };
 
     const handleGridModelChanged = (model: OuranosGridModel) => {
-        const paginationInfo = mapPagination(model.paginationModel, gridModel.paginationModel, data?.marketTrades?.pageInfo);
-        setPaginationInfo(paginationInfo);
+        if (hasPaginationChanged(model.paginationModel, gridModel.paginationModel)) {
+            const paginationInfo = mapPagination(model.paginationModel, gridModel.paginationModel, data?.marketTrades?.pageInfo);
+            setPaginationInfo(paginationInfo);
+        }
+
         setGridModel(model);
     };
 
@@ -105,7 +108,7 @@ export default function MarketDetail() {
                 loading={fetching}
                 initialModel={gridModel}
                 onGridModelChange={handleGridModelChanged}
-                pageSizeOptions={[5, 10, 15, 20]}
+                pageSizeOptions={[5, 10, 15, 20, 50]}
                 onRowClick={handleRowClick}
                 sx={{ mt: "1rem" }}
             />
