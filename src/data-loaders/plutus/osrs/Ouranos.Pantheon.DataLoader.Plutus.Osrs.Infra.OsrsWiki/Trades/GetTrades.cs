@@ -12,7 +12,7 @@ public sealed class GetTrades : IGetTrades
     private readonly ILogger<GetTrades> _logger;
     private readonly TimeSpan _refreshInterval;
     private readonly IWikiClient _wikiClient;
-    private DateTimeOffset _lastRefresh = DateTimeOffset.MinValue;
+    private DateTimeOffset _lastRefresh = DateTimeOffset.UtcNow;
 
     public GetTrades(
         ILogger<GetTrades> logger,
