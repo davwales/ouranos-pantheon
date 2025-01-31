@@ -1,17 +1,16 @@
 ﻿using Ardalis.GuardClauses;
 using Ouranos.Pantheon.Core.Application.Interfaces.Common;
-using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Service.Plutus.Domain.Trades;
 
 namespace Ouranos.Pantheon.DataLoader.Plutus.Consumer.Handlers.CheckDuplication;
 
-public sealed class CheckDuplicationHandler : QueryHandler<CheckDuplicationInput, CheckDuplicationResponse>
+public sealed class CheckDuplication : ICheckDuplication
 {
-    private readonly ILogger<CheckDuplicationHandler> _logger;
+    private readonly ILogger<CheckDuplication> _logger;
     private readonly ICrudRepository<Trade> _tradesRepository;
 
-    public CheckDuplicationHandler(
-        ILogger<CheckDuplicationHandler> logger,
+    public CheckDuplication(
+        ILogger<CheckDuplication> logger,
         ICrudRepository<Trade> tradesRepository
     )
     {
@@ -22,23 +21,22 @@ public sealed class CheckDuplicationHandler : QueryHandler<CheckDuplicationInput
         _tradesRepository = tradesRepository;
     }
 
-    protected override async Task<CheckDuplicationResponse> Handle(
-        CheckDuplicationInput query,
+    public async Task<bool> CheckDuplicationAsync(
+        Guid messageId,
         CancellationToken cancellationToken = default
     )
     {
-        _logger.LogTrace("Attempting to handle check duplication query '{@query}'.", query);
+        _logger.LogTrace("Attempting to check if message '{messageId}' is a duplicate.", messageId);
         cancellationToken.ThrowIfCancellationRequested();
 
         var trade = await _tradesRepository.FirstOrDefault(
-            t => t.Metadata.MessageId == query.MessageId,
+            t => t.Metadata.MessageId == messageId,
             cancellationToken
         );
 
         var isDuplicate = trade is not null;
-        var response = new CheckDuplicationResponse(isDuplicate);
 
-        _logger.LogDebug("Successfully handled check duplicate query.");
-        return response;
+        _logger.LogDebug("Successfully checked if message was a duplicate.");
+        return isDuplicate;
     }
 }
