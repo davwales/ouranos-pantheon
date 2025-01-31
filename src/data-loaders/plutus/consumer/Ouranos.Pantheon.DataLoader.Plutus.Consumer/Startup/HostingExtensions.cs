@@ -1,5 +1,4 @@
-﻿using Ouranos.Pantheon.Core.Common.AsyncLocks;
-using Ouranos.Pantheon.Core.Infra.Mongo;
+﻿using Ouranos.Pantheon.Core.Infra.Mongo;
 using Ouranos.Pantheon.Core.Infra.RabbitMq;
 using Ouranos.Pantheon.DataLoader.Plutus.Consumer.Handlers.CheckDuplication;
 using Ouranos.Pantheon.DataLoader.Plutus.Consumer.Handlers.InsertTrade;
@@ -14,7 +13,6 @@ public static class HostingExtensions
     {
         builder.Services
             .ConfigureWorker(builder.Configuration)
-            .AddSingleton<IKeyedAsyncLock<string>, KeyedAsyncLock<string>>()
             .AddScoped<ICheckDuplication, CheckDuplication>()
             .AddScoped<IUpsertSymbol, UpsertSymbol>()
             .AddScoped<IInsertTrade, InsertTrade>()
