@@ -1,7 +1,7 @@
 "use client";
 
 import LinkCard from "@/app/components/link_card";
-import { CardContent, Grid2, Typography } from "@mui/material";
+import { Box, CardContent, Grid2, Typography } from "@mui/material";
 import { useQuery } from "@urql/next";
 import { GET_CHARACTER_LIST } from "../queries";
 
@@ -34,8 +34,8 @@ export default function CharactersPage() {
     );
 
     return (
-        <>
+        <Box sx={{ m: "1rem" }}>
             {fetching ? "Loading..." : characterGrid}
-        </>
+        </Box>
     );
 }

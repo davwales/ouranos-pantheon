@@ -1,6 +1,7 @@
-import { Box, Button, TextField } from '@mui/material';
+import { Box, Button, SxProps, TextField } from '@mui/material';
 
 interface ChatInputProps {
+    sx?: SxProps;
     inputText: string;
     isGenerating: boolean;
     isEditing: boolean;
@@ -55,32 +56,16 @@ export default function ChatInput(props: ChatInputProps) {
         </>
     );
 
+    const inputPlaceholder = props.isEditing ? "Editing message..." : "Type your message...";
+    const placeholder = props.isGenerating ? "Generating response..." : inputPlaceholder;
+
     return (
-        <Box
-            component="form"
-            onSubmit={handleSubmit}
-            sx={{
-                display: 'flex',
-                p: 2,
-                gap: 1,
-                borderTop: 1,
-                borderColor: 'divider',
-                position: 'fixed',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                justifyContent: 'center',
-                maxWidth: 'md',
-                mx: 'auto',
-                backgroundColor: 'background.default',
-                zIndex: 1000
-            }}
-        >
+        <Box component="form" onSubmit={handleSubmit} sx={props.sx}>
             <TextField
                 value={props.inputText}
                 onChange={(e) => props.onInputChange(e.target.value)}
                 fullWidth
-                placeholder={props.isEditing ? "Editing message..." : "Type your message..."}
+                placeholder={placeholder}
                 disabled={props.isGenerating}
             />
             {props.isEditing ? editInputs : newMessageInput}

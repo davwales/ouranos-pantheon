@@ -1,10 +1,9 @@
 // components/ResponsiveNavigationBar.tsx
 "use client";
 
-import React from 'react';
-import { AppBar, Toolbar, Typography, Box, useMediaQuery, useTheme } from '@mui/material';
-import MobileNavigation from './mobile_navigation';
+import { AppBar, Box, Toolbar, Typography, useMediaQuery, useTheme } from '@mui/material';
 import DesktopNavigation from './desktop_navigation';
+import MobileNavigation from './mobile_navigation';
 import OuranosIcon from './ouranos_icon';
 
 export default function ResponsiveNavigationBar() {
@@ -12,7 +11,7 @@ export default function ResponsiveNavigationBar() {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   return (
-    <AppBar position="static">
+    <AppBar position="sticky">
       <Toolbar>
         <Box sx={{ flexGrow: 1 }}>
           {!isMobile ? <DesktopNavigation /> : <MobileNavigation />}

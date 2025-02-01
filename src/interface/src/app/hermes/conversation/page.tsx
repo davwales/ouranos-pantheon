@@ -35,7 +35,7 @@ export default function Conversation() {
     }
 
     const setupDisplay = (
-        <OuranosStepper steps={steps} onComplete={handleStepperComplete} />
+        <OuranosStepper sx={{ m: "1rem" }} steps={steps} onComplete={handleStepperComplete} />
     );
 
     const chatDisplay = userCharacter && assistantCharacter ? (
@@ -43,7 +43,7 @@ export default function Conversation() {
     ) : "Invalid conversation configuration. Please refresh and try again.";
 
     return (
-        <Box sx={{ width: '100%', height: "100%", padding: "1rem" }}>
+        <Box sx={{ width: '100%', height: "100%" }}>
             {setupComplete ? chatDisplay : setupDisplay}
         </Box>
     );

@@ -4,11 +4,13 @@ import {
     Step,
     StepLabel,
     Stepper,
+    SxProps,
     Typography
 } from '@mui/material';
 import React, { useState } from 'react';
 
 interface OuranosStepperProps {
+    sx?: SxProps;
     steps: {
         label: string;
         component: React.ReactNode;
@@ -43,7 +45,7 @@ export default function OuranosStepper(props: OuranosStepperProps) {
     };
 
     return (
-        <Box sx={{ widows: "100%", p: "0.25rem", mx: "auto", background: "none" }}>
+        <Box sx={props.sx}>
             <Stepper activeStep={activeStep} sx={{ mb: "1.5rem" }}>
                 {props.steps.map((step, index) => (
                     <Step key={step.label}>

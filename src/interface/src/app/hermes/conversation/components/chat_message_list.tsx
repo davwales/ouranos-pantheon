@@ -69,7 +69,7 @@ export default function ChatMessageList(props: ChatMessageListProps) {
     };
 
     return (
-        <>
+        <Box sx={props.sx}>
             <List sx={{ flexGrow: 1, overflowY: 'auto', }}>
                 {props.messages.map((msg, index) => (
                     <ListItem
@@ -93,6 +93,6 @@ export default function ChatMessageList(props: ChatMessageListProps) {
                     actions={getMessageActions(selectedMessageIndex, props.messages[selectedMessageIndex].role)}
                 />
             )}
-        </>
+        </Box>
     );
 }

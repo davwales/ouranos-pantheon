@@ -75,7 +75,7 @@ export default function EditCharacterPage() {
     }
 
     return (
-        <>
+        <Box sx={{ m: "1rem" }}>
             <Box sx={{ width: "100%", mb: "1rem" }}>
                 <Button LinkComponent={Link} href="/hermes/characters" variant="outlined">
                     Back
@@ -92,7 +92,6 @@ export default function EditCharacterPage() {
                 onSubmit={handleSubmit}
                 loading={loading || fetching}
             />
-        </>
-
+        </Box>
     );
 }

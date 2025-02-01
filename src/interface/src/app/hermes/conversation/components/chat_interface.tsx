@@ -112,10 +112,11 @@ export default function ChatInterface(props: ChatInterfaceProps) {
 
     return (
         <Box sx={{
-            height: '100%',
+            flex: 1,
             display: 'flex',
             flexDirection: 'column',
             position: 'relative',
+            py: '0.5rem'
         }}>
             <ChatMessageList
                 messages={messages}
@@ -125,6 +126,10 @@ export default function ChatInterface(props: ChatInterfaceProps) {
                 onEditMessage={handleMessageEdit}
                 onRetryMessage={handleMessageRetry}
                 isGenerating={isGenerating}
+                sx={{
+                    flex: 1,
+                    overflow: 'auto'
+                }}
             />
 
             <ChatInput
@@ -135,6 +140,23 @@ export default function ChatInterface(props: ChatInterfaceProps) {
                 onNewMessage={handleNewMessage}
                 onUpdateMessage={handleUpdateMessage}
                 onCancelEdit={handleCancelEdit}
+                sx={{
+                    display: 'flex',
+                    p: 2,
+                    gap: 1,
+                    borderTop: 1,
+                    borderColor: 'divider',
+                    position: 'fixed',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    justifyContent: 'center',
+                    maxWidth: 'md',
+                    mx: 'auto',
+                    backgroundColor: 'background.default',
+                    zIndex: 1000,
+                    boxSizing: 'border-box'
+                }}
             />
         </Box>
     );

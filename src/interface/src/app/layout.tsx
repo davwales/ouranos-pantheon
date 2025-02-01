@@ -34,7 +34,11 @@ export default function RootLayout({ children }: React.PropsWithChildren) {
               flexDirection: 'column'
             }}>
               <ResponsiveNavigationBar />
-              <Box sx={{ m: '1rem' }}>
+              <Box sx={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column'
+              }}>
                 {children}
               </Box>
             </Box>
