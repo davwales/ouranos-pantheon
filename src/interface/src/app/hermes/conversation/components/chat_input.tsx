@@ -65,6 +65,8 @@ export default function ChatInput(props: ChatInputProps) {
                 value={props.inputText}
                 onChange={(e) => props.onInputChange(e.target.value)}
                 fullWidth
+                multiline
+                maxRows={4}
                 placeholder={placeholder}
                 disabled={props.isGenerating}
             />

@@ -49,11 +49,6 @@ export default function ChatMessageList(props: ChatMessageListProps) {
                 label: 'Edit',
                 icon: <EditIcon fontSize="small" />,
                 onClick: () => props.onEditMessage?.(index)
-            },
-            {
-                label: 'Delete',
-                icon: <DeleteIcon fontSize="small" />,
-                onClick: () => props.onDeleteMessage?.(index)
             }
         ];
 
@@ -64,6 +59,12 @@ export default function ChatMessageList(props: ChatMessageListProps) {
                 onClick: () => props.onRetryMessage?.(index)
             });
         }
+
+        actions.push({
+            label: 'Delete',
+            icon: <DeleteIcon fontSize="small" color="error" />,
+            onClick: () => props.onDeleteMessage?.(index)
+        });
 
         return actions;
     };
