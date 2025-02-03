@@ -7,20 +7,24 @@ namespace Ouranos.Pantheon.Core.WebSockets;
 
 public sealed class WebSocketWorker : BackgroundService
 {
+    private readonly IHostApplicationLifetime _applicationLifetime;
     private readonly IWebSocketClient _client;
     private readonly TimeSpan _healthCheckInterval = TimeSpan.FromSeconds(5);
     private readonly ILogger<WebSocketWorker> _logger;
 
     public WebSocketWorker(
         ILogger<WebSocketWorker> logger,
-        IWebSocketClient client
+        IWebSocketClient client,
+        IHostApplicationLifetime applicationLifetime
     )
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(client);
+        Guard.Against.Null(applicationLifetime);
 
         _logger = logger;
         _client = client;
+        _applicationLifetime = applicationLifetime;
     }
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
@@ -52,5 +56,6 @@ public sealed class WebSocketWorker : BackgroundService
         }
 
         await _client.DisconnectAsync(cancellationToken);
+        _applicationLifetime.StopApplication();
     }
 }
