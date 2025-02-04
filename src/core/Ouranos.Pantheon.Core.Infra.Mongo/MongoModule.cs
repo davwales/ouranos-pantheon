@@ -54,6 +54,6 @@ public static class MongoModule
         BsonSerializer.RegisterGenericSerializerDefinition(typeof(Id<>), typeof(IdSerializer<>));
         BsonSerializer.TryRegisterSerializer(typeof(DateTimeOffset), new DateTimeOffsetSerializer(BsonType.DateTime));
         BsonSerializer.TryRegisterSerializer(typeof(decimal), new DecimalSerializer(BsonType.Decimal128));
-        BsonSerializer.TryRegisterSerializer(typeof(Guid), new GuidSerializer(BsonType.String));
+        BsonSerializer.TryRegisterSerializer(typeof(Guid), new GuidSerializer(GuidRepresentation.Standard));
     }
 }
