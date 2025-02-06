@@ -48,19 +48,19 @@ public sealed class ProcessTradeHandler : CommandHandler<ProcessTradeInput>
         const string hqCode = "hq";
         var hqItem = itemDtos.FirstOrDefault(i => i.SymbolCode == command.ItemCode && i.IsHighQuality);
 
-        const string lqCode = "lq";
-        var lqItem = itemDtos.FirstOrDefault(i => i.SymbolCode == command.ItemCode && !i.IsHighQuality);
+        const string nqCode = "nq";
+        var nqItem = itemDtos.FirstOrDefault(i => i.SymbolCode == command.ItemCode && !i.IsHighQuality);
 
         var messages = command.Sales
             .Select(sale =>
             {
-                var item = sale.IsHighQuality ? hqItem : lqItem;
+                var item = sale.IsHighQuality ? hqItem : nqItem;
                 if (item is not null)
                 {
                     return new TradeMessage(
                         Producer.Ffxiv,
                         command.ItemCode,
-                        sale.IsHighQuality ? hqCode : lqCode,
+                        sale.IsHighQuality ? hqCode : nqCode,
                         item.SymbolName,
                         sale.Price,
                         sale.Volume,
