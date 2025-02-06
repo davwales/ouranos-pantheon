@@ -9,29 +9,21 @@ namespace Ouranos.Pantheon.DataLoader.Plutus.Consumer.Handlers.InsertTrade;
 
 public sealed class InsertTrade : IInsertTrade
 {
-    private readonly ICreateDatabaseId<Trade> _createTradeId;
-    private readonly ICreateDatabaseId<TradeMessage> _createTradeMessageId;
     private readonly ILogger<InsertTrade> _logger;
-    private readonly ICrudRepository<TradeMessage> _tradeMessageRepository;
-    private readonly ICrudRepository<Trade> _tradeRepository;
+    private readonly IRepository<TradeMessage> _tradeMessageRepository;
+    private readonly IRepository<Trade> _tradeRepository;
 
     public InsertTrade(
         ILogger<InsertTrade> logger,
-        ICreateDatabaseId<Trade> createTradeId,
-        ICreateDatabaseId<TradeMessage> createTradeMessageId,
-        ICrudRepository<TradeMessage> tradeMessageRepository,
-        ICrudRepository<Trade> tradeRepository
+        IRepository<TradeMessage> tradeMessageRepository,
+        IRepository<Trade> tradeRepository
     )
     {
         Guard.Against.Null(logger);
-        Guard.Against.Null(createTradeId);
-        Guard.Against.Null(createTradeMessageId);
         Guard.Against.Null(tradeMessageRepository);
         Guard.Against.Null(tradeRepository);
 
         _logger = logger;
-        _createTradeId = createTradeId;
-        _createTradeMessageId = createTradeMessageId;
         _tradeMessageRepository = tradeMessageRepository;
         _tradeRepository = tradeRepository;
     }
@@ -45,7 +37,7 @@ public sealed class InsertTrade : IInsertTrade
         cancellationToken.ThrowIfCancellationRequested();
 
         var trade = new Trade(
-            _createTradeId.CreateId(),
+            _tradeRepository.CreateId(),
             input.Price,
             input.Volume,
             new TradeMetadata(
@@ -85,7 +77,7 @@ public sealed class InsertTrade : IInsertTrade
         try
         {
             var tradeMessage = new TradeMessage(
-                _createTradeMessageId.CreateId(),
+                _tradeMessageRepository.CreateId(),
                 tradeId,
                 messageId.Value
             );

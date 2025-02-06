@@ -9,7 +9,7 @@ namespace Ouranos.Pantheon.Core.Application.Tests.Commands.Common.DeleteEntity;
 public sealed class DeleteEntityHandlerTests
 {
     private readonly DeleteEntityHandler<TestEntity> _handler;
-    private readonly Mock<ICrudRepository<TestEntity>> _mockCrudRepository = new();
+    private readonly Mock<IRepository<TestEntity>> _mockCrudRepository = new();
     private readonly Mock<ILogger<DeleteEntityHandler<TestEntity>>> _mockLogger = new();
 
     public DeleteEntityHandlerTests()

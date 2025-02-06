@@ -9,11 +9,11 @@ namespace Ouranos.Pantheon.Core.Application.Queries.Common.GetEntity;
 public sealed class GetEntityHandler<T> : QueryHandler<GetEntityInput<T>, T> where T : BaseEntity<Id<T>>
 {
     private readonly ILogger<GetEntityHandler<T>> _logger;
-    private readonly ICrudRepository<T> _repository;
+    private readonly IRepository<T> _repository;
 
     public GetEntityHandler(
         ILogger<GetEntityHandler<T>> logger,
-        ICrudRepository<T> repository
+        IRepository<T> repository
     )
     {
         Guard.Against.Null(logger);

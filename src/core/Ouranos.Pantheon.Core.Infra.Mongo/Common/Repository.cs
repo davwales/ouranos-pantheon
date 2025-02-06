@@ -1,24 +1,32 @@
 using System.Linq.Expressions;
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
+using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Core.Domain.Common;
 
 namespace Ouranos.Pantheon.Core.Infra.Mongo.Common;
 
-public sealed class CrudRepository<T> : ICrudRepository<T> where T : BaseEntity<Id<T>>
+public sealed class Repository<T> : IRepository<T> where T : BaseEntity<Id<T>>
 {
-    private readonly ILogger<CrudRepository<T>> _logger;
+    private readonly ILogger<Repository<T>> _logger;
     private readonly IMongoRepository<T> _mongoRepository;
 
-    public CrudRepository(ILogger<CrudRepository<T>> logger, IMongoRepository<T> mongoRepository)
+    public Repository(ILogger<Repository<T>> logger, IMongoRepository<T> mongoRepository)
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(mongoRepository);
 
         _logger = logger;
         _mongoRepository = mongoRepository;
+    }
+
+    public Id<T> CreateId()
+    {
+        var mongoId = ObjectId.GenerateNewId().ToString();
+        return new Id<T>(mongoId);
     }
 
     public async Task Create(T entity, CancellationToken cancellationToken = default)
@@ -160,5 +168,26 @@ public sealed class CrudRepository<T> : ICrudRepository<T> where T : BaseEntity<
 
         _logger.LogDebug("Successfully determined if any {type} matched the given predicate in Mongo.", typeof(T).Name);
         return wasFound;
+    }
+
+    public async Task<TResult?> FirstOrDefault<TResult>(
+        IQueryable<TResult> query,
+        CancellationToken cancellationToken = default
+    )
+    {
+        _logger.LogTrace("Attempting to find '{resultType}' first or default of query on '{type}'.",
+            typeof(TResult).Name, typeof(T).Name);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (query is not IMongoQueryable<TResult> mongoQuery)
+        {
+            throw new InvalidOperationException("Cannot perform FirstOrDefaultAsync on a non-Mongo queryable.");
+        }
+
+        var result = await mongoQuery.FirstOrDefaultAsync(cancellationToken);
+
+        _logger.LogDebug("Successfully executed query to find first or default '{resultType}' from '{type}'.",
+            typeof(TResult).Name, typeof(T).Name);
+        return result;
     }
 }

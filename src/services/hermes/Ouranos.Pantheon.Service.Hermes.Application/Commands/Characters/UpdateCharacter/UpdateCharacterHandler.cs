@@ -9,12 +9,12 @@ namespace Ouranos.Pantheon.Service.Hermes.Application.Commands.Characters.Update
 
 public sealed class UpdateCharacterHandler : CommandHandler<UpdateCharacterInput, IdResponse<Character>>
 {
-    private readonly ICrudRepository<Character> _characterRepository;
+    private readonly IRepository<Character> _characterRepository;
     private readonly ILogger<UpdateCharacterHandler> _logger;
 
     public UpdateCharacterHandler(
         ILogger<UpdateCharacterHandler> logger,
-        ICrudRepository<Character> characterRepository
+        IRepository<Character> characterRepository
     )
     {
         Guard.Against.Null(logger);

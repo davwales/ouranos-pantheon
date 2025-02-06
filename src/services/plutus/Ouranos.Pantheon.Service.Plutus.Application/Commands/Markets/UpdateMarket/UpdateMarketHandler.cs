@@ -10,9 +10,9 @@ namespace Ouranos.Pantheon.Service.Plutus.Application.Commands.Markets.UpdateMar
 public sealed class UpdateMarketHandler : CommandHandler<UpdateMarketInput, IdResponse<Market>>
 {
     private readonly ILogger<UpdateMarketHandler> _logger;
-    private readonly ICrudRepository<Market> _marketRepository;
+    private readonly IRepository<Market> _marketRepository;
 
-    public UpdateMarketHandler(ILogger<UpdateMarketHandler> logger, ICrudRepository<Market> marketRepository)
+    public UpdateMarketHandler(ILogger<UpdateMarketHandler> logger, IRepository<Market> marketRepository)
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(marketRepository);

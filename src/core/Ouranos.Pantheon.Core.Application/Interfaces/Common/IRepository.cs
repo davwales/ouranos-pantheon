@@ -3,8 +3,10 @@ using Ouranos.Pantheon.Core.Domain.Common;
 
 namespace Ouranos.Pantheon.Core.Application.Interfaces.Common;
 
-public interface ICrudRepository<T> where T : BaseEntity<Id<T>>
+public interface IRepository<T> where T : BaseEntity<Id<T>>
 {
+    Id<T> CreateId();
+
     Task Create(T entity, CancellationToken cancellationToken = default);
 
     Task CreateMany(IEnumerable<T> entities, CancellationToken cancellationToken = default);
@@ -13,6 +15,11 @@ public interface ICrudRepository<T> where T : BaseEntity<Id<T>>
 
     Task<T?> FirstOrDefault(
         Expression<Func<T, bool>> predicate,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<TResult?> FirstOrDefault<TResult>(
+        IQueryable<TResult> query,
         CancellationToken cancellationToken = default
     );
 

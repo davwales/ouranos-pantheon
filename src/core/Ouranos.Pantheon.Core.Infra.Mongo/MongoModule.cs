@@ -29,17 +29,10 @@ public static class MongoModule
 
         services.TryAddSingleton<IMongoDatabaseManager, MongoDatabaseManager>();
         services.TryAddSingleton(typeof(IMongoRepository<>), typeof(MongoRepository<>));
-        services.AddScoped<IQueryExecutor, QueryExecutor>();
+        services.TryAddScoped(typeof(IRepository<>), typeof(Repository<>));
 
-        RegisterInfrastructureBehaviors(services);
         RegisterConventions();
         return services;
-    }
-
-    private static void RegisterInfrastructureBehaviors(IServiceCollection services)
-    {
-        services.TryAddScoped(typeof(ICrudRepository<>), typeof(CrudRepository<>));
-        services.TryAddScoped(typeof(ICreateDatabaseId<>), typeof(CreateDatabaseId<>));
     }
 
     private static void RegisterConventions()

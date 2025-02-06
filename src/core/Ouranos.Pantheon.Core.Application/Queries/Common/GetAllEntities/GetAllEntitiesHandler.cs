@@ -11,11 +11,11 @@ public sealed class GetAllEntitiesHandler<T> : QueryHandler<GetAllEntitiesInput<
     where T : BaseEntity<Id<T>>
 {
     private readonly ILogger<GetAllEntitiesHandler<T>> _logger;
-    private readonly ICrudRepository<T> _repository;
+    private readonly IRepository<T> _repository;
 
     public GetAllEntitiesHandler(
         ILogger<GetAllEntitiesHandler<T>> logger,
-        ICrudRepository<T> repository
+        IRepository<T> repository
     )
     {
         Guard.Against.Null(logger);

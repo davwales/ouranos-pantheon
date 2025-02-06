@@ -9,22 +9,18 @@ namespace Ouranos.Pantheon.Service.Hermes.Application.Commands.Characters.Create
 
 public sealed class CreateCharacterHandler : CommandHandler<CreateCharacterInput, IdResponse<Character>>
 {
-    private readonly ICrudRepository<Character> _characterRepository;
-    private readonly ICreateDatabaseId<Character> _createDatabaseId;
+    private readonly IRepository<Character> _characterRepository;
     private readonly ILogger<CreateCharacterHandler> _logger;
 
     public CreateCharacterHandler(
         ILogger<CreateCharacterHandler> logger,
-        ICreateDatabaseId<Character> createDatabaseId,
-        ICrudRepository<Character> characterRepository
+        IRepository<Character> characterRepository
     )
     {
         Guard.Against.Null(logger);
-        Guard.Against.Null(createDatabaseId);
         Guard.Against.Null(characterRepository);
 
         _logger = logger;
-        _createDatabaseId = createDatabaseId;
         _characterRepository = characterRepository;
     }
 
@@ -36,7 +32,7 @@ public sealed class CreateCharacterHandler : CommandHandler<CreateCharacterInput
         _logger.LogTrace("Attempting to handle create character command '{@command}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var characterId = _createDatabaseId.CreateId();
+        var characterId = _characterRepository.CreateId();
         var character = new Character(characterId, command.Name, command.Age, command.Details);
         await _characterRepository.Create(character, cancellationToken);
         var response = new IdResponse<Character>(characterId);

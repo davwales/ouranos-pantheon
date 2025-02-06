@@ -8,7 +8,7 @@ namespace Ouranos.Pantheon.Core.Application.Tests.Queries.Common.GetEntity;
 public sealed class GetEntityHandlerTests
 {
     private readonly GetEntityHandler<TestEntity> _handler;
-    private readonly Mock<ICrudRepository<TestEntity>> _mockCrudRepository = new();
+    private readonly Mock<IRepository<TestEntity>> _mockCrudRepository = new();
     private readonly Mock<ILogger<GetEntityHandler<TestEntity>>> _mockLogger = new();
 
     public GetEntityHandlerTests()

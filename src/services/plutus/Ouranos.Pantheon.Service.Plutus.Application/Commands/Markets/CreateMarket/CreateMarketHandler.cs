@@ -9,21 +9,17 @@ namespace Ouranos.Pantheon.Service.Plutus.Application.Commands.Markets.CreateMar
 
 public sealed class CreateMarketHandler : CommandHandler<CreateMarketInput, IdResponse<Market>>
 {
-    private readonly ICreateDatabaseId<Market> _createDatabaseId;
     private readonly ILogger<CreateMarketHandler> _logger;
-    private readonly ICrudRepository<Market> _marketRepository;
+    private readonly IRepository<Market> _marketRepository;
 
     public CreateMarketHandler(
         ILogger<CreateMarketHandler> logger,
-        ICreateDatabaseId<Market> createDatabaseId,
-        ICrudRepository<Market> marketRepository)
+        IRepository<Market> marketRepository)
     {
         Guard.Against.Null(logger);
-        Guard.Against.Null(createDatabaseId);
         Guard.Against.Null(marketRepository);
 
         _logger = logger;
-        _createDatabaseId = createDatabaseId;
         _marketRepository = marketRepository;
     }
 
@@ -35,7 +31,7 @@ public sealed class CreateMarketHandler : CommandHandler<CreateMarketInput, IdRe
         _logger.LogDebug("Attempting to handle create market command '{@command}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var marketId = _createDatabaseId.CreateId();
+        var marketId = _marketRepository.CreateId();
         var market = new Market(marketId, command.Name, command.Taxes);
         await _marketRepository.Create(market, cancellationToken);
         var response = new IdResponse<Market>(marketId);

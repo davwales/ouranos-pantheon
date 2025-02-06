@@ -11,11 +11,11 @@ public sealed class DeleteEntityHandler<T> : CommandHandler<DeleteEntityInput<T>
     where T : BaseEntity<Id<T>>
 {
     private readonly ILogger<DeleteEntityHandler<T>> _logger;
-    private readonly ICrudRepository<T> _repository;
+    private readonly IRepository<T> _repository;
 
     public DeleteEntityHandler(
         ILogger<DeleteEntityHandler<T>> logger,
-        ICrudRepository<T> repository
+        IRepository<T> repository
     )
     {
         Guard.Against.Null(logger);

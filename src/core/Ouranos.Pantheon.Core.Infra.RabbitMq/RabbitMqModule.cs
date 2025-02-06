@@ -10,7 +10,8 @@ public static class RabbitMqModule
     public static IServiceCollection AddCoreRabbitMqModule(
         this IServiceCollection services,
         IConfiguration configuration,
-        Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null
+        Action<IBusRegistrationConfigurator>? busRegistrationConfigurator = null,
+        Action<IRabbitMqBusFactoryConfigurator>? rabbitMqConfigurator = null
     )
     {
         if (services.All(s => s.ServiceType != typeof(IBus)))
@@ -18,7 +19,7 @@ public static class RabbitMqModule
             return services.AddMassTransit(x =>
             {
                 busRegistrationConfigurator?.Invoke(x);
-                x.ConfigureRabbitMq(configuration);
+                x.ConfigureRabbitMq(configuration, rabbitMqConfigurator);
             });
         }
 
@@ -30,7 +31,8 @@ public static class RabbitMqModule
 
     public static void ConfigureRabbitMq(
         this IBusRegistrationConfigurator configurator,
-        IConfiguration configuration
+        IConfiguration configuration,
+        Action<IRabbitMqBusFactoryConfigurator>? rabbitMqConfigurator = null
     )
     {
         configurator.UsingRabbitMq((context, cfg) =>
@@ -50,6 +52,8 @@ public static class RabbitMqModule
             {
                 cfg.UseConcurrencyLimit(options.ConcurrencyLimit.Value);
             }
+
+            rabbitMqConfigurator?.Invoke(cfg);
         });
     }
 }

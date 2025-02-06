@@ -6,23 +6,19 @@ namespace Ouranos.Pantheon.DataLoader.Plutus.Consumer.Handlers.UpsertSymbol;
 
 public sealed class UpsertSymbol : IUpsertSymbol
 {
-    private readonly ICreateDatabaseId<Symbol> _createDatabaseId;
     private readonly ILogger<UpsertSymbol> _logger;
-    private readonly ICrudRepository<Symbol> _symbolRepository;
+    private readonly IRepository<Symbol> _symbolRepository;
 
     public UpsertSymbol(
         ILogger<UpsertSymbol> logger,
-        ICrudRepository<Symbol> symbolRepository,
-        ICreateDatabaseId<Symbol> createDatabaseId
+        IRepository<Symbol> symbolRepository
     )
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(symbolRepository);
-        Guard.Against.Null(createDatabaseId);
 
         _logger = logger;
         _symbolRepository = symbolRepository;
-        _createDatabaseId = createDatabaseId;
     }
 
     public async Task<Symbol> UpsertSymbolAsync(
@@ -49,7 +45,7 @@ public sealed class UpsertSymbol : IUpsertSymbol
         }
 
         var newSymbol = new Symbol(
-            _createDatabaseId.CreateId(),
+            _symbolRepository.CreateId(),
             input.SymbolCode,
             input.SymbolSubcode,
             input.SymbolName,

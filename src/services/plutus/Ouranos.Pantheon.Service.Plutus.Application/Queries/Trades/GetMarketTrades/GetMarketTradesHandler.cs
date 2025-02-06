@@ -12,12 +12,12 @@ public sealed class GetMarketTradesHandler :
     QueryHandler<GetMarketTradesInput, WrapperResponse<IQueryable<GetMarketTradesResponse>>>
 {
     private readonly ILogger<GetMarketTradesHandler> _logger;
-    private readonly ICrudRepository<Trade> _tradeRepository;
+    private readonly IRepository<Trade> _tradeRepository;
 
     public GetMarketTradesHandler(
         ILogger<GetMarketTradesHandler> logger,
-        ICrudRepository<Market> marketRepository,
-        ICrudRepository<Trade> tradeRepository)
+        IRepository<Market> marketRepository,
+        IRepository<Trade> tradeRepository)
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(marketRepository);
