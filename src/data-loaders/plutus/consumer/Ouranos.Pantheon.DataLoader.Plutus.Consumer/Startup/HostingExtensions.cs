@@ -1,6 +1,5 @@
 ﻿using Ouranos.Pantheon.Core.Infra.Mongo;
 using Ouranos.Pantheon.Core.Infra.RabbitMq;
-using Ouranos.Pantheon.DataLoader.Plutus.Consumer.Handlers.CheckDuplication;
 using Ouranos.Pantheon.DataLoader.Plutus.Consumer.Handlers.InsertTrade;
 using Ouranos.Pantheon.DataLoader.Plutus.Consumer.Handlers.UpsertSymbol;
 using Ouranos.Pantheon.DataLoader.Plutus.Worker;
@@ -13,7 +12,6 @@ public static class HostingExtensions
     {
         builder.Services
             .ConfigureWorker(builder.Configuration)
-            .AddScoped<ICheckDuplication, CheckDuplication>()
             .AddScoped<IUpsertSymbol, UpsertSymbol>()
             .AddScoped<IInsertTrade, InsertTrade>()
             .AddCoreMongo(builder.Configuration)

@@ -1,28 +1,22 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Infra.Mongo;
 using Ouranos.Pantheon.DataLoader.Plutus.Infra.RabbitMq;
-using Ouranos.Pantheon.DataLoader.Plutus.TalosMigration.Actions.ConvertTrade;
-using Ouranos.Pantheon.DataLoader.Plutus.TalosMigration.Actions.GetTrades;
 
-namespace Ouranos.Pantheon.DataLoader.Plutus.TalosMigration.Extensions;
+namespace Ouranos.Pantheon.DataLoader.Plutus.Migration.Extensions;
 
-public static class HostingExtensions
+public static class StartupExtensions
 {
-    public static IHost ConfigureBuilder(this IHostBuilder builder)
+    public static IServiceProvider GetServices()
     {
         var configuration = BuildConfiguration();
-
-        builder.ConfigureServices((_, services) => services
-            .AddHostedService<TalosProducer>()
-            .AddSingleton<IGetTradesAction, GetTradesAction>()
-            .AddSingleton<IConvertTradeAction, ConvertTradeAction>()
+        return new ServiceCollection()
+            .AddSingleton<IMigration, Migration>()
+            .AddLogging(x => x.AddConsole())
             .AddCoreMongo(configuration)
             .AddPlutusDataLoaderRabbitMqModule(configuration)
-        );
-
-        return builder.Build();
+            .BuildServiceProvider();
     }
 
     private static IConfiguration BuildConfiguration()

@@ -18,6 +18,7 @@ plutus/
   ├── ffxiv/
   ├── osrs/
   ├── stocks/
+  ├── migration/
   ├── Application
   ├── Domain
   ├── RabbitMq
@@ -37,3 +38,7 @@ plutus/
 ## Database
 
 - plutus
+    - trademessages
+        - Add a unique index on `messageId`.
+        - Recommended to setup a ttl index on `createdAt`.
+    - trades

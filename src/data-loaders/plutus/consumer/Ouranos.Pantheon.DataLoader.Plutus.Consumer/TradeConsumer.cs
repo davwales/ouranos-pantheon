@@ -1,7 +1,6 @@
 using Ardalis.GuardClauses;
 using MassTransit;
 using Ouranos.Pantheon.Core.Domain.Common;
-using Ouranos.Pantheon.DataLoader.Plutus.Consumer.Handlers.CheckDuplication;
 using Ouranos.Pantheon.DataLoader.Plutus.Consumer.Handlers.InsertTrade;
 using Ouranos.Pantheon.DataLoader.Plutus.Consumer.Handlers.UpsertSymbol;
 using Ouranos.Pantheon.DataLoader.Plutus.Domain;
@@ -12,7 +11,6 @@ namespace Ouranos.Pantheon.DataLoader.Plutus.Consumer;
 
 public sealed class TradeConsumer : IConsumer<TradeMessage>
 {
-    private readonly ICheckDuplication _checkDuplication;
     private readonly IInsertTrade _insertTrade;
     private readonly ILogger<TradeConsumer> _logger;
     private readonly Dictionary<Producer, Id<Market>> _marketMap;
@@ -20,20 +18,17 @@ public sealed class TradeConsumer : IConsumer<TradeMessage>
 
     public TradeConsumer(
         ILogger<TradeConsumer> logger,
-        ICheckDuplication checkDuplication,
         IUpsertSymbol upsertSymbol,
         IInsertTrade insertTrade,
         IConfiguration configuration
     )
     {
         Guard.Against.Null(logger);
-        Guard.Against.Null(checkDuplication);
         Guard.Against.Null(upsertSymbol);
         Guard.Against.Null(insertTrade);
         Guard.Against.Null(configuration);
 
         _logger = logger;
-        _checkDuplication = checkDuplication;
         _upsertSymbol = upsertSymbol;
         _insertTrade = insertTrade;
         _marketMap = configuration
@@ -52,17 +47,6 @@ public sealed class TradeConsumer : IConsumer<TradeMessage>
         if (!_marketMap.TryGetValue(context.Message.Producer, out var marketId))
         {
             throw new InvalidOperationException("Cannot find market for this message.");
-        }
-
-        if (context.MessageId is not null)
-        {
-            var isDuplicate = await _checkDuplication.CheckDuplicationAsync(
-                context.MessageId.Value, context.CancellationToken);
-            if (isDuplicate)
-            {
-                _logger.LogInformation("Skipping message '{messageId}' because it is a duplicate.", context.MessageId);
-                return;
-            }
         }
 
         var upsertSymbolRequest = new UpsertSymbolInput(
