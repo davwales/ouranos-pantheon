@@ -12,5 +12,5 @@ public abstract class QueryHandler<TInput, TOutput> : IConsumer<TInput>
         await context.RespondAsync(result);
     }
 
-    protected abstract Task<TOutput> Handle(TInput query, CancellationToken cancellationToken = default);
+    public abstract Task<TOutput> Handle(TInput query, CancellationToken cancellationToken = default);
 }

@@ -33,7 +33,7 @@ public sealed class GetSymbolTradesHandler :
         _queryExecutor = queryExecutor;
     }
 
-    protected override async Task<GetSymbolTradesResponse> Handle(
+    public override async Task<GetSymbolTradesResponse> Handle(
         GetSymbolTradesInput query,
         CancellationToken cancellationToken = default
     )

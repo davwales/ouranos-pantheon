@@ -3,6 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{24007BE7-AE6D-46D3-B37A-522FE3EF0D9C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{F392701E-51BD-4568-8747-EEB6210D34B1}"
+	ProjectSection(SolutionItems) = preProject
+		tests\Directory.Build.props = tests\Directory.Build.props
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "core", "core", "{128A9F3B-4D1A-4A93-A0EC-2426770786AC}"
 	ProjectSection(SolutionItems) = preProject
@@ -141,6 +144,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "talos-migration", "talos-mi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.DataLoader.Plutus.TalosMigration", "src\data-loaders\plutus\talos-migration\Ouranos.Pantheon.DataLoader.Plutus.TalosMigration\Ouranos.Pantheon.DataLoader.Plutus.TalosMigration.csproj", "{BD27F07E-CF48-4529-8FD4-53CAE19F4F20}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "core", "core", "{E77EDC83-6ED1-424E-A7BA-2E0E62C75DDD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Core.Domain.Tests", "tests\core\Ouranos.Pantheon.Core.Domain.Tests\Ouranos.Pantheon.Core.Domain.Tests.csproj", "{E3445E33-87C3-4161-B5B7-5211743E1AF0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Core.Application.Tests", "tests\core\Ouranos.Pantheon.Core.Application.Tests\Ouranos.Pantheon.Core.Application.Tests.csproj", "{8104B2C5-3063-4924-82FC-ACD046C34AD5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Tests.Utils", "tests\Ouranos.Pantheon.Tests.Utils\Ouranos.Pantheon.Tests.Utils.csproj", "{4E996D12-1F9F-4CA0-9765-3949D538D3EB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -271,6 +282,18 @@ Global
 		{BD27F07E-CF48-4529-8FD4-53CAE19F4F20}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BD27F07E-CF48-4529-8FD4-53CAE19F4F20}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BD27F07E-CF48-4529-8FD4-53CAE19F4F20}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3445E33-87C3-4161-B5B7-5211743E1AF0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3445E33-87C3-4161-B5B7-5211743E1AF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3445E33-87C3-4161-B5B7-5211743E1AF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3445E33-87C3-4161-B5B7-5211743E1AF0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8104B2C5-3063-4924-82FC-ACD046C34AD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8104B2C5-3063-4924-82FC-ACD046C34AD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8104B2C5-3063-4924-82FC-ACD046C34AD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8104B2C5-3063-4924-82FC-ACD046C34AD5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E996D12-1F9F-4CA0-9765-3949D538D3EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E996D12-1F9F-4CA0-9765-3949D538D3EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E996D12-1F9F-4CA0-9765-3949D538D3EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E996D12-1F9F-4CA0-9765-3949D538D3EB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{128A9F3B-4D1A-4A93-A0EC-2426770786AC} = {24007BE7-AE6D-46D3-B37A-522FE3EF0D9C}
@@ -316,5 +339,9 @@ Global
 		{18ACC0D0-8E98-4C21-83C7-B7F4E9CCB718} = {DBE7C5CA-24A4-4277-8F46-8043EE66C167}
 		{2D7850F3-3398-4BFE-AAFB-B0E134FD6D5D} = {DBE7C5CA-24A4-4277-8F46-8043EE66C167}
 		{BD27F07E-CF48-4529-8FD4-53CAE19F4F20} = {2D7850F3-3398-4BFE-AAFB-B0E134FD6D5D}
+		{E77EDC83-6ED1-424E-A7BA-2E0E62C75DDD} = {F392701E-51BD-4568-8747-EEB6210D34B1}
+		{E3445E33-87C3-4161-B5B7-5211743E1AF0} = {E77EDC83-6ED1-424E-A7BA-2E0E62C75DDD}
+		{8104B2C5-3063-4924-82FC-ACD046C34AD5} = {E77EDC83-6ED1-424E-A7BA-2E0E62C75DDD}
+		{4E996D12-1F9F-4CA0-9765-3949D538D3EB} = {F392701E-51BD-4568-8747-EEB6210D34B1}
 	EndGlobalSection
 EndGlobal

@@ -10,11 +10,11 @@ namespace Ouranos.Pantheon.Core.Application.Queries.Common.GetAllEntities;
 public sealed class GetAllEntitiesHandler<T> : QueryHandler<GetAllEntitiesInput<T>, WrapperResponse<IQueryable<T>>>
     where T : BaseEntity<Id<T>>
 {
-    private readonly ILogger<T> _logger;
+    private readonly ILogger<GetAllEntitiesHandler<T>> _logger;
     private readonly ICrudRepository<T> _repository;
 
     public GetAllEntitiesHandler(
-        ILogger<T> logger,
+        ILogger<GetAllEntitiesHandler<T>> logger,
         ICrudRepository<T> repository
     )
     {
@@ -25,7 +25,7 @@ public sealed class GetAllEntitiesHandler<T> : QueryHandler<GetAllEntitiesInput<
         _repository = repository;
     }
 
-    protected override Task<WrapperResponse<IQueryable<T>>> Handle(
+    public override Task<WrapperResponse<IQueryable<T>>> Handle(
         GetAllEntitiesInput<T> query,
         CancellationToken cancellationToken = default
     )

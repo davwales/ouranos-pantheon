@@ -1,4 +1,5 @@
 stages:
+  - test
   - build
   - push_images
 
@@ -20,6 +21,11 @@ variables:
       - "${IMAGE_NAME}.tar"
   only:
     - main
+
+dotnet_test:
+  stage: test
+  script:
+    - 'dotnet test'
 
 build_gateway:
   <<: *build_template

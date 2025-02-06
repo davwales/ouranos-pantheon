@@ -23,7 +23,7 @@ public sealed class GetTradesHandler : QueryHandler<GetTradesInput, WrapperRespo
         _getTrades = getTrades;
     }
 
-    protected override async Task<WrapperResponse<List<GetTradesResponse>>> Handle(
+    public override async Task<WrapperResponse<List<GetTradesResponse>>> Handle(
         GetTradesInput query,
         CancellationToken cancellationToken = default
     )

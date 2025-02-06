@@ -24,7 +24,7 @@ public sealed class UpdateCharacterHandler : CommandHandler<UpdateCharacterInput
         _characterRepository = characterRepository;
     }
 
-    protected override async Task<IdResponse<Character>> Handle(
+    public override async Task<IdResponse<Character>> Handle(
         UpdateCharacterInput command,
         CancellationToken cancellationToken = default
     )

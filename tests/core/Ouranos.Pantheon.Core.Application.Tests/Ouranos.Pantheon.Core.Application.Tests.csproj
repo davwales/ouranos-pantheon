@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\src\core\Ouranos.Pantheon.Core.Application\Ouranos.Pantheon.Core.Application.csproj"/>
+        <ProjectReference Include="..\..\Ouranos.Pantheon.Tests.Utils\Ouranos.Pantheon.Tests.Utils.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Folder Include="Commands\Common\"/>
+    </ItemGroup>
+
+</Project>

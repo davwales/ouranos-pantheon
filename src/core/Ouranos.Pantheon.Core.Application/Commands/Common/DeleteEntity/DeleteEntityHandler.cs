@@ -10,11 +10,11 @@ namespace Ouranos.Pantheon.Core.Application.Commands.Common.DeleteEntity;
 public sealed class DeleteEntityHandler<T> : CommandHandler<DeleteEntityInput<T>, IdResponse<T>>
     where T : BaseEntity<Id<T>>
 {
-    private readonly ILogger<T> _logger;
+    private readonly ILogger<DeleteEntityHandler<T>> _logger;
     private readonly ICrudRepository<T> _repository;
 
     public DeleteEntityHandler(
-        ILogger<T> logger,
+        ILogger<DeleteEntityHandler<T>> logger,
         ICrudRepository<T> repository
     )
     {
@@ -25,7 +25,7 @@ public sealed class DeleteEntityHandler<T> : CommandHandler<DeleteEntityInput<T>
         _repository = repository;
     }
 
-    protected override async Task<IdResponse<T>> Handle(
+    public override async Task<IdResponse<T>> Handle(
         DeleteEntityInput<T> command,
         CancellationToken cancellationToken = default
     )

@@ -29,7 +29,7 @@ public sealed class ProcessTradeHandler : CommandHandler<ProcessTradeInput>
         _queueTradeMessages = queueTradeMessages;
     }
 
-    protected override async Task Handle(
+    public override async Task Handle(
         ProcessTradeInput command,
         CancellationToken cancellationToken = default
     )

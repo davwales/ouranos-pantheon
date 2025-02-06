@@ -24,7 +24,7 @@ public sealed class GenerateCompletionHandler :
         _generateCompletion = generateCompletion;
     }
 
-    protected override async Task<StreamResponse<string, GenerateCompletionResponse>> Handle(
+    public override async Task<StreamResponse<string, GenerateCompletionResponse>> Handle(
         GenerateCompletionInput command,
         CancellationToken cancellationToken = default
     )

@@ -23,7 +23,7 @@ public sealed class GetEntityHandler<T> : QueryHandler<GetEntityInput<T>, T> whe
         _repository = repository;
     }
 
-    protected override async Task<T> Handle(
+    public override async Task<T> Handle(
         GetEntityInput<T> query,
         CancellationToken cancellationToken = default
     )

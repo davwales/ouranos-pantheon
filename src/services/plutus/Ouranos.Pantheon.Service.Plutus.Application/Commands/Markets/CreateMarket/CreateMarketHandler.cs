@@ -27,7 +27,7 @@ public sealed class CreateMarketHandler : CommandHandler<CreateMarketInput, IdRe
         _marketRepository = marketRepository;
     }
 
-    protected override async Task<IdResponse<Market>> Handle(
+    public override async Task<IdResponse<Market>> Handle(
         CreateMarketInput command,
         CancellationToken cancellationToken = default
     )

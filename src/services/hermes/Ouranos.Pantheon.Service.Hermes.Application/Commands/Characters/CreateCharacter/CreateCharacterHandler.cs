@@ -28,7 +28,7 @@ public sealed class CreateCharacterHandler : CommandHandler<CreateCharacterInput
         _characterRepository = characterRepository;
     }
 
-    protected override async Task<IdResponse<Character>> Handle(
+    public override async Task<IdResponse<Character>> Handle(
         CreateCharacterInput command,
         CancellationToken cancellationToken = default
     )

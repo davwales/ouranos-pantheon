@@ -27,7 +27,7 @@ public sealed class GetMarketTradesHandler :
         _tradeRepository = tradeRepository;
     }
 
-    protected override async Task<WrapperResponse<IQueryable<GetMarketTradesResponse>>> Handle(
+    public override async Task<WrapperResponse<IQueryable<GetMarketTradesResponse>>> Handle(
         GetMarketTradesInput query,
         CancellationToken cancellationToken = default
     )

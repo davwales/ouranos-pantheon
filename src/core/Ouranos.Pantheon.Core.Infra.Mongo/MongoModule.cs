@@ -47,7 +47,8 @@ public static class MongoModule
         var conventions = new ConventionPack
         {
             new IgnoreExtraElementsConvention(true),
-            new CamelCaseElementNameConvention()
+            new CamelCaseElementNameConvention(),
+            new IgnoreIfNullConvention(true)
         };
 
         ConventionRegistry.Register("Custom Conventions", conventions, _ => true);

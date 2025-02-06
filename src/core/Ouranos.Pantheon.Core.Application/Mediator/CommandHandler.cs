@@ -12,7 +12,7 @@ public abstract class CommandHandler<TInput, TOutput> : IConsumer<TInput>
         await context.RespondAsync(result);
     }
 
-    protected abstract Task<TOutput> Handle(TInput command, CancellationToken cancellationToken = default);
+    public abstract Task<TOutput> Handle(TInput command, CancellationToken cancellationToken = default);
 }
 
 public abstract class CommandHandler<TInput> : IConsumer<TInput> where TInput : class, ICommand
@@ -22,5 +22,5 @@ public abstract class CommandHandler<TInput> : IConsumer<TInput> where TInput : 
         await Handle(context.Message, context.CancellationToken);
     }
 
-    protected abstract Task Handle(TInput command, CancellationToken cancellationToken = default);
+    public abstract Task Handle(TInput command, CancellationToken cancellationToken = default);
 }
