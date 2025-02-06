@@ -5,12 +5,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\..\src\core\Ouranos.Pantheon.Core.Application\Ouranos.Pantheon.Core.Application.csproj"/>
+        <ProjectReference Include="..\..\..\src\core\Ouranos.Pantheon.Core.Infra.OuranosMl\Ouranos.Pantheon.Core.Infra.OuranosMl.csproj"/>
         <ProjectReference Include="..\..\Ouranos.Pantheon.Tests.Utils\Ouranos.Pantheon.Tests.Utils.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="Commands\Common\"/>
+        <PackageReference Include="System.Linq.Async" Version="$(SystemLinqAsyncVersion)"/>
     </ItemGroup>
 
 </Project>

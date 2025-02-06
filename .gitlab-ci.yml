@@ -27,7 +27,7 @@ dotnet_test:
   stage: test
   script:
     - 'dotnet restore'
-    - 'dotnet test --logger "console;verbosity=detailed" --no-build'
+    - 'dotnet test --logger "console;verbosity=detailed"'
 
 build_gateway:
   <<: *build_template

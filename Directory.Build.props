@@ -33,6 +33,7 @@
         <SerilogSettingsConfigurationVersion>9.0.*</SerilogSettingsConfigurationVersion>
         <SerilogSinksConsoleVersion>6.0.*</SerilogSinksConsoleVersion>
         <SerilogSinksGrafanaLokiVersion>8.3.*</SerilogSinksGrafanaLokiVersion>
+        <SystemLinqAsyncVersion>6.0.*</SystemLinqAsyncVersion>
     </PropertyGroup>
 
     <Target Name="CopyGitHooks" AfterTargets="AfterBuild">
