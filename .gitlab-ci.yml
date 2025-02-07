@@ -26,7 +26,7 @@ dotnet_test:
   image: mcr.microsoft.com/dotnet/sdk:8.0
   stage: test
   script:
-    - 'dotnet restore'
+    - 'dotnet restore --verbosity quiet'
     - 'dotnet test --logger "console;verbosity=detailed"'
 
 build_gateway:

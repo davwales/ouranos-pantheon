@@ -8,14 +8,15 @@ namespace Ouranos.Pantheon.Core.Application.Tests.Queries.Common.GetAllEntities;
 public sealed class GetAllEntitiesHandlerTests
 {
     private readonly GetAllEntitiesHandler<TestEntity> _handler;
-    private readonly Mock<IRepository<TestEntity>> _mockCrudRepository = new();
-    private readonly Mock<ILogger<GetAllEntitiesHandler<TestEntity>>> _mockLogger = new();
+    private readonly IRepository<TestEntity> _repository;
 
     public GetAllEntitiesHandlerTests()
     {
+        _repository = Substitute.For<IRepository<TestEntity>>();
+
         _handler = new GetAllEntitiesHandler<TestEntity>(
-            _mockLogger.Object,
-            _mockCrudRepository.Object
+            Substitute.For<ILogger<GetAllEntitiesHandler<TestEntity>>>(),
+            _repository
         );
     }
 
@@ -28,9 +29,7 @@ public sealed class GetAllEntitiesHandlerTests
         var expectedQuery = fixture.CreateMany<TestEntity>().AsQueryable();
         var cts = new CancellationTokenSource();
 
-        _mockCrudRepository
-            .Setup(x => x.AsQueryable(cts.Token))
-            .Returns(expectedQuery);
+        _repository.AsQueryable(cts.Token).Returns(expectedQuery);
 
         // Act
         var response = await _handler.Handle(input, cts.Token);

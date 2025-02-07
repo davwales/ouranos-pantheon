@@ -11,10 +11,10 @@ public sealed class OuranosMachineLearningModuleTests
     {
         // Arrange
         IServiceCollection services = new ServiceCollection();
-        var mockConfiguration = new Mock<IConfiguration>();
+        var configuration = Substitute.For<IConfiguration>();
 
         // Act
-        services.AddCoreOuranosMachineLearningModule(mockConfiguration.Object);
+        services.AddCoreOuranosMachineLearningModule(configuration);
 
         // Assert
         services.ShouldContainService(typeof(IOuranosMachineLearningClient), ServiceLifetime.Transient);

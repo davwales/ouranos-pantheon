@@ -12,11 +12,12 @@ namespace Ouranos.Pantheon.Core.Application.Tests.Mediator;
 public sealed class DispatcherTests
 {
     private readonly Dispatcher _dispatcher;
-    private readonly Mock<IMediator> _mockMediator = new();
+    private readonly IMediator _mediator;
 
     public DispatcherTests()
     {
-        _dispatcher = new Dispatcher(_mockMediator.Object);
+        _mediator = Substitute.For<IMediator>();
+        _dispatcher = new Dispatcher(_mediator);
     }
 
     [Fact]
@@ -30,10 +31,7 @@ public sealed class DispatcherTests
         await _dispatcher.Send(request, cts.Token);
 
         // Assert
-        _mockMediator.Verify(
-            m => m.Send<IRequest>(request, cts.Token),
-            Times.Once
-        );
+        await _mediator.Received(1).Send<IRequest>(request, cts.Token);
     }
 
     [Fact]
@@ -44,18 +42,14 @@ public sealed class DispatcherTests
         var expectedResult = fixture.Create<TestEntity>();
         var request = new TestRequestWithResult();
         var cts = new CancellationTokenSource();
-
-        var mockRequestClient = SetupRequestClient(request, expectedResult, cts.Token);
+        var requestClient = SetupRequestClient(request, expectedResult, cts.Token);
 
         // Act
         var actualResult = await _dispatcher.Send(request, cts.Token);
 
         // Assert
         actualResult.ShouldBe(expectedResult);
-        mockRequestClient.Verify(
-            x => x.GetResponse<TestEntity>(request, cts.Token, default),
-            Times.Once
-        );
+        await requestClient.Received(1).GetResponse<TestEntity>(request, cts.Token);
     }
 
     [Fact]
@@ -67,7 +61,7 @@ public sealed class DispatcherTests
         var cts = new CancellationTokenSource();
         var streamedResults = fixture.CreateMany<string>().ToList();
 
-        var mockRequestClient = SetupRequestClient(request, new StreamResponse<string, TestEntity>(
+        var requestClient = SetupRequestClient(request, new StreamResponse<string, TestEntity>(
             async _ => await Task.FromResult(streamedResults.ToAsyncEnumerable()),
             async str => await Task.FromResult(new TestEntity(new Id<TestEntity>(str)))
         ), cts.Token);
@@ -81,35 +75,25 @@ public sealed class DispatcherTests
             (actual, expected) => actual.Id.ShouldBe(expected.Id)
         );
 
-        mockRequestClient.Verify(
-            x => x.GetResponse<StreamResponse<string, TestEntity>>(
-                request, cts.Token, default),
-            Times.Once
-        );
+        await requestClient
+            .Received(1)
+            .GetResponse<StreamResponse<string, TestEntity>>(request, cts.Token);
     }
 
-    private Mock<IRequestClient<IRequest<T>>> SetupRequestClient<T>(
+    private IRequestClient<IRequest<T>> SetupRequestClient<T>(
         IRequest<T> request,
         T response,
         CancellationToken cancellationToken
     ) where T : class
     {
-        var mockResponse = new Mock<Response<T>>();
-        var mockRequestClient = new Mock<IRequestClient<IRequest<T>>>();
+        var subResponse = Substitute.For<Response<T>>();
+        var requestClient = Substitute.For<IRequestClient<IRequest<T>>>();
 
-        _mockMediator
-            .Setup(x => x.CreateRequestClient<IRequest<T>>(default))
-            .Returns(mockRequestClient.Object);
+        _mediator.CreateRequestClient<IRequest<T>>().Returns(requestClient);
+        requestClient.GetResponse<T>(request, cancellationToken).Returns(subResponse);
+        subResponse.Message.Returns(response);
 
-        mockRequestClient
-            .Setup(x => x.GetResponse<T>(request, cancellationToken, default))
-            .ReturnsAsync(mockResponse.Object);
-
-        mockResponse
-            .SetupGet(x => x.Message)
-            .Returns(response);
-
-        return mockRequestClient;
+        return requestClient;
     }
 
     public sealed record TestRequest : IRequest;

@@ -9,14 +9,15 @@ namespace Ouranos.Pantheon.Core.Application.Tests.Commands.Common.DeleteEntity;
 public sealed class DeleteEntityHandlerTests
 {
     private readonly DeleteEntityHandler<TestEntity> _handler;
-    private readonly Mock<IRepository<TestEntity>> _mockCrudRepository = new();
-    private readonly Mock<ILogger<DeleteEntityHandler<TestEntity>>> _mockLogger = new();
+    private readonly IRepository<TestEntity> _repository;
 
     public DeleteEntityHandlerTests()
     {
+        _repository = Substitute.For<IRepository<TestEntity>>();
+
         _handler = new DeleteEntityHandler<TestEntity>(
-            _mockLogger.Object,
-            _mockCrudRepository.Object
+            Substitute.For<ILogger<DeleteEntityHandler<TestEntity>>>(),
+            _repository
         );
     }
 
@@ -34,9 +35,6 @@ public sealed class DeleteEntityHandlerTests
 
         // Assert
         response.Id.ShouldBe(expectedId);
-        _mockCrudRepository.Verify(
-            x => x.Delete(expectedId, cts.Token),
-            Times.Once
-        );
+        await _repository.Received(1).Delete(expectedId, cts.Token);
     }
 }

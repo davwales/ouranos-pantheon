@@ -13,25 +13,14 @@ public sealed class MediatorExtensionsTests
     public void AddStandardConsumersForEntity_ShouldRegisterExpectedConsumers()
     {
         // Arrange
-        var mockMediatorRegistrationConfigurator = new Mock<IMediatorRegistrationConfigurator>();
+        var mediatorRegistrationConfigurator = Substitute.For<IMediatorRegistrationConfigurator>();
 
         // Act
-        mockMediatorRegistrationConfigurator.Object.AddStandardConsumersForEntity<TestEntity>();
+        mediatorRegistrationConfigurator.AddStandardConsumersForEntity<TestEntity>();
 
         // Assert
-        mockMediatorRegistrationConfigurator.Verify(
-            m => m.AddConsumer<GetAllEntitiesHandler<TestEntity>>(null),
-            Times.Once
-        );
-
-        mockMediatorRegistrationConfigurator.Verify(
-            m => m.AddConsumer<GetEntityHandler<TestEntity>>(null),
-            Times.Once
-        );
-
-        mockMediatorRegistrationConfigurator.Verify(
-            m => m.AddConsumer<DeleteEntityHandler<TestEntity>>(null),
-            Times.Once
-        );
+        mediatorRegistrationConfigurator.Received(1).AddConsumer<GetAllEntitiesHandler<TestEntity>>();
+        mediatorRegistrationConfigurator.Received(1).AddConsumer<GetEntityHandler<TestEntity>>();
+        mediatorRegistrationConfigurator.Received(1).AddConsumer<DeleteEntityHandler<TestEntity>>();
     }
 }

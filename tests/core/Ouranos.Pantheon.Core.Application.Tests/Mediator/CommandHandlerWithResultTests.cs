@@ -16,20 +16,17 @@ public sealed class CommandHandlerWithResultTests
         var expectedResult = fixture.Create<TestEntity>();
         var input = new TestCommand(expectedResult);
         var cts = new CancellationTokenSource();
-        var context = new Mock<ConsumeContext<TestCommand>>();
+        var context = Substitute.For<ConsumeContext<TestCommand>>();
 
-        context.SetupGet(x => x.Message).Returns(input);
-        context.Setup(x => x.CancellationToken).Returns(cts.Token);
+        context.Message.Returns(input);
+        context.CancellationToken.Returns(cts.Token);
 
         // Act
-        await _handler.Consume(context.Object);
+        await _handler.Consume(context);
 
         // Assert
         _handler.HandleCount.ShouldBe(1);
-        context.Verify(
-            x => x.RespondAsync(expectedResult),
-            Times.Once
-        );
+        await context.Received(1).RespondAsync(expectedResult);
     }
 
     public sealed record TestCommand(TestEntity Result) : ICommand<TestEntity>;

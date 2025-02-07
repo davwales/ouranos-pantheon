@@ -1,6 +1,5 @@
 ﻿using System.Net;
 using Microsoft.Extensions.Logging;
-using Moq.Protected;
 using Ouranos.Pantheon.Core.Infra.OuranosMl.Requests;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
 
@@ -9,17 +8,20 @@ namespace Ouranos.Pantheon.Core.Infra.OuranosMl.Tests;
 public sealed class OuranosMachineLearningClientTests
 {
     private readonly OuranosMachineLearningClient _client;
-    private readonly Mock<HttpMessageHandler> _httpMessageHandlerMock = new();
-    private readonly Mock<ILogger<OuranosMachineLearningClient>> _loggerMock = new();
+    private readonly HttpMessageHandler _httpMessageHandler;
 
     public OuranosMachineLearningClientTests()
     {
-        var httpClient = new HttpClient(_httpMessageHandlerMock.Object)
+        _httpMessageHandler = Substitute.For<HttpMessageHandler>();
+        var httpClient = new HttpClient(_httpMessageHandler)
         {
             BaseAddress = new Uri("http://test.com/")
         };
 
-        _client = new OuranosMachineLearningClient(_loggerMock.Object, httpClient);
+        _client = new OuranosMachineLearningClient(
+            Substitute.For<ILogger<OuranosMachineLearningClient>>(),
+            httpClient
+        );
     }
 
     [Fact]
@@ -36,15 +38,13 @@ public sealed class OuranosMachineLearningClientTests
 
         // Assert
         result.ShouldBe(["chunk1chunk2chunk3"]);
-
-        _httpMessageHandlerMock.Protected().Verify(
+        _httpMessageHandler.Protected(
             "SendAsync",
-            Times.Once(),
-            ItExpr.Is<HttpRequestMessage>(req =>
+            Arg.Is<HttpRequestMessage>(req =>
                 req.Method == HttpMethod.Post &&
                 req.RequestUri!.ToString() == "http://test.com/generation/text"
             ),
-            ItExpr.IsAny<CancellationToken>()
+            Arg.Any<CancellationToken>()
         );
     }
 
@@ -99,17 +99,16 @@ public sealed class OuranosMachineLearningClientTests
 
     private void SetupHttpHandler(HttpStatusCode statusCode, HttpContent? content = null)
     {
-        _httpMessageHandlerMock
-            .Protected()
-            .Setup<Task<HttpResponseMessage>>(
+        _httpMessageHandler
+            .Protected(
                 "SendAsync",
-                ItExpr.IsAny<HttpRequestMessage>(),
-                ItExpr.IsAny<CancellationToken>()
+                Arg.Any<HttpRequestMessage>(),
+                Arg.Any<CancellationToken>()
             )
-            .ReturnsAsync(new HttpResponseMessage
+            .Returns(Task.FromResult(new HttpResponseMessage
             {
                 StatusCode = statusCode,
                 Content = content
-            });
+            }));
     }
 }
