@@ -2,34 +2,31 @@
 
 namespace Ouranos.Pantheon.Core.Common.Examples.GeneticAlgorithms;
 
-public sealed class GeneticAlgorithmExample : IExample
+public sealed class GeneticAlgorithmExample
 {
-    public void Run()
+    public static void Run()
     {
-        var engine = new GeneticAlgorithmEngine<bool>();
-
-        // Truthy Score
-        engine.AddFitnessComponent(chromosome => chromosome.Genes.Sum(x => x ? 1 : 0));
-
-        // Repeat Penalty
-        engine.AddFitnessComponent(-0.6, chromosome =>
-        {
-            if (chromosome.Genes.Length is 0 or 1)
+        var engine = new GeneticAlgorithmBuilder<bool>()
+            .AddFitnessComponent(chromosome => chromosome.Genes.Sum(x => x ? 1 : 0)) // Truthy Score
+            .AddFitnessComponent(-0.6, chromosome => // Repeat Penalty
             {
-                return 0;
-            }
-
-            var repeats = 0;
-            for (var i = 1; i < chromosome.Genes.Length; i++)
-            {
-                if (chromosome.Genes[i] == chromosome.Genes[i - 1])
+                if (chromosome.Genes.Length is 0 or 1)
                 {
-                    repeats++;
+                    return 0;
                 }
-            }
 
-            return repeats;
-        });
+                var repeats = 0;
+                for (var i = 1; i < chromosome.Genes.Length; i++)
+                {
+                    if (chromosome.Genes[i] == chromosome.Genes[i - 1])
+                    {
+                        repeats++;
+                    }
+                }
+
+                return repeats;
+            })
+            .Build();
 
         var population = Enumerable
             .Range(0, 100)
@@ -38,7 +35,7 @@ public sealed class GeneticAlgorithmExample : IExample
 
         var finalChromosome = engine.Evolve(
             population,
-            100000,
+            100,
             onGenerationCompleted: (generation, generationPopulation) =>
             {
                 if (generation % 10 != 0)

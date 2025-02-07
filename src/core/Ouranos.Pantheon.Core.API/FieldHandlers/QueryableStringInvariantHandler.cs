@@ -76,15 +76,15 @@ public sealed class QueryableStringInvariantHandler(InputParser inputParser)
         object? parsedValue
     )
     {
-        var operation = Operators.GetValueOrDefault(field.Id, null)
+        var operation = Operators.GetValueOrDefault(field.Id)
                         ?? throw new InvalidOperationException("Unable to find valid operation method.");
 
-        var property = context.GetInstance();
         if (parsedValue is not string str)
         {
             throw new InvalidOperationException("Can only perform invariant string operations on strings.");
         }
 
+        var property = context.GetInstance();
         Expression expression = Expression.Call(
             Expression.Call(property, ToLower),
             operation,

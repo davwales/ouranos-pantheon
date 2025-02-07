@@ -9,4 +9,16 @@
         <ProjectReference Include="..\..\src\core\Ouranos.Pantheon.Core.Common\Ouranos.Pantheon.Core.Common.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Update="Properties\launchSettings.json">
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+            <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+            <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+        </None>
+    </ItemGroup>
+
 </Project>

@@ -1,32 +1,22 @@
 ﻿namespace Ouranos.Pantheon.Core.Common.GeneticAlgorithms;
 
 public sealed class GeneticAlgorithmEngine<T>(
-    int populationSize = 100,
-    double mutationRate = 0.01,
-    double elitismRate = 0.1
+    uint populationSize,
+    double mutationRate,
+    double elitismRate,
+    IReadOnlyCollection<FitnessComponent<T>> fitnessComponents
 ) : IGeneticAlgorithmEngine<T>
 {
-    private readonly List<FitnessComponent> _fitnessComponents = [];
     private readonly Random _random = new();
-
-    public void AddFitnessComponent(Func<IChromosome<T>, double> fitnessFunction)
-    {
-        _fitnessComponents.Add(new FitnessComponent(1, fitnessFunction));
-    }
-
-    public void AddFitnessComponent(double weight, Func<IChromosome<T>, double> fitnessFunction)
-    {
-        _fitnessComponents.Add(new FitnessComponent(weight, fitnessFunction));
-    }
 
     public double EvaluateFitness(IChromosome<T> chromosome)
     {
-        return _fitnessComponents.Sum(component => component.Weight * component.FitnessFunction(chromosome));
+        return fitnessComponents.Sum(component => component.Weight * component.FitnessFunction(chromosome));
     }
 
     public IChromosome<T> Evolve(
-        ICollection<IChromosome<T>> population,
-        int generations,
+        IReadOnlyCollection<IChromosome<T>> population,
+        uint generations,
         double targetFitness = double.MaxValue,
         Action<int, IReadOnlyCollection<IChromosome<T>>>? onGenerationCompleted = null,
         CancellationToken cancellationToken = default
@@ -88,8 +78,6 @@ public sealed class GeneticAlgorithmEngine<T>(
 
         return tournament[0].Chromosome;
     }
-
-    private record FitnessComponent(double Weight, Func<IChromosome<T>, double> FitnessFunction);
 
     private record EvaluatedChromosome(double Fitness, IChromosome<T> Chromosome);
 }
