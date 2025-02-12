@@ -30,6 +30,7 @@ public static class MongoModule
         services.TryAddSingleton<IMongoDatabaseManager, MongoDatabaseManager>();
         services.TryAddSingleton(typeof(IMongoRepository<>), typeof(MongoRepository<>));
         services.TryAddScoped(typeof(IRepository<>), typeof(Repository<>));
+        services.TryAddScoped<IQueryExecutor, QueryExecutor>();
 
         RegisterConventions();
         return services;

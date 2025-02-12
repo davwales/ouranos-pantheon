@@ -7,19 +7,23 @@ public interface IRepository<T> where T : BaseEntity<Id<T>>
 {
     Id<T> CreateId();
 
-    Task Create(T entity, CancellationToken cancellationToken = default);
-
-    Task CreateMany(IEnumerable<T> entities, CancellationToken cancellationToken = default);
-
-    Task<T> Read(Id<T> id, CancellationToken cancellationToken = default);
-
-    Task<T?> FirstOrDefault(
-        Expression<Func<T, bool>> predicate,
+    Task Create(
+        T entity,
         CancellationToken cancellationToken = default
     );
 
-    Task<TResult?> FirstOrDefault<TResult>(
-        IQueryable<TResult> query,
+    Task CreateMany(
+        IEnumerable<T> entities,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<T> Read(
+        Id<T> id,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<T?> FirstOrDefault(
+        Expression<Func<T, bool>> predicate,
         CancellationToken cancellationToken = default
     );
 
@@ -28,13 +32,26 @@ public interface IRepository<T> where T : BaseEntity<Id<T>>
         CancellationToken cancellationToken = default
     );
 
-    Task<IEnumerable<T>> ReadAll(CancellationToken cancellationToken = default);
+    Task<IEnumerable<T>> ReadAll(
+        CancellationToken cancellationToken = default
+    );
 
-    Task Update(T entity, CancellationToken cancellationToken = default);
+    Task Update(
+        T entity,
+        CancellationToken cancellationToken = default
+    );
 
-    Task Delete(Id<T> id, CancellationToken cancellationToken = default);
+    Task Delete(
+        Id<T> id,
+        CancellationToken cancellationToken = default
+    );
 
-    Task Upsert(T entity, CancellationToken cancellationToken = default);
+    Task Upsert(
+        T entity,
+        CancellationToken cancellationToken = default
+    );
 
-    IQueryable<T> AsQueryable(CancellationToken cancellationToken = default);
+    IQueryable<T> AsQueryable(
+        CancellationToken cancellationToken = default
+    );
 }

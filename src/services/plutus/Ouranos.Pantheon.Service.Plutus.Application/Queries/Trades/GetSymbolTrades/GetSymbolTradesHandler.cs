@@ -12,21 +12,25 @@ public sealed class GetSymbolTradesHandler :
 {
     private readonly IBucketTrades _bucketTrades;
     private readonly ILogger<GetSymbolTradesHandler> _logger;
+    private readonly IQueryExecutor _queryExecutor;
     private readonly IRepository<Trade> _tradeRepository;
 
     public GetSymbolTradesHandler(
         ILogger<GetSymbolTradesHandler> logger,
         IRepository<Trade> tradeRepository,
-        IBucketTrades bucketTrades
+        IBucketTrades bucketTrades,
+        IQueryExecutor queryExecutor
     )
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(tradeRepository);
         Guard.Against.Null(bucketTrades);
+        Guard.Against.Null(queryExecutor);
 
         _logger = logger;
         _tradeRepository = tradeRepository;
         _bucketTrades = bucketTrades;
+        _queryExecutor = queryExecutor;
     }
 
     public override async Task<GetSymbolTradesResponse> Handle(
@@ -106,7 +110,7 @@ public sealed class GetSymbolTradesHandler :
                 )).ToList()
             ));
 
-        var symbolTrades = await _tradeRepository.FirstOrDefault(
+        var symbolTrades = await _queryExecutor.FirstOrDefault(
             symbolTradesQuery,
             cancellationToken
         );
