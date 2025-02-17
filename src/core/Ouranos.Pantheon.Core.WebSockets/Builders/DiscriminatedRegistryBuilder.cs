@@ -12,30 +12,30 @@ public sealed class DiscriminatedRegistryBuilder : IDiscriminatedRegistryBuilder
     private readonly Dictionary<Type, IDiscriminatedMessagingBuilder> _messagingBuilders = [];
     private readonly IServiceCollection _services;
 
-    private string? _discriminatorPath;
-
     public DiscriminatedRegistryBuilder(IServiceCollection services)
     {
         Guard.Against.Null(services);
         _services = services;
     }
 
+    public string? DiscriminatorPath { get; private set; }
+
+    public IReadOnlyDictionary<Type, IDiscriminatedMessagingBuilder> MessagingBuilders => _messagingBuilders;
+
     public IDiscriminatedRegistryBuilder UseDiscriminatorPath(string discriminatorPath)
     {
-        _discriminatorPath = discriminatorPath;
+        Guard.Against.NullOrWhiteSpace(discriminatorPath);
+        DiscriminatorPath = discriminatorPath;
         return this;
     }
 
     public IServiceCollection Build()
     {
-        if (string.IsNullOrWhiteSpace(_discriminatorPath))
-        {
-            throw new InvalidOperationException("Discriminator path is not set.");
-        }
+        Guard.Against.Null(DiscriminatorPath);
 
         _services.TryAddTransient<ITypeResolver>(_ =>
             new JsonTypeResolver(
-                _discriminatorPath,
+                DiscriminatorPath,
                 _messagingBuilders.ToDictionary(
                     x => x.Value.Discriminator,
                     x => x.Key

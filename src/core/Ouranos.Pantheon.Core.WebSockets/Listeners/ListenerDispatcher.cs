@@ -3,7 +3,7 @@ using Ouranos.Pantheon.Core.WebSockets.WebSocketClients;
 
 namespace Ouranos.Pantheon.Core.WebSockets.Listeners;
 
-public sealed class ListenerDispatcher<T> : IListenerDispatcher
+public sealed record ListenerDispatcher<T> : IListenerDispatcher
 {
     private readonly IListener<T> _listener;
 

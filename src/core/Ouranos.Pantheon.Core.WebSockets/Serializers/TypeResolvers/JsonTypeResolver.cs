@@ -2,20 +2,11 @@
 
 namespace Ouranos.Pantheon.Core.WebSockets.Serializers.TypeResolvers;
 
-public sealed class JsonTypeResolver : ITypeResolver
+public sealed record JsonTypeResolver(
+    string DiscriminatorPath,
+    IReadOnlyDictionary<string, Type> TypeMap
+) : ITypeResolver
 {
-    private readonly string _discriminatorPath;
-    private readonly Dictionary<string, Type> _typeMap;
-
-    public JsonTypeResolver(
-        string discriminatorPath,
-        Dictionary<string, Type> typeMap
-    )
-    {
-        _discriminatorPath = discriminatorPath;
-        _typeMap = typeMap;
-    }
-
     public Type ResolveType(byte[] data)
     {
         using var document = JsonDocument.Parse(data);
@@ -26,13 +17,13 @@ public sealed class JsonTypeResolver : ITypeResolver
             return typeof(IList<object>);
         }
 
-        if (_discriminatorPath.Split('.').Any(segment => !element.TryGetProperty(segment, out element)))
+        if (DiscriminatorPath.Split('.').Any(segment => !element.TryGetProperty(segment, out element)))
         {
-            throw new InvalidOperationException($"Discriminator path '{_discriminatorPath}' not found.");
+            throw new InvalidOperationException($"Discriminator path '{DiscriminatorPath}' not found.");
         }
 
         var discriminator = element.GetString();
-        if (discriminator is null || !_typeMap.TryGetValue(discriminator, out var type))
+        if (discriminator is null || !TypeMap.TryGetValue(discriminator, out var type))
         {
             throw new InvalidOperationException($"No type mapping found for discriminator: {discriminator}.");
         }

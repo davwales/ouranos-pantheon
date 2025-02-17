@@ -15,6 +15,12 @@ public sealed class ListenerRegistry : IListenerRegistry
         _serializer = serializer;
     }
 
+    public IReadOnlyDictionary<Type, IReadOnlyList<IListenerDispatcher>> Listeners
+        => _listeners.ToDictionary(
+            x => x.Key,
+            IReadOnlyList<IListenerDispatcher> (x) => x.Value
+        );
+
     public void RegisterListener<T>(IListener<T> listener)
     {
         var messageType = typeof(T);
@@ -32,7 +38,8 @@ public sealed class ListenerRegistry : IListenerRegistry
     public async Task HandleMessageAsync(
         byte[] messageData,
         IWebSocketClient client,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var message = _serializer.Deserialize<object>(messageData);
 

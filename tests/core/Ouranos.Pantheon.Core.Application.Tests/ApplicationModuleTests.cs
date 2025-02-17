@@ -16,6 +16,6 @@ public sealed class ApplicationModuleTests
         services.AddCoreApplicationModule();
 
         // Assert
-        services.ShouldContainService(typeof(IDispatcher), ServiceLifetime.Transient);
+        services.ShouldContainService<IDispatcher>(ServiceLifetime.Transient);
     }
 }

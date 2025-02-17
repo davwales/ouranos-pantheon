@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace Ouranos.Pantheon.Core.WebSockets.Serializers.Converters;
 
-public sealed class JsonMessageConverter(JsonSerializerOptions? options = default) : IMessageConverter
+public sealed class JsonMessageConverter(JsonSerializerOptions? options = null) : IMessageConverter
 {
     private readonly JsonSerializerOptions _options = options ?? new JsonSerializerOptions
     {

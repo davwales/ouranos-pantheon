@@ -17,6 +17,6 @@ public sealed class OuranosMachineLearningModuleTests
         services.AddCoreOuranosMachineLearningModule(configuration);
 
         // Assert
-        services.ShouldContainService(typeof(IOuranosMachineLearningClient), ServiceLifetime.Transient);
+        services.ShouldContainService<IOuranosMachineLearningClient>(ServiceLifetime.Transient);
     }
 }

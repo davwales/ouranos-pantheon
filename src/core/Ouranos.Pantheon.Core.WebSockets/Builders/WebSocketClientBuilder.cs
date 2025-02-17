@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.WebSockets.Listeners;
 using Ouranos.Pantheon.Core.WebSockets.Serializers;
 using Ouranos.Pantheon.Core.WebSockets.Serializers.Converters;
+using Ouranos.Pantheon.Core.WebSockets.Serializers.TypeResolvers;
 using Ouranos.Pantheon.Core.WebSockets.WebSocketClients;
 
 namespace Ouranos.Pantheon.Core.WebSockets.Builders;
@@ -12,13 +13,10 @@ namespace Ouranos.Pantheon.Core.WebSockets.Builders;
 public sealed class WebSocketClientBuilder : IWebSocketClientBuilder
 {
     private readonly IServiceCollection _services;
-    private uint _bufferSize = 4096;
-    private Action? _configureMessaging;
-    private string _host = string.Empty;
 
     public WebSocketClientBuilder(
         IServiceCollection services,
-        WebSocketOptions? options = default
+        WebSocketOptions? options = null
     )
     {
         Guard.Against.Null(services);
@@ -33,23 +31,29 @@ public sealed class WebSocketClientBuilder : IWebSocketClientBuilder
         UseBufferSize(options.BufferSize);
     }
 
+    public uint BufferSize { get; private set; } = 4096;
+
+    public Action? ConfigureMessaging { get; private set; }
+
+    public string Host { get; private set; } = string.Empty;
+
     public IWebSocketClientBuilder ConfigureHost(string host)
     {
         Guard.Against.NullOrWhiteSpace(host);
-        _host = host;
+        Host = host;
         return this;
     }
 
     public IWebSocketClientBuilder UseBufferSize(uint bufferSize)
     {
-        _bufferSize = bufferSize;
+        BufferSize = bufferSize;
         return this;
     }
 
     public IWebSocketClientBuilder UseConstantMessage<TMessage>(
         Action<IConstantMessagingBuilder<TMessage>> configuration)
     {
-        _configureMessaging = () =>
+        ConfigureMessaging = () =>
         {
             var messageBuilder = new ConstantMessagingBuilder<TMessage>(_services);
             configuration(messageBuilder);
@@ -61,7 +65,7 @@ public sealed class WebSocketClientBuilder : IWebSocketClientBuilder
 
     public IWebSocketClientBuilder UseDiscriminatedMessages(Action<IDiscriminatedRegistryBuilder> configuration)
     {
-        _configureMessaging = () =>
+        ConfigureMessaging = () =>
         {
             var messageBuilder = new DiscriminatedRegistryBuilder(_services);
             configuration(messageBuilder);
@@ -85,17 +89,18 @@ public sealed class WebSocketClientBuilder : IWebSocketClientBuilder
 
     public IServiceCollection Build()
     {
-        _configureMessaging?.Invoke();
-        _services.TryAddSingleton<IMessageConverter, JsonMessageConverter>();
-        _services.TryAddSingleton<IMessageConverter, JsonMessageConverter>();
-        _services.TryAddSingleton<IMessageSerializer, MessageSerializer>();
+        ConfigureMessaging?.Invoke();
+
+        UseTypeResolver<JsonTypeResolver>();
+        UseConverter<JsonMessageConverter>();
+        UseSerializer<MessageSerializer>();
 
         return _services
             .AddSingleton<IWebSocketClient>(sp =>
                 new WebSocketClient(
                     sp.GetRequiredService<ILogger<WebSocketClient>>(),
-                    _host,
-                    _bufferSize,
+                    Host,
+                    BufferSize,
                     sp.GetRequiredService<IMessageSerializer>(),
                     sp.GetServices<IWebSocketInitializer>().ToList(),
                     sp.GetRequiredService<IListenerRegistry>()
