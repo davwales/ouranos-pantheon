@@ -13,8 +13,8 @@
     <ItemGroup>
         <ProjectReference Include="..\..\..\..\core\Ouranos.Pantheon.Core.Common\Ouranos.Pantheon.Core.Common.csproj"/>
         <ProjectReference Include="..\..\..\..\core\Ouranos.Pantheon.Core.Infra.Mongo\Ouranos.Pantheon.Core.Infra.Mongo.csproj"/>
-        <ProjectReference Include="..\..\..\..\core\Ouranos.Pantheon.Core.Infra.RabbitMq\Ouranos.Pantheon.Core.Infra.RabbitMq.csproj"/>
         <ProjectReference Include="..\..\Ouranos.Pantheon.DataLoader.Plutus.Domain\Ouranos.Pantheon.DataLoader.Plutus.Domain.csproj"/>
+        <ProjectReference Include="..\..\Ouranos.Pantheon.DataLoader.Plutus.Infra.RabbitMq\Ouranos.Pantheon.DataLoader.Plutus.Infra.RabbitMq.csproj"/>
         <ProjectReference Include="..\..\Ouranos.Pantheon.DataLoader.Plutus.Worker\Ouranos.Pantheon.DataLoader.Plutus.Worker.csproj"/>
     </ItemGroup>
 </Project>
