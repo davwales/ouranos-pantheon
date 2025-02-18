@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using Microsoft.Extensions.Logging;
+using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 using Ouranos.Pantheon.Core.Infra.Mongo.Common;
 using Ouranos.Pantheon.Tests.Utils;
@@ -55,5 +56,40 @@ public sealed class QueryExecutorTests
         // Assert
         var actualException = await get.ShouldThrowAsync<InvalidOperationException>();
         actualException.Message.ShouldBe("Cannot perform FirstOrDefaultAsync on a non-Mongo queryable.");
+    }
+
+    [Fact]
+    public async Task ToList_WhenValidQueryable_ShouldReturnExpectedResult()
+    {
+        // Arrange
+        var fixture = new Fixture();
+        var query = Substitute.For<IMongoQueryable<TestEntity>>();
+        var cursor = Substitute.For<IAsyncCursor<TestEntity>>();
+        var cts = new CancellationTokenSource();
+        var expectedResult = fixture.CreateMany<TestEntity>().ToList();
+
+        query.ToCursorAsync(Arg.Any<CancellationToken>()).Returns(cursor);
+        cursor.MoveNextAsync(cts.Token).Returns(true, false);
+        cursor.Current.Returns(expectedResult);
+
+        // Act
+        var actualEntity = await _queryExecutor.ToList(query, cts.Token);
+
+        // Assert
+        actualEntity.ShouldBe(expectedResult);
+    }
+
+    [Fact]
+    public async Task ToList_WhenNotMongoQueryable_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var query = Substitute.For<IQueryable<TestEntity>>();
+
+        // Act
+        var get = async () => await _queryExecutor.ToList(query);
+
+        // Assert
+        var actualException = await get.ShouldThrowAsync<InvalidOperationException>();
+        actualException.Message.ShouldBe("Cannot perform ToListAsync on a non-Mongo queryable.");
     }
 }

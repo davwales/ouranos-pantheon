@@ -6,4 +6,9 @@ public interface IQueryExecutor
         IQueryable<T> query,
         CancellationToken cancellationToken = default
     );
+
+    Task<List<T>> ToList<T>(
+        IQueryable<T> query,
+        CancellationToken cancellationToken = default
+    );
 }
