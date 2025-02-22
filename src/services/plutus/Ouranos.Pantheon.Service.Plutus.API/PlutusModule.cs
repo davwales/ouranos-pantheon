@@ -6,6 +6,8 @@ using Ouranos.Pantheon.Core.API.Extensions;
 using Ouranos.Pantheon.Core.API.Interfaces;
 using Ouranos.Pantheon.Service.Plutus.Application;
 using Ouranos.Pantheon.Service.Plutus.Domain.Markets;
+using Ouranos.Pantheon.Service.Plutus.Domain.Recipes;
+using Ouranos.Pantheon.Service.Plutus.Domain.SymbolGroups;
 using Ouranos.Pantheon.Service.Plutus.Domain.Symbols;
 using Ouranos.Pantheon.Service.Plutus.Infra.Mongo;
 
@@ -17,7 +19,9 @@ public sealed class PlutusModule : IOuranosModule
     {
         return builder
             .BindModelId<Market>()
-            .BindModelId<Symbol>();
+            .BindModelId<Symbol>()
+            .BindModelId<SymbolGroup>()
+            .BindModelId<Recipe>();
     }
 
     public IServiceCollection ConfigureServices(IServiceCollection services, IConfiguration configuration)

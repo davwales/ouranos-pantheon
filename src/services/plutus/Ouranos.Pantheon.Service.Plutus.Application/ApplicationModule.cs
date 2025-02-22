@@ -3,6 +3,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Ouranos.Pantheon.Core.Application;
 using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Service.Plutus.Domain.Markets;
+using Ouranos.Pantheon.Service.Plutus.Domain.Recipes;
+using Ouranos.Pantheon.Service.Plutus.Domain.SymbolGroups;
 using Ouranos.Pantheon.Service.Plutus.Domain.Symbols;
 
 namespace Ouranos.Pantheon.Service.Plutus.Application;
@@ -21,6 +23,8 @@ public static class ApplicationModule
         mediator.AddConsumers(typeof(ApplicationModule).Assembly);
         mediator.AddStandardConsumersForEntity<Market>();
         mediator.AddStandardConsumersForEntity<Symbol>();
+        mediator.AddStandardConsumersForEntity<SymbolGroup>();
+        mediator.AddStandardConsumersForEntity<Recipe>();
 
         return mediator;
     }
