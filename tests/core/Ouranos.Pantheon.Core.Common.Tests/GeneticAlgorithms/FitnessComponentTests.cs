@@ -1,7 +1,4 @@
-﻿using AutoFixture;
-using Ouranos.Pantheon.Core.Common.GeneticAlgorithms;
-using Shouldly;
-using Xunit;
+﻿using Ouranos.Pantheon.Core.Common.GeneticAlgorithms;
 
 namespace Ouranos.Pantheon.Core.Common.Tests.GeneticAlgorithms;
 

@@ -168,4 +168,20 @@ public sealed class Repository<T> : IRepository<T> where T : BaseEntity<Id<T>>
         _logger.LogDebug("Successfully determined if any {type} matched the given predicate in Mongo.", typeof(T).Name);
         return wasFound;
     }
+
+    public async Task<long> Delete(
+        Expression<Func<T, bool>> predicate,
+        CancellationToken cancellationToken = default
+    )
+    {
+        _logger.LogTrace("Attempting to delete {type} using a predicate in Mongo.", typeof(T).Name);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var collection = _mongoRepository.GetCollection();
+        var filter = Builders<T>.Filter.Where(predicate);
+        var result = await collection.DeleteManyAsync(filter, cancellationToken);
+
+        _logger.LogDebug("Successfully deleted {type} using a predicate in Mongo.", typeof(T).Name);
+        return result.DeletedCount;
+    }
 }

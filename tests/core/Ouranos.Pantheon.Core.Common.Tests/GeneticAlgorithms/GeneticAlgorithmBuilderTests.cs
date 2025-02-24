@@ -1,6 +1,4 @@
 ﻿using Ouranos.Pantheon.Core.Common.GeneticAlgorithms;
-using Shouldly;
-using Xunit;
 
 namespace Ouranos.Pantheon.Core.Common.Tests.GeneticAlgorithms;
 

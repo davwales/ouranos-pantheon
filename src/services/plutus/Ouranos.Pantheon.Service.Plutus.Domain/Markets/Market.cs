@@ -8,7 +8,8 @@ public sealed class Market : BaseEntity<Id<Market>>
     public Market(
         Id<Market> id,
         string name,
-        Taxes taxes
+        Taxes taxes,
+        bool isForecastingEnabled = false
     ) : base(id)
     {
         Guard.Against.NullOrWhiteSpace(name);
@@ -16,11 +17,14 @@ public sealed class Market : BaseEntity<Id<Market>>
 
         Name = name;
         Taxes = taxes;
+        IsForecastingEnabled = isForecastingEnabled;
     }
 
     public string Name { get; private set; }
 
     public Taxes Taxes { get; private set; }
+
+    public bool IsForecastingEnabled { get; private set; }
 
     public void Update(string name, Taxes taxes)
     {

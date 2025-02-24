@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using System.Net.Mime;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -5,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
+using Ouranos.Pantheon.Core.Infra.OuranosMl.Dtos;
 using Ouranos.Pantheon.Core.Infra.OuranosMl.Requests;
 
 namespace Ouranos.Pantheon.Core.Infra.OuranosMl;
@@ -73,5 +75,32 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
         }
 
         _logger.LogDebug("Successfully generated completion using Ouranos ML.");
+    }
+
+    public async Task<List<List<ForecastPoint>>> GetPlutusForecasts(
+        GetPlutusForecastsRequest payload,
+        CancellationToken cancellationToken = default
+    )
+    {
+        _logger.LogTrace(
+            "Attempting to generate plutus forecasts using Ouranos ML with payload '{@payload}'.",
+            payload);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var jsonBody = JsonSerializer.Serialize(payload, _jsonSerializerOptions);
+        var request = new HttpRequestMessage(HttpMethod.Post, "plutus/forecast")
+        {
+            Content = new StringContent(jsonBody, Encoding.UTF8, MediaTypeNames.Application.Json)
+        };
+
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        var result = await response.Content.ReadFromJsonAsync<List<List<ForecastPoint>>>(
+            cancellationToken
+        ) ?? throw new InvalidOperationException("Failed to parse plutus forecast response.");
+
+        _logger.LogDebug("Successfully generated plutus forecasts using Ouranos ML.");
+        return result;
     }
 }

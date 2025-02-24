@@ -9,6 +9,20 @@ through a data-loader module.
 The goal of this service is to allow users to easily identify trends or discrepancies in market data that will allow
 them to make informed decisions in what to invest in for profit.
 
+## Usage
+
+This module is hosted via the gateway. If you wish to run this yourself, you will need to run the gateway or otherwise
+create your own.
+
+You will need to configure the following environment variables, however:
+
+- Ouranos:Mongo:ConnectionString
+- Ouranos:OuranosMl:ConnectionString
+
+It is highly recommended that you set the following variable to `false` for local development.
+
+- Ouranos:Plutus:Forecasting:IsEnabled
+
 ## Architecture
 
 ```
@@ -16,9 +30,13 @@ plutus/
   ├── API/
   ├── Application/
   ├── Domain/
-  │   ├── Characters/
-  │   ├── Conversations/
-  └── Infra.Mongo/
+  │   ├── Forecasts/
+  │   ├── Markets/
+  │   ├── Recipes/
+  │   ├── SymbolGroups/
+  │   ├── Symbols/
+  │   ├── Trades/
+  └── Infra.*/
 ```
 
 ## Dependencies
@@ -28,25 +46,8 @@ plutus/
 - Ouranos.Pantheon.Core.API
 - Ouranos.Pantheon.Core.Application
 - Ouranos.Pantheon.Core.Domain
-- Ouranos.Pantheon.Core.Mongo
-
-## Module API
-
-- Queries
-    - Markets
-        - GetMarket
-        - GetAllMarkets
-    - Symbols
-        - GetSymbol
-        - GetAllSymbols
-    - Trades
-        - GetMarketTrades
-        - GetSymbolTrades
-- Mutations
-    - Markets
-        - CreateMarket
-        - UpdateMarket
-        - DeleteMarket
+- Ouranos.Pantheon.Core.Infra.Mongo
+- Ouranos.Pantheon.Core.Infra.OuranosMl
 
 ## Database
 
@@ -54,3 +55,6 @@ plutus/
     - markets
     - symbols
     - trades
+    - symbolgroups
+    - recipes
+    - forecasts

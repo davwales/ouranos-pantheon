@@ -245,6 +245,40 @@ public sealed class RepositoryTests
     }
 
     [Fact]
+    public async Task Delete_WhenGivenPredicate_ShouldReturnExpectedValue()
+    {
+        // Arrange
+        var fixture = new Fixture();
+        var predicate = fixture.Create<Expression<Func<TestEntity, bool>>>();
+        var cts = new CancellationTokenSource();
+        var mongoResult = Substitute.For<DeleteResult>();
+        var expectedFilter = Builders<TestEntity>.Filter.Where(predicate);
+        var expectedResult = fixture.Create<long>();
+
+        mongoResult.DeletedCount.Returns(expectedResult);
+
+        _mongoCollection
+            .DeleteManyAsync(
+                Arg.Any<FilterDefinition<TestEntity>>(),
+                Arg.Any<CancellationToken>()
+            )
+            .Returns(mongoResult);
+
+        // Act
+        var actualResult = await _repository.Delete(predicate, cts.Token);
+
+        // Assert
+        actualResult.ShouldBe(expectedResult);
+
+        await _mongoCollection
+            .Received(1)
+            .DeleteManyAsync(
+                ArgExtensions.IsEquivalent(expectedFilter),
+                cts.Token
+            );
+    }
+
+    [Fact]
     public async Task Upsert_ShouldInvokeExpectedActions()
     {
         // Arrange

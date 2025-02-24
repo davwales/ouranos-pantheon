@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\core\Ouranos.Pantheon.Core.Infra.OuranosMl\Ouranos.Pantheon.Core.Infra.OuranosMl.csproj"/>
+        <ProjectReference Include="..\Ouranos.Pantheon.Service.Plutus.Application\Ouranos.Pantheon.Service.Plutus.Application.csproj"/>
+    </ItemGroup>
+
+</Project>
