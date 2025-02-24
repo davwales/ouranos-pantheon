@@ -51,7 +51,7 @@ public sealed class ForecastCreatorJob : BackgroundService
             var currentDate = DateTime.UtcNow.Date;
             if (_lastExecuted >= currentDate)
             {
-                var delay = _lastExecuted.AddDays(1) - _lastExecuted;
+                var delay = _lastExecuted.AddDays(1) - DateTime.UtcNow;
                 _logger.LogInformation("Waiting '{seconds}' seconds to generate forecasts.", delay.TotalSeconds);
                 await Task.Delay(delay, cancellationToken);
                 continue;
