@@ -46,4 +46,18 @@ public sealed class IdTests
         // Assert
         actualString.ShouldBe(id.Value);
     }
+
+    [Fact]
+    public void Parse_ShouldReturnExpectedId()
+    {
+        // Arrange
+        var fixture = new Fixture();
+        var expectedId = fixture.Create<Id<TestEntity>>();
+
+        // Act
+        var actualId = Id<TestEntity>.Parse(expectedId.Value);
+
+        // Assert
+        actualId.ShouldBe(expectedId);
+    }
 }

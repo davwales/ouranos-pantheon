@@ -51,6 +51,28 @@ export type AdditionalFieldsSortInput = {
 };
 
 /** A connection to a list of items. */
+export type AllForecastsConnection = {
+  __typename?: 'AllForecastsConnection';
+  /** A list of edges. */
+  edges?: Maybe<Array<AllForecastsEdge>>;
+  /** A flattened list of the nodes. */
+  nodes?: Maybe<Array<Forecast>>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** Identifies the total count of items in the connection. */
+  totalCount: Scalars['Int']['output'];
+};
+
+/** An edge in a connection. */
+export type AllForecastsEdge = {
+  __typename?: 'AllForecastsEdge';
+  /** A cursor for use in pagination. */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of the edge. */
+  node: Forecast;
+};
+
+/** A connection to a list of items. */
 export type AllMarketsConnection = {
   __typename?: 'AllMarketsConnection';
   /** A list of edges. */
@@ -73,6 +95,50 @@ export type AllMarketsEdge = {
 };
 
 /** A connection to a list of items. */
+export type AllRecipesConnection = {
+  __typename?: 'AllRecipesConnection';
+  /** A list of edges. */
+  edges?: Maybe<Array<AllRecipesEdge>>;
+  /** A flattened list of the nodes. */
+  nodes?: Maybe<Array<Recipe>>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** Identifies the total count of items in the connection. */
+  totalCount: Scalars['Int']['output'];
+};
+
+/** An edge in a connection. */
+export type AllRecipesEdge = {
+  __typename?: 'AllRecipesEdge';
+  /** A cursor for use in pagination. */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of the edge. */
+  node: Recipe;
+};
+
+/** A connection to a list of items. */
+export type AllSymbolGroupsConnection = {
+  __typename?: 'AllSymbolGroupsConnection';
+  /** A list of edges. */
+  edges?: Maybe<Array<AllSymbolGroupsEdge>>;
+  /** A flattened list of the nodes. */
+  nodes?: Maybe<Array<SymbolGroup>>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+  /** Identifies the total count of items in the connection. */
+  totalCount: Scalars['Int']['output'];
+};
+
+/** An edge in a connection. */
+export type AllSymbolGroupsEdge = {
+  __typename?: 'AllSymbolGroupsEdge';
+  /** A cursor for use in pagination. */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of the edge. */
+  node: SymbolGroup;
+};
+
+/** A connection to a list of items. */
 export type AllSymbolsConnection = {
   __typename?: 'AllSymbolsConnection';
   /** A list of edges. */
@@ -92,6 +158,11 @@ export type AllSymbolsEdge = {
   cursor: Scalars['String']['output'];
   /** The item at the end of the edge. */
   node: Symbol;
+};
+
+export type BooleanOperationFilterInput = {
+  eq?: InputMaybe<Scalars['Boolean']['input']>;
+  neq?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type Character = {
@@ -127,7 +198,7 @@ export type CharacterFilterInput = {
   and?: InputMaybe<Array<CharacterFilterInput>>;
   createdAt?: InputMaybe<DateTimeOperationFilterInput>;
   details?: InputMaybe<ListFilterInputTypeOfCharacterDetailFilterInput>;
-  id?: InputMaybe<IdOfCharacterFilterInput>;
+  id?: InputMaybe<IdFilterInputTypeOfCharacterFilterInput>;
   name?: InputMaybe<StringOperationFilterInput>;
   or?: InputMaybe<Array<CharacterFilterInput>>;
   updatedAt?: InputMaybe<DateTimeOperationFilterInput>;
@@ -253,6 +324,59 @@ export type FlatTaxSortInput = {
   rate?: InputMaybe<SortEnumType>;
 };
 
+export type Forecast = {
+  __typename?: 'Forecast';
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  latest: ForecastPoint;
+  predictions: Array<ForecastPoint>;
+  symbolId: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type ForecastFilterInput = {
+  and?: InputMaybe<Array<ForecastFilterInput>>;
+  createdAt?: InputMaybe<DateTimeOperationFilterInput>;
+  id?: InputMaybe<IdFilterInputTypeOfForecastFilterInput>;
+  latest?: InputMaybe<ForecastPointFilterInput>;
+  or?: InputMaybe<Array<ForecastFilterInput>>;
+  predictions?: InputMaybe<ListFilterInputTypeOfForecastPointFilterInput>;
+  symbolId?: InputMaybe<IdFilterInputTypeOfSymbolFilterInput>;
+  updatedAt?: InputMaybe<DateTimeOperationFilterInput>;
+};
+
+export type ForecastPoint = {
+  __typename?: 'ForecastPoint';
+  averagePrice: Scalars['Decimal']['output'];
+  maxPrice: Scalars['Decimal']['output'];
+  minPrice: Scalars['Decimal']['output'];
+  volume: Scalars['Decimal']['output'];
+};
+
+export type ForecastPointFilterInput = {
+  and?: InputMaybe<Array<ForecastPointFilterInput>>;
+  averagePrice?: InputMaybe<DecimalOperationFilterInput>;
+  maxPrice?: InputMaybe<DecimalOperationFilterInput>;
+  minPrice?: InputMaybe<DecimalOperationFilterInput>;
+  or?: InputMaybe<Array<ForecastPointFilterInput>>;
+  volume?: InputMaybe<DecimalOperationFilterInput>;
+};
+
+export type ForecastPointSortInput = {
+  averagePrice?: InputMaybe<SortEnumType>;
+  maxPrice?: InputMaybe<SortEnumType>;
+  minPrice?: InputMaybe<SortEnumType>;
+  volume?: InputMaybe<SortEnumType>;
+};
+
+export type ForecastSortInput = {
+  createdAt?: InputMaybe<SortEnumType>;
+  id?: InputMaybe<SortEnumType>;
+  latest?: InputMaybe<ForecastPointSortInput>;
+  symbolId?: InputMaybe<SortEnumType>;
+  updatedAt?: InputMaybe<SortEnumType>;
+};
+
 export type GenerateCompletionInput = {
   conversation: ConversationInput;
 };
@@ -301,7 +425,7 @@ export type GetMarketTradesResponseFilterInput = {
   or?: InputMaybe<Array<GetMarketTradesResponseFilterInput>>;
   roi?: InputMaybe<DecimalOperationFilterInput>;
   symbolCode?: InputMaybe<StringOperationFilterInput>;
-  symbolId?: InputMaybe<IdOfSymbolFilterInput>;
+  symbolId?: InputMaybe<IdFilterInputTypeOfSymbolFilterInput>;
   symbolName?: InputMaybe<StringOperationFilterInput>;
   symbolSubcode?: InputMaybe<StringOperationFilterInput>;
   totalGain?: InputMaybe<DecimalOperationFilterInput>;
@@ -359,22 +483,46 @@ export type GetSymbolTradesResponse = {
   trades: Array<GetSymbolTradeBucketsResponse>;
 };
 
-export type IdOfCharacterFilterInput = {
-  and?: InputMaybe<Array<IdOfCharacterFilterInput>>;
-  or?: InputMaybe<Array<IdOfCharacterFilterInput>>;
-  value?: InputMaybe<StringOperationFilterInput>;
+export type IdFilterInputTypeOfCharacterFilterInput = {
+  eq?: InputMaybe<Scalars['String']['input']>;
+  in?: InputMaybe<Array<Scalars['String']['input']>>;
+  neq?: InputMaybe<Scalars['String']['input']>;
+  nin?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
-export type IdOfMarketFilterInput = {
-  and?: InputMaybe<Array<IdOfMarketFilterInput>>;
-  or?: InputMaybe<Array<IdOfMarketFilterInput>>;
-  value?: InputMaybe<StringOperationFilterInput>;
+export type IdFilterInputTypeOfForecastFilterInput = {
+  eq?: InputMaybe<Scalars['String']['input']>;
+  in?: InputMaybe<Array<Scalars['String']['input']>>;
+  neq?: InputMaybe<Scalars['String']['input']>;
+  nin?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
-export type IdOfSymbolFilterInput = {
-  and?: InputMaybe<Array<IdOfSymbolFilterInput>>;
-  or?: InputMaybe<Array<IdOfSymbolFilterInput>>;
-  value?: InputMaybe<StringOperationFilterInput>;
+export type IdFilterInputTypeOfMarketFilterInput = {
+  eq?: InputMaybe<Scalars['String']['input']>;
+  in?: InputMaybe<Array<Scalars['String']['input']>>;
+  neq?: InputMaybe<Scalars['String']['input']>;
+  nin?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+export type IdFilterInputTypeOfRecipeFilterInput = {
+  eq?: InputMaybe<Scalars['String']['input']>;
+  in?: InputMaybe<Array<Scalars['String']['input']>>;
+  neq?: InputMaybe<Scalars['String']['input']>;
+  nin?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+export type IdFilterInputTypeOfSymbolFilterInput = {
+  eq?: InputMaybe<Scalars['String']['input']>;
+  in?: InputMaybe<Array<Scalars['String']['input']>>;
+  neq?: InputMaybe<Scalars['String']['input']>;
+  nin?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+export type IdFilterInputTypeOfSymbolGroupFilterInput = {
+  eq?: InputMaybe<Scalars['String']['input']>;
+  in?: InputMaybe<Array<Scalars['String']['input']>>;
+  neq?: InputMaybe<Scalars['String']['input']>;
+  nin?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 export type IdResponseOfCharacter = {
@@ -409,10 +557,32 @@ export type ListFilterInputTypeOfCharacterDetailFilterInput = {
   some?: InputMaybe<CharacterDetailFilterInput>;
 };
 
+export type ListFilterInputTypeOfForecastPointFilterInput = {
+  all?: InputMaybe<ForecastPointFilterInput>;
+  any?: InputMaybe<Scalars['Boolean']['input']>;
+  none?: InputMaybe<ForecastPointFilterInput>;
+  some?: InputMaybe<ForecastPointFilterInput>;
+};
+
+export type ListFilterInputTypeOfRecipeComponentFilterInput = {
+  all?: InputMaybe<RecipeComponentFilterInput>;
+  any?: InputMaybe<Scalars['Boolean']['input']>;
+  none?: InputMaybe<RecipeComponentFilterInput>;
+  some?: InputMaybe<RecipeComponentFilterInput>;
+};
+
+export type ListIdFilterInputTypeOfSymbolFilterInput = {
+  all?: InputMaybe<IdFilterInputTypeOfSymbolFilterInput>;
+  any?: InputMaybe<Scalars['Boolean']['input']>;
+  none?: InputMaybe<IdFilterInputTypeOfSymbolFilterInput>;
+  some?: InputMaybe<IdFilterInputTypeOfSymbolFilterInput>;
+};
+
 export type Market = {
   __typename?: 'Market';
   createdAt: Scalars['DateTime']['output'];
   id: Scalars['String']['output'];
+  isForecastingEnabled: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
   taxes: Taxes;
   updatedAt: Scalars['DateTime']['output'];
@@ -421,7 +591,8 @@ export type Market = {
 export type MarketFilterInput = {
   and?: InputMaybe<Array<MarketFilterInput>>;
   createdAt?: InputMaybe<DateTimeOperationFilterInput>;
-  id?: InputMaybe<IdOfMarketFilterInput>;
+  id?: InputMaybe<IdFilterInputTypeOfMarketFilterInput>;
+  isForecastingEnabled?: InputMaybe<BooleanOperationFilterInput>;
   name?: InputMaybe<StringOperationFilterInput>;
   or?: InputMaybe<Array<MarketFilterInput>>;
   taxes?: InputMaybe<TaxesFilterInput>;
@@ -431,6 +602,7 @@ export type MarketFilterInput = {
 export type MarketSortInput = {
   createdAt?: InputMaybe<SortEnumType>;
   id?: InputMaybe<SortEnumType>;
+  isForecastingEnabled?: InputMaybe<SortEnumType>;
   name?: InputMaybe<SortEnumType>;
   taxes?: InputMaybe<TaxesSortInput>;
   updatedAt?: InputMaybe<SortEnumType>;
@@ -582,6 +754,14 @@ export type Query = {
    */
   allCharacters: Array<Character>;
   /**
+   * Gets all forecasts.
+   *
+   *
+   * **Returns:**
+   * List of all forecasts.
+   */
+  allForecasts?: Maybe<AllForecastsConnection>;
+  /**
    * Gets all markets.
    *
    *
@@ -589,6 +769,22 @@ export type Query = {
    * List of all markets.
    */
   allMarkets?: Maybe<AllMarketsConnection>;
+  /**
+   * Gets all recipes.
+   *
+   *
+   * **Returns:**
+   * List of all recipes.
+   */
+  allRecipes?: Maybe<AllRecipesConnection>;
+  /**
+   * Gets all symbol groups.
+   *
+   *
+   * **Returns:**
+   * List of all symbol groups.
+   */
+  allSymbolGroups?: Maybe<AllSymbolGroupsConnection>;
   /**
    * Gets all symbols.
    *
@@ -622,6 +818,14 @@ export type Query = {
    */
   marketTrades?: Maybe<MarketTradesConnection>;
   /**
+   * Retrieves a recipe by its identifier.
+   *
+   *
+   * **Returns:**
+   * The recipe matching the given query.
+   */
+  recipe: Recipe;
+  /**
    * Gets a symbol by its identifier.
    *
    *
@@ -629,6 +833,14 @@ export type Query = {
    * The symbol matching the given query.
    */
   symbol: Symbol;
+  /**
+   * Retrieves a symbol group by its identifier.
+   *
+   *
+   * **Returns:**
+   * The symbol group matching the given query.
+   */
+  symbolGroup: SymbolGroup;
   /**
    * Retrieves information about the trades for a given symbol.
    *
@@ -646,6 +858,16 @@ export type QueryAllCharactersArgs = {
 };
 
 
+export type QueryAllForecastsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  order?: InputMaybe<Array<ForecastSortInput>>;
+  where?: InputMaybe<ForecastFilterInput>;
+};
+
+
 export type QueryAllMarketsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -653,6 +875,26 @@ export type QueryAllMarketsArgs = {
   last?: InputMaybe<Scalars['Int']['input']>;
   order?: InputMaybe<Array<MarketSortInput>>;
   where?: InputMaybe<MarketFilterInput>;
+};
+
+
+export type QueryAllRecipesArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  order?: InputMaybe<Array<RecipeSortInput>>;
+  where?: InputMaybe<RecipeFilterInput>;
+};
+
+
+export type QueryAllSymbolGroupsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  order?: InputMaybe<Array<SymbolGroupSortInput>>;
+  where?: InputMaybe<SymbolGroupFilterInput>;
 };
 
 
@@ -687,13 +929,72 @@ export type QueryMarketTradesArgs = {
 };
 
 
+export type QueryRecipeArgs = {
+  recipeId: Scalars['String']['input'];
+};
+
+
 export type QuerySymbolArgs = {
   symbolId: Scalars['String']['input'];
 };
 
 
+export type QuerySymbolGroupArgs = {
+  symbolGroupId: Scalars['String']['input'];
+};
+
+
 export type QuerySymbolTradesArgs = {
   input: GetSymbolTradesInput;
+};
+
+export type Recipe = {
+  __typename?: 'Recipe';
+  cost: Scalars['Decimal']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  inputs: Array<RecipeComponent>;
+  marketId: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  outputs: Array<RecipeComponent>;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type RecipeComponent = {
+  __typename?: 'RecipeComponent';
+  name: Scalars['String']['output'];
+  quantity: Scalars['Int']['output'];
+  symbolId: Scalars['String']['output'];
+};
+
+export type RecipeComponentFilterInput = {
+  and?: InputMaybe<Array<RecipeComponentFilterInput>>;
+  name?: InputMaybe<StringOperationFilterInput>;
+  or?: InputMaybe<Array<RecipeComponentFilterInput>>;
+  quantity?: InputMaybe<IntOperationFilterInput>;
+  symbolId?: InputMaybe<IdFilterInputTypeOfSymbolFilterInput>;
+};
+
+export type RecipeFilterInput = {
+  and?: InputMaybe<Array<RecipeFilterInput>>;
+  cost?: InputMaybe<DecimalOperationFilterInput>;
+  createdAt?: InputMaybe<DateTimeOperationFilterInput>;
+  id?: InputMaybe<IdFilterInputTypeOfRecipeFilterInput>;
+  inputs?: InputMaybe<ListFilterInputTypeOfRecipeComponentFilterInput>;
+  marketId?: InputMaybe<IdFilterInputTypeOfMarketFilterInput>;
+  name?: InputMaybe<StringOperationFilterInput>;
+  or?: InputMaybe<Array<RecipeFilterInput>>;
+  outputs?: InputMaybe<ListFilterInputTypeOfRecipeComponentFilterInput>;
+  updatedAt?: InputMaybe<DateTimeOperationFilterInput>;
+};
+
+export type RecipeSortInput = {
+  cost?: InputMaybe<SortEnumType>;
+  createdAt?: InputMaybe<SortEnumType>;
+  id?: InputMaybe<SortEnumType>;
+  marketId?: InputMaybe<SortEnumType>;
+  name?: InputMaybe<SortEnumType>;
+  updatedAt?: InputMaybe<SortEnumType>;
 };
 
 export enum Role {
@@ -739,12 +1040,41 @@ export type SymbolFilterInput = {
   and?: InputMaybe<Array<SymbolFilterInput>>;
   code?: InputMaybe<StringOperationFilterInput>;
   createdAt?: InputMaybe<DateTimeOperationFilterInput>;
-  id?: InputMaybe<IdOfSymbolFilterInput>;
-  marketId?: InputMaybe<IdOfMarketFilterInput>;
+  id?: InputMaybe<IdFilterInputTypeOfSymbolFilterInput>;
+  marketId?: InputMaybe<IdFilterInputTypeOfMarketFilterInput>;
   name?: InputMaybe<StringOperationFilterInput>;
   or?: InputMaybe<Array<SymbolFilterInput>>;
   subcode?: InputMaybe<StringOperationFilterInput>;
   updatedAt?: InputMaybe<DateTimeOperationFilterInput>;
+};
+
+export type SymbolGroup = {
+  __typename?: 'SymbolGroup';
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  marketId: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  symbolIds: Array<Scalars['String']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type SymbolGroupFilterInput = {
+  and?: InputMaybe<Array<SymbolGroupFilterInput>>;
+  createdAt?: InputMaybe<DateTimeOperationFilterInput>;
+  id?: InputMaybe<IdFilterInputTypeOfSymbolGroupFilterInput>;
+  marketId?: InputMaybe<IdFilterInputTypeOfMarketFilterInput>;
+  name?: InputMaybe<StringOperationFilterInput>;
+  or?: InputMaybe<Array<SymbolGroupFilterInput>>;
+  symbolIds?: InputMaybe<ListIdFilterInputTypeOfSymbolFilterInput>;
+  updatedAt?: InputMaybe<DateTimeOperationFilterInput>;
+};
+
+export type SymbolGroupSortInput = {
+  createdAt?: InputMaybe<SortEnumType>;
+  id?: InputMaybe<SortEnumType>;
+  marketId?: InputMaybe<SortEnumType>;
+  name?: InputMaybe<SortEnumType>;
+  updatedAt?: InputMaybe<SortEnumType>;
 };
 
 export type SymbolSortInput = {

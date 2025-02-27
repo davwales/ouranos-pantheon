@@ -1,4 +1,5 @@
-﻿using HotChocolate.Execution.Configuration;
+﻿using HotChocolate.Data.Filters;
+using HotChocolate.Execution.Configuration;
 using MassTransit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +16,11 @@ public sealed class HermesModule : IOuranosModule
     public IRequestExecutorBuilder ConfigureSchema(IRequestExecutorBuilder builder)
     {
         return builder.BindModelId<Character>();
+    }
+
+    public IFilterConventionDescriptor ConfigureSchemaFilters(IFilterConventionDescriptor descriptor)
+    {
+        return descriptor.BindModelIdFilter<Character>();
     }
 
     public IServiceCollection ConfigureServices(IServiceCollection services, IConfiguration configuration)

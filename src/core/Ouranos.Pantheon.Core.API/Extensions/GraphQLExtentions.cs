@@ -4,6 +4,7 @@ using HotChocolate.Execution.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Ouranos.Pantheon.Core.API.FieldHandlers;
+using Ouranos.Pantheon.Core.API.Interfaces;
 using Ouranos.Pantheon.Core.API.Mutations;
 using Ouranos.Pantheon.Core.API.Queries;
 
@@ -13,12 +14,21 @@ public static class GraphQlExtentions
 {
     public static IRequestExecutorBuilder ConfigureGraphQl(
         this IServiceCollection services,
-        IConfiguration configuration
+        IConfiguration configuration,
+        IReadOnlyCollection<IOuranosModule> modules
     )
     {
-        return services
+        var builder = services
             .AddGraphQLServer()
-            .AddFiltering()
+            .AddFiltering(descriptor =>
+            {
+                descriptor = descriptor.AddDefaults();
+
+                foreach (var module in modules)
+                {
+                    descriptor = module.ConfigureSchemaFilters(descriptor);
+                }
+            })
             .AddSorting()
             .AddQueryType<Query>()
             .AddTypeExtensions<Query>()
@@ -35,6 +45,13 @@ public static class GraphQlExtentions
                 var requestTimeoutSeconds = configuration.GetValue("Ouranos:RequestTimeout", 30);
                 o.ExecutionTimeout = TimeSpan.FromSeconds(requestTimeoutSeconds);
             });
+
+        foreach (var module in modules)
+        {
+            builder = module.ConfigureSchema(builder);
+        }
+
+        return builder;
     }
 
     private static IRequestExecutorBuilder AddTypeExtensions<T>(this IRequestExecutorBuilder builder)

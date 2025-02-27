@@ -5,10 +5,7 @@ using HotChocolate.Data.Filters.Expressions;
 using HotChocolate.Internal;
 using HotChocolate.Language;
 using HotChocolate.Types;
-using NSubstitute;
 using Ouranos.Pantheon.Core.API.FieldHandlers;
-using Shouldly;
-using Xunit;
 
 namespace Ouranos.Pantheon.Core.API.Tests.FieldHandlers;
 

@@ -6,6 +6,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\..\src\core\Ouranos.Pantheon.Core.API\Ouranos.Pantheon.Core.API.csproj"/>
+        <ProjectReference Include="..\..\Ouranos.Pantheon.Tests.Utils\Ouranos.Pantheon.Tests.Utils.csproj"/>
     </ItemGroup>
 
 </Project>

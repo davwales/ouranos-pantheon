@@ -1,4 +1,5 @@
-﻿using HotChocolate.Execution.Configuration;
+﻿using HotChocolate.Data.Filters;
+using HotChocolate.Execution.Configuration;
 using MassTransit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,6 +27,16 @@ public sealed class PlutusModule : IOuranosModule
             .BindModelId<SymbolGroup>()
             .BindModelId<Recipe>()
             .BindModelId<Forecast>();
+    }
+
+    public IFilterConventionDescriptor ConfigureSchemaFilters(IFilterConventionDescriptor descriptor)
+    {
+        return descriptor
+            .BindModelIdFilter<Market>()
+            .BindModelIdFilter<Symbol>()
+            .BindModelIdFilter<SymbolGroup>()
+            .BindModelIdFilter<Recipe>()
+            .BindModelIdFilter<Forecast>();
     }
 
     public IServiceCollection ConfigureServices(IServiceCollection services, IConfiguration configuration)

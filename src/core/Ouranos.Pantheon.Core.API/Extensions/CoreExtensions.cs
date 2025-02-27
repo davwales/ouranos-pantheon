@@ -22,7 +22,7 @@ public static class CoreExtensions
         logger?.Invoke(loggerConfig);
         Log.Logger = loggerConfig.CreateLogger();
 
-        var gqlBuilder = services.ConfigureGraphQl(configuration);
+        var gqlBuilder = services.ConfigureGraphQl(configuration, modules);
         gql?.Invoke(gqlBuilder);
 
         services.AddMediator(m =>
@@ -35,7 +35,6 @@ public static class CoreExtensions
 
         foreach (var module in modules)
         {
-            module.ConfigureSchema(gqlBuilder);
             module.ConfigureServices(services, configuration);
         }
 

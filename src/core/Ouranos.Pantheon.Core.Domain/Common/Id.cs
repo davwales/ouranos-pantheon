@@ -16,4 +16,9 @@ public readonly record struct Id<T>(string Value)
     {
         return Value;
     }
+
+    public static Id<T> Parse(string value)
+    {
+        return new Id<T>(value);
+    }
 }
