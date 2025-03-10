@@ -1,6 +1,6 @@
 import { convertToSx } from "@/app/components/core/mui_style_resolvers";
 import { StyleProps } from "@/app/components/core/style_props";
-import { GridSortItem, GridToolbar, DataGrid as MuiDataGrid } from "@mui/x-data-grid";
+import { GridFilterModel, GridPaginationModel, GridSortModel, GridToolbar, DataGrid as MuiDataGrid } from "@mui/x-data-grid";
 import { useState } from "react";
 
 export interface GridColDef {
@@ -10,22 +10,6 @@ export interface GridColDef {
     flex?: number;
     valueFormatter?: (x: any) => any
     valueGetter?: (x: any) => string
-}
-
-export type GridSortModel = GridSortItem[];
-
-export interface GridPaginationModel {
-    page: number;
-    pageSize: number;
-}
-
-export interface GridFilterModel {
-    items: {
-        field: string;
-        operator: string;
-        id?: number | string;
-        value?: any;
-    }[];
 }
 
 export interface GridModel {

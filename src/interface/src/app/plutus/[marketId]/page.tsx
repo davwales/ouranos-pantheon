@@ -5,7 +5,7 @@ import RefreshIcon from "@/app/components/core/icons/refresh_icon";
 import Button from "@/app/components/core/inputs/button";
 import IconButton from "@/app/components/core/inputs/icon_button";
 import Box from "@/app/components/core/layout/box";
-import { hasPaginationChanged, mapFilter, mapOrder, mapPagination } from "@/app/components/utils/graphql_mappers";
+import { hasPaginationChanged, mapFilter, mapOrder, mapPagination } from "@/app/components/core/utils/graphql_mappers";
 import PaginationInfo from "@/app/models/pagination_info";
 import TimeFrameSelection from "@/app/plutus/components/time_frame_selection";
 import { plutusColumns } from "@/app/plutus/constants/plutus_columns";

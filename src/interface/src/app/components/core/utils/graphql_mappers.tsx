@@ -1,6 +1,7 @@
-import { getFieldType, GridColDef, GridFilterModel, GridPaginationModel, GridSortModel } from "@/app/components/core/data-display/data_grid";
+import { getFieldType, GridColDef } from "@/app/components/core/data-display/data_grid";
 import PaginationInfo from "@/app/models/pagination_info";
 import { PageInfo, SortEnumType } from "@/gql/graphql";
+import { GridFilterModel, GridLogicOperator, GridPaginationModel, GridSortModel } from "@mui/x-data-grid";
 
 export function mapFilter(
     model: GridFilterModel,
@@ -32,7 +33,13 @@ export function mapFilter(
 
     if (filterItems.length === 0) return null;
 
-    return filterItems[0];
+    if (filterItems.length === 1) {
+        return filterItems[0];
+    } else if (model.logicOperator === GridLogicOperator.Or) {
+        return { or: filterItems };
+    } else {
+        return { and: filterItems };
+    }
 }
 
 export function mapOperator(operator: string): string {
