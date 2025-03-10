@@ -1,14 +1,17 @@
 "use client";
 
-import { PrettyNumber } from "@/app/components/pretty_number";
-import useInterval from "@/app/utilities/use_interval";
-import { Box, Button, Grid2, Typography } from "@mui/material";
+import Typography from "@/app/components/core/data-display/typography";
+import Button from "@/app/components/core/inputs/button";
+import Box from "@/app/components/core/layout/box";
+import Grid from "@/app/components/core/layout/grid";
+import { PrettyNumber } from "@/app/components/utils/pretty_number";
+import useInterval from "@/app/components/utils/use_interval";
+import DetailChart from "@/app/plutus/[marketId]/[symbolId]/components/detail_chart";
+import TimeFrameSelection from "@/app/plutus/components/time_frame_selection";
+import { PlutusState, usePlutusStore } from "@/app/plutus/constants/plutus_store";
+import { GET_SYMBOL_DETAILS } from "@/app/plutus/queries";
 import { useQuery } from "@urql/next";
 import { useParams, useRouter } from "next/navigation";
-import TimeFrameSelection from "../../components/time_frame_selection";
-import { PlutusState, usePlutusStore } from "../../constants/plutus_store";
-import { GET_SYMBOL_DETAILS } from "../../queries";
-import DetailChart from "./components/detail_chart";
 
 export default function SymbolDetail() {
     const router = useRouter();
@@ -41,7 +44,6 @@ export default function SymbolDetail() {
         "Average Price": <PrettyNumber number={data?.symbolTrades.averagePrice} />,
         "Minimum Price": <PrettyNumber number={data?.symbolTrades.minPrice} />,
         "Maximum Price": <PrettyNumber number={data?.symbolTrades.maxPrice} />,
-        "Tax": <PrettyNumber number={data?.symbolTrades.tax} />,
         //"Total Volume": <PrettyNumber number={data?.symbolTrades.} />,
         "Transactions": <PrettyNumber number={data?.symbolTrades.numTransactions || 0} decimals={0} />,
         "Margin": <PrettyNumber number={data?.symbolTrades.margin} />,
@@ -50,27 +52,27 @@ export default function SymbolDetail() {
 
     return (
         <>
-            <Box sx={{ width: "100%", m: "auto" }}>
+            <Box styling={{ width: "100%", m: "auto" }}>
                 <Button variant="outlined" onClick={handleBackClicked}>Back</Button>
-                <TimeFrameSelection onChange={handleTimeFrameChange} seconds={timeFrameSeconds} sx={{ float: "right" }} />
+                <TimeFrameSelection onChange={handleTimeFrameChange} seconds={timeFrameSeconds} styling={{ float: "right" }} />
             </Box>
-            <Grid2 container spacing={2} sx={{ m: "auto" }}>
-                <Grid2 container spacing={2} sx={{ maxWidth: "100rem", m: "auto" }}>
-                    <Grid2 size={12} sx={{ textAlign: "center" }}>
+            <Grid container spacing={2} styling={{ m: "auto" }}>
+                <Grid container spacing={2} styling={{ maxWidth: "100rem", m: "auto" }}>
+                    <Grid size={12} styling={{ textAlign: "center" }}>
                         <Typography variant="h4">{data?.symbol.name}</Typography>
-                    </Grid2>
+                    </Grid>
                     {Object.entries(fieldMapping).map(([fieldKey, fieldValue]) => (
-                        <Grid2 key={fieldKey} size={{ sm: 12, md: 4 }} sx={{ textAlign: "center" }}>
+                        <Grid key={fieldKey} size={{ sm: 12, md: 4 }} styling={{ textAlign: "center" }}>
                             <Typography variant="h6">{fieldKey}</Typography>
                             {fieldValue}
-                        </Grid2>
+                        </Grid>
                     ))}
-                </Grid2>
-            </Grid2>
+                </Grid>
+            </Grid>
             {data?.symbolTrades?.trades.length &&
-                <Grid2 size={12} sx={{ textAlign: "center" }}>
+                <Grid size={12} styling={{ textAlign: "center" }}>
                     <DetailChart trades={data.symbolTrades.trades} />
-                </Grid2>
+                </Grid>
             }
         </>
     );

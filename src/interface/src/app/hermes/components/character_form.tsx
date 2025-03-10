@@ -1,15 +1,15 @@
-// CharacterForm.tsx
 "use client";
 
+import Typography from '@/app/components/core/data-display/typography';
+import AddIcon from '@/app/components/core/icons/add_icon';
+import RemoveIcon from '@/app/components/core/icons/remove_icon';
+import Button from '@/app/components/core/inputs/button';
+import IconButton from '@/app/components/core/inputs/icon_button';
+import NumberField from '@/app/components/core/inputs/number_field';
+import TextField from '@/app/components/core/inputs/text_field';
+import Box from '@/app/components/core/layout/box';
+import FormBox from '@/app/components/core/layout/form_box';
 import { CharacterDetail } from '@/gql/graphql';
-import { Add, Remove } from '@mui/icons-material';
-import {
-    Box,
-    Button,
-    IconButton,
-    TextField,
-    Typography,
-} from '@mui/material';
 import React, { useState } from 'react';
 
 export interface CharacterInput {
@@ -27,24 +27,26 @@ interface CharacterFormProps {
 
 export default function CharacterForm(props: CharacterFormProps) {
     const [name, setName] = useState(props.initialValues?.name || '');
-    const [age, setAge] = useState<number | ''>(props.initialValues?.age || '');
-    const [details, setDetails] = useState<CharacterDetail[]>(
-        props.initialValues?.details || []
-    );
+    const [age, setAge] = useState<number | undefined>(props.initialValues?.age);
+    const [details, setDetails] = useState<CharacterDetail[]>(props.initialValues?.details || []);
 
-    const handleChange =
-        (setter: React.Dispatch<React.SetStateAction<any>>) =>
-            (event: React.ChangeEvent<HTMLInputElement>) => {
-                setter(event.target.value);
-            };
+    const handleNameChange = (x: string) => {
+        if (!x) return;
+        setName(x);
+    };
+
+    const handleAgeChange = (x: number) => {
+        if (x <= 0) return;
+        setAge(x);
+    }
 
     const handleDetailsChange = (
         index: number,
         field: 'key' | 'value',
-        event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+        value: string
     ) => {
         const newDetails = [...details];
-        newDetails[index][field] = event.target.value;
+        newDetails[index][field] = value;
         setDetails(newDetails);
     };
 
@@ -62,74 +64,78 @@ export default function CharacterForm(props: CharacterFormProps) {
         const input: CharacterInput = {
             id: props.initialValues?.id,
             name,
-            age: age === '' ? 0 : Number(age),
+            age: age ?? 0,
             details,
         };
         props.onSubmit(input);
     };
 
     return (
-        <form onSubmit={handleSubmit}>
+        <FormBox onSubmit={handleSubmit}>
             <TextField
                 label="Name"
                 value={name}
-                onChange={handleChange(setName)}
+                onChange={handleNameChange}
                 required
                 fullWidth
                 margin="normal"
             />
-            <TextField
+
+            <NumberField
                 label="Age"
-                type="number"
                 value={age}
-                onChange={handleChange(setAge)}
+                onChange={handleAgeChange}
                 fullWidth
                 margin="normal"
             />
-            <Typography variant="h6" gutterBottom sx={{ mb: "1rem" }}>
+
+            <Typography variant="h6" gutterBottom styling={{ mb: "medium" }}>
                 Details
             </Typography>
+
             {details.map((detail, index) => (
                 <Box
                     key={index}
-                    sx={{ display: 'flex', alignItems: 'center', mb: "1rem" }}
+                    styling={{ display: 'flex', alignItems: 'center', mb: "medium" }}
                 >
                     <TextField
                         label="Key"
                         value={detail.key}
-                        onChange={(e) => handleDetailsChange(index, 'key', e)}
+                        onChange={(x) => handleDetailsChange(index, 'key', x)}
                         required
-                        sx={{ flex: 1, mr: 1 }}
+                        styling={{ flex: 1, mr: "medium" }}
                     />
                     <TextField
                         label="Value"
                         value={detail.value}
-                        onChange={(e) => handleDetailsChange(index, 'value', e)}
+                        onChange={(x) => handleDetailsChange(index, 'value', x)}
                         required
-                        sx={{ flex: 1, mr: 1 }}
+                        styling={{ flex: 1, mr: "medium" }}
                     />
                     <IconButton onClick={() => handleRemoveDetail(index)}>
-                        <Remove />
+                        <RemoveIcon />
                     </IconButton>
                 </Box>
             ))}
+
             <Button
                 variant="outlined"
                 onClick={handleAddDetail}
-                startIcon={<Add />}
-                sx={{ mb: 2 }}
+                startIcon={<AddIcon />}
+                styling={{ mb: 'small' }}
             >
                 Add Detail
             </Button>
-            <Box sx={{ mt: 2 }}>
+
+            <Box>
                 <Button
-                    type="submit"
                     variant="contained"
                     disabled={props.loading}
+                    submit
                 >
                     {props.loading ? 'Submitting...' : 'Submit'}
                 </Button>
             </Box>
-        </form>
+        </FormBox>
     );
 }

@@ -1,5 +1,5 @@
+import { Alert } from '@/app/models/alert';
 import { create } from 'zustand';
-import { Alert } from '../models/alert';
 
 interface GlobalState {
   alerts: Alert[];

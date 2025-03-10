@@ -1,14 +1,15 @@
-// CreateCharacterPage.tsx
 "use client";
 
+import Typography from '@/app/components/core/data-display/typography';
+import Button from '@/app/components/core/inputs/button';
+import Box from '@/app/components/core/layout/box';
+import CharacterForm, { CharacterInput } from '@/app/hermes/components/character_form';
+import { CREATE_CHARACTER } from '@/app/hermes/mutations';
 import { CreateCharacterInput } from '@/gql/graphql';
-import { Box, Button, Typography } from '@mui/material';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useMutation } from 'urql';
-import CharacterForm, { CharacterInput } from '../../components/character_form';
-import { CREATE_CHARACTER } from '../../mutations';
 
 export default function CreateCharacterPage() {
     const router = useRouter();
@@ -40,15 +41,17 @@ export default function CreateCharacterPage() {
     };
 
     return (
-        <Box sx={{ m: "1rem" }}>
-            <Box sx={{ width: "100%", mb: "1rem" }}>
-                <Button LinkComponent={Link} href="/hermes/characters" variant="outlined">
+        <Box styling={{ m: "medium" }}>
+            <Box styling={{ width: "100%", mb: "medium" }}>
+                <Button component={Link} href="/hermes/characters" variant="outlined">
                     Back
                 </Button>
             </Box>
+
             <Typography variant="h5" gutterBottom>
                 Create Character
             </Typography>
+
             <CharacterForm
                 onSubmit={handleSubmit}
                 loading={loading}

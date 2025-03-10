@@ -1,13 +1,13 @@
 "use client";
 
-import OuranosStepper from '@/app/components/ouranos_stepper';
+import Box from '@/app/components/core/layout/box';
+import DetailedStepper from '@/app/components/navigation/detailed_stepper';
+import StepContext from '@/app/hermes/conversation/components/step_context';
+import ConversationCharacter from '@/app/hermes/conversation/models/conversation_character';
+import ChatInterfaceView from '@/app/hermes/conversation/views/chat_interface_view';
+import SelectCharacterView from '@/app/hermes/conversation/views/select_character_view';
 import { Role } from '@/gql/graphql';
-import { Box } from '@mui/material';
 import { useState } from 'react';
-import ChatInterface from './components/chat_interface';
-import StepContext from './components/step_context';
-import StepSelectCharacter from './components/step_select_character';
-import ConversationCharacter from './models/conversation_character';
 
 export default function Conversation() {
     const [context, setContext] = useState('');
@@ -22,11 +22,11 @@ export default function Conversation() {
         },
         {
             label: 'Select Your Character',
-            component: <StepSelectCharacter role={Role.User} character={userCharacter} setCharacter={setUserCharacter} />
+            component: <SelectCharacterView role={Role.User} character={userCharacter} setCharacter={setUserCharacter} />
         },
         {
             label: 'Select Assistant Character',
-            component: <StepSelectCharacter role={Role.Assistant} character={assistantCharacter} setCharacter={setAssistantCharacter} />
+            component: <SelectCharacterView role={Role.Assistant} character={assistantCharacter} setCharacter={setAssistantCharacter} />
         }
     ];
 
@@ -35,15 +35,15 @@ export default function Conversation() {
     }
 
     const setupDisplay = (
-        <OuranosStepper sx={{ m: "1rem" }} steps={steps} onComplete={handleStepperComplete} />
+        <DetailedStepper styling={{ m: "medium" }} steps={steps} onComplete={handleStepperComplete} />
     );
 
     const chatDisplay = userCharacter && assistantCharacter ? (
-        <ChatInterface context={context} userCharacter={userCharacter} assistantCharacter={assistantCharacter} />
+        <ChatInterfaceView context={context} userCharacter={userCharacter} assistantCharacter={assistantCharacter} />
     ) : "Invalid conversation configuration. Please refresh and try again.";
 
     return (
-        <Box sx={{ width: '100%', height: "100%" }}>
+        <Box styling={{ width: '100%', height: "100%" }}>
             {setupComplete ? chatDisplay : setupDisplay}
         </Box>
     );

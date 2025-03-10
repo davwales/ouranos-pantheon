@@ -1,13 +1,11 @@
+import Typography from '@/app/components/core/data-display/typography';
+import Grid from '@/app/components/core/layout/grid';
+import Card from '@/app/components/core/surfaces/card';
+import CardContent from '@/app/components/core/surfaces/card_content';
+import ConversationCharacter from '@/app/hermes/conversation/models/conversation_character';
+import { GET_DETAILED_CHARACTER_LIST } from '@/app/hermes/queries';
 import { Role } from '@/gql/graphql';
-import {
-    Card,
-    CardContent,
-    Grid2,
-    Typography
-} from '@mui/material';
 import { useQuery } from 'urql';
-import { GET_DETAILED_CHARACTER_LIST } from '../../queries';
-import ConversationCharacter from '../models/conversation_character';
 
 interface StepSelectCharacterProps {
     role: Role;
@@ -36,7 +34,7 @@ export default function CharacterList(props: StepSelectCharacterProps) {
     const characterCard = (name: string, selected: boolean, onClick: () => void) => (
         <Card
             onClick={onClick}
-            sx={{
+            styling={{
                 cursor: props.canSelect ? 'pointer' : 'default',
                 border: selected ? '2px solid' : '2px solid transparent'
             }}
@@ -54,16 +52,16 @@ export default function CharacterList(props: StepSelectCharacterProps) {
     return (
         <>
             {fetching ? "Loading..." : (
-                <Grid2 container spacing={2}>
+                <Grid container spacing={2}>
                     {data?.allCharacters.map((c, index) => (
-                        <Grid2 key={index} size={{ xs: 12, sm: 12, md: 6, lg: 4, xl: 2 }}>
+                        <Grid key={index} size={{ xs: 12, sm: 12, md: 6, lg: 4, xl: 2 }}>
                             {characterCard(c.name, props.character?.id == c.id, () => handleCharacterSelect(c))}
-                        </Grid2>
+                        </Grid>
                     ))}
-                    <Grid2 size={{ xs: 12, sm: 12, md: 6, lg: 4, xl: 2 }}>
+                    <Grid size={{ xs: 12, sm: 12, md: 6, lg: 4, xl: 2 }}>
                         {characterCard("Create New", isNewCharacter, handleCharacterCreate)}
-                    </Grid2>
-                </Grid2>
+                    </Grid>
+                </Grid>
             )}
         </>
     );

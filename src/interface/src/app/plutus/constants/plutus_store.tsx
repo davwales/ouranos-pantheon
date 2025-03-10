@@ -1,5 +1,5 @@
+import { timeFrames } from "@/app/plutus/constants/time_frames";
 import { create } from "zustand";
-import { timeFrames } from "./time_frames";
 
 export interface PlutusState {
     tab: number,

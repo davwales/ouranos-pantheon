@@ -1,5 +1,5 @@
-import { abbreviateNumber } from "@/app/components/pretty_number";
-import { GridColDef } from "@mui/x-data-grid";
+import { GridColDef } from "@/app/components/core/data-display/data_grid";
+import { abbreviateNumber } from "@/app/components/utils/pretty_number";
 
 export const plutusColumns: GridColDef[] = [
     {

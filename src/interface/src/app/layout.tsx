@@ -1,10 +1,10 @@
-import { Box, CssBaseline } from '@mui/material';
-import { AppRouterCacheProvider } from '@mui/material-nextjs/v14-appRouter';
-import { ThemeProvider } from '@mui/material/styles';
+import Box from '@/app/components/core/layout/box';
+import AppRouterCacheProvider from '@/app/components/core/utils/app_router_cache_provider';
+import CssBaseline from '@/app/components/core/utils/css_baseline';
+import ThemeProvider from '@/app/components/core/utils/theme_provider';
+import GlobalAlert from '@/app/components/feedback/global_alert';
+import ResponsiveNavigationBar from '@/app/components/navigation/responsive_navigation_bar';
 import type { Metadata } from 'next';
-import GlobalAlert from './components/Alerts/global_alert';
-import ResponsiveNavigationBar from './components/responsive_navigation_bar';
-import siteTheme from './site_theme';
 
 export const metadata: Metadata = {
   title: 'Ouranos',
@@ -24,17 +24,17 @@ export default function RootLayout({ children }: React.PropsWithChildren) {
         padding: 0
       }}>
         <AppRouterCacheProvider>
-          <ThemeProvider theme={siteTheme}>
+          <ThemeProvider>
             <CssBaseline />
             <GlobalAlert />
-            <Box sx={{
+            <Box styling={{
               minHeight: '100vh',
-              margin: 0,
+              m: 'none',
               display: 'flex',
               flexDirection: 'column'
             }}>
               <ResponsiveNavigationBar />
-              <Box sx={{
+              <Box styling={{
                 flex: 1,
                 display: 'flex',
                 flexDirection: 'column'

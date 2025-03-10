@@ -1,26 +1,27 @@
 "use client";
 
-import { OuranosDataGrid } from "@/app/components/ouranos_data_grid";
-import OuranosGridModel from "@/app/models/ouranos_grid_model";
-import OuranosPaginationInfo from "@/app/models/ouranos_pagination_info";
-import { hasPaginationChanged, mapFilter, mapOrder, mapPagination } from "@/app/utilities/graphql_mappers";
+import { DataGrid, GridModel } from "@/app/components/core/data-display/data_grid";
+import RefreshIcon from "@/app/components/core/icons/refresh_icon";
+import Button from "@/app/components/core/inputs/button";
+import IconButton from "@/app/components/core/inputs/icon_button";
+import Box from "@/app/components/core/layout/box";
+import { hasPaginationChanged, mapFilter, mapOrder, mapPagination } from "@/app/components/utils/graphql_mappers";
+import PaginationInfo from "@/app/models/pagination_info";
+import TimeFrameSelection from "@/app/plutus/components/time_frame_selection";
+import { plutusColumns } from "@/app/plutus/constants/plutus_columns";
+import { PlutusState, usePlutusStore } from "@/app/plutus/constants/plutus_store";
+import { GET_MARKET_TRADES } from "@/app/plutus/queries";
 import { GetMarketTradesResponse } from "@/gql/graphql";
-import RefreshIcon from "@mui/icons-material/Refresh";
-import { Box, Button, IconButton } from "@mui/material";
 import { useQuery } from "@urql/next";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import TimeFrameSelection from "../components/time_frame_selection";
-import { plutusColumns } from "../constants/plutus_columns";
-import { PlutusState, usePlutusStore } from "../constants/plutus_store";
-import { GET_MARKET_TRADES } from "../queries";
 
 export default function MarketDetail() {
     const router = useRouter();
     const { marketId } = useParams<{ marketId: string }>();
     const [timeFrameSeconds, setTimeFrameSeconds] = usePlutusStore((state: PlutusState) => [state.timeFrameSeconds, state.setTimeFrameSeconds]);
-    const [paginationInfo, setPaginationInfo] = useState<OuranosPaginationInfo>();
-    const [gridModel, setGridModel] = useState<OuranosGridModel>({
+    const [paginationInfo, setPaginationInfo] = useState<PaginationInfo>();
+    const [gridModel, setGridModel] = useState<GridModel>({
         sortModel: [{ field: "totalGain", sort: "desc" }],
         paginationModel: { page: 0, pageSize: 10 },
         filterModel: { items: [] }
@@ -38,7 +39,7 @@ export default function MarketDetail() {
         router.push(`/plutus/${marketId}/${row.symbolId}`);
     };
 
-    const handleGridModelChanged = (model: OuranosGridModel) => {
+    const handleGridModelChanged = (model: GridModel) => {
         if (hasPaginationChanged(model.paginationModel, gridModel.paginationModel)) {
             const paginationInfo = mapPagination(model.paginationModel, gridModel.paginationModel, data?.marketTrades?.pageInfo);
             setPaginationInfo(paginationInfo);
@@ -70,7 +71,7 @@ export default function MarketDetail() {
     return (
         <>
             <Box
-                sx={{
+                styling={{
                     width: "100%",
                     display: 'flex',
                     justifyContent: 'space-between',
@@ -85,10 +86,10 @@ export default function MarketDetail() {
                 </Box>
 
                 <Box
-                    sx={{
+                    styling={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 2
+                        gap: "large"
                     }}
                 >
                     <IconButton disabled={fetching} onClick={handleRefreshClicked}>
@@ -100,7 +101,8 @@ export default function MarketDetail() {
                     />
                 </Box>
             </Box>
-            <OuranosDataGrid
+
+            <DataGrid
                 rows={data?.marketTrades?.nodes}
                 columns={plutusColumns}
                 getRowId={(row: any) => row.symbolId}
@@ -110,7 +112,7 @@ export default function MarketDetail() {
                 onGridModelChange={handleGridModelChanged}
                 pageSizeOptions={[5, 10, 15, 20, 50]}
                 onRowClick={handleRowClick}
-                sx={{ mt: "1rem" }}
+                styling={{ mt: 'medium' }}
             />
         </>
     );

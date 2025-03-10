@@ -1,7 +1,10 @@
-import { Box, Button, SxProps, TextField } from '@mui/material';
+import Button from '@/app/components/core/inputs/button';
+import TextField from '@/app/components/core/inputs/text_field';
+import FormBox from '@/app/components/core/layout/form_box';
+import { StyleProps } from '@/app/components/core/style_props';
 
 interface ChatInputProps {
-    sx?: SxProps;
+    styling?: StyleProps;
     inputText: string;
     isGenerating: boolean;
     isEditing: boolean;
@@ -33,10 +36,10 @@ export default function ChatInput(props: ChatInputProps) {
                 Cancel
             </Button>
             <Button
-                type="submit"
                 variant="contained"
                 color="primary"
                 disabled={props.isGenerating || !props.inputText.trim()}
+                submit
             >
                 Save
             </Button>
@@ -46,10 +49,10 @@ export default function ChatInput(props: ChatInputProps) {
     const newMessageInput = (
         <>
             <Button
-                type="submit"
                 variant="contained"
                 color="primary"
                 disabled={props.isGenerating || !props.inputText.trim()}
+                submit
             >
                 Send
             </Button>
@@ -60,10 +63,10 @@ export default function ChatInput(props: ChatInputProps) {
     const placeholder = props.isGenerating ? "Generating response..." : inputPlaceholder;
 
     return (
-        <Box component="form" onSubmit={handleSubmit} sx={props.sx}>
+        <FormBox styling={props.styling} onSubmit={handleSubmit} >
             <TextField
                 value={props.inputText}
-                onChange={(e) => props.onInputChange(e.target.value)}
+                onChange={props.onInputChange}
                 fullWidth
                 multiline
                 maxRows={4}
@@ -71,6 +74,6 @@ export default function ChatInput(props: ChatInputProps) {
                 disabled={props.isGenerating}
             />
             {props.isEditing ? editInputs : newMessageInput}
-        </Box>
+        </FormBox>
     );
 }

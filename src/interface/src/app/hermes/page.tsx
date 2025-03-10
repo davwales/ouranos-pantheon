@@ -1,5 +1,7 @@
-import { CardContent, Grid2, Typography } from "@mui/material";
-import LinkCard from "../components/link_card";
+import Typography from "@/app/components/core/data-display/typography";
+import Grid from "@/app/components/core/layout/grid";
+import CardContent from "@/app/components/core/surfaces/card_content";
+import LinkCard from "@/app/components/surfaces/link_card";
 
 export default function Hermes() {
     const modules = [
@@ -15,19 +17,19 @@ export default function Hermes() {
 
     return (
         <>
-            <Grid2 container spacing={2}>
+            <Grid container spacing={2}>
                 {modules.map((m, index) => (
-                    <Grid2 key={index} size={{ sm: 12, lg: 4 }}>
+                    <Grid key={index} size={{ sm: 12, lg: 4 }}>
                         <LinkCard href={m.href}>
                             <CardContent>
-                                <Typography variant="h4" sx={{ textAlign: "center" }}>
+                                <Typography variant="h4" styling={{ textAlign: "center" }}>
                                     {m.title}
                                 </Typography>
                             </CardContent>
                         </LinkCard>
-                    </Grid2>
+                    </Grid>
                 ))}
-            </Grid2>
+            </Grid>
         </>
     );
 }

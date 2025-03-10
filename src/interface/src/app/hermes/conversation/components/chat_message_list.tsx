@@ -1,15 +1,19 @@
-import ResponsiveMenu from "@/app/components/responsive_menu";
+import List from "@/app/components/core/data-display/list";
+import ListItem from "@/app/components/core/data-display/list_item";
+import ListItemText from "@/app/components/core/data-display/list_item_text";
+import DeleteIcon from "@/app/components/core/icons/delete_icon";
+import EditIcon from "@/app/components/core/icons/edit_icon";
+import ReplayIcon from "@/app/components/core/icons/replay_icon";
+import Box from "@/app/components/core/layout/box";
+import { StyleProps } from "@/app/components/core/style_props";
+import ResponsiveMenu from "@/app/components/navigation/responsive_menu";
+import ConversationCharacter from "@/app/hermes/conversation/models/conversation_character";
+import Message from "@/app/hermes/conversation/models/message";
 import { Role } from "@/gql/graphql";
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import ReplayIcon from '@mui/icons-material/Replay';
-import { Box, List, ListItem, ListItemText, SxProps } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
-import ConversationCharacter from "../models/conversation_character";
-import Message from "../models/message";
 
 interface ChatMessageListProps {
-    sx?: SxProps;
+    styling?: StyleProps;
     messages: Message[];
     userCharacter: ConversationCharacter;
     assistantCharacter: ConversationCharacter;
@@ -20,9 +24,9 @@ interface ChatMessageListProps {
 };
 
 export default function ChatMessageList(props: ChatMessageListProps) {
-    const [contextMenuAnchor, setContextMenuAnchor] = useState<HTMLElement | null>(null);
-    const [selectedMessageIndex, setSelectedMessageIndex] = useState<number | null>(null);
-    const messageListRef = useRef<HTMLDivElement>(null);
+    const [contextMenuAnchor, setContextMenuAnchor] = useState<HTMLElement | undefined>();
+    const [selectedMessageIndex, setSelectedMessageIndex] = useState<number | undefined>();
+    const messageListRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
         if (messageListRef?.current) {
@@ -39,8 +43,8 @@ export default function ChatMessageList(props: ChatMessageListProps) {
     };
 
     const handleCloseContextMenu = () => {
-        setContextMenuAnchor(null);
-        setSelectedMessageIndex(null);
+        setContextMenuAnchor(undefined);
+        setSelectedMessageIndex(undefined);
     };
 
     const getMessageActions = (index: number, role: Role) => {
@@ -60,18 +64,20 @@ export default function ChatMessageList(props: ChatMessageListProps) {
             });
         }
 
-        actions.push({
-            label: 'Delete',
-            icon: <DeleteIcon fontSize="small" color="error" />,
-            onClick: () => props.onDeleteMessage?.(index)
-        });
+        if (role === Role.User) {
+            actions.push({
+                label: 'Delete',
+                icon: <DeleteIcon fontSize="small" color="error" />,
+                onClick: () => props.onDeleteMessage?.(index)
+            });
+        }
 
         return actions;
     };
 
     return (
-        <Box sx={props.sx}>
-            <List sx={{ flexGrow: 1, overflowY: 'auto', }}>
+        <Box styling={props.styling}>
+            <List styling={{ flexGrow: 1, overflowY: 'auto', pb: 'xxl' }}>
                 {props.messages.map((msg, index) => (
                     <ListItem
                         key={index}
@@ -80,14 +86,15 @@ export default function ChatMessageList(props: ChatMessageListProps) {
                         <ListItemText
                             primary={msg.content}
                             secondary={msg.role === Role.User ? props.userCharacter.name : props.assistantCharacter.name}
-                            sx={{ textAlign: msg.role === Role.User ? 'right' : 'left' }}
+                            styling={{ textAlign: msg.role === Role.User ? 'right' : 'left' }}
                         />
                     </ListItem>
                 ))}
-                <Box sx={{ pt: (theme) => theme.spacing(10) }} ref={messageListRef} />
+
+                <div ref={messageListRef} />
             </List>
 
-            {selectedMessageIndex !== null && (
+            {selectedMessageIndex && (
                 <ResponsiveMenu
                     anchorEl={contextMenuAnchor}
                     onClose={handleCloseContextMenu}

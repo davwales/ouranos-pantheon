@@ -1,4 +1,4 @@
-import { TextField } from '@mui/material';
+import TextField from "@/app/components/core/inputs/text_field";
 
 interface StepContextProps {
     context: string;
@@ -11,7 +11,7 @@ export default function StepContext(props: StepContextProps) {
             label="Chat Context"
             placeholder="Enter the context for the chat..."
             value={props.context}
-            onChange={(e) => props.setContext(e.target.value)}
+            onChange={props.setContext}
             multiline
             rows={4}
             variant="outlined"
