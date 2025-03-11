@@ -160,6 +160,26 @@ export type AllSymbolsEdge = {
   node: Symbol;
 };
 
+/** A connection to a list of items. */
+export type AllTradesConnection = {
+  __typename?: 'AllTradesConnection';
+  /** A list of edges. */
+  edges?: Maybe<Array<AllTradesEdge>>;
+  /** A flattened list of the nodes. */
+  nodes?: Maybe<Array<Trade>>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+};
+
+/** An edge in a connection. */
+export type AllTradesEdge = {
+  __typename?: 'AllTradesEdge';
+  /** A cursor for use in pagination. */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of the edge. */
+  node: Trade;
+};
+
 export type BooleanOperationFilterInput = {
   eq?: InputMaybe<Scalars['Boolean']['input']>;
   neq?: InputMaybe<Scalars['Boolean']['input']>;
@@ -520,6 +540,13 @@ export type IdFilterInputTypeOfSymbolGroupFilterInput = {
   nin?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
+export type IdFilterInputTypeOfTradeFilterInput = {
+  eq?: InputMaybe<Scalars['String']['input']>;
+  in?: InputMaybe<Array<Scalars['String']['input']>>;
+  neq?: InputMaybe<Scalars['String']['input']>;
+  nin?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
 export type IdResponseOfCharacter = {
   __typename?: 'IdResponseOfCharacter';
   id: Scalars['String']['output'];
@@ -789,6 +816,14 @@ export type Query = {
    */
   allSymbols?: Maybe<AllSymbolsConnection>;
   /**
+   * Gets all trades.
+   *
+   *
+   * **Returns:**
+   * List of all trades.
+   */
+  allTrades?: Maybe<AllTradesConnection>;
+  /**
    * Gets a character.
    *
    *
@@ -900,6 +935,16 @@ export type QueryAllSymbolsArgs = {
   last?: InputMaybe<Scalars['Int']['input']>;
   order?: InputMaybe<Array<SymbolSortInput>>;
   where?: InputMaybe<SymbolFilterInput>;
+};
+
+
+export type QueryAllTradesArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  order?: InputMaybe<Array<TradeSortInput>>;
+  where?: InputMaybe<TradeFilterInput>;
 };
 
 
@@ -1102,6 +1147,66 @@ export type TaxesSortInput = {
   flat?: InputMaybe<FlatTaxSortInput>;
 };
 
+export type Trade = {
+  __typename?: 'Trade';
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  metadata: TradeMetadata;
+  price: Scalars['Decimal']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+  volume: Scalars['Decimal']['output'];
+};
+
+export type TradeFilterInput = {
+  and?: InputMaybe<Array<TradeFilterInput>>;
+  createdAt?: InputMaybe<DateTimeOperationFilterInput>;
+  id?: InputMaybe<IdFilterInputTypeOfTradeFilterInput>;
+  metadata?: InputMaybe<TradeMetadataFilterInput>;
+  or?: InputMaybe<Array<TradeFilterInput>>;
+  price?: InputMaybe<DecimalOperationFilterInput>;
+  updatedAt?: InputMaybe<DateTimeOperationFilterInput>;
+  volume?: InputMaybe<DecimalOperationFilterInput>;
+};
+
+export type TradeMetadata = {
+  __typename?: 'TradeMetadata';
+  additionalFields: AdditionalFields;
+  marketId: Scalars['String']['output'];
+  symbolCode: Scalars['String']['output'];
+  symbolId: Scalars['String']['output'];
+  symbolName: Scalars['String']['output'];
+  symbolSubcode?: Maybe<Scalars['String']['output']>;
+};
+
+export type TradeMetadataFilterInput = {
+  additionalFields?: InputMaybe<AdditionalFieldsFilterInput>;
+  and?: InputMaybe<Array<TradeMetadataFilterInput>>;
+  marketId?: InputMaybe<IdFilterInputTypeOfMarketFilterInput>;
+  or?: InputMaybe<Array<TradeMetadataFilterInput>>;
+  symbolCode?: InputMaybe<StringOperationFilterInput>;
+  symbolId?: InputMaybe<IdFilterInputTypeOfSymbolFilterInput>;
+  symbolName?: InputMaybe<StringOperationFilterInput>;
+  symbolSubcode?: InputMaybe<StringOperationFilterInput>;
+};
+
+export type TradeMetadataSortInput = {
+  additionalFields?: InputMaybe<AdditionalFieldsSortInput>;
+  marketId?: InputMaybe<SortEnumType>;
+  symbolCode?: InputMaybe<SortEnumType>;
+  symbolId?: InputMaybe<SortEnumType>;
+  symbolName?: InputMaybe<SortEnumType>;
+  symbolSubcode?: InputMaybe<SortEnumType>;
+};
+
+export type TradeSortInput = {
+  createdAt?: InputMaybe<SortEnumType>;
+  id?: InputMaybe<SortEnumType>;
+  metadata?: InputMaybe<TradeMetadataSortInput>;
+  price?: InputMaybe<SortEnumType>;
+  updatedAt?: InputMaybe<SortEnumType>;
+  volume?: InputMaybe<SortEnumType>;
+};
+
 export type UpdateCharacterInput = {
   age: Scalars['Int']['input'];
   characterId: Scalars['String']['input'];
@@ -1194,7 +1299,7 @@ export type GetSymbolDetailsQueryVariables = Exact<{
 }>;
 
 
-export type GetSymbolDetailsQuery = { __typename?: 'Query', symbol: { __typename?: 'Symbol', code: string, createdAt: any, id: string, marketId: string, name: string, subcode?: string | null, updatedAt: any }, symbolTrades: { __typename?: 'GetSymbolTradesResponse', totalSpent: any, averagePrice: any, minPrice: any, maxPrice: any, volume: any, numTransactions: number, trades: Array<{ __typename?: 'GetSymbolTradeBucketsResponse', date: any, maxPrice: any, minPrice: any, numTransactions: number, price: any, totalSpent: any, volume: any }> } };
+export type GetSymbolDetailsQuery = { __typename?: 'Query', symbol: { __typename?: 'Symbol', code: string, createdAt: any, id: string, marketId: string, name: string, subcode?: string | null, updatedAt: any }, symbolTrades: { __typename?: 'GetSymbolTradesResponse', totalSpent: any, averagePrice: any, minPrice: any, maxPrice: any, volume: any, numTransactions: number, trades: Array<{ __typename?: 'GetSymbolTradeBucketsResponse', date: any, maxPrice: any, minPrice: any, numTransactions: number, price: any, totalSpent: any, volume: any }> }, latestTrade?: { __typename?: 'AllTradesConnection', nodes?: Array<{ __typename?: 'Trade', price: any, volume: any }> | null } | null, allForecasts?: { __typename?: 'AllForecastsConnection', nodes?: Array<{ __typename?: 'Forecast', predictions: Array<{ __typename?: 'ForecastPoint', averagePrice: any }>, latest: { __typename?: 'ForecastPoint', averagePrice: any } }> | null } | null };
 
 
 export const DeleteCharacterDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"deleteCharacter"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"DeleteCharacterInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteCharacter"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"idResponseOfCharacter"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]} as unknown as DocumentNode<DeleteCharacterMutation, DeleteCharacterMutationVariables>;
@@ -1206,4 +1311,4 @@ export const DetailedCharacterListDocument = {"kind":"Document","definitions":[{
 export const GetCharacterDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getCharacter"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"characterId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"character"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"characterId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"characterId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"age"}},{"kind":"Field","name":{"kind":"Name","value":"details"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"key"}},{"kind":"Field","name":{"kind":"Name","value":"value"}}]}}]}}]}}]} as unknown as DocumentNode<GetCharacterQuery, GetCharacterQueryVariables>;
 export const GetMarketsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetMarkets"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"allMarkets"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"nodes"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]}}]} as unknown as DocumentNode<GetMarketsQuery, GetMarketsQueryVariables>;
 export const GetMarketTradesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetMarketTrades"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"GetMarketTradesInput"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"where"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"GetMarketTradesResponseFilterInput"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"order"}},"type":{"kind":"ListType","type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"GetMarketTradesResponseSortInput"}}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"first"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"after"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"last"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"before"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"marketTrades"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}},{"kind":"Argument","name":{"kind":"Name","value":"where"},"value":{"kind":"Variable","name":{"kind":"Name","value":"where"}}},{"kind":"Argument","name":{"kind":"Name","value":"order"},"value":{"kind":"Variable","name":{"kind":"Name","value":"order"}}},{"kind":"Argument","name":{"kind":"Name","value":"first"},"value":{"kind":"Variable","name":{"kind":"Name","value":"first"}}},{"kind":"Argument","name":{"kind":"Name","value":"after"},"value":{"kind":"Variable","name":{"kind":"Name","value":"after"}}},{"kind":"Argument","name":{"kind":"Name","value":"last"},"value":{"kind":"Variable","name":{"kind":"Name","value":"last"}}},{"kind":"Argument","name":{"kind":"Name","value":"before"},"value":{"kind":"Variable","name":{"kind":"Name","value":"before"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"totalCount"}},{"kind":"Field","name":{"kind":"Name","value":"nodes"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"averagePrice"}},{"kind":"Field","name":{"kind":"Name","value":"limit"}},{"kind":"Field","name":{"kind":"Name","value":"margin"}},{"kind":"Field","name":{"kind":"Name","value":"maxPrice"}},{"kind":"Field","name":{"kind":"Name","value":"minPrice"}},{"kind":"Field","name":{"kind":"Name","value":"numTransactions"}},{"kind":"Field","name":{"kind":"Name","value":"roi"}},{"kind":"Field","name":{"kind":"Name","value":"symbolCode"}},{"kind":"Field","name":{"kind":"Name","value":"symbolId"}},{"kind":"Field","name":{"kind":"Name","value":"symbolName"}},{"kind":"Field","name":{"kind":"Name","value":"symbolSubcode"}},{"kind":"Field","name":{"kind":"Name","value":"totalGain"}},{"kind":"Field","name":{"kind":"Name","value":"totalSpent"}},{"kind":"Field","name":{"kind":"Name","value":"totalVolume"}}]}},{"kind":"Field","name":{"kind":"Name","value":"pageInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"endCursor"}},{"kind":"Field","name":{"kind":"Name","value":"hasNextPage"}},{"kind":"Field","name":{"kind":"Name","value":"hasPreviousPage"}},{"kind":"Field","name":{"kind":"Name","value":"startCursor"}}]}}]}}]}}]} as unknown as DocumentNode<GetMarketTradesQuery, GetMarketTradesQueryVariables>;
-export const GetSymbolDetailsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetSymbolDetails"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"symbolId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"seconds"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Float"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"symbol"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"symbolId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"symbolId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"code"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"marketId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"subcode"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"symbolTrades"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"symbolId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"symbolId"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"seconds"},"value":{"kind":"Variable","name":{"kind":"Name","value":"seconds"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"totalSpent"}},{"kind":"Field","name":{"kind":"Name","value":"averagePrice"}},{"kind":"Field","name":{"kind":"Name","value":"minPrice"}},{"kind":"Field","name":{"kind":"Name","value":"maxPrice"}},{"kind":"Field","name":{"kind":"Name","value":"volume"}},{"kind":"Field","name":{"kind":"Name","value":"numTransactions"}},{"kind":"Field","name":{"kind":"Name","value":"trades"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"date"}},{"kind":"Field","name":{"kind":"Name","value":"maxPrice"}},{"kind":"Field","name":{"kind":"Name","value":"minPrice"}},{"kind":"Field","name":{"kind":"Name","value":"numTransactions"}},{"kind":"Field","name":{"kind":"Name","value":"price"}},{"kind":"Field","name":{"kind":"Name","value":"totalSpent"}},{"kind":"Field","name":{"kind":"Name","value":"volume"}}]}}]}}]}}]} as unknown as DocumentNode<GetSymbolDetailsQuery, GetSymbolDetailsQueryVariables>;
+export const GetSymbolDetailsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetSymbolDetails"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"symbolId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"seconds"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Float"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"symbol"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"symbolId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"symbolId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"code"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"marketId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"subcode"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"symbolTrades"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"symbolId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"symbolId"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"seconds"},"value":{"kind":"Variable","name":{"kind":"Name","value":"seconds"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"totalSpent"}},{"kind":"Field","name":{"kind":"Name","value":"averagePrice"}},{"kind":"Field","name":{"kind":"Name","value":"minPrice"}},{"kind":"Field","name":{"kind":"Name","value":"maxPrice"}},{"kind":"Field","name":{"kind":"Name","value":"volume"}},{"kind":"Field","name":{"kind":"Name","value":"numTransactions"}},{"kind":"Field","name":{"kind":"Name","value":"trades"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"date"}},{"kind":"Field","name":{"kind":"Name","value":"maxPrice"}},{"kind":"Field","name":{"kind":"Name","value":"minPrice"}},{"kind":"Field","name":{"kind":"Name","value":"numTransactions"}},{"kind":"Field","name":{"kind":"Name","value":"price"}},{"kind":"Field","name":{"kind":"Name","value":"totalSpent"}},{"kind":"Field","name":{"kind":"Name","value":"volume"}}]}}]}},{"kind":"Field","alias":{"kind":"Name","value":"latestTrade"},"name":{"kind":"Name","value":"allTrades"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"first"},"value":{"kind":"IntValue","value":"1"}},{"kind":"Argument","name":{"kind":"Name","value":"order"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"createdAt"},"value":{"kind":"EnumValue","value":"DESC"}}]}},{"kind":"Argument","name":{"kind":"Name","value":"where"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"metadata"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"symbolId"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"eq"},"value":{"kind":"Variable","name":{"kind":"Name","value":"symbolId"}}}]}}]}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"nodes"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"price"}},{"kind":"Field","name":{"kind":"Name","value":"volume"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"allForecasts"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"where"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"symbolId"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"eq"},"value":{"kind":"Variable","name":{"kind":"Name","value":"symbolId"}}}]}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"nodes"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"predictions"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"averagePrice"}}]}},{"kind":"Field","name":{"kind":"Name","value":"latest"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"averagePrice"}}]}}]}}]}}]}}]} as unknown as DocumentNode<GetSymbolDetailsQuery, GetSymbolDetailsQueryVariables>;

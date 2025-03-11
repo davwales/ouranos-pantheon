@@ -5,7 +5,7 @@ using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Service.Plutus.Application.Interfaces.Trades;
 using Ouranos.Pantheon.Service.Plutus.Domain.Trades;
 
-namespace Ouranos.Pantheon.Service.Plutus.Application.Queries.Trades.GetSymbolTrades;
+namespace Ouranos.Pantheon.Service.Plutus.Application.Queries.Symbols.GetSymbolTrades;
 
 public sealed class GetSymbolTradesHandler : QueryHandler<GetSymbolTradesInput, GetSymbolTradesResponse>
 {

@@ -7,6 +7,7 @@ import Grid from "@/app/components/core/layout/grid";
 import { PrettyNumber } from "@/app/components/utils/pretty_number";
 import useInterval from "@/app/components/utils/use_interval";
 import DetailChart from "@/app/plutus/[marketId]/[symbolId]/components/detail_chart";
+import PercentChange from "@/app/plutus/[marketId]/[symbolId]/components/percent_change";
 import TimeFrameSelection from "@/app/plutus/components/time_frame_selection";
 import { PlutusState, usePlutusStore } from "@/app/plutus/constants/plutus_store";
 import { GET_SYMBOL_DETAILS } from "@/app/plutus/queries";
@@ -55,7 +56,21 @@ export default function SymbolDetail() {
                 alignItems: 'center',
                 mb: 'large'
             }}>
-                <Typography variant='h3'>{data?.symbol.name}</Typography>
+                <Box styling={{ display: 'flex', gap: 'medium', alignItems: 'center' }}>
+                    <Typography variant='h3'>{data?.symbol.name}</Typography>
+
+                    <PercentChange
+                        label="Current"
+                        current={data?.latestTrade?.nodes?.[0]?.price}
+                        previous={data?.allForecasts?.nodes?.[0].latest?.averagePrice}
+                    />
+
+                    <PercentChange
+                        label="Predicted"
+                        current={data?.allForecasts?.nodes?.[0]?.predictions?.[0]?.averagePrice}
+                        previous={data?.allForecasts?.nodes?.[0].latest?.averagePrice}
+                    />
+                </Box>
 
                 <Box styling={{ display: 'flex', gap: 'medium' }}>
                     <Button variant="outlined" onClick={handleBackClicked}>Back</Button>

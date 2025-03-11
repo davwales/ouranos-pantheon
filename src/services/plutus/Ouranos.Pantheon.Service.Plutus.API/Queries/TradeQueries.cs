@@ -1,7 +1,7 @@
 using Ouranos.Pantheon.Core.API.Queries;
 using Ouranos.Pantheon.Core.Application.Mediator;
-using Ouranos.Pantheon.Service.Plutus.Application.Queries.Trades.GetMarketTrades;
-using Ouranos.Pantheon.Service.Plutus.Application.Queries.Trades.GetSymbolTrades;
+using Ouranos.Pantheon.Core.Application.Queries.Common.GetAllEntities;
+using Ouranos.Pantheon.Service.Plutus.Domain.Trades;
 
 namespace Ouranos.Pantheon.Service.Plutus.API.Queries;
 
@@ -9,44 +9,22 @@ namespace Ouranos.Pantheon.Service.Plutus.API.Queries;
 public sealed class TradeQueries
 {
     /// <summary>
-    ///     Retrieves information about the symbols in a market.
+    ///     Gets all trades.
     /// </summary>
     /// <param name="dispatcher">
     ///     <see cref="IDispatcher" />
     /// </param>
-    /// <param name="input">Query used to filter market trades.</param>
     /// <param name="cancellationToken"><see cref="CancellationToken" />.</param>
-    /// <returns>Trade statistics for the symbols in a market.</returns>
-    [UsePaging(IncludeTotalCount = true)]
+    /// <returns>List of all trades.</returns>
+    [UsePaging(IncludeTotalCount = false)]
     [UseFiltering]
     [UseSorting]
-    public async Task<IQueryable<GetMarketTradesResponse>> GetMarketTrades(
+    public async Task<IQueryable<Trade>> GetAllTrades(
         [Service] IDispatcher dispatcher,
-        GetMarketTradesInput input,
         CancellationToken cancellationToken = default
     )
     {
-        var wrapper = await dispatcher.Send(input, cancellationToken);
+        var wrapper = await dispatcher.Send(new GetAllEntitiesInput<Trade>(), cancellationToken);
         return wrapper.Value;
-    }
-
-    /// <summary>
-    ///     Retrieves information about the trades for a given symbol.
-    /// </summary>
-    /// <param name="dispatcher">
-    ///     <see cref="IDispatcher" />
-    /// </param>
-    /// <param name="input">Query used to filter symbol trades.</param>
-    /// <param name="cancellationToken">
-    ///     <see cref="CancellationToken" />
-    /// </param>
-    /// <returns>Trade statistics for a symbol.</returns>
-    public async Task<GetSymbolTradesResponse> GetSymbolTrades(
-        [Service] IDispatcher dispatcher,
-        GetSymbolTradesInput input,
-        CancellationToken cancellationToken = default
-    )
-    {
-        return await dispatcher.Send(input, cancellationToken);
     }
 }

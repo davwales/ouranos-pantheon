@@ -12,6 +12,7 @@ using Ouranos.Pantheon.Service.Plutus.Domain.Markets;
 using Ouranos.Pantheon.Service.Plutus.Domain.Recipes;
 using Ouranos.Pantheon.Service.Plutus.Domain.SymbolGroups;
 using Ouranos.Pantheon.Service.Plutus.Domain.Symbols;
+using Ouranos.Pantheon.Service.Plutus.Domain.Trades;
 using Ouranos.Pantheon.Service.Plutus.Infra.Mongo;
 using Ouranos.Pantheon.Service.Plutus.Infra.OuranosMl;
 
@@ -26,7 +27,8 @@ public sealed class PlutusModule : IOuranosModule
             .BindModelId<Symbol>()
             .BindModelId<SymbolGroup>()
             .BindModelId<Recipe>()
-            .BindModelId<Forecast>();
+            .BindModelId<Forecast>()
+            .BindModelId<Trade>();
     }
 
     public IFilterConventionDescriptor ConfigureSchemaFilters(IFilterConventionDescriptor descriptor)
@@ -36,7 +38,8 @@ public sealed class PlutusModule : IOuranosModule
             .BindModelIdFilter<Symbol>()
             .BindModelIdFilter<SymbolGroup>()
             .BindModelIdFilter<Recipe>()
-            .BindModelIdFilter<Forecast>();
+            .BindModelIdFilter<Forecast>()
+            .BindModelIdFilter<Trade>();
     }
 
     public IServiceCollection ConfigureServices(IServiceCollection services, IConfiguration configuration)

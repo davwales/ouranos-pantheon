@@ -9,6 +9,7 @@ using Ouranos.Pantheon.Service.Plutus.Domain.Markets;
 using Ouranos.Pantheon.Service.Plutus.Domain.Recipes;
 using Ouranos.Pantheon.Service.Plutus.Domain.SymbolGroups;
 using Ouranos.Pantheon.Service.Plutus.Domain.Symbols;
+using Ouranos.Pantheon.Service.Plutus.Domain.Trades;
 
 namespace Ouranos.Pantheon.Service.Plutus.Application;
 
@@ -34,6 +35,7 @@ public static class ApplicationModule
         mediator.AddStandardConsumersForEntity<SymbolGroup>();
         mediator.AddStandardConsumersForEntity<Recipe>();
         mediator.AddStandardConsumersForEntity<Forecast>();
+        mediator.AddStandardConsumersForEntity<Trade>();
 
         return mediator;
     }

@@ -13,4 +13,9 @@
         <ProjectReference Include="..\..\..\core\Ouranos.Pantheon.Core.Application\Ouranos.Pantheon.Core.Application.csproj"/>
         <ProjectReference Include="..\Ouranos.Pantheon.Service.Plutus.Domain\Ouranos.Pantheon.Service.Plutus.Domain.csproj"/>
     </ItemGroup>
+
+    <ItemGroup>
+        <Folder Include="Queries\Markets\"/>
+        <Folder Include="Queries\Symbols\"/>
+    </ItemGroup>
 </Project>

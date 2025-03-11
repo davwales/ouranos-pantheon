@@ -69,5 +69,25 @@ export const GET_SYMBOL_DETAILS = graphql(`
                 volume
             }
         }
+        latestTrade: allTrades(
+            first: 1
+            order: { createdAt: DESC }
+            where: { metadata: { symbolId: { eq: $symbolId } } }
+        ) {
+            nodes {
+                price
+                volume
+            }
+        }
+        allForecasts(where: { symbolId: { eq: $symbolId } }) {
+            nodes {
+                predictions {
+                    averagePrice
+                }
+                latest {
+                    averagePrice
+                }
+            }
+        }
     }
 `);

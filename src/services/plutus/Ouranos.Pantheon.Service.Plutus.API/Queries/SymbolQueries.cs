@@ -3,6 +3,7 @@ using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Core.Application.Queries.Common.GetAllEntities;
 using Ouranos.Pantheon.Core.Application.Queries.Common.GetEntity;
 using Ouranos.Pantheon.Core.Domain.Common;
+using Ouranos.Pantheon.Service.Plutus.Application.Queries.Symbols.GetSymbolTrades;
 using Ouranos.Pantheon.Service.Plutus.Domain.Symbols;
 
 namespace Ouranos.Pantheon.Service.Plutus.API.Queries;
@@ -48,5 +49,25 @@ public sealed class SymbolQueries
     )
     {
         return await dispatcher.Send(new GetEntityInput<Symbol>(symbolId), cancellationToken);
+    }
+
+    /// <summary>
+    ///     Retrieves information about the trades for a given symbol.
+    /// </summary>
+    /// <param name="dispatcher">
+    ///     <see cref="IDispatcher" />
+    /// </param>
+    /// <param name="input">Query used to filter symbol trades.</param>
+    /// <param name="cancellationToken">
+    ///     <see cref="CancellationToken" />
+    /// </param>
+    /// <returns>Trade statistics for a symbol.</returns>
+    public async Task<GetSymbolTradesResponse> GetSymbolTrades(
+        [Service] IDispatcher dispatcher,
+        GetSymbolTradesInput input,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dispatcher.Send(input, cancellationToken);
     }
 }

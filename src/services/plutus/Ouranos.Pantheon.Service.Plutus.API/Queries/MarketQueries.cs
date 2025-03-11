@@ -3,6 +3,7 @@ using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Core.Application.Queries.Common.GetAllEntities;
 using Ouranos.Pantheon.Core.Application.Queries.Common.GetEntity;
 using Ouranos.Pantheon.Core.Domain.Common;
+using Ouranos.Pantheon.Service.Plutus.Application.Queries.Markets.GetMarketTrades;
 using Ouranos.Pantheon.Service.Plutus.Domain.Markets;
 
 namespace Ouranos.Pantheon.Service.Plutus.API.Queries;
@@ -46,5 +47,27 @@ public sealed class MarketQueries
     )
     {
         return await dispatcher.Send(new GetEntityInput<Market>(marketId), cancellationToken);
+    }
+
+    /// <summary>
+    ///     Retrieves information about the symbols in a market.
+    /// </summary>
+    /// <param name="dispatcher">
+    ///     <see cref="IDispatcher" />
+    /// </param>
+    /// <param name="input">Query used to filter market trades.</param>
+    /// <param name="cancellationToken"><see cref="CancellationToken" />.</param>
+    /// <returns>Trade statistics for the symbols in a market.</returns>
+    [UsePaging(IncludeTotalCount = true)]
+    [UseFiltering]
+    [UseSorting]
+    public async Task<IQueryable<GetMarketTradesResponse>> GetMarketTrades(
+        [Service] IDispatcher dispatcher,
+        GetMarketTradesInput input,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var wrapper = await dispatcher.Send(input, cancellationToken);
+        return wrapper.Value;
     }
 }

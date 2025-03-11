@@ -1,4 +1,4 @@
-﻿namespace Ouranos.Pantheon.Service.Plutus.Application.Queries.Trades.GetSymbolTrades;
+﻿namespace Ouranos.Pantheon.Service.Plutus.Application.Queries.Symbols.GetSymbolTrades;
 
 public sealed record GetSymbolTradeBucketsResponse(
     decimal Price,
