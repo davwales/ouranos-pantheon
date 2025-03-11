@@ -21,7 +21,6 @@ export default function SymbolDetail() {
     const [{ data }, reexecuteQuery] = useQuery({
         query: GET_SYMBOL_DETAILS,
         variables: {
-            marketId: marketId,
             symbolId: symbolId,
             seconds: timeFrameSeconds > 0 ? timeFrameSeconds : undefined
         }
@@ -41,39 +40,58 @@ export default function SymbolDetail() {
         "Code": <Typography>{data?.symbol.code}</Typography>,
         "Subcode": <Typography>{data?.symbol.subcode}</Typography>,
         "Total Spent": <PrettyNumber number={data?.symbolTrades.totalSpent} />,
-        "Average Price": <PrettyNumber number={data?.symbolTrades.averagePrice} />,
         "Minimum Price": <PrettyNumber number={data?.symbolTrades.minPrice} />,
+        "Average Price": <PrettyNumber number={data?.symbolTrades.averagePrice} />,
         "Maximum Price": <PrettyNumber number={data?.symbolTrades.maxPrice} />,
-        //"Total Volume": <PrettyNumber number={data?.symbolTrades.} />,
-        "Transactions": <PrettyNumber number={data?.symbolTrades.numTransactions || 0} decimals={0} />,
-        "Margin": <PrettyNumber number={data?.symbolTrades.margin} />,
-        "Gain": <PrettyNumber number={data?.symbolTrades.totalGain} />,
+        "Volume": <PrettyNumber number={data?.symbolTrades.volume} />,
+        "# Transactions": <PrettyNumber number={data?.symbolTrades.numTransactions || 0} decimals={0} />,
     };
 
     return (
-        <>
-            <Box styling={{ width: "100%", m: "auto" }}>
-                <Button variant="outlined" onClick={handleBackClicked}>Back</Button>
-                <TimeFrameSelection onChange={handleTimeFrameChange} seconds={timeFrameSeconds} styling={{ float: "right" }} />
+        <Box styling={{ width: '100%', p: 'medium' }}>
+            <Box styling={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                mb: 'large'
+            }}>
+                <Typography variant='h3'>{data?.symbol.name}</Typography>
+
+                <Box styling={{ display: 'flex', gap: 'medium' }}>
+                    <Button variant="outlined" onClick={handleBackClicked}>Back</Button>
+                    <TimeFrameSelection onChange={handleTimeFrameChange} seconds={timeFrameSeconds} />
+                </Box>
             </Box>
-            <Grid container spacing={2} styling={{ m: "auto" }}>
-                <Grid container spacing={2} styling={{ maxWidth: "100rem", m: "auto" }}>
-                    <Grid size={12} styling={{ textAlign: "center" }}>
-                        <Typography variant="h4">{data?.symbol.name}</Typography>
-                    </Grid>
-                    {Object.entries(fieldMapping).map(([fieldKey, fieldValue]) => (
-                        <Grid key={fieldKey} size={{ sm: 12, md: 4 }} styling={{ textAlign: "center" }}>
-                            <Typography variant="h6">{fieldKey}</Typography>
-                            {fieldValue}
-                        </Grid>
-                    ))}
+
+            <Grid container spacing={3}>
+                <Grid size={{ xs: 12, md: 4 }}>
+                    <Box styling={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 'large'
+                    }}>
+                        {Object.entries(fieldMapping).map(([fieldKey, fieldValue]) => (
+                            <Box key={fieldKey} styling={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                width: '100%'
+                            }}>
+                                <Typography variant="h6">{fieldKey}</Typography>
+                                {fieldValue}
+                            </Box>
+                        ))}
+                    </Box>
+                </Grid>
+
+                <Grid size={{ xs: 12, md: 8 }}>
+                    {data?.symbolTrades?.trades.length && (
+                        <Box styling={{ height: '100%', minHeight: '400px' }}>
+                            <DetailChart trades={data.symbolTrades.trades} />
+                        </Box>
+                    )}
                 </Grid>
             </Grid>
-            {data?.symbolTrades?.trades.length &&
-                <Grid size={12} styling={{ textAlign: "center" }}>
-                    <DetailChart trades={data.symbolTrades.trades} />
-                </Grid>
-            }
-        </>
+        </Box>
     );
 }

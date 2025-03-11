@@ -5,10 +5,7 @@ public sealed record GetSymbolTradesResponse(
     decimal MaxPrice,
     decimal AveragePrice,
     decimal TotalSpent,
-    decimal Margin,
-    decimal TotalGain,
-    decimal AverageGain,
+    decimal Volume,
     int NumTransactions,
-    decimal Tax,
     List<GetSymbolTradeBucketsResponse> Trades
 );

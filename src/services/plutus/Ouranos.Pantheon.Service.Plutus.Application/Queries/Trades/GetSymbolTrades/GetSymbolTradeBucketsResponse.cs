@@ -6,7 +6,6 @@ public sealed record GetSymbolTradeBucketsResponse(
     decimal TotalSpent,
     decimal MinPrice,
     decimal MaxPrice,
-    decimal Margin,
     int NumTransactions,
     DateTimeOffset Date
 );

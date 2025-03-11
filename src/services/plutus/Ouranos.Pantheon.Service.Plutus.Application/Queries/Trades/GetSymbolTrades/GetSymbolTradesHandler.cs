@@ -7,8 +7,7 @@ using Ouranos.Pantheon.Service.Plutus.Domain.Trades;
 
 namespace Ouranos.Pantheon.Service.Plutus.Application.Queries.Trades.GetSymbolTrades;
 
-public sealed class GetSymbolTradesHandler :
-    QueryHandler<GetSymbolTradesInput, GetSymbolTradesResponse>
+public sealed class GetSymbolTradesHandler : QueryHandler<GetSymbolTradesInput, GetSymbolTradesResponse>
 {
     private readonly IBucketTrades _bucketTrades;
     private readonly ILogger<GetSymbolTradesHandler> _logger;
@@ -50,65 +49,53 @@ public sealed class GetSymbolTradesHandler :
 
         var symbolTradesQuery = _bucketTrades
             .GetBucketedTradesQuery(tradesQuery, query.NumBuckets, cancellationToken)
-            .Select(x => new
-            {
-                x.SymbolId,
-                x.Date,
-                x.TotalSpent,
-                x.Volume,
-                x.MinPrice,
-                x.MaxPrice,
-                x.NumTransactions,
-                Price = x.TotalSpent / x.Volume,
-                Margin = x.MaxPrice - x.MinPrice
-            })
+            .Select(
+                x => new
+                {
+                    x.SymbolId,
+                    x.Date,
+                    x.TotalSpent,
+                    x.Volume,
+                    x.MinPrice,
+                    x.MaxPrice,
+                    x.NumTransactions,
+                    Price = x.TotalSpent / x.Volume
+                }
+            )
             .GroupBy(x => x.SymbolId)
-            .Select(g => new
-            {
-                g.Last().SymbolId,
-                TotalPrice = g.Sum(x => x.Price),
-                MinPrice = g.Min(x => x.MinPrice),
-                MaxPrice = g.Max(x => x.MaxPrice),
-                TotalSpent = g.Sum(x => x.TotalSpent),
-                TotalVolume = g.Sum(x => x.Volume),
-                NumTransactions = g.Sum(x => x.NumTransactions),
-                Trades = g.ToList()
-            })
-            // Taxes
-            .Select(x => new
-            {
-                x.SymbolId,
-                x.TotalPrice,
-                x.MinPrice,
-                x.MaxPrice,
-                x.TotalSpent,
-                x.TotalVolume,
-                x.NumTransactions,
-                x.Trades,
-                Margin = x.MaxPrice - x.MinPrice, // add  tax
-                AveragePrice = x.TotalPrice / x.TotalVolume
-            })
-            .Select(x => new GetSymbolTradesResponse(
-                x.MinPrice,
-                x.MaxPrice,
-                x.AveragePrice,
-                x.TotalSpent,
-                x.Margin,
-                x.Margin * x.TotalVolume,
-                x.AveragePrice * x.TotalVolume,
-                x.NumTransactions,
-                0m, //tax
-                x.Trades.Select(t => new GetSymbolTradeBucketsResponse(
-                    t.Price,
-                    t.Volume,
-                    t.TotalSpent,
-                    t.MinPrice,
-                    t.MaxPrice,
-                    t.Margin,
-                    t.NumTransactions,
-                    t.Date
-                )).ToList()
-            ));
+            .Select(
+                g => new
+                {
+                    g.Last().SymbolId,
+                    MinPrice = g.Min(x => x.MinPrice),
+                    MaxPrice = g.Max(x => x.MaxPrice),
+                    TotalSpent = g.Sum(x => x.TotalSpent),
+                    Volume = g.Sum(x => x.Volume),
+                    NumTransactions = g.Sum(x => x.NumTransactions),
+                    Trades = g.ToList()
+                }
+            )
+            .Select(
+                x => new GetSymbolTradesResponse(
+                    x.MinPrice,
+                    x.MaxPrice,
+                    x.TotalSpent / x.Volume,
+                    x.TotalSpent,
+                    x.Volume,
+                    x.NumTransactions,
+                    x.Trades.Select(
+                        t => new GetSymbolTradeBucketsResponse(
+                            t.Price,
+                            t.Volume,
+                            t.TotalSpent,
+                            t.MinPrice,
+                            t.MaxPrice,
+                            t.NumTransactions,
+                            t.Date
+                        )
+                    ).ToList()
+                )
+            );
 
         var symbolTrades = await _queryExecutor.FirstOrDefault(
             symbolTradesQuery,
@@ -121,10 +108,7 @@ public sealed class GetSymbolTradesHandler :
             0m,
             0m,
             0m,
-            0m,
-            0m,
             0,
-            0m,
             []
         );
 

@@ -12,7 +12,7 @@ public sealed class GetTrades : IGetTrades
     private readonly ILogger<GetTrades> _logger;
     private readonly TimeSpan _refreshInterval;
     private readonly IWikiClient _wikiClient;
-    private DateTimeOffset _lastRefresh = DateTimeOffset.UtcNow;
+    private DateTimeOffset? _lastRefresh;
 
     public GetTrades(
         ILogger<GetTrades> logger,
@@ -34,6 +34,14 @@ public sealed class GetTrades : IGetTrades
     {
         _logger.LogTrace("Attempting to get trades from the osrs wiki.");
         cancellationToken.ThrowIfCancellationRequested();
+
+        if (_lastRefresh is null)
+        {
+            var initialPrices = await _wikiClient.GetPrices(cancellationToken);
+            var initialTimestamp = ParseTimestamp(initialPrices.Timestamp);
+            _lastRefresh = initialTimestamp;
+            return [];
+        }
 
         var timeSinceRefresh = DateTimeOffset.UtcNow - _lastRefresh;
         if (timeSinceRefresh < _refreshInterval)

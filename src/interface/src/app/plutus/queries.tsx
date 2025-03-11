@@ -42,7 +42,7 @@ export const GET_MARKET_TRADES = graphql(`
 `);
 
 export const GET_SYMBOL_DETAILS = graphql(`
-    query GetSymbolDetails($marketId: String!, $symbolId: String!, $seconds: Float) {
+    query GetSymbolDetails($symbolId: String!, $seconds: Float) {
         symbol(symbolId: $symbolId) {
             code
             createdAt
@@ -52,19 +52,15 @@ export const GET_SYMBOL_DETAILS = graphql(`
             subcode
             updatedAt
         }
-        symbolTrades(input: { marketId: $marketId, symbolId: $symbolId, seconds: $seconds }) {
-            averageGain
-            averagePrice
-            margin
-            maxPrice
-            minPrice
-            numTransactions
-            tax
-            totalGain
+        symbolTrades(input: { symbolId: $symbolId, seconds: $seconds }) {
             totalSpent
+            averagePrice
+            minPrice
+            maxPrice
+            volume
+            numTransactions
             trades {
                 date
-                margin
                 maxPrice
                 minPrice
                 numTransactions
