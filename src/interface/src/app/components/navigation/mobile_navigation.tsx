@@ -15,7 +15,8 @@ import React, { useState } from 'react';
 
 export default function MobileNavigation() {
     const [drawerOpen, setDrawerOpen] = useState(false);
-    const [hermesOpen, setHermesOpen] = useState(false);
+    const [isPlutusOpen, setPlutusOpen] = useState(false);
+    const [isHermesOpen, setHermesOpen] = useState(false);
 
     const toggleDrawer =
         (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
@@ -30,8 +31,68 @@ export default function MobileNavigation() {
         };
 
     const handleHermesClick = () => {
-        setHermesOpen(!hermesOpen);
+        setHermesOpen(!isHermesOpen);
     };
+
+    const singleItem = (label: string, href: string) => (
+        <Link href={href} passHref legacyBehavior>
+            <ListItemButton component="a" onClick={toggleDrawer(false)}>
+                <ListItemText primary={label} />
+            </ListItemButton>
+        </Link>
+    );
+
+    const multiItem = (
+        label: string,
+        setOpen: (isOpen: boolean) => void,
+        isOpen: boolean,
+        options: {
+            label: string;
+            href: string;
+        }[]
+    ) => (
+        <>
+            <ListItemButton onClick={() => setOpen(!isOpen)}>
+                <ListItemText primary={label} />
+                {isOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            </ListItemButton>
+            <Collapse in={isOpen}>
+                <List disablePadding>
+                    {options.map(o => (
+                        <Link href={o.href} passHref legacyBehavior>
+                            <ListItemButton
+                                component="a"
+                                onClick={toggleDrawer(false)}
+                                styling={{ pl: 'large' }}
+                            >
+                                <ListItemText primary={o.label} />
+                            </ListItemButton>
+                        </Link>
+                    ))}
+                </List>
+            </Collapse>
+        </>
+    );
+
+    const homeItem = singleItem("Home", "/");
+
+    const plutusItem = multiItem("Plutus", setPlutusOpen, isPlutusOpen, [
+        {
+            label: "Explorer",
+            href: "/plutus/explorer"
+        }
+    ]);
+
+    const hermesItem = multiItem("Hermes", setHermesOpen, isHermesOpen, [
+        {
+            label: "Create Conversation",
+            href: "/hermes/conversation"
+        },
+        {
+            label: "Manage Characters",
+            href: "/hermes/characters"
+        }
+    ]);
 
     return (
         <>
@@ -50,42 +111,9 @@ export default function MobileNavigation() {
                     onKeyDown={toggleDrawer(false)}
                 >
                     <List component="nav">
-                        <Link href="/" passHref legacyBehavior>
-                            <ListItemButton component="a" onClick={toggleDrawer(false)}>
-                                <ListItemText primary="Home" />
-                            </ListItemButton>
-                        </Link>
-                        <Link href="/plutus" passHref legacyBehavior>
-                            <ListItemButton component="a" onClick={toggleDrawer(false)}>
-                                <ListItemText primary="Plutus" />
-                            </ListItemButton>
-                        </Link>
-                        <ListItemButton onClick={handleHermesClick}>
-                            <ListItemText primary="Hermes" />
-                            {hermesOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                        </ListItemButton>
-                        <Collapse in={hermesOpen}>
-                            <List disablePadding>
-                                <Link href="/hermes/conversation" passHref legacyBehavior>
-                                    <ListItemButton
-                                        component="a"
-                                        onClick={toggleDrawer(false)}
-                                        styling={{ pl: 'large' }}
-                                    >
-                                        <ListItemText primary="Create Conversation" />
-                                    </ListItemButton>
-                                </Link>
-                                <Link href="/hermes/characters" passHref legacyBehavior>
-                                    <ListItemButton
-                                        component="a"
-                                        onClick={toggleDrawer(false)}
-                                        styling={{ pl: 'large' }}
-                                    >
-                                        <ListItemText primary="Manage Characters" />
-                                    </ListItemButton>
-                                </Link>
-                            </List>
-                        </Collapse>
+                        {homeItem}
+                        {plutusItem}
+                        {hermesItem}
                     </List>
                 </Box>
             </Drawer>

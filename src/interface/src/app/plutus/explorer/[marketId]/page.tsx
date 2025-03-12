@@ -28,7 +28,7 @@ export default function MarketDetail() {
     });
 
     const handleBackClicked = () => {
-        router.push("/plutus");
+        router.push("/plutus/explorer");
     };
 
     const handleTimeFrameChange = (seconds: number) => {
@@ -36,7 +36,7 @@ export default function MarketDetail() {
     };
 
     const handleRowClick = (row: GetMarketTradesResponse) => {
-        router.push(`/plutus/${marketId}/${row.symbolId}`);
+        router.push(`/plutus/explorer/${marketId}/${row.symbolId}`);
     };
 
     const handleGridModelChanged = (model: GridModel) => {

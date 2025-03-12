@@ -7,10 +7,10 @@ import Grid from "@/app/components/core/layout/grid";
 import { useMobile } from "@/app/components/core/utils/breakpoints";
 import { PrettyNumber } from "@/app/components/utils/pretty_number";
 import useInterval from "@/app/components/utils/use_interval";
-import DetailChart from "@/app/plutus/[marketId]/[symbolId]/components/detail_chart";
-import PercentChange from "@/app/plutus/[marketId]/[symbolId]/components/percent_change";
 import TimeFrameSelection from "@/app/plutus/components/time_frame_selection";
 import { PlutusState, usePlutusStore } from "@/app/plutus/constants/plutus_store";
+import DetailChart from "@/app/plutus/explorer/[marketId]/[symbolId]/components/detail_chart";
+import PercentChange from "@/app/plutus/explorer/[marketId]/[symbolId]/components/percent_change";
 import { GET_SYMBOL_DETAILS } from "@/app/plutus/queries";
 import { useQuery } from "@urql/next";
 import { useParams, useRouter } from "next/navigation";
@@ -36,7 +36,7 @@ export default function SymbolDetail() {
     };
 
     const handleBackClicked = () => {
-        router.push(`/plutus/${marketId}`);
+        router.push(`/plutus/explorer/${marketId}`);
     };
 
     const fieldMapping = {

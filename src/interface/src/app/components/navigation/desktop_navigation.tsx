@@ -6,54 +6,78 @@ import Box from '@/app/components/core/layout/box';
 import Menu from '@/app/components/core/navigation/menu';
 import MenuItem from '@/app/components/core/navigation/menu_item';
 import Link from 'next/link';
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 export default function DesktopNavigation() {
-    const [anchorEl, setAnchorEl] = useState<HTMLElement | undefined>();
+    const [hermesAnchor, setHermesAnchor] = useState<HTMLElement | undefined>();
+    const [plutusAnchor, setPlutusAnchor] = useState<HTMLElement | undefined>();
 
-    const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
-        setAnchorEl(event.currentTarget);
-    };
+    const singleItem = (label: string, href: string) => (
+        <Link href={href} passHref legacyBehavior>
+            <Button color="inherit" component="a">
+                {label}
+            </Button>
+        </Link>
+    );
 
-    const handleMenuClose = () => {
-        setAnchorEl(undefined);
-    };
-
-    return (
-        <Box styling={{ display: "flex", alignItems: "center" }}>
-            <Link href="/" passHref legacyBehavior>
-                <Button color="inherit" component="a">
-                    Home
-                </Button>
-            </Link>
+    const multiItem = (
+        label: string,
+        anchorEl: HTMLElement | undefined,
+        setAnchorEl: (x: HTMLElement | undefined) => void,
+        options: {
+            label: string;
+            href: string;
+        }[]
+    ) => (
+        <>
             <Button
                 color="inherit"
-                onClick={handleMenuOpen}
+                onClick={(e) => setAnchorEl(e.currentTarget)}
                 endIcon={<ExpandMoreIcon />}
             >
-                Hermes
+                {label}
             </Button>
             <Menu
                 anchorEl={anchorEl}
                 open={Boolean(anchorEl)}
-                onClose={handleMenuClose}
+                onClose={() => setAnchorEl(undefined)}
             >
-                <Link href="/hermes/conversation" passHref legacyBehavior>
-                    <MenuItem onClick={handleMenuClose} component="a">
-                        Create Conversation
-                    </MenuItem>
-                </Link>
-                <Link href="/hermes/characters" passHref legacyBehavior>
-                    <MenuItem onClick={handleMenuClose} component="a">
-                        Manage Characters
-                    </MenuItem>
-                </Link>
+                {options.map(o => (
+                    <Link href={o.href} passHref legacyBehavior>
+                        <MenuItem onClick={() => setAnchorEl(undefined)} component="a">
+                            {o.label}
+                        </MenuItem>
+                    </Link>
+                ))}
             </Menu>
-            <Link href="/plutus" passHref legacyBehavior>
-                <Button color="inherit" component="a">
-                    Plutus
-                </Button>
-            </Link>
+        </>
+    );
+
+    const homeItem = singleItem("Home", "/");
+
+    const plutusItem = multiItem("Plutus", plutusAnchor, setPlutusAnchor, [
+        {
+            label: "Explorer",
+            href: "/plutus/explorer"
+        }
+    ]);
+
+    const hermesItem = multiItem("Hermes", hermesAnchor, setHermesAnchor, [
+        {
+            label: "Create Conversation",
+            href: "/hermes/conversation"
+        },
+        {
+            label: "Manage Characters",
+            href: "/hermes/characters"
+        }
+    ]);
+
+    return (
+        <Box styling={{ display: "flex", alignItems: "center" }}>
+            {homeItem}
+            {hermesItem}
+            {plutusItem}
         </Box>
     );
 };
