@@ -44,7 +44,7 @@ export default function PercentChange(props: PercentChangeProps) {
     const tooltip = (
         <>
             Previous: {props.previous ? <PrettyNumber number={props.previous} /> : "-"}
-            Current: {props.current ? <PrettyNumber number={props.current} /> : "-"}
+            {props.label || "Current"}: {props.current ? <PrettyNumber number={props.current} /> : "-"}
         </>
     );
 

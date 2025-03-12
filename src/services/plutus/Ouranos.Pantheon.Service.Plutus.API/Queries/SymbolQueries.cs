@@ -3,6 +3,7 @@ using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Core.Application.Queries.Common.GetAllEntities;
 using Ouranos.Pantheon.Core.Application.Queries.Common.GetEntity;
 using Ouranos.Pantheon.Core.Domain.Common;
+using Ouranos.Pantheon.Service.Plutus.Application.Queries.Symbols.GetDailySymbolSummary;
 using Ouranos.Pantheon.Service.Plutus.Application.Queries.Symbols.GetSymbolTrades;
 using Ouranos.Pantheon.Service.Plutus.Domain.Symbols;
 
@@ -65,6 +66,26 @@ public sealed class SymbolQueries
     public async Task<GetSymbolTradesResponse> GetSymbolTrades(
         [Service] IDispatcher dispatcher,
         GetSymbolTradesInput input,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dispatcher.Send(input, cancellationToken);
+    }
+
+    /// <summary>
+    ///     Gets the daily summary of trades for a symbol.
+    /// </summary>
+    /// <param name="dispatcher">
+    ///     <see cref="IDispatcher" />
+    /// </param>
+    /// <param name="input">Inputs required to retrieve the summary.</param>
+    /// <param name="cancellationToken">
+    ///     <see cref="CancellationToken" />
+    /// </param>
+    /// <returns>Summary of trades for the given symbol for today.</returns>
+    public async Task<GetDailySymbolSummaryResponse> GetDailySymbolSummary(
+        [Service] IDispatcher dispatcher,
+        GetDailySymbolSummaryInput input,
         CancellationToken cancellationToken = default
     )
     {

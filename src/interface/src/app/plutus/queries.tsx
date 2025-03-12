@@ -89,5 +89,11 @@ export const GET_SYMBOL_DETAILS = graphql(`
                 }
             }
         }
+        dailySymbolSummary(input: { symbolId: $symbolId }) {
+            averagePrice
+            maxPrice
+            minPrice
+            volume
+        }
     }
 `);

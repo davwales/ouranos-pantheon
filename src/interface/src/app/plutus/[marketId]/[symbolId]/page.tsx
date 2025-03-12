@@ -4,6 +4,7 @@ import Typography from "@/app/components/core/data-display/typography";
 import Button from "@/app/components/core/inputs/button";
 import Box from "@/app/components/core/layout/box";
 import Grid from "@/app/components/core/layout/grid";
+import { useMobile } from "@/app/components/core/utils/breakpoints";
 import { PrettyNumber } from "@/app/components/utils/pretty_number";
 import useInterval from "@/app/components/utils/use_interval";
 import DetailChart from "@/app/plutus/[marketId]/[symbolId]/components/detail_chart";
@@ -18,6 +19,7 @@ export default function SymbolDetail() {
     const router = useRouter();
     const { marketId, symbolId } = useParams<{ marketId: string, symbolId: string }>();
     const [timeFrameSeconds, setTimeFrameSeconds] = usePlutusStore((state: PlutusState) => [state.timeFrameSeconds, state.setTimeFrameSeconds]);
+    const isMobile = useMobile();
 
     const [{ data }, reexecuteQuery] = useQuery({
         query: GET_SYMBOL_DETAILS,
@@ -48,38 +50,58 @@ export default function SymbolDetail() {
         "# Transactions": <PrettyNumber number={data?.symbolTrades.numTransactions || 0} decimals={0} />,
     };
 
+    const header = <Typography variant='h3'>{data?.symbol.name}</Typography>;
+
+    const controls = (
+        <Box styling={{ float: isMobile ? 'initial' : 'right', mb: isMobile ? 'large' : 'none' }}>
+            <Button
+                variant="outlined"
+                onClick={handleBackClicked}
+                styling={{ mr: 'medium' }}
+            >
+                Back
+            </Button>
+            <TimeFrameSelection
+                onChange={handleTimeFrameChange}
+                seconds={timeFrameSeconds}
+                styling={{ float: 'right' }}
+            />
+        </Box>
+    );
+
+    const priceChange = (label: string, current?: number) => data?.allForecasts?.nodes?.[0] ? (
+        <Grid size={{ xs: 3, sm: 2, md: 2, lg: 1 }} styling={{ mx: 'small' }}>
+            <PercentChange
+                label={label}
+                current={current}
+                previous={data.allForecasts.nodes[0].latest.averagePrice}
+            />
+        </Grid>
+    ) : null;
+
+    const latestPriceChange = priceChange("Latest", data?.latestTrade?.nodes?.[0]?.price);
+    const dailyPriceChange = priceChange("Today", data?.dailySymbolSummary.averagePrice);
+    const predictedPriceChange = priceChange("Predicted", data?.allForecasts?.nodes?.[0]?.predictions[0]?.averagePrice);
+
     return (
         <Box styling={{ width: '100%', p: 'medium' }}>
-            <Box styling={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                mb: 'large'
-            }}>
-                <Box styling={{ display: 'flex', gap: 'medium', alignItems: 'center' }}>
-                    <Typography variant='h3'>{data?.symbol.name}</Typography>
+            <Grid container spacing={1} styling={{ mb: 'small', alignItems: 'center' }}>
+                <Grid size={{ xs: 12, sm: 12, md: 8 }}>
+                    {isMobile ? controls : header}
+                </Grid>
+                <Grid size={{ xs: 12, sm: 12, md: 4 }}>
+                    {isMobile ? header : controls}
+                </Grid>
+            </Grid>
 
-                    <PercentChange
-                        label="Current"
-                        current={data?.latestTrade?.nodes?.[0]?.price}
-                        previous={data?.allForecasts?.nodes?.[0].latest?.averagePrice}
-                    />
-
-                    <PercentChange
-                        label="Predicted"
-                        current={data?.allForecasts?.nodes?.[0]?.predictions?.[0]?.averagePrice}
-                        previous={data?.allForecasts?.nodes?.[0].latest?.averagePrice}
-                    />
-                </Box>
-
-                <Box styling={{ display: 'flex', gap: 'medium' }}>
-                    <Button variant="outlined" onClick={handleBackClicked}>Back</Button>
-                    <TimeFrameSelection onChange={handleTimeFrameChange} seconds={timeFrameSeconds} />
-                </Box>
-            </Box>
+            <Grid container styling={{ mb: 'medium' }}>
+                {latestPriceChange}
+                {dailyPriceChange}
+                {predictedPriceChange}
+            </Grid>
 
             <Grid container spacing={3}>
-                <Grid size={{ xs: 12, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 12, md: 4 }}>
                     <Box styling={{
                         display: 'flex',
                         flexDirection: 'column',
@@ -99,7 +121,7 @@ export default function SymbolDetail() {
                     </Box>
                 </Grid>
 
-                <Grid size={{ xs: 12, md: 8 }}>
+                <Grid size={{ xs: 12, sm: 12, md: 8 }}>
                     {data?.symbolTrades?.trades.length && (
                         <Box styling={{ height: '100%', minHeight: '400px' }}>
                             <DetailChart trades={data.symbolTrades.trades} />
@@ -107,6 +129,6 @@ export default function SymbolDetail() {
                     )}
                 </Grid>
             </Grid>
-        </Box>
+        </Box >
     );
 }

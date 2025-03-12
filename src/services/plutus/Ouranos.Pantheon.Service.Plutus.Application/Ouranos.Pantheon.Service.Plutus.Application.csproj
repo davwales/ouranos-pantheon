@@ -16,6 +16,5 @@
 
     <ItemGroup>
         <Folder Include="Queries\Markets\"/>
-        <Folder Include="Queries\Symbols\"/>
     </ItemGroup>
 </Project>
