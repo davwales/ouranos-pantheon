@@ -13,9 +13,9 @@ export interface GridColDef {
 }
 
 export interface GridModel {
-    sortModel: GridSortModel,
-    filterModel: GridFilterModel,
-    paginationModel: GridPaginationModel
+    sortModel?: GridSortModel,
+    filterModel?: GridFilterModel,
+    paginationModel?: GridPaginationModel
 };
 
 export function getFieldType(
@@ -60,7 +60,7 @@ export function DataGrid<T>(props: DataGridProps<T>) {
     };
 
     const handlePaginationModelChange = (model: GridPaginationModel) => {
-        if (gridModel.paginationModel.pageSize != model.pageSize) {
+        if (gridModel.paginationModel?.pageSize != model.pageSize) {
             model.page = 0;
         }
 
@@ -90,6 +90,8 @@ export function DataGrid<T>(props: DataGridProps<T>) {
             slots={{
                 ...(props.toolbar && { toolbar: GridToolbar })
             }}
+            disableColumnFilter={props.initialModel?.filterModel == undefined}
+            disableColumnSorting={props.initialModel?.sortModel == undefined}
             rowSelection={false}
             autoHeight
             sx={{

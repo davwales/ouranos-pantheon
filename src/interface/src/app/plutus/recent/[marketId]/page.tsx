@@ -24,9 +24,7 @@ export default function RecentMarketTrades() {
     const router = useRouter();
     const { marketId } = useParams<{ marketId: string }>();
     const [gridModel, setGridModel] = useState<GridModel>({
-        sortModel: [{ field: "totalGain", sort: "desc" }],
-        paginationModel: { page: 0, pageSize: 10 },
-        filterModel: { items: [] }
+        paginationModel: { page: 0, pageSize: 10 }
     });
 
     const handleBackClicked = () => {
@@ -42,7 +40,7 @@ export default function RecentMarketTrades() {
             ...gridModel,
             paginationModel: {
                 page: 0,
-                pageSize: model.paginationModel.pageSize
+                pageSize: model.paginationModel?.pageSize || 10
             }
         });
     };
@@ -51,7 +49,7 @@ export default function RecentMarketTrades() {
         query: GET_RECENT_MARKET_TRADES,
         variables: {
             marketId: marketId,
-            first: gridModel.paginationModel.pageSize,
+            first: gridModel.paginationModel?.pageSize || 10,
         }
     });
 
@@ -125,7 +123,7 @@ export default function RecentMarketTrades() {
                 rows={transformedData}
                 columns={columns}
                 getRowId={(row: any) => row.id}
-                rowCount={gridModel.paginationModel.pageSize}
+                rowCount={gridModel.paginationModel?.pageSize || 10}
                 loading={fetching}
                 initialModel={gridModel}
                 onGridModelChange={handleGridModelChanged}
