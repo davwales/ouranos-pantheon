@@ -8,8 +8,8 @@ export interface GridColDef {
     headerName?: string;
     type?: 'string' | 'number';
     flex?: number;
-    valueFormatter?: (x: any) => any
-    valueGetter?: (x: any) => string
+    valueFormatter?: (x: any) => any;
+    valueGetter?: (x: any) => string;
 }
 
 export interface GridModel {
@@ -27,16 +27,17 @@ export function getFieldType(
 }
 
 interface DataGridProps<T> {
+    initialModel?: GridModel;
     columns: GridColDef[];
-    getRowId: (x: any) => any;
     rows: any;
     rowCount: number;
     loading: boolean;
-    onRowClick?: (row: T) => void;
-    initialModel?: GridModel;
     pageSizeOptions: number[];
-    onGridModelChange?: (model: GridModel) => void,
-    styling?: StyleProps
+    toolbar?: boolean;
+    styling?: StyleProps;
+    getRowId: (x: any) => any;
+    onRowClick?: (row: T) => void;
+    onGridModelChange?: (model: GridModel) => void;
 }
 
 export function DataGrid<T>(props: DataGridProps<T>) {
@@ -86,7 +87,9 @@ export function DataGrid<T>(props: DataGridProps<T>) {
             filterModel={gridModel.filterModel}
             onFilterModelChange={handleFilterModelChange}
             onRowClick={(params) => props.onRowClick?.(params.row)}
-            slots={{ toolbar: GridToolbar }}
+            slots={{
+                ...(props.toolbar && { toolbar: GridToolbar })
+            }}
             rowSelection={false}
             autoHeight
             sx={{

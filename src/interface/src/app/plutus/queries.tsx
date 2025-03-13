@@ -41,6 +41,27 @@ export const GET_MARKET_TRADES = graphql(`
     }
 `);
 
+export const GET_RECENT_MARKET_TRADES = graphql(`
+    query GetRecentMarketTrades($marketId: String!, $first: Int!) {
+        allTrades(
+            first: $first
+            where: { metadata: { marketId: { eq: $marketId } } }
+            order: { createdAt: DESC }
+        ) {
+            nodes {
+                createdAt
+                metadata {
+                    symbolId
+                    symbolName
+                    symbolSubcode
+                }
+                price
+                volume
+            }
+        }
+    }
+`)
+
 export const GET_SYMBOL_DETAILS = graphql(`
     query GetSymbolDetails($symbolId: String!, $seconds: Float) {
         symbol(symbolId: $symbolId) {

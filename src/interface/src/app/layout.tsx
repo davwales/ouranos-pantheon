@@ -3,7 +3,7 @@ import AppRouterCacheProvider from '@/app/components/core/utils/app_router_cache
 import CssBaseline from '@/app/components/core/utils/css_baseline';
 import ThemeProvider from '@/app/components/core/utils/theme_provider';
 import GlobalAlert from '@/app/components/feedback/global_alert';
-import ResponsiveNavigationBar from '@/app/components/navigation/navigation_bars/responsive_navigation_bar';
+import NavigationBar from '@/app/components/navigation/navigation_bar';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -71,7 +71,7 @@ export default function RootLayout({ children }: React.PropsWithChildren) {
               display: 'flex',
               flexDirection: 'column'
             }}>
-              <ResponsiveNavigationBar items={navigationItems} />
+              <NavigationBar items={navigationItems} />
               <Box styling={{
                 flex: 1,
                 display: 'flex',

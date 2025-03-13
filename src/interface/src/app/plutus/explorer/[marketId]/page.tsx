@@ -36,7 +36,7 @@ export default function MarketDetail() {
     };
 
     const handleRowClick = (row: GetMarketTradesResponse) => {
-        router.push(`/plutus/explorer/${marketId}/${row.symbolId}`);
+        router.push(`/plutus/explorer/${marketId}/${row.symbolId}?referrer=explorer`);
     };
 
     const handleGridModelChanged = (model: GridModel) => {
@@ -113,6 +113,7 @@ export default function MarketDetail() {
                 pageSizeOptions={[5, 10, 15, 20, 50]}
                 onRowClick={handleRowClick}
                 styling={{ mt: 'medium' }}
+                toolbar
             />
         </>
     );

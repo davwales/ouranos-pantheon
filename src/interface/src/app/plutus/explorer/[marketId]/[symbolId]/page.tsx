@@ -13,11 +13,12 @@ import DetailChart from "@/app/plutus/explorer/[marketId]/[symbolId]/components/
 import PercentChange from "@/app/plutus/explorer/[marketId]/[symbolId]/components/percent_change";
 import { GET_SYMBOL_DETAILS } from "@/app/plutus/queries";
 import { useQuery } from "@urql/next";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 export default function SymbolDetail() {
     const router = useRouter();
     const { marketId, symbolId } = useParams<{ marketId: string, symbolId: string }>();
+    const searchParams = useSearchParams();
     const [timeFrameSeconds, setTimeFrameSeconds] = usePlutusStore((state: PlutusState) => [state.timeFrameSeconds, state.setTimeFrameSeconds]);
     const isMobile = useMobile();
 
@@ -36,7 +37,12 @@ export default function SymbolDetail() {
     };
 
     const handleBackClicked = () => {
-        router.push(`/plutus/explorer/${marketId}`);
+        const referrer = searchParams.get("referrer");
+        if (referrer) {
+            router.push(`/plutus/${referrer}/${marketId}`);
+        } else {
+            router.push(`/plutus/explorer/${marketId}`);
+        }
     };
 
     const fieldMapping = {
