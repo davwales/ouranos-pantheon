@@ -118,3 +118,27 @@ export const GET_SYMBOL_DETAILS = graphql(`
         }
     }
 `);
+
+export const GET_RECIPE_TRADES = graphql(`
+    query GetRecipeTrades($input: GetRecipeTradesInput!, $where: GetRecipeTradesResponseFilterInput, $order: [GetRecipeTradesResponseSortInput!], $first: Int, $after: String, $last: Int, $before: String) {
+        recipeTrades(input: $input, where: $where, order: $order, first: $first, after: $after, last: $last, before: $before) {
+            totalCount
+            nodes {
+                averageBuyPrice
+                averageMargin
+                averageSellPrice
+                latestBuyPrice
+                latestMargin
+                latestSellPrice
+                recipeId
+                recipeName
+            }
+            pageInfo {
+                endCursor
+                hasNextPage
+                hasPreviousPage
+                startCursor
+            }
+        }
+    }
+`)

@@ -43,9 +43,13 @@ export default function RootLayout({ children }: React.PropsWithChildren) {
           href: "/plutus/explorer"
         },
         {
+          label: "Recipes",
+          href: "/plutus/recipes"
+        },
+        {
           label: "Recent Trades",
           href: "/plutus/recent"
-        }
+        },
       ]
     }
   ];

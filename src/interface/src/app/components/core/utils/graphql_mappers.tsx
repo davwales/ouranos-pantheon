@@ -4,9 +4,13 @@ import { PageInfo, SortEnumType } from "@/gql/graphql";
 import { GridFilterModel, GridLogicOperator, GridPaginationModel, GridSortModel } from "@mui/x-data-grid";
 
 export function mapFilter(
-    model: GridFilterModel,
+    model: GridFilterModel | undefined,
     columns: GridColDef[]
 ): any {
+    if (!model) {
+        return undefined;
+    }
+
     const filterItems = model.items
         .filter((item) => item.value !== undefined && item.value !== null)
         .map((item) => {
@@ -67,17 +71,31 @@ export function mapOperator(operator: string): string {
     }
 }
 
-export function mapOrder(sortModel: GridSortModel): any {
+export function mapOrder(sortModel: GridSortModel | undefined): any {
+    if (!sortModel) {
+        return undefined;
+    }
+
     return sortModel.map(({ field, sort }) => ({
         [field]: sort?.toUpperCase() as SortEnumType,
     }))
 };
 
 export function mapPagination(
-    paginationModel: GridPaginationModel,
-    previousPaginationModel: GridPaginationModel,
+    paginationModel?: GridPaginationModel,
+    previousPaginationModel?: GridPaginationModel,
     pageInfo?: PageInfo
 ): PaginationInfo {
+    if (!paginationModel) {
+        return {};
+    }
+
+    if (!previousPaginationModel) {
+        return {
+            first: paginationModel.pageSize
+        }
+    }
+
     // Page size has changed, return the first page again
     if (paginationModel.pageSize != previousPaginationModel.pageSize) {
         return {
@@ -101,9 +119,9 @@ export function mapPagination(
 }
 
 export function hasPaginationChanged(
-    paginationModel: GridPaginationModel,
-    previousPaginationModel: GridPaginationModel
+    paginationModel?: GridPaginationModel,
+    previousPaginationModel?: GridPaginationModel
 ): boolean {
-    return paginationModel.page !== previousPaginationModel.page ||
-        paginationModel.pageSize !== previousPaginationModel.pageSize;
+    return paginationModel?.page !== previousPaginationModel?.page ||
+        paginationModel?.pageSize !== previousPaginationModel?.pageSize;
 }

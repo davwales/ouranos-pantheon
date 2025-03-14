@@ -376,4 +376,33 @@ public sealed class RepositoryTests
         // Assert
         actualResult.ShouldBeTrue();
     }
+
+    [Fact]
+    public async Task ReadAll_WhenGivenPredicate_ShouldReturnExpectedValue()
+    {
+        // Arrange
+        var fixture = new Fixture();
+        var predicate = fixture.Create<Expression<Func<TestEntity, bool>>>();
+        var cts = new CancellationTokenSource();
+        var cursor = Substitute.For<IAsyncCursor<TestEntity>>();
+        var expectedEntities = fixture.CreateMany<TestEntity>().ToList();
+        var expectedFilter = Builders<TestEntity>.Filter.Where(predicate);
+
+        cursor.MoveNextAsync(cts.Token).Returns(true, false);
+        cursor.Current.Returns(expectedEntities);
+
+        _mongoCollection
+            .FindAsync(
+                ArgExtensions.IsEquivalent(expectedFilter),
+                Arg.Any<FindOptions<TestEntity>>(),
+                cts.Token
+            )
+            .Returns(cursor);
+
+        // Act
+        var actualEntities = await _repository.ReadAll(predicate, cts.Token);
+
+        // Assert
+        actualEntities.ShouldBe(expectedEntities);
+    }
 }

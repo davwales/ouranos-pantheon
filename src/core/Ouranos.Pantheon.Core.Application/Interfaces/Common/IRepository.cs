@@ -36,6 +36,11 @@ public interface IRepository<T> where T : BaseEntity<Id<T>>
         CancellationToken cancellationToken = default
     );
 
+    Task<List<T>> ReadAll(
+        Expression<Func<T, bool>> predicate,
+        CancellationToken cancellationToken = default
+    );
+
     Task Update(
         T entity,
         CancellationToken cancellationToken = default

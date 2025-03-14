@@ -3,6 +3,7 @@ using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Core.Application.Queries.Common.GetAllEntities;
 using Ouranos.Pantheon.Core.Application.Queries.Common.GetEntity;
 using Ouranos.Pantheon.Core.Domain.Common;
+using Ouranos.Pantheon.Service.Plutus.Application.Queries.Recipes.GetRecipeTrades;
 using Ouranos.Pantheon.Service.Plutus.Domain.Recipes;
 
 namespace Ouranos.Pantheon.Service.Plutus.API.Queries;
@@ -46,5 +47,29 @@ public sealed class RecipeQueries
     )
     {
         return await dispatcher.Send(new GetEntityInput<Recipe>(recipeId), cancellationToken);
+    }
+
+    /// <summary>
+    ///     Gets recipe trade information.
+    /// </summary>
+    /// <param name="dispatcher">
+    ///     <see cref="IDispatcher" />
+    /// </param>
+    /// <param name="input">Input required to filter recipe trades.</param>
+    /// <param name="cancellationToken">
+    ///     <see cref="CancellationToken" />
+    /// </param>
+    /// <returns>List of recipe trade information.</returns>
+    [UsePaging(IncludeTotalCount = true)]
+    [UseFiltering]
+    [UseSorting]
+    public async Task<IQueryable<GetRecipeTradesResponse>> GetRecipeTrades(
+        [Service] IDispatcher dispatcher,
+        GetRecipeTradesInput input,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var wrapper = await dispatcher.Send(input, cancellationToken);
+        return wrapper.Value;
     }
 }

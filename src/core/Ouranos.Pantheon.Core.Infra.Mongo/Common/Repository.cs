@@ -118,10 +118,7 @@ public sealed class Repository<T> : IRepository<T> where T : BaseEntity<Id<T>>
 
         var collection = _mongoRepository.GetCollection();
         var filter = Builders<T>.Filter.Eq(x => x.Id, entity.Id);
-        await collection.ReplaceOneAsync(filter, entity, new ReplaceOptions
-        {
-            IsUpsert = true
-        }, cancellationToken);
+        await collection.ReplaceOneAsync(filter, entity, new ReplaceOptions { IsUpsert = true }, cancellationToken);
 
         _logger.LogDebug("Successfully performed upsert for {type} '{id}'.", typeof(T).Name, entity.Id);
     }
@@ -183,5 +180,21 @@ public sealed class Repository<T> : IRepository<T> where T : BaseEntity<Id<T>>
 
         _logger.LogDebug("Successfully deleted {type} using a predicate in Mongo.", typeof(T).Name);
         return result.DeletedCount;
+    }
+
+    public async Task<List<T>> ReadAll(
+        Expression<Func<T, bool>> predicate,
+        CancellationToken cancellationToken = default
+    )
+    {
+        _logger.LogTrace("Attempting to read all {type} using a predicate in Mongo.", typeof(T).Name);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var collection = _mongoRepository.GetCollection();
+        var filter = Builders<T>.Filter.Where(predicate);
+        var entity = await collection.Find(filter).ToListAsync(cancellationToken) ?? [];
+
+        _logger.LogDebug("Successfully read all {type} using a predicate in Mongo.", typeof(T).Name);
+        return entity;
     }
 }

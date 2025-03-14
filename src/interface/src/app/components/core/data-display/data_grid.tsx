@@ -96,12 +96,14 @@ export function DataGrid<T>(props: DataGridProps<T>) {
             autoHeight
             sx={{
                 ...(props.styling && convertToSx(props.styling)),
-                '.MuiDataGrid-cell:focus': {
-                    outline: 'none'
-                },
-                '& .MuiDataGrid-row:hover': {
-                    cursor: "pointer"
-                }
+                ...(props.onRowClick && {
+                    '.MuiDataGrid-cell:focus': {
+                        outline: 'none'
+                    },
+                    '& .MuiDataGrid-row:hover': {
+                        cursor: "pointer"
+                    }
+                })
             }}
         />
     );

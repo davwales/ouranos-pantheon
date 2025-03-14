@@ -1,57 +1,98 @@
 "use client";
 
-import { DataGrid, GridModel } from "@/app/components/core/data-display/data_grid";
+import { DataGrid, GridColDef, GridModel } from "@/app/components/core/data-display/data_grid";
 import RefreshIcon from "@/app/components/core/icons/refresh_icon";
 import Button from "@/app/components/core/inputs/button";
 import IconButton from "@/app/components/core/inputs/icon_button";
 import Box from "@/app/components/core/layout/box";
 import { hasPaginationChanged, mapFilter, mapOrder, mapPagination } from "@/app/components/core/utils/graphql_mappers";
+import { abbreviateNumber } from "@/app/components/utils/pretty_number";
+import useInterval from "@/app/components/utils/use_interval";
 import PaginationInfo from "@/app/models/pagination_info";
 import TimeFrameSelection from "@/app/plutus/components/time_frame_selection";
-import { plutusColumns } from "@/app/plutus/constants/plutus_columns";
 import { PlutusState, usePlutusStore } from "@/app/plutus/constants/plutus_store";
-import { GET_MARKET_TRADES } from "@/app/plutus/queries";
-import { GetMarketTradesResponse } from "@/gql/graphql";
+import { GET_RECIPE_TRADES } from "@/app/plutus/queries";
+import { GetRecipeTradesResponse } from "@/gql/graphql";
 import { useQuery } from "@urql/next";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
-export default function MarketDetail() {
+export default function RecentMarketTrades() {
     const router = useRouter();
     const { marketId } = useParams<{ marketId: string }>();
     const [timeFrameSeconds, setTimeFrameSeconds] = usePlutusStore((state: PlutusState) => [state.timeFrameSeconds, state.setTimeFrameSeconds]);
     const [paginationInfo, setPaginationInfo] = useState<PaginationInfo>();
     const [gridModel, setGridModel] = useState<GridModel>({
-        sortModel: [{ field: "totalGain", sort: "desc" }],
+        sortModel: [{ field: "averageMargin", sort: "desc" }],
         paginationModel: { page: 0, pageSize: 10 },
         filterModel: { items: [] }
     });
 
     const handleBackClicked = () => {
-        router.push("/plutus/explorer");
-    };
-
-    const handleRowClick = (row: GetMarketTradesResponse) => {
-        router.push(`/plutus/explorer/${marketId}/${row.symbolId}?referrer=explorer`);
+        router.push("/plutus/recipes");
     };
 
     const handleGridModelChanged = (model: GridModel) => {
         if (hasPaginationChanged(model.paginationModel, gridModel.paginationModel)) {
-            const paginationInfo = mapPagination(model.paginationModel, gridModel.paginationModel, data?.marketTrades?.pageInfo);
+            const paginationInfo = mapPagination(model.paginationModel, gridModel.paginationModel, data?.recipeTrades?.pageInfo);
             setPaginationInfo(paginationInfo);
         }
 
         setGridModel(model);
     };
 
+    const columns: GridColDef[] = [
+        {
+            field: "recipeName",
+            headerName: "Name",
+            flex: 1
+        },
+        {
+            field: "latestBuyPrice",
+            headerName: "Latest Buy Price",
+            flex: 1,
+            valueFormatter: x => abbreviateNumber(x),
+        },
+        {
+            field: "latestSellPrice",
+            headerName: "Latest Sell Price",
+            flex: 1,
+            valueFormatter: x => abbreviateNumber(x),
+        },
+        {
+            field: "latestMargin",
+            headerName: "Latest Margin",
+            flex: 1,
+            valueFormatter: x => abbreviateNumber(x),
+        },
+        {
+            field: "averageBuyPrice",
+            headerName: "Average Buy Price",
+            flex: 1,
+            valueFormatter: x => abbreviateNumber(x),
+        },
+        {
+            field: "averageSellPrice",
+            headerName: "Average Sell Price",
+            flex: 1,
+            valueFormatter: x => abbreviateNumber(x),
+        },
+        {
+            field: "averageMargin",
+            headerName: "Average Margin",
+            flex: 1,
+            valueFormatter: x => abbreviateNumber(x),
+        }
+    ]
+
     const [{ data, fetching }, reexecute] = useQuery({
-        query: GET_MARKET_TRADES,
+        query: GET_RECIPE_TRADES,
         variables: {
             input: {
                 marketId: marketId,
                 seconds: timeFrameSeconds > 0 ? timeFrameSeconds : undefined
             },
-            where: mapFilter(gridModel.filterModel, plutusColumns),
+            where: mapFilter(gridModel.filterModel, columns),
             order: mapOrder(gridModel.sortModel),
             after: paginationInfo?.after,
             first: paginationInfo?.first,
@@ -59,6 +100,8 @@ export default function MarketDetail() {
             last: paginationInfo?.last
         }
     });
+
+    useInterval(() => reexecute(), 15000);
 
     return (
         <>
@@ -95,17 +138,15 @@ export default function MarketDetail() {
             </Box>
 
             <DataGrid
-                rows={data?.marketTrades?.nodes}
-                columns={plutusColumns}
-                getRowId={(row: any) => row.symbolId}
-                rowCount={data?.marketTrades?.totalCount || 0}
+                rows={data?.recipeTrades?.nodes}
+                columns={columns}
+                getRowId={(row: GetRecipeTradesResponse) => row.recipeId}
+                rowCount={data?.recipeTrades?.totalCount || 0}
                 loading={fetching}
                 initialModel={gridModel}
                 onGridModelChange={handleGridModelChanged}
                 pageSizeOptions={[5, 10, 15, 20, 50]}
-                onRowClick={handleRowClick}
                 styling={{ mt: 'medium' }}
-                toolbar
             />
         </>
     );
