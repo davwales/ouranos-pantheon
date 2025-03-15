@@ -9,20 +9,29 @@ public sealed class Forecast : BaseEntity<Id<Forecast>>
     public Forecast(
         Id<Forecast> id,
         Id<Symbol> symbolId,
+        string symbolName,
+        string? symbolSubcode,
         ForecastPoint latest,
         IReadOnlyList<ForecastPoint> predictions
     ) : base(id)
     {
         Guard.Against.Null(symbolId);
+        Guard.Against.NullOrEmpty(symbolName);
         Guard.Against.Null(latest);
         Guard.Against.NullOrEmpty(predictions);
 
         SymbolId = symbolId;
+        SymbolName = symbolName;
+        SymbolSubcode = symbolSubcode;
         Latest = latest;
         Predictions = predictions;
     }
 
     public Id<Symbol> SymbolId { get; init; }
+
+    public string SymbolName { get; init; }
+
+    public string? SymbolSubcode { get; init; }
 
     public ForecastPoint Latest { get; init; }
 

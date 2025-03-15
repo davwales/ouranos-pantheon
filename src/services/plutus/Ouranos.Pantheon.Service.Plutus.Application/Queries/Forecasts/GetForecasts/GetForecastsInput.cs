@@ -7,5 +7,6 @@ using Ouranos.Pantheon.Service.Plutus.Domain.Symbols;
 namespace Ouranos.Pantheon.Service.Plutus.Application.Queries.Forecasts.GetForecasts;
 
 public sealed record GetForecastsInput(
-    Dictionary<Id<Symbol>, List<ForecastPoint>> HistoricalData
+    IReadOnlyList<Symbol> Symbols,
+    IReadOnlyDictionary<Id<Symbol>, List<ForecastPoint>> HistoricalData
 ) : IQuery<WrapperResponse<List<Forecast>>>;

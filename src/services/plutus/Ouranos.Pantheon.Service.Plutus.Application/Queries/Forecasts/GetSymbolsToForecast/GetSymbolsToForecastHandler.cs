@@ -10,7 +10,7 @@ using Ouranos.Pantheon.Service.Plutus.Domain.Symbols;
 namespace Ouranos.Pantheon.Service.Plutus.Application.Queries.Forecasts.GetSymbolsToForecast;
 
 public sealed class GetSymbolsToForecastHandler
-    : QueryHandler<GetSymbolsToForecastInput, WrapperResponse<List<Id<Symbol>>>>
+    : QueryHandler<GetSymbolsToForecastInput, WrapperResponse<List<Symbol>>>
 {
     private readonly ILogger<GetSymbolsToForecastHandler> _logger;
     private readonly IRepository<Market> _marketRepository;
@@ -35,7 +35,7 @@ public sealed class GetSymbolsToForecastHandler
         _symbolRepository = symbolRepository;
     }
 
-    public override async Task<WrapperResponse<List<Id<Symbol>>>> Handle(
+    public override async Task<WrapperResponse<List<Symbol>>> Handle(
         GetSymbolsToForecastInput query,
         CancellationToken cancellationToken = default
     )
@@ -44,8 +44,8 @@ public sealed class GetSymbolsToForecastHandler
         cancellationToken.ThrowIfCancellationRequested();
 
         var marketIds = await GetMarkets(cancellationToken);
-        var symbolIds = await GetSymbols(marketIds, cancellationToken);
-        var response = new WrapperResponse<List<Id<Symbol>>>(symbolIds);
+        var symbols = await GetSymbols(marketIds, cancellationToken);
+        var response = new WrapperResponse<List<Symbol>>(symbols);
 
         _logger.LogDebug("Successfully handled get symbols to forecast query.");
         return response;
@@ -60,15 +60,14 @@ public sealed class GetSymbolsToForecastHandler
         return await _queryExecutor.ToList(marketsQuery, cancellationToken);
     }
 
-    private async Task<List<Id<Symbol>>> GetSymbols(
+    private async Task<List<Symbol>> GetSymbols(
         IReadOnlyList<Id<Market>> marketIds,
         CancellationToken cancellationToken
     )
     {
-        var symbolsQuery = _symbolRepository.AsQueryable(cancellationToken)
-            .Where(s => marketIds.Contains(s.MarketId))
-            .Select(s => s.Id);
-
-        return await _queryExecutor.ToList(symbolsQuery, cancellationToken);
+        return await _symbolRepository.ReadAll(
+            s => marketIds.Contains(s.MarketId),
+            cancellationToken
+        );
     }
 }

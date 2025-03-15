@@ -76,25 +76,26 @@ public sealed class ForecastCreatorJob : BackgroundService
     private async Task CreateForecasts(CancellationToken cancellationToken)
     {
         var symbolsQuery = new GetSymbolsToForecastInput();
-        var symbolIds = await _dispatcher.Send(symbolsQuery, cancellationToken);
-        if (symbolIds.Value.Count == 0)
+        var symbols = await _dispatcher.Send(symbolsQuery, cancellationToken);
+        if (symbols.Value.Count == 0)
         {
             _logger.LogInformation("There are no symbols to forecast.");
             return;
         }
 
         List<Forecast> forecasts = [];
-        foreach (var batch in symbolIds.Value.Batch(_forecastingOptions.BatchSize))
+        foreach (var batch in symbols.Value.Batch(_forecastingOptions.BatchSize))
         {
-            var batchIds = batch.ToList();
+            var symbolBatch = batch.ToList();
+            var symbolIds = symbolBatch.Select(s => s.Id).ToList();
 
-            var historicalDataQuery = new GetHistoricalDataInput(batchIds);
+            var historicalDataQuery = new GetHistoricalDataInput(symbolIds);
             var historicalData = await _dispatcher.Send(
                 historicalDataQuery,
                 cancellationToken
             );
 
-            var getForecastsQuery = new GetForecastsInput(historicalData.Value);
+            var getForecastsQuery = new GetForecastsInput(symbolBatch, historicalData.Value);
             var batchForecasts = await _dispatcher.Send(
                 getForecastsQuery,
                 cancellationToken

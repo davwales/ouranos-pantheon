@@ -43,12 +43,22 @@ public sealed class GetForecastsHandler : QueryHandler<GetForecastsInput, Wrappe
         );
 
         var forecasts = predictions
-            .Select((p, i) => new Forecast(
-                _forecastRepository.CreateId(),
-                query.HistoricalData.Keys.ElementAt(i),
-                query.HistoricalData.Values.ElementAt(i).Last(),
-                p
-            ))
+            .Select(
+                (p, i) =>
+                {
+                    var symbolId = query.HistoricalData.Keys.ElementAt(i);
+                    var symbol = query.Symbols.First(s => s.Id == symbolId);
+
+                    return new Forecast(
+                        _forecastRepository.CreateId(),
+                        symbolId,
+                        symbol.Name,
+                        symbol.Subcode,
+                        query.HistoricalData.Values.ElementAt(i).Last(),
+                        p
+                    );
+                }
+            )
             .ToList();
 
         var response = new WrapperResponse<List<Forecast>>(forecasts);
