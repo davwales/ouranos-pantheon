@@ -7,7 +7,6 @@ import IconButton from "@/app/components/core/inputs/icon_button";
 import Box from "@/app/components/core/layout/box";
 import { hasPaginationChanged, mapFilter, mapOrder, mapPagination } from "@/app/components/core/utils/graphql_mappers";
 import { abbreviateNumber } from "@/app/components/utils/pretty_number";
-import useInterval from "@/app/components/utils/use_interval";
 import PaginationInfo from "@/app/models/pagination_info";
 import TimeFrameSelection from "@/app/plutus/components/time_frame_selection";
 import { PlutusState, usePlutusStore } from "@/app/plutus/constants/plutus_store";
@@ -100,8 +99,6 @@ export default function RecentMarketTrades() {
             last: paginationInfo?.last
         }
     });
-
-    useInterval(() => reexecute(), 15000);
 
     return (
         <>
