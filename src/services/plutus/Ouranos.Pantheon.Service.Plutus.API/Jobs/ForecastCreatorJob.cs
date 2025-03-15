@@ -6,7 +6,7 @@ using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Core.Common.Extensions;
 using Ouranos.Pantheon.Service.Plutus.Application.Commands.Forecasts.InsertForecasts;
 using Ouranos.Pantheon.Service.Plutus.Application.Options;
-using Ouranos.Pantheon.Service.Plutus.Application.Queries.Forecasts.GetForecasts;
+using Ouranos.Pantheon.Service.Plutus.Application.Queries.Forecasts.GetConstructedForecasts;
 using Ouranos.Pantheon.Service.Plutus.Application.Queries.Forecasts.GetHistoricalData;
 using Ouranos.Pantheon.Service.Plutus.Application.Queries.Forecasts.GetSymbolsToForecast;
 using Ouranos.Pantheon.Service.Plutus.Domain.Forecasts;
@@ -95,9 +95,13 @@ public sealed class ForecastCreatorJob : BackgroundService
                 cancellationToken
             );
 
-            var getForecastsQuery = new GetForecastsInput(symbolBatch, historicalData.Value);
+            var getConstructedForecastsQuery = new GetConstructedForecastsInput(
+                symbolBatch,
+                historicalData.Value
+            );
+
             var batchForecasts = await _dispatcher.Send(
-                getForecastsQuery,
+                getConstructedForecastsQuery,
                 cancellationToken
             );
 

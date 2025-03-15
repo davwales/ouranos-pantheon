@@ -3,6 +3,17 @@ import PaginationInfo from "@/app/models/pagination_info";
 import { PageInfo, SortEnumType } from "@/gql/graphql";
 import { GridFilterModel, GridLogicOperator, GridPaginationModel, GridSortModel } from "@mui/x-data-grid";
 
+const createNestedFilterObject = (fieldPath: string, value: any, operator: string) => {
+    const segments = fieldPath.split('.');
+    let currentObject = { [operator]: value };
+
+    for (let i = segments.length - 1; i >= 0; i--) {
+        currentObject = { [segments[i]]: currentObject };
+    }
+
+    return currentObject;
+}
+
 export function mapFilter(
     model: GridFilterModel | undefined,
     columns: GridColDef[]
@@ -23,17 +34,13 @@ export function mapFilter(
             if (fieldType === "number") {
                 parsedValue = parseFloat(value as string);
                 if (isNaN(parsedValue)) {
-                    return null; // Skip invalid numbers
+                    return null;
                 }
             }
 
-            return {
-                [field]: {
-                    [mappedOperator]: parsedValue,
-                },
-            };
+            return createNestedFilterObject(field, parsedValue, mappedOperator);
         })
-        .filter(Boolean); // Remove nulls
+        .filter(Boolean);
 
     if (filterItems.length === 0) return null;
 
@@ -71,14 +78,25 @@ export function mapOperator(operator: string): string {
     }
 }
 
+const createNestedOrderObject = (fieldPath: string, sortDirection: SortEnumType) => {
+    const segments = fieldPath.split('.');
+    let currentObject: any = sortDirection;
+
+    for (let i = segments.length - 1; i >= 0; i--) {
+        currentObject = { [segments[i]]: currentObject };
+    }
+
+    return currentObject;
+}
+
 export function mapOrder(sortModel: GridSortModel | undefined): any {
     if (!sortModel) {
         return undefined;
     }
 
-    return sortModel.map(({ field, sort }) => ({
-        [field]: sort?.toUpperCase() as SortEnumType,
-    }))
+    return sortModel.map(({ field, sort }) => {
+        return createNestedOrderObject(field, sort?.toUpperCase() as SortEnumType);
+    });
 };
 
 export function mapPagination(

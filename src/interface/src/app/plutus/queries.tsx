@@ -102,7 +102,7 @@ export const GET_SYMBOL_DETAILS = graphql(`
         }
         allForecasts(where: { symbolId: { eq: $symbolId } }) {
             nodes {
-                predictions {
+                dayOne {
                     averagePrice
                 }
                 latest {
@@ -132,6 +132,39 @@ export const GET_RECIPE_TRADES = graphql(`
                 latestSellPrice
                 recipeId
                 recipeName
+            }
+            pageInfo {
+                endCursor
+                hasNextPage
+                hasPreviousPage
+                startCursor
+            }
+        }
+    }
+`)
+
+export const GET_FORECASTS = graphql(`
+    query GetForecasts($where: GetForecastsResponseFilterInput, $order: [GetForecastsResponseSortInput!], $first: Int, $after: String, $last: Int, $before: String) {
+        allForecasts(where: $where, order: $order, first: $first, after: $after, last: $last, before: $before) {
+            totalCount
+            nodes {
+                id
+                symbolId
+                symbolName
+                symbolSubcode
+                latest {
+                    averagePrice
+                }
+                dayOne {
+                    averagePrice
+                    averagePriceDelta
+                    gainDelta
+                }
+                dayTwo {
+                    averagePrice
+                    averagePriceDelta
+                    gainDelta
+                }
             }
             pageInfo {
                 endCursor
