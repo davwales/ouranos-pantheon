@@ -87,7 +87,7 @@ export default function SymbolDetail() {
 
     const latestPriceChange = priceChange("Latest", data?.latestTrade?.nodes?.[0]?.price);
     const dailyPriceChange = priceChange("Today", data?.dailySymbolSummary.averagePrice);
-    const predictedPriceChange = priceChange("Predicted", data?.allForecasts?.nodes?.[0]?.dayOne.averagePrice);
+    const predictedPriceChange = priceChange("Predicted", data?.allForecasts?.nodes?.[0]?.predictions[0].averagePrice);
 
     return (
         <Box styling={{ width: '100%', p: 'medium' }}>

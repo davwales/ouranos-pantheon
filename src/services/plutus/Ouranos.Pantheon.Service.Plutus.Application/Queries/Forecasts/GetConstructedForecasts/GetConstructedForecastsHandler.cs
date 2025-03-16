@@ -4,7 +4,7 @@ using Ouranos.Pantheon.Core.Application.Common;
 using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Service.Plutus.Application.Interfaces.Forecasts;
-using Ouranos.Pantheon.Service.Plutus.Application.Queries.Forecasts.GetForecasts;
+using Ouranos.Pantheon.Service.Plutus.Application.Queries.Markets.GetMarketForecast;
 using Ouranos.Pantheon.Service.Plutus.Domain.Forecasts;
 
 namespace Ouranos.Pantheon.Service.Plutus.Application.Queries.Forecasts.GetConstructedForecasts;
@@ -14,10 +14,10 @@ public sealed class GetConstructedForecastsHandler
 {
     private readonly IRepository<Forecast> _forecastRepository;
     private readonly IGetForecastPredictions _getForecastPredictions;
-    private readonly ILogger<GetForecastsHandler> _logger;
+    private readonly ILogger<GetMarketForecastHandler> _logger;
 
     public GetConstructedForecastsHandler(
-        ILogger<GetForecastsHandler> logger,
+        ILogger<GetMarketForecastHandler> logger,
         IGetForecastPredictions getForecastPredictions,
         IRepository<Forecast> forecastRepository
     )

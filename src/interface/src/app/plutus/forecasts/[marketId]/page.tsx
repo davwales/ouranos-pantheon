@@ -9,7 +9,7 @@ import Box from "@/app/components/core/layout/box";
 import { hasPaginationChanged, mapFilter, mapOrder, mapPagination } from "@/app/components/core/utils/graphql_mappers";
 import { abbreviateNumber } from "@/app/components/utils/pretty_number";
 import PaginationInfo from "@/app/models/pagination_info";
-import { GET_FORECASTS } from "@/app/plutus/queries";
+import { GET_MARKET_FORECAST } from "@/app/plutus/queries";
 import { useQuery } from "@urql/next";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -20,12 +20,11 @@ interface RowData {
     symbolName: string;
     symbolSubcode: string | null | undefined;
     "latest.averagePrice": number;
-    "dayOne.averagePrice": number;
-    "dayOne.averagePriceDelta": number;
-    "dayOne.gainDelta": number;
+    "dayOne.margin": number;
+    "dayOne.gain": number;
     "dayTwo.averagePrice": number;
-    "dayTwo.averagePriceDelta": number;
-    "dayTwo.gainDelta": number;
+    "dayTwo.margin": number;
+    "dayTwo.gain": number;
 }
 
 export default function RecentMarketTrades() {
@@ -33,7 +32,7 @@ export default function RecentMarketTrades() {
     const { marketId } = useParams<{ marketId: string }>();
     const [paginationInfo, setPaginationInfo] = useState<PaginationInfo>();
     const [gridModel, setGridModel] = useState<GridModel>({
-        sortModel: [{ field: "dayOne.gainDelta", sort: "desc" }],
+        sortModel: [{ field: "dayOne.gain", sort: "desc" }],
         paginationModel: { page: 0, pageSize: 10 },
         filterModel: { items: [] }
     });
@@ -48,7 +47,7 @@ export default function RecentMarketTrades() {
 
     const handleGridModelChanged = (model: GridModel) => {
         if (hasPaginationChanged(model.paginationModel, gridModel.paginationModel)) {
-            const paginationInfo = mapPagination(model.paginationModel, gridModel.paginationModel, data?.allForecasts?.pageInfo);
+            const paginationInfo = mapPagination(model.paginationModel, gridModel.paginationModel, data?.marketForecast?.pageInfo);
             setPaginationInfo(paginationInfo);
         }
 
@@ -81,15 +80,15 @@ export default function RecentMarketTrades() {
             valueFormatter: x => abbreviateNumber(x),
         },
         {
-            field: "dayOne.averagePriceDelta",
-            headerName: "Today's Price Delta",
+            field: "dayOne.margin",
+            headerName: "Today's Margin",
             flex: 1,
             type: "number",
             valueFormatter: x => abbreviateNumber(x),
         },
         {
-            field: "dayOne.gainDelta",
-            headerName: "Today's Gain Delta",
+            field: "dayOne.gain",
+            headerName: "Today's Gain",
             flex: 1,
             type: "number",
             valueFormatter: x => abbreviateNumber(x),
@@ -102,15 +101,15 @@ export default function RecentMarketTrades() {
             valueFormatter: x => abbreviateNumber(x),
         },
         {
-            field: "dayTwo.averagePriceDelta",
-            headerName: "Tomorrow's Price Delta",
+            field: "dayTwo.margin",
+            headerName: "Tomorrow's Margin",
             flex: 1,
             type: "number",
             valueFormatter: x => abbreviateNumber(x),
         },
         {
-            field: "dayTwo.gainDelta",
-            headerName: "Tomorrow's Gain Delta",
+            field: "dayTwo.gain",
+            headerName: "Tomorrow's Gain",
             flex: 1,
             type: "number",
             valueFormatter: x => abbreviateNumber(x),
@@ -118,14 +117,10 @@ export default function RecentMarketTrades() {
     ]
 
     const [{ data, fetching }, reexecute] = useQuery({
-        query: GET_FORECASTS,
+        query: GET_MARKET_FORECAST,
         variables: {
-            where: {
-                ...mapFilter(gridModel.filterModel, columns),
-                marketId: {
-                    eq: marketId
-                }
-            },
+            marketId: marketId,
+            where: mapFilter(gridModel.filterModel, columns),
             order: mapOrder(gridModel.sortModel),
             after: paginationInfo?.after,
             first: paginationInfo?.first,
@@ -134,7 +129,7 @@ export default function RecentMarketTrades() {
         }
     });
 
-    const transformedData: RowData[] = data?.allForecasts?.nodes?.map(x => {
+    const transformedData: RowData[] = data?.marketForecast?.nodes?.map(x => {
         return {
             id: x.id,
             symbolId: x.symbolId,
@@ -142,15 +137,15 @@ export default function RecentMarketTrades() {
             symbolSubcode: x.symbolSubcode,
             "latest.averagePrice": x.latest.averagePrice,
             "dayOne.averagePrice": x.dayOne.averagePrice,
-            "dayOne.averagePriceDelta": x.dayOne.averagePriceDelta,
-            "dayOne.gainDelta": x.dayOne.gainDelta,
+            "dayOne.margin": x.dayOne.margin,
+            "dayOne.gain": x.dayOne.gain,
             "dayTwo.averagePrice": x.dayTwo.averagePrice,
-            "dayTwo.averagePriceDelta": x.dayTwo.averagePriceDelta,
-            "dayTwo.gainDelta": x.dayTwo.gainDelta
+            "dayTwo.margin": x.dayTwo.margin,
+            "dayTwo.gain": x.dayTwo.gain
         };
     }) || [];
 
-    const minutesToMidnight = (): number => {
+    const timeToRefresh = (): string => {
         const now = new Date();
         const midnightUTC = new Date(Date.UTC(
             now.getUTCFullYear(),
@@ -158,8 +153,20 @@ export default function RecentMarketTrades() {
             now.getUTCDate() + 1,
             0, 0, 0, 0
         ));
+
         const timeDifferenceMs = midnightUTC.getTime() - now.getTime();
-        return Math.floor(timeDifferenceMs / (1000 * 60 * 60));
+        const totalSeconds = Math.floor(timeDifferenceMs / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        if (hours == 0 && minutes == 0) {
+            return `${seconds} seconds`;
+        } else if (minutes == 0) {
+            return `${minutes} minutes`;
+        } else {
+            return `${hours}  hours`;
+        }
     }
 
     return (
@@ -183,11 +190,11 @@ export default function RecentMarketTrades() {
                     styling={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: "large"
+                        gap: "small"
                     }}
                 >
                     <Typography variant="body1">
-                        Next forecasts generated in {minutesToMidnight()} hours
+                        Next forecasts generated in {timeToRefresh()}
                     </Typography>
                     <IconButton disabled={fetching} onClick={reexecute}>
                         <RefreshIcon />
@@ -199,7 +206,7 @@ export default function RecentMarketTrades() {
                 rows={transformedData}
                 columns={columns}
                 getRowId={(row: RowData) => row.id}
-                rowCount={data?.allForecasts?.totalCount || 0}
+                rowCount={data?.marketForecast?.totalCount || 0}
                 onRowClick={handleRowClick}
                 loading={fetching}
                 initialModel={gridModel}

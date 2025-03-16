@@ -1,6 +1,7 @@
 ﻿using Ouranos.Pantheon.Core.API.Queries;
 using Ouranos.Pantheon.Core.Application.Mediator;
-using Ouranos.Pantheon.Service.Plutus.Application.Queries.Forecasts.GetForecasts;
+using Ouranos.Pantheon.Core.Application.Queries.Common.GetAllEntities;
+using Ouranos.Pantheon.Service.Plutus.Domain.Forecasts;
 
 namespace Ouranos.Pantheon.Service.Plutus.API.Queries;
 
@@ -18,12 +19,12 @@ public sealed class ForecastQueries
     [UsePaging(IncludeTotalCount = true)]
     [UseFiltering]
     [UseSorting]
-    public async Task<IQueryable<GetForecastsResponse>> GetAllForecasts(
+    public async Task<IQueryable<Forecast>> GetAllForecasts(
         [Service] IDispatcher dispatcher,
         CancellationToken cancellationToken = default
     )
     {
-        var wrapper = await dispatcher.Send(new GetForecastsInput(), cancellationToken);
+        var wrapper = await dispatcher.Send(new GetAllEntitiesInput<Forecast>(), cancellationToken);
         return wrapper.Value;
     }
 }

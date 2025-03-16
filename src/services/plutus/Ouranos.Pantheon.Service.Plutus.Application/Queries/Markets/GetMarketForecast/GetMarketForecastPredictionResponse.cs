@@ -1,10 +1,12 @@
-﻿namespace Ouranos.Pantheon.Service.Plutus.Application.Queries.Forecasts.GetForecasts;
+﻿namespace Ouranos.Pantheon.Service.Plutus.Application.Queries.Markets.GetMarketForecast;
 
-public sealed record GetForecastsPredictionResponse(
+public sealed record GetMarketForecastPredictionResponse(
     decimal AveragePrice,
     decimal MinPrice,
     decimal MaxPrice,
     decimal Volume,
+    decimal Margin,
+    decimal Gain,
     decimal AveragePriceDelta,
     decimal MinPriceDelta,
     decimal MaxPriceDelta,

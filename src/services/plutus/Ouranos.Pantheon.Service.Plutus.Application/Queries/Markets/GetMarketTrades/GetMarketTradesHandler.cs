@@ -12,6 +12,7 @@ public sealed class GetMarketTradesHandler
     : QueryHandler<GetMarketTradesInput, WrapperResponse<IQueryable<GetMarketTradesResponse>>>
 {
     private readonly ILogger<GetMarketTradesHandler> _logger;
+    private readonly IRepository<Market> _marketRepository;
     private readonly IRepository<Trade> _tradeRepository;
 
     public GetMarketTradesHandler(
@@ -26,6 +27,7 @@ public sealed class GetMarketTradesHandler
 
         _logger = logger;
         _tradeRepository = tradeRepository;
+        _marketRepository = marketRepository;
     }
 
     public override async Task<WrapperResponse<IQueryable<GetMarketTradesResponse>>> Handle(
@@ -35,6 +37,9 @@ public sealed class GetMarketTradesHandler
     {
         _logger.LogTrace("Attempting to handle symbol statistics query '{@query}'.", query);
         cancellationToken.ThrowIfCancellationRequested();
+
+        var market = await _marketRepository.Read(query.MarketId, cancellationToken);
+        var flatTax = market.Taxes.Flat ?? new FlatTax(0, 0, 0);
 
         DateTimeOffset? since = query.Seconds.HasValue
             ? DateTimeOffset.UtcNow - TimeSpan.FromSeconds(query.Seconds.Value)
@@ -74,7 +79,11 @@ public sealed class GetMarketTradesHandler
                     x.TotalVolume,
                     x.NumTransactions,
                     x.Limit,
-                    Tax = x.MaxPrice >= 100m ? x.MaxPrice * 0.01m : 0m
+                    Tax = x.MaxPrice * flatTax.Rate > flatTax.Maximum
+                        ? flatTax.Maximum
+                        : x.MaxPrice * flatTax.Rate > flatTax.Minimum
+                            ? x.MaxPrice * flatTax.Rate
+                            : 0
                 }
             )
             .Select(

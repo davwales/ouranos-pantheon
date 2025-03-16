@@ -102,7 +102,7 @@ export const GET_SYMBOL_DETAILS = graphql(`
         }
         allForecasts(where: { symbolId: { eq: $symbolId } }) {
             nodes {
-                dayOne {
+                predictions {
                     averagePrice
                 }
                 latest {
@@ -143,9 +143,9 @@ export const GET_RECIPE_TRADES = graphql(`
     }
 `)
 
-export const GET_FORECASTS = graphql(`
-    query GetForecasts($where: GetForecastsResponseFilterInput, $order: [GetForecastsResponseSortInput!], $first: Int, $after: String, $last: Int, $before: String) {
-        allForecasts(where: $where, order: $order, first: $first, after: $after, last: $last, before: $before) {
+export const GET_MARKET_FORECAST = graphql(`
+    query GetMarketForecast($marketId: String!, $where: GetMarketForecastResponseFilterInput, $order: [GetMarketForecastResponseSortInput!], $first: Int, $after: String, $last: Int, $before: String) {
+        marketForecast(input: { marketId: $marketId }, where: $where, order: $order, first: $first, after: $after, last: $last, before: $before) {
             totalCount
             nodes {
                 id
@@ -157,13 +157,13 @@ export const GET_FORECASTS = graphql(`
                 }
                 dayOne {
                     averagePrice
-                    averagePriceDelta
-                    gainDelta
+                    margin
+                    gain
                 }
                 dayTwo {
                     averagePrice
-                    averagePriceDelta
-                    gainDelta
+                    margin
+                    gain
                 }
             }
             pageInfo {
