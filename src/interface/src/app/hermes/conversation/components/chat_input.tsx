@@ -2,6 +2,7 @@ import Button from '@/app/components/core/inputs/button';
 import TextField from '@/app/components/core/inputs/text_field';
 import FormBox from '@/app/components/core/layout/form_box';
 import { StyleProps } from '@/app/components/core/style_props';
+import AppBar from '@/app/components/core/surfaces/app_bar';
 
 interface ChatInputProps {
     styling?: StyleProps;
@@ -63,17 +64,29 @@ export default function ChatInput(props: ChatInputProps) {
     const placeholder = props.isGenerating ? "Generating response..." : inputPlaceholder;
 
     return (
-        <FormBox styling={props.styling} onSubmit={handleSubmit} >
-            <TextField
-                value={props.inputText}
-                onChange={props.onInputChange}
-                fullWidth
-                multiline
-                maxRows={4}
-                placeholder={placeholder}
-                disabled={props.isGenerating}
-            />
-            {props.isEditing ? editInputs : newMessageInput}
-        </FormBox>
+        <AppBar position='fixed' styling={{ top: 'auto', bottom: 0 }}>
+            <FormBox
+                onSubmit={handleSubmit}
+                styling={{
+                    ...props.styling,
+                    display: 'flex',
+                    mx: 'auto',
+                    width: '100%',
+                    my: 'medium',
+                    gap: 'small'
+                }}
+            >
+                <TextField
+                    value={props.inputText}
+                    onChange={props.onInputChange}
+                    fullWidth
+                    multiline
+                    maxRows={4}
+                    placeholder={placeholder}
+                    disabled={props.isGenerating}
+                />
+                {props.isEditing ? editInputs : newMessageInput}
+            </FormBox>
+        </AppBar>
     );
 }

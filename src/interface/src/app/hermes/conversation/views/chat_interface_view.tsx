@@ -140,23 +140,6 @@ export default function ChatInterfaceView(props: ChatInterfaceViewProps) {
                 onNewMessage={handleNewMessage}
                 onUpdateMessage={handleUpdateMessage}
                 onCancelEdit={handleCancelEdit}
-                styling={{
-                    display: 'flex',
-                    p: "medium",
-                    gap: "small",
-                    borderTop: 1,
-                    borderColor: 'secondary',
-                    position: 'fixed',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    justifyContent: 'center',
-                    maxWidth: 'md',
-                    mx: 'auto',
-                    backgroundColor: 'background.default',
-                    zIndex: 1000,
-                    boxSizing: 'border-box'
-                }}
             />
         </Box>
     );
