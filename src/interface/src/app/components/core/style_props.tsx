@@ -1,7 +1,7 @@
 import { SxProps } from "@mui/material";
 
 export type SpacingToken = 'none' | 'small' | 'medium' | 'large' | 'xl' | 'xxl' | 'auto';
-export type ColorToken = 'primary' | 'secondary' | 'inherit' | 'error' | 'success' | 'transparent';
+export type ColorToken = 'primary' | 'secondary' | 'inherit' | 'error' | 'success';
 export type FontSizeToken = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 export type FontWeightToken = 'light' | 'regular' | 'medium' | 'bold';
 export type BorderRadiusToken = 'none' | 'sm' | 'md' | 'lg' | 'full';
