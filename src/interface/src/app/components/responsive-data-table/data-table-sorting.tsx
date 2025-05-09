@@ -48,8 +48,20 @@ export function DataTableSorting({
 
     const getCurrentSortColumn = (): string => {
         if (!sort) return "";
-        const [key] = Object.keys(sort);
-        return key ?? "";
+
+        const findNestedPath = (obj: SortArgs, currentPath: string[] = []): string | null => {
+            for (const [key, value] of Object.entries(obj)) {
+                if (typeof value === 'object') {
+                    const nestedPath = findNestedPath(value as SortArgs, [...currentPath, key]);
+                    if (nestedPath) return nestedPath;
+                } else {
+                    return [...currentPath, key].join('.');
+                }
+            }
+            return null;
+        };
+
+        return findNestedPath(sort) ?? "";
     };
 
     const handleSortChange = (columnId: string, direction?: SortEnumType) => {

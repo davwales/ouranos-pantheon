@@ -41,6 +41,7 @@ export default function RecentMarketTrades() {
             id: "recipeName",
             header: "Name",
             accessorFn: (row) => row.recipeName,
+            cell: ({ getValue }) => getValue<string>(),
             filterConfig: {
                 type: "string",
                 operators: ["eq", "neq", "contains", "startsWith", "endsWith"],
