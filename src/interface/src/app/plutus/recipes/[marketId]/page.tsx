@@ -1,88 +1,24 @@
 "use client";
 
-import { DataGrid, GridColDef, GridModel } from "@/app/components/core/data-display/data_grid";
-import RefreshIcon from "@/app/components/core/icons/refresh_icon";
-import Button from "@/app/components/core/inputs/button";
-import IconButton from "@/app/components/core/inputs/icon_button";
-import Box from "@/app/components/core/layout/box";
-import { hasPaginationChanged, mapFilter, mapOrder, mapPagination } from "@/app/components/core/utils/graphql_mappers";
-import { abbreviateNumber } from "@/app/components/utils/pretty_number";
-import PaginationInfo from "@/app/models/pagination_info";
+import { PrettyNumber } from "@/app/components/pretty-number";
+import { ExtendedColumnDef, PaginationArgs, SortArgs } from "@/app/components/responsive-data-table";
+import ResponsiveDataTable from "@/app/components/responsive-data-table/responsive-data-table";
+import { Typography } from "@/app/components/typography";
 import TimeFrameSelection from "@/app/plutus/components/time_frame_selection";
 import { PlutusState, usePlutusStore } from "@/app/plutus/constants/plutus_store";
 import { GET_RECIPE_TRADES } from "@/app/plutus/queries";
-import { GetRecipeTradesResponse } from "@/gql/graphql";
+import { GetRecipeTradesResponse, GetRecipeTradesResponseFilterInput, SortEnumType } from "@/gql/graphql";
 import { useQuery } from "@urql/next";
-import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { RefreshCw } from "lucide-react";
+import { useParams } from "next/navigation";
+import { useMemo, useState } from "react";
 
 export default function RecentMarketTrades() {
-    const router = useRouter();
     const { marketId } = useParams<{ marketId: string }>();
     const [timeFrameSeconds, setTimeFrameSeconds] = usePlutusStore((state: PlutusState) => [state.timeFrameSeconds, state.setTimeFrameSeconds]);
-    const [paginationInfo, setPaginationInfo] = useState<PaginationInfo>();
-    const [gridModel, setGridModel] = useState<GridModel>({
-        sortModel: [{ field: "averageMargin", sort: "desc" }],
-        paginationModel: { page: 0, pageSize: 10 },
-        filterModel: { items: [] }
-    });
-
-    const handleBackClicked = () => {
-        router.push("/plutus/recipes");
-    };
-
-    const handleGridModelChanged = (model: GridModel) => {
-        if (hasPaginationChanged(model.paginationModel, gridModel.paginationModel)) {
-            const paginationInfo = mapPagination(model.paginationModel, gridModel.paginationModel, data?.recipeTrades?.pageInfo);
-            setPaginationInfo(paginationInfo);
-        }
-
-        setGridModel(model);
-    };
-
-    const columns: GridColDef[] = [
-        {
-            field: "recipeName",
-            headerName: "Name",
-            flex: 1
-        },
-        {
-            field: "latestBuyPrice",
-            headerName: "Latest Buy Price",
-            flex: 1,
-            valueFormatter: x => abbreviateNumber(x),
-        },
-        {
-            field: "latestSellPrice",
-            headerName: "Latest Sell Price",
-            flex: 1,
-            valueFormatter: x => abbreviateNumber(x),
-        },
-        {
-            field: "latestMargin",
-            headerName: "Latest Margin",
-            flex: 1,
-            valueFormatter: x => abbreviateNumber(x),
-        },
-        {
-            field: "averageBuyPrice",
-            headerName: "Average Buy Price",
-            flex: 1,
-            valueFormatter: x => abbreviateNumber(x),
-        },
-        {
-            field: "averageSellPrice",
-            headerName: "Average Sell Price",
-            flex: 1,
-            valueFormatter: x => abbreviateNumber(x),
-        },
-        {
-            field: "averageMargin",
-            headerName: "Average Margin",
-            flex: 1,
-            valueFormatter: x => abbreviateNumber(x),
-        }
-    ]
+    const [paginationArgs, setPaginationArgs] = useState<PaginationArgs>({ pageSize: 10 });
+    const [filter, setFilter] = useState<GetRecipeTradesResponseFilterInput>({});
+    const [sort, setSort] = useState<SortArgs>({ averageMargin: SortEnumType.Desc });
 
     const [{ data, fetching }, reexecute] = useQuery({
         query: GET_RECIPE_TRADES,
@@ -91,60 +27,111 @@ export default function RecentMarketTrades() {
                 marketId: marketId,
                 seconds: timeFrameSeconds > 0 ? timeFrameSeconds : undefined
             },
-            where: mapFilter(gridModel.filterModel, columns),
-            order: mapOrder(gridModel.sortModel),
-            after: paginationInfo?.after,
-            first: paginationInfo?.first,
-            before: paginationInfo?.before,
-            last: paginationInfo?.last
+            order: sort,
+            where: filter,
+            first: paginationArgs.first,
+            after: paginationArgs.after,
+            last: paginationArgs.last,
+            before: paginationArgs.before
         }
     });
 
+    const columns: ExtendedColumnDef<GetRecipeTradesResponse>[] = useMemo(() => [
+        {
+            id: "recipeName",
+            header: "Name",
+            accessorFn: (row) => row.recipeName,
+            filterConfig: {
+                type: "string",
+                operators: ["eq", "neq", "contains", "startsWith", "endsWith"],
+            },
+        },
+        {
+            id: "latestBuyPrice",
+            header: "Latest Buy Price",
+            accessorFn: (row) => row.latestBuyPrice,
+            cell: ({ getValue }) => <PrettyNumber number={getValue<number>()} />,
+            filterConfig: {
+                type: "number",
+                operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
+            },
+        },
+        {
+            id: "latestSellPrice",
+            header: "Latest Sell Price",
+            accessorFn: (row) => row.latestSellPrice,
+            cell: ({ getValue }) => <PrettyNumber number={getValue<number>()} />,
+            filterConfig: {
+                type: "number",
+                operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
+            },
+        },
+        {
+            id: "latestMargin",
+            header: "Latest Margin",
+            accessorFn: (row) => row.latestMargin,
+            cell: ({ getValue }) => <PrettyNumber number={getValue<number>()} />,
+            filterConfig: {
+                type: "number",
+                operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
+            },
+        },
+        {
+            id: "averageBuyPrice",
+            header: "Average Buy Price",
+            accessorFn: (row) => row.averageBuyPrice,
+            cell: ({ getValue }) => <PrettyNumber number={getValue<number>()} />,
+            filterConfig: {
+                type: "number",
+                operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
+            },
+        },
+        {
+            id: "averageSellPrice",
+            header: "Average Sell Price",
+            accessorFn: (row) => row.averageSellPrice,
+            cell: ({ getValue }) => <PrettyNumber number={getValue<number>()} />,
+            filterConfig: {
+                type: "number",
+                operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
+            },
+        },
+        {
+            id: "averageMargin",
+            header: "Average Margin",
+            accessorFn: (row) => row.averageMargin,
+            cell: ({ getValue }) => <PrettyNumber number={getValue<number>()} />,
+            filterConfig: {
+                type: "number",
+                operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
+            },
+        }
+    ], []);
+
     return (
-        <>
-            <Box
-                styling={{
-                    width: "100%",
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    m: "auto"
-                }}
-            >
-                <Box>
-                    <Button variant="outlined" onClick={handleBackClicked}>
-                        Back
-                    </Button>
-                </Box>
+        <div>
+            <div className="flex items-center gap-2 justify-between">
+                <div className="flex items-end gap-2">
+                    <Typography variant="lead">Recipes</Typography>
+                </div>
+                <div className="flex items-center gap-4">
+                    {fetching ? <RefreshCw className="animate-spin" /> : <RefreshCw onClick={reexecute} className="hover:cursor-pointer" />}
+                    <TimeFrameSelection onValueChange={setTimeFrameSeconds} seconds={timeFrameSeconds} />
+                </div>
+            </div>
 
-                <Box
-                    styling={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: "large"
-                    }}
-                >
-                    <IconButton disabled={fetching} onClick={reexecute}>
-                        <RefreshIcon />
-                    </IconButton>
-                    <TimeFrameSelection
-                        onChange={setTimeFrameSeconds}
-                        seconds={timeFrameSeconds}
-                    />
-                </Box>
-            </Box>
-
-            <DataGrid
-                rows={data?.recipeTrades?.nodes}
+            <ResponsiveDataTable
                 columns={columns}
-                getRowId={(row: GetRecipeTradesResponse) => row.recipeId}
-                rowCount={data?.recipeTrades?.totalCount || 0}
-                loading={fetching}
-                initialModel={gridModel}
-                onGridModelChange={handleGridModelChanged}
-                pageSizeOptions={[5, 10, 15, 20, 50]}
-                styling={{ mt: 'medium' }}
+                data={data?.recipeTrades?.nodes}
+                paginationArgs={paginationArgs}
+                onPaginationArgsChanged={setPaginationArgs}
+                pageInfo={data?.recipeTrades?.pageInfo}
+                filter={filter}
+                onFilterChange={setFilter}
+                sort={sort}
+                onSortChange={setSort}
+                className="my-2"
             />
-        </>
+        </div>
     );
 }

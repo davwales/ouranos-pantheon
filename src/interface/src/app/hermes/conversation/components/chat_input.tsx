@@ -1,11 +1,19 @@
-import Button from '@/app/components/core/inputs/button';
-import TextField from '@/app/components/core/inputs/text_field';
-import FormBox from '@/app/components/core/layout/form_box';
-import { StyleProps } from '@/app/components/core/style_props';
-import AppBar from '@/app/components/core/surfaces/app_bar';
+import AutosizeTextarea from '@/app/components/autosize-textarea';
+import { Button } from '@/components/ui/button';
+import { ChangeEvent } from 'react';
 
-interface ChatInputProps {
-    styling?: StyleProps;
+
+export default function ChatInput({
+    inputText,
+    isGenerating,
+    isEditing,
+    onInputChange,
+    onNewMessage,
+    onUpdateMessage,
+    onCancelEdit,
+    className,
+    ...props
+}: React.ComponentProps<"form"> & {
     inputText: string;
     isGenerating: boolean;
     isEditing: boolean;
@@ -13,80 +21,70 @@ interface ChatInputProps {
     onNewMessage: () => void;
     onUpdateMessage: () => void;
     onCancelEdit?: () => void;
-}
-
-export default function ChatInput(props: ChatInputProps) {
+}) {
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        if (props.isEditing) {
-            props.onUpdateMessage();
+        if (isEditing) {
+            onUpdateMessage();
         } else {
-            props.onNewMessage();
+            onNewMessage();
         }
     };
 
-    const editInputs = (
-        <>
+    const handleInputChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
+        return onInputChange(event.target.value);
+    };
+
+    const EditInputs = () => (
+        <div>
             <Button
-                variant="outlined"
-                color="secondary"
-                onClick={props.onCancelEdit}
-                disabled={props.isGenerating}
-            >
-                Cancel
-            </Button>
-            <Button
-                variant="contained"
                 color="primary"
-                disabled={props.isGenerating || !props.inputText.trim()}
-                submit
+                disabled={isGenerating || !inputText.trim()}
+                type="submit"
+                className="w-full"
             >
                 Save
             </Button>
-        </>
+            <Button
+                variant="outline"
+                color="secondary"
+                onClick={onCancelEdit}
+                disabled={isGenerating}
+                type="button"
+                className="w-full mt-2"
+            >
+                Cancel
+            </Button>
+        </div>
     );
 
-    const newMessageInput = (
-        <>
+    const NewMessageInput = () => (
+        <div className="h-fit">
             <Button
-                variant="contained"
                 color="primary"
-                disabled={props.isGenerating || !props.inputText.trim()}
-                submit
+                disabled={isGenerating || !inputText.trim()}
+                type="submit"
+                className="h-fit"
             >
                 Send
             </Button>
-        </>
+        </div>
     );
 
-    const inputPlaceholder = props.isEditing ? "Editing message..." : "Type your message...";
-    const placeholder = props.isGenerating ? "Generating response..." : inputPlaceholder;
+    const inputPlaceholder = isEditing ? "Editing message..." : "Type your message...";
+    const placeholder = isGenerating ? "Generating response..." : inputPlaceholder;
 
     return (
-        <AppBar position='fixed' styling={{ top: 'auto', bottom: 0 }}>
-            <FormBox
-                onSubmit={handleSubmit}
-                styling={{
-                    ...props.styling,
-                    display: 'flex',
-                    mx: 'auto',
-                    width: '100%',
-                    my: 'medium',
-                    gap: 'small'
-                }}
-            >
-                <TextField
-                    value={props.inputText}
-                    onChange={props.onInputChange}
-                    fullWidth
-                    multiline
-                    maxRows={4}
-                    placeholder={placeholder}
-                    disabled={props.isGenerating}
-                />
-                {props.isEditing ? editInputs : newMessageInput}
-            </FormBox>
-        </AppBar>
+        <form {...props} onSubmit={handleSubmit} className={`flex items-center gap-4 ${className}`}>
+            <AutosizeTextarea
+                value={inputText}
+                onChange={handleInputChange}
+                placeholder={placeholder}
+                disabled={isGenerating}
+                className="min-h-16 max-h-64"
+            />
+            {isEditing ? <EditInputs /> : <NewMessageInput />}
+        </form>
     );
 }

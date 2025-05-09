@@ -1,12 +1,11 @@
-import Box from "@/app/components/core/layout/box";
 import { OuranosProvider } from "@/app/services/gql_client";
 
 export default function PlutusLayout({ children }: React.PropsWithChildren) {
     return (
-        <Box styling={{ m: "medium" }}>
+        <div className="m-4">
             <OuranosProvider>
                 {children}
             </OuranosProvider>
-        </Box>
+        </div>
     )
 }

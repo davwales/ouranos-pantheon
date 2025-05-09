@@ -1,48 +1,26 @@
 "use client";
 
-import { DataGrid, GridModel } from "@/app/components/core/data-display/data_grid";
-import RefreshIcon from "@/app/components/core/icons/refresh_icon";
-import Button from "@/app/components/core/inputs/button";
-import IconButton from "@/app/components/core/inputs/icon_button";
-import Box from "@/app/components/core/layout/box";
-import { hasPaginationChanged, mapFilter, mapOrder, mapPagination } from "@/app/components/core/utils/graphql_mappers";
-import PaginationInfo from "@/app/models/pagination_info";
+import ClipboardCopy from "@/app/components/clipboard-copy";
+import { PrettyNumber } from "@/app/components/pretty-number";
+import { ExtendedColumnDef, PaginationArgs, SortArgs } from "@/app/components/responsive-data-table";
+import ResponsiveDataTable from "@/app/components/responsive-data-table/responsive-data-table";
+import { Typography } from "@/app/components/typography";
 import TimeFrameSelection from "@/app/plutus/components/time_frame_selection";
-import { plutusColumns } from "@/app/plutus/constants/plutus_columns";
 import { PlutusState, usePlutusStore } from "@/app/plutus/constants/plutus_store";
 import { GET_MARKET_TRADES } from "@/app/plutus/queries";
-import { GetMarketTradesResponse } from "@/gql/graphql";
+import { GetMarketTradesResponse, GetMarketTradesResponseFilterInput, SortEnumType } from "@/gql/graphql";
 import { useQuery } from "@urql/next";
-import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { RefreshCw } from "lucide-react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { useMemo, useState } from "react";
 
 export default function MarketDetail() {
-    const router = useRouter();
     const { marketId } = useParams<{ marketId: string }>();
     const [timeFrameSeconds, setTimeFrameSeconds] = usePlutusStore((state: PlutusState) => [state.timeFrameSeconds, state.setTimeFrameSeconds]);
-    const [paginationInfo, setPaginationInfo] = useState<PaginationInfo>();
-    const [gridModel, setGridModel] = useState<GridModel>({
-        sortModel: [{ field: "totalGain", sort: "desc" }],
-        paginationModel: { page: 0, pageSize: 10 },
-        filterModel: { items: [] }
-    });
-
-    const handleBackClicked = () => {
-        router.push("/plutus/explorer");
-    };
-
-    const handleRowClick = (row: GetMarketTradesResponse) => {
-        router.push(`/plutus/explorer/${marketId}/${row.symbolId}?referrer=explorer`);
-    };
-
-    const handleGridModelChanged = (model: GridModel) => {
-        if (hasPaginationChanged(model.paginationModel, gridModel.paginationModel)) {
-            const paginationInfo = mapPagination(model.paginationModel, gridModel.paginationModel, data?.marketTrades?.pageInfo);
-            setPaginationInfo(paginationInfo);
-        }
-
-        setGridModel(model);
-    };
+    const [paginationArgs, setPaginationArgs] = useState<PaginationArgs>({ pageSize: 10 });
+    const [filter, setFilter] = useState<GetMarketTradesResponseFilterInput>({});
+    const [sort, setSort] = useState<SortArgs>({ totalGain: SortEnumType.Desc });
 
     const [{ data, fetching }, reexecute] = useQuery({
         query: GET_MARKET_TRADES,
@@ -51,62 +29,160 @@ export default function MarketDetail() {
                 marketId: marketId,
                 seconds: timeFrameSeconds > 0 ? timeFrameSeconds : undefined
             },
-            where: mapFilter(gridModel.filterModel, plutusColumns),
-            order: mapOrder(gridModel.sortModel),
-            after: paginationInfo?.after,
-            first: paginationInfo?.first,
-            before: paginationInfo?.before,
-            last: paginationInfo?.last
+            order: sort,
+            where: filter,
+            first: paginationArgs.first,
+            after: paginationArgs.after,
+            last: paginationArgs.last,
+            before: paginationArgs.before
         }
     });
 
-    return (
-        <>
-            <Box
-                styling={{
-                    width: "100%",
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    m: "auto"
-                }}
-            >
-                <Box>
-                    <Button variant="outlined" onClick={handleBackClicked}>
-                        Back
-                    </Button>
-                </Box>
-
-                <Box
-                    styling={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: "large"
-                    }}
+    const columns: ExtendedColumnDef<GetMarketTradesResponse>[] = useMemo(() => [
+        {
+            id: "symbolName",
+            header: "Name",
+            accessorFn: (row) => row.symbolName,
+            cell: ({ cell, row }) => (
+                <Link
+                    href={`/plutus/explorer/${marketId}/${row.original.symbolId}`}
+                    className="hover:underline"
                 >
-                    <IconButton disabled={fetching} onClick={reexecute}>
-                        <RefreshIcon />
-                    </IconButton>
-                    <TimeFrameSelection
-                        onChange={setTimeFrameSeconds}
-                        seconds={timeFrameSeconds}
-                    />
-                </Box>
-            </Box>
+                    {cell.getValue<string>()}
+                </Link>
+            ),
+            filterConfig: {
+                type: "string",
+                operators: ["eq", "neq", "contains", "startsWith", "endsWith"],
+            },
+        },
+        {
+            id: "symbolSubcode",
+            header: "Subcode",
+            accessorFn: (row) => row.symbolSubcode,
+            filterConfig: {
+                type: "string",
+                operators: ["eq", "neq", "contains", "startsWith", "endsWith"],
+            },
+        },
+        {
+            id: "minPrice",
+            header: "Min Price",
+            accessorFn: (row) => row.minPrice,
+            cell: ({ getValue }) => (
+                <ClipboardCopy value={getValue<number>()}>
+                    <PrettyNumber number={getValue<number>()} />
+                </ClipboardCopy>
+            ),
+            filterConfig: {
+                type: "number",
+                operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
+            },
+        },
+        {
+            id: "maxPrice",
+            header: "Max Price",
+            accessorFn: (row) => row.maxPrice,
+            cell: ({ getValue }) => (
+                <ClipboardCopy value={getValue<number>()}>
+                    <PrettyNumber number={getValue<number>()} />
+                </ClipboardCopy>
+            ),
+            filterConfig: {
+                type: "number",
+                operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
+            },
+        },
+        {
+            id: "averagePrice",
+            header: "Average Price",
+            accessorFn: (row) => row.averagePrice,
+            cell: ({ getValue }) => (
+                <ClipboardCopy value={getValue<number>()}>
+                    <PrettyNumber number={getValue<number>()} />
+                </ClipboardCopy>
+            ),
+            filterConfig: {
+                type: "number",
+                operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
+            },
+        },
+        {
+            id: "totalVolume",
+            header: "Volume",
+            accessorFn: (row) => row.totalVolume,
+            cell: ({ getValue }) => <PrettyNumber number={getValue<number>()} />,
+            filterConfig: {
+                type: "number",
+                operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
+            },
+        },
+        {
+            id: "limit",
+            header: "Limit",
+            accessorFn: (row) => row.limit,
+            cell: ({ getValue }) => <PrettyNumber number={getValue<number>()} />,
+            filterConfig: {
+                type: "number",
+                operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
+            },
+        },
+        {
+            id: "margin",
+            header: "Margin",
+            accessorFn: (row) => row.margin,
+            cell: ({ getValue }) => <PrettyNumber number={getValue<number>()} />,
+            filterConfig: {
+                type: "number",
+                operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
+            },
+        },
+        {
+            id: "totalGain",
+            header: "Gain",
+            accessorFn: (row) => row.totalGain,
+            cell: ({ getValue }) => <PrettyNumber number={getValue<number>()} />,
+            filterConfig: {
+                type: "number",
+                operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
+            },
+        },
+        {
+            id: "roi",
+            header: "ROI",
+            accessorFn: (row) => row.roi,
+            cell: ({ getValue }) => <>{Math.round(getValue<number>() * 100)}%</>,
+            filterConfig: {
+                type: "number",
+                operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
+            },
+        },
+    ], []);
 
-            <DataGrid
-                rows={data?.marketTrades?.nodes}
-                columns={plutusColumns}
-                getRowId={(row: any) => row.symbolId}
-                rowCount={data?.marketTrades?.totalCount || 0}
-                loading={fetching}
-                initialModel={gridModel}
-                onGridModelChange={handleGridModelChanged}
-                pageSizeOptions={[5, 10, 15, 20, 50]}
-                onRowClick={handleRowClick}
-                styling={{ mt: 'medium' }}
-                toolbar
+    return (
+        <div>
+            <div className="flex items-center gap-2 justify-between">
+                <div className="flex items-end gap-2">
+                    <Typography variant="lead">Explorer</Typography>
+                </div>
+                <div className="flex items-center gap-4">
+                    {fetching ? <RefreshCw className="animate-spin" /> : <RefreshCw onClick={reexecute} className="hover:cursor-pointer" />}
+                    <TimeFrameSelection onValueChange={setTimeFrameSeconds} seconds={timeFrameSeconds} />
+                </div>
+            </div>
+
+            <ResponsiveDataTable
+                columns={columns}
+                data={data?.marketTrades?.nodes}
+                paginationArgs={paginationArgs}
+                onPaginationArgsChanged={setPaginationArgs}
+                pageInfo={data?.marketTrades?.pageInfo}
+                filter={filter}
+                onFilterChange={setFilter}
+                sort={sort}
+                onSortChange={setSort}
+                className="my-2"
             />
-        </>
+        </div>
     );
 }

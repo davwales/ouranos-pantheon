@@ -1,7 +1,7 @@
 "use client";
 
-import Box from '@/app/components/core/layout/box';
-import DetailedStepper from '@/app/components/navigation/detailed_stepper';
+import { Step } from '@/app/components/stepper';
+import Stepper from '@/app/components/stepper/stepper';
 import StepContext from '@/app/hermes/conversation/components/step_context';
 import ConversationCharacter from '@/app/hermes/conversation/models/conversation_character';
 import ChatInterfaceView from '@/app/hermes/conversation/views/chat_interface_view';
@@ -15,18 +15,18 @@ export default function Conversation() {
     const [assistantCharacter, setAssistantCharacter] = useState<ConversationCharacter | undefined>();
     const [setupComplete, setSetupComplete] = useState(false);
 
-    const steps = [
+    const steps: Step[] = [
         {
-            label: 'Enter Chat Context',
-            component: <StepContext context={context} setContext={setContext} />
+            label: 'Context',
+            content: <StepContext context={context} setContext={setContext} />
         },
         {
-            label: 'Select Your Character',
-            component: <SelectCharacterView role={Role.User} character={userCharacter} setCharacter={setUserCharacter} />
+            label: 'Your Character',
+            content: <SelectCharacterView role={Role.User} character={userCharacter} setCharacter={setUserCharacter} />
         },
         {
-            label: 'Select Assistant Character',
-            component: <SelectCharacterView role={Role.Assistant} character={assistantCharacter} setCharacter={setAssistantCharacter} />
+            label: 'Assistant Character',
+            content: <SelectCharacterView role={Role.Assistant} character={assistantCharacter} setCharacter={setAssistantCharacter} />
         }
     ];
 
@@ -34,17 +34,17 @@ export default function Conversation() {
         setSetupComplete(true);
     }
 
-    const setupDisplay = (
-        <DetailedStepper styling={{ m: "medium" }} steps={steps} onComplete={handleStepperComplete} />
-    );
-
-    const chatDisplay = userCharacter && assistantCharacter ? (
+    const ChatDisplay = () => userCharacter && assistantCharacter ? (
         <ChatInterfaceView context={context} userCharacter={userCharacter} assistantCharacter={assistantCharacter} />
     ) : "Invalid conversation configuration. Please refresh and try again.";
 
     return (
-        <Box styling={{ width: '100%', height: "100%" }}>
-            {setupComplete ? chatDisplay : setupDisplay}
-        </Box>
+        <div>
+            {setupComplete ? (
+                <ChatDisplay />
+            ) : (
+                <Stepper steps={steps} onComplete={handleStepperComplete} className="m-4" />
+            )}
+        </div>
     );
 }

@@ -1,32 +1,38 @@
-import { Select, SelectChangeEvent } from "@/app/components/core/inputs/select";
-import MenuItem from "@/app/components/core/navigation/menu_item";
-import { StyleProps } from "@/app/components/core/style_props";
 import { timeFrames } from "@/app/plutus/constants/time_frames";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-interface TimeFrameSelectionProps {
+export default function TimeFrameSelection({
+    seconds,
+    onValueChange,
+    triggerClassName,
+    ...props
+}: React.ComponentProps<"div"> & {
     seconds: number,
-    onChange: (seconds: number) => void,
-    styling?: StyleProps
-};
-
-export default function TimeFrameSelection(props: TimeFrameSelectionProps) {
-    const handleScopeChange = (event: SelectChangeEvent) => {
-        if (!props.onChange) {
+    onValueChange: (seconds: number) => void,
+    className?: string;
+    triggerClassName?: string;
+}) {
+    const handleValueChanged = (value: string) => {
+        const parsedSeconds = parseInt(value, 10);
+        if (isNaN(parsedSeconds)) {
             return;
         }
-        props.onChange(event.target.value as number);
+
+        onValueChange(parsedSeconds);
     };
 
     return (
-        <Select
-            variant="standard"
-            value={props.seconds}
-            onChange={handleScopeChange}
-            styling={{ ...props.styling, minWidth: "10rem" }}
-        >
-            {timeFrames.map(t => (
-                <MenuItem key={t.name} value={t.seconds}>{t.name}</MenuItem>
-            ))}
-        </Select>
+        <div {...props}>
+            <Select onValueChange={handleValueChanged} defaultValue={String(seconds)}>
+                <SelectTrigger className={`w-50 ${triggerClassName}`}>
+                    <SelectValue placeholder="Seconds" />
+                </SelectTrigger>
+                <SelectContent>
+                    {timeFrames.map(t => (
+                        <SelectItem key={t.name} value={String(t.seconds)}>{t.name}</SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+        </div>
     );
 }

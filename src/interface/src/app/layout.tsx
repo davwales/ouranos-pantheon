@@ -1,95 +1,88 @@
-import Box from '@/app/components/core/layout/box';
-import AppRouterCacheProvider from '@/app/components/core/utils/app_router_cache_provider';
-import CssBaseline from '@/app/components/core/utils/css_baseline';
-import ThemeProvider from '@/app/components/core/utils/theme_provider';
-import GlobalAlert from '@/app/components/feedback/global_alert';
-import NavigationBar from '@/app/components/navigation/navigation_bar';
+import { Footer } from '@/app/components/footer';
+import { NavigationBarItem } from '@/app/components/responsive-navigation-bar';
+import ResponsiveNavigationBar from '@/app/components/responsive-navigation-bar/responsive-navigation-bar';
+import { ThemeProvider } from '@/app/components/theme-provider';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import type { Metadata } from 'next';
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: 'Ouranos',
   description: 'UI to interact with Ouranos applications.'
 }
 
-export default function RootLayout({ children }: React.PropsWithChildren) {
-  const navigationItems = [
-    {
-      label: "Home",
-      options: [
-        {
-          label: "",
-          href: "/"
-        }
-      ]
-    },
-    {
-      label: "Hermes",
-      options: [
-        {
-          label: "Create Conversation",
-          href: "/hermes/conversation"
-        },
-        {
-          label: "Manage Characters",
-          href: "/hermes/characters"
-        }
-      ]
-    },
-    {
-      label: "Plutus",
-      options: [
-        {
-          label: "Explorer",
-          href: "/plutus/explorer"
-        },
-        {
-          label: "Recipes",
-          href: "/plutus/recipes"
-        },
-        {
-          label: "Forecasts",
-          href: "/plutus/forecasts"
-        },
-        {
-          label: "Recent Trades",
-          href: "/plutus/recent"
-        },
-      ]
-    }
-  ];
+const navigationItems: NavigationBarItem[] = [
+  {
+    label: "Home",
+    options: [
+      {
+        label: "",
+        href: "/"
+      }
+    ]
+  },
+  {
+    label: "Hermes",
+    options: [
+      {
+        label: "Create Conversation",
+        description: "Have a conversation with the characters you have created.",
+        href: "/hermes/conversation"
+      },
+      {
+        label: "Manage Characters",
+        description: "Create, edit, and delete characters.",
+        href: "/hermes/characters"
+      }
+    ]
+  },
+  {
+    label: "Plutus",
+    options: [
+      {
+        label: "Explorer",
+        description: "Explore symbols and their relevant market data over time.",
+        href: "/plutus/explorer"
+      },
+      {
+        label: "Recipes",
+        description: "Manage and view how symbols can be combined to create other symbols.",
+        href: "/plutus/recipes"
+      },
+      {
+        label: "Forecasts",
+        description: "View the predicted symbol prices for the coming days.",
+        href: "/plutus/forecasts"
+      },
+      {
+        label: "Recent Trades",
+        description: "View trades for symbols as they are processed.",
+        href: "/plutus/recent"
+      },
+    ]
+  }
+];
 
+export default function RootLayout({ children }: React.PropsWithChildren) {
   return (
-    <html lang="en" style={{
-      height: "100%",
-      margin: 0,
-      padding: 0
-    }}>
-      <body style={{
-        height: "100%",
-        margin: 0,
-        padding: 0
-      }}>
-        <AppRouterCacheProvider>
-          <ThemeProvider>
-            <CssBaseline />
-            <GlobalAlert />
-            <Box styling={{
-              minHeight: '100vh',
-              m: 'none',
-              display: 'flex',
-              flexDirection: 'column'
-            }}>
-              <NavigationBar items={navigationItems} />
-              <Box styling={{
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column'
-              }}>
+    <html lang="en">
+      <body>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <SidebarProvider>
+            <div className='w-full flex flex-col h-screen'>
+              <ResponsiveNavigationBar items={navigationItems} />
+              <main className="flex-auto overflow-auto">
                 {children}
-              </Box>
-            </Box>
-          </ThemeProvider>
-        </AppRouterCacheProvider>
+              </main>
+              <Footer />
+            </div>
+          </SidebarProvider>
+        </ThemeProvider>
       </body>
     </html>
   )
