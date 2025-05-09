@@ -1,16 +1,11 @@
 "use client";
 
-import Typography from '@/app/components/core/data-display/typography';
-import AddIcon from '@/app/components/core/icons/add_icon';
-import RemoveIcon from '@/app/components/core/icons/remove_icon';
-import Button from '@/app/components/core/inputs/button';
-import IconButton from '@/app/components/core/inputs/icon_button';
-import NumberField from '@/app/components/core/inputs/number_field';
-import TextField from '@/app/components/core/inputs/text_field';
-import Box from '@/app/components/core/layout/box';
-import FormBox from '@/app/components/core/layout/form_box';
+import { Typography } from '@/app/components/typography';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
 import { CharacterDetail } from '@/gql/graphql';
-import React, { useState } from 'react';
+import React, { ChangeEvent, useMemo, useState } from 'react';
 
 export interface CharacterInput {
     id?: string;
@@ -19,34 +14,44 @@ export interface CharacterInput {
     details: CharacterDetail[];
 }
 
-interface CharacterFormProps {
+export function CharacterForm({
+    onSave,
+    onDelete,
+    submitText,
+    initialValues,
+    loading,
+    ...props
+}: React.ComponentProps<"form"> & {
+    onSave?: (input: CharacterInput) => void;
+    submitText?: string;
+    onDelete?: () => void;
     initialValues?: CharacterInput;
-    onSubmit: (input: CharacterInput) => void;
     loading?: boolean;
-}
+}) {
+    const [name, setName] = useState(initialValues?.name || '');
+    const [age, setAge] = useState<number | undefined>(initialValues?.age);
+    const [details, setDetails] = useState<CharacterDetail[]>(initialValues?.details || []);
 
-export default function CharacterForm(props: CharacterFormProps) {
-    const [name, setName] = useState(props.initialValues?.name || '');
-    const [age, setAge] = useState<number | undefined>(props.initialValues?.age);
-    const [details, setDetails] = useState<CharacterDetail[]>(props.initialValues?.details || []);
-
-    const handleNameChange = (x: string) => {
-        if (!x) return;
-        setName(x);
+    const handleNameChange = (event: ChangeEvent<HTMLInputElement>) => {
+        setName(event.target.value);
     };
 
-    const handleAgeChange = (x: number) => {
-        if (x <= 0) return;
-        setAge(x);
+    const handleAgeChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const age = parseInt(event.target.value);
+        if (age) {
+            setAge(age);
+        }
     }
 
-    const handleDetailsChange = (
-        index: number,
-        field: 'key' | 'value',
-        value: string
-    ) => {
+    const handleDetailKeyChange = (index: number, event: ChangeEvent<HTMLInputElement>) => {
         const newDetails = [...details];
-        newDetails[index][field] = value;
+        newDetails[index].key = event.target.value;
+        setDetails(newDetails);
+    };
+
+    const handleDetailValueChange = (index: number, event: ChangeEvent<HTMLInputElement>) => {
+        const newDetails = [...details];
+        newDetails[index].value = event.target.value;
         setDetails(newDetails);
     };
 
@@ -61,81 +66,106 @@ export default function CharacterForm(props: CharacterFormProps) {
 
     const handleSubmit = (event: React.FormEvent) => {
         event.preventDefault();
-        const input: CharacterInput = {
-            id: props.initialValues?.id,
-            name,
-            age: age ?? 0,
-            details,
-        };
-        props.onSubmit(input);
+
+        if (onSave) {
+            const input: CharacterInput = {
+                id: initialValues?.id,
+                name,
+                age: age ?? 0,
+                details,
+            };
+
+            onSave(input);
+        }
     };
 
+    const isReadOnly = useMemo(() => !Boolean(onSave), [onSave]);
+
     return (
-        <FormBox onSubmit={handleSubmit}>
-            <TextField
-                label="Name"
-                value={name}
-                onChange={handleNameChange}
-                required
-                fullWidth
-                margin="normal"
-            />
+        <form {...props} onSubmit={handleSubmit}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <Typography variant="h4">Name</Typography>
+                <Input
+                    type="text"
+                    readOnly={isReadOnly}
+                    value={name}
+                    onChange={handleNameChange}
+                    className="w-full"
+                />
+            </div>
 
-            <NumberField
-                label="Age"
-                value={age}
-                onChange={handleAgeChange}
-                fullWidth
-                margin="normal"
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <Typography variant="h4">Age</Typography>
+                <Input
+                    type="number"
+                    readOnly={isReadOnly}
+                    value={age}
+                    onChange={handleAgeChange}
+                    className="w-full"
+                />
+            </div>
 
-            <Typography variant="h6" gutterBottom styling={{ mb: "medium" }}>
-                Details
-            </Typography>
+            <Typography variant="h4" className="mt-4">Details</Typography>
+            {details.length > 0 ? details.map((detail, index) => (
+                <div key={index}>
+                    <div className={`grid grid-cols-1 md:grid-cols-${isReadOnly ? '2' : '3'} gap-4 mt-4`}>
+                        <Input
+                            type="text"
+                            readOnly={isReadOnly}
+                            value={detail.key}
+                            onChange={(e) => handleDetailKeyChange(index, e)}
+                            className="w-full"
+                        />
 
-            {details.map((detail, index) => (
-                <Box
-                    key={index}
-                    styling={{ display: 'flex', alignItems: 'center', mb: "medium" }}
-                >
-                    <TextField
-                        label="Key"
-                        value={detail.key}
-                        onChange={(x) => handleDetailsChange(index, 'key', x)}
-                        required
-                        styling={{ flex: 1, mr: "medium" }}
-                    />
-                    <TextField
-                        label="Value"
-                        value={detail.value}
-                        onChange={(x) => handleDetailsChange(index, 'value', x)}
-                        required
-                        styling={{ flex: 1, mr: "medium" }}
-                    />
-                    <IconButton onClick={() => handleRemoveDetail(index)}>
-                        <RemoveIcon />
-                    </IconButton>
-                </Box>
-            ))}
+                        <Input
+                            type="text"
+                            readOnly={isReadOnly}
+                            value={detail.value}
+                            onChange={(e) => handleDetailValueChange(index, e)}
+                            className="w-full"
+                        />
 
-            <Button
-                variant="outlined"
-                onClick={handleAddDetail}
-                startIcon={<AddIcon />}
-                styling={{ mb: 'small' }}
-            >
-                Add Detail
-            </Button>
+                        {!isReadOnly && (
+                            <Button type="button" variant="destructive" onClick={() => handleRemoveDetail(index)}>
+                                Remove Detail
+                            </Button>
+                        )}
+                    </div>
+                    {index < details.length - 1 && <Separator className="mt-4" />}
+                </div>
+            )) : <Typography>Add details that describe your character!</Typography>}
 
-            <Box>
-                <Button
-                    variant="contained"
-                    disabled={props.loading}
-                    submit
-                >
-                    {props.loading ? 'Submitting...' : 'Submit'}
-                </Button>
-            </Box>
-        </FormBox>
+            {!isReadOnly && (
+                <div>
+                    <Separator className="mt-4" />
+
+                    <Button type="button" variant="outline" onClick={handleAddDetail} className="mt-4 w-full">
+                        Add Detail
+                    </Button>
+
+                    <Separator className='my-4' />
+
+                    {(onSave || onDelete) && (
+                        <div className="grid grid-cols-1 gap-4 md:flex md:justify-between">
+                            {onSave && (
+                                <Button type="submit" className="w-full md:w-40">
+                                    {submitText ?? "Save"}
+                                </Button>
+                            )}
+                            {onDelete && (
+                                <Button
+                                    type="button"
+                                    variant="destructive"
+                                    onClick={onDelete}
+                                    className="w-full md:w-40"
+                                >
+                                    Delete Character
+                                </Button>
+                            )}
+                        </div>
+                    )}
+                </div>
+            )}
+        </form>
     );
 }

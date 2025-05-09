@@ -1,26 +1,24 @@
 "use client";
 
-import Typography from "@/app/components/core/data-display/typography";
-import Button from "@/app/components/core/inputs/button";
-import Box from "@/app/components/core/layout/box";
-import Grid from "@/app/components/core/layout/grid";
-import { useMobile } from "@/app/components/core/utils/breakpoints";
-import { PrettyNumber } from "@/app/components/utils/pretty_number";
-import useInterval from "@/app/components/utils/use_interval";
+import ClipboardCopy from "@/app/components/clipboard-copy";
+import { PrettyNumber } from "@/app/components/pretty-number/pretty-number";
+import { Typography } from "@/app/components/typography";
+import PercentChange from "@/app/plutus/components/percent-change";
+import PriceChart from "@/app/plutus/components/price-chart";
 import TimeFrameSelection from "@/app/plutus/components/time_frame_selection";
 import { PlutusState, usePlutusStore } from "@/app/plutus/constants/plutus_store";
-import DetailChart from "@/app/plutus/explorer/[marketId]/[symbolId]/components/detail_chart";
-import PercentChange from "@/app/plutus/explorer/[marketId]/[symbolId]/components/percent_change";
+import { minuteSeconds } from "@/app/plutus/constants/time_frames";
 import { GET_SYMBOL_DETAILS } from "@/app/plutus/queries";
+import useInterval from "@/hooks/use_interval";
 import { useQuery } from "@urql/next";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
+import React, { ReactNode, useMemo } from "react";
 
 export default function SymbolDetail() {
-    const router = useRouter();
-    const { marketId, symbolId } = useParams<{ marketId: string, symbolId: string }>();
-    const searchParams = useSearchParams();
+    const { symbolId } = useParams<{ marketId: string, symbolId: string }>();
     const [timeFrameSeconds, setTimeFrameSeconds] = usePlutusStore((state: PlutusState) => [state.timeFrameSeconds, state.setTimeFrameSeconds]);
-    const isMobile = useMobile();
+
+    useInterval(() => reexecuteQuery(), minuteSeconds * 1000);
 
     const [{ data }, reexecuteQuery] = useQuery({
         query: GET_SYMBOL_DETAILS,
@@ -30,111 +28,97 @@ export default function SymbolDetail() {
         }
     });
 
-    useInterval(() => reexecuteQuery(), 15000);
+    const formattedTrades = useMemo(() => data?.symbolTrades.trades.map(t => {
+        return {
+            ...t,
+            date: new Date(t.date)
+        };
+    }) ?? [], [data?.symbolTrades.trades]);
 
-    const handleTimeFrameChange = (seconds: number) => {
-        setTimeFrameSeconds(seconds);
-    };
-
-    const handleBackClicked = () => {
-        const referrer = searchParams.get("referrer");
-        if (referrer) {
-            router.push(`/plutus/${referrer}/${marketId}`);
-        } else {
-            router.push(`/plutus/explorer/${marketId}`);
-        }
-    };
-
-    const fieldMapping = {
-        "Code": <Typography>{data?.symbol.code}</Typography>,
-        "Subcode": <Typography>{data?.symbol.subcode}</Typography>,
-        "Total Spent": <PrettyNumber number={data?.symbolTrades.totalSpent} />,
-        "Minimum Price": <PrettyNumber number={data?.symbolTrades.minPrice} />,
-        "Average Price": <PrettyNumber number={data?.symbolTrades.averagePrice} />,
-        "Maximum Price": <PrettyNumber number={data?.symbolTrades.maxPrice} />,
-        "Volume": <PrettyNumber number={data?.symbolTrades.volume} />,
-        "# Transactions": <PrettyNumber number={data?.symbolTrades.numTransactions || 0} decimals={0} />,
-    };
-
-    const header = <Typography variant='h3'>{data?.symbol.name}</Typography>;
-
-    const controls = (
-        <Box styling={{ float: isMobile ? 'initial' : 'right', mb: isMobile ? 'large' : 'none' }}>
-            <Button
-                variant="outlined"
-                onClick={handleBackClicked}
-                styling={{ mr: 'medium' }}
-            >
-                Back
-            </Button>
-            <TimeFrameSelection
-                onChange={handleTimeFrameChange}
-                seconds={timeFrameSeconds}
-                styling={{ float: 'right' }}
-            />
-        </Box>
+    const StatDisplay = ({
+        label,
+        children
+    }: {
+        label: string,
+        children: ReactNode
+    }): ReactNode => (
+        <div className="flex justify-between">
+            <Typography variant="h4">{label}</Typography>
+            {children}
+        </div>
     );
 
-    const priceChange = (label: string, current?: number) => data?.allForecasts?.nodes?.[0] ? (
-        <Grid size={{ xs: 3, sm: 2, md: 2, lg: 1 }} styling={{ mx: 'small' }}>
-            <PercentChange
-                label={label}
-                current={current}
-                previous={data.allForecasts.nodes[0].latest.averagePrice}
-            />
-        </Grid>
+    const Stats = (props: React.ComponentProps<"div">): ReactNode => (
+        <div {...props}>
+            <StatDisplay label="Code">
+                {data?.symbol.code}
+            </StatDisplay>
+            {data?.symbol.subcode && <StatDisplay label="Subcode">
+                {data.symbol.subcode}
+            </StatDisplay>}
+            <StatDisplay label="Total Spent">
+                <PrettyNumber number={data?.symbolTrades.totalSpent} />
+            </StatDisplay>
+            <StatDisplay label="Minimum Price">
+                <ClipboardCopy value={data?.symbolTrades.minPrice}>
+                    <PrettyNumber number={data?.symbolTrades.minPrice} />
+                </ClipboardCopy>
+            </StatDisplay>
+            <StatDisplay label="Average Price">
+                <ClipboardCopy value={data?.symbolTrades.averagePrice}>
+                    <PrettyNumber number={data?.symbolTrades.averagePrice} />
+                </ClipboardCopy>
+            </StatDisplay>
+            <StatDisplay label="Maximum Price">
+                <ClipboardCopy value={data?.symbolTrades.maxPrice}>
+                    <PrettyNumber number={data?.symbolTrades.maxPrice} />
+                </ClipboardCopy>
+            </StatDisplay>
+            <StatDisplay label="Volume">
+                <PrettyNumber number={data?.symbolTrades.volume} />
+            </StatDisplay>
+            <StatDisplay label="# Transactions">
+                <PrettyNumber number={data?.symbolTrades.numTransactions || 0} decimals={0} />
+            </StatDisplay>
+        </div>
+    );
+
+    const PriceChange = ({
+        label,
+        current
+    }: {
+        label: string,
+        current?: number
+    }): ReactNode => data?.allForecasts?.nodes?.[0] ? (
+        <PercentChange
+            label={label}
+            current={current}
+            previous={data.allForecasts.nodes[0].latest.averagePrice}
+        />
     ) : null;
 
-    const latestPriceChange = priceChange("Latest", data?.latestTrade?.nodes?.[0]?.price);
-    const dailyPriceChange = priceChange("Today", data?.dailySymbolSummary.averagePrice);
-    const predictedPriceChange = priceChange("Predicted", data?.allForecasts?.nodes?.[0]?.predictions[0].averagePrice);
-
     return (
-        <Box styling={{ width: '100%', p: 'medium' }}>
-            <Grid container spacing={1} styling={{ mb: 'small', alignItems: 'center' }}>
-                <Grid size={{ xs: 12, sm: 12, md: 8 }}>
-                    {isMobile ? controls : header}
-                </Grid>
-                <Grid size={{ xs: 12, sm: 12, md: 4 }}>
-                    {isMobile ? header : controls}
-                </Grid>
-            </Grid>
+        <div>
+            <div className="md:flex md:justify-between md:items-center">
+                <Typography variant="h2" className="mb-2 border-b-0">{data?.symbol.name}</Typography>
 
-            <Grid container styling={{ mb: 'medium' }}>
-                {latestPriceChange}
-                {dailyPriceChange}
-                {predictedPriceChange}
-            </Grid>
+                <TimeFrameSelection
+                    onValueChange={setTimeFrameSeconds}
+                    seconds={timeFrameSeconds}
+                    triggerClassName="w-full md:w-50"
+                />
+            </div>
 
-            <Grid container spacing={3}>
-                <Grid size={{ xs: 12, sm: 12, md: 4 }}>
-                    <Box styling={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 'large'
-                    }}>
-                        {Object.entries(fieldMapping).map(([fieldKey, fieldValue]) => (
-                            <Box key={fieldKey} styling={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                width: '100%'
-                            }}>
-                                <Typography variant="h6">{fieldKey}</Typography>
-                                {fieldValue}
-                            </Box>
-                        ))}
-                    </Box>
-                </Grid>
+            <div className="grid grid-cols-1 md:grid-cols-8 gap-2 mt-4 mb-2">
+                <PriceChange label="Latest" current={data?.latestTrade?.nodes?.[0]?.price} />
+                <PriceChange label="Today" current={data?.dailySymbolSummary.averagePrice} />
+                <PriceChange label="Predicted" current={data?.allForecasts?.nodes?.[0]?.predictions[0].averagePrice} />
+            </div>
 
-                <Grid size={{ xs: 12, sm: 12, md: 8 }}>
-                    {data?.symbolTrades?.trades.length && (
-                        <Box styling={{ height: '100%', minHeight: '400px' }}>
-                            <DetailChart trades={data.symbolTrades.trades} />
-                        </Box>
-                    )}
-                </Grid>
-            </Grid>
-        </Box >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Stats className="my-2" />
+                <PriceChart data={formattedTrades} className="my-2" />
+            </div>
+        </div>
     );
 }

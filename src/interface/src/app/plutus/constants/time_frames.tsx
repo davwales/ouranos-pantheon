@@ -11,36 +11,16 @@ export interface TimeFrame {
 
 export const timeFrames: TimeFrame[] = [
     {
-        name: "Fifteen Minutes",
-        seconds: 15 * minuteSeconds
-    },
-    {
-        name: "Thirty Minutes",
-        seconds: 30 * minuteSeconds
-    },
-    {
         name: "One Hour",
         seconds: hourSeconds
     },
     {
-        name: "Three Hours",
-        seconds: 3 * hourSeconds
-    },
-    {
-        name: "Six Hours",
-        seconds: 6 * hourSeconds
-    },
-    {
-        name: "Twelve Hours",
-        seconds: 12 * hourSeconds
+        name: "Four Hours",
+        seconds: 4 * hourSeconds
     },
     {
         name: "One Day",
         seconds: daySeconds
-    },
-    {
-        name: "Three Days",
-        seconds: 3 * daySeconds
     },
     {
         name: "Five Days",
@@ -63,7 +43,7 @@ export const timeFrames: TimeFrame[] = [
         seconds: yearSeconds
     },
     {
-        name: "All Time",
+        name: "Max",
         seconds: -1
     }
 ];

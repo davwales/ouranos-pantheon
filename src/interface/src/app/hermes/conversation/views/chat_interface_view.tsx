@@ -1,4 +1,4 @@
-import Box from '@/app/components/core/layout/box';
+import { FooterContent } from '@/app/components/footer';
 import ChatInput from '@/app/hermes/conversation/components/chat_input';
 import ChatMessageList from '@/app/hermes/conversation/components/chat_message_list';
 import ConversationCharacter from '@/app/hermes/conversation/models/conversation_character';
@@ -111,13 +111,7 @@ export default function ChatInterfaceView(props: ChatInterfaceViewProps) {
     };
 
     return (
-        <Box styling={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            position: 'relative',
-            py: "small"
-        }}>
+        <div>
             <ChatMessageList
                 messages={messages}
                 userCharacter={props.userCharacter}
@@ -126,21 +120,20 @@ export default function ChatInterfaceView(props: ChatInterfaceViewProps) {
                 onEditMessage={handleMessageEdit}
                 onRetryMessage={handleMessageRetry}
                 isGenerating={isGenerating}
-                styling={{
-                    flex: 1,
-                    overflow: 'auto'
-                }}
             />
 
-            <ChatInput
-                inputText={inputText}
-                isGenerating={isGenerating}
-                isEditing={editingMessageIndex !== null}
-                onInputChange={setInputText}
-                onNewMessage={handleNewMessage}
-                onUpdateMessage={handleUpdateMessage}
-                onCancelEdit={handleCancelEdit}
-            />
-        </Box>
+            <FooterContent>
+                <ChatInput
+                    inputText={inputText}
+                    isGenerating={isGenerating}
+                    isEditing={editingMessageIndex !== null}
+                    onInputChange={setInputText}
+                    onNewMessage={handleNewMessage}
+                    onUpdateMessage={handleUpdateMessage}
+                    onCancelEdit={handleCancelEdit}
+                    className="p-4 border-t"
+                />
+            </FooterContent>
+        </div>
     );
 };

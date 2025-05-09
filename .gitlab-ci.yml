@@ -28,6 +28,8 @@ dotnet_test:
   script:
     - 'dotnet restore --verbosity quiet'
     - 'dotnet test --logger "console;verbosity=detailed"'
+  only:
+    - main
 
 build_gateway:
   <<: *build_template

@@ -6,6 +6,8 @@ export const GET_ALL_MARKETS = graphql(`
             nodes {
                 id
                 name
+                description
+                icon
             }
         }
     }

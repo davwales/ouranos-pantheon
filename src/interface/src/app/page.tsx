@@ -1,11 +1,11 @@
-import Typography from "@/app/components/core/data-display/typography";
+import { Typography } from "@/app/components/typography";
 
 export default function Home() {
   return (
-    <>
-      <Typography variant="body1" styling={{ m: "medium" }}>
+    <div className="p-4">
+      <Typography>
         This is the landing page.
       </Typography>
-    </>
+    </div>
   )
 }

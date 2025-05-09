@@ -1,19 +1,21 @@
-import List from "@/app/components/core/data-display/list";
-import ListItem from "@/app/components/core/data-display/list_item";
-import ListItemText from "@/app/components/core/data-display/list_item_text";
-import DeleteIcon from "@/app/components/core/icons/delete_icon";
-import EditIcon from "@/app/components/core/icons/edit_icon";
-import ReplayIcon from "@/app/components/core/icons/replay_icon";
-import Box from "@/app/components/core/layout/box";
-import { StyleProps } from "@/app/components/core/style_props";
-import ResponsiveMenu from "@/app/components/navigation/responsive_menu";
+import { MenuAction, ResponsiveContextMenu } from "@/app/components/responsive-context-menu";
+import { Typography } from "@/app/components/typography";
 import ConversationCharacter from "@/app/hermes/conversation/models/conversation_character";
 import Message from "@/app/hermes/conversation/models/message";
 import { Role } from "@/gql/graphql";
-import { useEffect, useRef, useState } from "react";
+import { Pencil, RotateCcw, Trash } from "lucide-react";
+import { useEffect, useRef } from "react";
 
-interface ChatMessageListProps {
-    styling?: StyleProps;
+export default function ChatMessageList({
+    messages,
+    userCharacter,
+    assistantCharacter,
+    isGenerating,
+    onEditMessage,
+    onDeleteMessage,
+    onRetryMessage,
+    ...props
+}: React.ComponentProps<"div"> & {
     messages: Message[];
     userCharacter: ConversationCharacter;
     assistantCharacter: ConversationCharacter;
@@ -21,54 +23,37 @@ interface ChatMessageListProps {
     onDeleteMessage?: (index: number) => void;
     onRetryMessage?: (index: number) => void;
     isGenerating?: boolean;
-};
-
-export default function ChatMessageList(props: ChatMessageListProps) {
-    const [contextMenuAnchor, setContextMenuAnchor] = useState<HTMLElement | undefined>();
-    const [selectedMessageIndex, setSelectedMessageIndex] = useState<number | undefined>();
+}) {
     const messageListRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
         if (messageListRef?.current) {
             messageListRef.current.scrollIntoView({ behavior: 'smooth' });
         }
-    }, [props.messages]);
+    }, [messages]);
 
-    const handleOpenContextMenu = (event: React.MouseEvent<HTMLLIElement>, index: number) => {
-        if (props.isGenerating) return;
-
-        event.preventDefault();
-        setContextMenuAnchor(event.currentTarget);
-        setSelectedMessageIndex(index);
-    };
-
-    const handleCloseContextMenu = () => {
-        setContextMenuAnchor(undefined);
-        setSelectedMessageIndex(undefined);
-    };
-
-    const getMessageActions = (index: number, role: Role) => {
-        const actions = [
+    const getMenuActions = (index: number): MenuAction[] => {
+        const actions: MenuAction[] = [
             {
                 label: 'Edit',
-                icon: <EditIcon fontSize="small" />,
-                onClick: () => props.onEditMessage?.(index)
+                icon: <Pencil />,
+                onClick: () => onEditMessage?.(index)
             }
         ];
 
-        if (role === Role.Assistant) {
+        if (messages[index].role === Role.Assistant) {
             actions.push({
                 label: 'Retry',
-                icon: <ReplayIcon fontSize="small" />,
-                onClick: () => props.onRetryMessage?.(index)
+                icon: <RotateCcw />,
+                onClick: () => onRetryMessage?.(index)
             });
         }
 
-        if (role === Role.User) {
+        if (messages[index].role === Role.User) {
             actions.push({
                 label: 'Delete',
-                icon: <DeleteIcon fontSize="small" color="error" />,
-                onClick: () => props.onDeleteMessage?.(index)
+                icon: <Trash />,
+                onClick: () => onDeleteMessage?.(index)
             });
         }
 
@@ -76,31 +61,25 @@ export default function ChatMessageList(props: ChatMessageListProps) {
     };
 
     return (
-        <Box styling={props.styling}>
-            <List styling={{ flexGrow: 1, overflowY: 'auto', pb: 'xxl' }}>
-                {props.messages.map((msg, index) => (
-                    <ListItem
-                        key={index}
-                        onClick={(e) => handleOpenContextMenu(e, index)}
-                    >
-                        <ListItemText
-                            primary={msg.content}
-                            secondary={msg.role === Role.User ? props.userCharacter.name : props.assistantCharacter.name}
-                            styling={{ textAlign: msg.role === Role.User ? 'right' : 'left' }}
-                        />
-                    </ListItem>
-                ))}
-
-                <div ref={messageListRef} />
-            </List>
-
-            {selectedMessageIndex && (
-                <ResponsiveMenu
-                    anchorEl={contextMenuAnchor}
-                    onClose={handleCloseContextMenu}
-                    actions={getMessageActions(selectedMessageIndex, props.messages[selectedMessageIndex].role)}
-                />
-            )}
-        </Box>
+        <div {...props}>
+            {messages.map((msg, index) => (
+                <ResponsiveContextMenu
+                    key={index}
+                    actions={getMenuActions(index)}
+                    title="Actions"
+                    description="Perform an action on the message."
+                >
+                    <div className={`w-fit text-left break-words mt-4 mx-2 ${msg.role == Role.User && "ml-auto"}`}>
+                        <Typography className={`py-2 px-4 border rounded-2xl ${msg.role == Role.User && "bg-accent/30"}`}>
+                            {msg.content}
+                        </Typography>
+                        <Typography variant="muted" className={`mx-2.5 my-1 ${msg.role == Role.User && "text-right"}`}>
+                            {msg.role == Role.User ? userCharacter.name : assistantCharacter.name}
+                        </Typography>
+                    </div>
+                </ResponsiveContextMenu>
+            ))}
+            <div ref={messageListRef} />
+        </div>
     );
 }

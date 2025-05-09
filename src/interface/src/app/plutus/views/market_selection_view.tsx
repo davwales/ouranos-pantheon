@@ -1,32 +1,37 @@
 "use client";
 
-import Typography from "@/app/components/core/data-display/typography";
-import Grid from "@/app/components/core/layout/grid";
-import CardContent from "@/app/components/core/surfaces/card_content";
-import LinkCard from "@/app/components/surfaces/link_card";
+import InfoCard from "@/app/components/info-card";
+import { Typography } from "@/app/components/typography";
 import { GET_ALL_MARKETS } from "@/app/plutus/queries";
 import { useQuery } from "@urql/next";
+import Link from "next/link";
+import React from "react";
 
-interface MarketSelectionViewProps {
+export default function MarketSelectionView({
+    label,
+    href,
+    ...props
+}: React.ComponentProps<"div"> & {
+    label: string;
     href: string;
-}
-
-export default function MarketSelectionView(props: MarketSelectionViewProps) {
+}) {
     const [{ data }] = useQuery({ query: GET_ALL_MARKETS })
 
     return (
-        <Grid container spacing={2}>
-            {data?.allMarkets?.nodes?.map(market => (
-                <Grid key={market.id} size={{ sm: 12, md: 6, lg: 4, xl: 2 }}>
-                    <LinkCard href={`${props.href}/${market.id}`}>
-                        <CardContent>
-                            <Typography variant="h4" styling={{ textAlign: "center" }}>
-                                {market.name}
-                            </Typography>
-                        </CardContent>
-                    </LinkCard>
-                </Grid>
-            ))}
-        </Grid>
+        <div {...props}>
+            <Typography variant="h1" className="mb-10">{label}</Typography>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {data?.allMarkets?.nodes?.map(market => (
+                    <Link href={`${href}/${market.id}`} key={market.id} >
+                        <InfoCard
+                            label={market.name}
+                            description={market.description}
+                            iconSrc={market.icon}
+                            className="hover:bg-accent h-full w-full"
+                        />
+                    </Link>
+                ))}
+            </div>
+        </div>
     );
 }

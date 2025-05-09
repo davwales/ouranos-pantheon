@@ -1,14 +1,11 @@
 "use client";
 
-import Typography from '@/app/components/core/data-display/typography';
-import Button from '@/app/components/core/inputs/button';
-import Box from '@/app/components/core/layout/box';
-import CharacterForm, { CharacterInput } from '@/app/hermes/components/character_form';
+import { Typography } from '@/app/components/typography';
+import { CharacterForm, CharacterInput } from '@/app/hermes/components/character_form';
 import { DELETE_CHARACTER, UPDATE_CHARACTER } from '@/app/hermes/mutations';
 import { GET_CHARACTER } from '@/app/hermes/queries';
 import { mapDetails } from '@/app/hermes/utils/map_details';
 import { UpdateCharacterInput } from '@/gql/graphql';
-import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from 'urql';
@@ -51,7 +48,7 @@ export default function EditCharacterPage() {
         }
     };
 
-    const handleSubmit = async (input: CharacterInput) => {
+    const handleSave = async (input: CharacterInput) => {
         setLoading(true);
 
         try {
@@ -75,25 +72,18 @@ export default function EditCharacterPage() {
     }
 
     return (
-        <Box styling={{ m: "medium" }}>
-            <Box styling={{ width: "100%", mb: "medium" }}>
-                <Button component={Link} href="/hermes/characters" variant="outlined">
-                    Back
-                </Button>
-                <Button variant="outlined" color="error" onClick={handleDelete} styling={{ float: "right" }}>
-                    Delete
-                </Button>
-            </Box>
-
-            <Typography variant="h5" gutterBottom>
+        <div className="m-4">
+            <Typography variant="h2" className="border-b-0">
                 Edit Character
             </Typography>
 
             <CharacterForm
                 initialValues={initialValues}
-                onSubmit={handleSubmit}
+                onSave={handleSave}
+                onDelete={handleDelete}
                 loading={loading || fetching}
+                className="mt-4"
             />
-        </Box>
+        </div>
     );
 }
