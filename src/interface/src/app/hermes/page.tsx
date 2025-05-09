@@ -1,35 +1,32 @@
-import Typography from "@/app/components/core/data-display/typography";
-import Grid from "@/app/components/core/layout/grid";
-import CardContent from "@/app/components/core/surfaces/card_content";
-import LinkCard from "@/app/components/surfaces/link_card";
+import InfoCard from "@/app/components/info-card";
+import Link from "next/link";
+
 
 export default function Hermes() {
     const modules = [
         {
-            title: "Create Conversation",
+            name: "Create Conversation",
+            description: "Create a new conversation with a character.",
             href: "/hermes/conversation"
         },
         {
-            title: "Manage Characters",
+            name: "Manage Characters",
+            description: "Manage your characters.",
             href: "/hermes/characters"
         }
     ];
 
     return (
-        <>
-            <Grid container spacing={2}>
-                {modules.map((m, index) => (
-                    <Grid key={index} size={{ sm: 12, lg: 4 }}>
-                        <LinkCard href={m.href}>
-                            <CardContent>
-                                <Typography variant="h4" styling={{ textAlign: "center" }}>
-                                    {m.title}
-                                </Typography>
-                            </CardContent>
-                        </LinkCard>
-                    </Grid>
-                ))}
-            </Grid>
-        </>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 m-4">
+            {modules.map((module, index) => (
+                <Link href={module.href} key={index} >
+                    <InfoCard
+                        label={module.name}
+                        description={module.description}
+                        className="hover:bg-accent h-full w-full"
+                    />
+                </Link>
+            ))}
+        </div>
     );
 }

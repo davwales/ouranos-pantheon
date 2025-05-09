@@ -40,7 +40,7 @@ export default function Plutus() {
                         <InfoCard
                             label={module.name}
                             description={module.description}
-                            icon={module.icon}
+                            iconSrc={module.icon}
                             className="hover:bg-accent h-full w-full"
                         />
                     </Link>
