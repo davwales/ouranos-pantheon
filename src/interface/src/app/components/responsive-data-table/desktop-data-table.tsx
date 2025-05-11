@@ -64,7 +64,6 @@ export default function DesktopDataTable<TData>({
                                             columns={[header.column.columnDef as ExtendedColumnDef<TData>]}
                                             sort={sort}
                                             onSortChange={onSortChange}
-                                            variant="desktop"
                                         />)}
                                     </div>
                                 </TableHead>

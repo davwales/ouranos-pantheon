@@ -1,4 +1,4 @@
-import { DesktopContent, MobileContent, ResponsiveContent } from "@/app/components/responsive-content";
+import { Content, ResponsiveContent } from "@/app/components/responsive-content";
 import DesktopDataTable from "@/app/components/responsive-data-table/desktop-data-table";
 import MobileDataTable from "@/app/components/responsive-data-table/mobile-data-table";
 import { DataTableProps } from "@/app/components/responsive-data-table/types";
@@ -9,13 +9,13 @@ export default function ResponsiveDataTable<TData>({
 }: React.ComponentProps<"div"> & DataTableProps<TData>) {
     return (
         <ResponsiveContent>
-            <DesktopContent>
+            <Content type="desktop">
                 <DesktopDataTable {...props} />
-            </DesktopContent>
+            </Content>
 
-            <MobileContent>
+            <Content type="mobile">
                 <MobileDataTable {...props} />
-            </MobileContent>
+            </Content>
         </ResponsiveContent>
     );
 }

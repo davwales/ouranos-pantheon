@@ -1,39 +1,32 @@
+"use client";
+
+import { useIsMobile } from "@/hooks/use-mobile";
 import React from "react";
 
-export function MobileContent({
-    children
-}: {
-    children: React.ReactNode
-}) {
-    return children;
-};
+type ContentType = "mobile" | "desktop";
 
-export function DesktopContent({
-    children
-}: {
-    children: React.ReactNode
-}) {
-    return children;
-};
+interface ContentProps extends React.ComponentProps<"div"> {
+    type: ContentType;
+}
+
+export function Content({ type, children, ...props }: ContentProps) {
+    return <div {...props}>{children}</div>;
+}
 
 export function ResponsiveContent({
     children,
     ...props
 }: React.ComponentProps<"div"> & {
-    children: React.ReactNode[];
+    children: React.ReactElement<ContentProps>[];
 }) {
-    const desktopContent = children.find(
-        (child) => React.isValidElement(child) && child.type === DesktopContent
-    );
+    const isMobile = useIsMobile();
+    const targetType: ContentType = isMobile ? "mobile" : "desktop";
 
-    const mobileContent = children.find(
-        (child) => React.isValidElement(child) && child.type === MobileContent
-    );
+    const content = children.filter((child) => child.props.type === targetType);
 
     return (
         <div {...props}>
-            <div className="hidden md:block">{desktopContent}</div>
-            <div className="md:hidden">{mobileContent}</div>
+            {content}
         </div>
     );
 }

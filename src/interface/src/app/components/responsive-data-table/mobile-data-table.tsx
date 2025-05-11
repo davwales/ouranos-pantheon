@@ -69,7 +69,6 @@ export default function MobileDataTable<TData>({
                 columns={columns}
                 sort={sort}
                 onSortChange={onSortChange}
-                variant="mobile"
             />)}
 
             <div className="space-y-4 mt-2">

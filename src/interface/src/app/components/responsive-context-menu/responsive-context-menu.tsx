@@ -1,4 +1,4 @@
-import { DesktopContent, MobileContent, ResponsiveContent } from '@/app/components/responsive-content';
+import { Content, ResponsiveContent } from '@/app/components/responsive-content';
 import { DesktopContextMenu } from '@/app/components/responsive-context-menu/desktop-context-menu';
 import { MobileContextMenu } from '@/app/components/responsive-context-menu/mobile-context-menu';
 import { ContextMenuProps } from '@/app/components/responsive-context-menu/types';
@@ -23,13 +23,13 @@ export function ResponsiveContextMenu({
 
     return (
         <ResponsiveContent {...props}>
-            <MobileContent>
+            <Content type="mobile">
                 <MobileContextMenu {...contextMenuProps} />
-            </MobileContent>
+            </Content>
 
-            <DesktopContent>
+            <Content type="desktop">
                 <DesktopContextMenu {...contextMenuProps} />
-            </DesktopContent>
+            </Content>
         </ResponsiveContent>
     );
 };

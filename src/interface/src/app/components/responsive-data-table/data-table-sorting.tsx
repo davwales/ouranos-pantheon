@@ -1,3 +1,4 @@
+import { Content, ResponsiveContent } from "@/app/components/responsive-content";
 import { ExtendedColumnDef, SortArgs } from "@/app/components/responsive-data-table/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SortEnumType } from "@/gql/graphql";
@@ -7,12 +8,10 @@ export function DataTableSorting({
     columns,
     sort,
     onSortChange,
-    variant = 'desktop'
 }: {
     columns: ExtendedColumnDef<any>[];
     sort?: SortArgs;
     onSortChange?: (sort: SortArgs) => void;
-    variant?: 'desktop' | 'mobile';
 }) {
     const getSortState = (columnId: string): SortEnumType | null => {
         if (!sort) return null;
@@ -86,69 +85,69 @@ export function DataTableSorting({
         }
     };
 
-    if (variant === 'mobile') {
-        return (
-            <div className="flex items-center gap-2 mt-2 w-full">
-                <h6>Sort By</h6>
-                <Select
-                    value={getCurrentSortColumn()}
-                    onValueChange={(value) => handleSortChange(value)}
-                >
-                    <SelectTrigger className="flex-grow max-w-1/2">
-                        <SelectValue placeholder="Sort by column" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {columns.map((column) => {
-                            if (!column.id) return null;
-                            return (
-                                <SelectItem key={column.id} value={column.id}>
-                                    {typeof column.header === 'string' ? column.header : column.id}
-                                </SelectItem>
-                            )
-                        })}
-                    </SelectContent>
-                </Select>
-
-                <Select
-                    value={getSortState(getCurrentSortColumn()) ?? ""}
-                    onValueChange={(value) => handleSortChange(getCurrentSortColumn(), value as SortEnumType)}
-                    disabled={!getCurrentSortColumn()}
-                >
-                    <SelectTrigger className="flex-grow max-w-1/2">
-                        <SelectValue placeholder="Direction" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value={SortEnumType.Asc}>Ascending</SelectItem>
-                        <SelectItem value={SortEnumType.Desc}>Descending</SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
-        );
-    }
-
     return (
-        <>
-            {columns.map((column) => {
-                const direction = getSortState(column.id ?? '');
-                const getSortIcon = () => {
-                    if (!direction) {
-                        return <ArrowUpDown className="opacity-0 hover:opacity-100 h-4 w-4" />;
-                    }
-                    return direction === SortEnumType.Asc ?
-                        <ArrowUp className="h-4 w-4" /> :
-                        <ArrowDown className="h-4 w-4" />;
-                };
-
-                return (
-                    <div
-                        key={column.id}
-                        className="flex items-center gap-2 cursor-pointer select-none"
-                        onClick={() => handleSortChange(column.id ?? '')}
+        <ResponsiveContent>
+            <Content type="mobile">
+                <div className="flex items-center gap-2 mt-2 w-full">
+                    <h6>Sort By</h6>
+                    <Select
+                        value={getCurrentSortColumn()}
+                        onValueChange={(value) => handleSortChange(value)}
                     >
-                        {getSortIcon()}
-                    </div>
-                );
-            })}
-        </>
+                        <SelectTrigger className="flex-grow max-w-1/2">
+                            <SelectValue placeholder="Sort by column" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {columns.map((column) => {
+                                if (!column.id) return null;
+                                return (
+                                    <SelectItem key={column.id} value={column.id}>
+                                        {typeof column.header === 'string' ? column.header : column.id}
+                                    </SelectItem>
+                                )
+                            })}
+                        </SelectContent>
+                    </Select>
+
+                    <Select
+                        value={getSortState(getCurrentSortColumn()) ?? ""}
+                        onValueChange={(value) => handleSortChange(getCurrentSortColumn(), value as SortEnumType)}
+                        disabled={!getCurrentSortColumn()}
+                    >
+                        <SelectTrigger className="flex-grow max-w-1/2">
+                            <SelectValue placeholder="Direction" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value={SortEnumType.Asc}>Ascending</SelectItem>
+                            <SelectItem value={SortEnumType.Desc}>Descending</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            </Content>
+
+            <Content type="desktop">
+                {columns.map((column) => {
+                    const direction = getSortState(column.id ?? '');
+                    const getSortIcon = () => {
+                        if (!direction) {
+                            return <ArrowUpDown className="opacity-0 hover:opacity-100 h-4 w-4" />;
+                        }
+                        return direction === SortEnumType.Asc ?
+                            <ArrowUp className="h-4 w-4" /> :
+                            <ArrowDown className="h-4 w-4" />;
+                    };
+
+                    return (
+                        <div
+                            key={column.id}
+                            className="flex items-center gap-2 cursor-pointer select-none"
+                            onClick={() => handleSortChange(column.id ?? '')}
+                        >
+                            {getSortIcon()}
+                        </div>
+                    );
+                })}
+            </Content>
+        </ResponsiveContent>
     );
 } 

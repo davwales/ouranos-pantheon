@@ -1,4 +1,4 @@
-import { DesktopContent, MobileContent, ResponsiveContent } from "@/app/components/responsive-content";
+import { Content, ResponsiveContent } from "@/app/components/responsive-content";
 import DesktopNavigationBar from "@/app/components/responsive-navigation-bar/desktop-navigation-bar";
 import MobileNavigationBar from "@/app/components/responsive-navigation-bar/mobile-navigation-bar";
 import { NavigationBarItem } from "@/app/components/responsive-navigation-bar/types";
@@ -17,12 +17,12 @@ export default function ResponsiveNavigationBar({
     return (
         <div className="border-b-2 p-3 flex items-center justify-between" {...props}>
             <ResponsiveContent>
-                <DesktopContent>
+                <Content type="desktop">
                     <DesktopNavigationBar items={items} />
-                </DesktopContent>
-                <MobileContent>
+                </Content>
+                <Content type="mobile">
                     <MobileNavigationBar items={items} />
-                </MobileContent>
+                </Content>
             </ResponsiveContent>
 
             <div className="flex items-center space-x-3">
