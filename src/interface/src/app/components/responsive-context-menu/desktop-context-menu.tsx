@@ -1,18 +1,16 @@
-import { MenuAction } from "@/app/components/responsive-context-menu/types";
+import { ContextMenuProps } from "@/app/components/responsive-context-menu/types";
 import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { ContextMenuContent, ContextMenuItem } from "@radix-ui/react-context-menu";
 
 export function DesktopContextMenu({
     actions,
     children,
+    disabled,
     ...props
-}: React.ComponentProps<typeof ContextMenu> & {
-    actions: MenuAction[];
-    children: React.ReactNode;
-}) {
+}: React.ComponentProps<typeof ContextMenu> & ContextMenuProps) {
     return (
         <ContextMenu {...props}>
-            <ContextMenuTrigger>
+            <ContextMenuTrigger disabled={disabled}>
                 {children}
             </ContextMenuTrigger>
             <ContextMenuContent>

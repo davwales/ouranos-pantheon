@@ -68,6 +68,7 @@ export default function ChatMessageList({
                     actions={getMenuActions(index)}
                     title="Actions"
                     description="Perform an action on the message."
+                    disabled={isGenerating}
                 >
                     <div className={`w-fit text-left break-words mt-4 mx-2 ${msg.role == Role.User && "ml-auto"}`}>
                         <Typography className={`py-2 px-4 border rounded-2xl ${msg.role == Role.User && "bg-accent/30"}`}>

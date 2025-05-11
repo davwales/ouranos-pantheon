@@ -1,4 +1,4 @@
-import { MenuAction } from "@/app/components/responsive-context-menu/types";
+import { ContextMenuProps, MenuAction } from "@/app/components/responsive-context-menu/types";
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
 import { useState } from "react";
 
@@ -8,13 +8,9 @@ export function MobileContextMenu({
     description,
     children,
     onOpenChange,
+    disabled,
     ...props
-}: React.ComponentProps<typeof Drawer> & {
-    actions: MenuAction[];
-    title: string;
-    description: string;
-    children: React.ReactNode;
-}) {
+}: React.ComponentProps<typeof Drawer> & ContextMenuProps) {
     const [open, setOpen] = useState<boolean>(false);
 
     const handleOpenChange = (updatedOpen: boolean) => {
@@ -32,7 +28,7 @@ export function MobileContextMenu({
 
     return (
         <Drawer open={open} onOpenChange={handleOpenChange} {...props}>
-            <DrawerTrigger className="w-full">
+            <DrawerTrigger disabled={disabled} className="w-full">
                 {children}
             </DrawerTrigger>
             <DrawerContent>

@@ -1,7 +1,7 @@
 import { DesktopContent, MobileContent, ResponsiveContent } from '@/app/components/responsive-content';
 import { DesktopContextMenu } from '@/app/components/responsive-context-menu/desktop-context-menu';
 import { MobileContextMenu } from '@/app/components/responsive-context-menu/mobile-context-menu';
-import { MenuAction } from '@/app/components/responsive-context-menu/types';
+import { ContextMenuProps } from '@/app/components/responsive-context-menu/types';
 
 export function ResponsiveContextMenu({
     actions,
@@ -9,34 +9,26 @@ export function ResponsiveContextMenu({
     description,
     children,
     onOpenChange,
+    disabled,
     ...props
-}: React.ComponentProps<"div"> & {
-    actions: MenuAction[];
-    title: string;
-    description: string;
-    children: React.ReactNode;
-    onOpenChange?: (open: boolean) => void;
-}) {
+}: React.ComponentProps<"div"> & ContextMenuProps) {
+    const contextMenuProps: ContextMenuProps = {
+        actions,
+        title,
+        description,
+        onOpenChange,
+        disabled,
+        children
+    };
+
     return (
         <ResponsiveContent {...props}>
             <MobileContent>
-                <MobileContextMenu
-                    actions={actions}
-                    title={title}
-                    description={description}
-                    onOpenChange={onOpenChange}
-                >
-                    {children}
-                </MobileContextMenu>
+                <MobileContextMenu {...contextMenuProps} />
             </MobileContent>
 
             <DesktopContent>
-                <DesktopContextMenu
-                    actions={actions}
-                    onOpenChange={onOpenChange}
-                >
-                    {children}
-                </DesktopContextMenu>
+                <DesktopContextMenu {...contextMenuProps} />
             </DesktopContent>
         </ResponsiveContent>
     );

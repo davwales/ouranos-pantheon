@@ -74,7 +74,7 @@ export default function RootLayout({ children }: React.PropsWithChildren) {
           disableTransitionOnChange
         >
           <SidebarProvider>
-            <div className='w-full flex flex-col h-screen'>
+            <div className='w-full flex flex-col min-h-[100dvh] h-[100dvh]'>
               <ResponsiveNavigationBar items={navigationItems} />
               <main className="flex-auto overflow-auto">
                 {children}
