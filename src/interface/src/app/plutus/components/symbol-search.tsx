@@ -11,10 +11,12 @@ export interface SelectedSymbol {
 }
 
 export function SymbolSearch({
+    marketId,
     numResults = 10,
     onSymbolSelected,
     ...props
 }: React.ComponentProps<"div"> & {
+    marketId: string;
     numResults?: number;
     onSymbolSelected?: (symbol: SelectedSymbol) => void;
 }) {
@@ -24,6 +26,7 @@ export function SymbolSearch({
     const [{ data }] = useQuery({
         query: SEARCH_SYMBOLS,
         variables: {
+            marketId: marketId,
             query: search,
             first: Math.max(1, Math.min(numResults, 50)),
         }

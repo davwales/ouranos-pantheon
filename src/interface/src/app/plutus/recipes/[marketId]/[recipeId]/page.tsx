@@ -139,6 +139,7 @@ export default function RecipeDetailPage() {
 
             <div className="space-y-6 mt-4">
                 <SymbolTable
+                    marketId={marketId}
                     title="Inputs"
                     items={inputs}
                     onAdd={handleAddInput}
@@ -148,10 +149,10 @@ export default function RecipeDetailPage() {
                     onDialogOpenChange={setIsInputDialogOpen}
                     selectedSymbol={selectedSymbol}
                     onSymbolSelected={setSelectedSymbol}
-                    onAddSymbol={handleAddInput}
                 />
 
                 <SymbolTable
+                    marketId={marketId}
                     title="Outputs"
                     items={outputs}
                     onAdd={handleAddOutput}
@@ -161,7 +162,6 @@ export default function RecipeDetailPage() {
                     onDialogOpenChange={setIsOutputDialogOpen}
                     selectedSymbol={selectedSymbol}
                     onSymbolSelected={setSelectedSymbol}
-                    onAddSymbol={handleAddOutput}
                 />
             </div>
         </div>

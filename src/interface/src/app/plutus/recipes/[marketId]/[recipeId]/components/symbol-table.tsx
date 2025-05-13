@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { MoreHorizontal, Plus, Trash2 } from "lucide-react";
 
 export function SymbolTable({
+    marketId,
     title,
     items,
     onAdd,
@@ -17,9 +18,9 @@ export function SymbolTable({
     isDialogOpen,
     onDialogOpenChange,
     selectedSymbol,
-    onSymbolSelected,
-    onAddSymbol
+    onSymbolSelected
 }: {
+    marketId: string;
     title: string;
     items: RecipeSymbol[];
     onAdd: () => void;
@@ -29,7 +30,6 @@ export function SymbolTable({
     onDialogOpenChange: (open: boolean) => void;
     selectedSymbol?: SelectedSymbol;
     onSymbolSelected: (symbol: SelectedSymbol) => void;
-    onAddSymbol: () => void;
 }) {
     const columns: ExtendedColumnDef<RecipeSymbol>[] = [
         {
@@ -95,11 +95,12 @@ export function SymbolTable({
                 >
                     <div>
                         <SymbolSearch
+                            marketId={marketId}
                             onSymbolSelected={onSymbolSelected}
                         />
 
                         <Button
-                            onClick={onAddSymbol}
+                            onClick={onAdd}
                             disabled={!selectedSymbol}
                             className="mt-2 w-full"
                         >

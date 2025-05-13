@@ -199,8 +199,8 @@ export const GET_RECIPE_DETAILS = graphql(`
 `);
 
 export const SEARCH_SYMBOLS = graphql(`
-    query SearchSymbols($query: String!) {
-        allSymbols(where: { name: { contains: $query } }) {
+    query SearchSymbols($marketId: String!, $query: String!) {
+        allSymbols(where: { name: { contains: $query }, marketId: { eq: $marketId } }) {
             nodes {
                 id
                 name
