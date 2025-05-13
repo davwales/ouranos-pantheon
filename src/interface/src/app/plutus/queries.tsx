@@ -177,3 +177,37 @@ export const GET_MARKET_FORECAST = graphql(`
         }
     }
 `)
+
+export const GET_RECIPE_DETAILS = graphql(`
+    query GetRecipeDetails($recipeId: String!) {
+        recipe(recipeId: $recipeId) {
+            id
+            name
+            cost
+            inputs {
+                name
+                quantity
+                symbolId
+            }
+            outputs {
+                name
+                quantity
+                symbolId
+            }
+        }
+    } 
+`);
+
+export const SEARCH_SYMBOLS = graphql(`
+    query SearchSymbols($query: String!) {
+        allSymbols(where: { name: { contains: $query } }) {
+            nodes {
+                id
+                name
+                code
+                subcode
+            }
+        }
+    }
+`)
+

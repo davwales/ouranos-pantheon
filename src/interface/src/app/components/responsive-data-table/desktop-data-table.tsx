@@ -18,6 +18,7 @@ export default function DesktopDataTable<TData>({
     onFilterChange,
     sort,
     onSortChange,
+    scrollTop = true,
     ...props
 }: React.ComponentProps<"div"> & DataTableProps<TData>) {
     const tableData = useMemo(() => data ?? [], [data]);
@@ -101,13 +102,15 @@ export default function DesktopDataTable<TData>({
                 </TableBody>
             </Table>
 
-            <DataTablePagination
-                paginationArgs={paginationArgs}
-                onPaginationArgsChanged={onPaginationArgsChanged}
-                pageInfo={pageInfo}
-                disablePagination={disablePagination}
-                className="float-right mt-2"
-            />
+            {(paginationArgs || onPaginationArgsChanged) && (
+                <DataTablePagination
+                    paginationArgs={paginationArgs}
+                    onPaginationArgsChanged={onPaginationArgsChanged}
+                    pageInfo={pageInfo}
+                    disablePagination={disablePagination}
+                    className="float-right mt-2"
+                />
+            )}
         </div>
     );
 }

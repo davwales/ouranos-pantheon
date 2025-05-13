@@ -79,6 +79,7 @@ export function DataTablePagination({
                     </Button>
                 </div>
             )}
+
             <Select value={String(paginationArgs?.pageSize)} defaultValue={String(availablePageSizes[0])} onValueChange={handlePageSizeChanged}>
                 <SelectTrigger className="w-full md:w-40 mt-2">
                     <SelectValue placeholder="Page Size" />

@@ -85,19 +85,29 @@ export default function MobileDataTable<TData>({
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-2">
-                                    {row.getVisibleCells().slice(1).map((cell) => (
-                                        <div key={cell.id} className="flex justify-between">
-                                            <span className="font-medium">
-                                                {cell.column.columnDef.header as string}:
-                                            </span>
-                                            <span>
+                                    {row.getVisibleCells().slice(1).map((cell) =>
+                                        cell.column.columnDef.header ? (
+                                            <div key={cell.id} className="flex justify-between items-center gap-4">
+                                                <span className="font-medium">
+                                                    {cell.column.columnDef.header as string}:
+                                                </span>
+
+                                                <span>
+                                                    {flexRender(
+                                                        cell.column.columnDef.cell,
+                                                        cell.getContext()
+                                                    )}
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            <div key={cell.id} className="w-full">
                                                 {flexRender(
                                                     cell.column.columnDef.cell,
                                                     cell.getContext()
                                                 )}
-                                            </span>
-                                        </div>
-                                    ))}
+                                            </div>
+                                        )
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>
@@ -111,13 +121,15 @@ export default function MobileDataTable<TData>({
                 )}
             </div>
 
-            <DataTablePagination
-                paginationArgs={paginationArgs}
-                onPaginationArgsChanged={handlePaginationArgsChanged}
-                pageInfo={pageInfo}
-                disablePagination={disablePagination}
-                className="mt-4"
-            />
+            {(paginationArgs || onPaginationArgsChanged) && (
+                <DataTablePagination
+                    paginationArgs={paginationArgs}
+                    onPaginationArgsChanged={handlePaginationArgsChanged}
+                    pageInfo={pageInfo}
+                    disablePagination={disablePagination}
+                    className="mt-4"
+                />
+            )}
 
             {scrollTop && (
                 <Button variant="outline" onClick={handleScrollToTop} className="w-full mt-2">

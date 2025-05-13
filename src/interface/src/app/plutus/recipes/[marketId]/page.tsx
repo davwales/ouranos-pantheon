@@ -10,6 +10,7 @@ import { GET_RECIPE_TRADES } from "@/app/plutus/queries";
 import { GetRecipeTradesResponse, GetRecipeTradesResponseFilterInput, SortEnumType } from "@/gql/graphql";
 import { useQuery } from "@urql/next";
 import { RefreshCw } from "lucide-react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
 
@@ -41,7 +42,14 @@ export default function RecentMarketTrades() {
             id: "recipeName",
             header: "Name",
             accessorFn: (row) => row.recipeName,
-            cell: ({ getValue }) => getValue<string>(),
+            cell: ({ cell, row }) => (
+                <Link
+                    href={`/plutus/recipes/${marketId}/${row.original.recipeId}`}
+                    className="hover:underline"
+                >
+                    {cell.getValue<string>()}
+                </Link>
+            ),
             filterConfig: {
                 type: "string",
                 operators: ["eq", "neq", "contains", "startsWith", "endsWith"],

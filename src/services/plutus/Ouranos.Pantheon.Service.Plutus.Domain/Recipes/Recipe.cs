@@ -18,7 +18,7 @@ public sealed class Recipe : BaseEntity<Id<Recipe>>
         Guard.Against.Null(marketId);
         Guard.Against.NullOrWhiteSpace(name);
         Guard.Against.Null(inputs);
-        Guard.Against.NullOrEmpty(outputs);
+        Guard.Against.Null(outputs);
 
         MarketId = marketId;
         Name = name;
