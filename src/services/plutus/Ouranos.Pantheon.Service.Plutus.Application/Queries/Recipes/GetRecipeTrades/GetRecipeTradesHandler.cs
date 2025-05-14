@@ -61,7 +61,15 @@ public sealed class GetRecipeTradesHandler
             cancellationToken
         );
 
-        var response = recipes
+        var validRecipes = recipes
+            .Where(
+                r =>
+                    r.Inputs.All(x => prices.ContainsKey(x.SymbolId)) &&
+                    r.Outputs.All(x => prices.ContainsKey(x.SymbolId))
+            )
+            .ToList();
+
+        var response = validRecipes
             .Select(
                 r => new
                 {
@@ -72,6 +80,19 @@ public sealed class GetRecipeTradesHandler
                     AverageBuyPrice = r.Inputs.Sum(i => prices[i.SymbolId].AveragePrice * i.Quantity) + r.Cost,
                     AverageSellPrice = r.Outputs.Sum(i => prices[i.SymbolId].AveragePrice * i.Quantity)
                 }
+            )
+            .Union(
+                recipes.Except(validRecipes).Select(
+                    r => new
+                    {
+                        r.Id,
+                        r.Name,
+                        LatestBuyPrice = (decimal)0,
+                        LatestSellPrice = (decimal)0,
+                        AverageBuyPrice = (decimal)0,
+                        AverageSellPrice = (decimal)0
+                    }
+                )
             )
             .Select(
                 x => new GetRecipeTradesResponse(
@@ -132,17 +153,7 @@ public sealed class GetRecipeTradesHandler
             cancellationToken
         );
 
-        var missingPrices = symbolIds
-            .Where(s => prices.All(p => p.Id != s))
-            .Select(
-                x => new SymbolPrice(
-                    x,
-                    decimal.MaxValue,
-                    decimal.MaxValue
-                )
-            );
-
-        return prices.Union(missingPrices).ToDictionary(
+        return prices.ToDictionary(
             x => x.Id,
             x => new IntermediatePrice(
                 x.AveragePrice,

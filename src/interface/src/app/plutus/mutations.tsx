@@ -19,3 +19,13 @@ export const DELETE_RECIPE = graphql(`
     }
   }
 `);
+
+export const CREATE_RECIPE = graphql(`
+  mutation CreateRecipe($input: CreateRecipeInput!) {
+    createRecipe(input: $input) {
+      idResponseOfRecipe {
+        id
+      }
+    }
+  }
+`);

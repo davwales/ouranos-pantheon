@@ -3,6 +3,7 @@ using Ouranos.Pantheon.Core.Application.Commands.Common.DeleteEntity;
 using Ouranos.Pantheon.Core.Application.Common;
 using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Core.Domain.Common;
+using Ouranos.Pantheon.Service.Plutus.Application.Commands.Recipes.CreateRecipe;
 using Ouranos.Pantheon.Service.Plutus.Application.Commands.Recipes.UpdateRecipe;
 using Ouranos.Pantheon.Service.Plutus.Domain.Recipes;
 
@@ -11,6 +12,24 @@ namespace Ouranos.Pantheon.Service.Plutus.API.Mutations;
 [ExtendObjectType<Mutation>]
 public sealed class RecipeMutations
 {
+    /// <summary>
+    ///     Creates a recipe.
+    /// </summary>
+    /// <param name="dispatcher">
+    ///     <see cref="IDispatcher" />
+    /// </param>
+    /// <param name="input">Requested creation data.</param>
+    /// <param name="cancellationToken"><see cref="CancellationToken" />.</param>
+    /// <returns>Response containing the created recipe's identifier.</returns>
+    public async Task<IdResponse<Recipe>> CreateRecipe(
+        [Service] IDispatcher dispatcher,
+        CreateRecipeInput input,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dispatcher.Send(input, cancellationToken);
+    }
+
     /// <summary>
     ///     Updates a recipe.
     /// </summary>

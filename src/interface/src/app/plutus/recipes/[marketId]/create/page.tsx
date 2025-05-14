@@ -2,22 +2,19 @@
 
 import { Typography } from "@/app/components/typography";
 import { SelectedSymbol } from "@/app/plutus/components/symbol-search";
-import { DELETE_RECIPE, UPDATE_RECIPE } from "@/app/plutus/mutations";
-import { GET_RECIPE_DETAILS } from "@/app/plutus/queries";
+import { CREATE_RECIPE } from "@/app/plutus/mutations";
 import { RecipeForm } from "@/app/plutus/recipes/components/recipe-form";
 import { SymbolTable } from "@/app/plutus/recipes/components/symbol-table";
 import { RecipeSymbol } from "@/app/plutus/recipes/types";
 import { Button } from "@/components/ui/button";
-import { useMutation, useQuery } from "@urql/next";
+import { useMutation } from "@urql/next";
 import { RefreshCw } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-export default function RecipeDetailPage() {
-  const { marketId, recipeId } = useParams<{
-    marketId: string;
-    recipeId: string;
-  }>();
+export default function CreateRecipePage() {
+  const { marketId } = useParams<{ marketId: string }>();
+  const router = useRouter();
   const [name, setName] = useState("");
   const [cost, setCost] = useState(0);
   const [inputs, setInputs] = useState<RecipeSymbol[]>([]);
@@ -25,45 +22,9 @@ export default function RecipeDetailPage() {
   const [selectedSymbol, setSelectedSymbol] = useState<SelectedSymbol>();
   const [isInputDialogOpen, setIsInputDialogOpen] = useState(false);
   const [isOutputDialogOpen, setIsOutputDialogOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const router = useRouter();
-
-  const [{ data, fetching }] = useQuery({
-    query: GET_RECIPE_DETAILS,
-    variables: {
-      recipeId: recipeId,
-    },
-  });
-
-  const [{ fetching: isSaving }, updateRecipe] = useMutation<
-    { idResponseOfRecipe: { id: string } },
-    {
-      input: {
-        recipeId: string;
-        marketId: string;
-        name: string;
-        cost: number;
-        inputs: Array<{ symbolId: string; name: string; quantity: number }>;
-        outputs: Array<{ symbolId: string; name: string; quantity: number }>;
-      };
-    }
-  >(UPDATE_RECIPE);
-
-  const [{ fetching: isDeleting }, deleteRecipe] = useMutation<
-    { idResponseOfRecipe: { id: string } },
-    { input: { recipeId: string } }
-  >(DELETE_RECIPE);
-
-  const isProcessing = isSaving || isDeleting;
-
-  useEffect(() => {
-    if (data?.recipe) {
-      setName(data.recipe.name);
-      setCost(data.recipe.cost);
-      setInputs(data.recipe.inputs);
-      setOutputs(data.recipe.outputs);
-    }
-  }, [data?.recipe]);
+  const [, createRecipe] = useMutation(CREATE_RECIPE);
 
   const handleAddInput = () => {
     if (selectedSymbol) {
@@ -107,25 +68,11 @@ export default function RecipeDetailPage() {
     setOutputs(newOutputs);
   };
 
-  const handleDelete = async () => {
+  const handleSubmit = async () => {
+    setIsProcessing(true);
     try {
-      await deleteRecipe({
+      const response = await createRecipe({
         input: {
-          recipeId,
-        },
-      });
-
-      router.push(`/plutus/recipes/${marketId}`);
-    } catch (error) {
-      console.error("Failed to delete recipe:", error);
-    }
-  };
-
-  const handleSave = async () => {
-    try {
-      await updateRecipe({
-        input: {
-          recipeId,
           marketId,
           name,
           cost,
@@ -141,37 +88,29 @@ export default function RecipeDetailPage() {
           })),
         },
       });
+
+      if (response.data?.createRecipe.idResponseOfRecipe?.id) {
+        const recipeId = response.data.createRecipe.idResponseOfRecipe.id;
+        router.replace(`/plutus/recipes/${marketId}/${recipeId}`);
+      }
     } catch (error) {
-      console.error("Failed to save recipe:", error);
+      console.error("Failed to create recipe:", error);
+    } finally {
+      setIsProcessing(false);
     }
   };
-
-  if (fetching) {
-    return <div>Loading...</div>;
-  }
-
-  if (!data?.recipe) {
-    return <div>Recipe not found</div>;
-  }
 
   return (
     <div>
       <div className="flex items-center justify-between">
         <Typography variant="h2" className="border-b-0">
-          Recipe Details
+          Create New Recipe
         </Typography>
 
         <div className="flex items-center gap-2">
           {isProcessing && <RefreshCw className="animate-spin" />}
-          <Button onClick={handleSave} disabled={isProcessing}>
+          <Button onClick={handleSubmit} disabled={isProcessing}>
             Save
-          </Button>
-          <Button
-            onClick={handleDelete}
-            disabled={isProcessing}
-            variant="destructive"
-          >
-            Delete
           </Button>
         </div>
       </div>
