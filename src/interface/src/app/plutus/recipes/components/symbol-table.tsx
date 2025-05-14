@@ -16,9 +16,7 @@ export function SymbolTable({
   marketId,
   title,
   items,
-  onAdd,
-  onRemove,
-  onQuantityChange,
+  onItemsChange,
   isDialogOpen,
   onDialogOpenChange,
   selectedSymbol,
@@ -27,14 +25,37 @@ export function SymbolTable({
   marketId: string;
   title: string;
   items: RecipeSymbol[];
-  onAdd: () => void;
-  onRemove: (index: number) => void;
-  onQuantityChange: (index: number, quantity: number) => void;
+  onItemsChange: (items: RecipeSymbol[]) => void;
   isDialogOpen: boolean;
   onDialogOpenChange: (open: boolean) => void;
   selectedSymbol?: SelectedSymbol;
   onSymbolSelected: (symbol: SelectedSymbol) => void;
 }) {
+  const handleAdd = () => {
+    if (selectedSymbol) {
+      const newItems = [
+        ...items,
+        { name: selectedSymbol.name, quantity: 1, symbolId: selectedSymbol.id },
+      ];
+      onItemsChange(newItems);
+      onDialogOpenChange(false);
+      onSymbolSelected(null as unknown as SelectedSymbol);
+    }
+  };
+
+  const handleRemove = (index: number) => {
+    const newItems = items.filter(
+      (item: RecipeSymbol, i: number) => i !== index
+    );
+    onItemsChange(newItems);
+  };
+
+  const handleQuantityChange = (index: number, quantity: number) => {
+    const newItems = [...items];
+    newItems[index].quantity = quantity;
+    onItemsChange(newItems);
+  };
+
   const columns: ExtendedColumnDef<RecipeSymbol>[] = [
     {
       id: "name",
@@ -56,7 +77,9 @@ export function SymbolTable({
       cell: ({ row, getValue }) => (
         <Input
           value={getValue() as number}
-          onChange={(e) => onQuantityChange(row.index, Number(e.target.value))}
+          onChange={(e) =>
+            handleQuantityChange(row.index, Number(e.target.value))
+          }
           min={1}
           type="number"
         />
@@ -73,7 +96,7 @@ export function SymbolTable({
             {
               label: "Remove",
               icon: <Trash2 className="h-4 w-4 text-destructive" />,
-              onClick: () => onRemove(row.index),
+              onClick: () => handleRemove(row.index),
             },
           ]}
         >
@@ -113,7 +136,7 @@ export function SymbolTable({
             />
 
             <Button
-              onClick={onAdd}
+              onClick={handleAdd}
               disabled={!selectedSymbol}
               className="mt-2 w-full"
             >

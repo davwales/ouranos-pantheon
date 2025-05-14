@@ -65,48 +65,6 @@ export default function RecipeDetailPage() {
     }
   }, [data?.recipe]);
 
-  const handleAddInput = () => {
-    if (selectedSymbol) {
-      setInputs([
-        ...inputs,
-        { name: selectedSymbol.name, quantity: 1, symbolId: selectedSymbol.id },
-      ]);
-      setIsInputDialogOpen(false);
-      setSelectedSymbol(undefined);
-    }
-  };
-
-  const handleRemoveInput = (index: number) => {
-    setInputs(inputs.filter((_, i) => i !== index));
-  };
-
-  const handleInputQuantityChange = (index: number, quantity: number) => {
-    const newInputs = [...inputs];
-    newInputs[index].quantity = quantity;
-    setInputs(newInputs);
-  };
-
-  const handleAddOutput = () => {
-    if (selectedSymbol) {
-      setOutputs([
-        ...outputs,
-        { name: selectedSymbol.name, quantity: 1, symbolId: selectedSymbol.id },
-      ]);
-      setIsOutputDialogOpen(false);
-      setSelectedSymbol(undefined);
-    }
-  };
-
-  const handleRemoveOutput = (index: number) => {
-    setOutputs(outputs.filter((_, i) => i !== index));
-  };
-
-  const handleOutputQuantityChange = (index: number, quantity: number) => {
-    const newOutputs = [...outputs];
-    newOutputs[index].quantity = quantity;
-    setOutputs(newOutputs);
-  };
-
   const handleDelete = async () => {
     try {
       await deleteRecipe({
@@ -188,9 +146,7 @@ export default function RecipeDetailPage() {
           marketId={marketId}
           title="Inputs"
           items={inputs}
-          onAdd={handleAddInput}
-          onRemove={handleRemoveInput}
-          onQuantityChange={handleInputQuantityChange}
+          onItemsChange={setInputs}
           isDialogOpen={isInputDialogOpen}
           onDialogOpenChange={setIsInputDialogOpen}
           selectedSymbol={selectedSymbol}
@@ -201,9 +157,7 @@ export default function RecipeDetailPage() {
           marketId={marketId}
           title="Outputs"
           items={outputs}
-          onAdd={handleAddOutput}
-          onRemove={handleRemoveOutput}
-          onQuantityChange={handleOutputQuantityChange}
+          onItemsChange={setOutputs}
           isDialogOpen={isOutputDialogOpen}
           onDialogOpenChange={setIsOutputDialogOpen}
           selectedSymbol={selectedSymbol}
