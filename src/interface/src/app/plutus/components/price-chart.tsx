@@ -65,6 +65,10 @@ export default function PriceChart({
     return abbreviateNumber(parsedValue);
   };
 
+  if (!data || data.length < 2) {
+    return <div {...props}>Not enough data to visualize.</div>;
+  }
+
   return (
     <div {...props}>
       <ChartContainer config={chartConfig}>
@@ -106,6 +110,9 @@ export default function PriceChart({
             fill="var(--color-volume)"
             opacity={0.5}
             activeBar={{ opacity: 1 }}
+            shape={(props: any) => {
+              return <rect {...props} width={Math.max(1, props.width)} />;
+            }}
           />
           <Line
             dataKey="minPrice"
