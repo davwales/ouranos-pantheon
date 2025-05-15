@@ -13,9 +13,9 @@ public sealed class GetItems : IGetItems
 {
     private const string CacheKey = $"XivAPi:{nameof(GetItems)}";
     private readonly IMemoryCache _cache;
-    private readonly TimeSpan _cacheDuration;
     private readonly IGithubClient _githubClient;
     private readonly ILogger<GetItems> _logger;
+    private readonly IOptions<XivApiOptions> _options;
 
     public GetItems(
         IMemoryCache cache,
@@ -28,12 +28,11 @@ public sealed class GetItems : IGetItems
         Guard.Against.Null(logger);
         Guard.Against.Null(githubClient);
         Guard.Against.Null(options);
-        Guard.Against.Null(options.Value);
 
         _cache = cache;
         _logger = logger;
         _githubClient = githubClient;
-        _cacheDuration = TimeSpan.FromMinutes(options.Value.ItemCacheMinutes);
+        _options = options;
     }
 
     public async Task<List<ItemDto>> GetItemsAsync(
@@ -42,18 +41,22 @@ public sealed class GetItems : IGetItems
     {
         _logger.LogTrace("Attempting to get items from XivApi.");
 
-        var xivItems = await _cache.GetOrCreateAsync(CacheKey, async entry =>
-        {
-            entry.AbsoluteExpirationRelativeToNow = _cacheDuration;
-            return await _githubClient.GetItems(cancellationToken);
-        }) ?? [];
+        var xivItems = await _cache.GetOrCreateAsync(
+            CacheKey,
+            async entry =>
+            {
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(_options.Value.ItemCacheMinutes);
+                return await _githubClient.GetItems(cancellationToken);
+            }
+        ) ?? [];
 
         // We must add items for both lq and hq (if possible).
         var items = xivItems
             .Select(x => ConvertItem(x, false))
-            .Union(xivItems
-                .Where(x => x.CanBeHq)
-                .Select(x => ConvertItem(x, true))
+            .Union(
+                xivItems
+                    .Where(x => x.CanBeHq)
+                    .Select(x => ConvertItem(x, true))
             )
             .ToList();
 

@@ -20,7 +20,6 @@ public sealed class WikiClient : IWikiClient
         Guard.Against.Null(httpClient);
         Guard.Against.Null(logger);
         Guard.Against.Null(options);
-        Guard.Against.Null(options.Value);
 
         _httpClient = httpClient;
         _logger = logger;
@@ -54,8 +53,11 @@ public sealed class WikiClient : IWikiClient
         var prices = await response.Content.ReadFromJsonAsync<PriceResponse>(cancellationToken)
                      ?? throw new InvalidOperationException("Failed to read runescape prices.");
 
-        _logger.LogDebug("Successfully retrieved {mappingCount} runescape prices with timestamp {timestamp}.",
-            prices.Data.Count, prices.Timestamp);
+        _logger.LogDebug(
+            "Successfully retrieved {mappingCount} runescape prices with timestamp {timestamp}.",
+            prices.Data.Count,
+            prices.Timestamp
+        );
         return prices;
     }
 }

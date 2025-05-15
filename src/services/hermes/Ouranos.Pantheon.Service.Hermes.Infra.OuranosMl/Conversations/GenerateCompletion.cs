@@ -14,8 +14,8 @@ namespace Ouranos.Pantheon.Service.Hermes.Infra.OuranosMl.Conversations;
 public sealed class GenerateCompletion : IGenerateCompletion
 {
     private readonly ILogger<GenerateCompletion> _logger;
+    private readonly IOptions<OuranosMachineLearningOptions> _options;
     private readonly IOuranosMachineLearningClient _ouranosClient;
-    private readonly string _systemPrompt;
 
     public GenerateCompletion(
         ILogger<GenerateCompletion> logger,
@@ -26,11 +26,10 @@ public sealed class GenerateCompletion : IGenerateCompletion
         Guard.Against.Null(logger);
         Guard.Against.Null(ouranosClient);
         Guard.Against.Null(options);
-        Guard.Against.Null(options.Value);
 
         _logger = logger;
         _ouranosClient = ouranosClient;
-        _systemPrompt = options.Value.SystemPrompt;
+        _options = options;
     }
 
     public async IAsyncEnumerable<string> GenerateCompletionStream(
@@ -55,29 +54,32 @@ public sealed class GenerateCompletion : IGenerateCompletion
     {
         var conversationVariables = GetConversationVariables(conversation);
 
-        var cleanedSystemPrompt = CleanContent(_systemPrompt, conversationVariables);
+        var cleanedSystemPrompt = CleanContent(_options.Value.SystemPrompt, conversationVariables);
         var cleanedContext = CleanContent(conversation.Context, conversationVariables);
 
         var cleanedMessages = conversation.Messages
             .Select(m =>
-            {
-                var role = m.Role switch
                 {
-                    Role.System => RoleDto.System,
-                    Role.User => RoleDto.User,
-                    Role.Assistant => RoleDto.Assistant,
-                    _ => throw new InvalidOperationException($"Unsupported message role '{m.Role}'.")
-                };
+                    var role = m.Role switch
+                    {
+                        Role.System => RoleDto.System,
+                        Role.User => RoleDto.User,
+                        Role.Assistant => RoleDto.Assistant,
+                        _ => throw new InvalidOperationException($"Unsupported message role '{m.Role}'.")
+                    };
 
-                return new MessageDto(CleanContent(m.Content, conversationVariables), role);
-            })
+                    return new MessageDto(CleanContent(m.Content, conversationVariables), role);
+                }
+            )
             .ToList();
 
-        return new GenerateCompletionRequest([
-            new MessageDto(cleanedSystemPrompt, RoleDto.System),
-            new MessageDto(cleanedContext, RoleDto.System),
-            .. cleanedMessages
-        ]);
+        return new GenerateCompletionRequest(
+            [
+                new MessageDto(cleanedSystemPrompt, RoleDto.System),
+                new MessageDto(cleanedContext, RoleDto.System),
+                .. cleanedMessages
+            ]
+        );
     }
 
     private static Dictionary<string, string> GetConversationVariables(ConversationInput conversation)
@@ -95,10 +97,7 @@ public sealed class GenerateCompletion : IGenerateCompletion
 
     private static string GetCharacterDescription(CharacterInput character)
     {
-        List<string> details =
-        [
-            $"{character.Name} is {character.Age} years old."
-        ];
+        List<string> details = [$"{character.Name} is {character.Age} years old."];
         details.AddRange(character.Details.Select(d => $"{character.Name}'s {d.Key} is {d.Value}"));
 
         return string.Join(". ", details);

@@ -16,7 +16,7 @@ namespace Ouranos.Pantheon.Service.Plutus.API.Jobs;
 public sealed class ForecastCreatorJob : BackgroundService
 {
     private readonly IDispatcher _dispatcher;
-    private readonly ForecastingOptions _forecastingOptions;
+    private readonly IOptions<ForecastingOptions> _forecastingOptions;
     private readonly ILogger<ForecastCreatorJob> _logger;
 
     private DateTime _lastExecuted = DateTime.MinValue;
@@ -29,16 +29,16 @@ public sealed class ForecastCreatorJob : BackgroundService
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(dispatcher);
-        Guard.Against.Null(forecastingOptions?.Value);
+        Guard.Against.Null(forecastingOptions);
 
         _logger = logger;
         _dispatcher = dispatcher;
-        _forecastingOptions = forecastingOptions.Value;
+        _forecastingOptions = forecastingOptions;
     }
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        if (!_forecastingOptions.IsEnabled)
+        if (!_forecastingOptions.Value.IsEnabled)
         {
             _logger.LogInformation("Forecasting is disabled, exiting job.");
             return;
@@ -84,7 +84,7 @@ public sealed class ForecastCreatorJob : BackgroundService
         }
 
         List<Forecast> forecasts = [];
-        foreach (var batch in symbols.Value.Batch(_forecastingOptions.BatchSize))
+        foreach (var batch in symbols.Value.Batch(_forecastingOptions.Value.BatchSize))
         {
             var symbolBatch = batch.ToList();
             var symbolIds = symbolBatch.Select(s => s.Id).ToList();

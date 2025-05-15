@@ -10,7 +10,7 @@ namespace Ouranos.Pantheon.DataLoader.Plutus.Osrs.Infra.OsrsWiki.Trades;
 public sealed class GetTrades : IGetTrades
 {
     private readonly ILogger<GetTrades> _logger;
-    private readonly TimeSpan _refreshInterval;
+    private readonly IOptions<OsrsWikiOptions> _options;
     private readonly IWikiClient _wikiClient;
     private DateTimeOffset? _lastRefresh;
 
@@ -23,11 +23,11 @@ public sealed class GetTrades : IGetTrades
         Guard.Against.Null(logger);
         Guard.Against.Null(wikiClient);
         Guard.Against.Null(options);
-        Guard.Against.Null(options.Value);
+        Guard.Against.Null(options);
 
         _logger = logger;
         _wikiClient = wikiClient;
-        _refreshInterval = TimeSpan.FromMinutes(options.Value.RefreshIntervalMinutes);
+        _options = options;
     }
 
     public async Task<List<GetTradesResponse>> GetTradesAsync(CancellationToken cancellationToken = default)
@@ -44,7 +44,7 @@ public sealed class GetTrades : IGetTrades
         }
 
         var timeSinceRefresh = DateTimeOffset.UtcNow - _lastRefresh;
-        if (timeSinceRefresh < _refreshInterval)
+        if (timeSinceRefresh < TimeSpan.FromMinutes(_options.Value.RefreshIntervalMinutes))
         {
             return [];
         }

@@ -11,7 +11,7 @@ public sealed class MongoDatabaseManager : IMongoDatabaseManager
     private readonly Dictionary<Assembly, string> _assemblyMappings = [];
     private readonly IMongoClient _client;
     private readonly Dictionary<Type, IMongoDatabase> _databases = [];
-    private readonly MongoOptions _options;
+    private readonly IOptions<MongoOptions> _options;
     private readonly Dictionary<Type, string> _typeMappings = [];
 
     public MongoDatabaseManager(
@@ -21,10 +21,10 @@ public sealed class MongoDatabaseManager : IMongoDatabaseManager
     {
         Guard.Against.Null(client);
         Guard.Against.Null(options);
-        Guard.Against.Null(options.Value);
+        Guard.Against.Null(options);
 
         _client = client;
-        _options = options.Value;
+        _options = options;
 
         var assemblies = AppDomain.CurrentDomain.GetAssemblies();
         SetupAssemblyMappings(assemblies);
@@ -61,7 +61,7 @@ public sealed class MongoDatabaseManager : IMongoDatabaseManager
 
     private void SetupAssemblyMappings(Assembly[] assemblies)
     {
-        foreach (var (assemblyName, dbName) in _options.AssemblyDatabases)
+        foreach (var (assemblyName, dbName) in _options.Value.AssemblyDatabases)
         {
             var assembly = assemblies.FirstOrDefault(a => a.GetName().Name == assemblyName);
 
@@ -75,7 +75,7 @@ public sealed class MongoDatabaseManager : IMongoDatabaseManager
     private void SetupTypeMappings(Assembly[] assemblies)
     {
         var assemblyTypes = assemblies.SelectMany(a => a.GetTypes()).ToList();
-        foreach (var (typeName, dbName) in _options.TypeDatabases)
+        foreach (var (typeName, dbName) in _options.Value.TypeDatabases)
         {
             var type = assemblyTypes.FirstOrDefault(t => t.FullName == typeName);
 

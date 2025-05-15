@@ -10,9 +10,8 @@ public sealed class WebSocketWorker : BackgroundService
 {
     private readonly IHostApplicationLifetime _applicationLifetime;
     private readonly IWebSocketClient _client;
-    private readonly TimeSpan _errorDelayInterval;
-    private readonly TimeSpan _healthCheckInterval;
     private readonly ILogger<WebSocketWorker> _logger;
+    private readonly IOptions<WebSocketOptions> _options;
 
     public WebSocketWorker(
         ILogger<WebSocketWorker> logger,
@@ -24,13 +23,11 @@ public sealed class WebSocketWorker : BackgroundService
         Guard.Against.Null(logger);
         Guard.Against.Null(client);
         Guard.Against.Null(applicationLifetime);
-        Guard.Against.Null(options?.Value);
 
         _logger = logger;
         _client = client;
         _applicationLifetime = applicationLifetime;
-        _healthCheckInterval = TimeSpan.FromSeconds(options.Value.HealthCheckIntervalSeconds);
-        _errorDelayInterval = TimeSpan.FromSeconds(options.Value.ErrorDelayIntervalSeconds);
+        _options = options;
     }
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
@@ -47,7 +44,10 @@ public sealed class WebSocketWorker : BackgroundService
                     break;
                 }
 
-                await Task.Delay(_healthCheckInterval, cancellationToken);
+                await Task.Delay(
+                    TimeSpan.FromSeconds(_options.Value.HealthCheckIntervalSeconds),
+                    cancellationToken
+                );
             }
             catch (OperationCanceledException)
             {
@@ -57,7 +57,11 @@ public sealed class WebSocketWorker : BackgroundService
             catch (Exception e)
             {
                 _logger.LogError(e, "Unhandled exception encountered, restarting.");
-                await Task.Delay(_errorDelayInterval, cancellationToken);
+
+                await Task.Delay(
+                    TimeSpan.FromSeconds(_options.Value.ErrorDelayIntervalSeconds),
+                    cancellationToken
+                );
             }
         }
 
