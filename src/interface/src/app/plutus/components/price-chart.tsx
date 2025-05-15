@@ -10,6 +10,7 @@ import {
 import { formatDistance } from "date-fns";
 import {
   Bar,
+  BarProps,
   CartesianGrid,
   ComposedChart,
   Line,
@@ -69,6 +70,17 @@ export default function PriceChart({
     return <div {...props}>Not enough data to visualize.</div>;
   }
 
+  const barShape = (opacity: number, props: BarProps) => (
+    <rect
+      x={props.x}
+      y={props.y}
+      width={Math.max(1, props.width || 0)}
+      height={props.height}
+      fill={props.fill}
+      opacity={opacity}
+    />
+  );
+
   return (
     <div {...props}>
       <ChartContainer config={chartConfig}>
@@ -108,11 +120,8 @@ export default function PriceChart({
             yAxisId="right"
             dataKey="volume"
             fill="var(--color-volume)"
-            opacity={0.5}
-            activeBar={{ opacity: 1 }}
-            shape={(props: any) => {
-              return <rect {...props} width={Math.max(1, props.width)} />;
-            }}
+            activeBar={(props: BarProps) => barShape(1, props)}
+            shape={(props: BarProps) => barShape(0.5, props)}
           />
           <Line
             dataKey="minPrice"
