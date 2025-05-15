@@ -1,5 +1,6 @@
 "use client";
 
+import { ConfirmationButton } from "@/app/components/confirmation-button";
 import { Typography } from "@/app/components/typography";
 import { SelectedSymbol } from "@/app/plutus/components/symbol-search";
 import { DELETE_RECIPE, UPDATE_RECIPE } from "@/app/plutus/mutations";
@@ -124,13 +125,15 @@ export default function RecipeDetailPage() {
           <Button onClick={handleSave} disabled={isProcessing}>
             Save
           </Button>
-          <Button
-            onClick={handleDelete}
+          <ConfirmationButton
+            title="Delete Recipe"
+            description="Are you sure you want to delete this recipe? This action cannot be undone."
+            onConfirm={handleDelete}
             disabled={isProcessing}
             variant="destructive"
           >
             Delete
-          </Button>
+          </ConfirmationButton>
         </div>
       </div>
 
