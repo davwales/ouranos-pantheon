@@ -6,8 +6,9 @@ import { Typography } from "@/app/components/typography";
 import PercentChange from "@/app/plutus/components/percent-change";
 import PriceChart from "@/app/plutus/components/price-chart";
 import TimeFrameSelection from "@/app/plutus/components/time_frame_selection";
-import { PlutusState, usePlutusStore } from "@/app/plutus/constants/plutus_store";
+
 import { minuteSeconds } from "@/app/plutus/constants/time_frames";
+import { PlutusState, usePlutusStore } from "@/app/plutus/plutus_store";
 import { GET_SYMBOL_DETAILS } from "@/app/plutus/queries";
 import useInterval from "@/hooks/use_interval";
 import { useQuery } from "@urql/next";
@@ -15,110 +16,125 @@ import { useParams } from "next/navigation";
 import React, { ReactNode, useMemo } from "react";
 
 export default function SymbolDetail() {
-    const { symbolId } = useParams<{ marketId: string, symbolId: string }>();
-    const [timeFrameSeconds, setTimeFrameSeconds] = usePlutusStore((state: PlutusState) => [state.timeFrameSeconds, state.setTimeFrameSeconds]);
+  const { symbolId } = useParams<{ marketId: string; symbolId: string }>();
+  const [timeFrameSeconds] = usePlutusStore((state: PlutusState) => [
+    state.timeFrameSeconds,
+  ]);
 
-    useInterval(() => reexecuteQuery(), minuteSeconds * 1000);
+  useInterval(() => reexecuteQuery(), minuteSeconds * 1000);
 
-    const [{ data }, reexecuteQuery] = useQuery({
-        query: GET_SYMBOL_DETAILS,
-        variables: {
-            symbolId: symbolId,
-            seconds: timeFrameSeconds > 0 ? timeFrameSeconds : undefined
-        }
-    });
+  const [{ data }, reexecuteQuery] = useQuery({
+    query: GET_SYMBOL_DETAILS,
+    variables: {
+      symbolId: symbolId,
+      seconds: timeFrameSeconds > 0 ? timeFrameSeconds : undefined,
+    },
+  });
 
-    const formattedTrades = useMemo(() => data?.symbolTrades.trades.map(t => {
+  const formattedTrades = useMemo(
+    () =>
+      data?.symbolTrades.trades.map((t) => {
         return {
-            ...t,
-            date: new Date(t.date)
+          ...t,
+          date: new Date(t.date),
         };
-    }) ?? [], [data?.symbolTrades.trades]);
+      }) ?? [],
+    [data?.symbolTrades.trades]
+  );
 
-    const StatDisplay = ({
-        label,
-        children
-    }: {
-        label: string,
-        children: ReactNode
-    }): ReactNode => (
-        <div className="flex justify-between">
-            <Typography variant="h4">{label}</Typography>
-            {children}
-        </div>
-    );
+  const StatDisplay = ({
+    label,
+    children,
+  }: {
+    label: string;
+    children: ReactNode;
+  }): ReactNode => (
+    <div className="flex justify-between">
+      <Typography variant="h4">{label}</Typography>
+      {children}
+    </div>
+  );
 
-    const Stats = (props: React.ComponentProps<"div">): ReactNode => (
-        <div {...props}>
-            <StatDisplay label="Code">
-                {data?.symbol.code}
-            </StatDisplay>
-            {data?.symbol.subcode && <StatDisplay label="Subcode">
-                {data.symbol.subcode}
-            </StatDisplay>}
-            <StatDisplay label="Total Spent">
-                <PrettyNumber number={data?.symbolTrades.totalSpent} />
-            </StatDisplay>
-            <StatDisplay label="Minimum Price">
-                <ClipboardCopy value={data?.symbolTrades.minPrice}>
-                    <PrettyNumber number={data?.symbolTrades.minPrice} />
-                </ClipboardCopy>
-            </StatDisplay>
-            <StatDisplay label="Average Price">
-                <ClipboardCopy value={data?.symbolTrades.averagePrice}>
-                    <PrettyNumber number={data?.symbolTrades.averagePrice} />
-                </ClipboardCopy>
-            </StatDisplay>
-            <StatDisplay label="Maximum Price">
-                <ClipboardCopy value={data?.symbolTrades.maxPrice}>
-                    <PrettyNumber number={data?.symbolTrades.maxPrice} />
-                </ClipboardCopy>
-            </StatDisplay>
-            <StatDisplay label="Volume">
-                <PrettyNumber number={data?.symbolTrades.volume} />
-            </StatDisplay>
-            <StatDisplay label="# Transactions">
-                <PrettyNumber number={data?.symbolTrades.numTransactions || 0} decimals={0} />
-            </StatDisplay>
-        </div>
-    );
-
-    const PriceChange = ({
-        label,
-        current
-    }: {
-        label: string,
-        current?: number
-    }): ReactNode => data?.allForecasts?.nodes?.[0] ? (
-        <PercentChange
-            label={label}
-            current={current}
-            previous={data.allForecasts.nodes[0].latest.averagePrice}
+  const Stats = (props: React.ComponentProps<"div">): ReactNode => (
+    <div {...props}>
+      <StatDisplay label="Code">{data?.symbol.code}</StatDisplay>
+      {data?.symbol.subcode && (
+        <StatDisplay label="Subcode">{data.symbol.subcode}</StatDisplay>
+      )}
+      <StatDisplay label="Total Spent">
+        <PrettyNumber number={data?.symbolTrades.totalSpent} />
+      </StatDisplay>
+      <StatDisplay label="Minimum Price">
+        <ClipboardCopy value={data?.symbolTrades.minPrice}>
+          <PrettyNumber number={data?.symbolTrades.minPrice} />
+        </ClipboardCopy>
+      </StatDisplay>
+      <StatDisplay label="Average Price">
+        <ClipboardCopy value={data?.symbolTrades.averagePrice}>
+          <PrettyNumber number={data?.symbolTrades.averagePrice} />
+        </ClipboardCopy>
+      </StatDisplay>
+      <StatDisplay label="Maximum Price">
+        <ClipboardCopy value={data?.symbolTrades.maxPrice}>
+          <PrettyNumber number={data?.symbolTrades.maxPrice} />
+        </ClipboardCopy>
+      </StatDisplay>
+      <StatDisplay label="Volume">
+        <PrettyNumber number={data?.symbolTrades.volume} />
+      </StatDisplay>
+      <StatDisplay label="# Transactions">
+        <PrettyNumber
+          number={data?.symbolTrades.numTransactions || 0}
+          decimals={0}
         />
+      </StatDisplay>
+    </div>
+  );
+
+  const PriceChange = ({
+    label,
+    current,
+  }: {
+    label: string;
+    current?: number;
+  }): ReactNode =>
+    data?.allForecasts?.nodes?.[0] ? (
+      <PercentChange
+        label={label}
+        current={current}
+        previous={data.allForecasts.nodes[0].latest.averagePrice}
+      />
     ) : null;
 
-    return (
-        <div>
-            <div className="md:flex md:justify-between md:items-center">
-                <Typography variant="h2" className="mb-2 border-b-0">{data?.symbol.name}</Typography>
+  return (
+    <div>
+      <div className="md:flex md:justify-between md:items-center">
+        <Typography variant="h2" className="mb-2 border-b-0">
+          {data?.symbol.name}
+        </Typography>
 
-                <TimeFrameSelection
-                    onValueChange={setTimeFrameSeconds}
-                    seconds={timeFrameSeconds}
-                    triggerClassName="w-full md:w-50"
-                />
-            </div>
+        <TimeFrameSelection triggerClassName="w-full md:w-50" />
+      </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-8 gap-2 mt-4 mb-2">
-                <PriceChange label="Latest" current={data?.latestTrade?.nodes?.[0]?.price} />
-                <PriceChange label="Today" current={data?.dailySymbolSummary.averagePrice} />
-                <PriceChange label="Predicted" current={data?.allForecasts?.nodes?.[0]?.predictions[0].averagePrice} />
-            </div>
+      <div className="grid grid-cols-1 md:grid-cols-8 gap-2 mt-4 mb-2">
+        <PriceChange
+          label="Latest"
+          current={data?.latestTrade?.nodes?.[0]?.price}
+        />
+        <PriceChange
+          label="Today"
+          current={data?.dailySymbolSummary.averagePrice}
+        />
+        <PriceChange
+          label="Predicted"
+          current={data?.allForecasts?.nodes?.[0]?.predictions[0].averagePrice}
+        />
+      </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Stats className="my-2" />
-                <PriceChart data={formattedTrades} className="my-2" />
-            </div>
-        </div>
-    );
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Stats className="my-2" />
+        <PriceChart data={formattedTrades} className="my-2" />
+      </div>
+    </div>
+  );
 }

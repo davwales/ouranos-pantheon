@@ -1,43 +1,29 @@
 "use client";
 
 import { PrettyNumber } from "@/app/components/pretty-number";
-import {
-  ExtendedColumnDef,
-  PaginationArgs,
-  SortArgs,
-} from "@/app/components/responsive-data-table";
+import { ExtendedColumnDef } from "@/app/components/responsive-data-table";
 import ResponsiveDataTable from "@/app/components/responsive-data-table/responsive-data-table";
 import { Typography } from "@/app/components/typography";
 import TimeFrameSelection from "@/app/plutus/components/time_frame_selection";
-import {
-  PlutusState,
-  usePlutusStore,
-} from "@/app/plutus/constants/plutus_store";
+import { PlutusState, usePlutusStore } from "@/app/plutus/plutus_store";
 import { GET_RECIPE_TRADES } from "@/app/plutus/queries";
 import { Button } from "@/components/ui/button";
-import {
-  GetRecipeTradesResponse,
-  GetRecipeTradesResponseFilterInput,
-  SortEnumType,
-} from "@/gql/graphql";
+import { GetRecipeTradesResponse } from "@/gql/graphql";
 import { useQuery } from "@urql/next";
 import { Plus, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
-export default function RecentMarketTrades() {
+export default function RecipesPage() {
   const { marketId } = useParams<{ marketId: string }>();
-  const [timeFrameSeconds, setTimeFrameSeconds] = usePlutusStore(
-    (state: PlutusState) => [state.timeFrameSeconds, state.setTimeFrameSeconds]
+  const [timeFrameSeconds, tableState, setTableState] = usePlutusStore(
+    (state: PlutusState) => [
+      state.timeFrameSeconds,
+      state.recipesTableState,
+      state.setRecipesTableState,
+    ]
   );
-  const [paginationArgs, setPaginationArgs] = useState<PaginationArgs>({
-    pageSize: 10,
-  });
-  const [filter, setFilter] = useState<GetRecipeTradesResponseFilterInput>({});
-  const [sort, setSort] = useState<SortArgs>({
-    averageMargin: SortEnumType.Desc,
-  });
 
   const [{ data, fetching }, reexecute] = useQuery({
     query: GET_RECIPE_TRADES,
@@ -46,12 +32,12 @@ export default function RecentMarketTrades() {
         marketId: marketId,
         seconds: timeFrameSeconds > 0 ? timeFrameSeconds : undefined,
       },
-      order: sort,
-      where: filter,
-      first: paginationArgs.first,
-      after: paginationArgs.after,
-      last: paginationArgs.last,
-      before: paginationArgs.before,
+      order: tableState.sort,
+      where: tableState.filter,
+      first: tableState.pagination?.first,
+      after: tableState.pagination?.after,
+      last: tableState.pagination?.last,
+      before: tableState.pagination?.before,
     },
   });
 
@@ -156,23 +142,16 @@ export default function RecentMarketTrades() {
           ) : (
             <RefreshCw onClick={reexecute} className="hover:cursor-pointer" />
           )}
-          <TimeFrameSelection
-            onValueChange={setTimeFrameSeconds}
-            seconds={timeFrameSeconds}
-          />
+          <TimeFrameSelection />
         </div>
       </div>
 
       <ResponsiveDataTable
         columns={columns}
         data={data?.recipeTrades?.nodes}
-        paginationArgs={paginationArgs}
-        onPaginationArgsChanged={setPaginationArgs}
+        state={tableState}
+        onStateChange={setTableState}
         pageInfo={data?.recipeTrades?.pageInfo}
-        filter={filter}
-        onFilterChange={setFilter}
-        sort={sort}
-        onSortChange={setSort}
         className="my-2"
       />
     </div>
