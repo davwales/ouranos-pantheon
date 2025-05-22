@@ -180,6 +180,56 @@ export type AllTradesEdge = {
   node: Trade;
 };
 
+export type Assistant = {
+  __typename?: 'Assistant';
+  assistantName: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  maxTokens?: Maybe<Scalars['Int']['output']>;
+  model: Scalars['String']['output'];
+  repeatPenalty?: Maybe<Scalars['Float']['output']>;
+  systemPrompt: Scalars['String']['output'];
+  temperature?: Maybe<Scalars['Float']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+  userName: Scalars['String']['output'];
+};
+
+export type AssistantFilterInput = {
+  and?: InputMaybe<Array<AssistantFilterInput>>;
+  assistantName?: InputMaybe<StringOperationFilterInput>;
+  createdAt?: InputMaybe<DateTimeOperationFilterInput>;
+  id?: InputMaybe<IdFilterInputTypeOfAssistantFilterInput>;
+  maxTokens?: InputMaybe<IntOperationFilterInput>;
+  model?: InputMaybe<StringOperationFilterInput>;
+  or?: InputMaybe<Array<AssistantFilterInput>>;
+  repeatPenalty?: InputMaybe<FloatOperationFilterInput>;
+  systemPrompt?: InputMaybe<StringOperationFilterInput>;
+  temperature?: InputMaybe<FloatOperationFilterInput>;
+  updatedAt?: InputMaybe<DateTimeOperationFilterInput>;
+  userName?: InputMaybe<StringOperationFilterInput>;
+};
+
+export type AssistantInput = {
+  maxTokens?: InputMaybe<Scalars['Int']['input']>;
+  model: Scalars['String']['input'];
+  repeatPenalty?: InputMaybe<Scalars['Float']['input']>;
+  systemPrompt: Scalars['String']['input'];
+  temperature?: InputMaybe<Scalars['Float']['input']>;
+};
+
+export type AssistantSortInput = {
+  assistantName?: InputMaybe<SortEnumType>;
+  createdAt?: InputMaybe<SortEnumType>;
+  id?: InputMaybe<SortEnumType>;
+  maxTokens?: InputMaybe<SortEnumType>;
+  model?: InputMaybe<SortEnumType>;
+  repeatPenalty?: InputMaybe<SortEnumType>;
+  systemPrompt?: InputMaybe<SortEnumType>;
+  temperature?: InputMaybe<SortEnumType>;
+  updatedAt?: InputMaybe<SortEnumType>;
+  userName?: InputMaybe<SortEnumType>;
+};
+
 export type BooleanOperationFilterInput = {
   eq?: InputMaybe<Scalars['Boolean']['input']>;
   neq?: InputMaybe<Scalars['Boolean']['input']>;
@@ -224,12 +274,6 @@ export type CharacterFilterInput = {
   updatedAt?: InputMaybe<DateTimeOperationFilterInput>;
 };
 
-export type CharacterInput = {
-  age: Scalars['Int']['input'];
-  details: Array<CharacterDetailInput>;
-  name: Scalars['String']['input'];
-};
-
 export type CharacterSortInput = {
   age?: InputMaybe<SortEnumType>;
   createdAt?: InputMaybe<SortEnumType>;
@@ -244,10 +288,20 @@ export type CompletionResponse = {
 };
 
 export type ConversationInput = {
-  assistant: CharacterInput;
-  context: Scalars['String']['input'];
+  assistant: AssistantInput;
   messages: Array<MessageInput>;
-  user: CharacterInput;
+};
+
+export type CreateAssistantInput = {
+  assistantName?: InputMaybe<Scalars['String']['input']>;
+  model: Scalars['String']['input'];
+  systemPrompt: Scalars['String']['input'];
+  userName?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type CreateAssistantPayload = {
+  __typename?: 'CreateAssistantPayload';
+  idResponseOfAssistant?: Maybe<IdResponseOfAssistant>;
 };
 
 export type CreateCharacterInput = {
@@ -314,6 +368,16 @@ export type DecimalOperationFilterInput = {
   nlte?: InputMaybe<Scalars['Decimal']['input']>;
 };
 
+export type DeleteAssistantInput = {
+  /** Id of the assistant to delete. */
+  assistantId: Scalars['String']['input'];
+};
+
+export type DeleteAssistantPayload = {
+  __typename?: 'DeleteAssistantPayload';
+  idResponseOfAssistant?: Maybe<IdResponseOfAssistant>;
+};
+
 export type DeleteCharacterInput = {
   /** Id of the character to delete. */
   characterId: Scalars['String']['input'];
@@ -369,6 +433,21 @@ export type FlatTaxSortInput = {
   maximum?: InputMaybe<SortEnumType>;
   minimum?: InputMaybe<SortEnumType>;
   rate?: InputMaybe<SortEnumType>;
+};
+
+export type FloatOperationFilterInput = {
+  eq?: InputMaybe<Scalars['Float']['input']>;
+  gt?: InputMaybe<Scalars['Float']['input']>;
+  gte?: InputMaybe<Scalars['Float']['input']>;
+  in?: InputMaybe<Array<InputMaybe<Scalars['Float']['input']>>>;
+  lt?: InputMaybe<Scalars['Float']['input']>;
+  lte?: InputMaybe<Scalars['Float']['input']>;
+  neq?: InputMaybe<Scalars['Float']['input']>;
+  ngt?: InputMaybe<Scalars['Float']['input']>;
+  ngte?: InputMaybe<Scalars['Float']['input']>;
+  nin?: InputMaybe<Array<InputMaybe<Scalars['Float']['input']>>>;
+  nlt?: InputMaybe<Scalars['Float']['input']>;
+  nlte?: InputMaybe<Scalars['Float']['input']>;
 };
 
 export type Forecast = {
@@ -687,6 +766,13 @@ export type GetSymbolTradesResponse = {
   volume: Scalars['Decimal']['output'];
 };
 
+export type IdFilterInputTypeOfAssistantFilterInput = {
+  eq?: InputMaybe<Scalars['String']['input']>;
+  in?: InputMaybe<Array<Scalars['String']['input']>>;
+  neq?: InputMaybe<Scalars['String']['input']>;
+  nin?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
 export type IdFilterInputTypeOfCharacterFilterInput = {
   eq?: InputMaybe<Scalars['String']['input']>;
   in?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -734,6 +820,11 @@ export type IdFilterInputTypeOfTradeFilterInput = {
   in?: InputMaybe<Array<Scalars['String']['input']>>;
   neq?: InputMaybe<Scalars['String']['input']>;
   nin?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+export type IdResponseOfAssistant = {
+  __typename?: 'IdResponseOfAssistant';
+  id: Scalars['String']['output'];
 };
 
 export type IdResponseOfCharacter = {
@@ -882,6 +973,14 @@ export type MessageInput = {
 export type Mutation = {
   __typename?: 'Mutation';
   /**
+   * Creates a assistant.
+   *
+   *
+   * **Returns:**
+   * The id of the newly created assistant.
+   */
+  createAssistant: CreateAssistantPayload;
+  /**
    * Creates a character.
    *
    *
@@ -905,6 +1004,14 @@ export type Mutation = {
    * Response containing the created recipe's identifier.
    */
   createRecipe: CreateRecipePayload;
+  /**
+   * Deletes a assistant.
+   *
+   *
+   * **Returns:**
+   * The id of the recently deleted assistant.
+   */
+  deleteAssistant: DeleteAssistantPayload;
   /**
    * Deletes a character.
    *
@@ -938,6 +1045,14 @@ export type Mutation = {
    */
   generateCompletion: GenerateCompletionPayload;
   /**
+   * Updates a assistant.
+   *
+   *
+   * **Returns:**
+   * The id of the updated assistant.
+   */
+  updateAssistant: UpdateAssistantPayload;
+  /**
    * Updates a character.
    *
    *
@@ -964,6 +1079,11 @@ export type Mutation = {
 };
 
 
+export type MutationCreateAssistantArgs = {
+  input: CreateAssistantInput;
+};
+
+
 export type MutationCreateCharacterArgs = {
   input: CreateCharacterInput;
 };
@@ -976,6 +1096,11 @@ export type MutationCreateMarketArgs = {
 
 export type MutationCreateRecipeArgs = {
   input: CreateRecipeInput;
+};
+
+
+export type MutationDeleteAssistantArgs = {
+  input: DeleteAssistantInput;
 };
 
 
@@ -996,6 +1121,11 @@ export type MutationDeleteRecipeArgs = {
 
 export type MutationGenerateCompletionArgs = {
   input: GenerateCompletionInput;
+};
+
+
+export type MutationUpdateAssistantArgs = {
+  input: UpdateAssistantInput;
 };
 
 
@@ -1028,6 +1158,14 @@ export type PageInfo = {
 
 export type Query = {
   __typename?: 'Query';
+  /**
+   * Gets a queryable list of assistants.
+   *
+   *
+   * **Returns:**
+   * A list of assistants.
+   */
+  allAssistants: Array<Assistant>;
   /**
    * Gets a queryable list of characters.
    *
@@ -1084,6 +1222,14 @@ export type Query = {
    * List of all trades.
    */
   allTrades?: Maybe<AllTradesConnection>;
+  /**
+   * Gets a assistant.
+   *
+   *
+   * **Returns:**
+   * The assistant matching the given query.
+   */
+  assistant: Assistant;
   /**
    * Gets a character.
    *
@@ -1167,6 +1313,12 @@ export type Query = {
 };
 
 
+export type QueryAllAssistantsArgs = {
+  order?: InputMaybe<Array<AssistantSortInput>>;
+  where?: InputMaybe<AssistantFilterInput>;
+};
+
+
 export type QueryAllCharactersArgs = {
   order?: InputMaybe<Array<CharacterSortInput>>;
   where?: InputMaybe<CharacterFilterInput>;
@@ -1230,6 +1382,11 @@ export type QueryAllTradesArgs = {
   last?: InputMaybe<Scalars['Int']['input']>;
   order?: InputMaybe<Array<TradeSortInput>>;
   where?: InputMaybe<TradeFilterInput>;
+};
+
+
+export type QueryAssistantArgs = {
+  assistantId: Scalars['String']['input'];
 };
 
 
@@ -1545,6 +1702,19 @@ export type TradeSortInput = {
   price?: InputMaybe<SortEnumType>;
   updatedAt?: InputMaybe<SortEnumType>;
   volume?: InputMaybe<SortEnumType>;
+};
+
+export type UpdateAssistantInput = {
+  assistantId: Scalars['String']['input'];
+  assistantName?: InputMaybe<Scalars['String']['input']>;
+  model: Scalars['String']['input'];
+  systemPrompt: Scalars['String']['input'];
+  userName?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateAssistantPayload = {
+  __typename?: 'UpdateAssistantPayload';
+  idResponseOfAssistant?: Maybe<IdResponseOfAssistant>;
 };
 
 export type UpdateCharacterInput = {

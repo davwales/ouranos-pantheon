@@ -10,7 +10,10 @@ public sealed class Assistant : BaseEntity<Id<Assistant>>
         string model,
         string systemPrompt,
         string? assistantName = null,
-        string? userName = null
+        string? userName = null,
+        float? temperature = null,
+        int? maxTokens = null,
+        float? repeatPenalty = null
     ) : base(id)
     {
         Guard.Against.NullOrWhiteSpace(model);
@@ -18,6 +21,9 @@ public sealed class Assistant : BaseEntity<Id<Assistant>>
 
         Model = model;
         SystemPrompt = systemPrompt;
+        Temperature = temperature;
+        MaxTokens = maxTokens;
+        RepeatPenalty = repeatPenalty;
 
         if (!string.IsNullOrWhiteSpace(assistantName))
         {
@@ -38,11 +44,20 @@ public sealed class Assistant : BaseEntity<Id<Assistant>>
 
     public string UserName { get; private set; } = "User";
 
+    public float? Temperature { get; private set; }
+
+    public int? MaxTokens { get; private set; }
+
+    public float? RepeatPenalty { get; private set; }
+
     public void Update(
         string model,
         string systemPrompt,
         string? assistantName = null,
-        string? userName = null
+        string? userName = null,
+        float? temperature = null,
+        int? maxTokens = null,
+        float? repeatPenalty = null
     )
     {
         Guard.Against.NullOrWhiteSpace(model);
@@ -50,6 +65,9 @@ public sealed class Assistant : BaseEntity<Id<Assistant>>
 
         Model = model;
         SystemPrompt = systemPrompt;
+        Temperature = temperature;
+        MaxTokens = maxTokens;
+        RepeatPenalty = repeatPenalty;
 
         if (!string.IsNullOrWhiteSpace(assistantName))
         {

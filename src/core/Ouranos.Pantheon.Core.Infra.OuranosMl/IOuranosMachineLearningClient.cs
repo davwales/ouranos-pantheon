@@ -10,6 +10,11 @@ public interface IOuranosMachineLearningClient
         CancellationToken cancellationToken = default
     );
 
+    IAsyncEnumerable<string> GenerateChatCompletion(
+        GenerateChatCompletionRequest payload,
+        CancellationToken cancellationToken = default
+    );
+
     Task<List<List<ForecastPoint>>> GetPlutusForecasts(
         GetPlutusForecastsRequest payload,
         CancellationToken cancellationToken = default

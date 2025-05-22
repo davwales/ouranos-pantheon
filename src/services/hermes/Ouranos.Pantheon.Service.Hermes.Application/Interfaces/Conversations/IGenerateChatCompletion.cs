@@ -2,7 +2,7 @@ using Ouranos.Pantheon.Service.Hermes.Application.Commands.Conversations.Generat
 
 namespace Ouranos.Pantheon.Service.Hermes.Application.Interfaces.Conversations;
 
-public interface IGenerateCompletion
+public interface IGenerateChatCompletion
 {
     IAsyncEnumerable<string> GenerateCompletionStream(
         ConversationInput conversation,
