@@ -8,5 +8,8 @@ public sealed record CreateAssistantInput(
     string Model,
     string SystemPrompt,
     string? AssistantName = null,
-    string? UserName = null
+    string? UserName = null,
+    float? Temperature = null,
+    int? MaxTokens = null,
+    float? RepeatPenalty = null
 ) : ICommand<IdResponse<Assistant>>;

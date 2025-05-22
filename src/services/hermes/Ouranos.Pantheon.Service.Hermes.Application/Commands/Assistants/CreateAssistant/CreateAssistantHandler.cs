@@ -37,7 +37,10 @@ public sealed class CreateAssistantHandler : CommandHandler<CreateAssistantInput
             command.Model,
             command.SystemPrompt,
             command.AssistantName,
-            command.UserName
+            command.UserName,
+            command.Temperature,
+            command.MaxTokens,
+            command.RepeatPenalty
         );
 
         await _assistantRepository.Create(assistant, cancellationToken);

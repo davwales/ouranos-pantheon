@@ -33,7 +33,17 @@ public sealed class UpdateAssistantHandler : CommandHandler<UpdateAssistantInput
         cancellationToken.ThrowIfCancellationRequested();
 
         var assistant = await _assistantRepository.Read(command.AssistantId, cancellationToken);
-        assistant.Update(command.Model, command.SystemPrompt, command.AssistantName, command.UserName);
+
+        assistant.Update(
+            command.Model,
+            command.SystemPrompt,
+            command.AssistantName,
+            command.UserName,
+            command.Temperature,
+            command.MaxTokens,
+            command.RepeatPenalty
+        );
+
         await _assistantRepository.Update(assistant, cancellationToken);
         var response = new IdResponse<Assistant>(command.AssistantId);
 

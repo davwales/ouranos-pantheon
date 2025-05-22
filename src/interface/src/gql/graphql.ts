@@ -235,53 +235,6 @@ export type BooleanOperationFilterInput = {
   neq?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-export type Character = {
-  __typename?: 'Character';
-  age: Scalars['Int']['output'];
-  createdAt: Scalars['DateTime']['output'];
-  details: Array<CharacterDetail>;
-  id: Scalars['String']['output'];
-  name: Scalars['String']['output'];
-  updatedAt: Scalars['DateTime']['output'];
-};
-
-export type CharacterDetail = {
-  __typename?: 'CharacterDetail';
-  key: Scalars['String']['output'];
-  value: Scalars['String']['output'];
-};
-
-export type CharacterDetailFilterInput = {
-  and?: InputMaybe<Array<CharacterDetailFilterInput>>;
-  key?: InputMaybe<StringOperationFilterInput>;
-  or?: InputMaybe<Array<CharacterDetailFilterInput>>;
-  value?: InputMaybe<StringOperationFilterInput>;
-};
-
-export type CharacterDetailInput = {
-  key: Scalars['String']['input'];
-  value: Scalars['String']['input'];
-};
-
-export type CharacterFilterInput = {
-  age?: InputMaybe<IntOperationFilterInput>;
-  and?: InputMaybe<Array<CharacterFilterInput>>;
-  createdAt?: InputMaybe<DateTimeOperationFilterInput>;
-  details?: InputMaybe<ListFilterInputTypeOfCharacterDetailFilterInput>;
-  id?: InputMaybe<IdFilterInputTypeOfCharacterFilterInput>;
-  name?: InputMaybe<StringOperationFilterInput>;
-  or?: InputMaybe<Array<CharacterFilterInput>>;
-  updatedAt?: InputMaybe<DateTimeOperationFilterInput>;
-};
-
-export type CharacterSortInput = {
-  age?: InputMaybe<SortEnumType>;
-  createdAt?: InputMaybe<SortEnumType>;
-  id?: InputMaybe<SortEnumType>;
-  name?: InputMaybe<SortEnumType>;
-  updatedAt?: InputMaybe<SortEnumType>;
-};
-
 export type CompletionResponse = {
   __typename?: 'CompletionResponse';
   chunks: Array<GenerateCompletionResponse>;
@@ -294,25 +247,17 @@ export type ConversationInput = {
 
 export type CreateAssistantInput = {
   assistantName?: InputMaybe<Scalars['String']['input']>;
+  maxTokens?: InputMaybe<Scalars['Int']['input']>;
   model: Scalars['String']['input'];
+  repeatPenalty?: InputMaybe<Scalars['Float']['input']>;
   systemPrompt: Scalars['String']['input'];
+  temperature?: InputMaybe<Scalars['Float']['input']>;
   userName?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type CreateAssistantPayload = {
   __typename?: 'CreateAssistantPayload';
   idResponseOfAssistant?: Maybe<IdResponseOfAssistant>;
-};
-
-export type CreateCharacterInput = {
-  age: Scalars['Int']['input'];
-  details: Array<CharacterDetailInput>;
-  name: Scalars['String']['input'];
-};
-
-export type CreateCharacterPayload = {
-  __typename?: 'CreateCharacterPayload';
-  idResponseOfCharacter?: Maybe<IdResponseOfCharacter>;
 };
 
 export type CreateMarketInput = {
@@ -376,16 +321,6 @@ export type DeleteAssistantInput = {
 export type DeleteAssistantPayload = {
   __typename?: 'DeleteAssistantPayload';
   idResponseOfAssistant?: Maybe<IdResponseOfAssistant>;
-};
-
-export type DeleteCharacterInput = {
-  /** Id of the character to delete. */
-  characterId: Scalars['String']['input'];
-};
-
-export type DeleteCharacterPayload = {
-  __typename?: 'DeleteCharacterPayload';
-  idResponseOfCharacter?: Maybe<IdResponseOfCharacter>;
 };
 
 export type DeleteMarketInput = {
@@ -773,13 +708,6 @@ export type IdFilterInputTypeOfAssistantFilterInput = {
   nin?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
-export type IdFilterInputTypeOfCharacterFilterInput = {
-  eq?: InputMaybe<Scalars['String']['input']>;
-  in?: InputMaybe<Array<Scalars['String']['input']>>;
-  neq?: InputMaybe<Scalars['String']['input']>;
-  nin?: InputMaybe<Array<Scalars['String']['input']>>;
-};
-
 export type IdFilterInputTypeOfForecastFilterInput = {
   eq?: InputMaybe<Scalars['String']['input']>;
   in?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -827,11 +755,6 @@ export type IdResponseOfAssistant = {
   id: Scalars['String']['output'];
 };
 
-export type IdResponseOfCharacter = {
-  __typename?: 'IdResponseOfCharacter';
-  id: Scalars['String']['output'];
-};
-
 export type IdResponseOfMarket = {
   __typename?: 'IdResponseOfMarket';
   id: Scalars['String']['output'];
@@ -855,13 +778,6 @@ export type IntOperationFilterInput = {
   nin?: InputMaybe<Array<InputMaybe<Scalars['Int']['input']>>>;
   nlt?: InputMaybe<Scalars['Int']['input']>;
   nlte?: InputMaybe<Scalars['Int']['input']>;
-};
-
-export type ListFilterInputTypeOfCharacterDetailFilterInput = {
-  all?: InputMaybe<CharacterDetailFilterInput>;
-  any?: InputMaybe<Scalars['Boolean']['input']>;
-  none?: InputMaybe<CharacterDetailFilterInput>;
-  some?: InputMaybe<CharacterDetailFilterInput>;
 };
 
 export type ListFilterInputTypeOfForecastPointFilterInput = {
@@ -981,14 +897,6 @@ export type Mutation = {
    */
   createAssistant: CreateAssistantPayload;
   /**
-   * Creates a character.
-   *
-   *
-   * **Returns:**
-   * The id of the newly created character.
-   */
-  createCharacter: CreateCharacterPayload;
-  /**
    * Creates a market.
    *
    *
@@ -1012,14 +920,6 @@ export type Mutation = {
    * The id of the recently deleted assistant.
    */
   deleteAssistant: DeleteAssistantPayload;
-  /**
-   * Deletes a character.
-   *
-   *
-   * **Returns:**
-   * The id of the recently deleted character.
-   */
-  deleteCharacter: DeleteCharacterPayload;
   /**
    * Deletes a market by it's identifier.
    *
@@ -1053,14 +953,6 @@ export type Mutation = {
    */
   updateAssistant: UpdateAssistantPayload;
   /**
-   * Updates a character.
-   *
-   *
-   * **Returns:**
-   * The id of the updated character.
-   */
-  updateCharacter: UpdateCharacterPayload;
-  /**
    * Updates a market by it's identifier.
    *
    *
@@ -1084,11 +976,6 @@ export type MutationCreateAssistantArgs = {
 };
 
 
-export type MutationCreateCharacterArgs = {
-  input: CreateCharacterInput;
-};
-
-
 export type MutationCreateMarketArgs = {
   input: CreateMarketInput;
 };
@@ -1101,11 +988,6 @@ export type MutationCreateRecipeArgs = {
 
 export type MutationDeleteAssistantArgs = {
   input: DeleteAssistantInput;
-};
-
-
-export type MutationDeleteCharacterArgs = {
-  input: DeleteCharacterInput;
 };
 
 
@@ -1126,11 +1008,6 @@ export type MutationGenerateCompletionArgs = {
 
 export type MutationUpdateAssistantArgs = {
   input: UpdateAssistantInput;
-};
-
-
-export type MutationUpdateCharacterArgs = {
-  input: UpdateCharacterInput;
 };
 
 
@@ -1166,14 +1043,6 @@ export type Query = {
    * A list of assistants.
    */
   allAssistants: Array<Assistant>;
-  /**
-   * Gets a queryable list of characters.
-   *
-   *
-   * **Returns:**
-   * A list of characters.
-   */
-  allCharacters: Array<Character>;
   /**
    * Gets all forecasts.
    *
@@ -1230,14 +1099,6 @@ export type Query = {
    * The assistant matching the given query.
    */
   assistant: Assistant;
-  /**
-   * Gets a character.
-   *
-   *
-   * **Returns:**
-   * The character matching the given query.
-   */
-  character: Character;
   /**
    * Gets the daily summary of trades for a symbol.
    *
@@ -1319,12 +1180,6 @@ export type QueryAllAssistantsArgs = {
 };
 
 
-export type QueryAllCharactersArgs = {
-  order?: InputMaybe<Array<CharacterSortInput>>;
-  where?: InputMaybe<CharacterFilterInput>;
-};
-
-
 export type QueryAllForecastsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -1387,11 +1242,6 @@ export type QueryAllTradesArgs = {
 
 export type QueryAssistantArgs = {
   assistantId: Scalars['String']['input'];
-};
-
-
-export type QueryCharacterArgs = {
-  characterId: Scalars['String']['input'];
 };
 
 
@@ -1707,26 +1557,17 @@ export type TradeSortInput = {
 export type UpdateAssistantInput = {
   assistantId: Scalars['String']['input'];
   assistantName?: InputMaybe<Scalars['String']['input']>;
+  maxTokens?: InputMaybe<Scalars['Int']['input']>;
   model: Scalars['String']['input'];
+  repeatPenalty?: InputMaybe<Scalars['Float']['input']>;
   systemPrompt: Scalars['String']['input'];
+  temperature?: InputMaybe<Scalars['Float']['input']>;
   userName?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateAssistantPayload = {
   __typename?: 'UpdateAssistantPayload';
   idResponseOfAssistant?: Maybe<IdResponseOfAssistant>;
-};
-
-export type UpdateCharacterInput = {
-  age: Scalars['Int']['input'];
-  characterId: Scalars['String']['input'];
-  details: Array<CharacterDetailInput>;
-  name: Scalars['String']['input'];
-};
-
-export type UpdateCharacterPayload = {
-  __typename?: 'UpdateCharacterPayload';
-  idResponseOfCharacter?: Maybe<IdResponseOfCharacter>;
 };
 
 export type UpdateMarketInput = {
@@ -1754,26 +1595,26 @@ export type UpdateRecipePayload = {
   idResponseOfRecipe?: Maybe<IdResponseOfRecipe>;
 };
 
-export type DeleteCharacterMutationVariables = Exact<{
-  input: DeleteCharacterInput;
+export type DeleteAssistantMutationVariables = Exact<{
+  input: DeleteAssistantInput;
 }>;
 
 
-export type DeleteCharacterMutation = { __typename?: 'Mutation', deleteCharacter: { __typename?: 'DeleteCharacterPayload', idResponseOfCharacter?: { __typename?: 'IdResponseOfCharacter', id: string } | null } };
+export type DeleteAssistantMutation = { __typename?: 'Mutation', deleteAssistant: { __typename?: 'DeleteAssistantPayload', idResponseOfAssistant?: { __typename?: 'IdResponseOfAssistant', id: string } | null } };
 
-export type CreateCharacterMutationVariables = Exact<{
-  input: CreateCharacterInput;
+export type CreateAssistantMutationVariables = Exact<{
+  input: CreateAssistantInput;
 }>;
 
 
-export type CreateCharacterMutation = { __typename?: 'Mutation', createCharacter: { __typename?: 'CreateCharacterPayload', idResponseOfCharacter?: { __typename?: 'IdResponseOfCharacter', id: string } | null } };
+export type CreateAssistantMutation = { __typename?: 'Mutation', createAssistant: { __typename?: 'CreateAssistantPayload', idResponseOfAssistant?: { __typename?: 'IdResponseOfAssistant', id: string } | null } };
 
-export type UpdateCharacterMutationVariables = Exact<{
-  input: UpdateCharacterInput;
+export type UpdateAssistantMutationVariables = Exact<{
+  input: UpdateAssistantInput;
 }>;
 
 
-export type UpdateCharacterMutation = { __typename?: 'Mutation', updateCharacter: { __typename?: 'UpdateCharacterPayload', idResponseOfCharacter?: { __typename?: 'IdResponseOfCharacter', id: string } | null } };
+export type UpdateAssistantMutation = { __typename?: 'Mutation', updateAssistant: { __typename?: 'UpdateAssistantPayload', idResponseOfAssistant?: { __typename?: 'IdResponseOfAssistant', id: string } | null } };
 
 export type GenerateCompletionMutationVariables = Exact<{
   input: GenerateCompletionInput;
@@ -1782,22 +1623,22 @@ export type GenerateCompletionMutationVariables = Exact<{
 
 export type GenerateCompletionMutation = { __typename?: 'Mutation', generateCompletion: { __typename?: 'GenerateCompletionPayload', completionResponse?: { __typename?: 'CompletionResponse', chunks: Array<{ __typename?: 'GenerateCompletionResponse', content: string }> } | null } };
 
-export type CharacterListQueryVariables = Exact<{ [key: string]: never; }>;
+export type AssistantListQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type CharacterListQuery = { __typename?: 'Query', allCharacters: Array<{ __typename?: 'Character', id: string, name: string, age: number }> };
+export type AssistantListQuery = { __typename?: 'Query', allAssistants: Array<{ __typename?: 'Assistant', id: string, model: string, assistantName: string }> };
 
-export type DetailedCharacterListQueryVariables = Exact<{ [key: string]: never; }>;
+export type DetailedAssistantListQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type DetailedCharacterListQuery = { __typename?: 'Query', allCharacters: Array<{ __typename?: 'Character', id: string, name: string, age: number, details: Array<{ __typename?: 'CharacterDetail', key: string, value: string }> }> };
+export type DetailedAssistantListQuery = { __typename?: 'Query', allAssistants: Array<{ __typename?: 'Assistant', assistantName: string, createdAt: any, id: string, maxTokens?: number | null, model: string, repeatPenalty?: number | null, systemPrompt: string, temperature?: number | null, updatedAt: any, userName: string }> };
 
-export type GetCharacterQueryVariables = Exact<{
-  characterId: Scalars['String']['input'];
+export type GetAssistantQueryVariables = Exact<{
+  assistantId: Scalars['String']['input'];
 }>;
 
 
-export type GetCharacterQuery = { __typename?: 'Query', character: { __typename?: 'Character', id: string, name: string, age: number, details: Array<{ __typename?: 'CharacterDetail', key: string, value: string }> } };
+export type GetAssistantQuery = { __typename?: 'Query', assistant: { __typename?: 'Assistant', assistantName: string, id: string, maxTokens?: number | null, model: string, repeatPenalty?: number | null, systemPrompt: string, temperature?: number | null, userName: string } };
 
 export type UpdateRecipeMutationVariables = Exact<{
   input: UpdateRecipeInput;
@@ -1896,13 +1737,13 @@ export type SearchSymbolsQueryVariables = Exact<{
 export type SearchSymbolsQuery = { __typename?: 'Query', allSymbols?: { __typename?: 'AllSymbolsConnection', nodes?: Array<{ __typename?: 'Symbol', id: string, name: string, code: string, subcode?: string | null }> | null } | null };
 
 
-export const DeleteCharacterDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"deleteCharacter"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"DeleteCharacterInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteCharacter"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"idResponseOfCharacter"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]} as unknown as DocumentNode<DeleteCharacterMutation, DeleteCharacterMutationVariables>;
-export const CreateCharacterDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"createCharacter"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateCharacterInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createCharacter"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"idResponseOfCharacter"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]} as unknown as DocumentNode<CreateCharacterMutation, CreateCharacterMutationVariables>;
-export const UpdateCharacterDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"updateCharacter"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateCharacterInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateCharacter"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"idResponseOfCharacter"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]} as unknown as DocumentNode<UpdateCharacterMutation, UpdateCharacterMutationVariables>;
+export const DeleteAssistantDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"deleteAssistant"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"DeleteAssistantInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteAssistant"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"idResponseOfAssistant"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]} as unknown as DocumentNode<DeleteAssistantMutation, DeleteAssistantMutationVariables>;
+export const CreateAssistantDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"createAssistant"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateAssistantInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createAssistant"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"idResponseOfAssistant"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]} as unknown as DocumentNode<CreateAssistantMutation, CreateAssistantMutationVariables>;
+export const UpdateAssistantDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"updateAssistant"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateAssistantInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateAssistant"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"idResponseOfAssistant"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]} as unknown as DocumentNode<UpdateAssistantMutation, UpdateAssistantMutationVariables>;
 export const GenerateCompletionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"generateCompletion"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"GenerateCompletionInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"generateCompletion"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"completionResponse"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"chunks"},"directives":[{"kind":"Directive","name":{"kind":"Name","value":"stream"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"content"}}]}}]}}]}}]}}]} as unknown as DocumentNode<GenerateCompletionMutation, GenerateCompletionMutationVariables>;
-export const CharacterListDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"characterList"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"allCharacters"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"age"}}]}}]}}]} as unknown as DocumentNode<CharacterListQuery, CharacterListQueryVariables>;
-export const DetailedCharacterListDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"detailedCharacterList"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"allCharacters"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"age"}},{"kind":"Field","name":{"kind":"Name","value":"details"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"key"}},{"kind":"Field","name":{"kind":"Name","value":"value"}}]}}]}}]}}]} as unknown as DocumentNode<DetailedCharacterListQuery, DetailedCharacterListQueryVariables>;
-export const GetCharacterDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getCharacter"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"characterId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"character"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"characterId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"characterId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"age"}},{"kind":"Field","name":{"kind":"Name","value":"details"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"key"}},{"kind":"Field","name":{"kind":"Name","value":"value"}}]}}]}}]}}]} as unknown as DocumentNode<GetCharacterQuery, GetCharacterQueryVariables>;
+export const AssistantListDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"AssistantList"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"allAssistants"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"model"}},{"kind":"Field","name":{"kind":"Name","value":"assistantName"}}]}}]}}]} as unknown as DocumentNode<AssistantListQuery, AssistantListQueryVariables>;
+export const DetailedAssistantListDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"DetailedAssistantList"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"allAssistants"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"assistantName"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"maxTokens"}},{"kind":"Field","name":{"kind":"Name","value":"model"}},{"kind":"Field","name":{"kind":"Name","value":"repeatPenalty"}},{"kind":"Field","name":{"kind":"Name","value":"systemPrompt"}},{"kind":"Field","name":{"kind":"Name","value":"temperature"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"userName"}}]}}]}}]} as unknown as DocumentNode<DetailedAssistantListQuery, DetailedAssistantListQueryVariables>;
+export const GetAssistantDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetAssistant"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"assistantId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"assistant"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"assistantId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"assistantId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"assistantName"}},{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"maxTokens"}},{"kind":"Field","name":{"kind":"Name","value":"model"}},{"kind":"Field","name":{"kind":"Name","value":"repeatPenalty"}},{"kind":"Field","name":{"kind":"Name","value":"systemPrompt"}},{"kind":"Field","name":{"kind":"Name","value":"temperature"}},{"kind":"Field","name":{"kind":"Name","value":"userName"}}]}}]}}]} as unknown as DocumentNode<GetAssistantQuery, GetAssistantQueryVariables>;
 export const UpdateRecipeDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateRecipe"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateRecipeInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateRecipe"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"idResponseOfRecipe"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]} as unknown as DocumentNode<UpdateRecipeMutation, UpdateRecipeMutationVariables>;
 export const DeleteRecipeDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DeleteRecipe"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"DeleteRecipeInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteRecipe"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"idResponseOfRecipe"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]} as unknown as DocumentNode<DeleteRecipeMutation, DeleteRecipeMutationVariables>;
 export const CreateRecipeDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateRecipe"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateRecipeInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createRecipe"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"idResponseOfRecipe"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]} as unknown as DocumentNode<CreateRecipeMutation, CreateRecipeMutationVariables>;

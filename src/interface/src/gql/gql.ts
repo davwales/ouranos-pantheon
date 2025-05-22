@@ -13,13 +13,13 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  * Therefore it is highly recommended to use the babel or swc plugin for production.
  */
 const documents = {
-    "\n    mutation deleteCharacter($input: DeleteCharacterInput!) {\n        deleteCharacter(input: $input) {\n            idResponseOfCharacter {\n                id\n            }\n        }\n    } \n": types.DeleteCharacterDocument,
-    "\n    mutation createCharacter($input: CreateCharacterInput!) {\n        createCharacter(input: $input) {\n            idResponseOfCharacter {\n                id\n            }\n        }\n    } \n": types.CreateCharacterDocument,
-    "\n    mutation updateCharacter($input: UpdateCharacterInput!) {\n        updateCharacter(input: $input) {\n            idResponseOfCharacter {\n                id\n            }\n        }\n    } \n": types.UpdateCharacterDocument,
-    "\n    mutation generateCompletion($input: GenerateCompletionInput!) {\n        generateCompletion(input: $input) {\n            completionResponse {\n                chunks @stream {\n                    content\n                }\n            }\n        }\n    }\n": types.GenerateCompletionDocument,
-    "\n    query characterList {\n        allCharacters {\n            id\n            name\n            age\n        }\n    }\n": types.CharacterListDocument,
-    "\n    query detailedCharacterList {\n        allCharacters {\n            id\n            name\n            age\n            details {\n                key\n                value\n            }\n        }\n    }\n": types.DetailedCharacterListDocument,
-    "\n    query getCharacter($characterId: String!) {\n        character(characterId: $characterId) {\n            id\n            name\n            age\n            details {\n                key\n                value\n            }\n        }\n    }\n": types.GetCharacterDocument,
+    "\n  mutation deleteAssistant($input: DeleteAssistantInput!) {\n    deleteAssistant(input: $input) {\n      idResponseOfAssistant {\n        id\n      }\n    }\n  }\n": types.DeleteAssistantDocument,
+    "\n  mutation createAssistant($input: CreateAssistantInput!) {\n    createAssistant(input: $input) {\n      idResponseOfAssistant {\n        id\n      }\n    }\n  }\n": types.CreateAssistantDocument,
+    "\n  mutation updateAssistant($input: UpdateAssistantInput!) {\n    updateAssistant(input: $input) {\n      idResponseOfAssistant {\n        id\n      }\n    }\n  }\n": types.UpdateAssistantDocument,
+    "\n  mutation generateCompletion($input: GenerateCompletionInput!) {\n    generateCompletion(input: $input) {\n      completionResponse {\n        chunks @stream {\n          content\n        }\n      }\n    }\n  }\n": types.GenerateCompletionDocument,
+    "\n  query AssistantList {\n    allAssistants {\n      id\n      model\n      assistantName\n    }\n  }\n": types.AssistantListDocument,
+    "\n  query DetailedAssistantList {\n    allAssistants {\n      assistantName\n      createdAt\n      id\n      maxTokens\n      model\n      repeatPenalty\n      systemPrompt\n      temperature\n      updatedAt\n      userName\n    }\n  }\n": types.DetailedAssistantListDocument,
+    "\n  query GetAssistant($assistantId: String!) {\n    assistant(assistantId: $assistantId) {\n      assistantName\n      id\n      maxTokens\n      model\n      repeatPenalty\n      systemPrompt\n      temperature\n      userName\n    }\n  }\n": types.GetAssistantDocument,
     "\n  mutation UpdateRecipe($input: UpdateRecipeInput!) {\n    updateRecipe(input: $input) {\n      idResponseOfRecipe {\n        id\n      }\n    }\n  }\n": types.UpdateRecipeDocument,
     "\n  mutation DeleteRecipe($input: DeleteRecipeInput!) {\n    deleteRecipe(input: $input) {\n      idResponseOfRecipe {\n        id\n      }\n    }\n  }\n": types.DeleteRecipeDocument,
     "\n  mutation CreateRecipe($input: CreateRecipeInput!) {\n    createRecipe(input: $input) {\n      idResponseOfRecipe {\n        id\n      }\n    }\n  }\n": types.CreateRecipeDocument,
@@ -50,31 +50,31 @@ export function graphql(source: string): unknown;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n    mutation deleteCharacter($input: DeleteCharacterInput!) {\n        deleteCharacter(input: $input) {\n            idResponseOfCharacter {\n                id\n            }\n        }\n    } \n"): (typeof documents)["\n    mutation deleteCharacter($input: DeleteCharacterInput!) {\n        deleteCharacter(input: $input) {\n            idResponseOfCharacter {\n                id\n            }\n        }\n    } \n"];
+export function graphql(source: "\n  mutation deleteAssistant($input: DeleteAssistantInput!) {\n    deleteAssistant(input: $input) {\n      idResponseOfAssistant {\n        id\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation deleteAssistant($input: DeleteAssistantInput!) {\n    deleteAssistant(input: $input) {\n      idResponseOfAssistant {\n        id\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n    mutation createCharacter($input: CreateCharacterInput!) {\n        createCharacter(input: $input) {\n            idResponseOfCharacter {\n                id\n            }\n        }\n    } \n"): (typeof documents)["\n    mutation createCharacter($input: CreateCharacterInput!) {\n        createCharacter(input: $input) {\n            idResponseOfCharacter {\n                id\n            }\n        }\n    } \n"];
+export function graphql(source: "\n  mutation createAssistant($input: CreateAssistantInput!) {\n    createAssistant(input: $input) {\n      idResponseOfAssistant {\n        id\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation createAssistant($input: CreateAssistantInput!) {\n    createAssistant(input: $input) {\n      idResponseOfAssistant {\n        id\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n    mutation updateCharacter($input: UpdateCharacterInput!) {\n        updateCharacter(input: $input) {\n            idResponseOfCharacter {\n                id\n            }\n        }\n    } \n"): (typeof documents)["\n    mutation updateCharacter($input: UpdateCharacterInput!) {\n        updateCharacter(input: $input) {\n            idResponseOfCharacter {\n                id\n            }\n        }\n    } \n"];
+export function graphql(source: "\n  mutation updateAssistant($input: UpdateAssistantInput!) {\n    updateAssistant(input: $input) {\n      idResponseOfAssistant {\n        id\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation updateAssistant($input: UpdateAssistantInput!) {\n    updateAssistant(input: $input) {\n      idResponseOfAssistant {\n        id\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n    mutation generateCompletion($input: GenerateCompletionInput!) {\n        generateCompletion(input: $input) {\n            completionResponse {\n                chunks @stream {\n                    content\n                }\n            }\n        }\n    }\n"): (typeof documents)["\n    mutation generateCompletion($input: GenerateCompletionInput!) {\n        generateCompletion(input: $input) {\n            completionResponse {\n                chunks @stream {\n                    content\n                }\n            }\n        }\n    }\n"];
+export function graphql(source: "\n  mutation generateCompletion($input: GenerateCompletionInput!) {\n    generateCompletion(input: $input) {\n      completionResponse {\n        chunks @stream {\n          content\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation generateCompletion($input: GenerateCompletionInput!) {\n    generateCompletion(input: $input) {\n      completionResponse {\n        chunks @stream {\n          content\n        }\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n    query characterList {\n        allCharacters {\n            id\n            name\n            age\n        }\n    }\n"): (typeof documents)["\n    query characterList {\n        allCharacters {\n            id\n            name\n            age\n        }\n    }\n"];
+export function graphql(source: "\n  query AssistantList {\n    allAssistants {\n      id\n      model\n      assistantName\n    }\n  }\n"): (typeof documents)["\n  query AssistantList {\n    allAssistants {\n      id\n      model\n      assistantName\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n    query detailedCharacterList {\n        allCharacters {\n            id\n            name\n            age\n            details {\n                key\n                value\n            }\n        }\n    }\n"): (typeof documents)["\n    query detailedCharacterList {\n        allCharacters {\n            id\n            name\n            age\n            details {\n                key\n                value\n            }\n        }\n    }\n"];
+export function graphql(source: "\n  query DetailedAssistantList {\n    allAssistants {\n      assistantName\n      createdAt\n      id\n      maxTokens\n      model\n      repeatPenalty\n      systemPrompt\n      temperature\n      updatedAt\n      userName\n    }\n  }\n"): (typeof documents)["\n  query DetailedAssistantList {\n    allAssistants {\n      assistantName\n      createdAt\n      id\n      maxTokens\n      model\n      repeatPenalty\n      systemPrompt\n      temperature\n      updatedAt\n      userName\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n    query getCharacter($characterId: String!) {\n        character(characterId: $characterId) {\n            id\n            name\n            age\n            details {\n                key\n                value\n            }\n        }\n    }\n"): (typeof documents)["\n    query getCharacter($characterId: String!) {\n        character(characterId: $characterId) {\n            id\n            name\n            age\n            details {\n                key\n                value\n            }\n        }\n    }\n"];
+export function graphql(source: "\n  query GetAssistant($assistantId: String!) {\n    assistant(assistantId: $assistantId) {\n      assistantName\n      id\n      maxTokens\n      model\n      repeatPenalty\n      systemPrompt\n      temperature\n      userName\n    }\n  }\n"): (typeof documents)["\n  query GetAssistant($assistantId: String!) {\n    assistant(assistantId: $assistantId) {\n      assistantName\n      id\n      maxTokens\n      model\n      repeatPenalty\n      systemPrompt\n      temperature\n      userName\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

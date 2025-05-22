@@ -7,7 +7,6 @@ using Ouranos.Pantheon.Core.API.Extensions;
 using Ouranos.Pantheon.Core.API.Interfaces;
 using Ouranos.Pantheon.Service.Hermes.Application;
 using Ouranos.Pantheon.Service.Hermes.Domain.Assistants;
-using Ouranos.Pantheon.Service.Hermes.Domain.Characters;
 using Ouranos.Pantheon.Service.Hermes.Infra.OuranosMl;
 
 namespace Ouranos.Pantheon.Service.Hermes.API;
@@ -16,16 +15,12 @@ public sealed class HermesModule : IOuranosModule
 {
     public IRequestExecutorBuilder ConfigureSchema(IRequestExecutorBuilder builder)
     {
-        return builder
-            .BindModelId<Character>()
-            .BindModelId<Assistant>();
+        return builder.BindModelId<Assistant>();
     }
 
     public IFilterConventionDescriptor ConfigureSchemaFilters(IFilterConventionDescriptor descriptor)
     {
-        return descriptor
-            .BindModelIdFilter<Character>()
-            .BindModelIdFilter<Assistant>();
+        return descriptor.BindModelIdFilter<Assistant>();
     }
 
     public IServiceCollection ConfigureServices(IServiceCollection services, IConfiguration configuration)
