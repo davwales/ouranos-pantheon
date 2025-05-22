@@ -1,14 +1,18 @@
 import { Textarea } from "@/components/ui/textarea";
+import React from "react";
 
-export default function AutosizeTextarea(props: React.ComponentProps<typeof Textarea>) {
-    return (
-        <Textarea
-            onInput={(e) => {
-                const target = e.target as HTMLTextAreaElement;
-                target.style.height = '0px';
-                target.style.height = target.scrollHeight + 'px';
-            }}
-            {...props}
-        />
-    );
+export default function AutosizeTextarea(
+  props: React.ComponentProps<typeof Textarea>
+) {
+  return (
+    <Textarea
+      ref={(textarea) => {
+        if (textarea) {
+          textarea.style.height = "0px";
+          textarea.style.height = textarea.scrollHeight + "px";
+        }
+      }}
+      {...props}
+    />
+  );
 }
