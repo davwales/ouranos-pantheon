@@ -121,7 +121,7 @@ export default function RecipesPage() {
         },
       },
     ],
-    []
+    [marketId]
   );
 
   return (

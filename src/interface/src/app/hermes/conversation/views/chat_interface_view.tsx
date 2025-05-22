@@ -29,9 +29,12 @@ export default function ChatInterfaceView({
     const message = result.data?.generateCompletion.completionResponse?.chunks
       .map((c) => c.content)
       .join("");
-    const updatedMessages = [...messages];
-    updatedMessages[updatedMessages.length - 1].content = message;
-    setMessages(updatedMessages);
+
+    setMessages((prevMessages) => {
+      const newMessages = [...prevMessages];
+      newMessages[newMessages.length - 1].content = message;
+      return newMessages;
+    });
   }, [result.data?.generateCompletion.completionResponse?.chunks]);
 
   const generateCompletion = async (currentMessages: MessageInput[]) => {

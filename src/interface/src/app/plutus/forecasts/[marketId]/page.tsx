@@ -165,7 +165,7 @@ export default function RecentMarketTrades() {
         },
       },
     ],
-    []
+    [marketId]
   );
 
   const timeToRefresh = (): string => {

@@ -162,7 +162,7 @@ export default function MarketDetail() {
         },
       },
     ],
-    []
+    [marketId]
   );
 
   return (
