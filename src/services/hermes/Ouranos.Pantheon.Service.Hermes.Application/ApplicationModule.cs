@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Ouranos.Pantheon.Core.Application;
 using Ouranos.Pantheon.Core.Application.Mediator;
+using Ouranos.Pantheon.Service.Hermes.Domain.Assistants;
 using Ouranos.Pantheon.Service.Hermes.Domain.Characters;
 
 namespace Ouranos.Pantheon.Service.Hermes.Application;
@@ -19,6 +20,7 @@ public static class ApplicationModule
     {
         mediator.AddConsumers(typeof(ApplicationModule).Assembly);
         mediator.AddStandardConsumersForEntity<Character>();
+        mediator.AddStandardConsumersForEntity<Assistant>();
 
         return mediator;
     }
