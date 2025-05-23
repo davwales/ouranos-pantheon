@@ -405,3 +405,4 @@ appsettings.Development.json
 *.fsp
 *.fgp
 *.graphql
+.aider*
