@@ -19,15 +19,13 @@
 
 ## Pending Tasks
 
-- [ ] API service implementation
 - [ ] UI component library integration
 - [ ] State management setup
 - [ ] Testing framework configuration
-- [ ] CI/CD pipeline setup
 
 ## Known Issues
 
-1. API service needs error handling
+1. GrapQL client needs error handling
 2. UI components need mobile responsiveness testing
 3. State management needs performance optimization
 4. Testing coverage needs improvement
@@ -35,8 +33,7 @@
 
 ## Next Steps
 
-1. Implement API service error handling
+1. Implement GrapQL client error handling
 2. Test mobile responsiveness
 3. Optimize state management
 4. Increase test coverage
-5. Configure CI/CD pipeline

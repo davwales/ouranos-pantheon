@@ -7,7 +7,7 @@
 - **Styling**: Tailwind CSS 3.3
 - **UI Components**: Shadcn UI
 - **State Management**: React Context API
-- **Data Fetching**: GraphQL (Apollo Client)
+- **Data Fetching**: GraphQL (URQL)
 - **Utility Libraries**: date-fns, lodash
 
 ## Development Tools
@@ -16,14 +16,14 @@
 - **Linting**: ESLint with TypeScript
 - **Bundler**: Webpack (via Next.js)
 - **Testing**: Jest (planned)
-- **CI/CD**: GitHub Actions (planned)
+- **CI/CD**: GitLab Pipeline
 
 ## Architecture
 
 - **Module System**: ES Modules
 - **Component Structure**: Atomic design pattern
 - **Routing**: Next.js App Router
-- **API Layer**: GraphQL with Apollo Client
+- **API Layer**: GraphQL with URQL
 - **Error Handling**: Custom error boundaries
 
 ## Performance

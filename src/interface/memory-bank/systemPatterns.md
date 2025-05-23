@@ -18,8 +18,8 @@
 
 1. **Client-Side**:
 
-   - Components → API Service → GraphQL Client → Backend
-   - Backend → GraphQL Client → API Service → Components
+   - Components → GraphQL Client → Backend
+   - Backend → GraphQL Client → Components
 
 2. **State Management**:
    - Global State → Context Providers → Components
