@@ -6,6 +6,7 @@ export default function ClipboardCopy({
   confirmation,
   children,
   successDuration = 1000,
+  hideIfNotSupported = false,
   className,
   ...props
 }: React.ComponentProps<"div"> & {
@@ -13,10 +14,15 @@ export default function ClipboardCopy({
   confirmation?: React.ReactNode;
   children: React.ReactNode;
   successDuration?: number;
+  hideIfNotSupported?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
 
   if (!navigator.clipboard) {
+    if (hideIfNotSupported) {
+      return null;
+    }
+
     return <div {...props}>{children}</div>;
   }
 

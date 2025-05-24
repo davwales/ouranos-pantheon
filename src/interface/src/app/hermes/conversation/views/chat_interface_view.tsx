@@ -9,7 +9,8 @@ import { useMutation } from "urql";
 
 export default function ChatInterfaceView({
   assistant,
-}: {
+  ...props
+}: React.ComponentProps<"div"> & {
   assistant: ConversationAssistant;
 }) {
   const [messages, setMessages] = useState<MessageInput[]>([]);
@@ -60,7 +61,7 @@ export default function ChatInterfaceView({
     try {
       const assistantMessage: MessageInput = {
         role: Role.Assistant,
-        content: "...",
+        content: "",
       };
       setMessages((prev) => [...prev, assistantMessage]);
       setIsGenerating(true);
@@ -113,7 +114,7 @@ export default function ChatInterfaceView({
   };
 
   return (
-    <div>
+    <div {...props}>
       <ChatMessageList
         messages={messages}
         assistant={assistant}
@@ -121,6 +122,7 @@ export default function ChatInterfaceView({
         onEditMessage={handleMessageEdit}
         onRetryMessage={handleMessageRetry}
         isGenerating={isGenerating}
+        className="mb-2"
       />
 
       <FooterContent>

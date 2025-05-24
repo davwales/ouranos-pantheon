@@ -2,7 +2,7 @@ import {
   MenuAction,
   ResponsiveContextMenu,
 } from "@/app/components/responsive-context-menu";
-import { Typography } from "@/app/components/typography";
+import { Message } from "@/app/hermes/conversation/components/message";
 import ConversationAssistant from "@/app/hermes/types";
 import { MessageInput, Role } from "@/gql/graphql";
 import { Pencil, RotateCcw, Trash } from "lucide-react";
@@ -63,35 +63,30 @@ export default function ChatMessageList({
   return (
     <div {...props}>
       {messages.map((msg, index) => (
-        <ResponsiveContextMenu
+        <div
           key={index}
-          actions={getMenuActions(index)}
-          title="Actions"
-          description="Perform an action on the message."
-          disabled={isGenerating}
+          className={`flex mt-4 mx-2 ${
+            msg.role == Role.User ? "justify-end" : "justify-start"
+          }`}
         >
-          <div
-            className={`w-fit text-left break-words mt-4 mx-2 ${
-              msg.role == Role.User && "ml-auto"
-            }`}
+          <ResponsiveContextMenu
+            actions={getMenuActions(index)}
+            title="Actions"
+            description="Perform an action on the message."
+            disabled={isGenerating}
           >
-            <Typography
-              className={`py-2 px-4 border rounded-2xl ${
-                msg.role == Role.User && "bg-accent/30"
-              }`}
-            >
-              {msg.content}
-            </Typography>
-            <Typography
-              variant="muted"
-              className={`mx-2.5 my-1 ${msg.role == Role.User && "text-right"}`}
-            >
-              {msg.role == Role.User
-                ? assistant.userName
-                : assistant.assistantName}
-            </Typography>
-          </div>
-        </ResponsiveContextMenu>
+            <Message
+              name={
+                msg.role == Role.User
+                  ? assistant.userName
+                  : assistant.assistantName
+              }
+              role={msg.role}
+              content={msg.content}
+              className="w-fit text-left break-words"
+            />
+          </ResponsiveContextMenu>
+        </div>
       ))}
       <div ref={messageListRef} />
     </div>
