@@ -168,6 +168,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Service.Pl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Core.WebSockets.Tests", "tests\core\Ouranos.Pantheon.Core.WebSockets.Tests\Ouranos.Pantheon.Core.WebSockets.Tests.csproj", "{B56D9E86-7EFC-4796-B002-7C29DF4356ED}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Service.Plutus.Domain.Tests", "tests\services\plutus\Ouranos.Pantheon.Service.Plutus.Domain.Tests\Ouranos.Pantheon.Service.Plutus.Domain.Tests.csproj", "{F032CA78-880C-4A95-BDB7-0F4EC2392CCF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -338,6 +340,10 @@ Global
 		{B56D9E86-7EFC-4796-B002-7C29DF4356ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B56D9E86-7EFC-4796-B002-7C29DF4356ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B56D9E86-7EFC-4796-B002-7C29DF4356ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F032CA78-880C-4A95-BDB7-0F4EC2392CCF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F032CA78-880C-4A95-BDB7-0F4EC2392CCF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F032CA78-880C-4A95-BDB7-0F4EC2392CCF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F032CA78-880C-4A95-BDB7-0F4EC2392CCF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{128A9F3B-4D1A-4A93-A0EC-2426770786AC} = {24007BE7-AE6D-46D3-B37A-522FE3EF0D9C}
@@ -396,5 +402,6 @@ Global
 		{E594C36B-C238-4B7E-83FF-5E90746C5C39} = {43BA1199-F79A-4613-8B06-D38854135B4A}
 		{F882A5A2-3876-4C38-B825-1A9C0E35E0FF} = {E77EDC83-6ED1-424E-A7BA-2E0E62C75DDD}
 		{B56D9E86-7EFC-4796-B002-7C29DF4356ED} = {E77EDC83-6ED1-424E-A7BA-2E0E62C75DDD}
+		{F032CA78-880C-4A95-BDB7-0F4EC2392CCF} = {43BA1199-F79A-4613-8B06-D38854135B4A}
 	EndGlobalSection
 EndGlobal
