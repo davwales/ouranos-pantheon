@@ -19,7 +19,7 @@ public sealed class Forecast : BaseEntity<Id<Forecast>>
     {
         Guard.Against.Null(marketId);
         Guard.Against.Null(symbolId);
-        Guard.Against.NullOrEmpty(symbolName);
+        Guard.Against.NullOrWhiteSpace(symbolName);
         Guard.Against.Null(latest);
         Guard.Against.NullOrEmpty(predictions);
 
