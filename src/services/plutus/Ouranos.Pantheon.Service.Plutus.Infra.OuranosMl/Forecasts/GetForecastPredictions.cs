@@ -12,7 +12,7 @@ namespace Ouranos.Pantheon.Service.Plutus.Infra.OuranosMl.Forecasts;
 public sealed class GetForecastPredictions : IGetForecastPredictions
 {
     private readonly IOuranosMachineLearningClient _client;
-    private readonly ForecastingOptions _forecastingOptions;
+    private readonly IOptions<ForecastingOptions> _forecastingOptions;
     private readonly ILogger<GetForecastPredictions> _logger;
 
     public GetForecastPredictions(
@@ -23,11 +23,11 @@ public sealed class GetForecastPredictions : IGetForecastPredictions
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(client);
-        Guard.Against.Null(forecastingOptions?.Value);
+        Guard.Against.Null(forecastingOptions);
 
         _logger = logger;
         _client = client;
-        _forecastingOptions = forecastingOptions.Value;
+        _forecastingOptions = forecastingOptions;
     }
 
     public async Task<List<List<ForecastPoint>>> GetPredictionsAsync(
@@ -37,29 +37,32 @@ public sealed class GetForecastPredictions : IGetForecastPredictions
     {
         _logger.LogTrace(
             "Attempting to get forecast predictions from Ouranos ml with historical data '{@historicalData}'.",
-            historicalData);
+            historicalData
+        );
         cancellationToken.ThrowIfCancellationRequested();
 
         var request = new GetPlutusForecastsRequest(
-            _forecastingOptions.NumPredictions,
+            _forecastingOptions.Value.NumPredictions,
             historicalData.Select(item =>
                 item.Select(x => new Core.Infra.OuranosMl.Dtos.ForecastPoint(
-                    x.AveragePrice,
-                    x.MinPrice,
-                    x.MaxPrice,
-                    x.Volume
-                )).ToList()
+                        x.AveragePrice,
+                        x.MinPrice,
+                        x.MaxPrice,
+                        x.Volume
+                    )
+                ).ToList()
             ).ToList()
         );
 
         var forecasts = await _client.GetPlutusForecasts(request, cancellationToken);
         var response = forecasts.Select(f =>
             f.Select(x => new ForecastPoint(
-                x.AveragePrice,
-                x.MinPrice,
-                x.MaxPrice,
-                x.Volume
-            )).ToList()
+                    x.AveragePrice,
+                    x.MinPrice,
+                    x.MaxPrice,
+                    x.Volume
+                )
+            ).ToList()
         ).ToList();
 
         _logger.LogInformation("Successfully retrieved forecast predictions from Ouranos ml.");
