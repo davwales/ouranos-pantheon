@@ -51,19 +51,19 @@ public sealed class OuranosMachineLearningClientTests
     }
 
     [Fact]
-    public async Task GenerateCompletion_ShouldSkipEmptyChunks()
+    public async Task GenerateCompletion_WhenGivenNewLineChunk_ShouldIncludeNewLine()
     {
         // Arrange
         var fixture = new Fixture();
         var request = fixture.Create<GenerateCompletionRequest>();
-        var chunks = new[] { "chunk1", "", "  ", "chunk2" };
+        var chunks = new[] { "chunk1", "\n", "  ", "chunk2" };
         SetupHttpHandler(HttpStatusCode.OK, new StreamContent(chunks.AsMemoryStream()));
 
         // Act
         var result = await _client.GenerateCompletion(request).ToListAsync();
 
         // Assert
-        result.ShouldBe(["chunk1  chunk2"]);
+        result.ShouldBe(["chunk1\n  chunk2"]);
     }
 
     [Fact]
@@ -154,10 +154,14 @@ public sealed class OuranosMachineLearningClientTests
                 Arg.Any<HttpRequestMessage>(),
                 Arg.Any<CancellationToken>()
             )
-            .Returns(Task.FromResult(new HttpResponseMessage
-            {
-                StatusCode = statusCode,
-                Content = content
-            }));
+            .Returns(
+                Task.FromResult(
+                    new HttpResponseMessage
+                    {
+                        StatusCode = statusCode,
+                        Content = content
+                    }
+                )
+            );
     }
 }
