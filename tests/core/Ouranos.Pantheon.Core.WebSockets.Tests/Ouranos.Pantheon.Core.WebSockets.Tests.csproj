@@ -7,8 +7,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\src\core\Ouranos.Pantheon.Core.WebSockets\Ouranos.Pantheon.Core.WebSockets.csproj"/>
-        <ProjectReference Include="..\Ouranos.Pantheon.Tests.Utils\Ouranos.Pantheon.Tests.Utils.csproj"/>
+        <ProjectReference Include="..\..\..\src\core\Ouranos.Pantheon.Core.WebSockets\Ouranos.Pantheon.Core.WebSockets.csproj"/>
+        <ProjectReference Include="..\..\Ouranos.Pantheon.Tests.Utils\Ouranos.Pantheon.Tests.Utils.csproj"/>
     </ItemGroup>
 
 </Project>
