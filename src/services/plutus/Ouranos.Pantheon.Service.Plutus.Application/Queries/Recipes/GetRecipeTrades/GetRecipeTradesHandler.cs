@@ -4,6 +4,7 @@ using Ouranos.Pantheon.Core.Application.Common;
 using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Core.Domain.Common;
+using Ouranos.Pantheon.Service.Plutus.Application.Queries.Recipes.GetRecipeTrades.Models;
 using Ouranos.Pantheon.Service.Plutus.Domain.Recipes;
 using Ouranos.Pantheon.Service.Plutus.Domain.Symbols;
 using Ouranos.Pantheon.Service.Plutus.Domain.Trades;
@@ -49,6 +50,14 @@ public sealed class GetRecipeTradesHandler
             cancellationToken
         );
 
+        if (recipes.Count == 0)
+        {
+            _logger.LogDebug("No recipes found for market '{marketId}'.", query.MarketId);
+            return new WrapperResponse<IQueryable<GetRecipeTradesResponse>>(
+                new List<GetRecipeTradesResponse>().AsQueryable()
+            );
+        }
+
         var symbolIds = recipes
             .SelectMany(r => r.Inputs.Select(x => x.SymbolId))
             .Union(recipes.SelectMany(r => r.Outputs.Select(x => x.SymbolId)))
@@ -62,16 +71,14 @@ public sealed class GetRecipeTradesHandler
         );
 
         var validRecipes = recipes
-            .Where(
-                r =>
-                    r.Inputs.All(x => prices.ContainsKey(x.SymbolId)) &&
-                    r.Outputs.All(x => prices.ContainsKey(x.SymbolId))
+            .Where(r =>
+                r.Inputs.All(x => prices.ContainsKey(x.SymbolId)) &&
+                r.Outputs.All(x => prices.ContainsKey(x.SymbolId))
             )
             .ToList();
 
         var response = validRecipes
-            .Select(
-                r => new
+            .Select(r => new
                 {
                     r.Id,
                     r.Name,
@@ -82,8 +89,7 @@ public sealed class GetRecipeTradesHandler
                 }
             )
             .Union(
-                recipes.Except(validRecipes).Select(
-                    r => new
+                recipes.Except(validRecipes).Select(r => new
                     {
                         r.Id,
                         r.Name,
@@ -94,8 +100,7 @@ public sealed class GetRecipeTradesHandler
                     }
                 )
             )
-            .Select(
-                x => new GetRecipeTradesResponse(
+            .Select(x => new GetRecipeTradesResponse(
                     x.Id,
                     x.Name,
                     x.LatestBuyPrice,
@@ -124,15 +129,13 @@ public sealed class GetRecipeTradesHandler
 
         var priceQuery = _tradeRepository
             .AsQueryable(cancellationToken)
-            .Where(
-                x =>
-                    (since == null || x.CreatedAt >= since) &&
-                    symbolIds.Contains(x.Metadata.SymbolId)
+            .Where(x =>
+                (since == null || x.CreatedAt >= since) &&
+                symbolIds.Contains(x.Metadata.SymbolId)
             )
             .OrderByDescending(x => x.CreatedAt)
             .GroupBy(x => x.Metadata.SymbolId)
-            .Select(
-                g => new
+            .Select(g => new
                 {
                     SymbolId = g.Key,
                     TotalSpent = g.Sum(x => x.Price * x.Volume),
@@ -140,8 +143,7 @@ public sealed class GetRecipeTradesHandler
                     LatestPrice = g.First().Price
                 }
             )
-            .Select(
-                x => new SymbolPrice(
+            .Select(x => new SymbolPrice(
                     x.SymbolId,
                     x.TotalSpent / x.Volume,
                     x.LatestPrice
@@ -161,8 +163,4 @@ public sealed class GetRecipeTradesHandler
             )
         );
     }
-
-    private record SymbolPrice(Id<Symbol> Id, decimal AveragePrice, decimal LatestPrice);
-
-    private record IntermediatePrice(decimal AveragePrice, decimal LatestPrice);
 }
