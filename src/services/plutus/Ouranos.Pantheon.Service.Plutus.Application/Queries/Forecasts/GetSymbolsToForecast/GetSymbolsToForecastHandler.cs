@@ -44,6 +44,13 @@ public sealed class GetSymbolsToForecastHandler
         cancellationToken.ThrowIfCancellationRequested();
 
         var marketIds = await GetMarkets(cancellationToken);
+
+        if (marketIds.Count == 0)
+        {
+            _logger.LogDebug("No markets configured with forecasting support.");
+            return new WrapperResponse<List<Symbol>>([]);
+        }
+
         var symbols = await GetSymbols(marketIds, cancellationToken);
         var response = new WrapperResponse<List<Symbol>>(symbols);
 
