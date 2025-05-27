@@ -29,7 +29,7 @@ public sealed class GetConstructedForecastsHandlerTests
         // Arrange
         var symbols = _fixture.CreateMany<Symbol>().ToList();
         var historicalData = symbols.ToDictionary(x => x.Id, _ => _fixture.CreateMany<ForecastPoint>().ToList());
-        var command = new GetConstructedForecastsInput(symbols, historicalData);
+        var query = new GetConstructedForecastsInput(symbols, historicalData);
         var expectedPredictions = _fixture.Create<List<List<ForecastPoint>>>();
         var expectedId = new Id<Forecast>(_fixture.Create<string>());
 
@@ -43,16 +43,16 @@ public sealed class GetConstructedForecastsHandlerTests
         _forecastRepository.CreateId().Returns(expectedId);
 
         // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
+        var result = await _handler.Handle(query, CancellationToken.None);
 
         // Assert
         result.ShouldBeOfType<WrapperResponse<List<Forecast>>>();
         result.Value.ShouldNotBeNull();
-        result.Value.Count.ShouldBe(command.HistoricalData.Count);
+        result.Value.Count.ShouldBe(query.HistoricalData.Count);
 
         await _getForecastPredictions.Received(1).GetPredictionsAsync(
             Arg.Is<List<List<ForecastPoint>>>(data =>
-                data.Count == command.HistoricalData.Count
+                data.Count == query.HistoricalData.Count
             ),
             Arg.Any<CancellationToken>()
         );
@@ -62,11 +62,11 @@ public sealed class GetConstructedForecastsHandlerTests
     public async Task Handle_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange
-        var command = _fixture.Create<GetConstructedForecastsInput>();
+        var query = _fixture.Create<GetConstructedForecastsInput>();
         var cancellationToken = new CancellationToken(true);
 
         // Act
-        var get = async () => await _handler.Handle(command, cancellationToken);
+        var get = async () => await _handler.Handle(query, cancellationToken);
 
         // Assert
         await get.ShouldThrowAsync<OperationCanceledException>();

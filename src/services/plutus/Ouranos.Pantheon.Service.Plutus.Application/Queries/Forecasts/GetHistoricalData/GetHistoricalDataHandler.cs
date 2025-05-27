@@ -18,7 +18,7 @@ public sealed class GetHistoricalDataHandler
     : QueryHandler<GetHistoricalDataInput, WrapperResponse<Dictionary<Id<Symbol>, List<ForecastPoint>>>>
 {
     private readonly IBucketHistoricalData _bucketHistoricalData;
-    private readonly ForecastingOptions _forecastingOptions;
+    private readonly IOptions<ForecastingOptions> _forecastingOptions;
     private readonly ILogger<GetHistoricalDataHandler> _logger;
     private readonly IQueryExecutor _queryExecutor;
     private readonly IRepository<Trade> _tradeRepository;
@@ -35,13 +35,13 @@ public sealed class GetHistoricalDataHandler
         Guard.Against.Null(bucketHistoricalData);
         Guard.Against.Null(tradeRepository);
         Guard.Against.Null(queryExecutor);
-        Guard.Against.Null(forecastingOptions?.Value);
+        Guard.Against.Null(forecastingOptions);
 
         _logger = logger;
         _bucketHistoricalData = bucketHistoricalData;
         _tradeRepository = tradeRepository;
         _queryExecutor = queryExecutor;
-        _forecastingOptions = forecastingOptions.Value;
+        _forecastingOptions = forecastingOptions;
     }
 
     public override async Task<WrapperResponse<Dictionary<Id<Symbol>, List<ForecastPoint>>>> Handle(
@@ -53,7 +53,7 @@ public sealed class GetHistoricalDataHandler
         cancellationToken.ThrowIfCancellationRequested();
 
         var end = DateTime.UtcNow.Date;
-        var start = end.AddDays(-_forecastingOptions.SequenceLength);
+        var start = end.AddDays(-_forecastingOptions.Value.SequenceLength);
 
         var tradeFilter = _tradeRepository.AsQueryable(cancellationToken)
             .Where(trade =>
@@ -66,15 +66,17 @@ public sealed class GetHistoricalDataHandler
             .OrderBy(x => x.Id.Bucket)
             .GroupBy(x => x.Id.SymbolId)
             .Select(g => new HistoricalDataDto(
-                g.Key,
-                g.Select(x => new ForecastPoint(
-                    x.TotalSpent / x.Volume,
-                    x.MinPrice,
-                    x.MaxPrice,
-                    x.Volume
-                )).ToList()
-            ))
-            .Where(x => x.HistoricalSymbolData.Count == _forecastingOptions.SequenceLength);
+                    g.Key,
+                    g.Select(x => new ForecastPoint(
+                            x.TotalSpent / x.Volume,
+                            x.MinPrice,
+                            x.MaxPrice,
+                            x.Volume
+                        )
+                    ).ToList()
+                )
+            )
+            .Where(x => x.HistoricalSymbolData.Count == _forecastingOptions.Value.SequenceLength);
 
         var historicalData = await _queryExecutor.ToList(dataQuery, cancellationToken);
 
