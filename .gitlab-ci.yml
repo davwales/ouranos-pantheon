@@ -19,6 +19,7 @@ variables:
   artifacts:
     paths:
       - "${IMAGE_NAME}.tar"
+    expire_in: 1 days
   only:
     - main
 
