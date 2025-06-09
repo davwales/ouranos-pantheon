@@ -49,7 +49,7 @@ export default function SymbolDetail() {
     label: string;
     children: ReactNode;
   }): ReactNode => (
-    <div className="flex justify-between">
+    <div className="flex justify-between items-end">
       <Typography variant="h4">{label}</Typography>
       {children}
     </div>
@@ -116,7 +116,7 @@ export default function SymbolDetail() {
         <TimeFrameSelection triggerClassName="w-full md:w-50" />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-8 gap-2 mt-4 mb-2">
+      <div className="grid grid-cols-1 md:grid-cols-8 gap-2 mt-4">
         <PriceChange
           label="Latest"
           current={data?.latestTrade?.nodes?.[0]?.price}
@@ -131,10 +131,8 @@ export default function SymbolDetail() {
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Stats className="my-2" />
-        <PriceChart data={formattedTrades} className="my-2" />
-      </div>
+      <Stats className="mt-2 gap-x-40 grid grid-cols-1 md:grid-cols-2" />
+      <PriceChart data={formattedTrades} className="mt-8 max-h-96 w-full" />
     </div>
   );
 }
