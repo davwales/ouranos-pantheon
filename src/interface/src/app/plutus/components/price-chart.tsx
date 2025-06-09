@@ -8,7 +8,6 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { formatDistance } from "date-fns";
-import { useMemo } from "react";
 import {
   Bar,
   BarProps,
@@ -83,22 +82,19 @@ export default function PriceChart({
     />
   );
 
-  const chartData = useMemo(
-    () =>
-      data.map((d) => ({
-        ...d,
-        date: d.date.getTime(),
-      })),
-    [data]
-  );
-
   return (
     <ChartContainer
       config={chartConfig}
       className={`min-h-[300px] ${className}`}
       {...props}
     >
-      <ComposedChart accessibilityLayer data={chartData}>
+      <ComposedChart
+        accessibilityLayer
+        data={data.map((d) => ({
+          ...d,
+          date: d.date.getTime(),
+        }))}
+      >
         <CartesianGrid vertical={false} />
         <ChartLegend content={<ChartLegendContent />} />
         <ChartTooltip
