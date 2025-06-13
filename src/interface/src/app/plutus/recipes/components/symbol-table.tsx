@@ -11,6 +11,44 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+function QuantityInput({
+  initialValue,
+  onValueCommit,
+}: {
+  initialValue: number;
+  onValueCommit: (value: number) => void;
+}) {
+  const [value, setValue] = useState(initialValue);
+
+  useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue]);
+
+  const handleBlur = () => {
+    if (value !== initialValue) {
+      onValueCommit(value);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.currentTarget.blur();
+    }
+  };
+
+  return (
+    <Input
+      value={value}
+      onChange={(e) => setValue(Number(e.target.value))}
+      onBlur={handleBlur}
+      onKeyDown={handleKeyDown}
+      min={1}
+      type="number"
+    />
+  );
+}
 
 export function SymbolTable({
   marketId,
@@ -43,72 +81,80 @@ export function SymbolTable({
     }
   };
 
-  const handleRemove = (index: number) => {
-    const newItems = items.filter(
-      (item: RecipeSymbol, i: number) => i !== index
-    );
-    onItemsChange(newItems);
-  };
+  const handleQuantityChange = useCallback(
+    (item: RecipeSymbol, quantity: number) => {
+      const newItems = items.map((i) =>
+        i.symbolId === item.symbolId ? { ...i, quantity } : i
+      );
+      onItemsChange(newItems);
+    },
+    [items, onItemsChange]
+  );
 
-  const handleQuantityChange = (index: number, quantity: number) => {
-    const newItems = [...items];
-    newItems[index].quantity = quantity;
-    onItemsChange(newItems);
-  };
+  const handleRemove = useCallback(
+    (item: RecipeSymbol) => {
+      const newItems = items.filter(
+        (i: RecipeSymbol) => i.symbolId !== item.symbolId
+      );
+      onItemsChange(newItems);
+    },
+    [items, onItemsChange]
+  );
 
-  const columns: ExtendedColumnDef<RecipeSymbol>[] = [
-    {
-      id: "name",
-      header: "Symbol",
-      accessorFn: (row: RecipeSymbol) => row.name,
-      cell: ({ row, getValue }) => (
-        <Link
-          href={`/plutus/explorer/${marketId}/${row.original.symbolId}`}
-          className="hover:underline"
-        >
-          {getValue<string>()}
-        </Link>
-      ),
-    },
-    {
-      id: "quantity",
-      header: "Quantity",
-      accessorFn: (row: RecipeSymbol) => row.quantity,
-      cell: ({ row, getValue }) => (
-        <Input
-          value={getValue() as number}
-          onChange={(e) =>
-            handleQuantityChange(row.index, Number(e.target.value))
-          }
-          min={1}
-          type="number"
-        />
-      ),
-    },
-    {
-      id: "actions",
-      header: "",
-      cell: ({ row }) => (
-        <ResponsiveDropdownMenu
-          title={`${title} Actions`}
-          description={`Available actions for this ${title.toLowerCase()}`}
-          actions={[
-            {
-              label: "Remove",
-              icon: <Trash2 className="h-4 w-4 text-destructive" />,
-              onClick: () => handleRemove(row.index),
-            },
-          ]}
-        >
-          <div className="border-1 rounded-md">
-            <Button variant="ghost" className="w-full">
-              <MoreHorizontal className="m-auto" />
-            </Button>
-          </div>
-        </ResponsiveDropdownMenu>
-      ),
-    },
-  ];
+  const columns: ExtendedColumnDef<RecipeSymbol>[] = useMemo(
+    () => [
+      {
+        id: "name",
+        header: "Symbol",
+        accessorFn: (row: RecipeSymbol) => row.name,
+        cell: ({ row, getValue }) => (
+          <Link
+            href={`/plutus/explorer/${marketId}/${row.original.symbolId}`}
+            className="hover:underline"
+          >
+            {getValue<string>()}
+          </Link>
+        ),
+      },
+      {
+        id: "quantity",
+        header: "Quantity",
+        accessorFn: (row: RecipeSymbol) => row.quantity,
+        cell: ({ row }) => (
+          <QuantityInput
+            initialValue={row.original.quantity}
+            onValueCommit={(quantity) =>
+              handleQuantityChange(row.original, quantity)
+            }
+          />
+        ),
+      },
+      {
+        id: "actions",
+        header: "",
+        cell: ({ row }) => (
+          <ResponsiveDropdownMenu
+            title={`${title} Actions`}
+            description={`Available actions for this ${title.toLowerCase()}`}
+            actions={[
+              {
+                label: "Remove",
+                icon: <Trash2 className="h-4 w-4 text-destructive" />,
+                onClick: () => handleRemove(row.original),
+              },
+            ]}
+          >
+            <div className="border-1 rounded-md">
+              <Button variant="ghost" className="w-full">
+                <MoreHorizontal className="m-auto" />
+              </Button>
+            </div>
+          </ResponsiveDropdownMenu>
+        ),
+      },
+    ],
+    [marketId, title, handleQuantityChange, handleRemove]
+  );
 
   return (
     <div>
