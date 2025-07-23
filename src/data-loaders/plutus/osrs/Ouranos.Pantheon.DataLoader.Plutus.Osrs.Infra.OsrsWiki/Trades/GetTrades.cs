@@ -114,7 +114,7 @@ public sealed class GetTrades : IGetTrades
 
         return new GetTradesResponse(
             mapping.Id.ToString(),
-            mapping.Members ? payToPlaySubcode : freeToPlaySubcode,
+            mapping.IsMembers ? payToPlaySubcode : freeToPlaySubcode,
             mapping.Name,
             price,
             volume,

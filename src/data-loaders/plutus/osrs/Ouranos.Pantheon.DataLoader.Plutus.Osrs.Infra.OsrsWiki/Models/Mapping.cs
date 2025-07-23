@@ -5,9 +5,17 @@ public sealed record Mapping(
     string Name,
     string Icon,
     string Examine,
-    bool Members,
+    object Members,
     int? LowAlch,
     int? HighAlch,
     int? Limit,
     int Value
-);
+)
+{
+    public bool IsMembers => Members switch
+    {
+        bool isMembers => isMembers,
+        string membersStr => !bool.TryParse(membersStr, out var isMembers) || isMembers,
+        _ => true
+    };
+}
