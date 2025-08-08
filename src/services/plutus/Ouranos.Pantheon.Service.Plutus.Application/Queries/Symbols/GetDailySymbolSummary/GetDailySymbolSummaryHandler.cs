@@ -39,14 +39,12 @@ public sealed class GetDailySymbolSummaryHandler
         var today = new DateTimeOffset(DateTimeOffset.UtcNow.Date, TimeSpan.Zero);
         var summaryQuery = _tradeRepository
             .AsQueryable(cancellationToken)
-            .Where(
-                t =>
-                    t.Metadata.SymbolId == query.SymbolId &&
-                    t.CreatedAt >= today
+            .Where(t =>
+                t.SymbolId == query.SymbolId &&
+                t.CreatedAt >= today
             )
             .GroupBy(_ => true)
-            .Select(
-                g => new
+            .Select(g => new
                 {
                     TotalSpent = g.Sum(x => x.Price * x.Volume),
                     MinPrice = g.Min(x => x.Price),
@@ -55,8 +53,7 @@ public sealed class GetDailySymbolSummaryHandler
                 }
             )
             .Where(x => x.Volume > 0)
-            .Select(
-                g => new GetDailySymbolSummaryResponse(
+            .Select(g => new GetDailySymbolSummaryResponse(
                     g.TotalSpent / g.Volume,
                     g.MinPrice,
                     g.MaxPrice,

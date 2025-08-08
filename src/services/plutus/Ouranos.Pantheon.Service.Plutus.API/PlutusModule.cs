@@ -13,8 +13,8 @@ using Ouranos.Pantheon.Service.Plutus.Domain.Recipes;
 using Ouranos.Pantheon.Service.Plutus.Domain.SymbolGroups;
 using Ouranos.Pantheon.Service.Plutus.Domain.Symbols;
 using Ouranos.Pantheon.Service.Plutus.Domain.Trades;
-using Ouranos.Pantheon.Service.Plutus.Infra.Mongo;
 using Ouranos.Pantheon.Service.Plutus.Infra.OuranosMl;
+using Ouranos.Pantheon.Service.Plutus.Infra.Postgres;
 
 namespace Ouranos.Pantheon.Service.Plutus.API;
 
@@ -46,9 +46,14 @@ public sealed class PlutusModule : IOuranosModule
     {
         return services
             .AddApplicationModule(configuration)
-            .AddMongoModule(configuration)
+            .AddPostgresModule(configuration)
             .AddOuranosMachineLearningModule(configuration)
             .AddHostedService<ForecastCreatorJob>();
+    }
+
+    public async Task<IServiceProvider> UseModule(IServiceProvider provider)
+    {
+        return await provider.ApplyPostgresMigrations();
     }
 
     public IMediatorRegistrationConfigurator ConfigureMediator(IMediatorRegistrationConfigurator mediator)

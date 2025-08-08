@@ -6,7 +6,15 @@
       "version": "13.9.14",
       "commands": [
         "fusion"
-      ]
+      ],
+      "rollForward": false
+    },
+    "dotnet-ef": {
+      "version": "9.0.8",
+      "commands": [
+        "dotnet-ef"
+      ],
+      "rollForward": false
     }
   }
 }

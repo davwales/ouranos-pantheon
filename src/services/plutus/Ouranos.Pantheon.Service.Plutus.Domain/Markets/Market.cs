@@ -5,6 +5,10 @@ namespace Ouranos.Pantheon.Service.Plutus.Domain.Markets;
 
 public sealed class Market : BaseEntity<Id<Market>>
 {
+    private Market()
+    {
+    }
+
     public Market(
         Id<Market> id,
         string name,

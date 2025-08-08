@@ -7,11 +7,15 @@ namespace Ouranos.Pantheon.Service.Plutus.Domain.SymbolGroups;
 
 public sealed class SymbolGroup : BaseEntity<Id<SymbolGroup>>
 {
+    private SymbolGroup()
+    {
+    }
+
     public SymbolGroup(
         Id<SymbolGroup> id,
         Id<Market> marketId,
         string name,
-        IReadOnlyList<Id<Symbol>> symbolIds
+        List<Id<Symbol>> symbolIds
     ) : base(id)
     {
         Guard.Against.Null(marketId);
@@ -27,5 +31,5 @@ public sealed class SymbolGroup : BaseEntity<Id<SymbolGroup>>
 
     public string Name { get; init; }
 
-    public IReadOnlyList<Id<Symbol>> SymbolIds { get; init; }
+    public List<Id<Symbol>> SymbolIds { get; init; }
 }

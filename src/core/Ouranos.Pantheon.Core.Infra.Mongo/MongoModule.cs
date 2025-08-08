@@ -21,15 +21,15 @@ public static class MongoModule
         services.Configure<MongoOptions>(configuration.GetSection(MongoOptions.SectionName));
 
         services.TryAddSingleton<IMongoClient>(sp =>
-        {
-            var options = sp.GetRequiredService<IOptions<MongoOptions>>();
-            var mongoClientSettings = MongoClientSettings.FromConnectionString(options.Value.ConnectionString);
-            return new MongoClient(mongoClientSettings);
-        });
+            {
+                var options = sp.GetRequiredService<IOptions<MongoOptions>>();
+                var mongoClientSettings = MongoClientSettings.FromConnectionString(options.Value.ConnectionString);
+                return new MongoClient(mongoClientSettings);
+            }
+        );
 
         services.TryAddSingleton<IMongoDatabaseManager, MongoDatabaseManager>();
         services.TryAddSingleton(typeof(IMongoRepository<>), typeof(MongoRepository<>));
-        services.TryAddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.TryAddScoped<IQueryExecutor, QueryExecutor>();
 
         RegisterConventions();

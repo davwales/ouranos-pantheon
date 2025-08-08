@@ -22,7 +22,7 @@ public sealed class SymbolGroupQueries
     [UseFiltering]
     [UseSorting]
     public async Task<IQueryable<SymbolGroup>> GetAllSymbolGroups(
-        [Service] IDispatcher dispatcher,
+        [Service] IScopedDispatcher dispatcher,
         CancellationToken cancellationToken = default
     )
     {
@@ -40,7 +40,7 @@ public sealed class SymbolGroupQueries
     /// <param name="cancellationToken"><see cref="CancellationToken" />.</param>
     /// <returns>The symbol group matching the given query.</returns>
     public async Task<SymbolGroup> GetSymbolGroup(
-        [Service] IDispatcher dispatcher,
+        [Service] IScopedDispatcher dispatcher,
         Id<SymbolGroup> symbolGroupId,
         CancellationToken cancellationToken = default
     )

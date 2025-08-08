@@ -4,6 +4,10 @@ namespace Ouranos.Pantheon.Core.Domain.Common;
 
 public abstract class BaseEntity<TId>
 {
+    protected BaseEntity()
+    {
+    }
+
     public BaseEntity(TId id)
     {
         Guard.Against.Null(id);

@@ -45,12 +45,11 @@ public sealed class GetSymbolTradesHandler : QueryHandler<GetSymbolTradesInput, 
             : null;
 
         var tradesQuery = _tradeRepository.AsQueryable(cancellationToken)
-            .Where(t => t.Metadata.SymbolId == query.SymbolId && (since == null || t.CreatedAt >= since));
+            .Where(t => t.SymbolId == query.SymbolId && (since == null || t.CreatedAt >= since));
 
         var symbolTradesQuery = _bucketTrades
             .GetBucketedTradesQuery(tradesQuery, query.NumBuckets, cancellationToken)
-            .Select(
-                x => new
+            .Select(x => new
                 {
                     x.SymbolId,
                     x.Date,
@@ -63,8 +62,7 @@ public sealed class GetSymbolTradesHandler : QueryHandler<GetSymbolTradesInput, 
                 }
             )
             .GroupBy(x => x.SymbolId)
-            .Select(
-                g => new
+            .Select(g => new
                 {
                     g.Last().SymbolId,
                     MinPrice = g.Min(x => x.MinPrice),
@@ -75,16 +73,14 @@ public sealed class GetSymbolTradesHandler : QueryHandler<GetSymbolTradesInput, 
                     Trades = g.ToList()
                 }
             )
-            .Select(
-                x => new GetSymbolTradesResponse(
+            .Select(x => new GetSymbolTradesResponse(
                     x.MinPrice,
                     x.MaxPrice,
                     x.TotalSpent / x.Volume,
                     x.TotalSpent,
                     x.Volume,
                     x.NumTransactions,
-                    x.Trades.Select(
-                        t => new GetSymbolTradeBucketsResponse(
+                    x.Trades.Select(t => new GetSymbolTradeBucketsResponse(
                             t.Price,
                             t.Volume,
                             t.TotalSpent,

@@ -172,6 +172,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Service.Pl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Service.Plutus.Application.Tests", "tests\services\plutus\Ouranos.Pantheon.Service.Plutus.Application.Tests\Ouranos.Pantheon.Service.Plutus.Application.Tests.csproj", "{E15C8D4B-8707-47E5-AE92-75C09DD8A393}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Core.Infra.Postgres", "src\core\Ouranos.Pantheon.Core.Infra.Postgres\Ouranos.Pantheon.Core.Infra.Postgres.csproj", "{46E8C217-1583-419A-B01B-C321F982CF96}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Service.Plutus.Infra.Postgres", "src\services\plutus\Ouranos.Pantheon.Service.Plutus.Infra.Postgres\Ouranos.Pantheon.Service.Plutus.Infra.Postgres.csproj", "{4158F0F2-EBFA-495F-8A0D-3DCF51F9D66D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Service.Hermes.Infra.Postgres", "src\services\hermes\Ouranos.Pantheon.Service.Hermes.Infra.Postgres\Ouranos.Pantheon.Service.Hermes.Infra.Postgres.csproj", "{2A37FE44-6812-4B4E-8E55-CE5C8A315916}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -346,6 +352,18 @@ Global
 		{E15C8D4B-8707-47E5-AE92-75C09DD8A393}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E15C8D4B-8707-47E5-AE92-75C09DD8A393}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E15C8D4B-8707-47E5-AE92-75C09DD8A393}.Release|Any CPU.Build.0 = Release|Any CPU
+		{46E8C217-1583-419A-B01B-C321F982CF96}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46E8C217-1583-419A-B01B-C321F982CF96}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46E8C217-1583-419A-B01B-C321F982CF96}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46E8C217-1583-419A-B01B-C321F982CF96}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4158F0F2-EBFA-495F-8A0D-3DCF51F9D66D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4158F0F2-EBFA-495F-8A0D-3DCF51F9D66D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4158F0F2-EBFA-495F-8A0D-3DCF51F9D66D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4158F0F2-EBFA-495F-8A0D-3DCF51F9D66D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A37FE44-6812-4B4E-8E55-CE5C8A315916}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A37FE44-6812-4B4E-8E55-CE5C8A315916}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A37FE44-6812-4B4E-8E55-CE5C8A315916}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A37FE44-6812-4B4E-8E55-CE5C8A315916}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{128A9F3B-4D1A-4A93-A0EC-2426770786AC} = {24007BE7-AE6D-46D3-B37A-522FE3EF0D9C}
@@ -405,5 +423,8 @@ Global
 		{B56D9E86-7EFC-4796-B002-7C29DF4356ED} = {E77EDC83-6ED1-424E-A7BA-2E0E62C75DDD}
 		{F032CA78-880C-4A95-BDB7-0F4EC2392CCF} = {43BA1199-F79A-4613-8B06-D38854135B4A}
 		{E15C8D4B-8707-47E5-AE92-75C09DD8A393} = {43BA1199-F79A-4613-8B06-D38854135B4A}
+		{46E8C217-1583-419A-B01B-C321F982CF96} = {128A9F3B-4D1A-4A93-A0EC-2426770786AC}
+		{4158F0F2-EBFA-495F-8A0D-3DCF51F9D66D} = {64F2EE35-47B2-45E2-8ADE-D989156D68DE}
+		{2A37FE44-6812-4B4E-8E55-CE5C8A315916} = {CEC7CE2F-45F1-4BBB-B1D0-E7BCAFEADB7D}
 	EndGlobalSection
 EndGlobal

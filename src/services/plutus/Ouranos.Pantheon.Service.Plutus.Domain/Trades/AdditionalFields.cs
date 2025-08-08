@@ -7,4 +7,16 @@ public sealed record AdditionalFields(
     string? Exchange = null,
     string? Tape = null,
     string? ExternalTradeId = null
-);
+)
+{
+    private AdditionalFields() : this(
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    )
+    {
+    }
+}

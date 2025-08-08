@@ -46,28 +46,25 @@ public sealed class GetMarketTradesHandler
             : null;
 
         var tradeQuery = _tradeRepository.AsQueryable(cancellationToken)
-            .Where(
-                x => x.Metadata.MarketId == query.MarketId &&
-                     (since == null || x.CreatedAt >= since)
+            .Where(x => x.Symbol.MarketId == query.MarketId &&
+                        (since == null || x.CreatedAt >= since)
             )
-            .GroupBy(t => t.Metadata.SymbolId)
-            .Select(
-                g => new
+            .GroupBy(t => t.SymbolId)
+            .Select(g => new
                 {
-                    g.First().Metadata.SymbolId,
-                    g.First().Metadata.SymbolName,
-                    g.First().Metadata.SymbolCode,
-                    g.First().Metadata.SymbolSubcode,
+                    g.First().SymbolId,
+                    SymbolName = g.First().Symbol.Name,
+                    SymbolCode = g.First().Symbol.Code,
+                    SymbolSubcode = g.First().Symbol.Subcode,
                     TotalSpent = g.Sum(t => t.Price * t.Volume),
                     MinPrice = g.Min(t => t.Price),
                     MaxPrice = g.Max(t => t.Price),
                     TotalVolume = g.Sum(t => t.Volume),
                     NumTransactions = g.Count(),
-                    Limit = g.First().Metadata.AdditionalFields.Limit ?? g.Sum(t => t.Volume)
+                    Limit = g.First().Symbol.AdditionalFields.Limit ?? g.Sum(t => t.Volume)
                 }
             )
-            .Select(
-                x => new
+            .Select(x => new
                 {
                     x.SymbolId,
                     x.SymbolName,
@@ -86,8 +83,7 @@ public sealed class GetMarketTradesHandler
                             : 0
                 }
             )
-            .Select(
-                x => new GetMarketTradesResponse(
+            .Select(x => new GetMarketTradesResponse(
                     x.SymbolId,
                     x.SymbolName,
                     x.SymbolCode,

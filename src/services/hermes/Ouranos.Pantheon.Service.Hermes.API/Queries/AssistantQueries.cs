@@ -22,7 +22,7 @@ public sealed class AssistantQueries
     /// </param>
     /// <returns>The assistant matching the given query.</returns>
     public async Task<Assistant> GetAssistant(
-        [Service] IDispatcher dispatcher,
+        [Service] IScopedDispatcher dispatcher,
         Id<Assistant> assistantId,
         CancellationToken cancellationToken = default
     )
@@ -43,7 +43,7 @@ public sealed class AssistantQueries
     [UseFiltering]
     [UseSorting]
     public async Task<IQueryable<Assistant>> GetAllAssistants(
-        [Service] IDispatcher dispatcher,
+        [Service] IScopedDispatcher dispatcher,
         CancellationToken cancellationToken = default
     )
     {

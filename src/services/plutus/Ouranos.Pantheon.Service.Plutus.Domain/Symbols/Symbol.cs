@@ -7,6 +7,10 @@ namespace Ouranos.Pantheon.Service.Plutus.Domain.Symbols;
 
 public sealed class Symbol : BaseEntity<Id<Symbol>>
 {
+    private Symbol()
+    {
+    }
+
     public Symbol(
         Id<Symbol> id,
         string code,

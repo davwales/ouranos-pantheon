@@ -7,6 +7,10 @@ namespace Ouranos.Pantheon.Service.Plutus.Domain.Forecasts;
 
 public sealed class Forecast : BaseEntity<Id<Forecast>>
 {
+    private Forecast()
+    {
+    }
+
     public Forecast(
         Id<Forecast> id,
         Id<Market> marketId,

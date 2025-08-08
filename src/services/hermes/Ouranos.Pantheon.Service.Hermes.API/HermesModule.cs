@@ -8,6 +8,7 @@ using Ouranos.Pantheon.Core.API.Interfaces;
 using Ouranos.Pantheon.Service.Hermes.Application;
 using Ouranos.Pantheon.Service.Hermes.Domain.Assistants;
 using Ouranos.Pantheon.Service.Hermes.Infra.OuranosMl;
+using Ouranos.Pantheon.Service.Hermes.Infra.Postgres;
 
 namespace Ouranos.Pantheon.Service.Hermes.API;
 
@@ -27,7 +28,13 @@ public sealed class HermesModule : IOuranosModule
     {
         return services
             .AddApplicationModule()
+            .AddPostgresModule(configuration)
             .AddOuranosMachineLearningModule(configuration);
+    }
+
+    public async Task<IServiceProvider> UseModule(IServiceProvider provider)
+    {
+        return await provider.ApplyPostgresMigrations();
     }
 
     public IMediatorRegistrationConfigurator ConfigureMediator(IMediatorRegistrationConfigurator mediator)

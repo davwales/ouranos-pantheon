@@ -45,6 +45,7 @@ public sealed class UpdateAssistantHandler : CommandHandler<UpdateAssistantInput
         );
 
         await _assistantRepository.Update(assistant, cancellationToken);
+        await _assistantRepository.SaveChanges(cancellationToken);
         var response = new IdResponse<Assistant>(command.AssistantId);
 
         _logger.LogDebug("Successfully handled update assistant request.");

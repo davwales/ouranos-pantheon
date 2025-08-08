@@ -21,14 +21,15 @@ public static class GraphQlExtentions
         var builder = services
             .AddGraphQLServer()
             .AddFiltering(descriptor =>
-            {
-                descriptor = descriptor.AddDefaults();
-
-                foreach (var module in modules)
                 {
-                    descriptor = module.ConfigureSchemaFilters(descriptor);
+                    descriptor = descriptor.AddDefaults();
+
+                    foreach (var module in modules)
+                    {
+                        descriptor = module.ConfigureSchemaFilters(descriptor);
+                    }
                 }
-            })
+            )
             .AddSorting()
             .AddQueryType<Query>()
             .AddTypeExtensions<Query>()
@@ -38,13 +39,14 @@ public static class GraphQlExtentions
             .BindCommonTypes()
             .AddOuranosConventions()
             .ModifyRequestOptions(o =>
-            {
-                var includeExceptionDetails = configuration.GetValue("Ouranos:IncludeExceptionDetails", false);
-                o.IncludeExceptionDetails = includeExceptionDetails;
+                {
+                    var includeExceptionDetails = configuration.GetValue("Ouranos:IncludeExceptionDetails", false);
+                    o.IncludeExceptionDetails = includeExceptionDetails;
 
-                var requestTimeoutSeconds = configuration.GetValue("Ouranos:RequestTimeout", 30);
-                o.ExecutionTimeout = TimeSpan.FromSeconds(requestTimeoutSeconds);
-            });
+                    var requestTimeoutSeconds = configuration.GetValue("Ouranos:RequestTimeout", 30);
+                    o.ExecutionTimeout = TimeSpan.FromSeconds(requestTimeoutSeconds);
+                }
+            );
 
         foreach (var module in modules)
         {
@@ -75,10 +77,14 @@ public static class GraphQlExtentions
     private static IRequestExecutorBuilder AddOuranosConventions(this IRequestExecutorBuilder builder)
     {
         return builder
-            .AddConvention<IFilterConvention>(new FilterConventionExtension(x => x
-                .AddProviderExtension(new QueryableFilterProviderExtension(e => e
-                    .AddFieldHandler<QueryableStringInvariantHandler>()
-                ))
-            ));
+            .AddConvention<IFilterConvention>(
+                new FilterConventionExtension(x => x
+                    .AddProviderExtension(
+                        new QueryableFilterProviderExtension(e => e
+                            .AddFieldHandler<QueryableStringInvariantHandler>()
+                        )
+                    )
+                )
+            );
     }
 }

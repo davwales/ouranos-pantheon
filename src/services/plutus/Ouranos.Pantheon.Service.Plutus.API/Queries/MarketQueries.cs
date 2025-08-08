@@ -24,7 +24,7 @@ public sealed class MarketQueries
     [UseFiltering]
     [UseSorting]
     public async Task<IQueryable<Market>> GetAllMarkets(
-        [Service] IDispatcher dispatcher,
+        [Service] IScopedDispatcher dispatcher,
         CancellationToken cancellationToken = default
     )
     {
@@ -42,7 +42,7 @@ public sealed class MarketQueries
     /// <param name="cancellationToken"><see cref="CancellationToken" />.</param>
     /// <returns>The market matching the given query.</returns>
     public async Task<Market> GetMarket(
-        [Service] IDispatcher dispatcher,
+        [Service] IScopedDispatcher dispatcher,
         Id<Market> marketId,
         CancellationToken cancellationToken = default
     )
@@ -63,7 +63,7 @@ public sealed class MarketQueries
     [UseFiltering]
     [UseSorting]
     public async Task<IQueryable<GetMarketTradesResponse>> GetMarketTrades(
-        [Service] IDispatcher dispatcher,
+        [Service] IScopedDispatcher dispatcher,
         GetMarketTradesInput input,
         CancellationToken cancellationToken = default
     )
@@ -85,7 +85,7 @@ public sealed class MarketQueries
     [UseFiltering]
     [UseSorting]
     public async Task<IQueryable<GetMarketForecastResponse>> GetMarketForecast(
-        [Service] IDispatcher dispatcher,
+        [Service] IScopedDispatcher dispatcher,
         GetMarketForecastInput input,
         CancellationToken cancellationToken = default
     )

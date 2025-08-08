@@ -5,11 +5,11 @@ using Ouranos.Pantheon.Core.Application.Common;
 
 namespace Ouranos.Pantheon.Core.Application.Mediator;
 
-public sealed class Dispatcher : IDispatcher
+public sealed class Dispatcher<TMediator> : IScopedDispatcher where TMediator : IMediator
 {
-    private readonly IMediator _mediator;
+    private readonly TMediator _mediator;
 
-    public Dispatcher(IMediator mediator)
+    public Dispatcher(TMediator mediator)
     {
         Guard.Against.Null(mediator);
         _mediator = mediator;

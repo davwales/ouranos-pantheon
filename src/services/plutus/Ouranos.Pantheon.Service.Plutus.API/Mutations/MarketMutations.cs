@@ -22,7 +22,7 @@ public sealed class MarketMutations
     /// <param name="cancellationToken"><see cref="CancellationToken" />.</param>
     /// <returns>Response containing the created market's identifier.</returns>
     public async Task<IdResponse<Market>> CreateMarket(
-        [Service] IDispatcher dispatcher,
+        [Service] IScopedDispatcher dispatcher,
         CreateMarketInput input,
         CancellationToken cancellationToken = default
     )
@@ -40,7 +40,7 @@ public sealed class MarketMutations
     /// <param name="cancellationToken"><see cref="CancellationToken" />.</param>
     /// <returns>Status code.</returns>
     public async Task<IdResponse<Market>> UpdateMarket(
-        [Service] IDispatcher dispatcher,
+        [Service] IScopedDispatcher dispatcher,
         UpdateMarketInput input,
         CancellationToken cancellationToken = default
     )
@@ -58,7 +58,7 @@ public sealed class MarketMutations
     /// <param name="cancellationToken"><see cref="CancellationToken" />.</param>
     /// <returns>Status code.</returns>
     public async Task<IdResponse<Market>> DeleteMarket(
-        [Service] IDispatcher dispatcher,
+        [Service] IScopedDispatcher dispatcher,
         Id<Market> marketId,
         CancellationToken cancellationToken = default
     )

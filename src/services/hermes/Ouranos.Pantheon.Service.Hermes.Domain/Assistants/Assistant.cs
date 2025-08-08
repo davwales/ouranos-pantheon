@@ -5,6 +5,10 @@ namespace Ouranos.Pantheon.Service.Hermes.Domain.Assistants;
 
 public sealed class Assistant : BaseEntity<Id<Assistant>>
 {
+    private Assistant()
+    {
+    }
+
     public Assistant(
         Id<Assistant> id,
         string model,

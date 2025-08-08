@@ -26,7 +26,7 @@ public sealed class SymbolQueries
     [UseFiltering]
     [UseSorting]
     public async Task<IQueryable<Symbol>> GetAllSymbols(
-        [Service] IDispatcher dispatcher,
+        [Service] IScopedDispatcher dispatcher,
         CancellationToken cancellationToken = default
     )
     {
@@ -44,7 +44,7 @@ public sealed class SymbolQueries
     /// <param name="cancellationToken"><see cref="CancellationToken" />.</param>
     /// <returns>The symbol matching the given query.</returns>
     public async Task<Symbol> GetSymbol(
-        [Service] IDispatcher dispatcher,
+        [Service] IScopedDispatcher dispatcher,
         Id<Symbol> symbolId,
         CancellationToken cancellationToken = default
     )
@@ -64,7 +64,7 @@ public sealed class SymbolQueries
     /// </param>
     /// <returns>Trade statistics for a symbol.</returns>
     public async Task<GetSymbolTradesResponse> GetSymbolTrades(
-        [Service] IDispatcher dispatcher,
+        [Service] IScopedDispatcher dispatcher,
         GetSymbolTradesInput input,
         CancellationToken cancellationToken = default
     )
@@ -84,7 +84,7 @@ public sealed class SymbolQueries
     /// </param>
     /// <returns>Summary of trades for the given symbol for today.</returns>
     public async Task<GetDailySymbolSummaryResponse> GetDailySymbolSummary(
-        [Service] IDispatcher dispatcher,
+        [Service] IScopedDispatcher dispatcher,
         GetDailySymbolSummaryInput input,
         CancellationToken cancellationToken = default
     )

@@ -24,7 +24,7 @@ public sealed class AssistantMutations
     /// </param>
     /// <returns>The id of the newly created assistant.</returns>
     public async Task<IdResponse<Assistant>> CreateAssistant(
-        [Service] IDispatcher dispatcher,
+        [Service] IScopedDispatcher dispatcher,
         CreateAssistantInput input,
         CancellationToken cancellationToken = default
     )
@@ -44,7 +44,7 @@ public sealed class AssistantMutations
     /// </param>
     /// <returns>The id of the updated assistant.</returns>
     public async Task<IdResponse<Assistant>> UpdateAssistant(
-        [Service] IDispatcher dispatcher,
+        [Service] IScopedDispatcher dispatcher,
         UpdateAssistantInput input,
         CancellationToken cancellationToken = default
     )
@@ -64,7 +64,7 @@ public sealed class AssistantMutations
     /// </param>
     /// <returns>The id of the recently deleted assistant.</returns>
     public async Task<IdResponse<Assistant>> DeleteAssistant(
-        [Service] IDispatcher dispatcher,
+        [Service] IScopedDispatcher dispatcher,
         Id<Assistant> assistantId,
         CancellationToken cancellationToken = default
     )

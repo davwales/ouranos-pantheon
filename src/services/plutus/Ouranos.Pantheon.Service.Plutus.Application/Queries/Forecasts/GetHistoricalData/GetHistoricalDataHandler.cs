@@ -59,7 +59,7 @@ public sealed class GetHistoricalDataHandler
             .Where(trade =>
                 trade.CreatedAt >= start &&
                 trade.CreatedAt < end &&
-                query.SymbolIds.Contains(trade.Metadata.SymbolId)
+                query.SymbolIds.Contains(trade.SymbolId)
             );
 
         var dataQuery = _bucketHistoricalData.ApplyBucketing(tradeFilter)

@@ -131,10 +131,10 @@ public sealed class GetRecipeTradesHandler
             .AsQueryable(cancellationToken)
             .Where(x =>
                 (since == null || x.CreatedAt >= since) &&
-                symbolIds.Contains(x.Metadata.SymbolId)
+                symbolIds.Contains(x.SymbolId)
             )
             .OrderByDescending(x => x.CreatedAt)
-            .GroupBy(x => x.Metadata.SymbolId)
+            .GroupBy(x => x.SymbolId)
             .Select(g => new
                 {
                     SymbolId = g.Key,

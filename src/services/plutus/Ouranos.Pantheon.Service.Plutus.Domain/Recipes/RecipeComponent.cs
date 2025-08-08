@@ -7,4 +7,9 @@ public sealed record RecipeComponent(
     Id<Symbol> SymbolId,
     string Name,
     int Quantity
-);
+)
+{
+    private RecipeComponent() : this(new Id<Symbol>(Guid.NewGuid().ToString()), string.Empty, 0)
+    {
+    }
+}

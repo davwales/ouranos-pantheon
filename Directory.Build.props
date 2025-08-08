@@ -14,9 +14,11 @@
 
     <PropertyGroup>
         <CsvHelperVersion>33.0.*</CsvHelperVersion>
+        <EFCoreNamingConventionsVersion>8.0.*</EFCoreNamingConventionsVersion>
         <MassTransitVersion>8.3.*</MassTransitVersion>
         <MassTransitRabbitMQVersion>8.3.*</MassTransitRabbitMQVersion>
         <MicrosoftConfigurationBinderVersion>8.0.*</MicrosoftConfigurationBinderVersion>
+        <MicrosoftEntityFrameworkCoreDesignVersion>8.0.11</MicrosoftEntityFrameworkCoreDesignVersion>
         <MicrosoftExtensionsCachingMemoryVersion>8.0.*</MicrosoftExtensionsCachingMemoryVersion>
         <MicrosoftExtensionsConfigurationVersion>8.0.*</MicrosoftExtensionsConfigurationVersion>
         <MicrosoftExtensionsConfigurationJsonVersion>8.0.*</MicrosoftExtensionsConfigurationJsonVersion>
@@ -26,6 +28,7 @@
         <MicrosoftExtensionsLoggingConsoleVersion>8.0.*</MicrosoftExtensionsLoggingConsoleVersion>
         <MicrosoftExtensionsOptionsConfigurationExtensionsVersion>8.0.*</MicrosoftExtensionsOptionsConfigurationExtensionsVersion>
         <MongoDriverVersion>2.27.*</MongoDriverVersion>
+        <NpgsqlEntityFrameworkCorePostgreSQLVersion>8.0.*</NpgsqlEntityFrameworkCorePostgreSQLVersion>
         <HotChocolateVersion>14.3.*</HotChocolateVersion>
         <SerilogVersion>4.2.*</SerilogVersion>
         <SerilogAspNetCoreVersion>8.0.*</SerilogAspNetCoreVersion>

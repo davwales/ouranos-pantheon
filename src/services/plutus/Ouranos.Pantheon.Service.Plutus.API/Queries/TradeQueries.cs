@@ -20,7 +20,7 @@ public sealed class TradeQueries
     [UseFiltering]
     [UseSorting]
     public async Task<IQueryable<Trade>> GetAllTrades(
-        [Service] IDispatcher dispatcher,
+        [Service] IScopedDispatcher dispatcher,
         CancellationToken cancellationToken = default
     )
     {

@@ -23,7 +23,7 @@ public sealed class RecipeQueries
     [UseFiltering]
     [UseSorting]
     public async Task<IQueryable<Recipe>> GetAllRecipes(
-        [Service] IDispatcher dispatcher,
+        [Service] IScopedDispatcher dispatcher,
         CancellationToken cancellationToken = default
     )
     {
@@ -41,7 +41,7 @@ public sealed class RecipeQueries
     /// <param name="cancellationToken"><see cref="CancellationToken" />.</param>
     /// <returns>The recipe matching the given query.</returns>
     public async Task<Recipe> GetRecipe(
-        [Service] IDispatcher dispatcher,
+        [Service] IScopedDispatcher dispatcher,
         Id<Recipe> recipeId,
         CancellationToken cancellationToken = default
     )
@@ -64,7 +64,7 @@ public sealed class RecipeQueries
     [UseFiltering]
     [UseSorting]
     public async Task<IQueryable<GetRecipeTradesResponse>> GetRecipeTrades(
-        [Service] IDispatcher dispatcher,
+        [Service] IScopedDispatcher dispatcher,
         GetRecipeTradesInput input,
         CancellationToken cancellationToken = default
     )

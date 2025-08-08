@@ -38,18 +38,14 @@ public sealed class InsertTrade : IInsertTrade
 
         var trade = new Trade(
             _tradeRepository.CreateId(),
+            input.Symbol.Id,
             input.Price,
             input.Volume,
-            new TradeMetadata(
-                input.MarketId,
-                input.SymbolId,
-                input.SymbolName,
-                input.SymbolCode,
-                input.SymbolSubcode,
-                input.AdditionalFields
-            ),
             input.Timestamp
-        );
+        )
+        {
+            Symbol = input.Symbol
+        };
 
         var shouldInsertTrade = await ShouldInsertTrade(trade.Id, input.MessageId, cancellationToken);
         if (!shouldInsertTrade)

@@ -22,7 +22,7 @@ public sealed class RecipeMutations
     /// <param name="cancellationToken"><see cref="CancellationToken" />.</param>
     /// <returns>Response containing the created recipe's identifier.</returns>
     public async Task<IdResponse<Recipe>> CreateRecipe(
-        [Service] IDispatcher dispatcher,
+        [Service] IScopedDispatcher dispatcher,
         CreateRecipeInput input,
         CancellationToken cancellationToken = default
     )
@@ -40,7 +40,7 @@ public sealed class RecipeMutations
     /// <param name="cancellationToken"><see cref="CancellationToken" />.</param>
     /// <returns>The id of the updated recipe.</returns>
     public async Task<IdResponse<Recipe>> UpdateRecipe(
-        [Service] IDispatcher dispatcher,
+        [Service] IScopedDispatcher dispatcher,
         UpdateRecipeInput input,
         CancellationToken cancellationToken = default
     )
@@ -58,7 +58,7 @@ public sealed class RecipeMutations
     /// <param name="cancellationToken"><see cref="CancellationToken" />.</param>
     /// <returns>Identifier of the deleted recipe.</returns>
     public async Task<IdResponse<Recipe>> DeleteRecipe(
-        [Service] IDispatcher dispatcher,
+        [Service] IScopedDispatcher dispatcher,
         Id<Recipe> recipeId,
         CancellationToken cancellationToken = default
     )

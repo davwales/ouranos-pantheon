@@ -20,7 +20,7 @@ public sealed class ForecastQueries
     [UseFiltering]
     [UseSorting]
     public async Task<IQueryable<Forecast>> GetAllForecasts(
-        [Service] IDispatcher dispatcher,
+        [Service] IScopedDispatcher dispatcher,
         CancellationToken cancellationToken = default
     )
     {

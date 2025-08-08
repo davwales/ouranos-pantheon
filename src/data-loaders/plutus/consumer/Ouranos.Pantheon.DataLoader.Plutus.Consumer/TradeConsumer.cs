@@ -59,21 +59,20 @@ public sealed class TradeConsumer : IConsumer<TradeMessage>
         var symbol = await _upsertSymbol.UpsertSymbolAsync(upsertSymbolRequest, context.CancellationToken);
 
         var insertTradeRequest = new InsertTradeInput(
-            marketId,
-            symbol.Id,
-            symbol.Name,
-            symbol.Code,
-            symbol.Subcode,
+            symbol,
             context.Message.Price,
             context.Message.Volume,
             context.Message.Timestamp,
-            context.Message.AdditionalFields,
             context.MessageId
         );
         var trade = await _insertTrade.InsertTradeAsync(insertTradeRequest, context.CancellationToken);
 
         _logger.LogInformation(
             "Successfully consumed trade message '{messageId}' for trade '{tradeId}', symbol '{symbolId}', and market '{marketId}'.",
-            context.MessageId, trade.Id, symbol.Id, marketId);
+            context.MessageId,
+            trade.Id,
+            symbol.Id,
+            marketId
+        );
     }
 }

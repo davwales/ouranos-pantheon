@@ -6,6 +6,10 @@ namespace Ouranos.Pantheon.Service.Plutus.Domain.Recipes;
 
 public sealed class Recipe : BaseEntity<Id<Recipe>>
 {
+    private Recipe()
+    {
+    }
+
     public Recipe(
         Id<Recipe> id,
         Id<Market> marketId,

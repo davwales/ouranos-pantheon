@@ -20,7 +20,7 @@ public sealed class ConversationMutations
     /// </param>
     /// <returns>Generated completion response.</returns>
     public CompletionResponse GenerateCompletion(
-        [Service] IDispatcher dispatcher,
+        [Service] IScopedDispatcher dispatcher,
         GenerateCompletionInput input,
         CancellationToken cancellationToken = default
     )

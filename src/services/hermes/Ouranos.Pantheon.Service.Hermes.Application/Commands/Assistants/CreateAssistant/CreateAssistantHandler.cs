@@ -44,6 +44,7 @@ public sealed class CreateAssistantHandler : CommandHandler<CreateAssistantInput
         );
 
         await _assistantRepository.Create(assistant, cancellationToken);
+        await _assistantRepository.SaveChanges(cancellationToken);
         var response = new IdResponse<Assistant>(assistant.Id);
 
         _logger.LogDebug("Successfully handled create assistant request for assistant '{assistantId}'.", assistant.Id);
