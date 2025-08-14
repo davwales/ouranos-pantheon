@@ -53,25 +53,25 @@ build_plutus_data_loader_ffxiv:
   <<: *build_template
   variables:
     IMAGE_NAME: "plutus-data-loader-ffxiv"
-    DOCKERFILE_PATH: "./src/data-loaders/plutus/ffxiv/Dockerfile"
+    DOCKERFILE_PATH: "./src/plutus/data-loaders/ffxiv/Dockerfile"
 
 build_plutus_data_loader_osrs:
   <<: *build_template
   variables:
     IMAGE_NAME: "plutus-data-loader-osrs"
-    DOCKERFILE_PATH: "./src/data-loaders/plutus/osrs/Dockerfile"
+    DOCKERFILE_PATH: "./src/plutus/data-loaders/osrs/Dockerfile"
 
 build_plutus_data_loader_stocks:
   <<: *build_template
   variables:
     IMAGE_NAME: "plutus-data-loader-stocks"
-    DOCKERFILE_PATH: "./src/data-loaders/plutus/stocks/Dockerfile"
+    DOCKERFILE_PATH: "./src/plutus/data-loaders/stocks/Dockerfile"
 
 build_plutus_data_loader_consumer:
   <<: *build_template
   variables:
     IMAGE_NAME: "plutus-data-loader-consumer"
-    DOCKERFILE_PATH: "./src/data-loaders/plutus/consumer/Dockerfile"
+    DOCKERFILE_PATH: "./src/plutus/data-loaders/consumer/Dockerfile"
 
 push_images:
   stage: push_images

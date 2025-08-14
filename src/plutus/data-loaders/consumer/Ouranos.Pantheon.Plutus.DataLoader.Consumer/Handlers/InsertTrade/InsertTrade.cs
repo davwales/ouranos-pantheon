@@ -1,0 +1,101 @@
+﻿using Ardalis.GuardClauses;
+using MongoDB.Driver;
+using Ouranos.Pantheon.Core.Application.Interfaces.Common;
+using Ouranos.Pantheon.Core.Domain.Common;
+using Ouranos.Pantheon.Plutus.DataLoader.Consumer.Models;
+using Ouranos.Pantheon.Plutus.Service.Domain.Trades;
+
+namespace Ouranos.Pantheon.Plutus.DataLoader.Consumer.Handlers.InsertTrade;
+
+public sealed class InsertTrade : IInsertTrade
+{
+    private readonly ILogger<InsertTrade> _logger;
+    private readonly IRepository<TradeMessage> _tradeMessageRepository;
+    private readonly IRepository<Trade> _tradeRepository;
+
+    public InsertTrade(
+        ILogger<InsertTrade> logger,
+        IRepository<TradeMessage> tradeMessageRepository,
+        IRepository<Trade> tradeRepository
+    )
+    {
+        Guard.Against.Null(logger);
+        Guard.Against.Null(tradeMessageRepository);
+        Guard.Against.Null(tradeRepository);
+
+        _logger = logger;
+        _tradeMessageRepository = tradeMessageRepository;
+        _tradeRepository = tradeRepository;
+    }
+
+    public async Task<Trade> InsertTradeAsync(
+        InsertTradeInput input,
+        CancellationToken cancellationToken = default
+    )
+    {
+        _logger.LogTrace("Attempting to insert trade with input '{@input}'.", input);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var trade = new Trade(
+            _tradeRepository.CreateId(),
+            input.Symbol.Id,
+            input.Price,
+            input.Volume,
+            input.Timestamp
+        )
+        {
+            Symbol = input.Symbol
+        };
+
+        var shouldInsertTrade = await ShouldInsertTrade(trade.Id, input.MessageId, cancellationToken);
+        if (!shouldInsertTrade)
+        {
+            return trade;
+        }
+
+        await _tradeRepository.Create(trade, cancellationToken);
+
+        _logger.LogDebug("Successfully insert trade '{tradeId}'.", trade.Id);
+        return trade;
+    }
+
+    private async Task<bool> ShouldInsertTrade(
+        Id<Trade> tradeId,
+        Guid? messageId,
+        CancellationToken cancellationToken
+    )
+    {
+        if (!messageId.HasValue)
+        {
+            return true;
+        }
+
+        try
+        {
+            var tradeMessage = new TradeMessage(
+                _tradeMessageRepository.CreateId(),
+                tradeId,
+                messageId.Value
+            );
+
+            await _tradeMessageRepository.Create(tradeMessage, cancellationToken);
+        }
+        catch (MongoDuplicateKeyException)
+        {
+            _logger.LogWarning("Detected duplicate trade message '{messageId}', ignoring.'", messageId);
+            return false;
+        }
+        catch (MongoWriteException writeException)
+        {
+            if (writeException.WriteError.Category != ServerErrorCategory.DuplicateKey)
+            {
+                throw;
+            }
+
+            _logger.LogWarning("Detected duplicate trade message '{messageId}', ignoring.", messageId);
+            return false;
+        }
+
+        return true;
+    }
+}

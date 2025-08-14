@@ -1,7 +1,7 @@
 ﻿using Ouranos.Pantheon.Core.API.Extensions;
 using Ouranos.Pantheon.Core.API.Interfaces;
-using Ouranos.Pantheon.Service.Hermes.API;
-using Ouranos.Pantheon.Service.Plutus.API;
+using Ouranos.Pantheon.Hermes.Service.API;
+using Ouranos.Pantheon.Plutus.Service.API;
 
 namespace Ouranos.Pantheon.Gateway.API.Startup;
 
