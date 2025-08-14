@@ -1,5 +1,6 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
+using Ouranos.Pantheon.Core.Infra.Postgres.Functions;
 
 namespace Ouranos.Pantheon.Core.Infra.Postgres;
 
@@ -19,5 +20,15 @@ public abstract class OuranosDbContext : DbContext
 
         modelBuilder.HasDefaultSchema(_schema.ToLower());
         modelBuilder.ApplyConfigurationsFromAssembly(GetType().Assembly);
+        modelBuilder.HasTimescaleDbFunctions();
+    }
+
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        base.ConfigureConventions(configurationBuilder);
+
+        configurationBuilder
+            .Properties<decimal>()
+            .HavePrecision(18, 2);
     }
 }

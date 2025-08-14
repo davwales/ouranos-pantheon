@@ -5,7 +5,7 @@ using Ouranos.Pantheon.Service.Plutus.Domain.Trades;
 
 namespace Ouranos.Pantheon.Service.Plutus.Domain.Symbols;
 
-public sealed class Symbol : BaseEntity<Id<Symbol>>
+public class Symbol : BaseEntity<Id<Symbol>>
 {
     private Symbol()
     {

@@ -106,7 +106,8 @@ namespace Ouranos.Pantheon.Service.Plutus.Infra.Postgres.Migrations
                         .HasColumnName("id");
 
                     b.Property<decimal>("Cost")
-                        .HasColumnType("numeric")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("cost");
 
                     b.Property<DateTimeOffset>("CreatedAt")
@@ -217,7 +218,8 @@ namespace Ouranos.Pantheon.Service.Plutus.Infra.Postgres.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<decimal>("Price")
-                        .HasColumnType("numeric")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("price");
 
                     b.Property<string>("SymbolId")
@@ -230,7 +232,8 @@ namespace Ouranos.Pantheon.Service.Plutus.Infra.Postgres.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<decimal>("Volume")
-                        .HasColumnType("numeric")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("volume");
 
                     b.HasKey("Id")
@@ -251,19 +254,23 @@ namespace Ouranos.Pantheon.Service.Plutus.Infra.Postgres.Migrations
                                 .HasColumnName("id");
 
                             b1.Property<decimal>("AveragePrice")
-                                .HasColumnType("numeric")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
                                 .HasColumnName("latest_average_price");
 
                             b1.Property<decimal>("MaxPrice")
-                                .HasColumnType("numeric")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
                                 .HasColumnName("latest_max_price");
 
                             b1.Property<decimal>("MinPrice")
-                                .HasColumnType("numeric")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
                                 .HasColumnName("latest_min_price");
 
                             b1.Property<decimal>("Volume")
-                                .HasColumnType("numeric")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
                                 .HasColumnName("latest_volume");
 
                             b1.HasKey("ForecastId");
@@ -289,19 +296,23 @@ namespace Ouranos.Pantheon.Service.Plutus.Infra.Postgres.Migrations
                             NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b1.Property<int>("Id"));
 
                             b1.Property<decimal>("AveragePrice")
-                                .HasColumnType("numeric")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
                                 .HasColumnName("average_price");
 
                             b1.Property<decimal>("MaxPrice")
-                                .HasColumnType("numeric")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
                                 .HasColumnName("max_price");
 
                             b1.Property<decimal>("MinPrice")
-                                .HasColumnType("numeric")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
                                 .HasColumnName("min_price");
 
                             b1.Property<decimal>("Volume")
-                                .HasColumnType("numeric")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
                                 .HasColumnName("volume");
 
                             b1.HasKey("ForecastId", "Id")
@@ -343,15 +354,18 @@ namespace Ouranos.Pantheon.Service.Plutus.Infra.Postgres.Migrations
                                         .HasColumnName("id");
 
                                     b2.Property<decimal>("Maximum")
-                                        .HasColumnType("numeric")
+                                        .HasPrecision(18, 2)
+                                        .HasColumnType("numeric(18,2)")
                                         .HasColumnName("taxes_flat_maximum");
 
                                     b2.Property<decimal>("Minimum")
-                                        .HasColumnType("numeric")
+                                        .HasPrecision(18, 2)
+                                        .HasColumnType("numeric(18,2)")
                                         .HasColumnName("taxes_flat_minimum");
 
                                     b2.Property<decimal>("Rate")
-                                        .HasColumnType("numeric")
+                                        .HasPrecision(18, 2)
+                                        .HasColumnType("numeric(18,2)")
                                         .HasColumnName("taxes_flat_rate");
 
                                     b2.HasKey("TaxesMarketId");
@@ -497,7 +511,8 @@ namespace Ouranos.Pantheon.Service.Plutus.Infra.Postgres.Migrations
                                 .HasColumnName("additional_fields_high_alch");
 
                             b1.Property<decimal?>("Limit")
-                                .HasColumnType("numeric")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
                                 .HasColumnName("additional_fields_limit");
 
                             b1.Property<int?>("LowAlch")

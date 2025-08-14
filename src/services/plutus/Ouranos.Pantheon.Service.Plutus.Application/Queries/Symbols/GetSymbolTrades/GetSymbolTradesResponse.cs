@@ -7,5 +7,5 @@ public sealed record GetSymbolTradesResponse(
     decimal TotalSpent,
     decimal Volume,
     int NumTransactions,
-    List<GetSymbolTradeBucketsResponse> Trades
+    IEnumerable<GetSymbolTradeBucketsResponse> Trades
 );

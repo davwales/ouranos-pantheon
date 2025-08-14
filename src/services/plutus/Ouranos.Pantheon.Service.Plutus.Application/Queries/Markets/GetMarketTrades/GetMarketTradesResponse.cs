@@ -1,13 +1,9 @@
-﻿using Ouranos.Pantheon.Core.Domain.Common;
-using Ouranos.Pantheon.Service.Plutus.Domain.Symbols;
+﻿using Ouranos.Pantheon.Service.Plutus.Domain.Symbols;
 
 namespace Ouranos.Pantheon.Service.Plutus.Application.Queries.Markets.GetMarketTrades;
 
 public sealed record GetMarketTradesResponse(
-    Id<Symbol> SymbolId,
-    string SymbolName,
-    string SymbolCode,
-    string? SymbolSubcode,
+    Symbol Symbol,
     decimal TotalSpent,
     decimal MinPrice,
     decimal MaxPrice,

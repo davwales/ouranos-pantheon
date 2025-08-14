@@ -28,7 +28,7 @@ export const usePlutusStore = create<PlutusState>((set) => ({
   recipesTableState: {
     pagination: { pageSize: 10 },
     filter: {},
-    sort: { averageMargin: SortEnumType.Desc },
+    sort: {}, // TODO: Enable once sorting works again { averageMargin: SortEnumType.Desc },
   },
   setRecipesTableState: (state) => set({ recipesTableState: state }),
   forecastsTableState: {

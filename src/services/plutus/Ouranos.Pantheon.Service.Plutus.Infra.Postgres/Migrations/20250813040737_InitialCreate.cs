@@ -25,10 +25,10 @@ namespace Ouranos.Pantheon.Service.Plutus.Infra.Postgres.Migrations
                     symbol_id = table.Column<string>(type: "text", nullable: false),
                     symbol_name = table.Column<string>(type: "text", nullable: false),
                     symbol_subcode = table.Column<string>(type: "text", nullable: true),
-                    latest_average_price = table.Column<decimal>(type: "numeric", nullable: false),
-                    latest_min_price = table.Column<decimal>(type: "numeric", nullable: false),
-                    latest_max_price = table.Column<decimal>(type: "numeric", nullable: false),
-                    latest_volume = table.Column<decimal>(type: "numeric", nullable: false),
+                    latest_average_price = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    latest_min_price = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    latest_max_price = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    latest_volume = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
@@ -44,9 +44,9 @@ namespace Ouranos.Pantheon.Service.Plutus.Infra.Postgres.Migrations
                 {
                     id = table.Column<string>(type: "text", nullable: false),
                     name = table.Column<string>(type: "text", nullable: false),
-                    taxes_flat_minimum = table.Column<decimal>(type: "numeric", nullable: true),
-                    taxes_flat_maximum = table.Column<decimal>(type: "numeric", nullable: true),
-                    taxes_flat_rate = table.Column<decimal>(type: "numeric", nullable: true),
+                    taxes_flat_minimum = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true),
+                    taxes_flat_maximum = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true),
+                    taxes_flat_rate = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true),
                     is_forecasting_enabled = table.Column<bool>(type: "boolean", nullable: false),
                     description = table.Column<string>(type: "text", nullable: true),
                     icon = table.Column<string>(type: "text", nullable: true),
@@ -66,7 +66,7 @@ namespace Ouranos.Pantheon.Service.Plutus.Infra.Postgres.Migrations
                     id = table.Column<string>(type: "text", nullable: false),
                     market_id = table.Column<string>(type: "text", nullable: false),
                     name = table.Column<string>(type: "text", nullable: false),
-                    cost = table.Column<decimal>(type: "numeric", nullable: false),
+                    cost = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
@@ -102,7 +102,7 @@ namespace Ouranos.Pantheon.Service.Plutus.Infra.Postgres.Migrations
                     subcode = table.Column<string>(type: "text", nullable: true),
                     name = table.Column<string>(type: "text", nullable: false),
                     market_id = table.Column<string>(type: "text", nullable: false),
-                    additional_fields_limit = table.Column<decimal>(type: "numeric", nullable: true),
+                    additional_fields_limit = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true),
                     additional_fields_high_alch = table.Column<int>(type: "integer", nullable: true),
                     additional_fields_low_alch = table.Column<int>(type: "integer", nullable: true),
                     additional_fields_exchange = table.Column<string>(type: "text", nullable: true),
@@ -124,10 +124,10 @@ namespace Ouranos.Pantheon.Service.Plutus.Infra.Postgres.Migrations
                     forecast_id = table.Column<string>(type: "text", nullable: false),
                     id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    average_price = table.Column<decimal>(type: "numeric", nullable: false),
-                    min_price = table.Column<decimal>(type: "numeric", nullable: false),
-                    max_price = table.Column<decimal>(type: "numeric", nullable: false),
-                    volume = table.Column<decimal>(type: "numeric", nullable: false)
+                    average_price = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    min_price = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    max_price = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    volume = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -196,14 +196,13 @@ namespace Ouranos.Pantheon.Service.Plutus.Infra.Postgres.Migrations
                 {
                     id = table.Column<string>(type: "text", nullable: false),
                     symbol_id = table.Column<string>(type: "text", nullable: false),
-                    price = table.Column<decimal>(type: "numeric", nullable: false),
-                    volume = table.Column<decimal>(type: "numeric", nullable: false),
+                    price = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
+                    volume = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_trades", x => x.id);
                     table.ForeignKey(
                         name: "fk_trades_symbols_symbol_id",
                         column: x => x.symbol_id,
@@ -219,12 +218,11 @@ namespace Ouranos.Pantheon.Service.Plutus.Infra.Postgres.Migrations
                 table: "symbols",
                 columns: new[] { "code", "subcode", "market_id" },
                 unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "ix_trades_symbol_id",
-                schema: "plutus",
-                table: "trades",
-                column: "symbol_id");
+            
+            migrationBuilder.Sql(
+                "SELECT create_hypertable('\"plutus\".\"trades\"', 'created_at', migrate_data => TRUE);\n" +
+                "CREATE INDEX ix_symbol_id_created_at ON \"plutus\".\"trades\" (\"symbol_id\", \"created_at\" DESC);"
+            );
         }
 
         /// <inheritdoc />

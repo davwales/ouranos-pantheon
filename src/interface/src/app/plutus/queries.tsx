@@ -16,8 +16,8 @@ export const GET_ALL_MARKETS = graphql(`
 export const GET_MARKET_TRADES = graphql(`
   query GetMarketTrades(
     $input: GetMarketTradesInput!
-    $where: GetMarketTradesResponseFilterInput
-    $order: [GetMarketTradesResponseSortInput!]
+    # TODO: Enable once filtering works again. $where: GetMarketTradesResponseFilterInput
+    # TODO: Enable once sorting works again. $order: [GetMarketTradesResponseSortInput!]
     $first: Int
     $after: String
     $last: Int
@@ -25,8 +25,8 @@ export const GET_MARKET_TRADES = graphql(`
   ) {
     marketTrades(
       input: $input
-      where: $where
-      order: $order
+      # where: $where
+      # order: $order
       first: $first
       after: $after
       last: $last
@@ -41,10 +41,12 @@ export const GET_MARKET_TRADES = graphql(`
         minPrice
         numTransactions
         roi
-        symbolCode
-        symbolId
-        symbolName
-        symbolSubcode
+        symbol {
+          id
+          name
+          code
+          subcode
+        }
         totalGain
         totalSpent
         totalVolume
@@ -63,15 +65,15 @@ export const GET_RECENT_MARKET_TRADES = graphql(`
   query GetRecentMarketTrades($marketId: String!, $first: Int!) {
     allTrades(
       first: $first
-      where: { metadata: { marketId: { eq: $marketId } } }
+      where: { symbol: { marketId: { eq: $marketId } } }
       order: { createdAt: DESC }
     ) {
       nodes {
         createdAt
-        metadata {
-          symbolId
-          symbolName
-          symbolSubcode
+        symbol {
+          id
+          name
+          subcode
         }
         price
         volume
@@ -111,7 +113,7 @@ export const GET_SYMBOL_DETAILS = graphql(`
     latestTrade: allTrades(
       first: 1
       order: { createdAt: DESC }
-      where: { metadata: { symbolId: { eq: $symbolId } } }
+      where: { symbol: { id: { eq: $symbolId } } }
     ) {
       nodes {
         price

@@ -9,7 +9,6 @@ public sealed class TradeConfiguration : IEntityTypeConfiguration<Trade>
 {
     public void Configure(EntityTypeBuilder<Trade> builder)
     {
-        builder.HasKey(t => t.Id);
         builder.Property(t => t.Id).HasIdConversion();
         builder.Property(t => t.SymbolId).HasIdConversion();
     }

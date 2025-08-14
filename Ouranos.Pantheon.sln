@@ -178,6 +178,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Service.Pl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Service.Hermes.Infra.Postgres", "src\services\hermes\Ouranos.Pantheon.Service.Hermes.Infra.Postgres\Ouranos.Pantheon.Service.Hermes.Infra.Postgres.csproj", "{2A37FE44-6812-4B4E-8E55-CE5C8A315916}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "seed", "seed", "{35FD8FD9-0651-4902-85A2-2EB724D0C2FE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.DataLoader.Plutus.Seed", "src\data-loaders\plutus\seed\Ouranos.Pantheon.DataLoader.Plutus.Seed\Ouranos.Pantheon.DataLoader.Plutus.Seed.csproj", "{BF3AD453-D894-4696-9B48-2F081A5515A8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -364,6 +368,10 @@ Global
 		{2A37FE44-6812-4B4E-8E55-CE5C8A315916}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2A37FE44-6812-4B4E-8E55-CE5C8A315916}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2A37FE44-6812-4B4E-8E55-CE5C8A315916}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF3AD453-D894-4696-9B48-2F081A5515A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF3AD453-D894-4696-9B48-2F081A5515A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF3AD453-D894-4696-9B48-2F081A5515A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF3AD453-D894-4696-9B48-2F081A5515A8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{128A9F3B-4D1A-4A93-A0EC-2426770786AC} = {24007BE7-AE6D-46D3-B37A-522FE3EF0D9C}
@@ -426,5 +434,7 @@ Global
 		{46E8C217-1583-419A-B01B-C321F982CF96} = {128A9F3B-4D1A-4A93-A0EC-2426770786AC}
 		{4158F0F2-EBFA-495F-8A0D-3DCF51F9D66D} = {64F2EE35-47B2-45E2-8ADE-D989156D68DE}
 		{2A37FE44-6812-4B4E-8E55-CE5C8A315916} = {CEC7CE2F-45F1-4BBB-B1D0-E7BCAFEADB7D}
+		{35FD8FD9-0651-4902-85A2-2EB724D0C2FE} = {DBE7C5CA-24A4-4277-8F46-8043EE66C167}
+		{BF3AD453-D894-4696-9B48-2F081A5515A8} = {35FD8FD9-0651-4902-85A2-2EB724D0C2FE}
 	EndGlobalSection
 EndGlobal

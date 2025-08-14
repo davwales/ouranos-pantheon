@@ -27,6 +27,7 @@ public static class PostgresModule
             .AddDbContextFactory<TContext>((sp, options) =>
                 {
                     var postgresOptions = sp.GetRequiredService<IOptions<PostgresOptions>>().Value;
+                    options.EnableSensitiveDataLogging(postgresOptions.EnableSensitiveDataLogging);
 
                     options
                         .UseNpgsql(

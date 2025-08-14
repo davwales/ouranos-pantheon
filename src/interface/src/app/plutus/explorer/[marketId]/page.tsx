@@ -8,12 +8,16 @@ import { Typography } from "@/app/components/typography";
 import TimeFrameSelection from "@/app/plutus/components/time_frame_selection";
 import { PlutusState, usePlutusStore } from "@/app/plutus/plutus_store";
 import { GET_MARKET_TRADES } from "@/app/plutus/queries";
-import { GetMarketTradesResponse } from "@/gql/graphql";
+import { GetMarketTradesQuery } from "@/gql/graphql";
 import { useQuery } from "@urql/next";
 import { RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo } from "react";
+
+type ExplorerTableRow = NonNullable<
+  NonNullable<GetMarketTradesQuery["marketTrades"]>["nodes"]
+>[0];
 
 export default function MarketDetail() {
   const { marketId } = useParams<{ marketId: string }>();
@@ -41,15 +45,15 @@ export default function MarketDetail() {
     },
   });
 
-  const columns: ExtendedColumnDef<GetMarketTradesResponse>[] = useMemo(
+  const columns: ExtendedColumnDef<ExplorerTableRow>[] = useMemo(
     () => [
       {
-        id: "symbolName",
+        id: "symbol.name",
         header: "Name",
-        accessorFn: (row) => row.symbolName,
+        accessorFn: (row) => row.symbol.name,
         cell: ({ cell, row }) => (
           <Link
-            href={`/plutus/explorer/${marketId}/${row.original.symbolId}`}
+            href={`/plutus/explorer/${marketId}/${row.original.symbol.id}`}
             className="hover:underline"
           >
             {cell.getValue<string>()}
@@ -61,9 +65,9 @@ export default function MarketDetail() {
         },
       },
       {
-        id: "symbolSubcode",
+        id: "symbol.subcode",
         header: "Subcode",
-        accessorFn: (row) => row.symbolSubcode,
+        accessorFn: (row) => row.symbol.subcode,
         filterConfig: {
           type: "string",
           operators: ["eq", "neq", "contains", "startsWith", "endsWith"],
@@ -188,6 +192,8 @@ export default function MarketDetail() {
         onStateChange={setTableState}
         pageInfo={data?.marketTrades?.pageInfo}
         className="my-2"
+        disableSorting // TODO: Remove once sorting works.
+        disableFiltering // TODO: Remove once filtering works.
       />
     </div>
   );

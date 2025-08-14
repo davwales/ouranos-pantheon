@@ -44,27 +44,22 @@ public sealed class GetSymbolTradesHandler : QueryHandler<GetSymbolTradesInput, 
             ? DateTimeOffset.UtcNow - TimeSpan.FromSeconds(query.Seconds.Value)
             : null;
 
-        var tradesQuery = _tradeRepository.AsQueryable(cancellationToken)
-            .Where(t => t.SymbolId == query.SymbolId && (since == null || t.CreatedAt >= since));
+        var trades = await _queryExecutor.ToList(
+            _bucketTrades.GetBucketedTradesQuery(
+                _tradeRepository.AsQueryable(cancellationToken).Where(t =>
+                    t.SymbolId == query.SymbolId && (since == null || t.CreatedAt >= since)
+                ),
+                query.NumBuckets,
+                cancellationToken
+            ),
+            cancellationToken
+        );
 
-        var symbolTradesQuery = _bucketTrades
-            .GetBucketedTradesQuery(tradesQuery, query.NumBuckets, cancellationToken)
-            .Select(x => new
-                {
-                    x.SymbolId,
-                    x.Date,
-                    x.TotalSpent,
-                    x.Volume,
-                    x.MinPrice,
-                    x.MaxPrice,
-                    x.NumTransactions,
-                    Price = x.TotalSpent / x.Volume
-                }
-            )
+        var symbolDetail = trades
             .GroupBy(x => x.SymbolId)
             .Select(g => new
                 {
-                    g.Last().SymbolId,
+                    g.Key,
                     MinPrice = g.Min(x => x.MinPrice),
                     MaxPrice = g.Max(x => x.MaxPrice),
                     TotalSpent = g.Sum(x => x.TotalSpent),
@@ -80,25 +75,23 @@ public sealed class GetSymbolTradesHandler : QueryHandler<GetSymbolTradesInput, 
                     x.TotalSpent,
                     x.Volume,
                     x.NumTransactions,
-                    x.Trades.Select(t => new GetSymbolTradeBucketsResponse(
-                            t.Price,
-                            t.Volume,
-                            t.TotalSpent,
-                            t.MinPrice,
-                            t.MaxPrice,
-                            t.NumTransactions,
-                            t.Date
+                    x.Trades
+                        .OrderBy(x => x.Date)
+                        .Select(t => new GetSymbolTradeBucketsResponse(
+                                t.Price,
+                                t.Volume,
+                                t.TotalSpent,
+                                t.MinPrice,
+                                t.MaxPrice,
+                                t.NumTransactions,
+                                t.Date
+                            )
                         )
-                    ).ToList()
                 )
-            );
+            )
+            .FirstOrDefault();
 
-        var symbolTrades = await _queryExecutor.FirstOrDefault(
-            symbolTradesQuery,
-            cancellationToken
-        );
-
-        var response = symbolTrades ?? new GetSymbolTradesResponse(
+        var response = symbolDetail ?? new GetSymbolTradesResponse(
             0m,
             0m,
             0m,

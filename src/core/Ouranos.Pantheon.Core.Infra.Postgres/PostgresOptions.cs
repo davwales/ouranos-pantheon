@@ -10,7 +10,8 @@ public sealed record PostgresOptions(
     bool IncludeErrorDetail,
     int CommandTimeout,
     int MaxRetries,
-    uint MaxRetryDelaySeconds
+    uint MaxRetryDelaySeconds,
+    bool EnableSensitiveDataLogging
 )
 {
     public const string SectionName = "Ouranos:Postgres";
@@ -25,7 +26,8 @@ public sealed record PostgresOptions(
         false,
         30,
         3,
-        5
+        5,
+        false
     )
     {
     }
