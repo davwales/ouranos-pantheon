@@ -17,6 +17,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\..\core\Ouranos.Pantheon.Core.Infra.Postgres\Ouranos.Pantheon.Core.Infra.Postgres.csproj"/>
+        <ProjectReference Include="..\Ouranos.Pantheon.Hermes.Service.Application\Ouranos.Pantheon.Hermes.Service.Application.csproj"/>
         <ProjectReference Include="..\Ouranos.Pantheon.Hermes.Service.Domain\Ouranos.Pantheon.Hermes.Service.Domain.csproj"/>
     </ItemGroup>
 

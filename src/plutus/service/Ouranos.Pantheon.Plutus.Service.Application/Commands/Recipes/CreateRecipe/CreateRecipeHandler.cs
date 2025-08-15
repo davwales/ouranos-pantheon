@@ -1,8 +1,8 @@
 ﻿using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Common;
-using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Core.Application.Mediator;
+using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Common;
 using Ouranos.Pantheon.Plutus.Service.Domain.Recipes;
 
 namespace Ouranos.Pantheon.Plutus.Service.Application.Commands.Recipes.CreateRecipe;
@@ -10,18 +10,18 @@ namespace Ouranos.Pantheon.Plutus.Service.Application.Commands.Recipes.CreateRec
 public sealed class CreateRecipeHandler : CommandHandler<CreateRecipeInput, IdResponse<Recipe>>
 {
     private readonly ILogger<CreateRecipeHandler> _logger;
-    private readonly IRepository<Recipe> _recipeRepository;
+    private readonly IPlutusUnitOfWork _unitOfWork;
 
     public CreateRecipeHandler(
         ILogger<CreateRecipeHandler> logger,
-        IRepository<Recipe> recipeRepository
+        IPlutusUnitOfWork unitOfWork
     )
     {
         Guard.Against.Null(logger);
-        Guard.Against.Null(recipeRepository);
+        Guard.Against.Null(unitOfWork);
 
         _logger = logger;
-        _recipeRepository = recipeRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public override async Task<IdResponse<Recipe>> Handle(
@@ -33,7 +33,7 @@ public sealed class CreateRecipeHandler : CommandHandler<CreateRecipeInput, IdRe
         cancellationToken.ThrowIfCancellationRequested();
 
         var recipe = new Recipe(
-            _recipeRepository.CreateId(),
+            _unitOfWork.Recipes.CreateId(),
             command.MarketId,
             command.Name,
             command.Cost,
@@ -41,7 +41,9 @@ public sealed class CreateRecipeHandler : CommandHandler<CreateRecipeInput, IdRe
             command.Outputs
         );
 
-        await _recipeRepository.Create(recipe, cancellationToken);
+        await _unitOfWork.Recipes.Create(recipe, cancellationToken);
+        await _unitOfWork.SaveChanges(cancellationToken);
+
         var response = new IdResponse<Recipe>(recipe.Id);
 
         _logger.LogDebug("Successfully handled create recipe command.");

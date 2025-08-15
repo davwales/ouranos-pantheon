@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialCommit : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -20,9 +20,9 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
                 schema: "plutus",
                 columns: table => new
                 {
-                    id = table.Column<string>(type: "text", nullable: false),
-                    market_id = table.Column<string>(type: "text", nullable: false),
-                    symbol_id = table.Column<string>(type: "text", nullable: false),
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    market_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    symbol_id = table.Column<Guid>(type: "uuid", nullable: false),
                     symbol_name = table.Column<string>(type: "text", nullable: false),
                     symbol_subcode = table.Column<string>(type: "text", nullable: true),
                     latest_average_price = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
@@ -42,7 +42,7 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
                 schema: "plutus",
                 columns: table => new
                 {
-                    id = table.Column<string>(type: "text", nullable: false),
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
                     name = table.Column<string>(type: "text", nullable: false),
                     taxes_flat_minimum = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true),
                     taxes_flat_maximum = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true),
@@ -63,8 +63,8 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
                 schema: "plutus",
                 columns: table => new
                 {
-                    id = table.Column<string>(type: "text", nullable: false),
-                    market_id = table.Column<string>(type: "text", nullable: false),
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    market_id = table.Column<Guid>(type: "uuid", nullable: false),
                     name = table.Column<string>(type: "text", nullable: false),
                     cost = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
@@ -80,8 +80,8 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
                 schema: "plutus",
                 columns: table => new
                 {
-                    id = table.Column<string>(type: "text", nullable: false),
-                    market_id = table.Column<string>(type: "text", nullable: false),
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    market_id = table.Column<Guid>(type: "uuid", nullable: false),
                     name = table.Column<string>(type: "text", nullable: false),
                     created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
@@ -97,11 +97,11 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
                 schema: "plutus",
                 columns: table => new
                 {
-                    id = table.Column<string>(type: "text", nullable: false),
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
                     code = table.Column<string>(type: "text", nullable: false),
                     subcode = table.Column<string>(type: "text", nullable: true),
                     name = table.Column<string>(type: "text", nullable: false),
-                    market_id = table.Column<string>(type: "text", nullable: false),
+                    market_id = table.Column<Guid>(type: "uuid", nullable: false),
                     additional_fields_limit = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true),
                     additional_fields_high_alch = table.Column<int>(type: "integer", nullable: true),
                     additional_fields_low_alch = table.Column<int>(type: "integer", nullable: true),
@@ -117,11 +117,27 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "trade_message",
+                schema: "plutus",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    trade_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    message_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_trade_message", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "forecasts_predictions",
                 schema: "plutus",
                 columns: table => new
                 {
-                    forecast_id = table.Column<string>(type: "text", nullable: false),
+                    forecast_id = table.Column<Guid>(type: "uuid", nullable: false),
                     id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     average_price = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
@@ -146,10 +162,10 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
                 schema: "plutus",
                 columns: table => new
                 {
-                    recipe_id = table.Column<string>(type: "text", nullable: false),
+                    recipe_id = table.Column<Guid>(type: "uuid", nullable: false),
                     id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    symbol_id = table.Column<string>(type: "text", nullable: false),
+                    symbol_id = table.Column<Guid>(type: "uuid", nullable: false),
                     name = table.Column<string>(type: "text", nullable: false),
                     quantity = table.Column<int>(type: "integer", nullable: false)
                 },
@@ -170,10 +186,10 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
                 schema: "plutus",
                 columns: table => new
                 {
-                    recipe_id = table.Column<string>(type: "text", nullable: false),
+                    recipe_id = table.Column<Guid>(type: "uuid", nullable: false),
                     id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    symbol_id = table.Column<string>(type: "text", nullable: false),
+                    symbol_id = table.Column<Guid>(type: "uuid", nullable: false),
                     name = table.Column<string>(type: "text", nullable: false),
                     quantity = table.Column<int>(type: "integer", nullable: false)
                 },
@@ -194,8 +210,8 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
                 schema: "plutus",
                 columns: table => new
                 {
-                    id = table.Column<string>(type: "text", nullable: false),
-                    symbol_id = table.Column<string>(type: "text", nullable: false),
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    symbol_id = table.Column<Guid>(type: "uuid", nullable: false),
                     price = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     volume = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
@@ -217,6 +233,13 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
                 schema: "plutus",
                 table: "symbols",
                 columns: new[] { "code", "subcode", "market_id" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_trade_message_message_id",
+                schema: "plutus",
+                table: "trade_message",
+                column: "message_id",
                 unique: true);
             
             migrationBuilder.Sql(
@@ -246,6 +269,10 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
 
             migrationBuilder.DropTable(
                 name: "symbol_groups",
+                schema: "plutus");
+
+            migrationBuilder.DropTable(
+                name: "trade_message",
                 schema: "plutus");
 
             migrationBuilder.DropTable(

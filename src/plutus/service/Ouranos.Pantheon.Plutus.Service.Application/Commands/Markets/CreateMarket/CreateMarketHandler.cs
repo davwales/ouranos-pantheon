@@ -1,8 +1,8 @@
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Common;
-using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Core.Application.Mediator;
+using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Common;
 using Ouranos.Pantheon.Plutus.Service.Domain.Markets;
 
 namespace Ouranos.Pantheon.Plutus.Service.Application.Commands.Markets.CreateMarket;
@@ -10,18 +10,18 @@ namespace Ouranos.Pantheon.Plutus.Service.Application.Commands.Markets.CreateMar
 public sealed class CreateMarketHandler : CommandHandler<CreateMarketInput, IdResponse<Market>>
 {
     private readonly ILogger<CreateMarketHandler> _logger;
-    private readonly IRepository<Market> _marketRepository;
+    private readonly IPlutusUnitOfWork _unitOfWork;
 
     public CreateMarketHandler(
         ILogger<CreateMarketHandler> logger,
-        IRepository<Market> marketRepository
+        IPlutusUnitOfWork unitOfWork
     )
     {
         Guard.Against.Null(logger);
-        Guard.Against.Null(marketRepository);
+        Guard.Against.Null(unitOfWork);
 
         _logger = logger;
-        _marketRepository = marketRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public override async Task<IdResponse<Market>> Handle(
@@ -32,9 +32,10 @@ public sealed class CreateMarketHandler : CommandHandler<CreateMarketInput, IdRe
         _logger.LogDebug("Attempting to handle create market command '{@command}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var marketId = _marketRepository.CreateId();
+        var marketId = _unitOfWork.Markets.CreateId();
         var market = new Market(marketId, command.Name, command.Taxes);
-        await _marketRepository.Create(market, cancellationToken);
+        await _unitOfWork.Markets.Create(market, cancellationToken);
+        await _unitOfWork.SaveChanges(cancellationToken);
         var response = new IdResponse<Market>(marketId);
 
         _logger.LogDebug("Successfully handle create market request for market '{marketId}'.", marketId);

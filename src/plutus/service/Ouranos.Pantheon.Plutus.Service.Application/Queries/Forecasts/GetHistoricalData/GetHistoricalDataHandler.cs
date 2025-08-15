@@ -5,12 +5,12 @@ using Ouranos.Pantheon.Core.Application.Common;
 using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Core.Domain.Common;
+using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Common;
 using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Forecasts;
 using Ouranos.Pantheon.Plutus.Service.Application.Models.Forecasts;
 using Ouranos.Pantheon.Plutus.Service.Application.Options;
 using Ouranos.Pantheon.Plutus.Service.Domain.Forecasts;
 using Ouranos.Pantheon.Plutus.Service.Domain.Symbols;
-using Ouranos.Pantheon.Plutus.Service.Domain.Trades;
 
 namespace Ouranos.Pantheon.Plutus.Service.Application.Queries.Forecasts.GetHistoricalData;
 
@@ -21,25 +21,25 @@ public sealed class GetHistoricalDataHandler
     private readonly IOptions<ForecastingOptions> _forecastingOptions;
     private readonly ILogger<GetHistoricalDataHandler> _logger;
     private readonly IQueryExecutor _queryExecutor;
-    private readonly IRepository<Trade> _tradeRepository;
+    private readonly IPlutusUnitOfWork _unitOfWork;
 
     public GetHistoricalDataHandler(
         ILogger<GetHistoricalDataHandler> logger,
         IBucketHistoricalData bucketHistoricalData,
-        IRepository<Trade> tradeRepository,
+        IPlutusUnitOfWork unitOfWork,
         IQueryExecutor queryExecutor,
         IOptions<ForecastingOptions> forecastingOptions
     )
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(bucketHistoricalData);
-        Guard.Against.Null(tradeRepository);
+        Guard.Against.Null(unitOfWork);
         Guard.Against.Null(queryExecutor);
         Guard.Against.Null(forecastingOptions);
 
         _logger = logger;
         _bucketHistoricalData = bucketHistoricalData;
-        _tradeRepository = tradeRepository;
+        _unitOfWork = unitOfWork;
         _queryExecutor = queryExecutor;
         _forecastingOptions = forecastingOptions;
     }
@@ -55,7 +55,7 @@ public sealed class GetHistoricalDataHandler
         var end = DateTime.UtcNow.Date;
         var start = end.AddDays(-_forecastingOptions.Value.SequenceLength);
 
-        var tradeFilter = _tradeRepository.AsQueryable(cancellationToken)
+        var tradeFilter = _unitOfWork.Trades.AsQueryable(cancellationToken)
             .Where(trade =>
                 trade.CreatedAt >= start &&
                 trade.CreatedAt < end &&

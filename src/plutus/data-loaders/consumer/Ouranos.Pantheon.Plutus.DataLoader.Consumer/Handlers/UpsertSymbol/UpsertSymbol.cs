@@ -1,5 +1,5 @@
 ﻿using Ardalis.GuardClauses;
-using Ouranos.Pantheon.Core.Application.Interfaces.Common;
+using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Common;
 using Ouranos.Pantheon.Plutus.Service.Domain.Symbols;
 
 namespace Ouranos.Pantheon.Plutus.DataLoader.Consumer.Handlers.UpsertSymbol;
@@ -7,18 +7,18 @@ namespace Ouranos.Pantheon.Plutus.DataLoader.Consumer.Handlers.UpsertSymbol;
 public sealed class UpsertSymbol : IUpsertSymbol
 {
     private readonly ILogger<UpsertSymbol> _logger;
-    private readonly IRepository<Symbol> _symbolRepository;
+    private readonly IPlutusUnitOfWork _unitOfWork;
 
     public UpsertSymbol(
         ILogger<UpsertSymbol> logger,
-        IRepository<Symbol> symbolRepository
+        IPlutusUnitOfWork unitOfWork
     )
     {
         Guard.Against.Null(logger);
-        Guard.Against.Null(symbolRepository);
+        Guard.Against.Null(unitOfWork);
 
         _logger = logger;
-        _symbolRepository = symbolRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Symbol> UpsertSymbolAsync(
@@ -29,7 +29,7 @@ public sealed class UpsertSymbol : IUpsertSymbol
         _logger.LogTrace("Attempting to upsert symbol with input '{@input}'.", input);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var existingSymbol = await _symbolRepository.FirstOrDefault(
+        var existingSymbol = await _unitOfWork.Symbols.FirstOrDefault(
             s => s.MarketId == input.MarketId &&
                  s.Code == input.SymbolCode &&
                  s.Subcode == input.SymbolSubcode,
@@ -39,13 +39,14 @@ public sealed class UpsertSymbol : IUpsertSymbol
         if (existingSymbol is not null)
         {
             existingSymbol.Update(input.SymbolName, input.AdditionalFields);
-            await _symbolRepository.Update(existingSymbol, cancellationToken);
+            await _unitOfWork.Symbols.Update(existingSymbol, cancellationToken);
+            await _unitOfWork.SaveChanges(cancellationToken);
             _logger.LogDebug("Successfully updated symbol '{symbolId}'.", existingSymbol.Id);
             return existingSymbol;
         }
 
         var newSymbol = new Symbol(
-            _symbolRepository.CreateId(),
+            _unitOfWork.Symbols.CreateId(),
             input.SymbolCode,
             input.SymbolSubcode,
             input.SymbolName,
@@ -53,7 +54,8 @@ public sealed class UpsertSymbol : IUpsertSymbol
             input.AdditionalFields
         );
 
-        await _symbolRepository.Create(newSymbol, cancellationToken);
+        await _unitOfWork.Symbols.Create(newSymbol, cancellationToken);
+        await _unitOfWork.SaveChanges(cancellationToken);
 
         _logger.LogDebug("Successfully inserted new symbol '{symbolId}'.", newSymbol.Id);
         return newSymbol;

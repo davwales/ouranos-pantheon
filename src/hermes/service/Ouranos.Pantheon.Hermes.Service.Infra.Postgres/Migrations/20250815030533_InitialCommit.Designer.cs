@@ -12,8 +12,8 @@ using Ouranos.Pantheon.Hermes.Service.Infra.Postgres;
 namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
 {
     [DbContext(typeof(HermesDbContext))]
-    [Migration("20250807022452_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250815030533_InitialCommit")]
+    partial class InitialCommit
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -28,8 +28,8 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
 
             modelBuilder.Entity("Ouranos.Pantheon.Hermes.Service.Domain.Assistants.Assistant", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("text")
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<string>("AssistantName")

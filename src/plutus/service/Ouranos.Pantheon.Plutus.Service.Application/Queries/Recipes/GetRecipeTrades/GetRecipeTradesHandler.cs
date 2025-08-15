@@ -4,10 +4,9 @@ using Ouranos.Pantheon.Core.Application.Common;
 using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Core.Domain.Common;
+using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Common;
 using Ouranos.Pantheon.Plutus.Service.Application.Queries.Recipes.GetRecipeTrades.Models;
-using Ouranos.Pantheon.Plutus.Service.Domain.Recipes;
 using Ouranos.Pantheon.Plutus.Service.Domain.Symbols;
-using Ouranos.Pantheon.Plutus.Service.Domain.Trades;
 
 namespace Ouranos.Pantheon.Plutus.Service.Application.Queries.Recipes.GetRecipeTrades;
 
@@ -16,24 +15,20 @@ public sealed class GetRecipeTradesHandler
 {
     private readonly ILogger<GetRecipeTradesHandler> _logger;
     private readonly IQueryExecutor _queryExecutor;
-    private readonly IRepository<Recipe> _recipeRepository;
-    private readonly IRepository<Trade> _tradeRepository;
+    private readonly IPlutusUnitOfWork _unitOfWork;
 
     public GetRecipeTradesHandler(
         ILogger<GetRecipeTradesHandler> logger,
-        IRepository<Recipe> recipeRepository,
-        IRepository<Trade> tradeRepository,
+        IPlutusUnitOfWork unitOfWork,
         IQueryExecutor queryExecutor
     )
     {
         Guard.Against.Null(logger);
-        Guard.Against.Null(recipeRepository);
-        Guard.Against.Null(tradeRepository);
+        Guard.Against.Null(unitOfWork);
         Guard.Against.Null(queryExecutor);
 
         _logger = logger;
-        _recipeRepository = recipeRepository;
-        _tradeRepository = tradeRepository;
+        _unitOfWork = unitOfWork;
         _queryExecutor = queryExecutor;
     }
 
@@ -45,7 +40,7 @@ public sealed class GetRecipeTradesHandler
         _logger.LogTrace("Attempting to handle get recipe trades query '{@query}'.", query);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var recipes = await _recipeRepository.ReadAll(
+        var recipes = await _unitOfWork.Recipes.ReadAll(
             r => r.MarketId == query.MarketId,
             cancellationToken
         );
@@ -127,7 +122,7 @@ public sealed class GetRecipeTradesHandler
             ? DateTimeOffset.UtcNow - TimeSpan.FromSeconds(seconds.Value)
             : null;
 
-        var priceQuery = _tradeRepository
+        var priceQuery = _unitOfWork.Trades
             .AsQueryable(cancellationToken)
             .Where(x =>
                 (since == null || x.CreatedAt >= since) &&

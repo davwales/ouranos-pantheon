@@ -1,7 +1,7 @@
 ﻿{
   "$schema": "http://json.schemastore.org/launchsettings.json",
   "profiles": {
-    "Ouranos.Pantheon.DataLoader.Plutus.Migration": {
+    "Ouranos.Pantheon.Plutus.DataLoader.Migration": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "environmentVariables": {

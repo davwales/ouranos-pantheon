@@ -3,13 +3,13 @@ using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Core.Application.Common;
 using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Core.Domain.Common;
+using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Common;
 using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Forecasts;
 using Ouranos.Pantheon.Plutus.Service.Application.Models.Forecasts;
 using Ouranos.Pantheon.Plutus.Service.Application.Options;
 using Ouranos.Pantheon.Plutus.Service.Application.Queries.Forecasts.GetHistoricalData;
 using Ouranos.Pantheon.Plutus.Service.Domain.Forecasts;
 using Ouranos.Pantheon.Plutus.Service.Domain.Symbols;
-using Ouranos.Pantheon.Plutus.Service.Domain.Trades;
 
 namespace Ouranos.Pantheon.Plutus.Service.Application.Tests.Queries.Forecasts.GetHistoricalData;
 
@@ -20,14 +20,14 @@ public sealed class GetHistoricalDataHandlerTests
     private readonly GetHistoricalDataHandler _handler;
     private readonly ILogger<GetHistoricalDataHandler> _logger = Substitute.For<ILogger<GetHistoricalDataHandler>>();
     private readonly IQueryExecutor _queryExecutor = Substitute.For<IQueryExecutor>();
-    private readonly IRepository<Trade> _tradeRepository = Substitute.For<IRepository<Trade>>();
+    private readonly IPlutusUnitOfWork _unitOfWork = Substitute.For<IPlutusUnitOfWork>();
 
     public GetHistoricalDataHandlerTests()
     {
         _handler = new GetHistoricalDataHandler(
             _logger,
             _bucketHistoricalData,
-            _tradeRepository,
+            _unitOfWork,
             _queryExecutor,
             _forecastingOptions
         );
@@ -61,7 +61,8 @@ public sealed class GetHistoricalDataHandlerTests
         result.Value.ShouldNotBeNull();
         result.Value.ShouldBe(expectedData);
 
-        _tradeRepository.Received(1).AsQueryable(Arg.Any<CancellationToken>());
+        _unitOfWork.Trades.Received(1).AsQueryable(Arg.Any<CancellationToken>());
+
         await _queryExecutor.Received(1).ToList(
             Arg.Any<IQueryable<HistoricalDataDto>>(),
             Arg.Any<CancellationToken>()

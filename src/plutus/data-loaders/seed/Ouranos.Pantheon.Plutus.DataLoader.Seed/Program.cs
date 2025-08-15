@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
-using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Plutus.DataLoader.Seed.Extensions;
+using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Common;
 using Ouranos.Pantheon.Plutus.Service.Domain.Markets;
 using Ouranos.Pantheon.Plutus.Service.Domain.Symbols;
 using Ouranos.Pantheon.Plutus.Service.Domain.Trades;
@@ -18,33 +18,28 @@ const double volumeVolatility = 5.0;
 var tradeInterval = TimeSpan.FromMinutes(5);
 
 var services = StartupExtensions.GetServices();
-var marketRepository = services.GetRequiredService<IRepository<Market>>();
-var symbolRepository = services.GetRequiredService<IRepository<Symbol>>();
-var tradeRepository = services.GetRequiredService<IRepository<Trade>>();
+var unitOfWork = services.GetRequiredService<IPlutusUnitOfWork>();
 
 if (clearDatabase)
 {
     Console.WriteLine("Clearing the database...");
-    await tradeRepository.Delete(_ => true);
-    await symbolRepository.Delete(_ => true);
-    await marketRepository.Delete(_ => true);
-    await tradeRepository.SaveChanges();
-    await symbolRepository.SaveChanges();
-    await marketRepository.SaveChanges();
+    await unitOfWork.Trades.Delete(_ => true);
+    await unitOfWork.Symbols.Delete(_ => true);
+    await unitOfWork.Markets.Delete(_ => true);
     Console.WriteLine("Database cleared.");
 }
 
 // Create Market
 Console.WriteLine("Creating market...");
 var market = new Market(
-    marketRepository.CreateId(),
+    unitOfWork.Markets.CreateId(),
     marketName,
     new Taxes(new FlatTax(0.01m, 100m, 0.05m)),
     true,
     marketDescription
 );
-await marketRepository.Create(market);
-await marketRepository.SaveChanges();
+
+await unitOfWork.Markets.Create(market);
 Console.WriteLine("Market created.");
 
 // Create Symbols
@@ -53,7 +48,7 @@ var symbols = new List<Symbol>();
 for (var i = 0; i < numberOfSymbols; i++)
 {
     var symbol = new Symbol(
-        symbolRepository.CreateId(),
+        unitOfWork.Symbols.CreateId(),
         $"SYM{i:D3}",
         null,
         $"Symbol {i}",
@@ -63,8 +58,7 @@ for (var i = 0; i < numberOfSymbols; i++)
     symbols.Add(symbol);
 }
 
-await symbolRepository.CreateMany(symbols);
-await symbolRepository.SaveChanges();
+await unitOfWork.Symbols.CreateMany(symbols);
 Console.WriteLine("Symbols created.");
 
 // Create Trades
@@ -93,7 +87,7 @@ foreach (var symbol in symbols)
         }
 
         var trade = new Trade(
-            tradeRepository.CreateId(),
+            unitOfWork.Trades.CreateId(),
             symbol.Id,
             (decimal)currentPrice,
             (decimal)currentVolume,
@@ -108,8 +102,10 @@ foreach (var symbol in symbols)
     }
 }
 
-await tradeRepository.CreateMany(trades);
-await tradeRepository.SaveChanges();
+await unitOfWork.Trades.CreateMany(trades);
 
 Console.WriteLine("Trades created.");
+
+Console.WriteLine("Saving changes to the database...");
+await unitOfWork.SaveChanges();
 Console.WriteLine("Database seeding complete.");

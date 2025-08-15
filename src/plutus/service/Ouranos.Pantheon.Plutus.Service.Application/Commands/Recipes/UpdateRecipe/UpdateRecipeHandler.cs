@@ -1,8 +1,8 @@
 ﻿using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Common;
-using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Core.Application.Mediator;
+using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Common;
 using Ouranos.Pantheon.Plutus.Service.Domain.Recipes;
 
 namespace Ouranos.Pantheon.Plutus.Service.Application.Commands.Recipes.UpdateRecipe;
@@ -10,18 +10,18 @@ namespace Ouranos.Pantheon.Plutus.Service.Application.Commands.Recipes.UpdateRec
 public sealed class UpdateRecipeHandler : CommandHandler<UpdateRecipeInput, IdResponse<Recipe>>
 {
     private readonly ILogger<UpdateRecipeHandler> _logger;
-    private readonly IRepository<Recipe> _recipeRepository;
+    private readonly IPlutusUnitOfWork _unitOfWork;
 
     public UpdateRecipeHandler(
         ILogger<UpdateRecipeHandler> logger,
-        IRepository<Recipe> recipeRepository
+        IPlutusUnitOfWork unitOfWork
     )
     {
         Guard.Against.Null(logger);
-        Guard.Against.Null(recipeRepository);
+        Guard.Against.Null(unitOfWork);
 
         _logger = logger;
-        _recipeRepository = recipeRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public override async Task<IdResponse<Recipe>> Handle(
@@ -41,7 +41,8 @@ public sealed class UpdateRecipeHandler : CommandHandler<UpdateRecipeInput, IdRe
             command.Outputs
         );
 
-        await _recipeRepository.Update(updatedRecipe, cancellationToken);
+        await _unitOfWork.Recipes.Update(updatedRecipe, cancellationToken);
+        await _unitOfWork.SaveChanges(cancellationToken);
         var response = new IdResponse<Recipe>(updatedRecipe.Id);
 
         _logger.LogDebug("Successfully handled update recipe command.");

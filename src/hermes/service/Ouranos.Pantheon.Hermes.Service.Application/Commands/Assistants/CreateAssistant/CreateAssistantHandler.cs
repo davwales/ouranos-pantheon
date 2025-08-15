@@ -1,27 +1,27 @@
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Common;
-using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Core.Application.Mediator;
+using Ouranos.Pantheon.Hermes.Service.Application.Interfaces.Common;
 using Ouranos.Pantheon.Hermes.Service.Domain.Assistants;
 
 namespace Ouranos.Pantheon.Hermes.Service.Application.Commands.Assistants.CreateAssistant;
 
 public sealed class CreateAssistantHandler : CommandHandler<CreateAssistantInput, IdResponse<Assistant>>
 {
-    private readonly IRepository<Assistant> _assistantRepository;
+    private readonly IHermesUnitOfWork _unitOfWork;
     private readonly ILogger<CreateAssistantHandler> _logger;
 
     public CreateAssistantHandler(
         ILogger<CreateAssistantHandler> logger,
-        IRepository<Assistant> assistantRepository
+        IHermesUnitOfWork unitOfWork
     )
     {
         Guard.Against.Null(logger);
-        Guard.Against.Null(assistantRepository);
+        Guard.Against.Null(unitOfWork);
 
         _logger = logger;
-        _assistantRepository = assistantRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public override async Task<IdResponse<Assistant>> Handle(
@@ -33,7 +33,7 @@ public sealed class CreateAssistantHandler : CommandHandler<CreateAssistantInput
         cancellationToken.ThrowIfCancellationRequested();
 
         var assistant = new Assistant(
-            _assistantRepository.CreateId(),
+            _unitOfWork.Assistants.CreateId(),
             command.Model,
             command.SystemPrompt,
             command.AssistantName,
@@ -43,8 +43,8 @@ public sealed class CreateAssistantHandler : CommandHandler<CreateAssistantInput
             command.RepeatPenalty
         );
 
-        await _assistantRepository.Create(assistant, cancellationToken);
-        await _assistantRepository.SaveChanges(cancellationToken);
+        await _unitOfWork.Assistants.Create(assistant, cancellationToken);
+        await _unitOfWork.SaveChanges(cancellationToken);
         var response = new IdResponse<Assistant>(assistant.Id);
 
         _logger.LogDebug("Successfully handled create assistant request for assistant '{assistantId}'.", assistant.Id);

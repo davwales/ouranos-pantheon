@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Plutus.Service.Application.Commands.Forecasts.InsertForecasts;
+using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Common;
 using Ouranos.Pantheon.Plutus.Service.Domain.Forecasts;
 
 namespace Ouranos.Pantheon.Plutus.Service.Application.Tests.Commands.Forecasts.InsertForecasts;
@@ -9,13 +9,13 @@ namespace Ouranos.Pantheon.Plutus.Service.Application.Tests.Commands.Forecasts.I
 public sealed class InsertForecastsHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
-    private readonly IRepository<Forecast> _forecastRepository = Substitute.For<IRepository<Forecast>>();
     private readonly InsertForecastsHandler _handler;
     private readonly ILogger<InsertForecastsHandler> _logger = Substitute.For<ILogger<InsertForecastsHandler>>();
+    private readonly IPlutusUnitOfWork _unitOfWork = Substitute.For<IPlutusUnitOfWork>();
 
     public InsertForecastsHandlerTests()
     {
-        _handler = new InsertForecastsHandler(_logger, _forecastRepository);
+        _handler = new InsertForecastsHandler(_logger, _unitOfWork);
     }
 
     [Fact]
@@ -28,12 +28,12 @@ public sealed class InsertForecastsHandlerTests
         await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await _forecastRepository.Received(1).Delete(
+        await _unitOfWork.Forecasts.Received(1).Delete(
             Arg.Any<Expression<Func<Forecast, bool>>>(),
             Arg.Any<CancellationToken>()
         );
 
-        await _forecastRepository.Received(1).CreateMany(
+        await _unitOfWork.Forecasts.Received(1).CreateMany(
             Arg.Is(command.Forecasts),
             Arg.Any<CancellationToken>()
         );

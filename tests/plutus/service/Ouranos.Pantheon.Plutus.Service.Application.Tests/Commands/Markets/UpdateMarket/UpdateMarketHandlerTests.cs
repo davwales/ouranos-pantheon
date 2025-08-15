@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Common;
-using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Plutus.Service.Application.Commands.Markets.UpdateMarket;
+using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Common;
 using Ouranos.Pantheon.Plutus.Service.Domain.Markets;
 
 namespace Ouranos.Pantheon.Plutus.Service.Application.Tests.Commands.Markets.UpdateMarket;
@@ -11,11 +11,11 @@ public sealed class UpdateMarketHandlerTests
     private readonly IFixture _fixture = new Fixture();
     private readonly UpdateMarketHandler _handler;
     private readonly ILogger<UpdateMarketHandler> _logger = Substitute.For<ILogger<UpdateMarketHandler>>();
-    private readonly IRepository<Market> _marketRepository = Substitute.For<IRepository<Market>>();
+    private readonly IPlutusUnitOfWork _unitOfWork = Substitute.For<IPlutusUnitOfWork>();
 
     public UpdateMarketHandlerTests()
     {
-        _handler = new UpdateMarketHandler(_logger, _marketRepository);
+        _handler = new UpdateMarketHandler(_logger, _unitOfWork);
     }
 
     [Fact]
@@ -29,7 +29,7 @@ public sealed class UpdateMarketHandlerTests
             _fixture.Create<Taxes>()
         );
 
-        _marketRepository
+        _unitOfWork.Markets
             .Read(command.MarketId, Arg.Any<CancellationToken>())
             .Returns(existingMarket);
 
@@ -43,7 +43,7 @@ public sealed class UpdateMarketHandlerTests
         existingMarket.Name.ShouldBe(command.Name);
         existingMarket.Taxes.ShouldBe(command.Taxes);
 
-        await _marketRepository.Received(1).Update(
+        await _unitOfWork.Markets.Received(1).Update(
             Arg.Is<Market>(m =>
                 m.Id == command.MarketId &&
                 m.Name == command.Name &&

@@ -180,7 +180,7 @@ public sealed class Repository<TContext, TEntity> : IRepository<TEntity>, IAsync
         }
     }
 
-    public async Task<long> Delete(
+    public Task<long> Delete(
         Expression<Func<TEntity, bool>> predicate,
         CancellationToken cancellationToken = default
     )
@@ -190,23 +190,14 @@ public sealed class Repository<TContext, TEntity> : IRepository<TEntity>, IAsync
             typeof(TEntity).Name,
             predicate.ToString()
         );
-        var entitiesToDelete = await _dbSet.Where(predicate).ToListAsync(cancellationToken);
-        if (entitiesToDelete.Count == 0)
-        {
-            _logger.LogDebug(
-                "No entities of type '{EntityType}' found to delete matching predicate",
-                typeof(TEntity).Name
-            );
-            return 0;
-        }
 
-        _dbSet.RemoveRange(entitiesToDelete);
+        _dbSet.RemoveRange(_dbSet.Where(predicate));
         _logger.LogDebug(
-            "'{DeletedCount}' entities of type '{EntityType}' deleted successfully",
-            entitiesToDelete.Count,
+            "Entities of type '{EntityType}' deleted successfully",
             typeof(TEntity).Name
         );
-        return entitiesToDelete.Count;
+
+        return Task.FromResult(0L);
     }
 
     public async Task Upsert(TEntity entity, CancellationToken cancellationToken = default)

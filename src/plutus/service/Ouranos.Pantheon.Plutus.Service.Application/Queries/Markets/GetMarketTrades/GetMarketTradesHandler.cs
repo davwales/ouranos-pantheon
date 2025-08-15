@@ -1,10 +1,9 @@
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Common;
-using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Core.Application.Mediator;
+using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Common;
 using Ouranos.Pantheon.Plutus.Service.Domain.Markets;
-using Ouranos.Pantheon.Plutus.Service.Domain.Trades;
 
 namespace Ouranos.Pantheon.Plutus.Service.Application.Queries.Markets.GetMarketTrades;
 
@@ -12,22 +11,18 @@ public sealed class GetMarketTradesHandler
     : QueryHandler<GetMarketTradesInput, WrapperResponse<IQueryable<GetMarketTradesResponse>>>
 {
     private readonly ILogger<GetMarketTradesHandler> _logger;
-    private readonly IRepository<Market> _marketRepository;
-    private readonly IRepository<Trade> _tradeRepository;
+    private readonly IPlutusUnitOfWork _unitOfWork;
 
     public GetMarketTradesHandler(
         ILogger<GetMarketTradesHandler> logger,
-        IRepository<Market> marketRepository,
-        IRepository<Trade> tradeRepository
+        IPlutusUnitOfWork unitOfWork
     )
     {
         Guard.Against.Null(logger);
-        Guard.Against.Null(marketRepository);
-        Guard.Against.Null(tradeRepository);
+        Guard.Against.Null(unitOfWork);
 
         _logger = logger;
-        _tradeRepository = tradeRepository;
-        _marketRepository = marketRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public override async Task<WrapperResponse<IQueryable<GetMarketTradesResponse>>> Handle(
@@ -38,14 +33,14 @@ public sealed class GetMarketTradesHandler
         _logger.LogTrace("Attempting to handle symbol statistics query '{@query}'.", query);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var market = await _marketRepository.Read(query.MarketId, cancellationToken);
+        var market = await _unitOfWork.Markets.Read(query.MarketId, cancellationToken);
         var flatTax = market.Taxes.Flat ?? new FlatTax(0, 0, 0);
 
         DateTimeOffset? since = query.Seconds.HasValue
             ? DateTimeOffset.UtcNow - TimeSpan.FromSeconds(query.Seconds.Value)
             : null;
 
-        var tradeQuery = _tradeRepository.AsQueryable(cancellationToken)
+        var tradeQuery = _unitOfWork.Trades.AsQueryable(cancellationToken)
             .Where(x => x.Symbol.MarketId == query.MarketId &&
                         (since == null || x.CreatedAt >= since)
             )

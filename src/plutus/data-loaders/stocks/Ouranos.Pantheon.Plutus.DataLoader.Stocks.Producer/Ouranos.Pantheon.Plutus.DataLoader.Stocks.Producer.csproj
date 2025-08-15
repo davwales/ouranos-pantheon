@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
-        <UserSecretsId>dotnet-Ouranos.Pantheon.DataLoader.Plutus.Stocks.Producer-80a3cbc9-9712-4822-b5a0-d5d7740353bc</UserSecretsId>
+        <UserSecretsId>dotnet-Ouranos.Pantheon.Plutus.DataLoader.Stocks.Producer-80a3cbc9-9712-4822-b5a0-d5d7740353bc</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>

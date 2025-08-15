@@ -1,9 +1,8 @@
 ﻿using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Common;
-using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Core.Application.Mediator;
-using Ouranos.Pantheon.Plutus.Service.Domain.Forecasts;
+using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Common;
 using Ouranos.Pantheon.Plutus.Service.Domain.Markets;
 
 namespace Ouranos.Pantheon.Plutus.Service.Application.Queries.Markets.GetMarketForecast;
@@ -11,23 +10,19 @@ namespace Ouranos.Pantheon.Plutus.Service.Application.Queries.Markets.GetMarketF
 public sealed class GetMarketForecastHandler
     : QueryHandler<GetMarketForecastInput, WrapperResponse<IQueryable<GetMarketForecastResponse>>>
 {
-    private readonly IRepository<Forecast> _forecastRepository;
     private readonly ILogger<GetMarketForecastHandler> _logger;
-    private readonly IRepository<Market> _marketRepository;
+    private readonly IPlutusUnitOfWork _unitOfWork;
 
     public GetMarketForecastHandler(
         ILogger<GetMarketForecastHandler> logger,
-        IRepository<Forecast> forecastRepository,
-        IRepository<Market> marketRepository
+        IPlutusUnitOfWork unitOfWork
     )
     {
         Guard.Against.Null(logger);
-        Guard.Against.Null(forecastRepository);
-        Guard.Against.Null(marketRepository);
+        Guard.Against.Null(unitOfWork);
 
         _logger = logger;
-        _forecastRepository = forecastRepository;
-        _marketRepository = marketRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public override async Task<WrapperResponse<IQueryable<GetMarketForecastResponse>>> Handle(
@@ -38,10 +33,10 @@ public sealed class GetMarketForecastHandler
         _logger.LogTrace("Attempting to handle get market forecast query '{@query}'.", query);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var market = await _marketRepository.Read(query.MarketId, cancellationToken);
+        var market = await _unitOfWork.Markets.Read(query.MarketId, cancellationToken);
         var flatTax = market.Taxes.Flat ?? new FlatTax(0, 0, 0);
 
-        var forecastsQuery = _forecastRepository
+        var forecastsQuery = _unitOfWork.Forecasts
             .AsQueryable(cancellationToken)
             .Where(f => f.MarketId == query.MarketId && f.Predictions.Count >= 7)
             .Select(f => new

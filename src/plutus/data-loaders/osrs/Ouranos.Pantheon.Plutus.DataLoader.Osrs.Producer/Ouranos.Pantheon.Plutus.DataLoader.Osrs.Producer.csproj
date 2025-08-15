@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
-        <UserSecretsId>dotnet-Ouranos.Pantheon.DataLoader.Plutus.Publisher.Osrs-da27f842-1da9-4c5a-b69e-2d67062cfea7</UserSecretsId>
+        <UserSecretsId>dotnet-Ouranos.Pantheon.Plutus.DataLoader.Publisher.Osrs-da27f842-1da9-4c5a-b69e-2d67062cfea7</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>

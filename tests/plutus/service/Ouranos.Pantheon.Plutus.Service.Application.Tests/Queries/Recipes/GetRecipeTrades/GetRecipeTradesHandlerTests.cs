@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Common;
 using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Core.Domain.Common;
+using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Common;
 using Ouranos.Pantheon.Plutus.Service.Application.Queries.Recipes.GetRecipeTrades;
 using Ouranos.Pantheon.Plutus.Service.Application.Queries.Recipes.GetRecipeTrades.Models;
 using Ouranos.Pantheon.Plutus.Service.Domain.Markets;
@@ -17,15 +18,13 @@ public sealed class GetRecipeTradesHandlerTests
     private readonly GetRecipeTradesHandler _handler;
     private readonly ILogger<GetRecipeTradesHandler> _logger = Substitute.For<ILogger<GetRecipeTradesHandler>>();
     private readonly IQueryExecutor _queryExecutor = Substitute.For<IQueryExecutor>();
-    private readonly IRepository<Recipe> _recipeRepository = Substitute.For<IRepository<Recipe>>();
-    private readonly IRepository<Trade> _tradeRepository = Substitute.For<IRepository<Trade>>();
+    private readonly IPlutusUnitOfWork _unitOfWork = Substitute.For<IPlutusUnitOfWork>();
 
     public GetRecipeTradesHandlerTests()
     {
         _handler = new GetRecipeTradesHandler(
             _logger,
-            _recipeRepository,
-            _tradeRepository,
+            _unitOfWork,
             _queryExecutor
         );
     }
@@ -39,12 +38,11 @@ public sealed class GetRecipeTradesHandlerTests
         var trade = _fixture.Create<Trade>();
         var query = new GetRecipeTradesInput(marketId, 3600);
 
-        _recipeRepository
+        _unitOfWork.Recipes
             .ReadAll(Arg.Any<Expression<Func<Recipe, bool>>>(), Arg.Any<CancellationToken>())
             .Returns([recipe]);
 
-        _tradeRepository
-            .AsQueryable(Arg.Any<CancellationToken>())
+        _unitOfWork.Trades.AsQueryable(Arg.Any<CancellationToken>())
             .Returns(
                 new List<Trade>
                 {
@@ -70,12 +68,12 @@ public sealed class GetRecipeTradesHandlerTests
         result.Value.ShouldNotBeNull();
         result.Value.Count().ShouldBe(1);
 
-        await _recipeRepository.Received(1).ReadAll(
+        await _unitOfWork.Recipes.Received(1).ReadAll(
             Arg.Any<Expression<Func<Recipe, bool>>>(),
             Arg.Any<CancellationToken>()
         );
 
-        _tradeRepository.Received(1).AsQueryable(Arg.Any<CancellationToken>());
+        _unitOfWork.Trades.Received(1).AsQueryable(Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -85,7 +83,7 @@ public sealed class GetRecipeTradesHandlerTests
         var marketId = _fixture.Create<Id<Market>>();
         var query = new GetRecipeTradesInput(marketId, 3600);
 
-        _recipeRepository
+        _unitOfWork.Recipes
             .ReadAll(Arg.Any<Expression<Func<Recipe, bool>>>(), Arg.Any<CancellationToken>())
             .Returns([]);
 

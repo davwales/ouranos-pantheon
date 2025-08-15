@@ -25,8 +25,8 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
 
             modelBuilder.Entity("Ouranos.Pantheon.Hermes.Service.Domain.Assistants.Assistant", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("text")
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<string>("AssistantName")

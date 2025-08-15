@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialCommit : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -19,7 +19,7 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
                 schema: "hermes",
                 columns: table => new
                 {
-                    id = table.Column<string>(type: "text", nullable: false),
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
                     model = table.Column<string>(type: "text", nullable: false),
                     system_prompt = table.Column<string>(type: "text", nullable: false),
                     assistant_name = table.Column<string>(type: "text", nullable: false),

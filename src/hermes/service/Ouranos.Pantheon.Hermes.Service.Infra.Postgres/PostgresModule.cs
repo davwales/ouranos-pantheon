@@ -1,7 +1,9 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Ouranos.Pantheon.Core.Infra.Postgres;
+using Ouranos.Pantheon.Hermes.Service.Application.Interfaces.Common;
 using Ouranos.Pantheon.Hermes.Service.Domain.Assistants;
+using Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Common;
 
 namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres;
 
@@ -17,7 +19,8 @@ public static class PostgresModule
                 configuration,
                 typeof(PostgresModule).Assembly
             )
-            .AddRepository<HermesDbContext, Assistant>();
+            .AddRepository<HermesDbContext, Assistant>()
+            .AddTransient<IHermesUnitOfWork, HermesUnitOfWork>();
     }
 
     public static async Task<IServiceProvider> ApplyPostgresMigrations(

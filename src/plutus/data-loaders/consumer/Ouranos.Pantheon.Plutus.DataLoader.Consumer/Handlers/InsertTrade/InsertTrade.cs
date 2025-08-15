@@ -1,8 +1,8 @@
 ﻿using Ardalis.GuardClauses;
 using MongoDB.Driver;
-using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Core.Domain.Common;
 using Ouranos.Pantheon.Plutus.DataLoader.Consumer.Models;
+using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Common;
 using Ouranos.Pantheon.Plutus.Service.Domain.Trades;
 
 namespace Ouranos.Pantheon.Plutus.DataLoader.Consumer.Handlers.InsertTrade;
@@ -10,22 +10,18 @@ namespace Ouranos.Pantheon.Plutus.DataLoader.Consumer.Handlers.InsertTrade;
 public sealed class InsertTrade : IInsertTrade
 {
     private readonly ILogger<InsertTrade> _logger;
-    private readonly IRepository<TradeMessage> _tradeMessageRepository;
-    private readonly IRepository<Trade> _tradeRepository;
+    private readonly IPlutusUnitOfWork _unitOfWork;
 
     public InsertTrade(
         ILogger<InsertTrade> logger,
-        IRepository<TradeMessage> tradeMessageRepository,
-        IRepository<Trade> tradeRepository
+        IPlutusUnitOfWork unitOfWork
     )
     {
         Guard.Against.Null(logger);
-        Guard.Against.Null(tradeMessageRepository);
-        Guard.Against.Null(tradeRepository);
+        Guard.Against.Null(unitOfWork);
 
         _logger = logger;
-        _tradeMessageRepository = tradeMessageRepository;
-        _tradeRepository = tradeRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Trade> InsertTradeAsync(
@@ -37,7 +33,7 @@ public sealed class InsertTrade : IInsertTrade
         cancellationToken.ThrowIfCancellationRequested();
 
         var trade = new Trade(
-            _tradeRepository.CreateId(),
+            _unitOfWork.Trades.CreateId(),
             input.Symbol.Id,
             input.Price,
             input.Volume,
@@ -53,7 +49,8 @@ public sealed class InsertTrade : IInsertTrade
             return trade;
         }
 
-        await _tradeRepository.Create(trade, cancellationToken);
+        await _unitOfWork.Trades.Create(trade, cancellationToken);
+        await _unitOfWork.SaveChanges(cancellationToken);
 
         _logger.LogDebug("Successfully insert trade '{tradeId}'.", trade.Id);
         return trade;
@@ -73,12 +70,12 @@ public sealed class InsertTrade : IInsertTrade
         try
         {
             var tradeMessage = new TradeMessage(
-                _tradeMessageRepository.CreateId(),
+                _unitOfWork.TradeMessages.CreateId(),
                 tradeId,
                 messageId.Value
             );
 
-            await _tradeMessageRepository.Create(tradeMessage, cancellationToken);
+            await _unitOfWork.TradeMessages.Create(tradeMessage, cancellationToken);
         }
         catch (MongoDuplicateKeyException)
         {

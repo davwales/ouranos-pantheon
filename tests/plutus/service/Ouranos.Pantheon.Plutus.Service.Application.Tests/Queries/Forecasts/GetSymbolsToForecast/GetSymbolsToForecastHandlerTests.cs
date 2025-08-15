@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Common;
 using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Core.Domain.Common;
+using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Common;
 using Ouranos.Pantheon.Plutus.Service.Application.Queries.Forecasts.GetSymbolsToForecast;
 using Ouranos.Pantheon.Plutus.Service.Domain.Markets;
 using Ouranos.Pantheon.Plutus.Service.Domain.Symbols;
@@ -16,17 +17,15 @@ public sealed class GetSymbolsToForecastHandlerTests
     private readonly ILogger<GetSymbolsToForecastHandler> _logger =
         Substitute.For<ILogger<GetSymbolsToForecastHandler>>();
 
-    private readonly IRepository<Market> _marketRepository = Substitute.For<IRepository<Market>>();
     private readonly IQueryExecutor _queryExecutor = Substitute.For<IQueryExecutor>();
-    private readonly IRepository<Symbol> _symbolRepository = Substitute.For<IRepository<Symbol>>();
+    private readonly IPlutusUnitOfWork _unitOfWork = Substitute.For<IPlutusUnitOfWork>();
 
     public GetSymbolsToForecastHandlerTests()
     {
         _handler = new GetSymbolsToForecastHandler(
             _logger,
             _queryExecutor,
-            _marketRepository,
-            _symbolRepository
+            _unitOfWork
         );
     }
 
@@ -42,7 +41,7 @@ public sealed class GetSymbolsToForecastHandlerTests
 
         var query = new GetSymbolsToForecastInput();
 
-        _marketRepository
+        _unitOfWork.Markets
             .AsQueryable(Arg.Any<CancellationToken>())
             .Returns(Enumerable.Empty<Market>().AsQueryable());
 
@@ -50,7 +49,7 @@ public sealed class GetSymbolsToForecastHandlerTests
             .ToList(Arg.Any<IQueryable<Id<Market>>>(), Arg.Any<CancellationToken>())
             .Returns(marketIds);
 
-        _symbolRepository
+        _unitOfWork.Symbols
             .ReadAll(Arg.Any<Expression<Func<Symbol, bool>>>(), Arg.Any<CancellationToken>())
             .Returns(symbols);
 
@@ -62,14 +61,14 @@ public sealed class GetSymbolsToForecastHandlerTests
         result.Value.ShouldNotBeNull();
         result.Value.ShouldBe(symbols);
 
-        _marketRepository.Received(1).AsQueryable(Arg.Any<CancellationToken>());
+        _unitOfWork.Markets.Received(1).AsQueryable(Arg.Any<CancellationToken>());
 
         await _queryExecutor.Received(1).ToList(
             Arg.Any<IQueryable<Id<Market>>>(),
             Arg.Any<CancellationToken>()
         );
 
-        await _symbolRepository.Received(1).ReadAll(
+        await _unitOfWork.Symbols.Received(1).ReadAll(
             Arg.Any<Expression<Func<Symbol, bool>>>(),
             Arg.Any<CancellationToken>()
         );
@@ -81,7 +80,7 @@ public sealed class GetSymbolsToForecastHandlerTests
         // Arrange
         var query = new GetSymbolsToForecastInput();
 
-        _marketRepository
+        _unitOfWork.Markets
             .AsQueryable(Arg.Any<CancellationToken>())
             .Returns(Enumerable.Empty<Market>().AsQueryable());
 

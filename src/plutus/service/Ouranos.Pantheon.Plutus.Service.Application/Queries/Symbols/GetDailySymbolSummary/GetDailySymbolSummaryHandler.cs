@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Core.Application.Mediator;
-using Ouranos.Pantheon.Plutus.Service.Domain.Trades;
+using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Common;
 
 namespace Ouranos.Pantheon.Plutus.Service.Application.Queries.Symbols.GetDailySymbolSummary;
 
@@ -11,20 +11,20 @@ public sealed class GetDailySymbolSummaryHandler
 {
     private readonly ILogger<GetDailySymbolSummaryHandler> _logger;
     private readonly IQueryExecutor _queryExecutor;
-    private readonly IRepository<Trade> _tradeRepository;
+    private readonly IPlutusUnitOfWork _unitOfWork;
 
     public GetDailySymbolSummaryHandler(
         ILogger<GetDailySymbolSummaryHandler> logger,
-        IRepository<Trade> tradeRepository,
+        IPlutusUnitOfWork unitOfWork,
         IQueryExecutor queryExecutor
     )
     {
         Guard.Against.Null(logger);
-        Guard.Against.Null(tradeRepository);
+        Guard.Against.Null(unitOfWork);
         Guard.Against.Null(queryExecutor);
 
         _logger = logger;
-        _tradeRepository = tradeRepository;
+        _unitOfWork = unitOfWork;
         _queryExecutor = queryExecutor;
     }
 
@@ -37,7 +37,7 @@ public sealed class GetDailySymbolSummaryHandler
         cancellationToken.ThrowIfCancellationRequested();
 
         var today = new DateTimeOffset(DateTimeOffset.UtcNow.Date, TimeSpan.Zero);
-        var summaryQuery = _tradeRepository
+        var summaryQuery = _unitOfWork.Trades
             .AsQueryable(cancellationToken)
             .Where(t =>
                 t.SymbolId == query.SymbolId &&

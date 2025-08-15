@@ -23,24 +23,54 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Ouranos.Pantheon.Plutus.Service.Domain.Forecasts.Forecast", b =>
+            modelBuilder.Entity("Ouranos.Pantheon.Plutus.DataLoader.Consumer.Models.TradeMessage", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("text")
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<string>("MarketId")
-                        .IsRequired()
-                        .HasColumnType("text")
+                    b.Property<Guid>("MessageId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("message_id");
+
+                    b.Property<Guid>("TradeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("trade_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_trade_message");
+
+                    b.HasIndex("MessageId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_trade_message_message_id");
+
+                    b.ToTable("trade_message", "plutus");
+                });
+
+            modelBuilder.Entity("Ouranos.Pantheon.Plutus.Service.Domain.Forecasts.Forecast", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("MarketId")
+                        .HasColumnType("uuid")
                         .HasColumnName("market_id");
 
-                    b.Property<string>("SymbolId")
-                        .IsRequired()
-                        .HasColumnType("text")
+                    b.Property<Guid>("SymbolId")
+                        .HasColumnType("uuid")
                         .HasColumnName("symbol_id");
 
                     b.Property<string>("SymbolName")
@@ -64,8 +94,8 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
 
             modelBuilder.Entity("Ouranos.Pantheon.Plutus.Service.Domain.Markets.Market", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("text")
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<DateTimeOffset>("CreatedAt")
@@ -101,8 +131,8 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
 
             modelBuilder.Entity("Ouranos.Pantheon.Plutus.Service.Domain.Recipes.Recipe", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("text")
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<decimal>("Cost")
@@ -114,9 +144,8 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<string>("MarketId")
-                        .IsRequired()
-                        .HasColumnType("text")
+                    b.Property<Guid>("MarketId")
+                        .HasColumnType("uuid")
                         .HasColumnName("market_id");
 
                     b.Property<string>("Name")
@@ -136,17 +165,16 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
 
             modelBuilder.Entity("Ouranos.Pantheon.Plutus.Service.Domain.SymbolGroups.SymbolGroup", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("text")
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<string>("MarketId")
-                        .IsRequired()
-                        .HasColumnType("text")
+                    b.Property<Guid>("MarketId")
+                        .HasColumnType("uuid")
                         .HasColumnName("market_id");
 
                     b.Property<string>("Name")
@@ -166,8 +194,8 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
 
             modelBuilder.Entity("Ouranos.Pantheon.Plutus.Service.Domain.Symbols.Symbol", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("text")
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<string>("Code")
@@ -179,9 +207,8 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<string>("MarketId")
-                        .IsRequired()
-                        .HasColumnType("text")
+                    b.Property<Guid>("MarketId")
+                        .HasColumnType("uuid")
                         .HasColumnName("market_id");
 
                     b.Property<string>("Name")
@@ -209,8 +236,8 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
 
             modelBuilder.Entity("Ouranos.Pantheon.Plutus.Service.Domain.Trades.Trade", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("text")
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<DateTimeOffset>("CreatedAt")
@@ -222,9 +249,8 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("price");
 
-                    b.Property<string>("SymbolId")
-                        .IsRequired()
-                        .HasColumnType("text")
+                    b.Property<Guid>("SymbolId")
+                        .HasColumnType("uuid")
                         .HasColumnName("symbol_id");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
@@ -249,8 +275,8 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
                 {
                     b.OwnsOne("Ouranos.Pantheon.Plutus.Service.Domain.Forecasts.ForecastPoint", "Latest", b1 =>
                         {
-                            b1.Property<string>("ForecastId")
-                                .HasColumnType("text")
+                            b1.Property<Guid>("ForecastId")
+                                .HasColumnType("uuid")
                                 .HasColumnName("id");
 
                             b1.Property<decimal>("AveragePrice")
@@ -284,8 +310,8 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
 
                     b.OwnsMany("Ouranos.Pantheon.Plutus.Service.Domain.Forecasts.ForecastPoint", "Predictions", b1 =>
                         {
-                            b1.Property<string>("ForecastId")
-                                .HasColumnType("text")
+                            b1.Property<Guid>("ForecastId")
+                                .HasColumnType("uuid")
                                 .HasColumnName("forecast_id");
 
                             b1.Property<int>("Id")
@@ -335,8 +361,8 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
                 {
                     b.OwnsOne("Ouranos.Pantheon.Plutus.Service.Domain.Markets.Taxes", "Taxes", b1 =>
                         {
-                            b1.Property<string>("MarketId")
-                                .HasColumnType("text")
+                            b1.Property<Guid>("MarketId")
+                                .HasColumnType("uuid")
                                 .HasColumnName("id");
 
                             b1.HasKey("MarketId");
@@ -349,8 +375,8 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
 
                             b1.OwnsOne("Ouranos.Pantheon.Plutus.Service.Domain.Markets.FlatTax", "Flat", b2 =>
                                 {
-                                    b2.Property<string>("TaxesMarketId")
-                                        .HasColumnType("text")
+                                    b2.Property<Guid>("TaxesMarketId")
+                                        .HasColumnType("uuid")
                                         .HasColumnName("id");
 
                                     b2.Property<decimal>("Maximum")
@@ -388,8 +414,8 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
                 {
                     b.OwnsMany("Ouranos.Pantheon.Plutus.Service.Domain.Recipes.RecipeComponent", "Inputs", b1 =>
                         {
-                            b1.Property<string>("RecipeId")
-                                .HasColumnType("text")
+                            b1.Property<Guid>("RecipeId")
+                                .HasColumnType("uuid")
                                 .HasColumnName("recipe_id");
 
                             b1.Property<int>("Id")
@@ -408,9 +434,8 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
                                 .HasColumnType("integer")
                                 .HasColumnName("quantity");
 
-                            b1.Property<string>("SymbolId")
-                                .IsRequired()
-                                .HasColumnType("text")
+                            b1.Property<Guid>("SymbolId")
+                                .HasColumnType("uuid")
                                 .HasColumnName("symbol_id");
 
                             b1.HasKey("RecipeId", "Id")
@@ -425,8 +450,8 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
 
                     b.OwnsMany("Ouranos.Pantheon.Plutus.Service.Domain.Recipes.RecipeComponent", "Outputs", b1 =>
                         {
-                            b1.Property<string>("RecipeId")
-                                .HasColumnType("text")
+                            b1.Property<Guid>("RecipeId")
+                                .HasColumnType("uuid")
                                 .HasColumnName("recipe_id");
 
                             b1.Property<int>("Id")
@@ -445,9 +470,8 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
                                 .HasColumnType("integer")
                                 .HasColumnName("quantity");
 
-                            b1.Property<string>("SymbolId")
-                                .IsRequired()
-                                .HasColumnType("text")
+                            b1.Property<Guid>("SymbolId")
+                                .HasColumnType("uuid")
                                 .HasColumnName("symbol_id");
 
                             b1.HasKey("RecipeId", "Id")
@@ -469,8 +493,8 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
                 {
                     b.OwnsOne("System.Collections.Generic.List<Ouranos.Pantheon.Core.Domain.Common.Id<Ouranos.Pantheon.Plutus.Service.Domain.Symbols.Symbol>>", "SymbolIds", b1 =>
                         {
-                            b1.Property<string>("SymbolGroupId")
-                                .HasColumnType("text");
+                            b1.Property<Guid>("SymbolGroupId")
+                                .HasColumnType("uuid");
 
                             b1.Property<int>("Capacity")
                                 .HasColumnType("integer");
@@ -494,8 +518,8 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
                 {
                     b.OwnsOne("Ouranos.Pantheon.Plutus.Service.Domain.Trades.AdditionalFields", "AdditionalFields", b1 =>
                         {
-                            b1.Property<string>("SymbolId")
-                                .HasColumnType("text")
+                            b1.Property<Guid>("SymbolId")
+                                .HasColumnType("uuid")
                                 .HasColumnName("id");
 
                             b1.Property<string>("Exchange")

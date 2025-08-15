@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Common;
-using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Core.Domain.Common;
 using Ouranos.Pantheon.Plutus.Service.Application.Commands.Markets.CreateMarket;
+using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Common;
 using Ouranos.Pantheon.Plutus.Service.Domain.Markets;
 
 namespace Ouranos.Pantheon.Plutus.Service.Application.Tests.Commands.Markets.CreateMarket;
@@ -12,11 +12,11 @@ public sealed class CreateMarketHandlerTests
     private readonly IFixture _fixture = new Fixture();
     private readonly CreateMarketHandler _handler;
     private readonly ILogger<CreateMarketHandler> _logger = Substitute.For<ILogger<CreateMarketHandler>>();
-    private readonly IRepository<Market> _marketRepository = Substitute.For<IRepository<Market>>();
+    private readonly IPlutusUnitOfWork _unitOfWork = Substitute.For<IPlutusUnitOfWork>();
 
     public CreateMarketHandlerTests()
     {
-        _handler = new CreateMarketHandler(_logger, _marketRepository);
+        _handler = new CreateMarketHandler(_logger, _unitOfWork);
     }
 
     [Fact]
@@ -26,7 +26,7 @@ public sealed class CreateMarketHandlerTests
         var command = _fixture.Create<CreateMarketInput>();
         var expectedId = new Id<Market>(_fixture.Create<string>());
 
-        _marketRepository.CreateId().Returns(expectedId);
+        _unitOfWork.Markets.CreateId().Returns(expectedId);
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -35,7 +35,7 @@ public sealed class CreateMarketHandlerTests
         result.ShouldBeOfType<IdResponse<Market>>();
         result.Id.ShouldBe(expectedId);
 
-        await _marketRepository.Received(1).Create(
+        await _unitOfWork.Markets.Received(1).Create(
             Arg.Is<Market>(m =>
                 m.Id == expectedId &&
                 m.Name == command.Name &&

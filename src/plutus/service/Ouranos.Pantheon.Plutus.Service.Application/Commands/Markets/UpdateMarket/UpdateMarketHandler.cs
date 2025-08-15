@@ -1,8 +1,8 @@
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Common;
-using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Core.Application.Mediator;
+using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Common;
 using Ouranos.Pantheon.Plutus.Service.Domain.Markets;
 
 namespace Ouranos.Pantheon.Plutus.Service.Application.Commands.Markets.UpdateMarket;
@@ -10,15 +10,15 @@ namespace Ouranos.Pantheon.Plutus.Service.Application.Commands.Markets.UpdateMar
 public sealed class UpdateMarketHandler : CommandHandler<UpdateMarketInput, IdResponse<Market>>
 {
     private readonly ILogger<UpdateMarketHandler> _logger;
-    private readonly IRepository<Market> _marketRepository;
+    private readonly IPlutusUnitOfWork _unitOfWork;
 
-    public UpdateMarketHandler(ILogger<UpdateMarketHandler> logger, IRepository<Market> marketRepository)
+    public UpdateMarketHandler(ILogger<UpdateMarketHandler> logger, IPlutusUnitOfWork unitOfWork)
     {
         Guard.Against.Null(logger);
-        Guard.Against.Null(marketRepository);
+        Guard.Against.Null(unitOfWork);
 
         _logger = logger;
-        _marketRepository = marketRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public override async Task<IdResponse<Market>> Handle(
@@ -29,9 +29,10 @@ public sealed class UpdateMarketHandler : CommandHandler<UpdateMarketInput, IdRe
         _logger.LogDebug("Attempting to handle update market command '{@command}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var market = await _marketRepository.Read(command.MarketId, cancellationToken);
+        var market = await _unitOfWork.Markets.Read(command.MarketId, cancellationToken);
         market.Update(command.Name, command.Taxes);
-        await _marketRepository.Update(market, cancellationToken);
+        await _unitOfWork.Markets.Update(market, cancellationToken);
+        await _unitOfWork.SaveChanges(cancellationToken);
         var response = new IdResponse<Market>(market.Id);
 
         _logger.LogDebug("Successfully handled updated market request.");

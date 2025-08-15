@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
-        <UserSecretsId>dotnet-Ouranos.Pantheon.DataLoader.Plutus.Consumer-f021c234-2ec1-474c-8feb-175a63b0e245</UserSecretsId>
+        <UserSecretsId>dotnet-Ouranos.Pantheon.Plutus.DataLoader.Consumer-f021c234-2ec1-474c-8feb-175a63b0e245</UserSecretsId>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
 
@@ -13,6 +13,7 @@
     <ItemGroup>
         <ProjectReference Include="..\..\..\..\core\Ouranos.Pantheon.Core.Common\Ouranos.Pantheon.Core.Common.csproj"/>
         <ProjectReference Include="..\..\..\..\core\Ouranos.Pantheon.Core.Infra.Mongo\Ouranos.Pantheon.Core.Infra.Mongo.csproj"/>
+        <ProjectReference Include="..\..\..\service\Ouranos.Pantheon.Plutus.Service.Infra.Postgres\Ouranos.Pantheon.Plutus.Service.Infra.Postgres.csproj"/>
         <ProjectReference Include="..\..\Ouranos.Pantheon.Plutus.DataLoader.Domain\Ouranos.Pantheon.Plutus.DataLoader.Domain.csproj"/>
         <ProjectReference Include="..\..\Ouranos.Pantheon.Plutus.DataLoader.Infra.RabbitMq\Ouranos.Pantheon.Plutus.DataLoader.Infra.RabbitMq.csproj"/>
         <ProjectReference Include="..\..\Ouranos.Pantheon.Plutus.DataLoader.Worker\Ouranos.Pantheon.Plutus.DataLoader.Worker.csproj"/>

@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Common;
-using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Core.Domain.Common;
+using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Common;
 using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Forecasts;
 using Ouranos.Pantheon.Plutus.Service.Application.Queries.Forecasts.GetConstructedForecasts;
 using Ouranos.Pantheon.Plutus.Service.Application.Queries.Markets.GetMarketForecast;
@@ -13,14 +13,14 @@ namespace Ouranos.Pantheon.Plutus.Service.Application.Tests.Queries.Forecasts.Ge
 public sealed class GetConstructedForecastsHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
-    private readonly IRepository<Forecast> _forecastRepository = Substitute.For<IRepository<Forecast>>();
     private readonly IGetForecastPredictions _getForecastPredictions = Substitute.For<IGetForecastPredictions>();
     private readonly GetConstructedForecastsHandler _handler;
     private readonly ILogger<GetMarketForecastHandler> _logger = Substitute.For<ILogger<GetMarketForecastHandler>>();
+    private readonly IPlutusUnitOfWork _unitOfWork = Substitute.For<IPlutusUnitOfWork>();
 
     public GetConstructedForecastsHandlerTests()
     {
-        _handler = new GetConstructedForecastsHandler(_logger, _getForecastPredictions, _forecastRepository);
+        _handler = new GetConstructedForecastsHandler(_logger, _getForecastPredictions, _unitOfWork);
     }
 
     [Fact]
@@ -40,7 +40,7 @@ public sealed class GetConstructedForecastsHandlerTests
             )
             .Returns(expectedPredictions);
 
-        _forecastRepository.CreateId().Returns(expectedId);
+        _unitOfWork.Forecasts.CreateId().Returns(expectedId);
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);

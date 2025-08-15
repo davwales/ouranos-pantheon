@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Common;
-using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Core.Domain.Common;
 using Ouranos.Pantheon.Plutus.Service.Application.Commands.Recipes.CreateRecipe;
+using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Common;
 using Ouranos.Pantheon.Plutus.Service.Domain.Recipes;
 
 namespace Ouranos.Pantheon.Plutus.Service.Application.Tests.Commands.Recipes.CreateRecipe;
@@ -12,11 +12,11 @@ public sealed class CreateRecipeHandlerTests
     private readonly IFixture _fixture = new Fixture();
     private readonly CreateRecipeHandler _handler;
     private readonly ILogger<CreateRecipeHandler> _logger = Substitute.For<ILogger<CreateRecipeHandler>>();
-    private readonly IRepository<Recipe> _recipeRepository = Substitute.For<IRepository<Recipe>>();
+    private readonly IPlutusUnitOfWork _unitOfWork = Substitute.For<IPlutusUnitOfWork>();
 
     public CreateRecipeHandlerTests()
     {
-        _handler = new CreateRecipeHandler(_logger, _recipeRepository);
+        _handler = new CreateRecipeHandler(_logger, _unitOfWork);
     }
 
     [Fact]
@@ -26,7 +26,7 @@ public sealed class CreateRecipeHandlerTests
         var command = _fixture.Create<CreateRecipeInput>();
         var expectedId = new Id<Recipe>(_fixture.Create<string>());
 
-        _recipeRepository.CreateId().Returns(expectedId);
+        _unitOfWork.Recipes.CreateId().Returns(expectedId);
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -35,7 +35,7 @@ public sealed class CreateRecipeHandlerTests
         result.ShouldBeOfType<IdResponse<Recipe>>();
         result.Id.ShouldBe(expectedId);
 
-        await _recipeRepository.Received(1).Create(
+        await _unitOfWork.Recipes.Received(1).Create(
             Arg.Is<Recipe>(r =>
                 r.Id == expectedId &&
                 r.MarketId == command.MarketId &&

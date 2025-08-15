@@ -2,8 +2,8 @@
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Core.Application.Mediator;
+using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Common;
 using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Trades;
-using Ouranos.Pantheon.Plutus.Service.Domain.Trades;
 
 namespace Ouranos.Pantheon.Plutus.Service.Application.Queries.Symbols.GetSymbolTrades;
 
@@ -12,22 +12,22 @@ public sealed class GetSymbolTradesHandler : QueryHandler<GetSymbolTradesInput, 
     private readonly IBucketTrades _bucketTrades;
     private readonly ILogger<GetSymbolTradesHandler> _logger;
     private readonly IQueryExecutor _queryExecutor;
-    private readonly IRepository<Trade> _tradeRepository;
+    private readonly IPlutusUnitOfWork _unitOfWork;
 
     public GetSymbolTradesHandler(
         ILogger<GetSymbolTradesHandler> logger,
-        IRepository<Trade> tradeRepository,
+        IPlutusUnitOfWork unitOfWork,
         IBucketTrades bucketTrades,
         IQueryExecutor queryExecutor
     )
     {
         Guard.Against.Null(logger);
-        Guard.Against.Null(tradeRepository);
+        Guard.Against.Null(unitOfWork);
         Guard.Against.Null(bucketTrades);
         Guard.Against.Null(queryExecutor);
 
         _logger = logger;
-        _tradeRepository = tradeRepository;
+        _unitOfWork = unitOfWork;
         _bucketTrades = bucketTrades;
         _queryExecutor = queryExecutor;
     }
@@ -46,7 +46,7 @@ public sealed class GetSymbolTradesHandler : QueryHandler<GetSymbolTradesInput, 
 
         var trades = await _queryExecutor.ToList(
             _bucketTrades.GetBucketedTradesQuery(
-                _tradeRepository.AsQueryable(cancellationToken).Where(t =>
+                _unitOfWork.Trades.AsQueryable(cancellationToken).Where(t =>
                     t.SymbolId == query.SymbolId && (since == null || t.CreatedAt >= since)
                 ),
                 query.NumBuckets,
@@ -76,7 +76,7 @@ public sealed class GetSymbolTradesHandler : QueryHandler<GetSymbolTradesInput, 
                     x.Volume,
                     x.NumTransactions,
                     x.Trades
-                        .OrderBy(x => x.Date)
+                        .OrderBy(t => t.Date)
                         .Select(t => new GetSymbolTradeBucketsResponse(
                                 t.Price,
                                 t.Volume,
