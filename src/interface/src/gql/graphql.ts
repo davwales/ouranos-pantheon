@@ -392,9 +392,8 @@ export type Forecast = {
   latest: ForecastPoint;
   marketId: Scalars['String']['output'];
   predictions: Array<ForecastPoint>;
+  symbol: Symbol;
   symbolId: Scalars['String']['output'];
-  symbolName: Scalars['String']['output'];
-  symbolSubcode?: Maybe<Scalars['String']['output']>;
   updatedAt: Scalars['DateTime']['output'];
 };
 
@@ -406,9 +405,8 @@ export type ForecastFilterInput = {
   marketId?: InputMaybe<IdFilterInputTypeOfMarketFilterInput>;
   or?: InputMaybe<Array<ForecastFilterInput>>;
   predictions?: InputMaybe<ListFilterInputTypeOfForecastPointFilterInput>;
+  symbol?: InputMaybe<SymbolFilterInput>;
   symbolId?: InputMaybe<IdFilterInputTypeOfSymbolFilterInput>;
-  symbolName?: InputMaybe<StringOperationFilterInput>;
-  symbolSubcode?: InputMaybe<StringOperationFilterInput>;
   updatedAt?: InputMaybe<DateTimeOperationFilterInput>;
 };
 
@@ -441,9 +439,8 @@ export type ForecastSortInput = {
   id?: InputMaybe<SortEnumType>;
   latest?: InputMaybe<ForecastPointSortInput>;
   marketId?: InputMaybe<SortEnumType>;
+  symbol?: InputMaybe<SymbolSortInput>;
   symbolId?: InputMaybe<SortEnumType>;
-  symbolName?: InputMaybe<SortEnumType>;
-  symbolSubcode?: InputMaybe<SortEnumType>;
   updatedAt?: InputMaybe<SortEnumType>;
 };
 
@@ -755,11 +752,11 @@ export type ListFilterInputTypeOfRecipeComponentFilterInput = {
   some?: InputMaybe<RecipeComponentFilterInput>;
 };
 
-export type ListFilterInputTypeOfTradeFilterInput = {
-  all?: InputMaybe<TradeFilterInput>;
+export type ListFilterInputTypeOfSymbolFilterInput = {
+  all?: InputMaybe<SymbolFilterInput>;
   any?: InputMaybe<Scalars['Boolean']['input']>;
-  none?: InputMaybe<TradeFilterInput>;
-  some?: InputMaybe<TradeFilterInput>;
+  none?: InputMaybe<SymbolFilterInput>;
+  some?: InputMaybe<SymbolFilterInput>;
 };
 
 export type ListIdFilterInputTypeOfSymbolFilterInput = {
@@ -1279,6 +1276,7 @@ export type Recipe = {
   createdAt: Scalars['DateTime']['output'];
   id: Scalars['String']['output'];
   inputs: Array<RecipeComponent>;
+  market: Market;
   marketId: Scalars['String']['output'];
   name: Scalars['String']['output'];
   outputs: Array<RecipeComponent>;
@@ -1312,6 +1310,7 @@ export type RecipeFilterInput = {
   createdAt?: InputMaybe<DateTimeOperationFilterInput>;
   id?: InputMaybe<IdFilterInputTypeOfRecipeFilterInput>;
   inputs?: InputMaybe<ListFilterInputTypeOfRecipeComponentFilterInput>;
+  market?: InputMaybe<MarketFilterInput>;
   marketId?: InputMaybe<IdFilterInputTypeOfMarketFilterInput>;
   name?: InputMaybe<StringOperationFilterInput>;
   or?: InputMaybe<Array<RecipeFilterInput>>;
@@ -1323,6 +1322,7 @@ export type RecipeSortInput = {
   cost?: InputMaybe<SortEnumType>;
   createdAt?: InputMaybe<SortEnumType>;
   id?: InputMaybe<SortEnumType>;
+  market?: InputMaybe<MarketSortInput>;
   marketId?: InputMaybe<SortEnumType>;
   name?: InputMaybe<SortEnumType>;
   updatedAt?: InputMaybe<SortEnumType>;
@@ -1382,10 +1382,10 @@ export type Symbol = {
   code: Scalars['String']['output'];
   createdAt: Scalars['DateTime']['output'];
   id: Scalars['String']['output'];
+  market: Market;
   marketId: Scalars['String']['output'];
   name: Scalars['String']['output'];
   subcode?: Maybe<Scalars['String']['output']>;
-  trades: Array<Trade>;
   updatedAt: Scalars['DateTime']['output'];
 };
 
@@ -1395,11 +1395,11 @@ export type SymbolFilterInput = {
   code?: InputMaybe<StringOperationFilterInput>;
   createdAt?: InputMaybe<DateTimeOperationFilterInput>;
   id?: InputMaybe<IdFilterInputTypeOfSymbolFilterInput>;
+  market?: InputMaybe<MarketFilterInput>;
   marketId?: InputMaybe<IdFilterInputTypeOfMarketFilterInput>;
   name?: InputMaybe<StringOperationFilterInput>;
   or?: InputMaybe<Array<SymbolFilterInput>>;
   subcode?: InputMaybe<StringOperationFilterInput>;
-  trades?: InputMaybe<ListFilterInputTypeOfTradeFilterInput>;
   updatedAt?: InputMaybe<DateTimeOperationFilterInput>;
 };
 
@@ -1407,9 +1407,11 @@ export type SymbolGroup = {
   __typename?: 'SymbolGroup';
   createdAt: Scalars['DateTime']['output'];
   id: Scalars['String']['output'];
+  market: Market;
   marketId: Scalars['String']['output'];
   name: Scalars['String']['output'];
   symbolIds: Array<Scalars['String']['output']>;
+  symbols: Array<Symbol>;
   updatedAt: Scalars['DateTime']['output'];
 };
 
@@ -1417,16 +1419,19 @@ export type SymbolGroupFilterInput = {
   and?: InputMaybe<Array<SymbolGroupFilterInput>>;
   createdAt?: InputMaybe<DateTimeOperationFilterInput>;
   id?: InputMaybe<IdFilterInputTypeOfSymbolGroupFilterInput>;
+  market?: InputMaybe<MarketFilterInput>;
   marketId?: InputMaybe<IdFilterInputTypeOfMarketFilterInput>;
   name?: InputMaybe<StringOperationFilterInput>;
   or?: InputMaybe<Array<SymbolGroupFilterInput>>;
   symbolIds?: InputMaybe<ListIdFilterInputTypeOfSymbolFilterInput>;
+  symbols?: InputMaybe<ListFilterInputTypeOfSymbolFilterInput>;
   updatedAt?: InputMaybe<DateTimeOperationFilterInput>;
 };
 
 export type SymbolGroupSortInput = {
   createdAt?: InputMaybe<SortEnumType>;
   id?: InputMaybe<SortEnumType>;
+  market?: InputMaybe<MarketSortInput>;
   marketId?: InputMaybe<SortEnumType>;
   name?: InputMaybe<SortEnumType>;
   updatedAt?: InputMaybe<SortEnumType>;
@@ -1437,6 +1442,7 @@ export type SymbolSortInput = {
   code?: InputMaybe<SortEnumType>;
   createdAt?: InputMaybe<SortEnumType>;
   id?: InputMaybe<SortEnumType>;
+  market?: InputMaybe<MarketSortInput>;
   marketId?: InputMaybe<SortEnumType>;
   name?: InputMaybe<SortEnumType>;
   subcode?: InputMaybe<SortEnumType>;

@@ -50,12 +50,10 @@ public sealed class GetConstructedForecastsHandler
                     var symbolId = query.HistoricalData.Keys.ElementAt(i);
                     var symbol = query.Symbols.First(s => s.Id == symbolId);
 
-                    return new Forecast(
+                    return Forecast.Create(
                         _unitOfWork.Forecasts.CreateId(),
-                        symbol.MarketId,
-                        symbolId,
-                        symbol.Name,
-                        symbol.Subcode,
+                        symbol.Market,
+                        symbol,
                         query.HistoricalData.Values.ElementAt(i).Last(),
                         p
                     );

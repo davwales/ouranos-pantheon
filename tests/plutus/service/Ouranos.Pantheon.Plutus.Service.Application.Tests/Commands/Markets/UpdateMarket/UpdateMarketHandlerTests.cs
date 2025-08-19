@@ -23,7 +23,7 @@ public sealed class UpdateMarketHandlerTests
     {
         // Arrange
         var command = _fixture.Create<UpdateMarketInput>();
-        var existingMarket = new Market(
+        var existingMarket = Market.Create(
             command.MarketId,
             _fixture.Create<string>(),
             _fixture.Create<Taxes>()

@@ -19,10 +19,7 @@ public sealed class TradeTests
         var timestamp = _fixture.Create<DateTimeOffset>();
 
         // Act
-        var trade = new Trade(id, symbol.Id, price, volume, timestamp)
-        {
-            Symbol = symbol
-        };
+        var trade = Trade.Create(id, symbol, price, volume, timestamp);
 
         // Assert
         trade.Id.ShouldBe(id);

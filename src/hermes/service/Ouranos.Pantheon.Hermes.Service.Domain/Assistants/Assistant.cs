@@ -5,39 +5,10 @@ namespace Ouranos.Pantheon.Hermes.Service.Domain.Assistants;
 
 public sealed class Assistant : BaseEntity<Id<Assistant>>
 {
-    private Assistant()
+    private Assistant(Id<Assistant> id) : base(id)
     {
-    }
-
-    public Assistant(
-        Id<Assistant> id,
-        string model,
-        string systemPrompt,
-        string? assistantName = null,
-        string? userName = null,
-        float? temperature = null,
-        int? maxTokens = null,
-        float? repeatPenalty = null
-    ) : base(id)
-    {
-        Guard.Against.NullOrWhiteSpace(model);
-        Guard.Against.NullOrWhiteSpace(systemPrompt);
-
-        Model = model;
-        SystemPrompt = systemPrompt;
-        Temperature = temperature;
-        MaxTokens = maxTokens;
-        RepeatPenalty = repeatPenalty;
-
-        if (!string.IsNullOrWhiteSpace(assistantName))
-        {
-            AssistantName = assistantName;
-        }
-
-        if (!string.IsNullOrWhiteSpace(userName))
-        {
-            UserName = userName;
-        }
+        Model = string.Empty;
+        SystemPrompt = string.Empty;
     }
 
     public string Model { get; private set; }
@@ -53,6 +24,42 @@ public sealed class Assistant : BaseEntity<Id<Assistant>>
     public int? MaxTokens { get; private set; }
 
     public float? RepeatPenalty { get; private set; }
+
+    public static Assistant Create(
+        Id<Assistant> id,
+        string model,
+        string systemPrompt,
+        string? assistantName = null,
+        string? userName = null,
+        float? temperature = null,
+        int? maxTokens = null,
+        float? repeatPenalty = null
+    )
+    {
+        Guard.Against.NullOrWhiteSpace(model);
+        Guard.Against.NullOrWhiteSpace(systemPrompt);
+
+        var assistant = new Assistant(id)
+        {
+            Model = model,
+            SystemPrompt = systemPrompt,
+            Temperature = temperature,
+            MaxTokens = maxTokens,
+            RepeatPenalty = repeatPenalty
+        };
+
+        if (!string.IsNullOrWhiteSpace(assistantName))
+        {
+            assistant.AssistantName = assistantName;
+        }
+
+        if (!string.IsNullOrWhiteSpace(userName))
+        {
+            assistant.UserName = userName;
+        }
+
+        return assistant;
+    }
 
     public void Update(
         string model,

@@ -32,9 +32,11 @@ public sealed class UpdateRecipeHandler : CommandHandler<UpdateRecipeInput, IdRe
         _logger.LogTrace("Attempting to handle update recipe command '{@command}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var updatedRecipe = new Recipe(
+        var market = await _unitOfWork.Markets.Read(command.MarketId, cancellationToken);
+
+        var updatedRecipe = Recipe.Create(
             command.RecipeId,
-            command.MarketId,
+            market,
             command.Name,
             command.Cost,
             command.Inputs,

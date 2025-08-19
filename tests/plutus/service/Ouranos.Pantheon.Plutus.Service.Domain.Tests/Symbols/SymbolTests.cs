@@ -13,22 +13,22 @@ public sealed class SymbolTests
     public void Constructor_WhenHappyPath_ShouldSetExpectedProperties()
     {
         // Arrange
-        var id = new Id<Symbol>(_fixture.Create<string>());
+        var id = _fixture.Create<Id<Symbol>>();
         var code = _fixture.Create<string>();
         var subcode = _fixture.Create<string>();
         var name = _fixture.Create<string>();
-        var marketId = new Id<Market>(_fixture.Create<string>());
+        var market = _fixture.Create<Market>();
         var additionalFields = new AdditionalFields();
 
         // Act
-        var symbol = new Symbol(id, code, subcode, name, marketId, additionalFields);
+        var symbol = Symbol.Create(id, code, subcode, name, market, additionalFields);
 
         // Assert
         symbol.Id.ShouldBe(id);
         symbol.Code.ShouldBe(code);
         symbol.Subcode.ShouldBe(subcode);
         symbol.Name.ShouldBe(name);
-        symbol.MarketId.ShouldBe(marketId);
+        symbol.MarketId.ShouldBe(market.Id);
         symbol.AdditionalFields.ShouldBe(additionalFields);
     }
 
@@ -39,13 +39,13 @@ public sealed class SymbolTests
     public void Constructor_WhenInvalidCode_ShouldThrowArgumentException(string? code)
     {
         // Arrange
-        var id = new Id<Symbol>(_fixture.Create<string>());
+        var id = _fixture.Create<Id<Symbol>>();
         var name = _fixture.Create<string>();
-        var marketId = new Id<Market>(_fixture.Create<string>());
+        var market = _fixture.Create<Market>();
         var additionalFields = new AdditionalFields();
 
         // Act
-        var create = () => new Symbol(id, code!, null, name, marketId, additionalFields);
+        var create = () => Symbol.Create(id, code!, null, name, market, additionalFields);
 
         // Assert
         create.ShouldThrow<ArgumentException>();
@@ -58,13 +58,13 @@ public sealed class SymbolTests
     public void Constructor_WhenInvalidName_ShouldThrowArgumentException(string? name)
     {
         // Arrange
-        var id = new Id<Symbol>(_fixture.Create<string>());
+        var id = _fixture.Create<Id<Symbol>>();
         var code = _fixture.Create<string>();
-        var marketId = new Id<Market>(_fixture.Create<string>());
+        var market = _fixture.Create<Market>();
         var additionalFields = new AdditionalFields();
 
         // Act
-        var create = () => new Symbol(id, code, null, name!, marketId, additionalFields);
+        var create = () => Symbol.Create(id, code, null, name!, market, additionalFields);
 
         // Assert
         create.ShouldThrow<ArgumentException>();
@@ -74,13 +74,13 @@ public sealed class SymbolTests
     public void Constructor_WhenNullAdditionalFields_ShouldThrowArgumentException()
     {
         // Arrange
-        var id = new Id<Symbol>(_fixture.Create<string>());
+        var id = _fixture.Create<Id<Symbol>>();
         var code = _fixture.Create<string>();
         var name = _fixture.Create<string>();
-        var marketId = new Id<Market>(_fixture.Create<string>());
+        var market = _fixture.Create<Market>();
 
         // Act
-        var create = () => new Symbol(id, code, null, name, marketId, null!);
+        var create = () => Symbol.Create(id, code, null, name, market, null!);
 
         // Assert
         create.ShouldThrow<ArgumentException>();
@@ -90,12 +90,12 @@ public sealed class SymbolTests
     public void Update_WhenHappyPath_ShouldUpdateProperties()
     {
         // Arrange
-        var symbol = new Symbol(
-            new Id<Symbol>(_fixture.Create<string>()),
+        var symbol = Symbol.Create(
+            _fixture.Create<Id<Symbol>>(),
             _fixture.Create<string>(),
             null,
             "Original Name",
-            new Id<Market>(_fixture.Create<string>()),
+            _fixture.Create<Market>(),
             new AdditionalFields()
         );
         const string newName = "Updated Name";
@@ -116,12 +116,12 @@ public sealed class SymbolTests
     public void Update_WhenInvalidName_ShouldThrowArgumentException(string? name)
     {
         // Arrange
-        var symbol = new Symbol(
-            new Id<Symbol>(_fixture.Create<string>()),
+        var symbol = Symbol.Create(
+            _fixture.Create<Id<Symbol>>(),
             _fixture.Create<string>(),
             null,
             "Original Name",
-            new Id<Market>(_fixture.Create<string>()),
+            _fixture.Create<Market>(),
             new AdditionalFields()
         );
 
@@ -136,12 +136,12 @@ public sealed class SymbolTests
     public void Update_WhenNullAdditionalFields_ShouldThrowArgumentException()
     {
         // Arrange
-        var symbol = new Symbol(
-            new Id<Symbol>(_fixture.Create<string>()),
+        var symbol = Symbol.Create(
+            _fixture.Create<Id<Symbol>>(),
             _fixture.Create<string>(),
             null,
             "Original Name",
-            new Id<Market>(_fixture.Create<string>()),
+            _fixture.Create<Market>(),
             new AdditionalFields()
         );
 

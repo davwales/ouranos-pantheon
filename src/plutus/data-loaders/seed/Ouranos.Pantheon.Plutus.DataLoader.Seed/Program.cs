@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Ouranos.Pantheon.Core.Domain.Common;
 using Ouranos.Pantheon.Plutus.DataLoader.Seed.Extensions;
 using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Common;
 using Ouranos.Pantheon.Plutus.Service.Domain.Markets;
@@ -20,39 +21,43 @@ var tradeInterval = TimeSpan.FromMinutes(5);
 var services = StartupExtensions.GetServices();
 var unitOfWork = services.GetRequiredService<IPlutusUnitOfWork>();
 
-if (clearDatabase)
-{
-    Console.WriteLine("Clearing the database...");
-    await unitOfWork.Trades.Delete(_ => true);
-    await unitOfWork.Symbols.Delete(_ => true);
-    await unitOfWork.Markets.Delete(_ => true);
-    Console.WriteLine("Database cleared.");
-}
-
 // Create Market
 Console.WriteLine("Creating market...");
-var market = new Market(
-    unitOfWork.Markets.CreateId(),
-    marketName,
-    new Taxes(new FlatTax(0.01m, 100m, 0.05m)),
-    true,
-    marketDescription
-);
 
-await unitOfWork.Markets.Create(market);
-Console.WriteLine("Market created.");
+var marketId = new Id<Market>("a653e3b4-f7e8-4b16-a215-8c44b1341871");
+
+if (clearDatabase)
+{
+    await unitOfWork.Trades.Delete(t => t.Symbol.MarketId == marketId);
+    await unitOfWork.Symbols.Delete(s => s.MarketId == marketId);
+}
+
+var market = await unitOfWork.Markets.FirstOrDefault(m => m.Id == marketId);
+if (market is null)
+{
+    market = Market.Create(
+        new Id<Market>("a653e3b4-f7e8-4b16-a215-8c44b1341871"),
+        marketName,
+        new Taxes(new FlatTax(0.01m, 100m, 0.05m)),
+        true,
+        marketDescription
+    );
+
+    await unitOfWork.Markets.Create(market);
+    Console.WriteLine("Market created.");
+}
 
 // Create Symbols
 Console.WriteLine("Creating symbols...");
 var symbols = new List<Symbol>();
 for (var i = 0; i < numberOfSymbols; i++)
 {
-    var symbol = new Symbol(
+    var symbol = Symbol.Create(
         unitOfWork.Symbols.CreateId(),
         $"SYM{i:D3}",
         null,
         $"Symbol {i}",
-        market.Id,
+        market,
         new AdditionalFields()
     );
     symbols.Add(symbol);
@@ -86,16 +91,14 @@ foreach (var symbol in symbols)
             currentVolume = 0;
         }
 
-        var trade = new Trade(
+        var trade = Trade.Create(
             unitOfWork.Trades.CreateId(),
-            symbol.Id,
+            symbol,
             (decimal)currentPrice,
             (decimal)currentVolume,
             currentTimestamp
-        )
-        {
-            Symbol = symbol
-        };
+        );
+
         trades.Add(trade);
 
         currentTimestamp = currentTimestamp.Add(tradeInterval);

@@ -32,16 +32,13 @@ public sealed class InsertTrade : IInsertTrade
         _logger.LogTrace("Attempting to insert trade with input '{@input}'.", input);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var trade = new Trade(
+        var trade = Trade.Create(
             _unitOfWork.Trades.CreateId(),
-            input.Symbol.Id,
+            input.Symbol,
             input.Price,
             input.Volume,
             input.Timestamp
-        )
-        {
-            Symbol = input.Symbol
-        };
+        );
 
         var shouldInsertTrade = await ShouldInsertTrade(trade.Id, input.MessageId, cancellationToken);
         if (!shouldInsertTrade)

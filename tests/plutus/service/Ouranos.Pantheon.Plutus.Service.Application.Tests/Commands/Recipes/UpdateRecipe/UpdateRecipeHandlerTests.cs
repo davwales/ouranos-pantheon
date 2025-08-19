@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Common;
 using Ouranos.Pantheon.Plutus.Service.Application.Commands.Recipes.UpdateRecipe;
 using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Common;
+using Ouranos.Pantheon.Plutus.Service.Domain.Markets;
 using Ouranos.Pantheon.Plutus.Service.Domain.Recipes;
 
 namespace Ouranos.Pantheon.Plutus.Service.Application.Tests.Commands.Recipes.UpdateRecipe;
@@ -22,7 +23,12 @@ public sealed class UpdateRecipeHandlerTests
     public async Task Handle_WhenHappyPath_ShouldUpdateRecipeAndReturnId()
     {
         // Arrange
-        var command = _fixture.Create<UpdateRecipeInput>();
+        var market = _fixture.Create<Market>();
+        var command = _fixture.Build<UpdateRecipeInput>()
+            .With(x => x.MarketId, market.Id)
+            .Create();
+
+        _unitOfWork.Markets.Read(market.Id, CancellationToken.None).Returns(market);
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);

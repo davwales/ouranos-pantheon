@@ -44,8 +44,8 @@ public sealed class GetMarketForecastHandler
                     f.Id,
                     f.MarketId,
                     f.SymbolId,
-                    f.SymbolName,
-                    f.SymbolSubcode,
+                    SymbolName = f.Symbol.Name,
+                    SymbolSubcode = f.Symbol.Subcode,
                     f.Latest,
                     Predictions = f.Predictions.Select(p => new
                         {

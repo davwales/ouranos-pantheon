@@ -45,12 +45,14 @@ public sealed class UpsertSymbol : IUpsertSymbol
             return existingSymbol;
         }
 
-        var newSymbol = new Symbol(
+        var market = await _unitOfWork.Markets.Read(input.MarketId, cancellationToken);
+
+        var newSymbol = Symbol.Create(
             _unitOfWork.Symbols.CreateId(),
             input.SymbolCode,
             input.SymbolSubcode,
             input.SymbolName,
-            input.MarketId,
+            market,
             input.AdditionalFields
         );
 

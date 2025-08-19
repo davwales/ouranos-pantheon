@@ -7,11 +7,13 @@ using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Common;
 using Ouranos.Pantheon.Plutus.Service.Application.Queries.Forecasts.GetSymbolsToForecast;
 using Ouranos.Pantheon.Plutus.Service.Domain.Markets;
 using Ouranos.Pantheon.Plutus.Service.Domain.Symbols;
+using Ouranos.Pantheon.Plutus.Service.Domain.Trades;
 
 namespace Ouranos.Pantheon.Plutus.Service.Application.Tests.Queries.Forecasts.GetSymbolsToForecast;
 
 public sealed class GetSymbolsToForecastHandlerTests
 {
+    private readonly IFixture _fixture = new Fixture();
     private readonly GetSymbolsToForecastHandler _handler;
 
     private readonly ILogger<GetSymbolsToForecastHandler> _logger =
@@ -33,11 +35,16 @@ public sealed class GetSymbolsToForecastHandlerTests
     public async Task Handle_WhenHappyPath_ShouldReturnSymbols()
     {
         // Arrange
-        var marketIds = new Fixture().CreateMany<Id<Market>>(3).ToList();
-        var symbols = new Fixture().Build<Symbol>()
-            .With(s => s.MarketId, () => marketIds[0])
-            .CreateMany(5)
-            .ToList();
+        var markets = _fixture.CreateMany<Market>(3).ToList();
+        var symbols = Enumerable.Range(0, 5).Select(_ => Symbol.Create(
+                _fixture.Create<Id<Symbol>>(),
+                _fixture.Create<string>(),
+                _fixture.Create<string>(),
+                _fixture.Create<string>(),
+                markets[0],
+                _fixture.Create<AdditionalFields>()
+            )
+        ).ToList();
 
         var query = new GetSymbolsToForecastInput();
 
@@ -47,7 +54,7 @@ public sealed class GetSymbolsToForecastHandlerTests
 
         _queryExecutor
             .ToList(Arg.Any<IQueryable<Id<Market>>>(), Arg.Any<CancellationToken>())
-            .Returns(marketIds);
+            .Returns([.. markets.Select(m => m.Id)]);
 
         _unitOfWork.Symbols
             .ReadAll(Arg.Any<Expression<Func<Symbol, bool>>>(), Arg.Any<CancellationToken>())

@@ -4,11 +4,7 @@ namespace Ouranos.Pantheon.Core.Domain.Common;
 
 public abstract class BaseEntity<TId>
 {
-    protected BaseEntity()
-    {
-    }
-
-    public BaseEntity(TId id)
+    protected BaseEntity(TId id)
     {
         Guard.Against.Null(id);
 
@@ -21,7 +17,7 @@ public abstract class BaseEntity<TId>
 
     public DateTimeOffset CreatedAt { get; init; }
 
-    public DateTimeOffset UpdatedAt { get; protected set; }
+    public DateTimeOffset UpdatedAt { get; private set; }
 
     protected void Update()
     {

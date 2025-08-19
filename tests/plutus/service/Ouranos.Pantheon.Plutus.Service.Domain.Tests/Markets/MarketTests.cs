@@ -11,7 +11,7 @@ public sealed class MarketTests
     public void Constructor_WhenHappyPath_ShouldSetExpectedProperties()
     {
         // Arrange
-        var id = new Id<Market>(_fixture.Create<string>());
+        var id = _fixture.Create<Id<Market>>();
         var name = _fixture.Create<string>();
         var taxes = _fixture.Create<Taxes>();
         var isForecastingEnabled = _fixture.Create<bool>();
@@ -19,7 +19,7 @@ public sealed class MarketTests
         var icon = _fixture.Create<string>();
 
         // Act
-        var market = new Market(id, name, taxes, isForecastingEnabled, description, icon);
+        var market = Market.Create(id, name, taxes, isForecastingEnabled, description, icon);
 
         // Assert
         market.Id.ShouldBe(id);
@@ -41,7 +41,7 @@ public sealed class MarketTests
         var taxes = _fixture.Create<Taxes>();
 
         // Act
-        var create = () => new Market(id, name!, taxes);
+        var create = () => Market.Create(id, name!, taxes);
 
         // Assert
         create.ShouldThrow<ArgumentException>();
@@ -55,7 +55,7 @@ public sealed class MarketTests
         var name = _fixture.Create<string>();
 
         // Act
-        var create = () => new Market(id, name, null!);
+        var create = () => Market.Create(id, name, null!);
 
         // Assert
         create.ShouldThrow<ArgumentException>();
@@ -65,8 +65,8 @@ public sealed class MarketTests
     public void Update_WhenHappyPath_ShouldUpdateProperties()
     {
         // Arrange
-        var market = new Market(
-            new Id<Market>(_fixture.Create<string>()),
+        var market = Market.Create(
+            _fixture.Create<Id<Market>>(),
             "Original Name",
             _fixture.Create<Taxes>(),
             false,
@@ -91,7 +91,7 @@ public sealed class MarketTests
     public void Update_WhenInvalidName_ShouldThrowArgumentException(string? name)
     {
         // Arrange
-        var market = new Market(
+        var market = Market.Create(
             new Id<Market>(_fixture.Create<string>()),
             "Original Name",
             _fixture.Create<Taxes>()
@@ -108,7 +108,7 @@ public sealed class MarketTests
     public void Update_WhenNullTaxes_ShouldThrowArgumentException()
     {
         // Arrange
-        var market = new Market(
+        var market = Market.Create(
             new Id<Market>(_fixture.Create<string>()),
             "Original Name",
             _fixture.Create<Taxes>()

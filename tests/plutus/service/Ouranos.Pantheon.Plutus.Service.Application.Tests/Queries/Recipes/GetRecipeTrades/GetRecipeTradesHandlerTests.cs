@@ -33,10 +33,17 @@ public sealed class GetRecipeTradesHandlerTests
     public async Task Handle_WhenHappyPath_ShouldReturnRecipeTrades()
     {
         // Arrange
-        var marketId = _fixture.Create<Id<Market>>();
-        var recipe = _fixture.Build<Recipe>().With(x => x.MarketId, marketId).Create();
+        var market = _fixture.Create<Market>();
+        var recipe = Recipe.Create(
+            _fixture.Create<Id<Recipe>>(),
+            market,
+            _fixture.Create<string>(),
+            _fixture.Create<decimal>(),
+            [.. _fixture.CreateMany<RecipeComponent>()],
+            [.. _fixture.CreateMany<RecipeComponent>()]
+        );
         var trade = _fixture.Create<Trade>();
-        var query = new GetRecipeTradesInput(marketId, 3600);
+        var query = new GetRecipeTradesInput(market.Id, 3600);
 
         _unitOfWork.Recipes
             .ReadAll(Arg.Any<Expression<Func<Recipe, bool>>>(), Arg.Any<CancellationToken>())

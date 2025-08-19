@@ -5,45 +5,42 @@ using Ouranos.Pantheon.Plutus.Service.Domain.Symbols;
 
 namespace Ouranos.Pantheon.Plutus.Service.Domain.Forecasts;
 
-public sealed class Forecast : BaseEntity<Id<Forecast>>
+public class Forecast : BaseEntity<Id<Forecast>>
 {
-    private Forecast()
+    private Forecast(Id<Forecast> id) : base(id)
     {
-    }
-
-    public Forecast(
-        Id<Forecast> id,
-        Id<Market> marketId,
-        Id<Symbol> symbolId,
-        string symbolName,
-        string? symbolSubcode,
-        ForecastPoint latest,
-        IReadOnlyList<ForecastPoint> predictions
-    ) : base(id)
-    {
-        Guard.Against.Null(marketId);
-        Guard.Against.Null(symbolId);
-        Guard.Against.NullOrWhiteSpace(symbolName);
-        Guard.Against.Null(latest);
-        Guard.Against.NullOrEmpty(predictions);
-
-        MarketId = marketId;
-        SymbolId = symbolId;
-        SymbolName = symbolName;
-        SymbolSubcode = symbolSubcode;
-        Latest = latest;
-        Predictions = predictions;
     }
 
     public Id<Market> MarketId { get; init; }
 
     public Id<Symbol> SymbolId { get; init; }
 
-    public string SymbolName { get; init; }
+    public required ForecastPoint Latest { get; init; }
 
-    public string? SymbolSubcode { get; init; }
+    public required IReadOnlyList<ForecastPoint> Predictions { get; init; }
 
-    public ForecastPoint Latest { get; init; }
+    public virtual required Symbol Symbol { get; init; }
 
-    public IReadOnlyList<ForecastPoint> Predictions { get; init; }
+    public static Forecast Create(
+        Id<Forecast> id,
+        Market market,
+        Symbol symbol,
+        ForecastPoint latest,
+        IReadOnlyList<ForecastPoint> predictions
+    )
+    {
+        Guard.Against.Null(market);
+        Guard.Against.Null(symbol);
+        Guard.Against.Null(latest);
+        Guard.Against.NullOrEmpty(predictions);
+
+        return new Forecast(id)
+        {
+            SymbolId = symbol.Id,
+            MarketId = market.Id,
+            Latest = latest,
+            Predictions = predictions,
+            Symbol = symbol
+        };
+    }
 }

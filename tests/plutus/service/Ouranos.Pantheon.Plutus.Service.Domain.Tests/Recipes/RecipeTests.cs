@@ -12,19 +12,19 @@ public sealed class RecipeTests
     public void Constructor_WhenHappyPath_ShouldSetExpectedProperties()
     {
         // Arrange
-        var id = new Id<Recipe>(_fixture.Create<string>());
-        var marketId = new Id<Market>(_fixture.Create<string>());
+        var id = _fixture.Create<Id<Recipe>>();
+        var market = _fixture.Create<Market>();
         var name = _fixture.Create<string>();
         var cost = _fixture.Create<decimal>();
         var inputs = _fixture.CreateMany<RecipeComponent>().ToList();
         var outputs = _fixture.CreateMany<RecipeComponent>().ToList();
 
         // Act
-        var recipe = new Recipe(id, marketId, name, cost, inputs, outputs);
+        var recipe = Recipe.Create(id, market, name, cost, inputs, outputs);
 
         // Assert
         recipe.Id.ShouldBe(id);
-        recipe.MarketId.ShouldBe(marketId);
+        recipe.MarketId.ShouldBe(market.Id);
         recipe.Name.ShouldBe(name);
         recipe.Cost.ShouldBe(cost);
         recipe.Inputs.ShouldBe(inputs);
@@ -38,14 +38,14 @@ public sealed class RecipeTests
     public void Constructor_WhenInvalidName_ShouldThrowArgumentException(string? name)
     {
         // Arrange
-        var id = new Id<Recipe>(_fixture.Create<string>());
-        var marketId = new Id<Market>(_fixture.Create<string>());
+        var id = _fixture.Create<Id<Recipe>>();
+        var market = _fixture.Create<Market>();
         var cost = _fixture.Create<decimal>();
         var inputs = _fixture.CreateMany<RecipeComponent>().ToList();
         var outputs = _fixture.CreateMany<RecipeComponent>().ToList();
 
         // Act
-        var create = () => new Recipe(id, marketId, name!, cost, inputs, outputs);
+        var create = () => Recipe.Create(id, market, name!, cost, inputs, outputs);
 
         // Assert
         create.ShouldThrow<ArgumentException>();
@@ -55,14 +55,14 @@ public sealed class RecipeTests
     public void Constructor_WhenNullInputs_ShouldThrowArgumentException()
     {
         // Arrange
-        var id = new Id<Recipe>(_fixture.Create<string>());
-        var marketId = new Id<Market>(_fixture.Create<string>());
+        var id = _fixture.Create<Id<Recipe>>();
+        var market = _fixture.Create<Market>();
         var name = _fixture.Create<string>();
         var cost = _fixture.Create<decimal>();
         var outputs = _fixture.CreateMany<RecipeComponent>().ToList();
 
         // Act
-        var create = () => new Recipe(id, marketId, name, cost, null!, outputs);
+        var create = () => Recipe.Create(id, market, name, cost, null!, outputs);
 
         // Assert
         create.ShouldThrow<ArgumentException>();
@@ -72,14 +72,14 @@ public sealed class RecipeTests
     public void Constructor_WhenNullOutputs_ShouldThrowArgumentException()
     {
         // Arrange
-        var id = new Id<Recipe>(_fixture.Create<string>());
-        var marketId = new Id<Market>(_fixture.Create<string>());
+        var id = _fixture.Create<Id<Recipe>>();
+        var market = _fixture.Create<Market>();
         var name = _fixture.Create<string>();
         var cost = _fixture.Create<decimal>();
         var inputs = _fixture.CreateMany<RecipeComponent>().ToList();
 
         // Act
-        var create = () => new Recipe(id, marketId, name, cost, inputs, null!);
+        var create = () => Recipe.Create(id, market, name, cost, inputs, null!);
 
         // Assert
         create.ShouldThrow<ArgumentException>();

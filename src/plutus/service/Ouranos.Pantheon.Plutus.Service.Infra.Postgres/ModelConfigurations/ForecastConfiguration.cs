@@ -15,7 +15,17 @@ public sealed class ForecastConfiguration : IEntityTypeConfiguration<Forecast>
         builder.Property(p => p.MarketId).HasIdConversion();
         builder.Property(p => p.SymbolId).HasIdConversion();
 
-        builder.OwnsOne(p => p.Latest);
+
+        builder.OwnsOne(
+            p => p.Latest,
+            x =>
+            {
+                x.Property(f => f.AveragePrice);
+                x.Property(f => f.MinPrice);
+                x.Property(f => f.MaxPrice);
+                x.Property(f => f.Volume);
+            }
+        );
         builder.OwnsMany(p => p.Predictions);
     }
 }

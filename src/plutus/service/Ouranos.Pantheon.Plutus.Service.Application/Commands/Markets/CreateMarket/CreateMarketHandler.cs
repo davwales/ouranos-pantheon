@@ -33,7 +33,7 @@ public sealed class CreateMarketHandler : CommandHandler<CreateMarketInput, IdRe
         cancellationToken.ThrowIfCancellationRequested();
 
         var marketId = _unitOfWork.Markets.CreateId();
-        var market = new Market(marketId, command.Name, command.Taxes);
+        var market = Market.Create(marketId, command.Name, command.Taxes);
         await _unitOfWork.Markets.Create(market, cancellationToken);
         await _unitOfWork.SaveChanges(cancellationToken);
         var response = new IdResponse<Market>(marketId);

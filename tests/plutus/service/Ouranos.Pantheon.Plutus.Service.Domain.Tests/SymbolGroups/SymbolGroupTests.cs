@@ -13,19 +13,19 @@ public sealed class SymbolGroupTests
     public void Constructor_WhenHappyPath_ShouldSetExpectedProperties()
     {
         // Arrange
-        var id = new Id<SymbolGroup>(_fixture.Create<string>());
-        var marketId = new Id<Market>(_fixture.Create<string>());
+        var id = _fixture.Create<Id<SymbolGroup>>();
+        var market = _fixture.Create<Market>();
         var name = _fixture.Create<string>();
-        var symbolIds = _fixture.CreateMany<Id<Symbol>>().ToList();
+        var symbols = _fixture.CreateMany<Symbol>().ToList();
 
         // Act
-        var symbolGroup = new SymbolGroup(id, marketId, name, symbolIds);
+        var symbolGroup = SymbolGroup.Create(id, market, name, symbols);
 
         // Assert
         symbolGroup.Id.ShouldBe(id);
-        symbolGroup.MarketId.ShouldBe(marketId);
+        symbolGroup.MarketId.ShouldBe(market.Id);
         symbolGroup.Name.ShouldBe(name);
-        symbolGroup.SymbolIds.ShouldBe(symbolIds);
+        symbolGroup.SymbolIds.ShouldBe([.. symbols.Select(s => s.Id)]);
     }
 
     [Theory]
@@ -35,12 +35,12 @@ public sealed class SymbolGroupTests
     public void Constructor_WhenInvalidName_ShouldThrowArgumentException(string? name)
     {
         // Arrange
-        var id = new Id<SymbolGroup>(_fixture.Create<string>());
-        var marketId = new Id<Market>(_fixture.Create<string>());
-        var symbolIds = _fixture.CreateMany<Id<Symbol>>().ToList();
+        var id = _fixture.Create<Id<SymbolGroup>>();
+        var market = _fixture.Create<Market>();
+        var symbols = _fixture.CreateMany<Symbol>().ToList();
 
         // Act
-        var create = () => new SymbolGroup(id, marketId, name!, symbolIds);
+        var create = () => SymbolGroup.Create(id, market, name!, symbols);
 
         // Assert
         create.ShouldThrow<ArgumentException>();
@@ -50,12 +50,12 @@ public sealed class SymbolGroupTests
     public void Constructor_WhenNullSymbolIds_ShouldThrowArgumentException()
     {
         // Arrange
-        var id = new Id<SymbolGroup>(_fixture.Create<string>());
-        var marketId = new Id<Market>(_fixture.Create<string>());
+        var id = _fixture.Create<Id<SymbolGroup>>();
+        var market = _fixture.Create<Market>();
         var name = _fixture.Create<string>();
 
         // Act
-        var create = () => new SymbolGroup(id, marketId, name, null!);
+        var create = () => SymbolGroup.Create(id, market, name, null!);
 
         // Assert
         create.ShouldThrow<ArgumentException>();

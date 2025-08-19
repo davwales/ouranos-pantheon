@@ -4,31 +4,13 @@ using Ouranos.Pantheon.Plutus.Service.Domain.Markets;
 
 namespace Ouranos.Pantheon.Plutus.Service.Domain.Recipes;
 
-public sealed class Recipe : BaseEntity<Id<Recipe>>
+public class Recipe : BaseEntity<Id<Recipe>>
 {
-    private Recipe()
+    private Recipe(Id<Recipe> id) : base(id)
     {
-    }
-
-    public Recipe(
-        Id<Recipe> id,
-        Id<Market> marketId,
-        string name,
-        decimal cost,
-        IReadOnlyList<RecipeComponent> inputs,
-        IReadOnlyList<RecipeComponent> outputs
-    ) : base(id)
-    {
-        Guard.Against.Null(marketId);
-        Guard.Against.NullOrWhiteSpace(name);
-        Guard.Against.Null(inputs);
-        Guard.Against.Null(outputs);
-
-        MarketId = marketId;
-        Name = name;
-        Cost = cost;
-        Inputs = inputs;
-        Outputs = outputs;
+        Name = string.Empty;
+        Inputs = [];
+        Outputs = [];
     }
 
     public Id<Market> MarketId { get; init; }
@@ -40,4 +22,31 @@ public sealed class Recipe : BaseEntity<Id<Recipe>>
     public IReadOnlyList<RecipeComponent> Inputs { get; init; }
 
     public IReadOnlyList<RecipeComponent> Outputs { get; init; }
+
+    public virtual required Market Market { get; init; }
+
+    public static Recipe Create(
+        Id<Recipe> id,
+        Market market,
+        string name,
+        decimal cost,
+        IReadOnlyList<RecipeComponent> inputs,
+        IReadOnlyList<RecipeComponent> outputs
+    )
+    {
+        Guard.Against.Null(market);
+        Guard.Against.NullOrWhiteSpace(name);
+        Guard.Against.Null(inputs);
+        Guard.Against.Null(outputs);
+
+        return new Recipe(id)
+        {
+            MarketId = market.Id,
+            Name = name,
+            Cost = cost,
+            Inputs = inputs,
+            Outputs = outputs,
+            Market = market
+        };
+    }
 }

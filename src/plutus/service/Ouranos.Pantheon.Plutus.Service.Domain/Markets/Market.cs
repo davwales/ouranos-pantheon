@@ -5,27 +5,10 @@ namespace Ouranos.Pantheon.Plutus.Service.Domain.Markets;
 
 public sealed class Market : BaseEntity<Id<Market>>
 {
-    private Market()
+    private Market(Id<Market> id) : base(id)
     {
-    }
-
-    public Market(
-        Id<Market> id,
-        string name,
-        Taxes taxes,
-        bool isForecastingEnabled = false,
-        string? description = null,
-        string? icon = null
-    ) : base(id)
-    {
-        Guard.Against.NullOrWhiteSpace(name);
-        Guard.Against.Null(taxes);
-
-        Name = name;
-        Taxes = taxes;
-        IsForecastingEnabled = isForecastingEnabled;
-        Description = description;
-        Icon = icon;
+        Name = string.Empty;
+        Taxes = new Taxes(null);
     }
 
     public string Name { get; private set; }
@@ -37,6 +20,28 @@ public sealed class Market : BaseEntity<Id<Market>>
     public string? Description { get; private set; }
 
     public string? Icon { get; private set; }
+
+    public static Market Create(
+        Id<Market> id,
+        string name,
+        Taxes taxes,
+        bool isForecastingEnabled = false,
+        string? description = null,
+        string? icon = null
+    )
+    {
+        Guard.Against.NullOrWhiteSpace(name);
+        Guard.Against.Null(taxes);
+
+        return new Market(id)
+        {
+            Name = name,
+            Taxes = taxes,
+            IsForecastingEnabled = isForecastingEnabled,
+            Description = description,
+            Icon = icon
+        };
+    }
 
     public void Update(string name, Taxes taxes)
     {

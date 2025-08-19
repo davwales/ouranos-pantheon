@@ -9,8 +9,8 @@ namespace Ouranos.Pantheon.Hermes.Service.Application.Commands.Assistants.Create
 
 public sealed class CreateAssistantHandler : CommandHandler<CreateAssistantInput, IdResponse<Assistant>>
 {
-    private readonly IHermesUnitOfWork _unitOfWork;
     private readonly ILogger<CreateAssistantHandler> _logger;
+    private readonly IHermesUnitOfWork _unitOfWork;
 
     public CreateAssistantHandler(
         ILogger<CreateAssistantHandler> logger,
@@ -32,7 +32,7 @@ public sealed class CreateAssistantHandler : CommandHandler<CreateAssistantInput
         _logger.LogTrace("Attempting to handle create assistant command '{@command}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var assistant = new Assistant(
+        var assistant = Assistant.Create(
             _unitOfWork.Assistants.CreateId(),
             command.Model,
             command.SystemPrompt,

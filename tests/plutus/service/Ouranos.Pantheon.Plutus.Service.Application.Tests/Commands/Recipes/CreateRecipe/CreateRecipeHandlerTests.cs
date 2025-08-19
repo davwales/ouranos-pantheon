@@ -3,6 +3,7 @@ using Ouranos.Pantheon.Core.Application.Common;
 using Ouranos.Pantheon.Core.Domain.Common;
 using Ouranos.Pantheon.Plutus.Service.Application.Commands.Recipes.CreateRecipe;
 using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Common;
+using Ouranos.Pantheon.Plutus.Service.Domain.Markets;
 using Ouranos.Pantheon.Plutus.Service.Domain.Recipes;
 
 namespace Ouranos.Pantheon.Plutus.Service.Application.Tests.Commands.Recipes.CreateRecipe;
@@ -23,10 +24,14 @@ public sealed class CreateRecipeHandlerTests
     public async Task Handle_WhenHappyPath_ShouldCreateRecipeAndReturnId()
     {
         // Arrange
-        var command = _fixture.Create<CreateRecipeInput>();
-        var expectedId = new Id<Recipe>(_fixture.Create<string>());
+        var market = _fixture.Create<Market>();
+        var expectedId = _fixture.Create<Id<Recipe>>();
+        var command = _fixture.Build<CreateRecipeInput>()
+            .With(x => x.MarketId, market.Id)
+            .Create();
 
         _unitOfWork.Recipes.CreateId().Returns(expectedId);
+        _unitOfWork.Markets.Read(command.MarketId, CancellationToken.None).Returns(market);
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);

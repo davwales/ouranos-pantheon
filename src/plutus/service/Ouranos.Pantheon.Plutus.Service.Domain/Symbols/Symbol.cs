@@ -7,29 +7,11 @@ namespace Ouranos.Pantheon.Plutus.Service.Domain.Symbols;
 
 public class Symbol : BaseEntity<Id<Symbol>>
 {
-    private Symbol()
+    private Symbol(Id<Symbol> id) : base(id)
     {
-    }
-
-    public Symbol(
-        Id<Symbol> id,
-        string code,
-        string? subcode,
-        string name,
-        Id<Market> marketId,
-        AdditionalFields additionalFields
-    ) : base(id)
-    {
-        Guard.Against.NullOrWhiteSpace(code);
-        Guard.Against.NullOrWhiteSpace(name);
-        Guard.Against.Null(marketId);
-        Guard.Against.Null(additionalFields);
-
-        Code = code;
-        Subcode = subcode;
-        Name = name;
-        MarketId = marketId;
-        AdditionalFields = additionalFields;
+        Code = string.Empty;
+        Name = string.Empty;
+        AdditionalFields = new AdditionalFields();
     }
 
     public string Code { get; init; }
@@ -41,6 +23,33 @@ public class Symbol : BaseEntity<Id<Symbol>>
     public Id<Market> MarketId { get; init; }
 
     public AdditionalFields AdditionalFields { get; private set; }
+
+    public virtual required Market Market { get; init; }
+
+    public static Symbol Create(
+        Id<Symbol> id,
+        string code,
+        string? subcode,
+        string name,
+        Market market,
+        AdditionalFields additionalFields
+    )
+    {
+        Guard.Against.NullOrWhiteSpace(code);
+        Guard.Against.NullOrWhiteSpace(name);
+        Guard.Against.Null(market);
+        Guard.Against.Null(additionalFields);
+
+        return new Symbol(id)
+        {
+            Code = code,
+            Subcode = subcode,
+            Name = name,
+            MarketId = market.Id,
+            AdditionalFields = additionalFields,
+            Market = market
+        };
+    }
 
     public void Update(string name, AdditionalFields additionalFields)
     {

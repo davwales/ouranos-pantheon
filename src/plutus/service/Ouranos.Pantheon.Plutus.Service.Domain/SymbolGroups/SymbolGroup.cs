@@ -5,26 +5,12 @@ using Ouranos.Pantheon.Plutus.Service.Domain.Symbols;
 
 namespace Ouranos.Pantheon.Plutus.Service.Domain.SymbolGroups;
 
-public sealed class SymbolGroup : BaseEntity<Id<SymbolGroup>>
+public class SymbolGroup : BaseEntity<Id<SymbolGroup>>
 {
-    private SymbolGroup()
+    private SymbolGroup(Id<SymbolGroup> id) : base(id)
     {
-    }
-
-    public SymbolGroup(
-        Id<SymbolGroup> id,
-        Id<Market> marketId,
-        string name,
-        List<Id<Symbol>> symbolIds
-    ) : base(id)
-    {
-        Guard.Against.Null(marketId);
-        Guard.Against.NullOrWhiteSpace(name);
-        Guard.Against.Null(symbolIds);
-
-        MarketId = marketId;
-        Name = name;
-        SymbolIds = symbolIds;
+        Name = string.Empty;
+        SymbolIds = [];
     }
 
     public Id<Market> MarketId { get; init; }
@@ -32,4 +18,29 @@ public sealed class SymbolGroup : BaseEntity<Id<SymbolGroup>>
     public string Name { get; init; }
 
     public List<Id<Symbol>> SymbolIds { get; init; }
+
+    public virtual required Market Market { get; init; }
+
+    public virtual required IEnumerable<Symbol> Symbols { get; init; }
+
+    public static SymbolGroup Create(
+        Id<SymbolGroup> id,
+        Market market,
+        string name,
+        List<Symbol> symbols
+    )
+    {
+        Guard.Against.Null(market);
+        Guard.Against.NullOrWhiteSpace(name);
+        Guard.Against.Null(symbols);
+
+        return new SymbolGroup(id)
+        {
+            MarketId = market.Id,
+            Name = name,
+            SymbolIds = [.. symbols.Select(s => s.Id)],
+            Market = market,
+            Symbols = symbols
+        };
+    }
 }

@@ -6,24 +6,8 @@ namespace Ouranos.Pantheon.Plutus.Service.Domain.Trades;
 
 public class Trade : BaseEntity<Id<Trade>>
 {
-    private Trade()
+    private Trade(Id<Trade> id) : base(id)
     {
-    }
-
-    public Trade(
-        Id<Trade> id,
-        Id<Symbol> symbolId,
-        decimal price,
-        decimal volume,
-        DateTimeOffset timestamp
-    ) : base(id)
-    {
-        Guard.Against.Null(symbolId);
-
-        Price = price;
-        Volume = volume;
-        SymbolId = symbolId;
-        CreatedAt = timestamp;
     }
 
     public Id<Symbol> SymbolId { get; init; }
@@ -33,4 +17,24 @@ public class Trade : BaseEntity<Id<Trade>>
     public decimal Volume { get; init; }
 
     public virtual required Symbol Symbol { get; init; }
+
+    public static Trade Create(
+        Id<Trade> id,
+        Symbol symbol,
+        decimal price,
+        decimal volume,
+        DateTimeOffset timestamp
+    )
+    {
+        Guard.Against.Null(symbol);
+
+        return new Trade(id)
+        {
+            Price = price,
+            Volume = volume,
+            SymbolId = symbol.Id,
+            CreatedAt = timestamp,
+            Symbol = symbol
+        };
+    }
 }
