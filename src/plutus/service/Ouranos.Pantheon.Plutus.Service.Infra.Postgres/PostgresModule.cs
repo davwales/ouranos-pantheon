@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Ouranos.Pantheon.Core.Infra.Postgres;
-using Ouranos.Pantheon.Plutus.DataLoader.Consumer.Models;
 using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Common;
 using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Forecasts;
 using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Trades;

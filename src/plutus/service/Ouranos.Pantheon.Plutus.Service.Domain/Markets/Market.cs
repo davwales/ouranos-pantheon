@@ -3,9 +3,9 @@ using Ouranos.Pantheon.Core.Domain.Common;
 
 namespace Ouranos.Pantheon.Plutus.Service.Domain.Markets;
 
-public sealed class Market : BaseEntity<Id<Market>>
+public class Market : BaseEntity<Id<Market>>
 {
-    private Market(Id<Market> id) : base(id)
+    protected Market(Id<Market> id) : base(id)
     {
         Name = string.Empty;
         Taxes = new Taxes(null);

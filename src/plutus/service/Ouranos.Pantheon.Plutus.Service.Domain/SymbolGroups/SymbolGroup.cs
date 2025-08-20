@@ -7,7 +7,7 @@ namespace Ouranos.Pantheon.Plutus.Service.Domain.SymbolGroups;
 
 public class SymbolGroup : BaseEntity<Id<SymbolGroup>>
 {
-    private SymbolGroup(Id<SymbolGroup> id) : base(id)
+    protected SymbolGroup(Id<SymbolGroup> id) : base(id)
     {
         Name = string.Empty;
         SymbolIds = [];

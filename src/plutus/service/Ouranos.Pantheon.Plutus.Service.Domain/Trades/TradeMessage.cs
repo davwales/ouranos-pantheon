@@ -1,9 +1,8 @@
 ﻿using Ouranos.Pantheon.Core.Domain.Common;
-using Ouranos.Pantheon.Plutus.Service.Domain.Trades;
 
-namespace Ouranos.Pantheon.Plutus.DataLoader.Consumer.Models;
+namespace Ouranos.Pantheon.Plutus.Service.Domain.Trades;
 
-public sealed class TradeMessage : BaseEntity<Id<TradeMessage>>
+public class TradeMessage : BaseEntity<Id<TradeMessage>>
 {
     public TradeMessage(
         Id<TradeMessage> id,

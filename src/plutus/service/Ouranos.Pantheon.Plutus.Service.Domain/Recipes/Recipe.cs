@@ -6,7 +6,7 @@ namespace Ouranos.Pantheon.Plutus.Service.Domain.Recipes;
 
 public class Recipe : BaseEntity<Id<Recipe>>
 {
-    private Recipe(Id<Recipe> id) : base(id)
+    protected Recipe(Id<Recipe> id) : base(id)
     {
         Name = string.Empty;
         Inputs = [];

@@ -3,8 +3,8 @@ using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Plutus.DataLoader.Application.Interfaces.Trades;
 using Ouranos.Pantheon.Plutus.DataLoader.Domain;
-using Ouranos.Pantheon.Plutus.DataLoader.Domain.Trades;
-using Ouranos.Pantheon.Plutus.Service.Domain.Trades;
+using Ouranos.Pantheon.Plutus.Service.Domain.Symbols;
+using TradeMessage = Ouranos.Pantheon.Plutus.DataLoader.Domain.Trades.TradeMessage;
 
 namespace Ouranos.Pantheon.Plutus.DataLoader.Osrs.Application.Commands.Trades.ProcessTrades;
 

@@ -1,4 +1,4 @@
-﻿using Ouranos.Pantheon.Plutus.Service.Domain.Trades;
+﻿using Ouranos.Pantheon.Plutus.Service.Domain.Symbols;
 
 namespace Ouranos.Pantheon.Plutus.DataLoader.Domain.Trades;
 

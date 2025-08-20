@@ -1,5 +1,4 @@
 using Ouranos.Pantheon.Core.Application.Interfaces.Common;
-using Ouranos.Pantheon.Plutus.DataLoader.Consumer.Models;
 using Ouranos.Pantheon.Plutus.Service.Domain.Forecasts;
 using Ouranos.Pantheon.Plutus.Service.Domain.Markets;
 using Ouranos.Pantheon.Plutus.Service.Domain.Recipes;

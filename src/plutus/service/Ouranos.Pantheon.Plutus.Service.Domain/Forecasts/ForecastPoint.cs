@@ -1,6 +1,6 @@
 ﻿namespace Ouranos.Pantheon.Plutus.Service.Domain.Forecasts;
 
-public sealed record ForecastPoint(
+public record ForecastPoint(
     decimal AveragePrice,
     decimal MinPrice,
     decimal MaxPrice,

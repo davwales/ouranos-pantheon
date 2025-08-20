@@ -19,6 +19,7 @@
         <MassTransitRabbitMQVersion>8.3.*</MassTransitRabbitMQVersion>
         <MicrosoftConfigurationBinderVersion>8.0.*</MicrosoftConfigurationBinderVersion>
         <MicrosoftEntityFrameworkCoreDesignVersion>8.0.11</MicrosoftEntityFrameworkCoreDesignVersion>
+        <MicrosoftEntityFrameworkCoreProxiesVersion>8.0.*</MicrosoftEntityFrameworkCoreProxiesVersion>
         <MicrosoftExtensionsCachingMemoryVersion>8.0.*</MicrosoftExtensionsCachingMemoryVersion>
         <MicrosoftExtensionsConfigurationVersion>8.0.*</MicrosoftExtensionsConfigurationVersion>
         <MicrosoftExtensionsConfigurationJsonVersion>8.0.*</MicrosoftExtensionsConfigurationJsonVersion>

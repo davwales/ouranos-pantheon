@@ -7,7 +7,7 @@ namespace Ouranos.Pantheon.Plutus.Service.Domain.Symbols;
 
 public class Symbol : BaseEntity<Id<Symbol>>
 {
-    private Symbol(Id<Symbol> id) : base(id)
+    protected Symbol(Id<Symbol> id) : base(id)
     {
         Code = string.Empty;
         Name = string.Empty;

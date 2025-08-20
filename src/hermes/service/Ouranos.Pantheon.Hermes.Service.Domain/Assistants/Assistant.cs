@@ -3,9 +3,9 @@ using Ouranos.Pantheon.Core.Domain.Common;
 
 namespace Ouranos.Pantheon.Hermes.Service.Domain.Assistants;
 
-public sealed class Assistant : BaseEntity<Id<Assistant>>
+public class Assistant : BaseEntity<Id<Assistant>>
 {
-    private Assistant(Id<Assistant> id) : base(id)
+    protected Assistant(Id<Assistant> id) : base(id)
     {
         Model = string.Empty;
         SystemPrompt = string.Empty;

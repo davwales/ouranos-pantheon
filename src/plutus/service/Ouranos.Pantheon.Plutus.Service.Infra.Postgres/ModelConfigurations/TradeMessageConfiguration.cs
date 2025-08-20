@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Ouranos.Pantheon.Core.Infra.Postgres.Extensions;
-using Ouranos.Pantheon.Plutus.DataLoader.Consumer.Models;
+using Ouranos.Pantheon.Plutus.Service.Domain.Trades;
 
 namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.ModelConfigurations;
 

@@ -1,6 +1,5 @@
 using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Core.Infra.Postgres.Common;
-using Ouranos.Pantheon.Plutus.DataLoader.Consumer.Models;
 using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Common;
 using Ouranos.Pantheon.Plutus.Service.Domain.Forecasts;
 using Ouranos.Pantheon.Plutus.Service.Domain.Markets;

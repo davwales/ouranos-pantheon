@@ -6,7 +6,7 @@ namespace Ouranos.Pantheon.Plutus.Service.Domain.Trades;
 
 public class Trade : BaseEntity<Id<Trade>>
 {
-    private Trade(Id<Trade> id) : base(id)
+    protected Trade(Id<Trade> id) : base(id)
     {
     }
 

@@ -3,13 +3,17 @@ using Ouranos.Pantheon.Plutus.Service.Domain.Symbols;
 
 namespace Ouranos.Pantheon.Plutus.Service.Domain.Recipes;
 
-public sealed record RecipeComponent(
+public record RecipeComponent(
     Id<Symbol> SymbolId,
     string Name,
     int Quantity
 )
 {
-    private RecipeComponent() : this(new Id<Symbol>(Guid.NewGuid().ToString()), string.Empty, 0)
+    protected RecipeComponent() : this(
+        new Id<Symbol>(Guid.NewGuid().ToString()),
+        string.Empty,
+        0
+    )
     {
     }
 }
