@@ -57,8 +57,8 @@ public sealed class GetHistoricalDataHandler
 
         var tradeFilter = _unitOfWork.Trades.AsQueryable(cancellationToken)
             .Where(trade =>
-                trade.CreatedAt >= start &&
-                trade.CreatedAt < end &&
+                trade.Timestamp >= start &&
+                trade.Timestamp < end &&
                 query.SymbolIds.Contains(trade.SymbolId)
             );
 

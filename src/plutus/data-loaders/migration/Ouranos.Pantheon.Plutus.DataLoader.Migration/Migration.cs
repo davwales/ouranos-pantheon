@@ -1,67 +1,43 @@
-﻿using Ardalis.GuardClauses;
+using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
-using MongoDB.Driver;
-using Ouranos.Pantheon.Core.Infra.Mongo;
-using Ouranos.Pantheon.Plutus.Service.Domain.Trades;
+using Ouranos.Pantheon.Plutus.DataLoader.Migration.Migrators;
 
 namespace Ouranos.Pantheon.Plutus.DataLoader.Migration;
 
 public sealed class Migration : IMigration
 {
     private readonly ILogger<Migration> _logger;
-    private readonly IMongoDatabase _mongoDatabase;
+    private readonly MarketMigrator _marketMigrator;
+    private readonly SymbolMigrator _symbolMigrator;
+    private readonly TradeMigrator _tradeMigrator;
 
     public Migration(
         ILogger<Migration> logger,
-        IMongoDatabaseManager mongoDatabaseManager
+        MarketMigrator marketMigrator,
+        SymbolMigrator symbolMigrator,
+        TradeMigrator tradeMigrator
     )
     {
         Guard.Against.Null(logger);
-        Guard.Against.Null(mongoDatabaseManager);
+        Guard.Against.Null(marketMigrator);
+        Guard.Against.Null(symbolMigrator);
+        Guard.Against.Null(tradeMigrator);
 
         _logger = logger;
-        _mongoDatabase = mongoDatabaseManager.GetDatabase<Migration>();
+        _marketMigrator = marketMigrator;
+        _symbolMigrator = symbolMigrator;
+        _tradeMigrator = tradeMigrator;
     }
 
     public async Task Migrate(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Starting time series migration...");
+        _logger.LogInformation("Starting data migration...");
         cancellationToken.ThrowIfCancellationRequested();
 
-        var legacyTradesCollection = _mongoDatabase.GetCollection<Trade>("trades_bak");
-        var timeSeriesTradesCollection = _mongoDatabase.GetCollection<Trade>("trades_test");
+        var marketIdMap = _marketMigrator.Migrate();
+        var symbolIdMap = await _symbolMigrator.MigrateAsync(marketIdMap, cancellationToken);
+        await _tradeMigrator.MigrateAsync(symbolIdMap, cancellationToken);
 
-        var tradeCursor = await legacyTradesCollection
-            .Find(Builders<Trade>.Filter.Empty)
-            .Sort(Builders<Trade>.Sort.Ascending(t => t.CreatedAt))
-            .ToCursorAsync(cancellationToken);
-
-        long numProcessed = 0;
-        var start = DateTimeOffset.UtcNow;
-
-        while (await tradeCursor.MoveNextAsync(cancellationToken))
-        {
-            var trades = tradeCursor.Current.ToList();
-
-            if (trades.Count == 0)
-            {
-                continue;
-            }
-
-            await timeSeriesTradesCollection.InsertManyAsync(trades, null, cancellationToken);
-
-            numProcessed += trades.Count;
-            var duration = DateTimeOffset.UtcNow.Subtract(start);
-            _logger.LogInformation(
-                "Processed '{count}' trades after a total of '{seconds}' seconds. Throughput: '{throughput}' trades/s.",
-                numProcessed,
-                duration.TotalSeconds,
-                duration.TotalSeconds > 0 ? numProcessed / duration.TotalSeconds : 0
-            );
-
-            cancellationToken.ThrowIfCancellationRequested();
-        }
-
-        _logger.LogInformation("Completed time series migration.");
+        _logger.LogInformation("Completed data migration.");
     }
 }

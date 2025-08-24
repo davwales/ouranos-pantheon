@@ -16,6 +16,8 @@ public class Trade : BaseEntity<Id<Trade>>
 
     public decimal Volume { get; init; }
 
+    public DateTimeOffset Timestamp { get; init; }
+
     public virtual required Symbol Symbol { get; init; }
 
     public static Trade Create(
@@ -33,7 +35,7 @@ public class Trade : BaseEntity<Id<Trade>>
             Price = price,
             Volume = volume,
             SymbolId = symbol.Id,
-            CreatedAt = timestamp,
+            Timestamp = timestamp,
             Symbol = symbol
         };
     }

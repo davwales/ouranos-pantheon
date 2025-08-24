@@ -41,7 +41,7 @@ public sealed class GetDailySymbolSummaryHandler
             .AsQueryable(cancellationToken)
             .Where(t =>
                 t.SymbolId == query.SymbolId &&
-                t.CreatedAt >= today
+                t.Timestamp >= today
             )
             .GroupBy(_ => true)
             .Select(g => new

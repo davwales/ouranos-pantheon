@@ -24,7 +24,7 @@ public sealed class BucketHistoricalData : IBucketHistoricalData
             .GroupBy(t => new
                 {
                     t.SymbolId,
-                    Bucket = t.CreatedAt.Date
+                    Bucket = t.Timestamp.Date
                 }
             )
             .Select(g => new ForecastBucketDto(

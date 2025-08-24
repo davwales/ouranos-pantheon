@@ -125,10 +125,10 @@ public sealed class GetRecipeTradesHandler
         var priceQuery = _unitOfWork.Trades
             .AsQueryable(cancellationToken)
             .Where(x =>
-                (since == null || x.CreatedAt >= since) &&
+                (since == null || x.Timestamp >= since) &&
                 symbolIds.Contains(x.SymbolId)
             )
-            .OrderByDescending(x => x.CreatedAt)
+            .OrderByDescending(x => x.Timestamp)
             .GroupBy(x => x.SymbolId)
             .Select(g => new
                 {

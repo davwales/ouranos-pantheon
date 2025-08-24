@@ -26,6 +26,6 @@ public sealed class TradeTests
         trade.SymbolId.ShouldBe(symbol.Id);
         trade.Price.ShouldBe(price);
         trade.Volume.ShouldBe(volume);
-        trade.CreatedAt.ShouldBe(timestamp);
+        trade.Timestamp.ShouldBe(timestamp);
     }
 }

@@ -42,7 +42,7 @@ public sealed class GetMarketTradesHandler
 
         var tradeQuery = _unitOfWork.Trades.AsQueryable(cancellationToken)
             .Where(x => x.Symbol.MarketId == query.MarketId &&
-                        (since == null || x.CreatedAt >= since)
+                        (since == null || x.Timestamp >= since)
             )
             .GroupBy(t => t.Symbol)
             .Select(g => new

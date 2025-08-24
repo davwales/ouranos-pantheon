@@ -3,6 +3,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Infra.Mongo;
 using Ouranos.Pantheon.Plutus.DataLoader.Infra.RabbitMq;
+using Ouranos.Pantheon.Plutus.DataLoader.Migration.Migrators;
+using Ouranos.Pantheon.Plutus.Service.Infra.Postgres;
 
 namespace Ouranos.Pantheon.Plutus.DataLoader.Migration.Extensions;
 
@@ -13,9 +15,16 @@ public static class StartupExtensions
         var configuration = BuildConfiguration();
         return new ServiceCollection()
             .AddSingleton<IMigration, Migration>()
-            .AddLogging(x => x.AddConsole())
+            .AddTransient<MarketMigrator>()
+            .AddTransient<SymbolMigrator>()
+            .AddTransient<TradeMigrator>()
+            .AddLogging(x => x
+                .AddConsole()
+                .AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning)
+            )
             .AddCoreMongo(configuration)
             .AddPlutusDataLoaderRabbitMqModule(configuration)
+            .AddPostgresModule(configuration)
             .BuildServiceProvider();
     }
 

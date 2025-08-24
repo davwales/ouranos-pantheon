@@ -30,9 +30,9 @@ public sealed class BucketTrades : IBucketTrades
             .GroupBy(t => 1)
             .Select(g => new
                 {
-                    StartTime = g.Min(t => t.CreatedAt),
-                    EndTime = g.Max(t => t.CreatedAt),
-                    Duration = g.Max(t => t.CreatedAt) - g.Min(t => t.CreatedAt)
+                    StartTime = g.Min(t => t.Timestamp),
+                    EndTime = g.Max(t => t.Timestamp),
+                    Duration = g.Max(t => t.Timestamp) - g.Min(t => t.Timestamp)
                 }
             )
             .FirstOrDefault();
@@ -44,7 +44,7 @@ public sealed class BucketTrades : IBucketTrades
 
         var interval = CalculateSmartInterval(timeRange.Duration);
         var bucketedQuery = query
-            .GroupBy(t => TimescaleDbFunctions.TimeBucket(interval, t.CreatedAt))
+            .GroupBy(t => TimescaleDbFunctions.TimeBucket(interval, t.Timestamp))
             .Select(group => new BucketDto(
                     group.First().SymbolId,
                     group.Key,

@@ -47,7 +47,7 @@ public sealed class GetSymbolTradesHandler : QueryHandler<GetSymbolTradesInput, 
         var trades = await _queryExecutor.ToList(
             _bucketTrades.GetBucketedTradesQuery(
                 _unitOfWork.Trades.AsQueryable(cancellationToken).Where(t =>
-                    t.SymbolId == query.SymbolId && (since == null || t.CreatedAt >= since)
+                    t.SymbolId == query.SymbolId && (since == null || t.Timestamp >= since)
                 ),
                 query.NumBuckets,
                 cancellationToken
