@@ -11,7 +11,7 @@
         <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.*"/>
         <PackageReference Include="Ardalis.GuardClauses" Version="5.0.*"/>
     </ItemGroup>
-
+    
     <PropertyGroup>
         <CsvHelperVersion>33.0.*</CsvHelperVersion>
         <EFCoreNamingConventionsVersion>8.0.*</EFCoreNamingConventionsVersion>
