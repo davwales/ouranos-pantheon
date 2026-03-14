@@ -21,7 +21,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\core\Ouranos.Pantheon.Core.API\Ouranos.Pantheon.Core.API.csproj"/>
-        <ProjectReference Include="..\..\hermes\service\Ouranos.Pantheon.Hermes.Service.API\Ouranos.Pantheon.Hermes.Service.API.csproj"/>
+        <ProjectReference Include="..\..\modules\hermes\Ouranos.Pantheon.Modules.Hermes\Ouranos.Pantheon.Modules.Hermes.csproj" />
         <ProjectReference Include="..\..\plutus\service\Ouranos.Pantheon.Plutus.Service.API\Ouranos.Pantheon.Plutus.Service.API.csproj"/>
     </ItemGroup>
 

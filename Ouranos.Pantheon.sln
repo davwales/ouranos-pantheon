@@ -12,14 +12,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "core", "core", "{128A9F3B-4
 		src\core\README.md = src\core\README.md
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "hermes", "hermes", "{3718B2D4-51F6-40AC-8360-6635988D47DE}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "service", "service", "{CEC7CE2F-45F1-4BBB-B1D0-E7BCAFEADB7D}"
-	ProjectSection(SolutionItems) = preProject
-		src\hermes\service\Dockerfile = src\hermes\service\Dockerfile
-		src\hermes\service\README.md = src\hermes\service\README.md
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "service", "service", "{64F2EE35-47B2-45E2-8ADE-D989156D68DE}"
 	ProjectSection(SolutionItems) = preProject
 		src\plutus\service\Dockerfile = src\plutus\service\Dockerfile
@@ -113,16 +105,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Core.Infra
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "seed", "seed", "{35FD8FD9-0651-4902-85A2-2EB724D0C2FE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Hermes.Service.API", "src\hermes\service\Ouranos.Pantheon.Hermes.Service.API\Ouranos.Pantheon.Hermes.Service.API.csproj", "{CDD1BFEA-982B-47DC-8F3B-1980E62B4C06}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Hermes.Service.Application", "src\hermes\service\Ouranos.Pantheon.Hermes.Service.Application\Ouranos.Pantheon.Hermes.Service.Application.csproj", "{521136D6-8358-40E3-9511-413FFAE038B0}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Hermes.Service.Domain", "src\hermes\service\Ouranos.Pantheon.Hermes.Service.Domain\Ouranos.Pantheon.Hermes.Service.Domain.csproj", "{1CA42830-5286-4123-9534-5E748B3EEC7B}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Hermes.Service.Infra.OuranosMl", "src\hermes\service\Ouranos.Pantheon.Hermes.Service.Infra.OuranosMl\Ouranos.Pantheon.Hermes.Service.Infra.OuranosMl.csproj", "{FDB89ABC-350C-48D6-B5F2-B2DCF08DAA2F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Hermes.Service.Infra.Postgres", "src\hermes\service\Ouranos.Pantheon.Hermes.Service.Infra.Postgres\Ouranos.Pantheon.Hermes.Service.Infra.Postgres.csproj", "{8BAD6B8B-0BC4-4C0F-A834-38FB9ACB1A8A}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Plutus.DataLoader.Consumer", "src\plutus\data-loaders\consumer\Ouranos.Pantheon.Plutus.DataLoader.Consumer\Ouranos.Pantheon.Plutus.DataLoader.Consumer.csproj", "{E7E62347-A194-4219-81B8-DD70BC2C6480}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Plutus.DataLoader.Application", "src\plutus\data-loaders\Ouranos.Pantheon.Plutus.DataLoader.Application\Ouranos.Pantheon.Plutus.DataLoader.Application.csproj", "{B2D1FBE9-4D69-4E9F-81C1-7C80F264F2EC}"
@@ -168,6 +150,17 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Plutus.Service.Domain.Tests", "tests\plutus\service\Ouranos.Pantheon.Plutus.Service.Domain.Tests\Ouranos.Pantheon.Plutus.Service.Domain.Tests.csproj", "{C1B399DE-35D7-4F36-ADE3-CB7FDD8A1BFD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Plutus.Service.Infra.OuranosMl.Tests", "tests\plutus\service\Ouranos.Pantheon.Plutus.Service.Infra.OuranosMl.Tests\Ouranos.Pantheon.Plutus.Service.Infra.OuranosMl.Tests.csproj", "{D944E985-8DF5-4629-BC0E-5AF82BAC6555}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "modules", "modules", "{729D4168-682A-4C6F-8CC1-3E02A7B90EB9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "hermes", "hermes", "{B7D73E42-5659-4E6E-A573-A788E3878790}"
+	ProjectSection(SolutionItems) = preProject
+		src\hermes\service\README.md = src\hermes\service\README.md
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Modules.Hermes", "src\modules\hermes\Ouranos.Pantheon.Modules.Hermes\Ouranos.Pantheon.Modules.Hermes.csproj", "{1859D718-E915-47C3-A569-D914BD1DA571}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Modules.Shared", "src\modules\Ouranos.Pantheon.Modules.Shared\Ouranos.Pantheon.Modules.Shared.csproj", "{F86C6EB3-05DF-47B6-B750-D2C5CDE091BC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -239,26 +232,6 @@ Global
 		{46E8C217-1583-419A-B01B-C321F982CF96}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{46E8C217-1583-419A-B01B-C321F982CF96}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{46E8C217-1583-419A-B01B-C321F982CF96}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CDD1BFEA-982B-47DC-8F3B-1980E62B4C06}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CDD1BFEA-982B-47DC-8F3B-1980E62B4C06}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CDD1BFEA-982B-47DC-8F3B-1980E62B4C06}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CDD1BFEA-982B-47DC-8F3B-1980E62B4C06}.Release|Any CPU.Build.0 = Release|Any CPU
-		{521136D6-8358-40E3-9511-413FFAE038B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{521136D6-8358-40E3-9511-413FFAE038B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{521136D6-8358-40E3-9511-413FFAE038B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{521136D6-8358-40E3-9511-413FFAE038B0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1CA42830-5286-4123-9534-5E748B3EEC7B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1CA42830-5286-4123-9534-5E748B3EEC7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1CA42830-5286-4123-9534-5E748B3EEC7B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1CA42830-5286-4123-9534-5E748B3EEC7B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FDB89ABC-350C-48D6-B5F2-B2DCF08DAA2F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FDB89ABC-350C-48D6-B5F2-B2DCF08DAA2F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FDB89ABC-350C-48D6-B5F2-B2DCF08DAA2F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FDB89ABC-350C-48D6-B5F2-B2DCF08DAA2F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8BAD6B8B-0BC4-4C0F-A834-38FB9ACB1A8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8BAD6B8B-0BC4-4C0F-A834-38FB9ACB1A8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8BAD6B8B-0BC4-4C0F-A834-38FB9ACB1A8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8BAD6B8B-0BC4-4C0F-A834-38FB9ACB1A8A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E7E62347-A194-4219-81B8-DD70BC2C6480}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E7E62347-A194-4219-81B8-DD70BC2C6480}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E7E62347-A194-4219-81B8-DD70BC2C6480}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -343,11 +316,17 @@ Global
 		{D944E985-8DF5-4629-BC0E-5AF82BAC6555}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D944E985-8DF5-4629-BC0E-5AF82BAC6555}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D944E985-8DF5-4629-BC0E-5AF82BAC6555}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1859D718-E915-47C3-A569-D914BD1DA571}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1859D718-E915-47C3-A569-D914BD1DA571}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1859D718-E915-47C3-A569-D914BD1DA571}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1859D718-E915-47C3-A569-D914BD1DA571}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F86C6EB3-05DF-47B6-B750-D2C5CDE091BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F86C6EB3-05DF-47B6-B750-D2C5CDE091BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F86C6EB3-05DF-47B6-B750-D2C5CDE091BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F86C6EB3-05DF-47B6-B750-D2C5CDE091BC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{128A9F3B-4D1A-4A93-A0EC-2426770786AC} = {24007BE7-AE6D-46D3-B37A-522FE3EF0D9C}
-		{3718B2D4-51F6-40AC-8360-6635988D47DE} = {24007BE7-AE6D-46D3-B37A-522FE3EF0D9C}
-		{CEC7CE2F-45F1-4BBB-B1D0-E7BCAFEADB7D} = {3718B2D4-51F6-40AC-8360-6635988D47DE}
 		{D676A27F-C4A4-4741-A513-045762808A8C} = {128A9F3B-4D1A-4A93-A0EC-2426770786AC}
 		{1A65C5FA-3121-4737-B49D-73920F76EC2F} = {128A9F3B-4D1A-4A93-A0EC-2426770786AC}
 		{F5EDC1BA-0974-48C7-8628-DCE5AFC484FF} = {128A9F3B-4D1A-4A93-A0EC-2426770786AC}
@@ -374,11 +353,6 @@ Global
 		{46E8C217-1583-419A-B01B-C321F982CF96} = {128A9F3B-4D1A-4A93-A0EC-2426770786AC}
 		{35FD8FD9-0651-4902-85A2-2EB724D0C2FE} = {DBE7C5CA-24A4-4277-8F46-8043EE66C167}
 		{64F2EE35-47B2-45E2-8ADE-D989156D68DE} = {DDE15ED7-21D6-4AC1-8536-B833DA144125}
-		{CDD1BFEA-982B-47DC-8F3B-1980E62B4C06} = {CEC7CE2F-45F1-4BBB-B1D0-E7BCAFEADB7D}
-		{521136D6-8358-40E3-9511-413FFAE038B0} = {CEC7CE2F-45F1-4BBB-B1D0-E7BCAFEADB7D}
-		{1CA42830-5286-4123-9534-5E748B3EEC7B} = {CEC7CE2F-45F1-4BBB-B1D0-E7BCAFEADB7D}
-		{FDB89ABC-350C-48D6-B5F2-B2DCF08DAA2F} = {CEC7CE2F-45F1-4BBB-B1D0-E7BCAFEADB7D}
-		{8BAD6B8B-0BC4-4C0F-A834-38FB9ACB1A8A} = {CEC7CE2F-45F1-4BBB-B1D0-E7BCAFEADB7D}
 		{E7E62347-A194-4219-81B8-DD70BC2C6480} = {7AA6C4E7-1F7A-4AAF-B70B-730A237D1F24}
 		{B2D1FBE9-4D69-4E9F-81C1-7C80F264F2EC} = {DBE7C5CA-24A4-4277-8F46-8043EE66C167}
 		{2BE3CA36-51F1-4CC3-95A2-77AED7744E6F} = {DBE7C5CA-24A4-4277-8F46-8043EE66C167}
@@ -402,5 +376,9 @@ Global
 		{BF22C5F6-51B4-4910-AC69-BD84906C8B15} = {E9BD53AF-12FF-444F-8485-B7DB8A4E1506}
 		{C1B399DE-35D7-4F36-ADE3-CB7FDD8A1BFD} = {E9BD53AF-12FF-444F-8485-B7DB8A4E1506}
 		{D944E985-8DF5-4629-BC0E-5AF82BAC6555} = {E9BD53AF-12FF-444F-8485-B7DB8A4E1506}
+		{729D4168-682A-4C6F-8CC1-3E02A7B90EB9} = {24007BE7-AE6D-46D3-B37A-522FE3EF0D9C}
+		{B7D73E42-5659-4E6E-A573-A788E3878790} = {729D4168-682A-4C6F-8CC1-3E02A7B90EB9}
+		{1859D718-E915-47C3-A569-D914BD1DA571} = {B7D73E42-5659-4E6E-A573-A788E3878790}
+		{F86C6EB3-05DF-47B6-B750-D2C5CDE091BC} = {729D4168-682A-4C6F-8CC1-3E02A7B90EB9}
 	EndGlobalSection
 EndGlobal

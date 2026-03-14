@@ -1,6 +1,6 @@
 ﻿using Ouranos.Pantheon.Core.API.Extensions;
 using Ouranos.Pantheon.Core.API.Interfaces;
-using Ouranos.Pantheon.Hermes.Service.API;
+using Ouranos.Pantheon.Modules.Hermes;
 using Ouranos.Pantheon.Plutus.Service.API;
 
 namespace Ouranos.Pantheon.Gateway.API.Startup;
