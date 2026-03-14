@@ -1,5 +1,4 @@
 ﻿using MassTransit;
-using Ouranos.Pantheon.Core.Infra.Mongo;
 using Ouranos.Pantheon.Plutus.DataLoader.Consumer.Handlers.InsertTrade;
 using Ouranos.Pantheon.Plutus.DataLoader.Consumer.Handlers.UpsertSymbol;
 using Ouranos.Pantheon.Plutus.DataLoader.Infra.RabbitMq;
@@ -16,7 +15,6 @@ public static class HostingExtensions
             .ConfigureWorker(builder.Configuration)
             .AddScoped<IUpsertSymbol, UpsertSymbol>()
             .AddScoped<IInsertTrade, InsertTrade>()
-            .AddCoreMongo(builder.Configuration)
             .AddPostgresModule(builder.Configuration)
             .AddMassTransit(x =>
                 {
