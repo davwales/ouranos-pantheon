@@ -26,12 +26,14 @@
                 Condition="Exists('..\..\..\gateway\Ouranos.Pantheon.Gateway.API\appsettings.json')">
             <Link>appsettings.json</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>Never</CopyToPublishDirectory>
         </Content>
 
         <Content Include="..\..\..\gateway\Ouranos.Pantheon.Gateway.API\appsettings.Development.json" 
                 Condition="Exists('..\..\..\gateway\Ouranos.Pantheon.Gateway.API\appsettings.Development.json')">
             <Link>appsettings.Development.json</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>Never</CopyToPublishDirectory>
         </Content>
     </ItemGroup>
 
