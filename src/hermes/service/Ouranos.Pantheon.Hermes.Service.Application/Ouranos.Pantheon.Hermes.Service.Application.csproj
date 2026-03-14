@@ -5,6 +5,9 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\..\core\Ouranos.Pantheon.Core.Application\Ouranos.Pantheon.Core.Application.csproj"/>
-        <ProjectReference Include="..\Ouranos.Pantheon.Hermes.Service.Domain\Ouranos.Pantheon.Hermes.Service.Domain.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Commands\Assistants\CreateAssistant\" />
     </ItemGroup>
 </Project>

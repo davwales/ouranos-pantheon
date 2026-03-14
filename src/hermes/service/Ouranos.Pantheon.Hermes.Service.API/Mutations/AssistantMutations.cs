@@ -13,26 +13,6 @@ namespace Ouranos.Pantheon.Hermes.Service.API.Mutations;
 public sealed class AssistantMutations
 {
     /// <summary>
-    ///     Creates a assistant.
-    /// </summary>
-    /// <param name="dispatcher">
-    ///     <see cref="IDispatcher" />
-    /// </param>
-    /// <param name="input">Command to be executed.</param>
-    /// <param name="cancellationToken">
-    ///     <see cref="CancellationToken" />
-    /// </param>
-    /// <returns>The id of the newly created assistant.</returns>
-    public async Task<IdResponse<Assistant>> CreateAssistant(
-        [Service] IScopedDispatcher dispatcher,
-        CreateAssistantInput input,
-        CancellationToken cancellationToken = default
-    )
-    {
-        return await dispatcher.Send(input, cancellationToken);
-    }
-
-    /// <summary>
     ///     Updates a assistant.
     /// </summary>
     /// <param name="dispatcher">

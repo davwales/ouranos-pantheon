@@ -5,7 +5,7 @@ WORKDIR /app
 COPY . ./
 
 RUN dotnet restore
-RUN dotnet publish ./src/hermes/service/Ouranos.Pantheon.Hermes.Service.API/Ouranos.Pantheon.Hermes.Service.API.csproj -c Release -o /app/publish
+RUN dotnet publish ./src/modules/hermes/Ouranos.Pantheon.Modules.Hermes/Ouranos.Pantheon.Modules.Hermes.csproj -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 
