@@ -32,8 +32,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Core.Appli
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Core.Domain", "src\core\Ouranos.Pantheon.Core.Domain\Ouranos.Pantheon.Core.Domain.csproj", "{F5EDC1BA-0974-48C7-8628-DCE5AFC484FF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Core.Infra.Mongo", "src\core\Ouranos.Pantheon.Core.Infra.Mongo\Ouranos.Pantheon.Core.Infra.Mongo.csproj", "{45BFA704-C089-4EB3-BE40-18ADD0617E82}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{17150C3E-ECED-431E-8CE0-774603C5A4BB}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
@@ -103,15 +101,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Core.Appli
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Tests.Utils", "tests\Ouranos.Pantheon.Tests.Utils\Ouranos.Pantheon.Tests.Utils.csproj", "{4E996D12-1F9F-4CA0-9765-3949D538D3EB}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "migration", "migration", "{03224059-6B92-42A6-83E1-3BB844A1464E}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Core.Infra.OuranosMl.Tests", "tests\core\Ouranos.Pantheon.Core.Infra.OuranosMl.Tests\Ouranos.Pantheon.Core.Infra.OuranosMl.Tests.csproj", "{AC0F5781-C7B5-4275-B571-2723C2EEBAB9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Core.API.Tests", "tests\core\Ouranos.Pantheon.Core.API.Tests\Ouranos.Pantheon.Core.API.Tests.csproj", "{494AF5B7-CA7B-4C57-9C06-60A6D42DB86B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Core.Common.Tests", "tests\core\Ouranos.Pantheon.Core.Common.Tests\Ouranos.Pantheon.Core.Common.Tests.csproj", "{27CDE586-54FA-4FAA-A177-D68758AE7B7F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Core.Infra.Mongo.Tests", "tests\core\Ouranos.Pantheon.Core.Infra.Mongo.Tests\Ouranos.Pantheon.Core.Infra.Mongo.Tests.csproj", "{41EFF7E2-AEA8-4242-85E3-6B20399698AA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Core.WebSockets.Tests", "tests\core\Ouranos.Pantheon.Core.WebSockets.Tests\Ouranos.Pantheon.Core.WebSockets.Tests.csproj", "{B56D9E86-7EFC-4796-B002-7C29DF4356ED}"
 EndProject
@@ -124,8 +118,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Hermes.Service.Application", "src\hermes\service\Ouranos.Pantheon.Hermes.Service.Application\Ouranos.Pantheon.Hermes.Service.Application.csproj", "{521136D6-8358-40E3-9511-413FFAE038B0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Hermes.Service.Domain", "src\hermes\service\Ouranos.Pantheon.Hermes.Service.Domain\Ouranos.Pantheon.Hermes.Service.Domain.csproj", "{1CA42830-5286-4123-9534-5E748B3EEC7B}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Hermes.Service.Infra.Mongo", "src\hermes\service\Ouranos.Pantheon.Hermes.Service.Infra.Mongo\Ouranos.Pantheon.Hermes.Service.Infra.Mongo.csproj", "{3348C69A-F905-4E3E-89C4-0B00AF954330}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Hermes.Service.Infra.OuranosMl", "src\hermes\service\Ouranos.Pantheon.Hermes.Service.Infra.OuranosMl\Ouranos.Pantheon.Hermes.Service.Infra.OuranosMl.csproj", "{FDB89ABC-350C-48D6-B5F2-B2DCF08DAA2F}"
 EndProject
@@ -147,8 +139,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Plutus.Dat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Plutus.DataLoader.Ffxiv.Producer", "src\plutus\data-loaders\ffxiv\Ouranos.Pantheon.Plutus.DataLoader.Ffxiv.Producer\Ouranos.Pantheon.Plutus.DataLoader.Ffxiv.Producer.csproj", "{87FE363B-665C-4536-98E8-F5C9D5D1D41F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Plutus.DataLoader.Migration", "src\plutus\data-loaders\migration\Ouranos.Pantheon.Plutus.DataLoader.Migration\Ouranos.Pantheon.Plutus.DataLoader.Migration.csproj", "{8D8102EA-B17F-4284-8DD9-0DDE81E57CE6}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Plutus.DataLoader.Osrs.Application", "src\plutus\data-loaders\osrs\Ouranos.Pantheon.Plutus.DataLoader.Osrs.Application\Ouranos.Pantheon.Plutus.DataLoader.Osrs.Application.csproj", "{51A1A86A-7D18-4F29-B80C-5E4916C40CF7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Plutus.DataLoader.Osrs.Infra.OsrsWiki", "src\plutus\data-loaders\osrs\Ouranos.Pantheon.Plutus.DataLoader.Osrs.Infra.OsrsWiki\Ouranos.Pantheon.Plutus.DataLoader.Osrs.Infra.OsrsWiki.csproj", "{8505320D-F2F5-4916-AB96-DADA76AFD2F4}"
@@ -164,8 +154,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Plutus.Service.Application", "src\plutus\service\Ouranos.Pantheon.Plutus.Service.Application\Ouranos.Pantheon.Plutus.Service.Application.csproj", "{C8BE2AC1-5F50-4E64-9515-8E88CDAF845E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Plutus.Service.Domain", "src\plutus\service\Ouranos.Pantheon.Plutus.Service.Domain\Ouranos.Pantheon.Plutus.Service.Domain.csproj", "{6873AAB2-CEEF-4788-B685-D11EF2F7F375}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Plutus.Service.Infra.Mongo", "src\plutus\service\Ouranos.Pantheon.Plutus.Service.Infra.Mongo\Ouranos.Pantheon.Plutus.Service.Infra.Mongo.csproj", "{A0510CAF-0FB6-4F14-B8B2-8849021BF390}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Plutus.Service.Infra.OuranosMl", "src\plutus\service\Ouranos.Pantheon.Plutus.Service.Infra.OuranosMl\Ouranos.Pantheon.Plutus.Service.Infra.OuranosMl.csproj", "{0C2566D1-4081-4281-88B4-25D0EB52AFC9}"
 EndProject
@@ -199,10 +187,6 @@ Global
 		{F5EDC1BA-0974-48C7-8628-DCE5AFC484FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F5EDC1BA-0974-48C7-8628-DCE5AFC484FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F5EDC1BA-0974-48C7-8628-DCE5AFC484FF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{45BFA704-C089-4EB3-BE40-18ADD0617E82}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{45BFA704-C089-4EB3-BE40-18ADD0617E82}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{45BFA704-C089-4EB3-BE40-18ADD0617E82}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{45BFA704-C089-4EB3-BE40-18ADD0617E82}.Release|Any CPU.Build.0 = Release|Any CPU
 		{55B203CA-1BAD-485E-9828-C9B59187C013}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{55B203CA-1BAD-485E-9828-C9B59187C013}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{55B203CA-1BAD-485E-9828-C9B59187C013}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -247,10 +231,6 @@ Global
 		{27CDE586-54FA-4FAA-A177-D68758AE7B7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{27CDE586-54FA-4FAA-A177-D68758AE7B7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{27CDE586-54FA-4FAA-A177-D68758AE7B7F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{41EFF7E2-AEA8-4242-85E3-6B20399698AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{41EFF7E2-AEA8-4242-85E3-6B20399698AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{41EFF7E2-AEA8-4242-85E3-6B20399698AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{41EFF7E2-AEA8-4242-85E3-6B20399698AA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B56D9E86-7EFC-4796-B002-7C29DF4356ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B56D9E86-7EFC-4796-B002-7C29DF4356ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B56D9E86-7EFC-4796-B002-7C29DF4356ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -271,10 +251,6 @@ Global
 		{1CA42830-5286-4123-9534-5E748B3EEC7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1CA42830-5286-4123-9534-5E748B3EEC7B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1CA42830-5286-4123-9534-5E748B3EEC7B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3348C69A-F905-4E3E-89C4-0B00AF954330}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3348C69A-F905-4E3E-89C4-0B00AF954330}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3348C69A-F905-4E3E-89C4-0B00AF954330}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3348C69A-F905-4E3E-89C4-0B00AF954330}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FDB89ABC-350C-48D6-B5F2-B2DCF08DAA2F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{FDB89ABC-350C-48D6-B5F2-B2DCF08DAA2F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FDB89ABC-350C-48D6-B5F2-B2DCF08DAA2F}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -315,10 +291,6 @@ Global
 		{87FE363B-665C-4536-98E8-F5C9D5D1D41F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{87FE363B-665C-4536-98E8-F5C9D5D1D41F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{87FE363B-665C-4536-98E8-F5C9D5D1D41F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8D8102EA-B17F-4284-8DD9-0DDE81E57CE6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8D8102EA-B17F-4284-8DD9-0DDE81E57CE6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8D8102EA-B17F-4284-8DD9-0DDE81E57CE6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8D8102EA-B17F-4284-8DD9-0DDE81E57CE6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{51A1A86A-7D18-4F29-B80C-5E4916C40CF7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{51A1A86A-7D18-4F29-B80C-5E4916C40CF7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{51A1A86A-7D18-4F29-B80C-5E4916C40CF7}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -351,10 +323,6 @@ Global
 		{6873AAB2-CEEF-4788-B685-D11EF2F7F375}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6873AAB2-CEEF-4788-B685-D11EF2F7F375}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6873AAB2-CEEF-4788-B685-D11EF2F7F375}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A0510CAF-0FB6-4F14-B8B2-8849021BF390}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A0510CAF-0FB6-4F14-B8B2-8849021BF390}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A0510CAF-0FB6-4F14-B8B2-8849021BF390}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A0510CAF-0FB6-4F14-B8B2-8849021BF390}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0C2566D1-4081-4281-88B4-25D0EB52AFC9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{0C2566D1-4081-4281-88B4-25D0EB52AFC9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0C2566D1-4081-4281-88B4-25D0EB52AFC9}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -383,7 +351,6 @@ Global
 		{D676A27F-C4A4-4741-A513-045762808A8C} = {128A9F3B-4D1A-4A93-A0EC-2426770786AC}
 		{1A65C5FA-3121-4737-B49D-73920F76EC2F} = {128A9F3B-4D1A-4A93-A0EC-2426770786AC}
 		{F5EDC1BA-0974-48C7-8628-DCE5AFC484FF} = {128A9F3B-4D1A-4A93-A0EC-2426770786AC}
-		{45BFA704-C089-4EB3-BE40-18ADD0617E82} = {128A9F3B-4D1A-4A93-A0EC-2426770786AC}
 		{DDE15ED7-21D6-4AC1-8536-B833DA144125} = {24007BE7-AE6D-46D3-B37A-522FE3EF0D9C}
 		{DBE7C5CA-24A4-4277-8F46-8043EE66C167} = {DDE15ED7-21D6-4AC1-8536-B833DA144125}
 		{EFED1D76-F469-42BE-AB4A-2C99C48F786E} = {DBE7C5CA-24A4-4277-8F46-8043EE66C167}
@@ -400,11 +367,9 @@ Global
 		{E3445E33-87C3-4161-B5B7-5211743E1AF0} = {E77EDC83-6ED1-424E-A7BA-2E0E62C75DDD}
 		{8104B2C5-3063-4924-82FC-ACD046C34AD5} = {E77EDC83-6ED1-424E-A7BA-2E0E62C75DDD}
 		{4E996D12-1F9F-4CA0-9765-3949D538D3EB} = {F392701E-51BD-4568-8747-EEB6210D34B1}
-		{03224059-6B92-42A6-83E1-3BB844A1464E} = {DBE7C5CA-24A4-4277-8F46-8043EE66C167}
 		{AC0F5781-C7B5-4275-B571-2723C2EEBAB9} = {E77EDC83-6ED1-424E-A7BA-2E0E62C75DDD}
 		{494AF5B7-CA7B-4C57-9C06-60A6D42DB86B} = {E77EDC83-6ED1-424E-A7BA-2E0E62C75DDD}
 		{27CDE586-54FA-4FAA-A177-D68758AE7B7F} = {E77EDC83-6ED1-424E-A7BA-2E0E62C75DDD}
-		{41EFF7E2-AEA8-4242-85E3-6B20399698AA} = {E77EDC83-6ED1-424E-A7BA-2E0E62C75DDD}
 		{B56D9E86-7EFC-4796-B002-7C29DF4356ED} = {E77EDC83-6ED1-424E-A7BA-2E0E62C75DDD}
 		{46E8C217-1583-419A-B01B-C321F982CF96} = {128A9F3B-4D1A-4A93-A0EC-2426770786AC}
 		{35FD8FD9-0651-4902-85A2-2EB724D0C2FE} = {DBE7C5CA-24A4-4277-8F46-8043EE66C167}
@@ -412,7 +377,6 @@ Global
 		{CDD1BFEA-982B-47DC-8F3B-1980E62B4C06} = {CEC7CE2F-45F1-4BBB-B1D0-E7BCAFEADB7D}
 		{521136D6-8358-40E3-9511-413FFAE038B0} = {CEC7CE2F-45F1-4BBB-B1D0-E7BCAFEADB7D}
 		{1CA42830-5286-4123-9534-5E748B3EEC7B} = {CEC7CE2F-45F1-4BBB-B1D0-E7BCAFEADB7D}
-		{3348C69A-F905-4E3E-89C4-0B00AF954330} = {CEC7CE2F-45F1-4BBB-B1D0-E7BCAFEADB7D}
 		{FDB89ABC-350C-48D6-B5F2-B2DCF08DAA2F} = {CEC7CE2F-45F1-4BBB-B1D0-E7BCAFEADB7D}
 		{8BAD6B8B-0BC4-4C0F-A834-38FB9ACB1A8A} = {CEC7CE2F-45F1-4BBB-B1D0-E7BCAFEADB7D}
 		{E7E62347-A194-4219-81B8-DD70BC2C6480} = {7AA6C4E7-1F7A-4AAF-B70B-730A237D1F24}
@@ -423,7 +387,6 @@ Global
 		{20516F11-9222-41F1-96D3-7A793FE08FCE} = {80277236-416A-4B1C-B32E-01AADF1552D0}
 		{57DE08ED-37BC-4125-AF4B-15DFD2666863} = {80277236-416A-4B1C-B32E-01AADF1552D0}
 		{87FE363B-665C-4536-98E8-F5C9D5D1D41F} = {80277236-416A-4B1C-B32E-01AADF1552D0}
-		{8D8102EA-B17F-4284-8DD9-0DDE81E57CE6} = {03224059-6B92-42A6-83E1-3BB844A1464E}
 		{51A1A86A-7D18-4F29-B80C-5E4916C40CF7} = {EFED1D76-F469-42BE-AB4A-2C99C48F786E}
 		{8505320D-F2F5-4916-AB96-DADA76AFD2F4} = {EFED1D76-F469-42BE-AB4A-2C99C48F786E}
 		{444C3684-F9AD-4064-9988-F0811D5004C4} = {EFED1D76-F469-42BE-AB4A-2C99C48F786E}
@@ -432,7 +395,6 @@ Global
 		{E4F3D959-0A10-4139-BA7E-2C8486CD40EE} = {64F2EE35-47B2-45E2-8ADE-D989156D68DE}
 		{C8BE2AC1-5F50-4E64-9515-8E88CDAF845E} = {64F2EE35-47B2-45E2-8ADE-D989156D68DE}
 		{6873AAB2-CEEF-4788-B685-D11EF2F7F375} = {64F2EE35-47B2-45E2-8ADE-D989156D68DE}
-		{A0510CAF-0FB6-4F14-B8B2-8849021BF390} = {64F2EE35-47B2-45E2-8ADE-D989156D68DE}
 		{0C2566D1-4081-4281-88B4-25D0EB52AFC9} = {64F2EE35-47B2-45E2-8ADE-D989156D68DE}
 		{3BCCDA57-F380-4061-B6E0-0C71069869B7} = {64F2EE35-47B2-45E2-8ADE-D989156D68DE}
 		{5E7CB603-D617-4A7E-BE83-CCF76DAA5914} = {F392701E-51BD-4568-8747-EEB6210D34B1}
