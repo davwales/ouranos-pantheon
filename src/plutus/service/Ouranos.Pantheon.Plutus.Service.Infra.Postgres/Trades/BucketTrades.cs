@@ -29,11 +29,11 @@ public sealed class BucketTrades : IBucketTrades
         var timeRange = query
             .GroupBy(t => 1)
             .Select(g => new
-                {
-                    StartTime = g.Min(t => t.Timestamp),
-                    EndTime = g.Max(t => t.Timestamp),
-                    Duration = g.Max(t => t.Timestamp) - g.Min(t => t.Timestamp)
-                }
+            {
+                StartTime = g.Min(t => t.Timestamp),
+                EndTime = g.Max(t => t.Timestamp),
+                Duration = g.Max(t => t.Timestamp) - g.Min(t => t.Timestamp)
+            }
             )
             .FirstOrDefault();
 

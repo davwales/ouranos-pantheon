@@ -22,10 +22,10 @@ public sealed class BucketHistoricalData : IBucketHistoricalData
 
         var bucketedQuery = query
             .GroupBy(t => new
-                {
-                    t.SymbolId,
-                    Bucket = t.Timestamp.Date
-                }
+            {
+                t.SymbolId,
+                Bucket = t.Timestamp.Date
+            }
             )
             .Select(g => new ForecastBucketDto(
                     new ForecastBucketIdDto(g.Key.SymbolId, g.Key.Bucket),

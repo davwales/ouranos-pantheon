@@ -10,7 +10,12 @@ public sealed class QueryExecutor : IQueryExecutor
         CancellationToken cancellationToken = default
     )
     {
-        return await query.FirstOrDefaultAsync(cancellationToken);
+        if (query is IAsyncEnumerable<T>)
+        {
+            return await query.FirstOrDefaultAsync(cancellationToken);
+        }
+
+        return query.FirstOrDefault();
     }
 
     public async Task<List<T>> ToList<T>(
@@ -18,6 +23,11 @@ public sealed class QueryExecutor : IQueryExecutor
         CancellationToken cancellationToken = default
     )
     {
-        return await query.ToListAsync(cancellationToken);
+        if (query is IAsyncEnumerable<T>)
+        {
+            return await query.ToListAsync(cancellationToken);
+        }
+
+        return [.. query];
     }
 }

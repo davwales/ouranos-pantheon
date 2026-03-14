@@ -4,17 +4,11 @@
   "tools": {
     "hotchocolate.fusion.commandline": {
       "version": "13.9.14",
-      "commands": [
-        "fusion"
-      ],
-      "rollForward": false
+      "commands": ["fusion"]
     },
     "dotnet-ef": {
       "version": "9.0.8",
-      "commands": [
-        "dotnet-ef"
-      ],
-      "rollForward": false
+      "commands": ["dotnet-ef"]
     }
   }
 }

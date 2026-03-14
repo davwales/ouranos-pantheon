@@ -2,7 +2,6 @@ using Ouranos.Pantheon.Core.Application.Interfaces.Common;
 using Ouranos.Pantheon.Plutus.Service.Domain.Forecasts;
 using Ouranos.Pantheon.Plutus.Service.Domain.Markets;
 using Ouranos.Pantheon.Plutus.Service.Domain.Recipes;
-using Ouranos.Pantheon.Plutus.Service.Domain.SymbolGroups;
 using Ouranos.Pantheon.Plutus.Service.Domain.Symbols;
 using Ouranos.Pantheon.Plutus.Service.Domain.Trades;
 
@@ -15,8 +14,6 @@ public interface IPlutusUnitOfWork : IUnitOfWork
     IRepository<Market> Markets { get; }
 
     IRepository<Recipe> Recipes { get; }
-
-    IRepository<SymbolGroup> SymbolGroups { get; }
 
     IRepository<Symbol> Symbols { get; }
 

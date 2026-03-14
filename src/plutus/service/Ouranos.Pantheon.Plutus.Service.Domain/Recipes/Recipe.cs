@@ -9,8 +9,6 @@ public class Recipe : BaseEntity<Id<Recipe>>
     protected Recipe(Id<Recipe> id) : base(id)
     {
         Name = string.Empty;
-        Inputs = [];
-        Outputs = [];
     }
 
     public Id<Market> MarketId { get; init; }
@@ -19,9 +17,9 @@ public class Recipe : BaseEntity<Id<Recipe>>
 
     public decimal Cost { get; init; }
 
-    public IReadOnlyList<RecipeComponent> Inputs { get; init; }
+    public virtual required ICollection<RecipeComponent> Inputs { get; init; }
 
-    public IReadOnlyList<RecipeComponent> Outputs { get; init; }
+    public virtual required ICollection<RecipeComponent> Outputs { get; init; }
 
     public virtual required Market Market { get; init; }
 
@@ -30,8 +28,8 @@ public class Recipe : BaseEntity<Id<Recipe>>
         Market market,
         string name,
         decimal cost,
-        IReadOnlyList<RecipeComponent> inputs,
-        IReadOnlyList<RecipeComponent> outputs
+        ICollection<RecipeComponent> inputs,
+        ICollection<RecipeComponent> outputs
     )
     {
         Guard.Against.Null(market);

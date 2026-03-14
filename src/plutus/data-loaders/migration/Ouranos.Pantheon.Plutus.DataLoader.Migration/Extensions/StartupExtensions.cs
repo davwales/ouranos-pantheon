@@ -18,6 +18,7 @@ public static class StartupExtensions
             .AddTransient<MarketMigrator>()
             .AddTransient<SymbolMigrator>()
             .AddTransient<TradeMigrator>()
+            .AddTransient<RecipeMigrator>()
             .AddLogging(x => x
                 .AddConsole()
                 .AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning)

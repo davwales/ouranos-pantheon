@@ -3,7 +3,6 @@ using Ouranos.Pantheon.Core.Infra.Postgres;
 using Ouranos.Pantheon.Plutus.Service.Domain.Forecasts;
 using Ouranos.Pantheon.Plutus.Service.Domain.Markets;
 using Ouranos.Pantheon.Plutus.Service.Domain.Recipes;
-using Ouranos.Pantheon.Plutus.Service.Domain.SymbolGroups;
 using Ouranos.Pantheon.Plutus.Service.Domain.Symbols;
 using Ouranos.Pantheon.Plutus.Service.Domain.Trades;
 
@@ -17,8 +16,6 @@ public sealed class PlutusDbContext(DbContextOptions<PlutusDbContext> options) :
 
     public DbSet<Recipe> Recipes { get; set; }
 
-    public DbSet<SymbolGroup> SymbolGroups { get; set; }
-
     public DbSet<Symbol> Symbols { get; set; }
 
     public DbSet<Trade> Trades { get; set; }
@@ -30,7 +27,6 @@ public sealed class PlutusDbContext(DbContextOptions<PlutusDbContext> options) :
         modelBuilder.Entity<Forecast>();
         modelBuilder.Entity<Market>();
         modelBuilder.Entity<Recipe>();
-        modelBuilder.Entity<SymbolGroup>();
         modelBuilder.Entity<Symbol>();
         modelBuilder.Entity<Trade>();
     }

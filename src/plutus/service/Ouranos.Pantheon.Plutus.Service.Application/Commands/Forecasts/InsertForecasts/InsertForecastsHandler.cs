@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Common;
-using Ouranos.Pantheon.Plutus.Service.Domain.Forecasts;
 
 namespace Ouranos.Pantheon.Plutus.Service.Application.Commands.Forecasts.InsertForecasts;
 

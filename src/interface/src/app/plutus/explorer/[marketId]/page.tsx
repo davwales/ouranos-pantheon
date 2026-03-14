@@ -26,7 +26,7 @@ export default function MarketDetail() {
       state.timeFrameSeconds,
       state.explorerTableState,
       state.setExplorerTableState,
-    ]
+    ],
   );
 
   const [{ data, fetching }, reexecute] = useQuery({
@@ -166,7 +166,7 @@ export default function MarketDetail() {
         },
       },
     ],
-    [marketId]
+    [marketId],
   );
 
   return (
@@ -192,8 +192,6 @@ export default function MarketDetail() {
         onStateChange={setTableState}
         pageInfo={data?.marketTrades?.pageInfo}
         className="my-2"
-        disableSorting // TODO: Remove once sorting works.
-        disableFiltering // TODO: Remove once filtering works.
       />
     </div>
   );

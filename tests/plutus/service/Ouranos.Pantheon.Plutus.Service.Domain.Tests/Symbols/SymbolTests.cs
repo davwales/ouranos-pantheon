@@ -1,7 +1,6 @@
 using Ouranos.Pantheon.Core.Domain.Common;
 using Ouranos.Pantheon.Plutus.Service.Domain.Markets;
 using Ouranos.Pantheon.Plutus.Service.Domain.Symbols;
-using Ouranos.Pantheon.Plutus.Service.Domain.Trades;
 
 namespace Ouranos.Pantheon.Plutus.Service.Domain.Tests.Symbols;
 

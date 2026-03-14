@@ -33,7 +33,6 @@ plutus/
   │   ├── Forecasts/
   │   ├── Markets/
   │   ├── Recipes/
-  │   ├── SymbolGroups/
   │   ├── Symbols/
   │   ├── Trades/
   └── Infra.*/
@@ -55,6 +54,5 @@ plutus/
     - markets
     - symbols
     - trades
-    - symbolgroups
     - recipes
     - forecasts

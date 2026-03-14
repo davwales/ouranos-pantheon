@@ -17,11 +17,11 @@ public sealed class SymbolConfiguration : IEntityTypeConfiguration<Symbol>
 
         builder
             .HasIndex(s => new
-                {
-                    s.Code,
-                    s.Subcode,
-                    s.MarketId
-                }
+            {
+                s.Code,
+                s.Subcode,
+                s.MarketId
+            }
             )
             .IsUnique();
     }

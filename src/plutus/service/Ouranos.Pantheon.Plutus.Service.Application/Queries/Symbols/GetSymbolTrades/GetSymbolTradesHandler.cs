@@ -58,15 +58,15 @@ public sealed class GetSymbolTradesHandler : QueryHandler<GetSymbolTradesInput, 
         var symbolDetail = trades
             .GroupBy(x => x.SymbolId)
             .Select(g => new
-                {
-                    g.Key,
-                    MinPrice = g.Min(x => x.MinPrice),
-                    MaxPrice = g.Max(x => x.MaxPrice),
-                    TotalSpent = g.Sum(x => x.TotalSpent),
-                    Volume = g.Sum(x => x.Volume),
-                    NumTransactions = g.Sum(x => x.NumTransactions),
-                    Trades = g.ToList()
-                }
+            {
+                g.Key,
+                MinPrice = g.Min(x => x.MinPrice),
+                MaxPrice = g.Max(x => x.MaxPrice),
+                TotalSpent = g.Sum(x => x.TotalSpent),
+                Volume = g.Sum(x => x.Volume),
+                NumTransactions = g.Sum(x => x.NumTransactions),
+                Trades = g.ToList()
+            }
             )
             .Select(x => new GetSymbolTradesResponse(
                     x.MinPrice,

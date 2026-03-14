@@ -7,17 +7,18 @@ namespace Ouranos.Pantheon.Plutus.Service.Domain.Forecasts;
 
 public class Forecast : BaseEntity<Id<Forecast>>
 {
-    private Forecast(Id<Forecast> id) : base(id)
+    protected Forecast(Id<Forecast> id) : base(id)
     {
+        Latest = new ForecastPoint(0, 0, 0, 0);
     }
 
     public Id<Market> MarketId { get; init; }
 
     public Id<Symbol> SymbolId { get; init; }
 
-    public required ForecastPoint Latest { get; init; }
+    public ForecastPoint Latest { get; init; }
 
-    public required IReadOnlyList<ForecastPoint> Predictions { get; init; }
+    public virtual required ICollection<ForecastPoint> Predictions { get; init; }
 
     public virtual required Symbol Symbol { get; init; }
 
@@ -26,7 +27,7 @@ public class Forecast : BaseEntity<Id<Forecast>>
         Market market,
         Symbol symbol,
         ForecastPoint latest,
-        IReadOnlyList<ForecastPoint> predictions
+        ICollection<ForecastPoint> predictions
     )
     {
         Guard.Against.Null(market);

@@ -11,6 +11,6 @@ public sealed record UpdateRecipeInput(
     Id<Recipe> RecipeId,
     string Name,
     decimal Cost,
-    IReadOnlyList<RecipeComponent> Inputs,
-    IReadOnlyList<RecipeComponent> Outputs
+    ICollection<RecipeComponent> Inputs,
+    ICollection<RecipeComponent> Outputs
 ) : ICommand<IdResponse<Recipe>>;

@@ -16,8 +16,8 @@ export const GET_ALL_MARKETS = graphql(`
 export const GET_MARKET_TRADES = graphql(`
   query GetMarketTrades(
     $input: GetMarketTradesInput!
-    # TODO: Enable once filtering works again. $where: GetMarketTradesResponseFilterInput
-    # TODO: Enable once sorting works again. $order: [GetMarketTradesResponseSortInput!]
+    $where: GetMarketTradesResponseFilterInput
+    $order: [GetMarketTradesResponseSortInput!]
     $first: Int
     $after: String
     $last: Int
@@ -25,8 +25,8 @@ export const GET_MARKET_TRADES = graphql(`
   ) {
     marketTrades(
       input: $input
-      # where: $where
-      # order: $order
+      where: $where
+      order: $order
       first: $first
       after: $after
       last: $last

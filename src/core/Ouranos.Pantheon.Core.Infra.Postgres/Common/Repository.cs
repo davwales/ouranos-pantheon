@@ -11,8 +11,9 @@ public sealed class Repository<TContext, TEntity> : IRepository<TEntity>, IAsync
     where TContext : OuranosDbContext
     where TEntity : BaseEntity<Id<TEntity>>
 {
-    private readonly TContext _context;
-    private readonly DbSet<TEntity> _dbSet;
+    public readonly TContext Context;
+    public readonly DbSet<TEntity> DbSet;
+
     private readonly ILogger<Repository<TContext, TEntity>> _logger;
 
     public Repository(
@@ -24,13 +25,13 @@ public sealed class Repository<TContext, TEntity> : IRepository<TEntity>, IAsync
         Guard.Against.Null(context);
 
         _logger = logger;
-        _context = context;
-        _dbSet = _context.Set<TEntity>();
+        Context = context;
+        DbSet = Context.Set<TEntity>();
     }
 
     public async ValueTask DisposeAsync()
     {
-        await _context.DisposeAsync();
+        await Context.DisposeAsync();
     }
 
     public Id<TEntity> CreateId()
@@ -41,7 +42,7 @@ public sealed class Repository<TContext, TEntity> : IRepository<TEntity>, IAsync
     public async Task Create(TEntity entity, CancellationToken cancellationToken = default)
     {
         _logger.LogTrace("Creating entity of type '{EntityType}' with input: {Entity}", typeof(TEntity).Name, entity);
-        await _dbSet.AddAsync(entity, cancellationToken);
+        await DbSet.AddAsync(entity, cancellationToken);
         _logger.LogDebug(
             "Entity of type '{EntityType}' with ID '{EntityId}' created successfully",
             typeof(TEntity).Name,
@@ -57,7 +58,7 @@ public sealed class Repository<TContext, TEntity> : IRepository<TEntity>, IAsync
             entityList.Count,
             typeof(TEntity).Name
         );
-        await _dbSet.AddRangeAsync(entityList, cancellationToken);
+        await DbSet.AddRangeAsync(entityList, cancellationToken);
         _logger.LogDebug(
             "'{EntityCount}' entities of type '{EntityType}' created successfully",
             entityList.Count,
@@ -68,7 +69,7 @@ public sealed class Repository<TContext, TEntity> : IRepository<TEntity>, IAsync
     public async Task<TEntity> Read(Id<TEntity> id, CancellationToken cancellationToken = default)
     {
         _logger.LogTrace("Reading entity of type '{EntityType}' with ID '{EntityId}'", typeof(TEntity).Name, id);
-        var entity = await _dbSet.FirstOrDefaultAsync(e => e.Id.Equals(id), cancellationToken);
+        var entity = await DbSet.FirstOrDefaultAsync(e => e.Id.Equals(id), cancellationToken);
 
         if (entity is null)
         {
@@ -94,7 +95,7 @@ public sealed class Repository<TContext, TEntity> : IRepository<TEntity>, IAsync
             typeof(TEntity).Name,
             predicate.ToString()
         );
-        var entity = await _dbSet.FirstOrDefaultAsync(predicate, cancellationToken);
+        var entity = await DbSet.FirstOrDefaultAsync(predicate, cancellationToken);
         _logger.LogDebug("Successfully retrieved first or default entity of type '{EntityType}'", typeof(TEntity).Name);
         return entity;
     }
@@ -109,7 +110,7 @@ public sealed class Repository<TContext, TEntity> : IRepository<TEntity>, IAsync
             typeof(TEntity).Name,
             predicate.ToString()
         );
-        var exists = await _dbSet.AnyAsync(predicate, cancellationToken);
+        var exists = await DbSet.AnyAsync(predicate, cancellationToken);
         _logger.LogDebug("Successfully checked if any entity of type '{EntityType}' exists", typeof(TEntity).Name);
         return exists;
     }
@@ -117,7 +118,7 @@ public sealed class Repository<TContext, TEntity> : IRepository<TEntity>, IAsync
     public async Task<IEnumerable<TEntity>> ReadAll(CancellationToken cancellationToken = default)
     {
         _logger.LogTrace("Reading all entities of type '{EntityType}'", typeof(TEntity).Name);
-        var entities = await _dbSet.ToListAsync(cancellationToken);
+        var entities = await DbSet.ToListAsync(cancellationToken);
         _logger.LogDebug(
             "Read '{EntityCount}' entities of type '{EntityType}' successfully",
             entities.Count,
@@ -136,7 +137,7 @@ public sealed class Repository<TContext, TEntity> : IRepository<TEntity>, IAsync
             typeof(TEntity).Name,
             predicate.ToString()
         );
-        var entities = await _dbSet.Where(predicate).ToListAsync(cancellationToken);
+        var entities = await DbSet.Where(predicate).ToListAsync(cancellationToken);
         _logger.LogDebug(
             "Read '{EntityCount}' entities of type '{EntityType}' matching predicate successfully",
             entities.Count,
@@ -148,7 +149,7 @@ public sealed class Repository<TContext, TEntity> : IRepository<TEntity>, IAsync
     public Task Update(TEntity entity, CancellationToken cancellationToken = default)
     {
         _logger.LogTrace("Updating entity of type '{EntityType}' with input: {Entity}", typeof(TEntity).Name, entity);
-        _dbSet.Update(entity);
+        DbSet.Update(entity);
         _logger.LogDebug(
             "Entity of type '{EntityType}' with ID '{EntityId}' updated successfully",
             typeof(TEntity).Name,
@@ -160,10 +161,10 @@ public sealed class Repository<TContext, TEntity> : IRepository<TEntity>, IAsync
     public async Task Delete(Id<TEntity> id, CancellationToken cancellationToken = default)
     {
         _logger.LogTrace("Deleting entity of type '{EntityType}' with ID '{EntityId}'", typeof(TEntity).Name, id);
-        var entity = await _dbSet.FirstOrDefaultAsync(e => e.Id.Equals(id), cancellationToken);
+        var entity = await DbSet.FirstOrDefaultAsync(e => e.Id.Equals(id), cancellationToken);
         if (entity is not null)
         {
-            _dbSet.Remove(entity);
+            DbSet.Remove(entity);
             _logger.LogDebug(
                 "Entity of type '{EntityType}' with ID '{EntityId}' deleted successfully",
                 typeof(TEntity).Name,
@@ -191,7 +192,7 @@ public sealed class Repository<TContext, TEntity> : IRepository<TEntity>, IAsync
             predicate.ToString()
         );
 
-        _dbSet.RemoveRange(_dbSet.Where(predicate));
+        DbSet.RemoveRange(DbSet.Where(predicate));
         _logger.LogDebug(
             "Entities of type '{EntityType}' deleted successfully",
             typeof(TEntity).Name
@@ -203,7 +204,7 @@ public sealed class Repository<TContext, TEntity> : IRepository<TEntity>, IAsync
     public async Task Upsert(TEntity entity, CancellationToken cancellationToken = default)
     {
         _logger.LogTrace("Upserting entity of type '{EntityType}' with input: {Entity}", typeof(TEntity).Name, entity);
-        var exists = await _dbSet
+        var exists = await DbSet
             .AsNoTracking()
             .AnyAsync(e => e.Id.Equals(entity.Id), cancellationToken);
 
@@ -214,7 +215,7 @@ public sealed class Repository<TContext, TEntity> : IRepository<TEntity>, IAsync
                 typeof(TEntity).Name,
                 entity.Id
             );
-            _dbSet.Update(entity);
+            DbSet.Update(entity);
         }
         else
         {
@@ -223,7 +224,7 @@ public sealed class Repository<TContext, TEntity> : IRepository<TEntity>, IAsync
                 typeof(TEntity).Name,
                 entity.Id
             );
-            await _dbSet.AddAsync(entity, cancellationToken);
+            await DbSet.AddAsync(entity, cancellationToken);
         }
 
         _logger.LogDebug(
@@ -236,7 +237,7 @@ public sealed class Repository<TContext, TEntity> : IRepository<TEntity>, IAsync
     public IQueryable<TEntity> AsQueryable(CancellationToken cancellationToken = default)
     {
         _logger.LogTrace("Returning IQueryable for entity type '{EntityType}'", typeof(TEntity).Name);
-        var queryable = _dbSet.AsQueryable();
+        var queryable = DbSet.AsQueryable();
         _logger.LogDebug("Returned IQueryable for entity type '{EntityType}' successfully", typeof(TEntity).Name);
         return queryable;
     }
@@ -244,7 +245,7 @@ public sealed class Repository<TContext, TEntity> : IRepository<TEntity>, IAsync
     public async Task SaveChanges(CancellationToken cancellationToken = default)
     {
         _logger.LogTrace("Saving changes to the database");
-        var changedCount = await _context.SaveChangesAsync(cancellationToken);
+        var changedCount = await Context.SaveChangesAsync(cancellationToken);
         _logger.LogDebug("Saved '{ChangedCount}' changes to the database successfully", changedCount);
     }
 }

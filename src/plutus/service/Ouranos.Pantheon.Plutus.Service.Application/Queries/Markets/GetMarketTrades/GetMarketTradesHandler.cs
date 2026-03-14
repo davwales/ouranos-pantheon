@@ -56,22 +56,7 @@ public sealed class GetMarketTradesHandler
                     Limit = g.Key.AdditionalFields.Limit ?? g.Sum(t => t.Volume)
                 }
             )
-            .Select(x => new
-                {
-                    x.Symbol,
-                    x.TotalSpent,
-                    x.MinPrice,
-                    x.MaxPrice,
-                    x.TotalVolume,
-                    x.NumTransactions,
-                    x.Limit,
-                    Tax = x.MaxPrice * flatTax.Rate > flatTax.Maximum
-                        ? flatTax.Maximum
-                        : x.MaxPrice * flatTax.Rate > flatTax.Minimum
-                            ? x.MaxPrice * flatTax.Rate
-                            : 0
-                }
-            )
+            .AsEnumerable()
             .Select(x => new GetMarketTradesResponse(
                     x.Symbol,
                     x.TotalSpent,
@@ -79,16 +64,16 @@ public sealed class GetMarketTradesHandler
                     x.MaxPrice,
                     x.TotalVolume,
                     x.NumTransactions,
-                    x.MaxPrice - x.MinPrice - x.Tax, // margin
-                    x.TotalSpent / x.TotalVolume, // average price
-                    (x.MaxPrice - x.MinPrice - x.Tax) / x.MinPrice, // roi
-                    (x.MaxPrice - x.MinPrice - x.Tax) *
-                    (x.TotalVolume > x.Limit ? x.Limit : x.TotalVolume), // total gain
-                    x.Limit
+                    x.Limit,
+                    x.MaxPrice * flatTax.Rate > flatTax.Maximum
+                        ? flatTax.Maximum
+                        : x.MaxPrice * flatTax.Rate > flatTax.Minimum
+                            ? x.MaxPrice * flatTax.Rate
+                            : 0
                 )
             );
 
-        var response = new WrapperResponse<IQueryable<GetMarketTradesResponse>>(tradeQuery);
+        var response = new WrapperResponse<IQueryable<GetMarketTradesResponse>>(tradeQuery.AsQueryable());
 
         _logger.LogDebug("Successfully handled symbol statistics request.");
         return await Task.FromResult(response);

@@ -10,7 +10,6 @@ using Ouranos.Pantheon.Plutus.Service.Application;
 using Ouranos.Pantheon.Plutus.Service.Domain.Forecasts;
 using Ouranos.Pantheon.Plutus.Service.Domain.Markets;
 using Ouranos.Pantheon.Plutus.Service.Domain.Recipes;
-using Ouranos.Pantheon.Plutus.Service.Domain.SymbolGroups;
 using Ouranos.Pantheon.Plutus.Service.Domain.Symbols;
 using Ouranos.Pantheon.Plutus.Service.Domain.Trades;
 using Ouranos.Pantheon.Plutus.Service.Infra.OuranosMl;
@@ -25,7 +24,6 @@ public sealed class PlutusModule : IOuranosModule
         return builder
             .BindModelId<Market>()
             .BindModelId<Symbol>()
-            .BindModelId<SymbolGroup>()
             .BindModelId<Recipe>()
             .BindModelId<Forecast>()
             .BindModelId<Trade>();
@@ -36,7 +34,6 @@ public sealed class PlutusModule : IOuranosModule
         return descriptor
             .BindModelIdFilter<Market>()
             .BindModelIdFilter<Symbol>()
-            .BindModelIdFilter<SymbolGroup>()
             .BindModelIdFilter<Recipe>()
             .BindModelIdFilter<Forecast>()
             .BindModelIdFilter<Trade>();

@@ -45,12 +45,12 @@ public sealed class GetDailySymbolSummaryHandler
             )
             .GroupBy(_ => true)
             .Select(g => new
-                {
-                    TotalSpent = g.Sum(x => x.Price * x.Volume),
-                    MinPrice = g.Min(x => x.Price),
-                    MaxPrice = g.Max(x => x.Price),
-                    Volume = g.Sum(x => x.Volume)
-                }
+            {
+                TotalSpent = g.Sum(x => x.Price * x.Volume),
+                MinPrice = g.Min(x => x.Price),
+                MaxPrice = g.Max(x => x.Price),
+                Volume = g.Sum(x => x.Volume)
+            }
             )
             .Where(x => x.Volume > 0)
             .Select(g => new GetDailySymbolSummaryResponse(

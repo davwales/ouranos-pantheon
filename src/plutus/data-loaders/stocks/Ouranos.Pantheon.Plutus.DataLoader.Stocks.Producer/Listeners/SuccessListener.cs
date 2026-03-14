@@ -43,7 +43,7 @@ public sealed class SuccessListener : IListener<SuccessMessage>
         if (message.Msg == authenticatedFlag)
         {
             var subscribeMessage = new SubscribeMessage(
-                [.._options.Value.Symbols],
+                [.. _options.Value.Symbols],
                 [],
                 []
             );

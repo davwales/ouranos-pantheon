@@ -39,7 +39,7 @@ public sealed class GenerateChatCompletion : IGenerateChatCompletion
             conversation.Assistant.Model,
             [
                 new MessageDto(conversation.Assistant.SystemPrompt, MapRole(Role.System)),
-                ..conversation.Messages.Select(m => new MessageDto(
+                .. conversation.Messages.Select(m => new MessageDto(
                         m.Content,
                         MapRole(m.Role)
                     )

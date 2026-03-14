@@ -60,6 +60,8 @@ public sealed class MarketQueries
     /// <param name="cancellationToken"><see cref="CancellationToken" />.</param>
     /// <returns>Trade statistics for the symbols in a market.</returns>
     [UsePaging(IncludeTotalCount = true)]
+    [UseFiltering]
+    [UseSorting]
     // TODO: Figure out how to get filtering to work on this query. [UseFiltering]
     // TODO: Figure out how to get sorting to work on this query. [UseSorting]
     public async Task<IQueryable<GetMarketTradesResponse>> GetMarketTrades(

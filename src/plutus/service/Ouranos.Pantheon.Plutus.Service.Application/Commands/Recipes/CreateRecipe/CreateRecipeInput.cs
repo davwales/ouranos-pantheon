@@ -10,6 +10,6 @@ public sealed record CreateRecipeInput(
     Id<Market> MarketId,
     string Name,
     decimal Cost,
-    IReadOnlyList<RecipeComponent> Inputs,
-    IReadOnlyList<RecipeComponent> Outputs
+    ICollection<RecipeComponent> Inputs,
+    ICollection<RecipeComponent> Outputs
 ) : ICommand<IdResponse<Recipe>>;

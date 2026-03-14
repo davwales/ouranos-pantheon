@@ -12,8 +12,8 @@ using Ouranos.Pantheon.Plutus.Service.Infra.Postgres;
 namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
 {
     [DbContext(typeof(PlutusDbContext))]
-    [Migration("20250906022601_ManySymbolGroups")]
-    partial class ManySymbolGroups
+    [Migration("20260312191800_InitialSetup")]
+    partial class InitialSetup
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -21,7 +21,7 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("plutus")
-                .HasAnnotation("ProductVersion", "8.0.19")
+                .HasAnnotation("ProductVersion", "8.0.24")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -131,38 +131,6 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
                     b.ToTable("recipes", "plutus");
                 });
 
-            modelBuilder.Entity("Ouranos.Pantheon.Plutus.Service.Domain.SymbolGroups.SymbolGroup", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid>("MarketId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("market_id");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("name");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.HasKey("Id")
-                        .HasName("pk_symbol_groups");
-
-                    b.HasIndex("MarketId")
-                        .HasDatabaseName("ix_symbol_groups_market_id");
-
-                    b.ToTable("symbol_groups", "plutus");
-                });
-
             modelBuilder.Entity("Ouranos.Pantheon.Plutus.Service.Domain.Symbols.Symbol", b =>
                 {
                     b.Property<Guid>("Id")
@@ -214,6 +182,10 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<DateTimeOffset>("Timestamp")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("timestamp");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -227,10 +199,6 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("symbol_id");
 
-                    b.Property<DateTimeOffset>("Timestamp")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("timestamp");
-
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
@@ -240,7 +208,7 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("volume");
 
-                    b.HasKey("Id")
+                    b.HasKey("Id", "Timestamp")
                         .HasName("pk_trades");
 
                     b.HasIndex("SymbolId")
@@ -279,25 +247,6 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
                         .HasDatabaseName("ix_trade_message_message_id");
 
                     b.ToTable("trade_message", "plutus");
-                });
-
-            modelBuilder.Entity("SymbolSymbolGroup", b =>
-                {
-                    b.Property<Guid>("SymbolGroupsId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("symbol_groups_id");
-
-                    b.Property<Guid>("SymbolsId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("symbols_id");
-
-                    b.HasKey("SymbolGroupsId", "SymbolsId")
-                        .HasName("pk_symbol_symbol_group");
-
-                    b.HasIndex("SymbolsId")
-                        .HasDatabaseName("ix_symbol_symbol_group_symbols_id");
-
-                    b.ToTable("symbol_symbol_group", "plutus");
                 });
 
             modelBuilder.Entity("Ouranos.Pantheon.Plutus.Service.Domain.Forecasts.Forecast", b =>
@@ -536,40 +485,6 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
                     b.Navigation("Outputs");
                 });
 
-            modelBuilder.Entity("Ouranos.Pantheon.Plutus.Service.Domain.SymbolGroups.SymbolGroup", b =>
-                {
-                    b.HasOne("Ouranos.Pantheon.Plutus.Service.Domain.Markets.Market", "Market")
-                        .WithMany()
-                        .HasForeignKey("MarketId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_symbol_groups_markets_market_id");
-
-                    b.OwnsOne("System.Collections.Generic.List<Ouranos.Pantheon.Core.Domain.Common.Id<Ouranos.Pantheon.Plutus.Service.Domain.Symbols.Symbol>>", "SymbolIds", b1 =>
-                        {
-                            b1.Property<Guid>("SymbolGroupId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<int>("Capacity")
-                                .HasColumnType("integer");
-
-                            b1.HasKey("SymbolGroupId");
-
-                            b1.ToTable("symbol_groups", "plutus");
-
-                            b1.ToJson("symbol_ids");
-
-                            b1.WithOwner()
-                                .HasForeignKey("SymbolGroupId")
-                                .HasConstraintName("fk_symbol_groups_symbol_groups_id");
-                        });
-
-                    b.Navigation("Market");
-
-                    b.Navigation("SymbolIds")
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Ouranos.Pantheon.Plutus.Service.Domain.Symbols.Symbol", b =>
                 {
                     b.HasOne("Ouranos.Pantheon.Plutus.Service.Domain.Markets.Market", "Market")
@@ -635,23 +550,6 @@ namespace Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Migrations
                         .HasConstraintName("fk_trades_symbols_symbol_id");
 
                     b.Navigation("Symbol");
-                });
-
-            modelBuilder.Entity("SymbolSymbolGroup", b =>
-                {
-                    b.HasOne("Ouranos.Pantheon.Plutus.Service.Domain.SymbolGroups.SymbolGroup", null)
-                        .WithMany()
-                        .HasForeignKey("SymbolGroupsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_symbol_symbol_group_symbol_groups_symbol_groups_id");
-
-                    b.HasOne("Ouranos.Pantheon.Plutus.Service.Domain.Symbols.Symbol", null)
-                        .WithMany()
-                        .HasForeignKey("SymbolsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_symbol_symbol_group_symbols_symbols_id");
                 });
 #pragma warning restore 612, 618
         }

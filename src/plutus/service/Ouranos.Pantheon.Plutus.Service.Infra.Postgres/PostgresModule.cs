@@ -7,7 +7,6 @@ using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Trades;
 using Ouranos.Pantheon.Plutus.Service.Domain.Forecasts;
 using Ouranos.Pantheon.Plutus.Service.Domain.Markets;
 using Ouranos.Pantheon.Plutus.Service.Domain.Recipes;
-using Ouranos.Pantheon.Plutus.Service.Domain.SymbolGroups;
 using Ouranos.Pantheon.Plutus.Service.Domain.Symbols;
 using Ouranos.Pantheon.Plutus.Service.Domain.Trades;
 using Ouranos.Pantheon.Plutus.Service.Infra.Postgres.Common;
@@ -31,7 +30,6 @@ public static class PostgresModule
             .AddRepository<PlutusDbContext, Forecast>()
             .AddRepository<PlutusDbContext, Market>()
             .AddRepository<PlutusDbContext, Recipe>()
-            .AddRepository<PlutusDbContext, SymbolGroup>()
             .AddRepository<PlutusDbContext, Symbol>()
             .AddRepository<PlutusDbContext, Trade>()
             .AddRepository<PlutusDbContext, TradeMessage>()
