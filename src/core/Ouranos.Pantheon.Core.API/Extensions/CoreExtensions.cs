@@ -26,12 +26,13 @@ public static class CoreExtensions
         gql?.Invoke(gqlBuilder);
 
         services.AddMediator(m =>
-        {
-            foreach (var module in modules)
             {
-                module.ConfigureMediator(m);
+                foreach (var module in modules)
+                {
+                    module.ConfigureMediator(m);
+                }
             }
-        });
+        );
 
         foreach (var module in modules)
         {
@@ -41,10 +42,19 @@ public static class CoreExtensions
         return services.AddSerilog();
     }
 
-    public static WebApplication UseOuranosCore(this WebApplication app)
+    public static async Task<WebApplication> UseOuranosCore(
+        this WebApplication app,
+        IReadOnlyList<IOuranosModule> modules
+    )
     {
         app.UseSerilogRequestLogging();
         app.MapGraphQL();
+
+        foreach (var module in modules)
+        {
+            await module.UseModule(app.Services);
+        }
+
         return app;
     }
 }

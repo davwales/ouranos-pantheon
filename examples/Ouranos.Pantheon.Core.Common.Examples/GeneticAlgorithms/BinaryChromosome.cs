@@ -5,7 +5,7 @@ namespace Ouranos.Pantheon.Core.Common.Examples.GeneticAlgorithms;
 public sealed class BinaryChromosome : IChromosome<bool>
 {
     private readonly Random _random = new();
-        
+
     public bool[] Genes { get; }
 
     public BinaryChromosome(int length)
@@ -15,7 +15,7 @@ public sealed class BinaryChromosome : IChromosome<bool>
             .Select(_ => _random.Next(2) == 1)
             .ToArray();
     }
-        
+
     public void Mutate(double mutationRate)
     {
         for (var i = 0; i < Genes.Length; i++)
