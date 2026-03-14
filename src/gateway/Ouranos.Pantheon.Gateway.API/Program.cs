@@ -1,6 +1,6 @@
 using Ouranos.Pantheon.Gateway.API.Startup;
 
-var app = WebApplication.CreateBuilder(args)
+var app = await WebApplication.CreateBuilder(args)
     .ConfigureBuilder()
     .ConfigureApp();
 

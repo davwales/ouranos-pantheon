@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using MassTransit.Mediator;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Ouranos.Pantheon.Core.Application.Mediator;
 
@@ -10,7 +11,8 @@ public static class ApplicationModule
         this IServiceCollection services
     )
     {
-        services.TryAddTransient<IDispatcher, Dispatcher>();
+        services.TryAddTransient<IDispatcher, Dispatcher<IMediator>>();
+        services.TryAddTransient<IScopedDispatcher, Dispatcher<IScopedMediator>>();
         return services;
     }
 }

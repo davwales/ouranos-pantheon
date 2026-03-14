@@ -30,11 +30,15 @@ public sealed class DeleteEntityHandler<T> : CommandHandler<DeleteEntityInput<T>
         CancellationToken cancellationToken = default
     )
     {
-        _logger.LogTrace("Attempting to handle delete entity command '{@command}' for type '{type}'.", command,
-            typeof(T).Name);
+        _logger.LogTrace(
+            "Attempting to handle delete entity command '{@command}' for type '{type}'.",
+            command,
+            typeof(T).Name
+        );
         cancellationToken.ThrowIfCancellationRequested();
 
         await _repository.Delete(command.EntityId, cancellationToken);
+        await _repository.SaveChanges(cancellationToken);
 
         _logger.LogDebug("Successfully handled delete entity command.");
         return new IdResponse<T>(command.EntityId);

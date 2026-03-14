@@ -14,5 +14,7 @@ public interface IOuranosModule
 
     IServiceCollection ConfigureServices(IServiceCollection services, IConfiguration configuration);
 
+    Task<IServiceProvider> UseModule(IServiceProvider provider);
+
     IMediatorRegistrationConfigurator ConfigureMediator(IMediatorRegistrationConfigurator mediator);
 }

@@ -64,4 +64,8 @@ public interface IRepository<T> where T : BaseEntity<Id<T>>
     IQueryable<T> AsQueryable(
         CancellationToken cancellationToken = default
     );
+
+    Task SaveChanges(
+        CancellationToken cancellationToken = default
+    );
 }

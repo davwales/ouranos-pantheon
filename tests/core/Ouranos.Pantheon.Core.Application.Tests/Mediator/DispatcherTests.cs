@@ -11,13 +11,13 @@ namespace Ouranos.Pantheon.Core.Application.Tests.Mediator;
 
 public sealed class DispatcherTests
 {
-    private readonly Dispatcher _dispatcher;
+    private readonly Dispatcher<IMediator> _dispatcher;
     private readonly IMediator _mediator;
 
     public DispatcherTests()
     {
         _mediator = Substitute.For<IMediator>();
-        _dispatcher = new Dispatcher(_mediator);
+        _dispatcher = new Dispatcher<IMediator>(_mediator);
     }
 
     [Fact]
@@ -61,10 +61,14 @@ public sealed class DispatcherTests
         var cts = new CancellationTokenSource();
         var streamedResults = fixture.CreateMany<string>().ToList();
 
-        var requestClient = SetupRequestClient(request, new StreamResponse<string, TestEntity>(
-            async _ => await Task.FromResult(streamedResults.ToAsyncEnumerable()),
-            async str => await Task.FromResult(new TestEntity(new Id<TestEntity>(str)))
-        ), cts.Token);
+        var requestClient = SetupRequestClient(
+            request,
+            new StreamResponse<string, TestEntity>(
+                async _ => await Task.FromResult(streamedResults.ToAsyncEnumerable()),
+                async str => await Task.FromResult(new TestEntity(new Id<TestEntity>(str)))
+            ),
+            cts.Token
+        );
 
         // Act
         var stream = _dispatcher.CreateStream(request, cts.Token);

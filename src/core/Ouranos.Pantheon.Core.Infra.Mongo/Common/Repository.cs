@@ -118,7 +118,15 @@ public sealed class Repository<T> : IRepository<T> where T : BaseEntity<Id<T>>
 
         var collection = _mongoRepository.GetCollection();
         var filter = Builders<T>.Filter.Eq(x => x.Id, entity.Id);
-        await collection.ReplaceOneAsync(filter, entity, new ReplaceOptions { IsUpsert = true }, cancellationToken);
+        await collection.ReplaceOneAsync(
+            filter,
+            entity,
+            new ReplaceOptions
+            {
+                IsUpsert = true
+            },
+            cancellationToken
+        );
 
         _logger.LogDebug("Successfully performed upsert for {type} '{id}'.", typeof(T).Name, entity.Id);
     }
@@ -196,5 +204,14 @@ public sealed class Repository<T> : IRepository<T> where T : BaseEntity<Id<T>>
 
         _logger.LogDebug("Successfully read all {type} using a predicate in Mongo.", typeof(T).Name);
         return entity;
+    }
+
+    public Task SaveChanges(CancellationToken cancellationToken = default)
+    {
+        // Changes are applied as requested in MongoDB and there is no need to invoke
+        // a save operation.
+
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.CompletedTask;
     }
 }

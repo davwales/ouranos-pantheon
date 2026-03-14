@@ -18,10 +18,10 @@ type RecentTradeRowData = {
   price: number;
   volume: number;
   createdAt: Date;
-  metadata: {
-    symbolId: string;
-    symbolName: string;
-    symbolSubcode?: string | null | undefined;
+  symbol: {
+    id: string;
+    name: string;
+    subcode?: string | null | undefined;
   };
 };
 
@@ -46,12 +46,12 @@ export default function RecentMarketTrades() {
   const columns: ExtendedColumnDef<RecentTradeRowData>[] = useMemo(
     () => [
       {
-        id: "metadata.symbolName",
+        id: "symbol.name",
         header: "Name",
-        accessorFn: (row) => row.metadata.symbolName,
+        accessorFn: (row) => row.symbol.name,
         cell: ({ cell, row }) => (
           <Link
-            href={`/plutus/explorer/${marketId}/${row.original.metadata.symbolId}`}
+            href={`/plutus/explorer/${marketId}/${row.original.symbol.id}`}
             className="hover:underline"
           >
             {cell.getValue<string>()}
@@ -59,9 +59,9 @@ export default function RecentMarketTrades() {
         ),
       },
       {
-        id: "metadata.symbolSubcode",
+        id: "symbol.subcode",
         header: "Subcode",
-        accessorFn: (row) => row.metadata.symbolSubcode,
+        accessorFn: (row) => row.symbol.subcode,
       },
       {
         id: "price",

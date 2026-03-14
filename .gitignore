@@ -402,6 +402,7 @@ FodyWeavers.xsd
 
 appsettings.Local.json
 appsettings.Development.json
+appsettings.Development.Migration.json
 *.fsp
 *.fgp
 *.graphql
