@@ -22,12 +22,15 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include="..\..\..\gateway\Ouranos.Pantheon.Gateway.API\appsettings.Development.json">
-            <Link>appsettings.Development.json</Link>
+        <Content Include="..\..\..\gateway\Ouranos.Pantheon.Gateway.API\appsettings.json" 
+                Condition="Exists('..\..\..\gateway\Ouranos.Pantheon.Gateway.API\appsettings.json')">
+            <Link>appsettings.json</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
-        <Content Include="..\..\..\gateway\Ouranos.Pantheon.Gateway.API\appsettings.json">
-            <Link>appsettings.json</Link>
+
+        <Content Include="..\..\..\gateway\Ouranos.Pantheon.Gateway.API\appsettings.Development.json" 
+                Condition="Exists('..\..\..\gateway\Ouranos.Pantheon.Gateway.API\appsettings.Development.json')">
+            <Link>appsettings.Development.json</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
