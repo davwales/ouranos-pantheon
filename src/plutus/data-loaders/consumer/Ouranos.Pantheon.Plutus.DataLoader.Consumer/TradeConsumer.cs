@@ -4,12 +4,13 @@ using Ouranos.Pantheon.Core.Domain.Common;
 using Ouranos.Pantheon.Plutus.DataLoader.Consumer.Handlers.InsertTrade;
 using Ouranos.Pantheon.Plutus.DataLoader.Consumer.Handlers.UpsertSymbol;
 using Ouranos.Pantheon.Plutus.DataLoader.Domain;
-using Ouranos.Pantheon.Plutus.DataLoader.Domain.Trades;
 using Ouranos.Pantheon.Plutus.Service.Domain.Markets;
+using LegacyNamespace = Ouranos.Pantheon.DataLoader.Plutus.Domain.Trades;
+using TradeMessage = Ouranos.Pantheon.Plutus.DataLoader.Domain.Trades.TradeMessage;
 
 namespace Ouranos.Pantheon.Plutus.DataLoader.Consumer;
 
-public sealed class TradeConsumer : IConsumer<TradeMessage>
+public sealed class TradeConsumer : IConsumer<TradeMessage>, IConsumer<LegacyNamespace.TradeMessage>
 {
     private readonly IInsertTrade _insertTrade;
     private readonly ILogger<TradeConsumer> _logger;
@@ -42,34 +43,63 @@ public sealed class TradeConsumer : IConsumer<TradeMessage>
 
     public async Task Consume(ConsumeContext<TradeMessage> context)
     {
-        _logger.LogTrace("Attempting to consume trade message '{@message}'.", context.Message);
+        await Process(context.MessageId, context.Message, context.CancellationToken);
+    }
 
-        if (!_marketMap.TryGetValue(context.Message.Producer, out var marketId))
+    public async Task Consume(ConsumeContext<LegacyNamespace.TradeMessage> context)
+    {
+        _logger.LogDebug("Detected legacy trade message '{messageId}', converting and processing.", context.MessageId);
+
+        await Process(
+            context.MessageId,
+            new TradeMessage(
+                context.Message.Producer,
+                context.Message.SymbolCode,
+                context.Message.SymbolSubcode,
+                context.Message.SymbolName,
+                context.Message.Price,
+                context.Message.Volume,
+                context.Message.Timestamp,
+                context.Message.AdditionalFields
+            ),
+            context.CancellationToken
+        );
+    }
+
+    private async Task Process(Guid? messageId, TradeMessage message, CancellationToken cancellationToken)
+    {
+        _logger.LogTrace("Attempting to consume trade message '{@messageId}'.", messageId);
+
+        if (!_marketMap.TryGetValue(message.Producer, out var marketId))
         {
             throw new InvalidOperationException("Cannot find market for this message.");
         }
 
-        var upsertSymbolRequest = new UpsertSymbolInput(
-            marketId,
-            context.Message.SymbolCode,
-            context.Message.SymbolSubcode,
-            context.Message.SymbolName,
-            context.Message.AdditionalFields
+        var symbol = await _upsertSymbol.UpsertSymbolAsync(
+            new UpsertSymbolInput(
+                marketId,
+                message.SymbolCode,
+                message.SymbolSubcode,
+                message.SymbolName,
+                message.AdditionalFields
+            ),
+            cancellationToken
         );
-        var symbol = await _upsertSymbol.UpsertSymbolAsync(upsertSymbolRequest, context.CancellationToken);
 
-        var insertTradeRequest = new InsertTradeInput(
-            symbol,
-            context.Message.Price,
-            context.Message.Volume,
-            context.Message.Timestamp,
-            context.MessageId
+        var trade = await _insertTrade.InsertTradeAsync(
+            new InsertTradeInput(
+                symbol,
+                message.Price,
+                message.Volume,
+                message.Timestamp,
+                messageId
+            ),
+            cancellationToken
         );
-        var trade = await _insertTrade.InsertTradeAsync(insertTradeRequest, context.CancellationToken);
 
         _logger.LogInformation(
             "Successfully consumed trade message '{messageId}' for trade '{tradeId}', symbol '{symbolId}', and market '{marketId}'.",
-            context.MessageId,
+            messageId,
             trade.Id,
             symbol.Id,
             marketId
