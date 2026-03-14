@@ -1,5 +1,4 @@
 ﻿using Ardalis.GuardClauses;
-using MongoDB.Driver;
 using Ouranos.Pantheon.Core.Domain.Common;
 using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Common;
 using Ouranos.Pantheon.Plutus.Service.Domain.Trades;
@@ -63,31 +62,13 @@ public sealed class InsertTrade : IInsertTrade
             return true;
         }
 
-        try
-        {
-            var tradeMessage = new TradeMessage(
-                _unitOfWork.TradeMessages.CreateId(),
-                tradeId,
-                messageId.Value
-            );
+        var tradeMessage = new TradeMessage(
+            _unitOfWork.TradeMessages.CreateId(),
+            tradeId,
+            messageId.Value
+        );
 
-            await _unitOfWork.TradeMessages.Create(tradeMessage, cancellationToken);
-        }
-        catch (MongoDuplicateKeyException)
-        {
-            _logger.LogWarning("Detected duplicate trade message '{messageId}', ignoring.'", messageId);
-            return false;
-        }
-        catch (MongoWriteException writeException)
-        {
-            if (writeException.WriteError.Category != ServerErrorCategory.DuplicateKey)
-            {
-                throw;
-            }
-
-            _logger.LogWarning("Detected duplicate trade message '{messageId}', ignoring.", messageId);
-            return false;
-        }
+        await _unitOfWork.TradeMessages.Create(tradeMessage, cancellationToken);
 
         return true;
     }

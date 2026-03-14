@@ -14,7 +14,6 @@
         <ProjectReference Include="..\..\..\core\Ouranos.Pantheon.Core.API\Ouranos.Pantheon.Core.API.csproj"/>
         <ProjectReference Include="..\..\..\core\Ouranos.Pantheon.Core.Common\Ouranos.Pantheon.Core.Common.csproj"/>
         <ProjectReference Include="..\Ouranos.Pantheon.Plutus.Service.Application\Ouranos.Pantheon.Plutus.Service.Application.csproj"/>
-        <ProjectReference Include="..\Ouranos.Pantheon.Plutus.Service.Infra.Mongo\Ouranos.Pantheon.Plutus.Service.Infra.Mongo.csproj"/>
         <ProjectReference Include="..\Ouranos.Pantheon.Plutus.Service.Infra.OuranosMl\Ouranos.Pantheon.Plutus.Service.Infra.OuranosMl.csproj"/>
         <ProjectReference Include="..\Ouranos.Pantheon.Plutus.Service.Infra.Postgres\Ouranos.Pantheon.Plutus.Service.Infra.Postgres.csproj"/>
     </ItemGroup>
