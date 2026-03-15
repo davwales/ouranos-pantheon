@@ -12,11 +12,11 @@ public sealed record GetMarketForecastResponse(
     string SymbolName,
     string? SymbolSubcode,
     ForecastPoint Latest,
-    GetMarketForecastPredictionResponse OneDayAhead,
-    GetMarketForecastPredictionResponse TwoDayAhead,
-    GetMarketForecastPredictionResponse ThreeDayAhead,
-    GetMarketForecastPredictionResponse FourDayAhead,
-    GetMarketForecastPredictionResponse FiveDayAhead,
-    GetMarketForecastPredictionResponse SixDayAhead,
-    GetMarketForecastPredictionResponse SevenDayAhead
+    GetMarketForecastPredictionResponse DayOne,
+    GetMarketForecastPredictionResponse DayTwo,
+    GetMarketForecastPredictionResponse DayThree,
+    GetMarketForecastPredictionResponse DayFour,
+    GetMarketForecastPredictionResponse DayFive,
+    GetMarketForecastPredictionResponse DaySix,
+    GetMarketForecastPredictionResponse DaySeven
 );
