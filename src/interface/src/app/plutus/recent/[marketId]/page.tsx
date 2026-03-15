@@ -17,7 +17,7 @@ import { useMemo } from "react";
 type RecentTradeRowData = {
   price: number;
   volume: number;
-  createdAt: Date;
+  timestamp: Date;
   symbol: {
     id: string;
     name: string;
@@ -80,9 +80,9 @@ export default function RecentMarketTrades() {
         cell: ({ getValue }) => <PrettyNumber number={getValue<number>()} />,
       },
       {
-        id: "createdAt",
-        header: "Date",
-        accessorFn: (row) => row.createdAt,
+        id: "timestamp",
+        header: "Timestamp",
+        accessorFn: (row) => row.timestamp,
         cell: ({ getValue }) => (
           <>
             {formatDistance(getValue<Date>(), new Date(), { addSuffix: true })}
@@ -90,7 +90,7 @@ export default function RecentMarketTrades() {
         ),
       },
     ],
-    [marketId]
+    [marketId],
   );
 
   return (

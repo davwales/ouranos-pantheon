@@ -66,10 +66,10 @@ export const GET_RECENT_MARKET_TRADES = graphql(`
     allTrades(
       first: $first
       where: { symbol: { marketId: { eq: $marketId } } }
-      order: { createdAt: DESC }
+      order: { timestamp: DESC }
     ) {
       nodes {
-        createdAt
+        timestamp
         symbol {
           id
           name
