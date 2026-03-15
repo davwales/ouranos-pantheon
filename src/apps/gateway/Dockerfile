@@ -5,7 +5,7 @@ WORKDIR /app
 COPY . ./
 
 RUN dotnet restore
-RUN dotnet publish ./src/gateway/Ouranos.Pantheon.Gateway.API/Ouranos.Pantheon.Gateway.API.csproj -c Release -o /app/publish
+RUN dotnet publish ./src/apps/gateway/Ouranos.Pantheon.Apps.Gateway/Ouranos.Pantheon.Apps.Gateway.csproj -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 
@@ -15,4 +15,4 @@ COPY --from=build /app/publish .
 
 EXPOSE 8300
 
-ENTRYPOINT ["dotnet", "Ouranos.Pantheon.Gateway.API.dll"]
+ENTRYPOINT ["dotnet", "Ouranos.Pantheon.Apps.Gateway.dll"]
