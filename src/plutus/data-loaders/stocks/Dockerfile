@@ -7,7 +7,7 @@ COPY . ./
 RUN dotnet restore
 RUN dotnet publish ./src/plutus/data-loaders/stocks/Ouranos.Pantheon.Plutus.DataLoader.Stocks.Producer/Ouranos.Pantheon.Plutus.DataLoader.Stocks.Producer.csproj -c Release -o /app/publish /p:UseAppHost=false
 
-FROM mcr.microsoft.com/dotnet/runtime:8.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 
 WORKDIR /app
 
