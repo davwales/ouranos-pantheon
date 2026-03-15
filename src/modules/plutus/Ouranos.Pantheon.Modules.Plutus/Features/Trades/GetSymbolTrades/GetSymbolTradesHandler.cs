@@ -44,13 +44,13 @@ public sealed class GetSymbolTradesHandler : QueryHandler<GetSymbolTradesInput, 
         var aggregatedStats = await baseQuery
             .GroupBy(t => 1)
             .Select(g => new
-            {
-                MinPrice = g.Min(t => t.Price),
-                MaxPrice = g.Max(t => t.Price),
-                TotalSpent = g.Sum(t => t.Price * t.Volume),
-                Volume = g.Sum(t => t.Volume),
-                NumTransactions = g.Count()
-            }
+                {
+                    MinPrice = g.Min(t => t.Price),
+                    MaxPrice = g.Max(t => t.Price),
+                    TotalSpent = g.Sum(t => t.Price * t.Volume),
+                    Volume = g.Sum(t => t.Volume),
+                    NumTransactions = g.Count()
+                }
             )
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -60,35 +60,29 @@ public sealed class GetSymbolTradesHandler : QueryHandler<GetSymbolTradesInput, 
             return new GetSymbolTradesResponse(0, 0, 0, 0, 0, 0, []);
         }
 
-        var buckets = await GetBucketedTradesQuery(baseQuery, query.NumBuckets)
-            .OrderBy(b => b.BucketStart)
-            .ToListAsync(cancellationToken);
-
-        var bucketResponses = buckets.Select(b =>
-                new GetSymbolTradeBucketsResponse(
-                    b.AveragePrice,
-                    b.Volume,
-                    b.TotalSpent,
-                    b.MinPrice,
-                    b.MaxPrice,
-                    b.NumTransactions,
-                    b.BucketStart
-                )
-            )
-            .ToList();
-
-        var averagePrice = aggregatedStats.Volume > 0
-            ? aggregatedStats.TotalSpent / aggregatedStats.Volume
-            : 0m;
-
         var response = new GetSymbolTradesResponse(
             aggregatedStats.MinPrice,
             aggregatedStats.MaxPrice,
-            averagePrice,
+            aggregatedStats.Volume > 0
+                ? aggregatedStats.TotalSpent / aggregatedStats.Volume
+                : 0m,
             aggregatedStats.TotalSpent,
             aggregatedStats.Volume,
             aggregatedStats.NumTransactions,
-            bucketResponses
+            GetBucketedTradesQuery(baseQuery, query.NumBuckets)
+                .AsEnumerable()
+                .OrderBy(b => b.BucketStart)
+                .Select(b =>
+                    new GetSymbolTradeBucketsResponse(
+                        b.AveragePrice,
+                        b.Volume,
+                        b.TotalSpent,
+                        b.MinPrice,
+                        b.MaxPrice,
+                        b.NumTransactions,
+                        b.BucketStart
+                    )
+                )
         );
 
         _logger.LogDebug("Successfully handled get symbol trades request.");
@@ -103,11 +97,11 @@ public sealed class GetSymbolTradesHandler : QueryHandler<GetSymbolTradesInput, 
         var timeRange = query
             .GroupBy(t => 1)
             .Select(g => new
-            {
-                StartTime = g.Min(t => t.Timestamp),
-                EndTime = g.Max(t => t.Timestamp),
-                Duration = g.Max(t => t.Timestamp) - g.Min(t => t.Timestamp)
-            }
+                {
+                    StartTime = g.Min(t => t.Timestamp),
+                    EndTime = g.Max(t => t.Timestamp),
+                    Duration = g.Max(t => t.Timestamp) - g.Min(t => t.Timestamp)
+                }
             )
             .FirstOrDefault();
 

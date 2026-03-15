@@ -6,10 +6,10 @@ public sealed record GetMarketForecastPredictionResponse(
     decimal MaxPrice,
     decimal Volume,
     decimal Margin,
-    decimal TotalMargin,
-    decimal PriceChange,
-    decimal MinPriceChange,
-    decimal MaxPriceChange,
-    decimal VolumeChange,
-    decimal TotalValueChange
+    decimal Gain,
+    decimal AveragePriceDelta,
+    decimal MinPriceDelta,
+    decimal MaxPriceDelta,
+    decimal VolumeDelta,
+    decimal GainDelta
 );
