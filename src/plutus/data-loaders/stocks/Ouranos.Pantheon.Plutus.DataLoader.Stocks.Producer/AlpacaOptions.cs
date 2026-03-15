@@ -8,7 +8,8 @@ public sealed record AlpacaOptions(
 {
     public const string SectionName = "Ouranos:Alpaca";
 
-    public AlpacaOptions() : this(string.Empty, string.Empty, [])
+    public AlpacaOptions()
+        : this(string.Empty, string.Empty, [])
     {
     }
 }

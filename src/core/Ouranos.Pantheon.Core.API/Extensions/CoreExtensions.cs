@@ -1,10 +1,10 @@
 using HotChocolate.Execution.Configuration;
-using MassTransit;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Ouranos.Pantheon.Core.API.Interfaces;
 using Serilog;
+using MassTransit;
+using Microsoft.AspNetCore.Builder;
 
 namespace Ouranos.Pantheon.Core.API.Extensions;
 

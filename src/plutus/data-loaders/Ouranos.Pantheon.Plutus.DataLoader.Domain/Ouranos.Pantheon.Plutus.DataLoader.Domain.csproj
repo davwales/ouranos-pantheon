@@ -5,7 +5,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\service\Ouranos.Pantheon.Plutus.Service.Domain\Ouranos.Pantheon.Plutus.Service.Domain.csproj"/>
+        <ProjectReference Include="..\..\..\modules\plutus\Ouranos.Pantheon.Modules.Plutus\Ouranos.Pantheon.Modules.Plutus.csproj" />
     </ItemGroup>
 
 </Project>

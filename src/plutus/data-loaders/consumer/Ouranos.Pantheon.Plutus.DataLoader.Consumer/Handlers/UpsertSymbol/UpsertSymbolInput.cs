@@ -1,7 +1,7 @@
 ﻿using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Core.Domain.Common;
-using Ouranos.Pantheon.Plutus.Service.Domain.Markets;
-using Ouranos.Pantheon.Plutus.Service.Domain.Symbols;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 
 namespace Ouranos.Pantheon.Plutus.DataLoader.Consumer.Handlers.UpsertSymbol;
 

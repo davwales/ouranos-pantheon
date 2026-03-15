@@ -1,5 +1,5 @@
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Plutus.DataLoader.Domain;
-using Ouranos.Pantheon.Plutus.Service.Domain.Symbols;
 
 // ReSharper disable all
 

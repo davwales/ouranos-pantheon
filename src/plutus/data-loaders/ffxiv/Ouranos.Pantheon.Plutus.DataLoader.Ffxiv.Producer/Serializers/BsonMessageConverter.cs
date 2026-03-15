@@ -15,10 +15,7 @@ public sealed class BsonMessageConverter : IMessageConverter
 
         ConventionRegistry.Register(
             "BsonMessageConverterConventions",
-            new ConventionPack
-            {
-                new CamelCaseElementNameConvention()
-            },
+            new ConventionPack { new CamelCaseElementNameConvention(), },
             t => true
         );
     }

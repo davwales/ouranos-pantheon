@@ -11,9 +11,9 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="MassTransit.RabbitMQ" Version="$(MassTransitRabbitMQVersion)"/>
+        <PackageReference Include="MassTransit.RabbitMQ" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Binder"
-                          Version="$(MicrosoftConfigurationBinderVersion)"/>
+                          />
     </ItemGroup>
 
 </Project>

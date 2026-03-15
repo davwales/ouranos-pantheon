@@ -1,6 +1,6 @@
 ﻿using Ouranos.Pantheon.Core.Application.Mediator;
-using Ouranos.Pantheon.Plutus.Service.Domain.Symbols;
-using Ouranos.Pantheon.Plutus.Service.Domain.Trades;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 
 namespace Ouranos.Pantheon.Plutus.DataLoader.Consumer.Handlers.InsertTrade;
 

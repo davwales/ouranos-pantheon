@@ -4,7 +4,7 @@ using Ouranos.Pantheon.Core.Application.Common;
 using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.CreateAssistant.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Assistants;
-using Ouranos.Pantheon.Modules.Hermes.Shared.Infra.Database;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Shared.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Assistants.CreateAssistant;

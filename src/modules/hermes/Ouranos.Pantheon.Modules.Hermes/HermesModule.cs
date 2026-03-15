@@ -10,7 +10,7 @@ using Ouranos.Pantheon.Core.Application;
 using Ouranos.Pantheon.Core.Infra.OuranosMl;
 using Ouranos.Pantheon.Core.Infra.Postgres;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Assistants;
-using Ouranos.Pantheon.Modules.Hermes.Shared.Infra.Database;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Shared;
 
 namespace Ouranos.Pantheon.Modules.Hermes;

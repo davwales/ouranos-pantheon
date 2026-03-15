@@ -9,4 +9,9 @@
         <ProjectReference Include="..\..\src\core\Ouranos.Pantheon.Core.Domain\Ouranos.Pantheon.Core.Domain.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="$(MicrosoftEntityFrameworkCoreVersion)"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="$(MicrosoftEntityFrameworkCoreVersion)"/>
+    </ItemGroup>
+
 </Project>
