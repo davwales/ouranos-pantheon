@@ -13,12 +13,13 @@ public static class WorkerExtensions
     {
         return services
             .AddLogging(x =>
-            {
-                var logger = new LoggerConfiguration()
-                    .ReadFrom.Configuration(configuration)
-                    .CreateLogger();
+                {
+                    var logger = new LoggerConfiguration()
+                        .ReadFrom.Configuration(configuration)
+                        .CreateLogger();
 
-                x.AddSerilog(logger);
-            });
+                    x.AddSerilog(logger);
+                }
+            );
     }
 }

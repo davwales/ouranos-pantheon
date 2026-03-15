@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using Ouranos.Pantheon.Modules.Hermes.Shared.Infra.Database;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 
 #nullable disable
 

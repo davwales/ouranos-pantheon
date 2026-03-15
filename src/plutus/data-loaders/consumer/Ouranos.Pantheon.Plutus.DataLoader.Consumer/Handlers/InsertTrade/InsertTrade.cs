@@ -1,25 +1,25 @@
 ﻿using Ardalis.GuardClauses;
 using Ouranos.Pantheon.Core.Domain.Common;
-using Ouranos.Pantheon.Plutus.Service.Application.Interfaces.Common;
-using Ouranos.Pantheon.Plutus.Service.Domain.Trades;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 
 namespace Ouranos.Pantheon.Plutus.DataLoader.Consumer.Handlers.InsertTrade;
 
 public sealed class InsertTrade : IInsertTrade
 {
     private readonly ILogger<InsertTrade> _logger;
-    private readonly IPlutusUnitOfWork _unitOfWork;
+    private readonly PlutusDbContext _dbContext;
 
     public InsertTrade(
         ILogger<InsertTrade> logger,
-        IPlutusUnitOfWork unitOfWork
+        PlutusDbContext dbContext
     )
     {
         Guard.Against.Null(logger);
-        Guard.Against.Null(unitOfWork);
+        Guard.Against.Null(dbContext);
 
         _logger = logger;
-        _unitOfWork = unitOfWork;
+        _dbContext = dbContext;
     }
 
     public async Task<Trade> InsertTradeAsync(
@@ -31,7 +31,7 @@ public sealed class InsertTrade : IInsertTrade
         cancellationToken.ThrowIfCancellationRequested();
 
         var trade = Trade.Create(
-            _unitOfWork.Trades.CreateId(),
+            new Id<Trade>(Guid.NewGuid().ToString()),
             input.Symbol,
             input.Price,
             input.Volume,
@@ -44,8 +44,8 @@ public sealed class InsertTrade : IInsertTrade
             return trade;
         }
 
-        await _unitOfWork.Trades.Create(trade, cancellationToken);
-        await _unitOfWork.SaveChanges(cancellationToken);
+        await _dbContext.Trades.AddAsync(trade, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         _logger.LogDebug("Successfully insert trade '{tradeId}'.", trade.Id);
         return trade;
@@ -62,13 +62,13 @@ public sealed class InsertTrade : IInsertTrade
             return true;
         }
 
-        var tradeMessage = new TradeMessage(
-            _unitOfWork.TradeMessages.CreateId(),
+        var tradeMessage = TradeMessage.Create(
+            new Id<TradeMessage>(Guid.NewGuid().ToString()),
             tradeId,
             messageId.Value
         );
 
-        await _unitOfWork.TradeMessages.Create(tradeMessage, cancellationToken);
+        await _dbContext.TradeMessages.AddAsync(tradeMessage, cancellationToken);
 
         return true;
     }

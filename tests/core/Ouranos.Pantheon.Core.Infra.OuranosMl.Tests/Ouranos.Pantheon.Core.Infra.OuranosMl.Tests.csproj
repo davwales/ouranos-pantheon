@@ -10,7 +10,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="System.Linq.Async" Version="$(SystemLinqAsyncVersion)"/>
+        <PackageReference Include="System.Linq.Async" />
     </ItemGroup>
 
 </Project>

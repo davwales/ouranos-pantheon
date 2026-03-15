@@ -2,10 +2,10 @@
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Plutus.DataLoader.Ffxiv.Application.Dtos;
 using Ouranos.Pantheon.Plutus.DataLoader.Ffxiv.Application.Interfaces.Items;
 using Ouranos.Pantheon.Plutus.DataLoader.Ffxiv.Infra.XivApi.Models;
-using Ouranos.Pantheon.Plutus.Service.Domain.Symbols;
 
 namespace Ouranos.Pantheon.Plutus.DataLoader.Ffxiv.Infra.XivApi.Items;
 

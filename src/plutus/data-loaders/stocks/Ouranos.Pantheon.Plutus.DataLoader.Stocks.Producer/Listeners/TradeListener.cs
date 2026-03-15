@@ -1,9 +1,9 @@
 ﻿using Ardalis.GuardClauses;
 using Ouranos.Pantheon.Core.WebSockets.Listeners;
 using Ouranos.Pantheon.Core.WebSockets.WebSocketClients;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Plutus.DataLoader.Application.Interfaces.Trades;
 using Ouranos.Pantheon.Plutus.DataLoader.Stocks.Producer.Messages;
-using Ouranos.Pantheon.Plutus.Service.Domain.Symbols;
 using TradeMessage = Ouranos.Pantheon.Plutus.DataLoader.Domain.Trades.TradeMessage;
 
 namespace Ouranos.Pantheon.Plutus.DataLoader.Stocks.Producer.Listeners;

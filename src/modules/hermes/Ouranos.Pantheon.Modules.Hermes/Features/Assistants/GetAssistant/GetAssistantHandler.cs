@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Core.Application.Mediator;
 using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.GetAssistant.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Assistants;
-using Ouranos.Pantheon.Modules.Hermes.Shared.Infra.Database;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Assistants.GetAssistant;
 

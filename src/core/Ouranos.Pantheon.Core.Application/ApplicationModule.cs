@@ -1,7 +1,7 @@
-﻿using MassTransit.Mediator;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Ouranos.Pantheon.Core.Application.Mediator;
+using MassTransit.Mediator;
 
 namespace Ouranos.Pantheon.Core.Application;
 
