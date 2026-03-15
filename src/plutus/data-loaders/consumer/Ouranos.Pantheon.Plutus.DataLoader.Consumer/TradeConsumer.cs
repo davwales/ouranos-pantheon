@@ -1,111 +1,103 @@
 using Ardalis.GuardClauses;
 using MassTransit;
+using Microsoft.EntityFrameworkCore;
 using Ouranos.Pantheon.Core.Domain.Common;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
-using Ouranos.Pantheon.Plutus.DataLoader.Consumer.Handlers.InsertTrade;
-using Ouranos.Pantheon.Plutus.DataLoader.Consumer.Handlers.UpsertSymbol;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 using Ouranos.Pantheon.Plutus.DataLoader.Domain;
-using LegacyNamespace = Ouranos.Pantheon.DataLoader.Plutus.Domain.Trades;
-using TradeMessage = Ouranos.Pantheon.Plutus.DataLoader.Domain.Trades.TradeMessage;
+using Ouranos.Pantheon.Plutus.DataLoader.Domain.Trades;
 
 namespace Ouranos.Pantheon.Plutus.DataLoader.Consumer;
 
-public sealed class TradeConsumer : IConsumer<TradeMessage>, IConsumer<LegacyNamespace.TradeMessage>
+public sealed class TradeConsumer : IConsumer<TradeMessage>
 {
-    private readonly IInsertTrade _insertTrade;
     private readonly ILogger<TradeConsumer> _logger;
     private readonly Dictionary<Producer, Id<Market>> _marketMap;
-    private readonly IUpsertSymbol _upsertSymbol;
+    private readonly PlutusDbContext _dbContext;
 
     public TradeConsumer(
         ILogger<TradeConsumer> logger,
-        IUpsertSymbol upsertSymbol,
-        IInsertTrade insertTrade,
-        IConfiguration configuration
+        IConfiguration configuration,
+        PlutusDbContext dbContext
     )
     {
         Guard.Against.Null(logger);
-        Guard.Against.Null(upsertSymbol);
-        Guard.Against.Null(insertTrade);
         Guard.Against.Null(configuration);
+        Guard.Against.Null(dbContext);
 
         _logger = logger;
-        _upsertSymbol = upsertSymbol;
-        _insertTrade = insertTrade;
-        _marketMap = configuration
+        _dbContext = dbContext;
+
+        var marketConfig = configuration
             .GetSection("Ouranos:Markets")
-            .Get<Dictionary<Producer, string>>()
-            ?.ToDictionary(
-                x => x.Key,
-                x => new Id<Market>(x.Value)
-            ) ?? throw new InvalidOperationException("Cannot find market map in configuration.");
+            .Get<Dictionary<Producer, string>>();
+
+        Guard.Against.Null(marketConfig);
+
+        _marketMap = marketConfig.ToDictionary(
+            x => x.Key,
+            x => new Id<Market>(x.Value)
+        );
     }
 
     public async Task Consume(ConsumeContext<TradeMessage> context)
     {
-        await Process(context.MessageId, context.Message, context.CancellationToken);
-    }
+        _logger.LogTrace("Attempting to consume trade message '{messageId}'.", context.MessageId);
 
-    public async Task Consume(ConsumeContext<LegacyNamespace.TradeMessage> context)
-    {
-        _logger.LogDebug(
-            "Detected legacy trade message '{messageId}', converting and processing.",
-            context.MessageId
+        var trade = Trade.Create(
+            new Id<Trade>((context.MessageId ?? Guid.NewGuid()).ToString()),
+            await UpsertSymbol(context, context.CancellationToken),
+            context.Message.Price,
+            context.Message.Volume,
+            context.Message.Timestamp
         );
 
-        await Process(
-            context.MessageId,
-            new TradeMessage(
-                context.Message.Producer,
-                context.Message.SymbolCode,
-                context.Message.SymbolSubcode,
-                context.Message.SymbolName,
-                context.Message.Price,
-                context.Message.Volume,
-                context.Message.Timestamp,
-                context.Message.AdditionalFields
-            ),
-            context.CancellationToken
-        );
+        await _dbContext.Trades.AddAsync(trade, context.CancellationToken);
+        await _dbContext.SaveChangesAsync(context.CancellationToken);
+
+        _logger.LogInformation("Successfully consumed trade message '{messageId}'.", context.MessageId);
     }
 
-    private async Task Process(Guid? messageId, TradeMessage message, CancellationToken cancellationToken)
+    private async Task<Symbol> UpsertSymbol(
+        ConsumeContext<TradeMessage> context,
+        CancellationToken cancellationToken
+    )
     {
-        _logger.LogTrace("Attempting to consume trade message '{@messageId}'.", messageId);
+        var marketId = _marketMap.GetValueOrDefault(context.Message.Producer);
+        Guard.Against.NotFound(context.Message.Producer, marketId);
 
-        if (!_marketMap.TryGetValue(message.Producer, out var marketId))
+        var market = await _dbContext.Markets.FirstOrDefaultAsync(m => m.Id == marketId, cancellationToken);
+        Guard.Against.NotFound(marketId, market);
+
+        var existingSymbol = await _dbContext.Symbols
+            .FirstOrDefaultAsync(
+                s => s.MarketId == marketId &&
+                     s.Code == context.Message.SymbolCode &&
+                     s.Subcode == context.Message.SymbolSubcode,
+                cancellationToken
+            );
+
+        if (existingSymbol is not null)
         {
-            throw new InvalidOperationException("Cannot find market for this message.");
+            existingSymbol.Update(context.Message.SymbolName, context.Message.AdditionalFields);
+            _dbContext.Symbols.Update(existingSymbol);
+
+            _logger.LogDebug("Successfully updated symbol '{symbolId}'.", existingSymbol.Id);
+            return existingSymbol;
         }
 
-        var symbol = await _upsertSymbol.UpsertSymbolAsync(
-            new UpsertSymbolInput(
-                marketId,
-                message.SymbolCode,
-                message.SymbolSubcode,
-                message.SymbolName,
-                message.AdditionalFields
-            ),
-            cancellationToken
+        var newSymbol = Symbol.Create(
+            new Id<Symbol>(Guid.NewGuid().ToString()),
+            context.Message.SymbolCode,
+            context.Message.SymbolSubcode,
+            context.Message.SymbolName,
+            market,
+            context.Message.AdditionalFields
         );
 
-        var trade = await _insertTrade.InsertTradeAsync(
-            new InsertTradeInput(
-                symbol,
-                message.Price,
-                message.Volume,
-                message.Timestamp,
-                messageId
-            ),
-            cancellationToken
-        );
-
-        _logger.LogInformation(
-            "Successfully consumed trade message '{messageId}' for trade '{tradeId}', symbol '{symbolId}', and market '{marketId}'.",
-            messageId,
-            trade.Id,
-            symbol.Id,
-            marketId
-        );
+        await _dbContext.Symbols.AddAsync(newSymbol, cancellationToken);
+        return newSymbol;
     }
 }

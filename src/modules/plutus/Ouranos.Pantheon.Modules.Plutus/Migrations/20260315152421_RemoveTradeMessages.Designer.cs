@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 
 #nullable disable
 
-namespace Ouranos.Pantheon.Modules.Plutus.Migrations
+namespace Ouranos.Pantheon.Modules.Plutus.Shared.Database.Migrations
 {
     [DbContext(typeof(PlutusDbContext))]
-    partial class PlutusDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260315152421_RemoveTradeMessages")]
+    partial class RemoveTradeMessages
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
