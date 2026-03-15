@@ -35,7 +35,10 @@ public sealed class SubscriptionInitializer : IWebSocketInitializer
         }
         else
         {
-            _logger.LogTrace("'{worldCount}' configured, subscribing to trades on those worlds.", _worlds.Count);
+            _logger.LogTrace(
+                "'{worldCount}' configured, subscribing to trades on those worlds.",
+                _worlds.Count
+            );
             await AddWorldSpecificSubscriptions(client, cancellationToken);
         }
 

@@ -1,7 +1,7 @@
 ﻿using Ouranos.Pantheon.Core.API.Extensions;
 using Ouranos.Pantheon.Core.API.Interfaces;
 using Ouranos.Pantheon.Modules.Hermes;
-using Ouranos.Pantheon.Plutus.Service.API;
+using Ouranos.Pantheon.Modules.Plutus;
 
 namespace Ouranos.Pantheon.Gateway.API.Startup;
 
@@ -19,8 +19,8 @@ public static class HostingExtensions
                 Modules,
                 gql => gql
                     .ModifyOptions(o => { o.EnableStream = true; })
-                    .ModifyCostOptions(o => o.EnforceCostLimits = false) // TODO - Refactor queries for lower cost
-            );
+                    .ModifyCostOptions(o => o.EnforceCostLimits = false)
+            ); // TODO - Refactor queries for lower cost
 
         return builder.Build();
     }

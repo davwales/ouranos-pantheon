@@ -8,8 +8,8 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.Extensions.Configuration.Binder"
-                          Version="$(MicrosoftConfigurationBinderVersion)"/>
-        <PackageReference Include="Microsoft.Extensions.Http" Version="$(MicrosoftExtensionsHttpVersion)"/>
+                          />
+        <PackageReference Include="Microsoft.Extensions.Http" />
     </ItemGroup>
 
 </Project>

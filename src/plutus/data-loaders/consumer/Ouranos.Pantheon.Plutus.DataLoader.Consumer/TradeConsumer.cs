@@ -1,10 +1,10 @@
 using Ardalis.GuardClauses;
 using MassTransit;
 using Ouranos.Pantheon.Core.Domain.Common;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Plutus.DataLoader.Consumer.Handlers.InsertTrade;
 using Ouranos.Pantheon.Plutus.DataLoader.Consumer.Handlers.UpsertSymbol;
 using Ouranos.Pantheon.Plutus.DataLoader.Domain;
-using Ouranos.Pantheon.Plutus.Service.Domain.Markets;
 using LegacyNamespace = Ouranos.Pantheon.DataLoader.Plutus.Domain.Trades;
 using TradeMessage = Ouranos.Pantheon.Plutus.DataLoader.Domain.Trades.TradeMessage;
 
@@ -48,7 +48,10 @@ public sealed class TradeConsumer : IConsumer<TradeMessage>, IConsumer<LegacyNam
 
     public async Task Consume(ConsumeContext<LegacyNamespace.TradeMessage> context)
     {
-        _logger.LogDebug("Detected legacy trade message '{messageId}', converting and processing.", context.MessageId);
+        _logger.LogDebug(
+            "Detected legacy trade message '{messageId}', converting and processing.",
+            context.MessageId
+        );
 
         await Process(
             context.MessageId,

@@ -5,40 +5,13 @@
         <Version>1.0.0</Version>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.*"/>
-        <PackageReference Include="Ardalis.GuardClauses" Version="5.0.*"/>
+        <PackageReference Include="Microsoft.Extensions.Logging" />
+        <PackageReference Include="Ardalis.GuardClauses" />
     </ItemGroup>
-    
-    <PropertyGroup>
-        <CsvHelperVersion>33.0.*</CsvHelperVersion>
-        <EFCoreNamingConventionsVersion>8.0.*</EFCoreNamingConventionsVersion>
-        <MassTransitVersion>8.3.*</MassTransitVersion>
-        <MassTransitRabbitMQVersion>8.3.*</MassTransitRabbitMQVersion>
-        <MicrosoftConfigurationBinderVersion>8.0.*</MicrosoftConfigurationBinderVersion>
-        <MicrosoftEntityFrameworkCoreDesignVersion>8.0.11</MicrosoftEntityFrameworkCoreDesignVersion>
-        <MicrosoftEntityFrameworkCoreProxiesVersion>8.0.*</MicrosoftEntityFrameworkCoreProxiesVersion>
-        <MicrosoftExtensionsCachingMemoryVersion>8.0.*</MicrosoftExtensionsCachingMemoryVersion>
-        <MicrosoftExtensionsConfigurationVersion>8.0.*</MicrosoftExtensionsConfigurationVersion>
-        <MicrosoftExtensionsConfigurationJsonVersion>8.0.*</MicrosoftExtensionsConfigurationJsonVersion>
-        <MicrosoftExtensionsDependencyInjectionVersion>8.0.*</MicrosoftExtensionsDependencyInjectionVersion>
-        <MicrosoftExtensionsHostingVersion>8.0.*</MicrosoftExtensionsHostingVersion>
-        <MicrosoftExtensionsHttpVersion>8.0.*</MicrosoftExtensionsHttpVersion>
-        <MicrosoftExtensionsLoggingConsoleVersion>8.0.*</MicrosoftExtensionsLoggingConsoleVersion>
-        <MicrosoftExtensionsOptionsConfigurationExtensionsVersion>8.0.*</MicrosoftExtensionsOptionsConfigurationExtensionsVersion>
-        <MongoDriverVersion>2.27.*</MongoDriverVersion>
-        <NpgsqlEntityFrameworkCorePostgreSQLVersion>8.0.*</NpgsqlEntityFrameworkCorePostgreSQLVersion>
-        <HotChocolateVersion>14.3.*</HotChocolateVersion>
-        <SerilogVersion>4.2.*</SerilogVersion>
-        <SerilogAspNetCoreVersion>8.0.*</SerilogAspNetCoreVersion>
-        <SerilogExtensionsLoggingVersion>8.0.*</SerilogExtensionsLoggingVersion>
-        <SerilogSettingsConfigurationVersion>9.0.*</SerilogSettingsConfigurationVersion>
-        <SerilogSinksConsoleVersion>6.0.*</SerilogSinksConsoleVersion>
-        <SerilogSinksGrafanaLokiVersion>8.3.*</SerilogSinksGrafanaLokiVersion>
-        <SystemLinqAsyncVersion>6.0.*</SystemLinqAsyncVersion>
-    </PropertyGroup>
 
     <Target Name="CopyGitHooks" AfterTargets="AfterBuild">
         <ItemGroup>
