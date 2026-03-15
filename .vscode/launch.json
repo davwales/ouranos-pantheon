@@ -2,13 +2,13 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Ouranos.Pantheon.Gateway.API",
+      "name": "Ouranos.Pantheon.Apps.Gateway",
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build",
-      "program": "${workspaceFolder}/src/gateway/Ouranos.Pantheon.Gateway.API/bin/Debug/net8.0/Ouranos.Pantheon.Gateway.API.dll",
+      "program": "${workspaceFolder}/src/apps/gateway/Ouranos.Pantheon.Apps.Gateway/bin/Debug/net8.0/Ouranos.Pantheon.Apps.Gateway.dll",
       "args": [],
-      "cwd": "${workspaceFolder}/src/gateway/Ouranos.Pantheon.Gateway.API",
+      "cwd": "${workspaceFolder}/src/apps/gateway/Ouranos.Pantheon.Apps.Gateway",
       "stopAtEntry": false,
       "env": {
         "ASPNETCORE_ENVIRONMENT": "Development"

@@ -3,7 +3,7 @@ using Ouranos.Pantheon.Core.API.Interfaces;
 using Ouranos.Pantheon.Modules.Hermes;
 using Ouranos.Pantheon.Modules.Plutus;
 
-namespace Ouranos.Pantheon.Gateway.API.Startup;
+namespace Ouranos.Pantheon.Apps.Gateway.Startup;
 
 public static class HostingExtensions
 {
