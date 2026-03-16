@@ -1,9 +1,9 @@
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Core.Application.Common;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.CreateMarket;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.CreateMarket.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
 

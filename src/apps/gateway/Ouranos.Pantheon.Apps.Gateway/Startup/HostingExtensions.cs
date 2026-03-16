@@ -1,26 +1,27 @@
-﻿using Ouranos.Pantheon.Core.API.Extensions;
-using Ouranos.Pantheon.Core.API.Interfaces;
+﻿using Ouranos.Pantheon.Modules.Shared.API.Extensions;
 using Ouranos.Pantheon.Modules.Hermes;
 using Ouranos.Pantheon.Modules.Plutus;
+using Ouranos.Pantheon.Modules.Shared;
 
 namespace Ouranos.Pantheon.Apps.Gateway.Startup;
 
 public static class HostingExtensions
 {
     private const string CorsPolicy = "AllowLocalAndServer";
-    private static readonly IReadOnlyList<IOuranosModule> Modules = [new HermesModule(), new PlutusModule()];
+    private static readonly IReadOnlyList<IPantheonModule> Modules = [new HermesModule(), new PlutusModule()];
 
     public static WebApplication ConfigureBuilder(this WebApplicationBuilder builder)
     {
-        builder.Services
-            .ConfigureCors(builder.Configuration)
+        builder
             .AddOuranosCore(
                 builder.Configuration,
                 Modules,
                 gql => gql
                     .ModifyOptions(o => { o.EnableStream = true; })
-                    .ModifyCostOptions(o => o.EnforceCostLimits = false)
-            ); // TODO - Refactor queries for lower cost
+                    .ModifyCostOptions(o => o.EnforceCostLimits = false) // TODO - Refactor queries for lower cost
+            )
+            .Services
+            .ConfigureCors(builder.Configuration);
 
         return builder.Build();
     }
@@ -32,13 +33,14 @@ public static class HostingExtensions
         return app;
     }
 
-    private static IServiceCollection ConfigureCors(
+    private static void ConfigureCors(
         this IServiceCollection services,
         IConfiguration configuration
     )
     {
         var corsAllowedHosts = configuration.GetSection("CorsAllowedHosts").Get<string[]>() ?? [];
-        return services.AddCors(options =>
+
+        services.AddCors(options =>
             options.AddPolicy(
                 CorsPolicy,
                 builder =>

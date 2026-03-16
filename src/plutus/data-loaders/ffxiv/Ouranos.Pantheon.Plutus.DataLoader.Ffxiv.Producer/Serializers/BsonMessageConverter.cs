@@ -2,7 +2,7 @@
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Bson.Serialization.Serializers;
-using Ouranos.Pantheon.Core.WebSockets.Serializers;
+using Ouranos.Pantheon.Modules.Shared.WebSockets.Serializers;
 
 namespace Ouranos.Pantheon.Plutus.DataLoader.Ffxiv.Producer.Serializers;
 

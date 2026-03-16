@@ -10,7 +10,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\..\..\core\Ouranos.Pantheon.Core.Application\Ouranos.Pantheon.Core.Application.csproj"/>
         <ProjectReference Include="..\..\Ouranos.Pantheon.Plutus.DataLoader.Infra.RabbitMq\Ouranos.Pantheon.Plutus.DataLoader.Infra.RabbitMq.csproj"/>
         <ProjectReference Include="..\..\Ouranos.Pantheon.Plutus.DataLoader.Worker\Ouranos.Pantheon.Plutus.DataLoader.Worker.csproj"/>
         <ProjectReference Include="..\Ouranos.Pantheon.Plutus.DataLoader.Osrs.Application\Ouranos.Pantheon.Plutus.DataLoader.Osrs.Application.csproj"/>

@@ -1,5 +1,5 @@
 ﻿using MassTransit;
-using Ouranos.Pantheon.Core.Infra.Postgres;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Plutus.DataLoader.Infra.RabbitMq;
 using Ouranos.Pantheon.Plutus.DataLoader.Worker;

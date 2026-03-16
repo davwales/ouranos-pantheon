@@ -1,5 +1,5 @@
 using AutoFixture.Kernel;
-using Ouranos.Pantheon.Core.Domain.Common;
+using Ouranos.Pantheon.Modules.Shared.Domain;
 
 namespace Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 
@@ -7,12 +7,7 @@ public sealed class IdSpecimenBuilder : ISpecimenBuilder
 {
     public object Create(object request, ISpecimenContext context)
     {
-        if (request is not Type type)
-        {
-            return new NoSpecimen();
-        }
-
-        if (!type.IsGenericType || type.GetGenericTypeDefinition() != typeof(Id<>))
+        if (request is not Type { IsGenericType: true } type || type.GetGenericTypeDefinition() != typeof(Id<>))
         {
             return new NoSpecimen();
         }

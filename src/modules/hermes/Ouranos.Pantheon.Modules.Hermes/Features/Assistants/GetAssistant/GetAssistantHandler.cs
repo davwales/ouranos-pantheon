@@ -1,7 +1,7 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Core.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
 using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.GetAssistant.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Assistants;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;

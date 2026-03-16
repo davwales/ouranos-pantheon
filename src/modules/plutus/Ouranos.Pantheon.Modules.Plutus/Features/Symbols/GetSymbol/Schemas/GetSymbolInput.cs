@@ -1,5 +1,5 @@
-using Ouranos.Pantheon.Core.Application.Mediator;
-using Ouranos.Pantheon.Core.Domain.Common;
+using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetSymbol.Schemas;

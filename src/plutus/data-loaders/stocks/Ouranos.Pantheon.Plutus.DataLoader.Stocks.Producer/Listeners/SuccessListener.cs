@@ -1,7 +1,7 @@
 ﻿using Ardalis.GuardClauses;
 using Microsoft.Extensions.Options;
-using Ouranos.Pantheon.Core.WebSockets.Listeners;
-using Ouranos.Pantheon.Core.WebSockets.WebSocketClients;
+using Ouranos.Pantheon.Modules.Shared.WebSockets.Listeners;
+using Ouranos.Pantheon.Modules.Shared.WebSockets.WebSocketClients;
 using Ouranos.Pantheon.Plutus.DataLoader.Stocks.Producer.Messages;
 
 namespace Ouranos.Pantheon.Plutus.DataLoader.Stocks.Producer.Listeners;
