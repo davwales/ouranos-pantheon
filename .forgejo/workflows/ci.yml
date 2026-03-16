@@ -12,10 +12,11 @@ env:
 jobs:
   test:
     runs-on: docker
-    container:
-      image: mcr.microsoft.com/dotnet/sdk:8.0
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "8.0.x"
       - run: dotnet restore --verbosity quiet
       - run: dotnet test --logger "console;verbosity=detailed"
 
