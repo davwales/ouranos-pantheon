@@ -1,4 +1,4 @@
-﻿using Ouranos.Pantheon.Core.Domain.Common;
+﻿using Ouranos.Pantheon.Modules.Shared.Domain;
 
 namespace Ouranos.Pantheon.Tests.Utils;
 

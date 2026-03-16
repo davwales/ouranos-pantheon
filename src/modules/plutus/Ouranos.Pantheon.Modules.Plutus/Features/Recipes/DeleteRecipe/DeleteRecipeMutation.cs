@@ -1,9 +1,9 @@
 using HotChocolate;
 using HotChocolate.Types;
-using Ouranos.Pantheon.Core.API.Mutations;
-using Ouranos.Pantheon.Core.Application.Common;
-using Ouranos.Pantheon.Core.Application.Mediator;
-using Ouranos.Pantheon.Core.Domain.Common;
+using Ouranos.Pantheon.Modules.Shared.API.Mutations;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.DeleteRecipe.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Recipes;
 

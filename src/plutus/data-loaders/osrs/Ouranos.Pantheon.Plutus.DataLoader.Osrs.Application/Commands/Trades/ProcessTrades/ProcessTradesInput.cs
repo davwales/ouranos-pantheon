@@ -1,4 +1,4 @@
-﻿using Ouranos.Pantheon.Core.Application.Mediator;
+﻿using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
 using Ouranos.Pantheon.Plutus.DataLoader.Osrs.Application.Queries.Trades.GetTrades;
 
 namespace Ouranos.Pantheon.Plutus.DataLoader.Osrs.Application.Commands.Trades.ProcessTrades;

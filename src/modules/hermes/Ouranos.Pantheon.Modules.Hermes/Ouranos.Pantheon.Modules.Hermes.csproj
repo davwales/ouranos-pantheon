@@ -12,8 +12,6 @@
   </ItemGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\..\..\core\Ouranos.Pantheon.Core.API\Ouranos.Pantheon.Core.API.csproj"/>
-    <ProjectReference Include="..\..\..\core\Ouranos.Pantheon.Core.Infra.OuranosMl\Ouranos.Pantheon.Core.Infra.OuranosMl.csproj" />
     <ProjectReference Include="..\..\Ouranos.Pantheon.Modules.Shared\Ouranos.Pantheon.Modules.Shared.csproj" />
   </ItemGroup>
 

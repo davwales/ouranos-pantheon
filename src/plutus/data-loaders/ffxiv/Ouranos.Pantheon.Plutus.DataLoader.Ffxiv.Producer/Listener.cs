@@ -1,7 +1,7 @@
 ﻿using Ardalis.GuardClauses;
-using Ouranos.Pantheon.Core.Application.Mediator;
-using Ouranos.Pantheon.Core.WebSockets.Listeners;
-using Ouranos.Pantheon.Core.WebSockets.WebSocketClients;
+using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.WebSockets.Listeners;
+using Ouranos.Pantheon.Modules.Shared.WebSockets.WebSocketClients;
 using Ouranos.Pantheon.Plutus.DataLoader.Ffxiv.Application.Commands.Trades.ProcessTrade;
 using Ouranos.Pantheon.Plutus.DataLoader.Ffxiv.Producer.Messages;
 

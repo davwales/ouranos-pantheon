@@ -1,8 +1,8 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Core.Application.Mediator;
-using Ouranos.Pantheon.Core.Infra.Postgres.Functions;
+using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Functions;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetSymbolTrades.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
@@ -44,13 +44,13 @@ public sealed class GetSymbolTradesHandler : QueryHandler<GetSymbolTradesInput, 
         var aggregatedStats = await baseQuery
             .GroupBy(t => 1)
             .Select(g => new
-                {
-                    MinPrice = g.Min(t => t.Price),
-                    MaxPrice = g.Max(t => t.Price),
-                    TotalSpent = g.Sum(t => t.Price * t.Volume),
-                    Volume = g.Sum(t => t.Volume),
-                    NumTransactions = g.Count()
-                }
+            {
+                MinPrice = g.Min(t => t.Price),
+                MaxPrice = g.Max(t => t.Price),
+                TotalSpent = g.Sum(t => t.Price * t.Volume),
+                Volume = g.Sum(t => t.Volume),
+                NumTransactions = g.Count()
+            }
             )
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -97,11 +97,11 @@ public sealed class GetSymbolTradesHandler : QueryHandler<GetSymbolTradesInput, 
         var timeRange = query
             .GroupBy(t => 1)
             .Select(g => new
-                {
-                    StartTime = g.Min(t => t.Timestamp),
-                    EndTime = g.Max(t => t.Timestamp),
-                    Duration = g.Max(t => t.Timestamp) - g.Min(t => t.Timestamp)
-                }
+            {
+                StartTime = g.Min(t => t.Timestamp),
+                EndTime = g.Max(t => t.Timestamp),
+                Duration = g.Max(t => t.Timestamp) - g.Min(t => t.Timestamp)
+            }
             )
             .FirstOrDefault();
 

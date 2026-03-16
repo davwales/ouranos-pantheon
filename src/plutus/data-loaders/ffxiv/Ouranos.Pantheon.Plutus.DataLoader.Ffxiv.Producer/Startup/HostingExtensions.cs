@@ -1,5 +1,5 @@
 ﻿using MassTransit;
-using Ouranos.Pantheon.Core.WebSockets;
+using Ouranos.Pantheon.Modules.Shared.WebSockets;
 using Ouranos.Pantheon.Plutus.DataLoader.Ffxiv.Application;
 using Ouranos.Pantheon.Plutus.DataLoader.Ffxiv.Infra.XivApi;
 using Ouranos.Pantheon.Plutus.DataLoader.Ffxiv.Producer.Initializers;

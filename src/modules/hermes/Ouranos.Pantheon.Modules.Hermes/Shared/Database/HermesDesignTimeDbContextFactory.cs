@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Ouranos.Pantheon.Core.Infra.Postgres;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 

@@ -1,8 +1,8 @@
 using HotChocolate;
 using HotChocolate.Types;
-using Ouranos.Pantheon.Core.API.Queries;
-using Ouranos.Pantheon.Core.Application.Mediator;
-using Ouranos.Pantheon.Core.Domain.Common;
+using Ouranos.Pantheon.Modules.Shared.API.Queries;
+using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetMarket.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 

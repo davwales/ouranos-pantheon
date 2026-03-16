@@ -1,6 +1,6 @@
 ﻿using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
-using Ouranos.Pantheon.Core.Application;
+using Ouranos.Pantheon.Modules.Shared.Application;
 
 namespace Ouranos.Pantheon.Plutus.DataLoader.Ffxiv.Application;
 

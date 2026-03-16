@@ -1,9 +1,9 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Core.Application.Common;
-using Ouranos.Pantheon.Core.Application.Mediator;
-using Ouranos.Pantheon.Core.Domain.Common;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetRecipeTrades.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
@@ -69,25 +69,25 @@ public sealed class GetRecipeTradesHandler
 
         var response = validRecipes
             .Select(r => new
-                {
-                    r.Id,
-                    r.Name,
-                    LatestBuyPrice = r.Inputs.Sum(i => prices[i.SymbolId].LatestPrice * i.Quantity) + r.Cost,
-                    LatestSellPrice = r.Outputs.Sum(i => prices[i.SymbolId].LatestPrice * i.Quantity),
-                    AverageBuyPrice = r.Inputs.Sum(i => prices[i.SymbolId].AveragePrice * i.Quantity) + r.Cost,
-                    AverageSellPrice = r.Outputs.Sum(i => prices[i.SymbolId].AveragePrice * i.Quantity)
-                }
+            {
+                r.Id,
+                r.Name,
+                LatestBuyPrice = r.Inputs.Sum(i => prices[i.SymbolId].LatestPrice * i.Quantity) + r.Cost,
+                LatestSellPrice = r.Outputs.Sum(i => prices[i.SymbolId].LatestPrice * i.Quantity),
+                AverageBuyPrice = r.Inputs.Sum(i => prices[i.SymbolId].AveragePrice * i.Quantity) + r.Cost,
+                AverageSellPrice = r.Outputs.Sum(i => prices[i.SymbolId].AveragePrice * i.Quantity)
+            }
             )
             .Union(
                 recipes.Except(validRecipes).Select(r => new
-                    {
-                        r.Id,
-                        r.Name,
-                        LatestBuyPrice = (decimal)0,
-                        LatestSellPrice = (decimal)0,
-                        AverageBuyPrice = (decimal)0,
-                        AverageSellPrice = (decimal)0
-                    }
+                {
+                    r.Id,
+                    r.Name,
+                    LatestBuyPrice = (decimal)0,
+                    LatestSellPrice = (decimal)0,
+                    AverageBuyPrice = (decimal)0,
+                    AverageSellPrice = (decimal)0
+                }
                 )
             )
             .Select(x => new GetRecipeTradesResponse(
@@ -121,12 +121,12 @@ public sealed class GetRecipeTradesHandler
             .OrderByDescending(x => x.Timestamp)
             .GroupBy(x => x.SymbolId)
             .Select(g => new
-                {
-                    SymbolId = g.Key,
-                    TotalSpent = g.Sum(x => x.Price * x.Volume),
-                    Volume = g.Sum(x => x.Volume),
-                    LatestPrice = g.First().Price
-                }
+            {
+                SymbolId = g.Key,
+                TotalSpent = g.Sum(x => x.Price * x.Volume),
+                Volume = g.Sum(x => x.Volume),
+                LatestPrice = g.First().Price
+            }
             )
             .Select(x => new SymbolPrice(
                     x.SymbolId,

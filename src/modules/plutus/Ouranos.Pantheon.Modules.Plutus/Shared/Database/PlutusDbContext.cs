@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Ouranos.Pantheon.Core.Infra.Postgres;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Recipes;

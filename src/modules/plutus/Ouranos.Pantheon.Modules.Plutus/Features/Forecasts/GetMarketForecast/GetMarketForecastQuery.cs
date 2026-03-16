@@ -1,8 +1,8 @@
 using HotChocolate;
 using HotChocolate.Data;
 using HotChocolate.Types;
-using Ouranos.Pantheon.Core.API.Queries;
-using Ouranos.Pantheon.Core.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.API.Queries;
+using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetMarketForecast.Schemas;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetMarketForecast;
