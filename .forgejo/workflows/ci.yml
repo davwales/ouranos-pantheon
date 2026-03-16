@@ -1,0 +1,138 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  REGISTRY: codeberg.org
+  REGISTRY_PREFIX: codeberg.org/${{ github.repository_owner }}/pantheon
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/dotnet/sdk:8.0
+    steps:
+      - uses: actions/checkout@v4
+      - run: dotnet restore --verbosity quiet
+      - run: dotnet test --logger "console;verbosity=detailed"
+
+  build_gateway:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -f src/apps/gateway/Dockerfile -t ${{ env.REGISTRY_PREFIX }}-gateway .
+      - name: Save image
+        run: docker save ${{ env.REGISTRY_PREFIX }}-gateway -o gateway.tar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gateway
+          path: gateway.tar
+          retention-days: 1
+
+  build_interface:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: src/interface/node_modules
+          key: ${{ github.ref_name }}-interface-${{ hashFiles('src/interface/package-lock.json') }}
+          restore-keys: ${{ github.ref_name }}-interface-
+      - name: Build image
+        run: docker build -f src/interface/Dockerfile -t ${{ env.REGISTRY_PREFIX }}-interface .
+      - name: Save image
+        run: docker save ${{ env.REGISTRY_PREFIX }}-interface -o interface.tar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: interface
+          path: interface.tar
+          retention-days: 1
+
+  build_plutus_data_loader_ffxiv:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -f src/plutus/data-loaders/ffxiv/Dockerfile -t ${{ env.REGISTRY_PREFIX }}-plutus-data-loader-ffxiv .
+      - name: Save image
+        run: docker save ${{ env.REGISTRY_PREFIX }}-plutus-data-loader-ffxiv -o plutus-data-loader-ffxiv.tar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: plutus-data-loader-ffxiv
+          path: plutus-data-loader-ffxiv.tar
+          retention-days: 1
+
+  build_plutus_data_loader_osrs:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -f src/plutus/data-loaders/osrs/Dockerfile -t ${{ env.REGISTRY_PREFIX }}-plutus-data-loader-osrs .
+      - name: Save image
+        run: docker save ${{ env.REGISTRY_PREFIX }}-plutus-data-loader-osrs -o plutus-data-loader-osrs.tar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: plutus-data-loader-osrs
+          path: plutus-data-loader-osrs.tar
+          retention-days: 1
+
+  build_plutus_data_loader_stocks:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -f src/plutus/data-loaders/stocks/Dockerfile -t ${{ env.REGISTRY_PREFIX }}-plutus-data-loader-stocks .
+      - name: Save image
+        run: docker save ${{ env.REGISTRY_PREFIX }}-plutus-data-loader-stocks -o plutus-data-loader-stocks.tar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: plutus-data-loader-stocks
+          path: plutus-data-loader-stocks.tar
+          retention-days: 1
+
+  build_plutus_data_loader_consumer:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -f src/plutus/data-loaders/consumer/Dockerfile -t ${{ env.REGISTRY_PREFIX }}-plutus-data-loader-consumer .
+      - name: Save image
+        run: docker save ${{ env.REGISTRY_PREFIX }}-plutus-data-loader-consumer -o plutus-data-loader-consumer.tar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: plutus-data-loader-consumer
+          path: plutus-data-loader-consumer.tar
+          retention-days: 1
+
+  push_images:
+    needs:
+      - build_gateway
+      - build_interface
+      - build_plutus_data_loader_ffxiv
+      - build_plutus_data_loader_osrs
+      - build_plutus_data_loader_stocks
+      - build_plutus_data_loader_consumer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Login to Codeberg registry
+        run: echo "${{ secrets.REGISTRY_TOKEN }}" | docker login ${{ env.REGISTRY }} -u "${{ secrets.REGISTRY_USER }}" --password-stdin
+      - name: Load and push images
+        run: |
+          for tar in artifacts/**/*.tar; do
+            IMAGE_NAME=$(basename "$tar" .tar)
+            docker load -i "$tar"
+            docker push "${{ env.REGISTRY_PREFIX }}-${IMAGE_NAME}"
+          done
