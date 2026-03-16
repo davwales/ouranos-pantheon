@@ -400,6 +400,18 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 
+# AI Assistants
+.cursorrules
+.cursor/rules/
+.clinerules
+.windsurfrules
+.github/copilot-instructions.md
+CLAUDE.md
+.ai/
+.memory/
+.prompt_history/
+memory/*.md
+
 appsettings.Local.json
 appsettings.Development.json
 appsettings.Development.Migration.json
