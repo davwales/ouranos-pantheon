@@ -1,5 +1,5 @@
 ﻿using Ardalis.GuardClauses;
-using Ouranos.Pantheon.Core.Domain.Common;
+using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Recipes;

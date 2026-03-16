@@ -4,18 +4,17 @@ using MassTransit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Ouranos.Pantheon.Core.API.Extensions;
-using Ouranos.Pantheon.Core.API.Interfaces;
-using Ouranos.Pantheon.Core.Application;
-using Ouranos.Pantheon.Core.Infra.OuranosMl;
-using Ouranos.Pantheon.Core.Infra.Postgres;
+using Ouranos.Pantheon.Modules.Shared.API.Extensions;
+using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Assistants;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Shared;
 
 namespace Ouranos.Pantheon.Modules.Hermes;
 
-public sealed class HermesModule : IPantheonModule, IOuranosModule
+public sealed class HermesModule : IPantheonModule
 {
     public IHostApplicationBuilder Build(IHostApplicationBuilder builder)
     {

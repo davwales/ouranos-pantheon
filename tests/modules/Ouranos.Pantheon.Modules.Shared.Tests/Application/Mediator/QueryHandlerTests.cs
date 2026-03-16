@@ -1,0 +1,47 @@
+﻿using MassTransit;
+using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Tests.Utils;
+
+namespace Ouranos.Pantheon.Modules.Shared.Tests.Application.Mediator;
+
+public sealed class QueryHandlerTests
+{
+    private readonly TestQueryHandler _handler = new();
+
+    [Fact]
+    public async Task Consume_ShouldInvokeHandler()
+    {
+        // Arrange
+        var fixture = new Fixture();
+        var expectedResult = fixture.Create<TestEntity>();
+        var input = new TestQuery(expectedResult);
+        var cts = new CancellationTokenSource();
+        var context = Substitute.For<ConsumeContext<TestQuery>>();
+
+        context.Message.Returns(input);
+        context.CancellationToken.Returns(cts.Token);
+
+        // Act
+        await _handler.Consume(context);
+
+        // Assert
+        _handler.HandleCount.ShouldBe(1);
+        await context.Received(1).RespondAsync(expectedResult);
+    }
+
+    public sealed record TestQuery(TestEntity Result) : IQuery<TestEntity>;
+
+    public sealed class TestQueryHandler : QueryHandler<TestQuery, TestEntity>
+    {
+        public int HandleCount;
+
+        public override async Task<TestEntity> Handle(
+            TestQuery query,
+            CancellationToken cancellationToken = default
+        )
+        {
+            HandleCount++;
+            return await Task.FromResult(query.Result);
+        }
+    }
+}

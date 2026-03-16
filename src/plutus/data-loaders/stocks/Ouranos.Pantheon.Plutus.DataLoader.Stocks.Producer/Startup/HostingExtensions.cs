@@ -1,4 +1,4 @@
-﻿using Ouranos.Pantheon.Core.WebSockets;
+﻿using Ouranos.Pantheon.Modules.Shared.WebSockets;
 using Ouranos.Pantheon.Plutus.DataLoader.Infra.RabbitMq;
 using Ouranos.Pantheon.Plutus.DataLoader.Stocks.Producer.Listeners;
 using Ouranos.Pantheon.Plutus.DataLoader.Stocks.Producer.Messages;

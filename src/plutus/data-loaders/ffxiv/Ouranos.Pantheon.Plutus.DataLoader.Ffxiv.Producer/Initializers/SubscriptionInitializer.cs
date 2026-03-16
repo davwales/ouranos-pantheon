@@ -1,5 +1,5 @@
 ﻿using Ardalis.GuardClauses;
-using Ouranos.Pantheon.Core.WebSockets.WebSocketClients;
+using Ouranos.Pantheon.Modules.Shared.WebSockets.WebSocketClients;
 using Ouranos.Pantheon.Plutus.DataLoader.Ffxiv.Producer.Messages;
 
 namespace Ouranos.Pantheon.Plutus.DataLoader.Ffxiv.Producer.Initializers;

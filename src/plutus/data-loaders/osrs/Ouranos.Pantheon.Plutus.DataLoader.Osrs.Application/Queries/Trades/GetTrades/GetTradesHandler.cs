@@ -1,7 +1,7 @@
 ﻿using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Core.Application.Common;
-using Ouranos.Pantheon.Core.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
 using Ouranos.Pantheon.Plutus.DataLoader.Osrs.Application.Interfaces.Trades;
 
 namespace Ouranos.Pantheon.Plutus.DataLoader.Osrs.Application.Queries.Trades.GetTrades;

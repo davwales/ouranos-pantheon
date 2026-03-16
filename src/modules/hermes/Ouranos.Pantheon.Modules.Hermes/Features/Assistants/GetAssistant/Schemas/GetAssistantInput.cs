@@ -1,5 +1,5 @@
-using Ouranos.Pantheon.Core.Application.Mediator;
-using Ouranos.Pantheon.Core.Domain.Common;
+using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Assistants;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Assistants.GetAssistant.Schemas;

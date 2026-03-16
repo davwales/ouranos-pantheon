@@ -1,11 +1,11 @@
 using System.Runtime.CompilerServices;
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Core.Application.Common;
-using Ouranos.Pantheon.Core.Application.Mediator;
-using Ouranos.Pantheon.Core.Infra.OuranosMl;
-using Ouranos.Pantheon.Core.Infra.OuranosMl.Dtos;
-using Ouranos.Pantheon.Core.Infra.OuranosMl.Requests;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
+using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning.Dtos;
+using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning.Requests;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 

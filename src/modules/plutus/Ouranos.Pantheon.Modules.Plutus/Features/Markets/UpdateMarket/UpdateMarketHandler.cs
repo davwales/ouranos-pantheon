@@ -1,8 +1,8 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Core.Application.Common;
-using Ouranos.Pantheon.Core.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.UpdateMarket.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
