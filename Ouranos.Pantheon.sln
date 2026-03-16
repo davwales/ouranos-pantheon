@@ -20,6 +20,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.gitlab-ci.yml = .gitlab-ci.yml
 		README.md = README.md
 		Ouranos.Pantheon.sln.DotSettings = Ouranos.Pantheon.sln.DotSettings
+		.forgejo\workflows\ci.yml = .forgejo\workflows\ci.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "plutus", "plutus", "{DDE15ED7-21D6-4AC1-8536-B833DA144125}"
