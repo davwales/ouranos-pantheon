@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  pull_request:
 
 env:
   DOTNET_INSTALL_DIR: "./.dotnet"
@@ -11,7 +12,47 @@ env:
   REGISTRY_PREFIX: codeberg.org/${{ github.repository_owner }}/pantheon
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "8.0.x"
+      - run: dotnet restore --verbosity quiet
+      - run: dotnet format --verify-no-changes
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: src/interface/package-lock.json
+      - run: npm ci
+        working-directory: src/interface
+      - run: npm run lint
+        working-directory: src/interface
+
+  build:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "8.0.x"
+      - run: dotnet restore --verbosity quiet
+      - run: dotnet build Ouranos.Pantheon.sln --no-restore
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: src/interface/package-lock.json
+      - run: npm ci
+        working-directory: src/interface
+      - run: npm run build
+        working-directory: src/interface
+
   test:
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,9 +62,9 @@ jobs:
       - run: dotnet restore --verbosity quiet
       - run: dotnet test --logger "console;verbosity=detailed"
 
-  build:
+  publish:
     needs: test
-    # if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     strategy:
       matrix:
