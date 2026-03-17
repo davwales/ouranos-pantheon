@@ -16,15 +16,15 @@
   </ItemGroup>
 
   <ItemGroup>
-      <Content Include="..\..\..\gateway\Ouranos.Pantheon.Apps.Gateway\appsettings.json" 
-              Condition="Exists('..\..\..\gateway\Ouranos.Pantheon.Apps.Gateway\appsettings.json')">
+      <Content Include="..\..\..\apps\gateway\Ouranos.Pantheon.Apps.Gateway\appsettings.json" 
+              Condition="Exists('..\..\..\apps\gateway\Ouranos.Pantheon.Apps.Gateway\appsettings.json')">
           <Link>appsettings.json</Link>
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
           <CopyToPublishDirectory>Never</CopyToPublishDirectory>
       </Content>
 
-      <Content Include="..\..\..\gateway\Ouranos.Pantheon.Apps.Gateway\appsettings.Development.json" 
-              Condition="Exists('..\..\..\gateway\Ouranos.Pantheon.Apps.Gateway\appsettings.Development.json')">
+      <Content Include="..\..\..\apps\gateway\Ouranos.Pantheon.Apps.Gateway\appsettings.Development.json" 
+              Condition="Exists('..\..\..\apps\gateway\Ouranos.Pantheon.Apps.Gateway\appsettings.Development.json')">
           <Link>appsettings.Development.json</Link>
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
           <CopyToPublishDirectory>Never</CopyToPublishDirectory>
