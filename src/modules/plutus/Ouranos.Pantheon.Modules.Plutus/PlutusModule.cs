@@ -210,7 +210,6 @@ public sealed class PlutusModule : IPantheonModule
         return new WebSocketWorker(
             sp.GetRequiredService<ILogger<WebSocketWorker>>(),
             client,
-            sp.GetRequiredService<IHostApplicationLifetime>(),
             Options.Create(wsOptions)
         );
     }
@@ -249,7 +248,6 @@ public sealed class PlutusModule : IPantheonModule
         return new WebSocketWorker(
             sp.GetRequiredService<ILogger<WebSocketWorker>>(),
             client,
-            sp.GetRequiredService<IHostApplicationLifetime>(),
             Options.Create(wsOptions)
         );
     }

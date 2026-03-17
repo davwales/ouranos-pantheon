@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute.ExceptionExtensions;
 using Ouranos.Pantheon.Modules.Shared.WebSockets;
@@ -9,14 +8,7 @@ namespace Ouranos.Pantheon.Modules.Shared.Tests.WebSockets;
 
 public sealed class WebSocketWorkerTests
 {
-    private readonly IHostApplicationLifetime _applicationLifetime;
-    private readonly IWebSocketClient _webSocketClient;
-
-    public WebSocketWorkerTests()
-    {
-        _webSocketClient = Substitute.For<IWebSocketClient>();
-        _applicationLifetime = Substitute.For<IHostApplicationLifetime>();
-    }
+    private readonly IWebSocketClient _webSocketClient = Substitute.For<IWebSocketClient>();
 
     [Fact]
     public async Task ExecuteAsync_ShouldHaveExpectedLifeTime()
@@ -31,7 +23,6 @@ public sealed class WebSocketWorkerTests
         // Assert
         await _webSocketClient.Received(1).ConnectAsync(Arg.Any<CancellationToken>());
         await _webSocketClient.Received(1).DisconnectAsync(Arg.Any<CancellationToken>());
-        _applicationLifetime.Received(1).StopApplication();
     }
 
     [Fact]
@@ -47,7 +38,7 @@ public sealed class WebSocketWorkerTests
         await worker.StartAsync(cts.Token);
 
         // Assert
-        _applicationLifetime.Received(1).StopApplication();
+        await _webSocketClient.Received(1).DisconnectAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -62,7 +53,7 @@ public sealed class WebSocketWorkerTests
         await worker.StartAsync(cts.Token);
 
         // Assert
-        _applicationLifetime.Received(1).StopApplication();
+        await _webSocketClient.Received(1).DisconnectAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -93,7 +84,7 @@ public sealed class WebSocketWorkerTests
 
         // Assert
         listeningCalls.ShouldBe(2);
-        _applicationLifetime.Received(1).StopApplication();
+        await _webSocketClient.Received(1).DisconnectAsync(Arg.Any<CancellationToken>());
     }
 
     private WebSocketWorker GivenWorkerWithOptions(WebSocketOptions options)
@@ -101,7 +92,6 @@ public sealed class WebSocketWorkerTests
         return new WebSocketWorker(
             Substitute.For<ILogger<WebSocketWorker>>(),
             _webSocketClient,
-            _applicationLifetime,
             Options.Create(options)
         );
     }
