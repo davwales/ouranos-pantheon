@@ -13,7 +13,9 @@ public sealed class ItemParser
             reader,
             new CsvConfiguration(CultureInfo.InvariantCulture)
             {
-                HasHeaderRecord = true, MissingFieldFound = null, HeaderValidated = null
+                HasHeaderRecord = true,
+                MissingFieldFound = null,
+                HeaderValidated = null
             }
         );
 
