@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute.ExceptionExtensions;
 using Ouranos.Pantheon.Modules.Shared.WebSockets;
@@ -10,8 +10,15 @@ public sealed class WebSocketWorkerTests
 {
     private readonly IWebSocketClient _webSocketClient = Substitute.For<IWebSocketClient>();
 
+    private static readonly WebSocketOptions ZeroDelayOptions = new()
+    {
+        HealthCheckIntervalSeconds = 0,
+        ReconnectBaseDelaySeconds = 0,
+        ReconnectMaxDelaySeconds = 0
+    };
+
     [Fact]
-    public async Task ExecuteAsync_ShouldHaveExpectedLifeTime()
+    public async Task ExecuteAsync_WhenCancelledBeforeStart_ShouldDisconnectWithoutConnecting()
     {
         // Arrange
         var cancellationToken = new CancellationToken(true);
@@ -21,16 +28,28 @@ public sealed class WebSocketWorkerTests
         await worker.StartAsync(cancellationToken);
 
         // Assert
-        await _webSocketClient.Received(1).ConnectAsync(Arg.Any<CancellationToken>());
+        await _webSocketClient.Received(0).ConnectAsync(Arg.Any<CancellationToken>());
         await _webSocketClient.Received(1).DisconnectAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task ExecuteAsync_WhenWebSocketNotListening_ShouldStopApplication()
+    public async Task ExecuteAsync_WhenConnectionDrops_ShouldReconnect()
     {
         // Arrange
         var cts = new CancellationTokenSource();
-        var worker = GivenWorkerWithOptions(new WebSocketOptions());
+        var worker = GivenWorkerWithOptions(ZeroDelayOptions);
+
+        var connectCount = 0;
+        _webSocketClient
+            .When(x => x.ConnectAsync(Arg.Any<CancellationToken>()))
+            .Do(_ =>
+                {
+                    if (++connectCount >= 2)
+                    {
+                        cts.Cancel();
+                    }
+                }
+            );
 
         _webSocketClient.IsListening.Returns(false);
 
@@ -38,44 +57,48 @@ public sealed class WebSocketWorkerTests
         await worker.StartAsync(cts.Token);
 
         // Assert
-        await _webSocketClient.Received(1).DisconnectAsync(Arg.Any<CancellationToken>());
+        await _webSocketClient.Received(2).ConnectAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task ExecuteAsync_WhenWebSocketClientCancels_ShouldStopApplication()
+    public async Task ExecuteAsync_WhenExceptionDuringListen_ShouldReconnect()
     {
         // Arrange
         var cts = new CancellationTokenSource();
-        var worker = GivenWorkerWithOptions(new WebSocketOptions());
-        _webSocketClient.IsListening.Throws(new OperationCanceledException());
+        var worker = GivenWorkerWithOptions(ZeroDelayOptions);
+
+        var connectCount = 0;
+        _webSocketClient
+            .When(x => x.ConnectAsync(Arg.Any<CancellationToken>()))
+            .Do(_ =>
+                {
+                    if (++connectCount >= 2)
+                    {
+                        cts.Cancel();
+                    }
+                }
+            );
+
+        _webSocketClient.IsListening.Throws(new InvalidOperationException("Connection error"));
 
         // Act
         await worker.StartAsync(cts.Token);
 
         // Assert
-        await _webSocketClient.Received(1).DisconnectAsync(Arg.Any<CancellationToken>());
+        await _webSocketClient.Received(2).ConnectAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task ExecuteAsync_WhenWebSocketThrowsException_ShouldNotStopApplication()
+    public async Task ExecuteAsync_WhenCancelled_ShouldStopAndDisconnect()
     {
         // Arrange
         var cts = new CancellationTokenSource();
-        var worker = GivenWorkerWithOptions(
-            new WebSocketOptions { HealthCheckIntervalSeconds = 0, ErrorDelayIntervalSeconds = 0 }
-        );
+        var worker = GivenWorkerWithOptions(ZeroDelayOptions);
 
-        var listeningCalls = 0;
-        _webSocketClient.IsListening.Returns(
-            _ =>
+        _webSocketClient.IsListening.Returns(_ =>
             {
-                listeningCalls++;
-                throw new InvalidOperationException();
-            },
-            _ =>
-            {
-                listeningCalls++;
-                return false;
+                cts.Cancel();
+                return true;
             }
         );
 
@@ -83,7 +106,7 @@ public sealed class WebSocketWorkerTests
         await worker.StartAsync(cts.Token);
 
         // Assert
-        listeningCalls.ShouldBe(2);
+        await _webSocketClient.Received(1).ConnectAsync(Arg.Any<CancellationToken>());
         await _webSocketClient.Received(1).DisconnectAsync(Arg.Any<CancellationToken>());
     }
 
