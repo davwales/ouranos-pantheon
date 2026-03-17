@@ -73,14 +73,6 @@ jobs:
             dockerfile: src/apps/gateway/Dockerfile
           - name: interface
             dockerfile: src/interface/Dockerfile
-          - name: plutus-data-loader-ffxiv
-            dockerfile: src/plutus/data-loaders/ffxiv/Dockerfile
-          - name: plutus-data-loader-osrs
-            dockerfile: src/plutus/data-loaders/osrs/Dockerfile
-          - name: plutus-data-loader-stocks
-            dockerfile: src/plutus/data-loaders/stocks/Dockerfile
-          - name: plutus-data-loader-consumer
-            dockerfile: src/plutus/data-loaders/consumer/Dockerfile
     steps:
       - uses: actions/checkout@v4
       - uses: docker/login-action@v3

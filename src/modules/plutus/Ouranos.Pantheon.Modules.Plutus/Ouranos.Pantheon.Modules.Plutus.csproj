@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
       <TargetFramework>net8.0</TargetFramework>
@@ -9,48 +9,31 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="CsvHelper" />
+    <PackageReference Include="MassTransit.RabbitMQ" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
+    <PackageReference Include="Microsoft.Extensions.Http" />
+    <PackageReference Include="MongoDB.Driver" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <ProjectReference Include="..\..\Ouranos.Pantheon.Modules.Shared\Ouranos.Pantheon.Modules.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-      <Content Include="..\..\..\gateway\Ouranos.Pantheon.Apps.Gateway\appsettings.json" 
-              Condition="Exists('..\..\..\gateway\Ouranos.Pantheon.Apps.Gateway\appsettings.json')">
+      <Content Include="..\..\..\apps\gateway\Ouranos.Pantheon.Apps.Gateway\appsettings.json"
+              Condition="Exists('..\..\..\apps\gateway\Ouranos.Pantheon.Apps.Gateway\appsettings.json')">
           <Link>appsettings.json</Link>
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
           <CopyToPublishDirectory>Never</CopyToPublishDirectory>
       </Content>
 
-      <Content Include="..\..\..\gateway\Ouranos.Pantheon.Apps.Gateway\appsettings.Development.json" 
-              Condition="Exists('..\..\..\gateway\Ouranos.Pantheon.Apps.Gateway\appsettings.Development.json')">
+      <Content Include="..\..\..\apps\gateway\Ouranos.Pantheon.Apps.Gateway\appsettings.Development.json"
+              Condition="Exists('..\..\..\apps\gateway\Ouranos.Pantheon.Apps.Gateway\appsettings.Development.json')">
           <Link>appsettings.Development.json</Link>
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
           <CopyToPublishDirectory>Never</CopyToPublishDirectory>
       </Content>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Features\Forecasts\GetAllForecasts\" />
-    <Folder Include="Features\Forecasts\GetMarketForecast\" />
-    <Folder Include="Features\Markets\CreateMarket\" />
-    <Folder Include="Features\Markets\DeleteMarket\" />
-    <Folder Include="Features\Markets\GetAllMarkets\" />
-    <Folder Include="Features\Markets\GetMarket\" />
-    <Folder Include="Features\Markets\UpdateMarket\" />
-    <Folder Include="Features\Recipes\CreateRecipe\" />
-    <Folder Include="Features\Recipes\DeleteRecipe\" />
-    <Folder Include="Features\Recipes\GetAllRecipes\" />
-    <Folder Include="Features\Recipes\GetRecipe\" />
-    <Folder Include="Features\Recipes\UpdateRecipe\" />
-    <Folder Include="Features\Symbols\GetAllSymbols\" />
-    <Folder Include="Features\Symbols\GetDailySymbolSummary\" />
-    <Folder Include="Features\Symbols\GetSymbol\" />
-    <Folder Include="Features\Trades\GetAllTrades\" />
-    <Folder Include="Features\Trades\GetMarketTrades\" />
-    <Folder Include="Features\Trades\GetRecipeTrades\" />
-    <Folder Include="Features\Trades\GetSymbolTrades\" />
   </ItemGroup>
 
 </Project>
