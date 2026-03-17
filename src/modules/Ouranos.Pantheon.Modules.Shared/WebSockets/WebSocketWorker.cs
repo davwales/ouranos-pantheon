@@ -8,7 +8,6 @@ namespace Ouranos.Pantheon.Modules.Shared.WebSockets;
 
 public sealed class WebSocketWorker : BackgroundService
 {
-    private readonly IHostApplicationLifetime _applicationLifetime;
     private readonly IWebSocketClient _client;
     private readonly ILogger<WebSocketWorker> _logger;
     private readonly IOptions<WebSocketOptions> _options;
@@ -16,56 +15,128 @@ public sealed class WebSocketWorker : BackgroundService
     public WebSocketWorker(
         ILogger<WebSocketWorker> logger,
         IWebSocketClient client,
-        IHostApplicationLifetime applicationLifetime,
         IOptions<WebSocketOptions> options
     )
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(client);
-        Guard.Against.Null(applicationLifetime);
 
         _logger = logger;
         _client = client;
-        _applicationLifetime = applicationLifetime;
         _options = options;
     }
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        await _client.ConnectAsync(cancellationToken);
+        var reconnectDelay = TimeSpan.FromSeconds(_options.Value.ReconnectBaseDelaySeconds);
 
         while (!cancellationToken.IsCancellationRequested)
         {
-            try
-            {
-                if (!_client.IsListening)
-                {
-                    _logger.LogError("Web socket client is not listening, exiting.");
-                    break;
-                }
+            var connected = await TryConnectAndMonitorAsync(reconnectDelay, cancellationToken);
 
-                await Task.Delay(
-                    TimeSpan.FromSeconds(_options.Value.HealthCheckIntervalSeconds),
-                    cancellationToken
-                );
-            }
-            catch (OperationCanceledException)
+            if (cancellationToken.IsCancellationRequested)
             {
-                _logger.LogInformation("Cancellation requested, exiting.");
                 break;
             }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "Unhandled exception encountered, restarting.");
 
-                await Task.Delay(
-                    TimeSpan.FromSeconds(_options.Value.ErrorDelayIntervalSeconds),
-                    cancellationToken
-                );
+            await DisconnectAsync();
+
+            if (!await TryWaitForReconnectAsync(reconnectDelay, cancellationToken))
+            {
+                break;
             }
+
+            reconnectDelay = connected
+                ? TimeSpan.FromSeconds(_options.Value.ReconnectBaseDelaySeconds)
+                : AdvanceBackoff(reconnectDelay);
         }
 
-        await _client.DisconnectAsync(cancellationToken);
-        _applicationLifetime.StopApplication();
+        await DisconnectAsync();
+        _logger.LogInformation("WebSocketWorker stopped for host '{host}'.", _options.Value.Host);
+    }
+
+    private async Task<bool> TryConnectAndMonitorAsync(
+        TimeSpan reconnectDelay,
+        CancellationToken cancellationToken
+    )
+    {
+        try
+        {
+            _logger.LogInformation(
+                "WebSocketWorker connecting to '{host}' (next backoff: {delay}s).",
+                _options.Value.Host,
+                reconnectDelay.TotalSeconds
+            );
+
+            await _client.ConnectAsync(cancellationToken);
+            _logger.LogInformation("WebSocketWorker connected to '{host}'.", _options.Value.Host);
+
+            await MonitorConnectionAsync(cancellationToken);
+            return true;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "WebSocketWorker error for '{host}', reconnecting in {delay}s.",
+                _options.Value.Host,
+                reconnectDelay.TotalSeconds
+            );
+            return false;
+        }
+    }
+
+    private async Task MonitorConnectionAsync(CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested && _client.IsListening)
+        {
+            await Task.Delay(
+                TimeSpan.FromSeconds(_options.Value.HealthCheckIntervalSeconds),
+                cancellationToken
+            );
+        }
+
+        if (!cancellationToken.IsCancellationRequested)
+        {
+            _logger.LogWarning(
+                "WebSocketWorker lost connection to '{host}', reconnecting.",
+                _options.Value.Host
+            );
+        }
+    }
+
+    private async Task<bool> TryWaitForReconnectAsync(TimeSpan delay, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(delay, cancellationToken);
+            return true;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            return false;
+        }
+    }
+
+    private async Task DisconnectAsync()
+    {
+        try
+        {
+            await _client.DisconnectAsync(CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Error disconnecting WebSocket.");
+        }
+    }
+
+    private TimeSpan AdvanceBackoff(TimeSpan current)
+    {
+        var maxDelay = TimeSpan.FromSeconds(_options.Value.ReconnectMaxDelaySeconds);
+        return TimeSpan.FromSeconds(Math.Min(current.TotalSeconds * 2, maxDelay.TotalSeconds));
     }
 }

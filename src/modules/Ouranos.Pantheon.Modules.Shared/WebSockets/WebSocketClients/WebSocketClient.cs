@@ -14,7 +14,7 @@ public class WebSocketClient : IDisposable, IWebSocketClient
     private readonly IListenerRegistry _listenerRegistry;
     private readonly ILogger<WebSocketClient> _logger;
     private readonly IMessageSerializer _serializer;
-    private readonly ClientWebSocket _webSocket = new();
+    private ClientWebSocket _webSocket = new();
     private Task? _listeningTask;
 
     public WebSocketClient(
@@ -53,11 +53,10 @@ public class WebSocketClient : IDisposable, IWebSocketClient
         _logger.LogTrace("Attempting to connect to web socket.");
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (_webSocket.State is not WebSocketState.None)
+        if (_webSocket.State != WebSocketState.None)
         {
-            const string errorMessage = "The web socket cannot be connected.";
-            _logger.LogError(errorMessage);
-            throw new InvalidOperationException(errorMessage);
+            _webSocket.Dispose();
+            _webSocket = new ClientWebSocket();
         }
 
         await _webSocket.ConnectAsync(_host, cancellationToken);
@@ -70,24 +69,23 @@ public class WebSocketClient : IDisposable, IWebSocketClient
     public async Task DisconnectAsync(CancellationToken cancellationToken = default)
     {
         _logger.LogTrace("Attempting to disconnect from web socket.");
-        if (_webSocket.State != WebSocketState.Open)
-        {
-            _logger.LogDebug("Web socket was already disconnected.");
-            return;
-        }
 
-        await _webSocket.CloseAsync(
-            WebSocketCloseStatus.NormalClosure,
-            "Client initiated close",
-            cancellationToken
-        );
+        if (_webSocket.State == WebSocketState.Open)
+        {
+            await _webSocket.CloseAsync(
+                WebSocketCloseStatus.NormalClosure,
+                "Client initiated close",
+                cancellationToken
+            );
+        }
 
         if (_listeningTask is not null)
         {
             await _listeningTask;
+            _listeningTask = null;
         }
 
-        _logger.LogDebug("Successfully disconnected from web socket.");
+        _logger.LogDebug("Disconnected from web socket.");
     }
 
     public async Task SendAsync(byte[] message, CancellationToken cancellationToken = default)

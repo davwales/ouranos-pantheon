@@ -1,4 +1,4 @@
-﻿using Ouranos.Pantheon.Modules.Shared.WebSockets;
+using Ouranos.Pantheon.Modules.Shared.WebSockets;
 
 namespace Ouranos.Pantheon.Modules.Shared.Tests.WebSockets;
 
@@ -19,21 +19,24 @@ public sealed class WebSocketOptionsTests
         var expectedHost = fixture.Create<string>();
         var expectedBufferSize = fixture.Create<uint>();
         var expectedHealthCheckIntervalSeconds = fixture.Create<uint>();
-        var expectedErrorDelayIntervalSeconds = fixture.Create<uint>();
+        var expectedReconnectBaseDelaySeconds = fixture.Create<uint>();
+        var expectedReconnectMaxDelaySeconds = fixture.Create<uint>();
 
         // Act
         var options = new WebSocketOptions(
             expectedHost,
             expectedBufferSize,
             expectedHealthCheckIntervalSeconds,
-            expectedErrorDelayIntervalSeconds
+            expectedReconnectBaseDelaySeconds,
+            expectedReconnectMaxDelaySeconds
         );
 
         // Assert
         options.Host.ShouldBe(expectedHost);
         options.BufferSize.ShouldBe(expectedBufferSize);
         options.HealthCheckIntervalSeconds.ShouldBe(expectedHealthCheckIntervalSeconds);
-        options.ErrorDelayIntervalSeconds.ShouldBe(expectedErrorDelayIntervalSeconds);
+        options.ReconnectBaseDelaySeconds.ShouldBe(expectedReconnectBaseDelaySeconds);
+        options.ReconnectMaxDelaySeconds.ShouldBe(expectedReconnectMaxDelaySeconds);
     }
 
     [Fact]
@@ -54,6 +57,7 @@ public sealed class WebSocketOptionsTests
         options.Host.ShouldBe(expectedHost);
         options.BufferSize.ShouldBe(expectedBufferSize);
         options.HealthCheckIntervalSeconds.ShouldBe((uint)300);
-        options.ErrorDelayIntervalSeconds.ShouldBe((uint)300);
+        options.ReconnectBaseDelaySeconds.ShouldBe((uint)5);
+        options.ReconnectMaxDelaySeconds.ShouldBe((uint)300);
     }
 }
