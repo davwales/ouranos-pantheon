@@ -12,7 +12,9 @@ public sealed class WebSocketWorkerTests
 
     private static readonly WebSocketOptions ZeroDelayOptions = new()
     {
-        HealthCheckIntervalSeconds = 0, ReconnectBaseDelaySeconds = 0, ReconnectMaxDelaySeconds = 0
+        HealthCheckIntervalSeconds = 0,
+        ReconnectBaseDelaySeconds = 0,
+        ReconnectMaxDelaySeconds = 0
     };
 
     [Fact]
