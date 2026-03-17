@@ -78,6 +78,12 @@ public sealed class PlutusModule : IPantheonModule
             .BindModelIdFilter<Trade>();
     }
 
+    public IMediatorRegistrationConfigurator ConfigureMediator(IMediatorRegistrationConfigurator mediator)
+    {
+        mediator.AddConsumers(typeof(PlutusModule).Assembly);
+        return mediator;
+    }
+
     private static void ConfigureDataLoaders(IHostApplicationBuilder builder)
     {
         var plutusOptionsSection = builder.Configuration.GetSection(PlutusOptions.SectionName);
