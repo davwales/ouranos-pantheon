@@ -12,5 +12,6 @@ public sealed record QueryOptions(
         MinPageSize: 1,
         MaxPageSize: 100,
         MaxSkip: 10000
-    ) {}
+    )
+    { }
 }

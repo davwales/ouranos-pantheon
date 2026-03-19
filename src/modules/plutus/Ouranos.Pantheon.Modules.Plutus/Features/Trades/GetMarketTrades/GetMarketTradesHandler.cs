@@ -81,15 +81,15 @@ public sealed class GetMarketTradesHandler
             )
             .GroupBy(t => t.Symbol)
             .Select(g => new
-                {
-                    Symbol = g.Key,
-                    TotalSpent = g.Sum(t => t.Price * t.Volume),
-                    MinPrice = g.Min(t => t.Price),
-                    MaxPrice = g.Max(t => t.Price),
-                    TotalVolume = g.Sum(t => t.Volume),
-                    NumTransactions = g.Count(),
-                    Limit = g.Key.AdditionalFields.Limit ?? g.Sum(t => t.Volume)
-                }
+            {
+                Symbol = g.Key,
+                TotalSpent = g.Sum(t => t.Price * t.Volume),
+                MinPrice = g.Min(t => t.Price),
+                MaxPrice = g.Max(t => t.Price),
+                TotalVolume = g.Sum(t => t.Volume),
+                NumTransactions = g.Count(),
+                Limit = g.Key.AdditionalFields.Limit ?? g.Sum(t => t.Volume)
+            }
             )
             .Select(x => new GetMarketTradesResponse(
                     x.Symbol.Id,
