@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetAllTrades.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
@@ -14,7 +14,7 @@ using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetAllTrades;
 
 public sealed class GetAllTradesHandler
-    : QueryHandler<GetAllTradesInput, WrapperResponse<IReadOnlyList<GetAllTradesResponse>>>
+    : IPantheonHandler<GetAllTradesInput, List<GetAllTradesResponse>>
 {
     private static readonly FilterBuilder<Trade> FilterBuilder = new FilterBuilder<Trade>()
         .On(nameof(GetAllTradesResponse.MarketId), t => t.Symbol.MarketId)
@@ -47,7 +47,7 @@ public sealed class GetAllTradesHandler
         _queryOptions = queryOptions;
     }
 
-    public override async Task<WrapperResponse<IReadOnlyList<GetAllTradesResponse>>> Handle(
+    public async Task<List<GetAllTradesResponse>> Handle(
         GetAllTradesInput input,
         CancellationToken cancellationToken = default
     )
@@ -79,6 +79,6 @@ public sealed class GetAllTradesHandler
             .ToListAsync(cancellationToken);
 
         _logger.LogDebug("Successfully handled get all trades request.");
-        return new WrapperResponse<IReadOnlyList<GetAllTradesResponse>>(items);
+        return items;
     }
 }

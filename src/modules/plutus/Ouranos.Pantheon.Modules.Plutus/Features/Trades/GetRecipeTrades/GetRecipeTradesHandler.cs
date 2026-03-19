@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetRecipeTrades.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
@@ -15,7 +15,7 @@ using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetRecipeTrades;
 
 public sealed class GetRecipeTradesHandler
-    : QueryHandler<GetRecipeTradesInput, PagedResponse<GetRecipeTradesResponse>>
+    : IPantheonHandler<GetRecipeTradesInput, PagedResponse<GetRecipeTradesResponse>>
 {
     private static readonly FilterBuilder<GetRecipeTradesResponse> FilterBuilder =
         new FilterBuilder<GetRecipeTradesResponse>()
@@ -46,7 +46,7 @@ public sealed class GetRecipeTradesHandler
         _queryOptions = queryOptions;
     }
 
-    public override async Task<PagedResponse<GetRecipeTradesResponse>> Handle(
+    public async Task<PagedResponse<GetRecipeTradesResponse>> Handle(
         GetRecipeTradesInput input,
         CancellationToken cancellationToken = default
     )

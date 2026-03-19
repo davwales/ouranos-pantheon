@@ -1,8 +1,8 @@
 using Ardalis.GuardClauses;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.GetAllAssistants.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Assistants;
@@ -10,7 +10,7 @@ using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Assistants;
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Assistants.GetAllAssistants;
 
 public sealed class GetAllAssistantsHandler
-    : QueryHandler<GetAllAssistantsInput, WrapperResponse<IQueryable<GetAllAssistantsResponse>>>
+    : IPantheonHandler<GetAllAssistantsInput, List<GetAllAssistantsResponse>>
 {
     private static readonly FilterBuilder<Assistant> FilterBuilder = new FilterBuilder<Assistant>()
         .On(nameof(Assistant.AssistantName), a => a.AssistantName)
@@ -31,7 +31,7 @@ public sealed class GetAllAssistantsHandler
         _dbContext = dbContext;
     }
 
-    public override async Task<WrapperResponse<IQueryable<GetAllAssistantsResponse>>> Handle(
+    public async Task<List<GetAllAssistantsResponse>> Handle(
         GetAllAssistantsInput query,
         CancellationToken cancellationToken = default
     )
@@ -39,8 +39,9 @@ public sealed class GetAllAssistantsHandler
         _logger.LogTrace("Attempting to handle get all assistants query '{@query}'.", query);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var queryable = _dbContext.Assistants
+        var assistants = await _dbContext.Assistants
             .AsQueryable()
+            .AsNoTracking()
             .FilterBy(query.Filter, FilterBuilder)
             .Select(a => new GetAllAssistantsResponse(
                     a.Id,
@@ -52,9 +53,10 @@ public sealed class GetAllAssistantsHandler
                     a.MaxTokens,
                     a.RepeatPenalty
                 )
-            );
+            )
+            .ToListAsync(cancellationToken);
 
         _logger.LogDebug("Successfully handled get all assistants request.");
-        return await Task.FromResult(new WrapperResponse<IQueryable<GetAllAssistantsResponse>>(queryable));
+        return assistants;
     }
 }

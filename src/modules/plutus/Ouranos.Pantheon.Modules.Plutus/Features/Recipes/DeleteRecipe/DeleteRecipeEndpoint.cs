@@ -2,8 +2,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.DeleteRecipe.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Recipes;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Domain;
+using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Recipes.DeleteRecipe;
 
@@ -17,10 +18,10 @@ public static class DeleteRecipeEndpoint
 
     private static async Task<IResult> Handle(
         Id<Recipe> recipeId,
-        IScopedDispatcher dispatcher,
+        IMessageBus bus,
         CancellationToken ct
     )
     {
-        return Results.Ok(await dispatcher.Send(new DeleteRecipeInput(recipeId), ct));
+        return Results.Ok(await bus.InvokeAsync<IdResponse<Recipe>>(new DeleteRecipeInput(recipeId), ct));
     }
 }

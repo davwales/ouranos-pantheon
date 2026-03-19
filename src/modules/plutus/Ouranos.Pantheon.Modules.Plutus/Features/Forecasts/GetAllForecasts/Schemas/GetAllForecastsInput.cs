@@ -1,6 +1,3 @@
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
-
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetAllForecasts.Schemas;
 
 public sealed record GetAllForecastsInput(
@@ -9,4 +6,4 @@ public sealed record GetAllForecastsInput(
     int Skip = 0,
     int Take = 10,
     string[]? Filter = null
-) : IQuery<PagedResponse<GetAllForecastsResponse>>;
+);

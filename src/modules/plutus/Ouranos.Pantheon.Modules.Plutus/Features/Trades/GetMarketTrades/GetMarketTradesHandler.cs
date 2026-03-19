@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketTrades.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
@@ -14,7 +14,7 @@ using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketTrades;
 
 public sealed class GetMarketTradesHandler
-    : QueryHandler<GetMarketTradesInput, PagedResponse<GetMarketTradesResponse>>
+    : IPantheonHandler<GetMarketTradesInput, PagedResponse<GetMarketTradesResponse>>
 {
     private static readonly FilterBuilder<GetMarketTradesResponse> FilterBuilder =
         new FilterBuilder<GetMarketTradesResponse>()
@@ -47,7 +47,7 @@ public sealed class GetMarketTradesHandler
         _queryOptions = queryOptions;
     }
 
-    public override async Task<PagedResponse<GetMarketTradesResponse>> Handle(
+    public async Task<PagedResponse<GetMarketTradesResponse>> Handle(
         GetMarketTradesInput input,
         CancellationToken cancellationToken = default
     )

@@ -1,13 +1,13 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetMarket.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetMarket;
 
-public sealed class GetMarketHandler : QueryHandler<GetMarketInput, GetMarketResponse>
+public sealed class GetMarketHandler : IPantheonHandler<GetMarketInput, GetMarketResponse>
 {
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<GetMarketHandler> _logger;
@@ -24,7 +24,7 @@ public sealed class GetMarketHandler : QueryHandler<GetMarketInput, GetMarketRes
         _dbContext = dbContext;
     }
 
-    public override async Task<GetMarketResponse> Handle(
+    public async Task<GetMarketResponse> Handle(
         GetMarketInput query,
         CancellationToken cancellationToken = default
     )

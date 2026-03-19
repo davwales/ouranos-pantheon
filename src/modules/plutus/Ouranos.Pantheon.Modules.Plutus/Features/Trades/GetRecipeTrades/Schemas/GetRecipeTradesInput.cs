@@ -1,5 +1,3 @@
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 
@@ -13,4 +11,4 @@ public sealed record GetRecipeTradesInput(
     int Skip = 0,
     int Take = 10,
     string[]? Filter = null
-) : IQuery<PagedResponse<GetRecipeTradesResponse>>;
+);

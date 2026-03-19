@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetAllMarkets.Schemas;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetAllMarkets;
 
@@ -15,11 +15,10 @@ public static class GetAllMarketsEndpoint
 
     private static async Task<IResult> Handle(
         [AsParameters] GetAllMarketsInput input,
-        IScopedDispatcher dispatcher,
+        IMessageBus bus,
         CancellationToken ct
     )
     {
-        var wrapper = await dispatcher.Send(input, ct);
-        return Results.Ok(wrapper.Value.ToList());
+        return Results.Ok(await bus.InvokeAsync<List<GetAllMarketsResponse>>(input, ct));
     }
 }

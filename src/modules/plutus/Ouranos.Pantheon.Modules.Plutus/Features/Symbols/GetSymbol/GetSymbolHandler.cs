@@ -1,13 +1,13 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetSymbol.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetSymbol;
 
-public sealed class GetSymbolHandler : QueryHandler<GetSymbolInput, GetSymbolResponse>
+public sealed class GetSymbolHandler : IPantheonHandler<GetSymbolInput, GetSymbolResponse>
 {
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<GetSymbolHandler> _logger;
@@ -24,7 +24,7 @@ public sealed class GetSymbolHandler : QueryHandler<GetSymbolInput, GetSymbolRes
         _dbContext = dbContext;
     }
 
-    public override async Task<GetSymbolResponse> Handle(
+    public async Task<GetSymbolResponse> Handle(
         GetSymbolInput query,
         CancellationToken cancellationToken = default
     )

@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning.Dtos;
 using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning.Requests;
@@ -12,7 +12,7 @@ using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion;
 
 public sealed class GenerateCompletionHandler
-    : CommandHandler<GenerateCompletionInput, StreamResponse<string, GenerateCompletionResponse>>
+    : IPantheonHandler<GenerateCompletionInput, StreamResponse<string, GenerateCompletionResponse>>
 {
     private readonly ILogger<GenerateCompletionHandler> _logger;
     private readonly IOuranosMachineLearningClient _ouranosMachineLearningClient;
@@ -29,7 +29,7 @@ public sealed class GenerateCompletionHandler
         _ouranosMachineLearningClient = ouranosMachineLearningClient;
     }
 
-    public override async Task<StreamResponse<string, GenerateCompletionResponse>> Handle(
+    public async Task<StreamResponse<string, GenerateCompletionResponse>> Handle(
         GenerateCompletionInput command,
         CancellationToken cancellationToken = default
     )

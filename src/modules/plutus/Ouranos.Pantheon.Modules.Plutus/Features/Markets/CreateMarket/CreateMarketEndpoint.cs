@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.CreateMarket.Schemas;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
+using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Markets.CreateMarket;
 
@@ -15,11 +17,11 @@ public static class CreateMarketEndpoint
 
     private static async Task<IResult> Handle(
         CreateMarketInput input,
-        IScopedDispatcher dispatcher,
+        IMessageBus bus,
         CancellationToken ct
     )
     {
-        var result = await dispatcher.Send(input, ct);
+        var result = await bus.InvokeAsync<IdResponse<Market>>(input, ct);
         return Results.Created($"/api/plutus/markets/{result.Id}", result);
     }
 }

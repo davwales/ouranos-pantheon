@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetAllSymbols.Schemas;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
+using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetAllSymbols;
 
@@ -15,10 +16,10 @@ public static class GetAllSymbolsEndpoint
 
     private static async Task<IResult> Handle(
         [AsParameters] GetAllSymbolsInput input,
-        IScopedDispatcher dispatcher,
+        IMessageBus bus,
         CancellationToken ct = default
     )
     {
-        return Results.Ok(await dispatcher.Send(input, ct));
+        return Results.Ok(await bus.InvokeAsync<PagedResponse<GetAllSymbolsResponse>>(input, ct));
     }
 }

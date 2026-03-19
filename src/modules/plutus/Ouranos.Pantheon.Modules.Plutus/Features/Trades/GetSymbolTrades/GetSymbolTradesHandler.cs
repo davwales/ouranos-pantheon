@@ -1,7 +1,7 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Functions;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetSymbolTrades.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
@@ -9,7 +9,7 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetSymbolTrades;
 
-public sealed class GetSymbolTradesHandler : QueryHandler<GetSymbolTradesInput, GetSymbolTradesResponse>
+public sealed class GetSymbolTradesHandler : IPantheonHandler<GetSymbolTradesInput, GetSymbolTradesResponse>
 {
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<GetSymbolTradesHandler> _logger;
@@ -26,7 +26,7 @@ public sealed class GetSymbolTradesHandler : QueryHandler<GetSymbolTradesInput, 
         _dbContext = dbContext;
     }
 
-    public override async Task<GetSymbolTradesResponse> Handle(
+    public async Task<GetSymbolTradesResponse> Handle(
         GetSymbolTradesInput query,
         CancellationToken cancellationToken = default
     )
@@ -60,6 +60,8 @@ public sealed class GetSymbolTradesHandler : QueryHandler<GetSymbolTradesInput, 
             return new GetSymbolTradesResponse(0, 0, 0, 0, 0, 0, []);
         }
 
+        var buckets = await GetBucketedTrades(baseQuery, query.NumBuckets, cancellationToken);
+
         var response = new GetSymbolTradesResponse(
             aggregatedStats.MinPrice,
             aggregatedStats.MaxPrice,
@@ -69,32 +71,32 @@ public sealed class GetSymbolTradesHandler : QueryHandler<GetSymbolTradesInput, 
             aggregatedStats.TotalSpent,
             aggregatedStats.Volume,
             aggregatedStats.NumTransactions,
-            GetBucketedTradesQuery(baseQuery, query.NumBuckets)
-                .AsEnumerable()
-                .OrderBy(b => b.BucketStart)
-                .Select(b =>
-                    new GetSymbolTradeBucketsResponse(
-                        b.AveragePrice,
-                        b.Volume,
-                        b.TotalSpent,
-                        b.MinPrice,
-                        b.MaxPrice,
-                        b.NumTransactions,
-                        b.BucketStart
+            [
+                .. buckets
+                    .Select(b => new GetSymbolTradeBucketsResponse(
+                            b.AveragePrice,
+                            b.Volume,
+                            b.TotalSpent,
+                            b.MinPrice,
+                            b.MaxPrice,
+                            b.NumTransactions,
+                            b.BucketStart
+                        )
                     )
-                )
+            ]
         );
 
         _logger.LogDebug("Successfully handled get symbol trades request.");
         return response;
     }
 
-    private IQueryable<BucketDto> GetBucketedTradesQuery(
+    private static async Task<List<BucketDto>> GetBucketedTrades(
         IQueryable<Trade> query,
-        int numBuckets
+        int numBuckets,
+        CancellationToken cancellationToken
     )
     {
-        var timeRange = query
+        var timeRange = await query
             .GroupBy(t => 1)
             .Select(g => new
             {
@@ -103,16 +105,19 @@ public sealed class GetSymbolTradesHandler : QueryHandler<GetSymbolTradesInput, 
                 Duration = g.Max(t => t.Timestamp) - g.Min(t => t.Timestamp)
             }
             )
-            .FirstOrDefault();
+            .FirstOrDefaultAsync(cancellationToken);
 
-        if (timeRange is null)
+        if (timeRange is null || timeRange.Duration <= TimeSpan.Zero)
         {
-            return Enumerable.Empty<BucketDto>().AsQueryable();
+            return [];
         }
 
-        var interval = CalculateSmartInterval(timeRange.Duration, numBuckets);
-        var bucketedQuery = query
-            .GroupBy(t => TimescaleDbFunctions.TimeBucket(interval, t.Timestamp))
+        var buckets = await query
+            .GroupBy(t => TimescaleDbFunctions.TimeBucket(
+                    CalculateSmartInterval(timeRange.Duration, numBuckets),
+                    t.Timestamp
+                )
+            )
             .Select(group => new BucketDto(
                     group.First().SymbolId,
                     group.Key,
@@ -124,9 +129,10 @@ public sealed class GetSymbolTradesHandler : QueryHandler<GetSymbolTradesInput, 
                     group.Sum(x => x.Price * x.Volume) / group.Sum(x => x.Volume),
                     group.Max(x => x.Price) - group.Min(x => x.Price)
                 )
-            );
+            )
+            .ToListAsync(cancellationToken);
 
-        return bucketedQuery;
+        return [.. buckets.OrderBy(b => b.BucketStart)];
     }
 
     private static TimeSpan CalculateSmartInterval(TimeSpan duration, int numBuckets)

@@ -1,5 +1,3 @@
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Assistants;
 
@@ -14,4 +12,4 @@ public sealed record UpdateAssistantInput(
     float? Temperature = null,
     int? MaxTokens = null,
     float? RepeatPenalty = null
-) : ICommand<IdResponse<Assistant>>;
+);

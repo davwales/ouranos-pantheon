@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.CreateAssistant.Schemas;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Assistants;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
+using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Assistants.CreateAssistant;
 
@@ -15,11 +17,11 @@ public static class CreateAssistantEndpoint
 
     private static async Task<IResult> Handle(
         CreateAssistantInput input,
-        IScopedDispatcher dispatcher,
+        IMessageBus bus,
         CancellationToken ct
     )
     {
-        var result = await dispatcher.Send(input, ct);
+        var result = await bus.InvokeAsync<IdResponse<Assistant>>(input, ct);
         return Results.Created($"/api/hermes/assistants/{result.Id}", result);
     }
 }

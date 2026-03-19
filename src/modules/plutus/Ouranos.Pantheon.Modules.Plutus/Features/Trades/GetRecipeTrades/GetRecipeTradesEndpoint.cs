@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetRecipeTrades.Schemas;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
+using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetRecipeTrades;
 
@@ -15,10 +16,10 @@ public static class GetRecipeTradesEndpoint
 
     private static async Task<IResult> Handle(
         [AsParameters] GetRecipeTradesInput input,
-        IScopedDispatcher dispatcher,
+        IMessageBus bus,
         CancellationToken ct = default
     )
     {
-        return Results.Ok(await dispatcher.Send(input, ct));
+        return Results.Ok(await bus.InvokeAsync<PagedResponse<GetRecipeTradesResponse>>(input, ct));
     }
 }

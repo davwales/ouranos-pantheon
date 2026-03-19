@@ -2,8 +2,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetMarket.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
 using Ouranos.Pantheon.Modules.Shared.Domain;
+using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetMarket;
 
@@ -17,11 +17,11 @@ public static class GetMarketEndpoint
 
     private static async Task<IResult> Handle(
         Id<Market> marketId,
-        IScopedDispatcher dispatcher,
+        IMessageBus bus,
         CancellationToken ct
     )
     {
-        var result = await dispatcher.Send(new GetMarketInput(marketId), ct);
+        var result = await bus.InvokeAsync<GetMarketResponse>(new GetMarketInput(marketId), ct);
         return Results.Ok(result);
     }
 }

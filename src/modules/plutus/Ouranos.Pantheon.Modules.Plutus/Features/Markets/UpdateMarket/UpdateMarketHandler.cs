@@ -2,14 +2,14 @@ using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.UpdateMarket.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Markets.UpdateMarket;
 
-public sealed class UpdateMarketHandler : CommandHandler<UpdateMarketInput, IdResponse<Market>>
+public sealed class UpdateMarketHandler : IPantheonHandler<UpdateMarketInput, IdResponse<Market>>
 {
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<UpdateMarketHandler> _logger;
@@ -26,7 +26,7 @@ public sealed class UpdateMarketHandler : CommandHandler<UpdateMarketInput, IdRe
         _dbContext = dbContext;
     }
 
-    public override async Task<IdResponse<Market>> Handle(
+    public async Task<IdResponse<Market>> Handle(
         UpdateMarketInput command,
         CancellationToken cancellationToken = default
     )

@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.GetAllRecipes.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Recipes;
@@ -14,7 +14,7 @@ using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Recipes.GetAllRecipes;
 
 public sealed class GetAllRecipesHandler
-    : QueryHandler<GetAllRecipesInput, PagedResponse<GetAllRecipesResponse>>
+    : IPantheonHandler<GetAllRecipesInput, PagedResponse<GetAllRecipesResponse>>
 {
     private static readonly FilterBuilder<Recipe> FilterBuilder = new FilterBuilder<Recipe>()
         .On(nameof(Recipe.MarketId), r => r.MarketId)
@@ -44,7 +44,7 @@ public sealed class GetAllRecipesHandler
         _queryOptions = queryOptions;
     }
 
-    public override async Task<PagedResponse<GetAllRecipesResponse>> Handle(
+    public async Task<PagedResponse<GetAllRecipesResponse>> Handle(
         GetAllRecipesInput input,
         CancellationToken cancellationToken = default
     )

@@ -2,14 +2,14 @@ using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.UpdateRecipe.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Recipes;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Recipes.UpdateRecipe;
 
-public sealed class UpdateRecipeHandler : CommandHandler<UpdateRecipeInput, IdResponse<Recipe>>
+public sealed class UpdateRecipeHandler : IPantheonHandler<UpdateRecipeInput, IdResponse<Recipe>>
 {
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<UpdateRecipeHandler> _logger;
@@ -26,7 +26,7 @@ public sealed class UpdateRecipeHandler : CommandHandler<UpdateRecipeInput, IdRe
         _dbContext = dbContext;
     }
 
-    public override async Task<IdResponse<Recipe>> Handle(
+    public async Task<IdResponse<Recipe>> Handle(
         UpdateRecipeInput command,
         CancellationToken cancellationToken = default
     )

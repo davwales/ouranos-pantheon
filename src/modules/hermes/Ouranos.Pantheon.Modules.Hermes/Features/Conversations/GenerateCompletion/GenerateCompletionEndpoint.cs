@@ -2,7 +2,8 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion.Schemas;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
+using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion;
 
@@ -16,7 +17,7 @@ public static class GenerateCompletionEndpoint
 
     private static async Task Handle(
         GenerateCompletionInput input,
-        IScopedDispatcher dispatcher,
+        IMessageBus bus,
         HttpContext httpContext,
         CancellationToken ct
     )
@@ -25,7 +26,8 @@ public static class GenerateCompletionEndpoint
         httpContext.Response.Headers.CacheControl = "no-cache";
         httpContext.Response.Headers.Connection = "keep-alive";
 
-        await foreach (var chunk in dispatcher.CreateStream(input, ct))
+        var streamResponse = await bus.InvokeAsync<StreamResponse<string, GenerateCompletionResponse>>(input, ct);
+        await foreach (var chunk in streamResponse.GetStream(ct))
         {
             var json = JsonSerializer.Serialize(chunk, new JsonSerializerOptions(JsonSerializerDefaults.Web));
             await httpContext.Response.WriteAsync($"data: {json}\n\n", ct);

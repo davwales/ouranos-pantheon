@@ -1,8 +1,9 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Application;
 using Serilog;
-using MassTransit;
+using Wolverine;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
 
@@ -24,14 +25,17 @@ public static class CoreExtensions
         builder.Services.ConfigureRest(configuration);
         builder.Services.Configure<QueryOptions>(configuration.GetSection(QueryOptions.SectionName));
 
-        builder.Services.AddMediator(m =>
+        ((WebApplicationBuilder)builder).Host.UseWolverine(opts =>
+        {
+            opts.Discovery.IncludeAssembly(typeof(IPantheonModule).Assembly);
+            foreach (var module in modules)
             {
-                foreach (var module in modules)
-                {
-                    module.ConfigureMediator(m);
-                }
+                opts.Discovery.IncludeAssembly(module.GetType().Assembly);
             }
-        );
+
+            opts.Discovery.CustomizeHandlerDiscovery(x =>
+                x.Includes.Implements<IPantheonHandler>());
+        });
 
         foreach (var module in modules)
         {
