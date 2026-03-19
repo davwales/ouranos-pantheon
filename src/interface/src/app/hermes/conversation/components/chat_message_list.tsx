@@ -4,7 +4,7 @@ import {
 } from "@/app/components/responsive-context-menu";
 import { Message } from "@/app/hermes/conversation/components/message";
 import ConversationAssistant from "@/app/hermes/types";
-import { MessageInput, Role } from "@/gql/graphql";
+import { MessageInput, Role } from "@/lib/api/hermes";
 import { Pencil, RotateCcw, Trash } from "lucide-react";
 import { useEffect, useRef } from "react";
 

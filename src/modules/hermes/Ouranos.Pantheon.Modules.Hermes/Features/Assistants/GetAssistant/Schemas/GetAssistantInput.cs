@@ -6,4 +6,4 @@ namespace Ouranos.Pantheon.Modules.Hermes.Features.Assistants.GetAssistant.Schem
 
 public sealed record GetAssistantInput(
     Id<Assistant> AssistantId
-) : IQuery<Assistant>;
+) : IQuery<GetAssistantResponse>;

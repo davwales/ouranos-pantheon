@@ -1,11 +1,9 @@
 import { FooterContent } from "@/app/components/footer";
 import ChatInput from "@/app/hermes/conversation/components/chat_input";
 import ChatMessageList from "@/app/hermes/conversation/components/chat_message_list";
-import { GENERATE_COMPLETION } from "@/app/hermes/mutations";
 import ConversationAssistant from "@/app/hermes/types";
-import { GenerateCompletionInput, MessageInput, Role } from "@/gql/graphql";
-import { useEffect, useState } from "react";
-import { useMutation } from "urql";
+import { MessageInput, Role, streamCompletion } from "@/lib/api/hermes";
+import { useState } from "react";
 
 export default function ChatInterfaceView({
   assistant,
@@ -20,52 +18,35 @@ export default function ChatInterfaceView({
     null
   );
 
-  const [result, sendMessage] = useMutation(GENERATE_COMPLETION);
-
-  useEffect(() => {
-    if (!result.data?.generateCompletion.completionResponse?.chunks) {
-      return;
-    }
-
-    const message = result.data?.generateCompletion.completionResponse?.chunks
-      .map((c) => c.content)
-      .join("");
-
-    setMessages((prevMessages) => {
-      const newMessages = [...prevMessages];
-      newMessages[newMessages.length - 1].content = message;
-      return newMessages;
-    });
-  }, [result.data?.generateCompletion.completionResponse?.chunks]);
-
   const generateCompletion = async (currentMessages: MessageInput[]) => {
     if (isGenerating) return;
     setIsGenerating(true);
 
-    const variables: GenerateCompletionInput = {
-      conversation: {
-        assistant: {
-          model: assistant.model,
-          systemPrompt: assistant.systemPrompt,
-          temperature: assistant.temperature,
-          maxTokens: assistant.maxTokens,
-          repeatPenalty: assistant.repeatPenalty,
-        },
-        messages: currentMessages.map(({ role, content }) => ({
-          role,
-          content,
-        })),
-      },
-    };
+    const assistantMessage: MessageInput = { role: Role.Assistant, content: "" };
+    setMessages((prev) => [...prev, assistantMessage]);
 
     try {
-      const assistantMessage: MessageInput = {
-        role: Role.Assistant,
-        content: "",
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
-      setIsGenerating(true);
-      await sendMessage({ input: variables });
+      for await (const chunk of streamCompletion({
+        conversation: {
+          assistant: {
+            model: assistant.model,
+            systemPrompt: assistant.systemPrompt,
+            temperature: assistant.temperature,
+            maxTokens: assistant.maxTokens,
+            repeatPenalty: assistant.repeatPenalty,
+          },
+          messages: currentMessages.map(({ role, content }) => ({ role, content })),
+        },
+      })) {
+        setMessages((prev) => {
+          const updated = [...prev];
+          updated[updated.length - 1] = {
+            ...updated[updated.length - 1],
+            content: updated[updated.length - 1].content + chunk.content,
+          };
+          return updated;
+        });
+      }
     } catch (error) {
       console.error("Error sending message:", error);
     } finally {

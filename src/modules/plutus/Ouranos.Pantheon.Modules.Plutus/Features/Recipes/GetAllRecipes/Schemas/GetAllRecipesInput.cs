@@ -1,7 +1,12 @@
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Recipes;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Recipes.GetAllRecipes.Schemas;
 
-public sealed record GetAllRecipesInput : IQuery<WrapperResponse<IQueryable<Recipe>>>;
+public sealed record GetAllRecipesInput(
+    string? SortField = null,
+    string? SortDirection = null,
+    int Skip = 0,
+    int Take = 10,
+    string[]? Filter = null
+) : IQuery<PagedResponse<GetAllRecipesResponse>>;

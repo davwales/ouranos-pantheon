@@ -1,48 +1,84 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
 using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetMarketForecast.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Shared.Application.Common.Pagination;
+using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetMarketForecast;
 
 public sealed class GetMarketForecastHandler
-    : QueryHandler<GetMarketForecastInput, WrapperResponse<IQueryable<GetMarketForecastResponse>>>
+    : QueryHandler<GetMarketForecastInput, PagedResponse<GetMarketForecastResponse>>
 {
+    private static readonly FilterBuilder<GetMarketForecastResponse> FilterBuilder =
+        new FilterBuilder<GetMarketForecastResponse>()
+            .On(nameof(GetMarketForecastResponse.SymbolName), x => x.SymbolName)
+            .On(nameof(GetMarketForecastResponse.SymbolSubcode), x => x.SymbolSubcode);
+
+    private static readonly SortBuilder<GetMarketForecastResponse> SortBuilder =
+        new SortBuilder<GetMarketForecastResponse>()
+            .On(nameof(GetMarketForecastResponse.SymbolName), x => x.SymbolName)
+            .On(
+                $"{nameof(GetMarketForecastResponse.DayOne)}.{nameof(GetMarketForecastPredictionResponse.Gain)}",
+                x => x.DayOne.Gain
+            )
+            .On(
+                $"{nameof(GetMarketForecastResponse.DayOne)}.{nameof(GetMarketForecastPredictionResponse.Margin)}",
+                x => x.DayOne.Margin
+            )
+            .On(
+                $"{nameof(GetMarketForecastResponse.DayTwo)}.{nameof(GetMarketForecastPredictionResponse.Gain)}",
+                x => x.DayTwo.Gain
+            )
+            .Default(x => x.DayOne.Gain);
+
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<GetMarketForecastHandler> _logger;
+    private readonly IOptions<QueryOptions> _queryOptions;
 
     public GetMarketForecastHandler(
         ILogger<GetMarketForecastHandler> logger,
-        PlutusDbContext dbContext
+        PlutusDbContext dbContext,
+        IOptions<QueryOptions> queryOptions
     )
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(dbContext);
+        Guard.Against.Null(queryOptions);
 
         _logger = logger;
         _dbContext = dbContext;
+        _queryOptions = queryOptions;
     }
 
-    public override async Task<WrapperResponse<IQueryable<GetMarketForecastResponse>>> Handle(
-        GetMarketForecastInput query,
+    public override async Task<PagedResponse<GetMarketForecastResponse>> Handle(
+        GetMarketForecastInput input,
         CancellationToken cancellationToken = default
     )
     {
-        _logger.LogTrace("Attempting to handle get market forecast query '{@query}'.", query);
+        _logger.LogTrace("Attempting to handle get market forecast query '{@query}'.", input);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var market = await _dbContext.Markets.FirstOrDefaultAsync(m => m.Id == query.MarketId, cancellationToken);
+        var limits = _queryOptions.Value;
+        Guard.Against.OutOfRange(input.Skip, nameof(input.Skip), 0, limits.MaxSkip);
+        Guard.Against.OutOfRange(input.Take, nameof(input.Take), limits.MinPageSize, limits.MaxPageSize);
 
-        Guard.Against.NotFound(query.MarketId, market);
+        var market = await _dbContext.Markets.AsNoTracking()
+            .FirstOrDefaultAsync(m => m.Id == input.MarketId, cancellationToken);
+
+        Guard.Against.NotFound(input.MarketId, market);
 
         var flatTax = market.Taxes.Flat ?? new FlatTax(0, 0, 0);
 
         var forecastsQuery = _dbContext.Forecasts
-            .Where(f => f.MarketId == query.MarketId && f.Predictions.Count >= 7)
+            .AsNoTracking()
+            .Where(f => f.MarketId == input.MarketId && f.Predictions.Count >= 7)
             .Select(f => new
             {
                 f.Id,
@@ -107,9 +143,19 @@ public sealed class GetMarketForecastHandler
                 )
             );
 
-        var response = new WrapperResponse<IQueryable<GetMarketForecastResponse>>(forecastsQuery);
+        var results = await forecastsQuery.ToListAsync(cancellationToken);
+
+        var filtered = results
+            .AsQueryable()
+            .FilterBy(input.Filter, FilterBuilder);
+        var totalCount = filtered.Count();
+
+        var page = await filtered
+            .SortBy(input.SortField, input.SortDirection, SortBuilder)
+            .Paginate(input.Skip, input.Take)
+            .ToListAsync(cancellationToken);
 
         _logger.LogDebug("Successfully handled get market forecast query.");
-        return await Task.FromResult(response);
+        return new PagedResponse<GetMarketForecastResponse>(page, totalCount, input.Skip, input.Take);
     }
 }

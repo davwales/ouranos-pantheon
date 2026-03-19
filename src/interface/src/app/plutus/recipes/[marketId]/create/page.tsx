@@ -2,12 +2,11 @@
 
 import { Typography } from "@/app/components/typography";
 import { SelectedSymbol } from "@/app/plutus/components/symbol-search";
-import { CREATE_RECIPE } from "@/app/plutus/mutations";
 import { RecipeForm } from "@/app/plutus/recipes/components/recipe-form";
 import { SymbolTable } from "@/app/plutus/recipes/components/symbol-table";
 import { RecipeSymbol } from "@/app/plutus/recipes/types";
 import { Button } from "@/components/ui/button";
-import { useMutation } from "@urql/next";
+import { plutusApi } from "@/lib/api/plutus";
 import { RefreshCw } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -24,33 +23,26 @@ export default function CreateRecipePage() {
   const [isOutputDialogOpen, setIsOutputDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const [, createRecipe] = useMutation(CREATE_RECIPE);
-
   const handleSubmit = async () => {
     setIsProcessing(true);
     try {
-      const response = await createRecipe({
-        input: {
-          marketId,
-          name,
-          cost,
-          inputs: inputs.map((input) => ({
-            symbolId: input.symbolId,
-            name: input.name,
-            quantity: input.quantity,
-          })),
-          outputs: outputs.map((output) => ({
-            symbolId: output.symbolId,
-            name: output.name,
-            quantity: output.quantity,
-          })),
-        },
+      const response = await plutusApi.createRecipe({
+        marketId,
+        name,
+        cost,
+        inputs: inputs.map((input) => ({
+          symbolId: input.symbolId,
+          name: input.name,
+          quantity: input.quantity,
+        })),
+        outputs: outputs.map((output) => ({
+          symbolId: output.symbolId,
+          name: output.name,
+          quantity: output.quantity,
+        })),
       });
 
-      if (response.data?.createRecipe.idResponseOfRecipe?.id) {
-        const recipeId = response.data.createRecipe.idResponseOfRecipe.id;
-        router.replace(`/plutus/recipes/${marketId}/${recipeId}`);
-      }
+      router.replace(`/plutus/recipes/${marketId}/${response.id}`);
     } catch (error) {
       console.error("Failed to create recipe:", error);
     } finally {

@@ -7,11 +7,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{F392701E
 		tests\Directory.Build.props = tests\Directory.Build.props
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "core", "core", "{128A9F3B-4D1A-4A93-A0EC-2426770786AC}"
-	ProjectSection(SolutionItems) = preProject
-		src\core\README.md = src\core\README.md
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{17150C3E-ECED-431E-8CE0-774603C5A4BB}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
@@ -21,8 +16,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Ouranos.Pantheon.sln.DotSettings = Ouranos.Pantheon.sln.DotSettings
 		.forgejo\workflows\ci.yml = .forgejo\workflows\ci.yml
 	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "plutus", "plutus", "{DDE15ED7-21D6-4AC1-8536-B833DA144125}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "automation", "automation", "{E0913C48-3A0F-485E-967D-10D82EEA01F7}"
 	ProjectSection(SolutionItems) = preProject
@@ -106,8 +99,6 @@ Global
 		{F69D1E39-FF56-49CF-BD55-625CB6263459}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{128A9F3B-4D1A-4A93-A0EC-2426770786AC} = {24007BE7-AE6D-46D3-B37A-522FE3EF0D9C}
-		{DDE15ED7-21D6-4AC1-8536-B833DA144125} = {24007BE7-AE6D-46D3-B37A-522FE3EF0D9C}
 		{4E996D12-1F9F-4CA0-9765-3949D538D3EB} = {F392701E-51BD-4568-8747-EEB6210D34B1}
 		{729D4168-682A-4C6F-8CC1-3E02A7B90EB9} = {24007BE7-AE6D-46D3-B37A-522FE3EF0D9C}
 		{B7D73E42-5659-4E6E-A573-A788E3878790} = {729D4168-682A-4C6F-8CC1-3E02A7B90EB9}

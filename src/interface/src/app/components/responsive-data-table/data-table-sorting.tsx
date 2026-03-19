@@ -1,7 +1,6 @@
 import { Content, ResponsiveContent } from "@/app/components/responsive-content";
-import { ExtendedColumnDef, SortArgs } from "@/app/components/responsive-data-table/types";
+import { ExtendedColumnDef, SortArgs, SortDirection } from "@/app/components/responsive-data-table/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SortEnumType } from "@/gql/graphql";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 
 export function DataTableSorting({
@@ -13,7 +12,7 @@ export function DataTableSorting({
     sort?: SortArgs;
     onSortChange?: (sort: SortArgs) => void;
 }) {
-    const getSortState = (columnId: string): SortEnumType | null => {
+    const getSortState = (columnId: string): SortDirection | null => {
         if (!sort) return null;
 
         const parts = columnId.split('.');
@@ -22,16 +21,16 @@ export function DataTableSorting({
             if (!current || !current[part]) {
                 return null;
             } else if (typeof current[part] === 'object') {
-                current = current[part];
+                current = current[part] as SortArgs;
             } else {
-                return current[part] as SortEnumType;
+                return current[part] as SortDirection;
             }
         }
 
         return null;
     };
 
-    const idToObject = (columnId: string, direction: SortEnumType): SortArgs => {
+    const idToObject = (columnId: string, direction: SortDirection): SortArgs => {
         const parts = columnId.split('.');
         const root: SortArgs = {};
         let current = root;
@@ -63,7 +62,7 @@ export function DataTableSorting({
         return findNestedPath(sort) ?? "";
     };
 
-    const handleSortChange = (columnId: string, direction?: SortEnumType) => {
+    const handleSortChange = (columnId: string, direction?: SortDirection) => {
         if (!onSortChange) return;
 
         if (!columnId) {
@@ -75,7 +74,11 @@ export function DataTableSorting({
             onSortChange(idToObject(columnId, direction));
         } else {
             const currentDirection = getSortState(columnId);
-            const newDirection = !currentDirection ? SortEnumType.Asc : currentDirection === SortEnumType.Asc ? SortEnumType.Desc : null;
+            const newDirection: SortDirection | null = !currentDirection
+                ? "ASC"
+                : currentDirection === "ASC"
+                ? "DESC"
+                : null;
 
             if (newDirection) {
                 onSortChange(idToObject(columnId, newDirection));
@@ -111,15 +114,15 @@ export function DataTableSorting({
 
                     <Select
                         value={getSortState(getCurrentSortColumn()) ?? ""}
-                        onValueChange={(value) => handleSortChange(getCurrentSortColumn(), value as SortEnumType)}
+                        onValueChange={(value) => handleSortChange(getCurrentSortColumn(), value as SortDirection)}
                         disabled={!getCurrentSortColumn()}
                     >
                         <SelectTrigger className="flex-grow max-w-1/2">
                             <SelectValue placeholder="Direction" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value={SortEnumType.Asc}>Ascending</SelectItem>
-                            <SelectItem value={SortEnumType.Desc}>Descending</SelectItem>
+                            <SelectItem value="ASC">Ascending</SelectItem>
+                            <SelectItem value="DESC">Descending</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -132,7 +135,7 @@ export function DataTableSorting({
                         if (!direction) {
                             return <ArrowUpDown className="opacity-0 hover:opacity-100 h-4 w-4" />;
                         }
-                        return direction === SortEnumType.Asc ?
+                        return direction === "ASC" ?
                             <ArrowUp className="h-4 w-4" /> :
                             <ArrowDown className="h-4 w-4" />;
                     };
@@ -150,4 +153,4 @@ export function DataTableSorting({
             </Content>
         </ResponsiveContent>
     );
-} 
+}

@@ -6,4 +6,4 @@ namespace Ouranos.Pantheon.Modules.Plutus.Features.Recipes.GetRecipe.Schemas;
 
 public sealed record GetRecipeInput(
     Id<Recipe> RecipeId
-) : IQuery<Recipe>;
+) : IQuery<GetRecipeResponse>;

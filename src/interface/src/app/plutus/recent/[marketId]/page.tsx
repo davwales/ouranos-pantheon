@@ -6,24 +6,13 @@ import { ExtendedColumnDef } from "@/app/components/responsive-data-table";
 import ResponsiveDataTable from "@/app/components/responsive-data-table/responsive-data-table";
 import { Typography } from "@/app/components/typography";
 import { PlutusState, usePlutusStore } from "@/app/plutus/plutus_store";
-import { GET_RECENT_MARKET_TRADES } from "@/app/plutus/queries";
+import { useApi } from "@/hooks/use-api";
 import useInterval from "@/hooks/use_interval";
-import { useQuery } from "@urql/next";
+import { Trade, plutusApi } from "@/lib/api/plutus";
 import { formatDistance } from "date-fns";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo } from "react";
-
-type RecentTradeRowData = {
-  price: number;
-  volume: number;
-  timestamp: Date;
-  symbol: {
-    id: string;
-    name: string;
-    subcode?: string | null | undefined;
-  };
-};
 
 export default function RecentMarketTrades() {
   const { marketId } = useParams<{ marketId: string }>();
@@ -32,26 +21,32 @@ export default function RecentMarketTrades() {
     state.setRecentTradesTableState,
   ]);
 
+  const take =
+    tableState.pagination?.take ?? tableState.pagination?.pageSize ?? 10;
+
+  const [state, reexecute] = useApi(
+    () =>
+      plutusApi.getAllTrades({
+        filter: [`MarketId:eq:${marketId}`],
+        sortField: "Timestamp",
+        sortDirection: "desc",
+        skip: 0,
+        take,
+      }),
+    [marketId, take],
+  );
+
   useInterval(() => reexecute(), 15000);
 
-  const [{ data }, reexecute] = useQuery({
-    query: GET_RECENT_MARKET_TRADES,
-    variables: {
-      marketId: marketId,
-      first:
-        tableState.pagination?.first ?? tableState.pagination?.pageSize ?? 10,
-    },
-  });
-
-  const columns: ExtendedColumnDef<RecentTradeRowData>[] = useMemo(
+  const columns: ExtendedColumnDef<Trade>[] = useMemo(
     () => [
       {
-        id: "symbol.name",
+        id: "symbolName",
         header: "Name",
-        accessorFn: (row) => row.symbol.name,
+        accessorFn: (row) => row.symbolName,
         cell: ({ cell, row }) => (
           <Link
-            href={`/plutus/explorer/${marketId}/${row.original.symbol.id}`}
+            href={`/plutus/explorer/${marketId}/${row.original.symbolId}`}
             className="hover:underline"
           >
             {cell.getValue<string>()}
@@ -59,9 +54,9 @@ export default function RecentMarketTrades() {
         ),
       },
       {
-        id: "symbol.subcode",
-        header: "Subcode",
-        accessorFn: (row) => row.symbol.subcode,
+        id: "symbolCode",
+        header: "Code",
+        accessorFn: (row) => row.symbolCode,
       },
       {
         id: "price",
@@ -85,7 +80,9 @@ export default function RecentMarketTrades() {
         accessorFn: (row) => row.timestamp,
         cell: ({ getValue }) => (
           <>
-            {formatDistance(getValue<Date>(), new Date(), { addSuffix: true })}
+            {formatDistance(new Date(getValue<string>()), new Date(), {
+              addSuffix: true,
+            })}
           </>
         ),
       },
@@ -98,7 +95,7 @@ export default function RecentMarketTrades() {
       <Typography variant="lead">Recent Trades</Typography>
       <ResponsiveDataTable
         columns={columns}
-        data={data?.allTrades?.nodes}
+        data={state.data}
         state={tableState}
         onStateChange={setTableState}
         disableFiltering

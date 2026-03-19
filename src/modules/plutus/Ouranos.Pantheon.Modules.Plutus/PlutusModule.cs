@@ -1,12 +1,10 @@
-using HotChocolate.Data.Filters;
-using HotChocolate.Execution.Configuration;
 using MassTransit;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Ouranos.Pantheon.Modules.Shared.API.Extensions;
 using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Infra.Postgres;
@@ -26,13 +24,27 @@ using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Stocks;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Stocks.Messages;
 using Ouranos.Pantheon.Modules.Plutus.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Recipes;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 using Ouranos.Pantheon.Modules.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Consumer;
+using Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetAllMarkets;
+using Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetMarket;
+using Ouranos.Pantheon.Modules.Plutus.Features.Markets.CreateMarket;
+using Ouranos.Pantheon.Modules.Plutus.Features.Markets.UpdateMarket;
+using Ouranos.Pantheon.Modules.Plutus.Features.Markets.DeleteMarket;
+using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketTrades;
+using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetAllTrades;
+using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetRecipeTrades;
+using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetSymbolTrades;
+using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetAllSymbols;
+using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetSymbol;
+using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetDailySymbolSummary;
+using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetAllForecasts;
+using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetMarketForecast;
+using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.GetAllRecipes;
+using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.GetRecipe;
+using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.CreateRecipe;
+using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.UpdateRecipe;
+using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.DeleteRecipe;
 
 namespace Ouranos.Pantheon.Modules.Plutus;
 
@@ -58,24 +70,27 @@ public sealed class PlutusModule : IPantheonModule
         return host;
     }
 
-    public IRequestExecutorBuilder ConfigureSchema(IRequestExecutorBuilder builder)
+    public void MapEndpoints(WebApplication app)
     {
-        return builder
-            .BindModelId<Forecast>()
-            .BindModelId<Market>()
-            .BindModelId<Recipe>()
-            .BindModelId<Symbol>()
-            .BindModelId<Trade>();
-    }
-
-    public IFilterConventionDescriptor ConfigureSchemaFilters(IFilterConventionDescriptor descriptor)
-    {
-        return descriptor
-            .BindModelIdFilter<Forecast>()
-            .BindModelIdFilter<Market>()
-            .BindModelIdFilter<Recipe>()
-            .BindModelIdFilter<Symbol>()
-            .BindModelIdFilter<Trade>();
+        GetAllMarketsEndpoint.Map(app);
+        GetMarketEndpoint.Map(app);
+        CreateMarketEndpoint.Map(app);
+        UpdateMarketEndpoint.Map(app);
+        DeleteMarketEndpoint.Map(app);
+        GetMarketTradesEndpoint.Map(app);
+        GetAllTradesEndpoint.Map(app);
+        GetRecipeTradesEndpoint.Map(app);
+        GetSymbolTradesEndpoint.Map(app);
+        GetAllSymbolsEndpoint.Map(app);
+        GetSymbolEndpoint.Map(app);
+        GetDailySymbolSummaryEndpoint.Map(app);
+        GetAllForecastsEndpoint.Map(app);
+        GetMarketForecastEndpoint.Map(app);
+        GetAllRecipesEndpoint.Map(app);
+        GetRecipeEndpoint.Map(app);
+        CreateRecipeEndpoint.Map(app);
+        UpdateRecipeEndpoint.Map(app);
+        DeleteRecipeEndpoint.Map(app);
     }
 
     public IMediatorRegistrationConfigurator ConfigureMediator(IMediatorRegistrationConfigurator mediator)

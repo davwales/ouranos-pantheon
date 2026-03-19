@@ -1,9 +1,12 @@
+using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketTrades.Schemas;
 
 public sealed record GetMarketTradesResponse(
-    Symbol Symbol,
+    Id<Symbol> SymbolId,
+    string SymbolName,
+    string? SymbolSubcode,
     decimal TotalSpent,
     decimal MinPrice,
     decimal MaxPrice,

@@ -10,7 +10,7 @@ public sealed record OsrsDataLoaderOptions(
 
     public OsrsDataLoaderOptions() : this(
         IsEnabled: true,
-        RefreshIntervalMinutes: 10,
+        RefreshIntervalMinutes: 5,
         Wiki: new OsrsWikiOptions()
     )
     {

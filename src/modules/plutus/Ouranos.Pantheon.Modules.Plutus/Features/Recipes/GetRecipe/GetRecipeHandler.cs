@@ -3,12 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
 using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.GetRecipe.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Recipes;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Recipes.GetRecipe;
 
-public sealed class GetRecipeHandler : QueryHandler<GetRecipeInput, Recipe>
+public sealed class GetRecipeHandler : QueryHandler<GetRecipeInput, GetRecipeResponse>
 {
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<GetRecipeHandler> _logger;
@@ -25,7 +24,7 @@ public sealed class GetRecipeHandler : QueryHandler<GetRecipeInput, Recipe>
         _dbContext = dbContext;
     }
 
-    public override async Task<Recipe> Handle(
+    public override async Task<GetRecipeResponse> Handle(
         GetRecipeInput query,
         CancellationToken cancellationToken = default
     )
@@ -34,11 +33,20 @@ public sealed class GetRecipeHandler : QueryHandler<GetRecipeInput, Recipe>
         cancellationToken.ThrowIfCancellationRequested();
 
         var recipe = await _dbContext.Recipes
+            .Include(r => r.Inputs)
+            .Include(r => r.Outputs)
             .FirstOrDefaultAsync(r => r.Id == query.RecipeId, cancellationToken);
 
         Guard.Against.NotFound(query.RecipeId, recipe);
 
         _logger.LogDebug("Successfully handled get recipe request.");
-        return recipe;
+        return new GetRecipeResponse(
+            recipe.Id,
+            recipe.MarketId,
+            recipe.Name,
+            recipe.Cost,
+            recipe.Inputs.ToList(),
+            recipe.Outputs.ToList()
+        );
     }
 }

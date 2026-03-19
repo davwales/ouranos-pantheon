@@ -2,65 +2,60 @@
 
 import { Typography } from "@/app/components/typography";
 import { AssistantForm } from "@/app/hermes/components/assistant_form";
-import { DELETE_ASSISTANT, UPDATE_ASSISTANT } from "@/app/hermes/mutations";
-import { GET_ASSISTANT } from "@/app/hermes/queries";
 import { AssistantFormInput } from "@/app/hermes/types";
+import { useApi } from "@/hooks/use-api";
+import { hermesApi } from "@/lib/api/hermes";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useMutation, useQuery } from "urql";
 
 export default function EditAssistantPage() {
   const router = useRouter();
-  const { assistantId: assistantId } = useParams<{ assistantId: string }>();
+  const { assistantId } = useParams<{ assistantId: string }>();
   const [loading, setLoading] = useState(false);
   const [assistant, setAssistant] = useState<AssistantFormInput>();
 
-  const [{ data, fetching, error: fetchError }] = useQuery({
-    query: GET_ASSISTANT,
-    variables: { assistantId: assistantId },
-  });
+  const [state] = useApi(
+    () => hermesApi.getAssistant(assistantId),
+    [assistantId],
+  );
+
+  const fetching = state.status === "loading";
 
   useEffect(() => {
-    if (data?.assistant) {
-      setAssistant({ ...data.assistant });
+    if (state.status === "success") {
+      setAssistant({ ...state.data });
     }
-  }, [data, fetchError]);
+  }, [state]);
 
-  const [, updateAssistant] = useMutation(UPDATE_ASSISTANT);
-  const [, deleteAssistant] = useMutation(DELETE_ASSISTANT);
-
-  const handleDelete = () => {
+  const handleDelete = async () => {
     setLoading(true);
-
     try {
-      deleteAssistant({ input: { assistantId: assistantId } });
-      setLoading(false);
+      await hermesApi.deleteAssistant(assistantId);
       router.push("/hermes/assistants");
-    } catch (err: any) {
+    } catch (err) {
+      console.error(err);
+    } finally {
       setLoading(false);
     }
   };
 
   const handleSave = async (input: AssistantFormInput) => {
     setLoading(true);
-
     try {
-      await updateAssistant({
-        input: {
-          assistantId: assistantId,
-          model: input.model,
-          systemPrompt: input.systemPrompt,
-          assistantName: input.assistantName,
-          userName: input.userName,
-          temperature: input.temperature,
-          maxTokens: input.maxTokens,
-          repeatPenalty: input.repeatPenalty,
-        },
+      await hermesApi.updateAssistant({
+        assistantId: assistantId,
+        model: input.model,
+        systemPrompt: input.systemPrompt,
+        assistantName: input.assistantName,
+        userName: input.userName,
+        temperature: input.temperature,
+        maxTokens: input.maxTokens,
+        repeatPenalty: input.repeatPenalty,
       });
-
-      setLoading(false);
       router.push("/hermes/assistants");
-    } catch (err: any) {
+    } catch (err) {
+      console.error(err);
+    } finally {
       setLoading(false);
     }
   };

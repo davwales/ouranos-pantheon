@@ -1,6 +1,5 @@
 import { DataTableState } from "@/app/components/responsive-data-table";
 import { timeFrames } from "@/app/plutus/constants/time_frames";
-import { SortEnumType } from "@/gql/graphql";
 import { create } from "zustand";
 
 export interface PlutusState {
@@ -20,25 +19,25 @@ export const usePlutusStore = create<PlutusState>((set) => ({
   timeFrameSeconds: timeFrames[0].seconds,
   setTimeFrameSeconds: (seconds) => set({ timeFrameSeconds: seconds }),
   explorerTableState: {
-    pagination: { pageSize: 10 },
+    pagination: { pageSize: 10, skip: 0, take: 10 },
     filter: {},
-    sort: { totalGain: SortEnumType.Desc },
+    sort: { totalGain: "DESC" },
   },
   setExplorerTableState: (state) => set({ explorerTableState: state }),
   recipesTableState: {
-    pagination: { pageSize: 10 },
+    pagination: { pageSize: 10, skip: 0, take: 10 },
     filter: {},
-    sort: { averageMargin: SortEnumType.Desc },
+    sort: { averageMargin: "DESC" },
   },
   setRecipesTableState: (state) => set({ recipesTableState: state }),
   forecastsTableState: {
-    pagination: { pageSize: 10 },
+    pagination: { pageSize: 10, skip: 0, take: 10 },
     filter: {},
-    sort: { dayOne: { gain: SortEnumType.Desc } },
+    sort: { dayOne: { gain: "DESC" } },
   },
   setForecastsTableState: (state) => set({ forecastsTableState: state }),
   recentTradesTableState: {
-    pagination: { pageSize: 10 },
+    pagination: { pageSize: 10, skip: 0, take: 10 },
     filter: {},
     sort: {},
   },

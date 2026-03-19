@@ -2,28 +2,31 @@
 
 import { Typography } from "@/app/components/typography";
 import { AssistantForm } from "@/app/hermes/components/assistant_form";
-import { CREATE_ASSISTANT } from "@/app/hermes/mutations";
 import { AssistantFormInput } from "@/app/hermes/types";
+import { hermesApi } from "@/lib/api/hermes";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useMutation } from "urql";
 
 export default function CreateAssistantPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  const [, createAssistant] = useMutation(CREATE_ASSISTANT);
-
   const handleSave = async (input: AssistantFormInput) => {
     setLoading(true);
-
     try {
-      await createAssistant({
-        input: { ...input },
+      await hermesApi.createAssistant({
+        model: input.model,
+        systemPrompt: input.systemPrompt,
+        assistantName: input.assistantName,
+        userName: input.userName,
+        temperature: input.temperature,
+        maxTokens: input.maxTokens,
+        repeatPenalty: input.repeatPenalty,
       });
-      setLoading(false);
       router.push("/hermes/assistants");
-    } catch (err: any) {
+    } catch (err) {
+      console.error(err);
+    } finally {
       setLoading(false);
     }
   };

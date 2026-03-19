@@ -4,20 +4,19 @@ import ClipboardCopy from "@/app/components/clipboard-copy";
 import { PrettyNumber } from "@/app/components/pretty-number";
 import { ExtendedColumnDef } from "@/app/components/responsive-data-table";
 import ResponsiveDataTable from "@/app/components/responsive-data-table/responsive-data-table";
+import {
+  extractFilter,
+  extractSort,
+} from "@/app/components/responsive-data-table/types";
 import { Typography } from "@/app/components/typography";
 import TimeFrameSelection from "@/app/plutus/components/time_frame_selection";
 import { PlutusState, usePlutusStore } from "@/app/plutus/plutus_store";
-import { GET_MARKET_TRADES } from "@/app/plutus/queries";
-import { GetMarketTradesQuery } from "@/gql/graphql";
-import { useQuery } from "@urql/next";
+import { useApi } from "@/hooks/use-api";
+import { GetMarketTradesRow, plutusApi } from "@/lib/api/plutus";
 import { RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo } from "react";
-
-type ExplorerTableRow = NonNullable<
-  NonNullable<GetMarketTradesQuery["marketTrades"]>["nodes"]
->[0];
 
 export default function MarketDetail() {
   const { marketId } = useParams<{ marketId: string }>();
@@ -29,31 +28,53 @@ export default function MarketDetail() {
     ],
   );
 
-  const [{ data, fetching }, reexecute] = useQuery({
-    query: GET_MARKET_TRADES,
-    variables: {
-      input: {
-        marketId: marketId,
-        seconds: timeFrameSeconds > 0 ? timeFrameSeconds : undefined,
-      },
-      order: tableState.sort,
-      where: tableState.filter,
-      first: tableState.pagination?.first,
-      after: tableState.pagination?.after,
-      last: tableState.pagination?.last,
-      before: tableState.pagination?.before,
-    },
-  });
+  const { sortField, sortDirection } = extractSort(tableState.sort);
+  const filter = extractFilter(tableState.filter);
 
-  const columns: ExtendedColumnDef<ExplorerTableRow>[] = useMemo(
+  const [state, reexecute] = useApi(
+    () =>
+      plutusApi.getMarketTrades(
+        marketId,
+        timeFrameSeconds > 0 ? timeFrameSeconds : undefined,
+        {
+          skip: tableState.pagination?.skip ?? 0,
+          take: tableState.pagination?.take ?? 10,
+          sortField,
+          sortDirection,
+          filter,
+        },
+      ),
+    [
+      marketId,
+      timeFrameSeconds,
+      tableState.pagination,
+      tableState.sort,
+      tableState.filter,
+    ],
+  );
+
+  const data = state.data;
+  const fetching = state.status === "loading";
+
+  const pageInfo = data
+    ? {
+        totalCount: data.totalCount,
+        skip: data.skip,
+        take: data.take,
+        hasNextPage: data.skip + data.take < data.totalCount,
+        hasPreviousPage: data.skip > 0,
+      }
+    : undefined;
+
+  const columns: ExtendedColumnDef<GetMarketTradesRow>[] = useMemo(
     () => [
       {
-        id: "symbol.name",
+        id: "symbolName",
         header: "Name",
-        accessorFn: (row) => row.symbol.name,
+        accessorFn: (row) => row.symbolName,
         cell: ({ cell, row }) => (
           <Link
-            href={`/plutus/explorer/${marketId}/${row.original.symbol.id}`}
+            href={`/plutus/explorer/${marketId}/${row.original.symbolId}`}
             className="hover:underline"
           >
             {cell.getValue<string>()}
@@ -65,9 +86,9 @@ export default function MarketDetail() {
         },
       },
       {
-        id: "symbol.subcode",
+        id: "symbolSubcode",
         header: "Subcode",
-        accessorFn: (row) => row.symbol.subcode,
+        accessorFn: (row) => row.symbolSubcode,
         filterConfig: {
           type: "string",
           operators: ["eq", "neq", "contains", "startsWith", "endsWith"],
@@ -187,10 +208,10 @@ export default function MarketDetail() {
 
       <ResponsiveDataTable
         columns={columns}
-        data={data?.marketTrades?.nodes}
+        data={data?.items}
         state={tableState}
         onStateChange={setTableState}
-        pageInfo={data?.marketTrades?.pageInfo}
+        pageInfo={pageInfo}
         className="my-2"
       />
     </div>
