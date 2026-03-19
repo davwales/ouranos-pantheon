@@ -2,10 +2,10 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-COPY ./src/interface/package*.json ./
+COPY ./src/apps/interface/package*.json ./
 RUN npm install
 
-COPY ./src/interface .
+COPY ./src/apps/interface .
 RUN npm run build
 
 EXPOSE 3000
