@@ -9,11 +9,27 @@ import TimeFrameSelection from "@/app/plutus/components/time_frame_selection";
 
 import { minuteSeconds } from "@/app/plutus/constants/time_frames";
 import { PlutusState, usePlutusStore } from "@/app/plutus/plutus_store";
-import { GET_SYMBOL_DETAILS } from "@/app/plutus/queries";
+import { useApi } from "@/hooks/use-api";
 import useInterval from "@/hooks/use_interval";
-import { useQuery } from "@urql/next";
+import {
+  GetDailySymbolSummaryResponse,
+  GetSymbolTradesResponse,
+  plutusApi,
+  Symbol,
+} from "@/lib/api/plutus";
 import { useParams } from "next/navigation";
 import React, { ReactNode, useMemo } from "react";
+
+interface SymbolDetails {
+  symbol: Symbol;
+  trades: GetSymbolTradesResponse;
+  summary: GetDailySymbolSummaryResponse;
+  latestTrade?: { price: number; volume: number };
+  forecast?: {
+    latest: { averagePrice: number };
+    predictions: Array<{ averagePrice: number }>;
+  };
+}
 
 export default function SymbolDetail() {
   const { symbolId } = useParams<{ marketId: string; symbolId: string }>();
@@ -21,25 +37,50 @@ export default function SymbolDetail() {
     state.timeFrameSeconds,
   ]);
 
+  const [state, reexecuteQuery] = useApi<SymbolDetails>(
+    () =>
+      Promise.all([
+        plutusApi.getSymbol(symbolId),
+        plutusApi.getSymbolTrades(
+          symbolId,
+          timeFrameSeconds > 0 ? timeFrameSeconds : undefined,
+        ),
+        plutusApi.getDailySymbolSummary(symbolId),
+        plutusApi.getAllTrades({
+          filter: [`symbolId:eq:${symbolId}`],
+          skip: 0,
+          take: 1,
+          sortField: "timestamp",
+          sortDirection: "desc",
+        }),
+        plutusApi.getAllForecasts({
+          filter: [`symbolId:eq:${symbolId}`],
+          skip: 0,
+          take: 1,
+        }),
+      ]).then(([symbol, trades, summary, allTrades, forecasts]) => ({
+        symbol,
+        trades,
+        summary,
+        latestTrade: allTrades[0],
+        forecast: (forecasts.items as any[])[0],
+      })),
+    [symbolId, timeFrameSeconds],
+  );
+
   useInterval(() => reexecuteQuery(), minuteSeconds * 1000);
 
-  const [{ data }, reexecuteQuery] = useQuery({
-    query: GET_SYMBOL_DETAILS,
-    variables: {
-      symbolId: symbolId,
-      seconds: timeFrameSeconds > 0 ? timeFrameSeconds : undefined,
-    },
-  });
+  const data = state.data;
 
   const formattedTrades = useMemo(
     () =>
-      data?.symbolTrades.trades.map((t) => {
+      state.data?.trades.trades.map((t) => {
         return {
           ...t,
           date: new Date(t.date),
         };
       }) ?? [],
-    [data?.symbolTrades.trades]
+    [data?.trades.trades],
   );
 
   const StatDisplay = ({
@@ -62,31 +103,28 @@ export default function SymbolDetail() {
         <StatDisplay label="Subcode">{data.symbol.subcode}</StatDisplay>
       )}
       <StatDisplay label="Total Spent">
-        <PrettyNumber number={data?.symbolTrades.totalSpent} />
+        <PrettyNumber number={data?.trades.totalSpent ?? 0} />
       </StatDisplay>
       <StatDisplay label="Minimum Price">
-        <ClipboardCopy value={data?.symbolTrades.minPrice}>
-          <PrettyNumber number={data?.symbolTrades.minPrice} />
+        <ClipboardCopy value={data?.trades.minPrice ?? 0}>
+          <PrettyNumber number={data?.trades.minPrice ?? 0} />
         </ClipboardCopy>
       </StatDisplay>
       <StatDisplay label="Average Price">
-        <ClipboardCopy value={data?.symbolTrades.averagePrice}>
-          <PrettyNumber number={data?.symbolTrades.averagePrice} />
+        <ClipboardCopy value={data?.trades.averagePrice ?? 0}>
+          <PrettyNumber number={data?.trades.averagePrice ?? 0} />
         </ClipboardCopy>
       </StatDisplay>
       <StatDisplay label="Maximum Price">
-        <ClipboardCopy value={data?.symbolTrades.maxPrice}>
-          <PrettyNumber number={data?.symbolTrades.maxPrice} />
+        <ClipboardCopy value={data?.trades.maxPrice ?? 0}>
+          <PrettyNumber number={data?.trades.maxPrice ?? 0} />
         </ClipboardCopy>
       </StatDisplay>
       <StatDisplay label="Volume">
-        <PrettyNumber number={data?.symbolTrades.volume} />
+        <PrettyNumber number={data?.trades.volume ?? 0} />
       </StatDisplay>
       <StatDisplay label="# Transactions">
-        <PrettyNumber
-          number={data?.symbolTrades.numTransactions || 0}
-          decimals={0}
-        />
+        <PrettyNumber number={data?.trades.numTransactions || 0} decimals={0} />
       </StatDisplay>
     </div>
   );
@@ -98,11 +136,11 @@ export default function SymbolDetail() {
     label: string;
     current?: number;
   }): ReactNode =>
-    data?.allForecasts?.nodes?.[0] ? (
+    data?.forecast ? (
       <PercentChange
         label={label}
         current={current}
-        previous={data.allForecasts.nodes[0].latest.averagePrice}
+        previous={data.forecast.latest.averagePrice}
       />
     ) : null;
 
@@ -117,17 +155,11 @@ export default function SymbolDetail() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-8 gap-2 mt-4">
-        <PriceChange
-          label="Latest"
-          current={data?.latestTrade?.nodes?.[0]?.price}
-        />
-        <PriceChange
-          label="Today"
-          current={data?.dailySymbolSummary.averagePrice}
-        />
+        <PriceChange label="Latest" current={data?.latestTrade?.price} />
+        <PriceChange label="Today" current={data?.summary.averagePrice} />
         <PriceChange
           label="Predicted"
-          current={data?.allForecasts?.nodes?.[0]?.predictions[0].averagePrice}
+          current={data?.forecast?.predictions[0]?.averagePrice}
         />
       </div>
 

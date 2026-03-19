@@ -55,7 +55,7 @@ public sealed class IdTests
         var expectedId = fixture.Create<Id<TestEntity>>();
 
         // Act
-        var actualId = Id<TestEntity>.Parse(expectedId.Value);
+        var actualId = Id<TestEntity>.Parse(expectedId.Value, null);
 
         // Assert
         actualId.ShouldBe(expectedId);

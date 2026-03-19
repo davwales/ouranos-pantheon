@@ -6,4 +6,4 @@ namespace Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetSymbol.Schemas;
 
 public sealed record GetSymbolInput(
     Id<Symbol> SymbolId
-) : IQuery<Symbol>;
+) : IQuery<GetSymbolResponse>;

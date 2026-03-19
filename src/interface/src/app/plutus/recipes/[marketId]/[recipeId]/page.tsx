@@ -3,13 +3,12 @@
 import { ConfirmationButton } from "@/app/components/confirmation-button";
 import { Typography } from "@/app/components/typography";
 import { SelectedSymbol } from "@/app/plutus/components/symbol-search";
-import { DELETE_RECIPE, UPDATE_RECIPE } from "@/app/plutus/mutations";
-import { GET_RECIPE_DETAILS } from "@/app/plutus/queries";
 import { RecipeForm } from "@/app/plutus/recipes/components/recipe-form";
 import { SymbolTable } from "@/app/plutus/recipes/components/symbol-table";
 import { RecipeSymbol } from "@/app/plutus/recipes/types";
 import { Button } from "@/components/ui/button";
-import { useMutation, useQuery } from "@urql/next";
+import { useApi } from "@/hooks/use-api";
+import { plutusApi } from "@/lib/api/plutus";
 import { RefreshCw } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -26,82 +25,59 @@ export default function RecipeDetailPage() {
   const [selectedSymbol, setSelectedSymbol] = useState<SelectedSymbol>();
   const [isInputDialogOpen, setIsInputDialogOpen] = useState(false);
   const [isOutputDialogOpen, setIsOutputDialogOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const router = useRouter();
 
-  const [{ data, fetching }] = useQuery({
-    query: GET_RECIPE_DETAILS,
-    variables: {
-      recipeId: recipeId,
-    },
-  });
+  const [state] = useApi(() => plutusApi.getRecipe(recipeId), [recipeId]);
 
-  const [{ fetching: isSaving }, updateRecipe] = useMutation<
-    { idResponseOfRecipe: { id: string } },
-    {
-      input: {
-        recipeId: string;
-        marketId: string;
-        name: string;
-        cost: number;
-        inputs: Array<{ symbolId: string; name: string; quantity: number }>;
-        outputs: Array<{ symbolId: string; name: string; quantity: number }>;
-      };
-    }
-  >(UPDATE_RECIPE);
-
-  const [{ fetching: isDeleting }, deleteRecipe] = useMutation<
-    { idResponseOfRecipe: { id: string } },
-    { input: { recipeId: string } }
-  >(DELETE_RECIPE);
-
-  const isProcessing = isSaving || isDeleting;
+  const recipe = state.data;
+  const fetching = state.status === "loading";
 
   useEffect(() => {
-    if (data?.recipe) {
-      setName(data.recipe.name);
-      setCost(data.recipe.cost);
-      setInputs(data.recipe.inputs);
-      setOutputs(data.recipe.outputs);
+    if (recipe) {
+      setName(recipe.name);
+      setCost(recipe.cost);
+      setInputs(recipe.inputs);
+      setOutputs(recipe.outputs);
     }
-  }, [data?.recipe]);
+  }, [recipe]);
 
   const handleDelete = async () => {
+    setIsProcessing(true);
     try {
-      await deleteRecipe({
-        input: {
-          recipeId,
-        },
-      });
-
+      await plutusApi.deleteRecipe(recipeId);
       router.push(`/plutus/recipes/${marketId}`);
     } catch (error) {
       console.error("Failed to delete recipe:", error);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const handleSave = async () => {
+    setIsProcessing(true);
     try {
-      await updateRecipe({
-        input: {
-          recipeId,
-          marketId,
-          name,
-          cost,
-          inputs: inputs.map((input) => ({
-            symbolId: input.symbolId,
-            name: input.name,
-            quantity: input.quantity,
-          })),
-          outputs: outputs.map((output) => ({
-            symbolId: output.symbolId,
-            name: output.name,
-            quantity: output.quantity,
-          })),
-        },
+      await plutusApi.updateRecipe({
+        recipeId,
+        marketId,
+        name,
+        cost,
+        inputs: inputs.map((input) => ({
+          symbolId: input.symbolId,
+          name: input.name,
+          quantity: input.quantity,
+        })),
+        outputs: outputs.map((output) => ({
+          symbolId: output.symbolId,
+          name: output.name,
+          quantity: output.quantity,
+        })),
       });
     } catch (error) {
       console.error("Failed to save recipe:", error);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -109,7 +85,7 @@ export default function RecipeDetailPage() {
     return <div>Loading...</div>;
   }
 
-  if (!data?.recipe) {
+  if (!recipe) {
     return <div>Recipe not found</div>;
   }
 

@@ -3,12 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetMarket.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetMarket;
 
-public sealed class GetMarketHandler : QueryHandler<GetMarketInput, Market>
+public sealed class GetMarketHandler : QueryHandler<GetMarketInput, GetMarketResponse>
 {
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<GetMarketHandler> _logger;
@@ -25,7 +24,7 @@ public sealed class GetMarketHandler : QueryHandler<GetMarketInput, Market>
         _dbContext = dbContext;
     }
 
-    public override async Task<Market> Handle(
+    public override async Task<GetMarketResponse> Handle(
         GetMarketInput query,
         CancellationToken cancellationToken = default
     )
@@ -39,6 +38,6 @@ public sealed class GetMarketHandler : QueryHandler<GetMarketInput, Market>
         Guard.Against.NotFound(query.MarketId, market);
 
         _logger.LogDebug("Successfully handled get market request.");
-        return market;
+        return new GetMarketResponse(market.Id, market.Name, market.Taxes, market.IsForecastingEnabled, market.Description, market.Icon);
     }
 }

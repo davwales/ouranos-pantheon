@@ -4,7 +4,7 @@ import ChatInterfaceView from "@/app/hermes/conversation/views/chat_interface_vi
 import SelectAssistantView from "@/app/hermes/conversation/views/select_assistant_view";
 import ConversationAssistant from "@/app/hermes/types";
 import { Button } from "@/components/ui/button";
-import { Role } from "@/gql/graphql";
+import { Role } from "@/lib/api/hermes";
 import { useState } from "react";
 
 export default function Conversation() {

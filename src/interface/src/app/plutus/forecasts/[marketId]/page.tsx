@@ -4,35 +4,19 @@ import ClipboardCopy from "@/app/components/clipboard-copy";
 import { PrettyNumber } from "@/app/components/pretty-number";
 import { ExtendedColumnDef } from "@/app/components/responsive-data-table";
 import ResponsiveDataTable from "@/app/components/responsive-data-table/responsive-data-table";
+import {
+  extractFilter,
+  extractSort,
+} from "@/app/components/responsive-data-table/types";
 import { Typography } from "@/app/components/typography";
 import { PlutusState, usePlutusStore } from "@/app/plutus/plutus_store";
-import { GET_MARKET_FORECAST } from "@/app/plutus/queries";
-import { useQuery } from "@urql/next";
+import { useApi } from "@/hooks/use-api";
+import { GetMarketForecastRow, plutusApi } from "@/lib/api/plutus";
 import { formatDistance } from "date-fns";
 import { RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo } from "react";
-
-type ForecastRowData = {
-  id: string;
-  symbolId: string;
-  symbolName: string;
-  symbolSubcode?: string | null;
-  latest: {
-    averagePrice: any;
-  };
-  dayOne: {
-    averagePrice: any;
-    margin: any;
-    gain: any;
-  };
-  dayTwo: {
-    averagePrice: any;
-    margin: any;
-    gain: any;
-  };
-};
 
 export default function RecentMarketTrades() {
   const { marketId } = useParams<{ marketId: string }>();
@@ -41,20 +25,35 @@ export default function RecentMarketTrades() {
     state.setForecastsTableState,
   ]);
 
-  const [{ data, fetching }, reexecute] = useQuery({
-    query: GET_MARKET_FORECAST,
-    variables: {
-      marketId: marketId,
-      order: tableState.sort,
-      where: tableState.filter,
-      first: tableState.pagination?.first,
-      after: tableState.pagination?.after,
-      last: tableState.pagination?.last,
-      before: tableState.pagination?.before,
-    },
-  });
+  const { sortField, sortDirection } = extractSort(tableState.sort);
+  const filter = extractFilter(tableState.filter);
 
-  const columns: ExtendedColumnDef<ForecastRowData>[] = useMemo(
+  const [state, reexecute] = useApi(
+    () =>
+      plutusApi.getMarketForecasts(marketId, {
+        skip: tableState.pagination?.skip ?? 0,
+        take: tableState.pagination?.take ?? 10,
+        sortField,
+        sortDirection,
+        filter,
+      }),
+    [marketId, tableState.pagination, tableState.sort, tableState.filter],
+  );
+
+  const data = state.data;
+  const fetching = state.status === "loading";
+
+  const pageInfo = data
+    ? {
+        totalCount: data.totalCount,
+        skip: data.skip,
+        take: data.take,
+        hasNextPage: data.skip + data.take < data.totalCount,
+        hasPreviousPage: data.skip > 0,
+      }
+    : undefined;
+
+  const columns: ExtendedColumnDef<GetMarketForecastRow>[] = useMemo(
     () => [
       {
         id: "symbolName",
@@ -165,7 +164,7 @@ export default function RecentMarketTrades() {
         },
       },
     ],
-    [marketId]
+    [marketId],
   );
 
   const timeToRefresh = (): string => {
@@ -178,8 +177,8 @@ export default function RecentMarketTrades() {
         0,
         0,
         0,
-        0
-      )
+        0,
+      ),
     );
 
     return formatDistance(midnightUTC, now, { addSuffix: true });
@@ -205,10 +204,10 @@ export default function RecentMarketTrades() {
 
       <ResponsiveDataTable
         columns={columns}
-        data={data?.marketForecast?.nodes}
+        data={data?.items}
         state={tableState}
         onStateChange={setTableState}
-        pageInfo={data?.marketForecast?.pageInfo}
+        pageInfo={pageInfo}
         className="my-2"
       />
     </div>

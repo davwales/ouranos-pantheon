@@ -1,16 +1,19 @@
-using HotChocolate.Data.Filters;
-using HotChocolate.Execution.Configuration;
 using MassTransit;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Ouranos.Pantheon.Modules.Shared.API.Extensions;
 using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Infra.Postgres;
-using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Assistants;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Shared;
+using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.GetAllAssistants;
+using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.GetAssistant;
+using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.CreateAssistant;
+using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.UpdateAssistant;
+using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.DeleteAssistant;
+using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion;
 
 namespace Ouranos.Pantheon.Modules.Hermes;
 
@@ -28,14 +31,14 @@ public sealed class HermesModule : IPantheonModule
         return host;
     }
 
-    public IRequestExecutorBuilder ConfigureSchema(IRequestExecutorBuilder builder)
+    public void MapEndpoints(WebApplication app)
     {
-        return builder.BindModelId<Assistant>();
-    }
-
-    public IFilterConventionDescriptor ConfigureSchemaFilters(IFilterConventionDescriptor descriptor)
-    {
-        return descriptor.BindModelIdFilter<Assistant>();
+        GetAllAssistantsEndpoint.Map(app);
+        GetAssistantEndpoint.Map(app);
+        CreateAssistantEndpoint.Map(app);
+        UpdateAssistantEndpoint.Map(app);
+        DeleteAssistantEndpoint.Map(app);
+        GenerateCompletionEndpoint.Map(app);
     }
 
     public IMediatorRegistrationConfigurator ConfigureMediator(IMediatorRegistrationConfigurator mediator)

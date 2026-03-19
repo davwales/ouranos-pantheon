@@ -3,13 +3,16 @@
 import { PrettyNumber } from "@/app/components/pretty-number";
 import { ExtendedColumnDef } from "@/app/components/responsive-data-table";
 import ResponsiveDataTable from "@/app/components/responsive-data-table/responsive-data-table";
+import {
+  extractFilter,
+  extractSort,
+} from "@/app/components/responsive-data-table/types";
 import { Typography } from "@/app/components/typography";
 import TimeFrameSelection from "@/app/plutus/components/time_frame_selection";
 import { PlutusState, usePlutusStore } from "@/app/plutus/plutus_store";
-import { GET_RECIPE_TRADES } from "@/app/plutus/queries";
 import { Button } from "@/components/ui/button";
-import { GetRecipeTradesResponse } from "@/gql/graphql";
-import { useQuery } from "@urql/next";
+import { useApi } from "@/hooks/use-api";
+import { GetRecipeTradesRow, plutusApi } from "@/lib/api/plutus";
 import { Plus, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -22,26 +25,48 @@ export default function RecipesPage() {
       state.timeFrameSeconds,
       state.recipesTableState,
       state.setRecipesTableState,
-    ]
+    ],
   );
 
-  const [{ data, fetching }, reexecute] = useQuery({
-    query: GET_RECIPE_TRADES,
-    variables: {
-      input: {
-        marketId: marketId,
-        seconds: timeFrameSeconds > 0 ? timeFrameSeconds : undefined,
-      },
-      order: tableState.sort,
-      where: tableState.filter,
-      first: tableState.pagination?.first,
-      after: tableState.pagination?.after,
-      last: tableState.pagination?.last,
-      before: tableState.pagination?.before,
-    },
-  });
+  const { sortField, sortDirection } = extractSort(tableState.sort);
+  const filter = extractFilter(tableState.filter);
 
-  const columns: ExtendedColumnDef<GetRecipeTradesResponse>[] = useMemo(
+  const [state, reexecute] = useApi(
+    () =>
+      plutusApi.getRecipeTrades(
+        marketId,
+        timeFrameSeconds > 0 ? timeFrameSeconds : undefined,
+        {
+          skip: tableState.pagination?.skip ?? 0,
+          take: tableState.pagination?.take ?? 10,
+          sortField,
+          sortDirection,
+          filter,
+        },
+      ),
+    [
+      marketId,
+      timeFrameSeconds,
+      tableState.pagination,
+      tableState.sort,
+      tableState.filter,
+    ],
+  );
+
+  const data = state.data;
+  const fetching = state.status === "loading";
+
+  const pageInfo = data
+    ? {
+        totalCount: data.totalCount,
+        skip: data.skip,
+        take: data.take,
+        hasNextPage: data.skip + data.take < data.totalCount,
+        hasPreviousPage: data.skip > 0,
+      }
+    : undefined;
+
+  const columns: ExtendedColumnDef<GetRecipeTradesRow>[] = useMemo(
     () => [
       {
         id: "recipeName",
@@ -121,7 +146,7 @@ export default function RecipesPage() {
         },
       },
     ],
-    [marketId]
+    [marketId],
   );
 
   return (
@@ -148,10 +173,10 @@ export default function RecipesPage() {
 
       <ResponsiveDataTable
         columns={columns}
-        data={data?.recipeTrades?.nodes}
+        data={data?.items}
         state={tableState}
         onStateChange={setTableState}
-        pageInfo={data?.recipeTrades?.pageInfo}
+        pageInfo={pageInfo}
         className="my-2"
       />
     </div>

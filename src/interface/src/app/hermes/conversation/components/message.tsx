@@ -1,6 +1,6 @@
 import { MarkdownRenderer } from "@/app/components/markdown-renderer";
 import { Typography } from "@/app/components/typography";
-import { Role } from "@/gql/graphql";
+import { Role } from "@/lib/api/hermes";
 
 export function Message({
   name,

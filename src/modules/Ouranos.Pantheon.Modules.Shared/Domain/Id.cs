@@ -1,6 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Ouranos.Pantheon.Modules.Shared.Domain;
 
-public readonly record struct Id<T>(string Value)
+public readonly record struct Id<T>(string Value) : IParsable<Id<T>>
 {
     public static explicit operator string(Id<T> id)
     {
@@ -17,8 +19,24 @@ public readonly record struct Id<T>(string Value)
         return Value;
     }
 
-    public static Id<T> Parse(string value)
+    public static Id<T> Parse(string s, IFormatProvider? _)
     {
-        return new Id<T>(value);
+        return new Id<T>(s);
+    }
+
+    public static bool TryParse(
+        [NotNullWhen(true)] string? s,
+        IFormatProvider? _,
+        out Id<T> result
+    )
+    {
+        if (string.IsNullOrWhiteSpace(s))
+        {
+            result = default;
+            return false;
+        }
+
+        result = new Id<T>(s);
+        return true;
     }
 }

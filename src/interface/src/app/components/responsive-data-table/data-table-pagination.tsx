@@ -18,18 +18,27 @@ export function DataTablePagination({
     disablePagination?: boolean;
 }) {
     const availablePageSizes = useMemo(() => paginationArgs?.pageSizes ?? [10, 20, 30, 40, 50], [paginationArgs?.pageSizes]);
+    const pageSize = paginationArgs?.pageSize ?? 10;
+    const skip = paginationArgs?.skip ?? 0;
+
+    const hasPreviousPage = pageInfo?.hasPreviousPage !== undefined
+        ? pageInfo.hasPreviousPage
+        : (pageInfo?.skip !== undefined ? pageInfo.skip > 0 : skip > 0);
+
+    const hasNextPage = pageInfo?.hasNextPage !== undefined
+        ? pageInfo.hasNextPage
+        : (pageInfo?.totalCount !== undefined
+            ? skip + pageSize < pageInfo.totalCount
+            : false);
 
     const handlePageSizeChanged = (value: string) => {
-        const pageSize = parseInt(value);
-
+        const newPageSize = parseInt(value);
         if (onPaginationArgsChanged) {
             onPaginationArgsChanged({
                 ...paginationArgs,
-                pageSize: pageSize,
-                last: undefined,
-                before: undefined,
-                first: pageSize,
-                after: undefined
+                pageSize: newPageSize,
+                take: newPageSize,
+                skip: 0,
             });
         }
     };
@@ -38,10 +47,8 @@ export function DataTablePagination({
         if (onPaginationArgsChanged) {
             onPaginationArgsChanged({
                 ...paginationArgs,
-                last: paginationArgs?.pageSize,
-                before: pageInfo?.startCursor,
-                first: undefined,
-                after: undefined
+                skip: Math.max(0, skip - pageSize),
+                take: pageSize,
             });
         }
     };
@@ -50,10 +57,8 @@ export function DataTablePagination({
         if (onPaginationArgsChanged) {
             onPaginationArgsChanged({
                 ...paginationArgs,
-                last: undefined,
-                before: undefined,
-                first: paginationArgs?.pageSize,
-                after: pageInfo?.endCursor
+                skip: skip + pageSize,
+                take: pageSize,
             });
         }
     };
@@ -64,7 +69,7 @@ export function DataTablePagination({
                 <div className="flex justify-between gap-2 mr-2">
                     <Button
                         onClick={handlePreviousPage}
-                        disabled={pageInfo?.hasPreviousPage === false}
+                        disabled={!hasPreviousPage}
                         className="w-1/2 items-end"
                     >
                         <ChevronLeft /> Previous
@@ -72,7 +77,7 @@ export function DataTablePagination({
 
                     <Button
                         onClick={handleNextPage}
-                        disabled={pageInfo?.hasNextPage === false}
+                        disabled={!hasNextPage}
                         className="w-1/2 items-end"
                     >
                         Next <ChevronRight />
@@ -80,13 +85,13 @@ export function DataTablePagination({
                 </div>
             )}
 
-            <Select value={String(paginationArgs?.pageSize)} defaultValue={String(availablePageSizes[0])} onValueChange={handlePageSizeChanged}>
+            <Select value={String(pageSize)} defaultValue={String(availablePageSizes[0])} onValueChange={handlePageSizeChanged}>
                 <SelectTrigger className="w-full md:w-40 mt-2">
                     <SelectValue placeholder="Page Size" />
                 </SelectTrigger>
                 <SelectContent>
-                    {availablePageSizes.map((pageSize, index) => (
-                        <SelectItem key={index} value={String(pageSize)}>{pageSize}</SelectItem>
+                    {availablePageSizes.map((ps, index) => (
+                        <SelectItem key={index} value={String(ps)}>{ps}</SelectItem>
                     ))}
                 </SelectContent>
             </Select>

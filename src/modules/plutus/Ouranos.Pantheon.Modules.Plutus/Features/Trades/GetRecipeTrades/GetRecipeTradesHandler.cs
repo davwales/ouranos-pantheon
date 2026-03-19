@@ -1,50 +1,81 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetRecipeTrades.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
+using Ouranos.Pantheon.Modules.Shared.Application.Common.Pagination;
+using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetRecipeTrades;
 
 public sealed class GetRecipeTradesHandler
-    : QueryHandler<GetRecipeTradesInput, WrapperResponse<IQueryable<GetRecipeTradesResponse>>>
+    : QueryHandler<GetRecipeTradesInput, PagedResponse<GetRecipeTradesResponse>>
 {
+    private static readonly FilterBuilder<GetRecipeTradesResponse> FilterBuilder =
+        new FilterBuilder<GetRecipeTradesResponse>()
+            .On(nameof(GetRecipeTradesResponse.RecipeName), x => x.RecipeName)
+            .On(nameof(GetRecipeTradesResponse.LatestBuyPrice), x => x.LatestBuyPrice)
+            .On(nameof(GetRecipeTradesResponse.LatestSellPrice), x => x.LatestSellPrice)
+            .On(nameof(GetRecipeTradesResponse.LatestMargin), x => x.LatestMargin)
+            .On(nameof(GetRecipeTradesResponse.AverageBuyPrice), x => x.AverageBuyPrice)
+            .On(nameof(GetRecipeTradesResponse.AverageSellPrice), x => x.AverageSellPrice)
+            .On(nameof(GetRecipeTradesResponse.AverageMargin), x => x.AverageMargin);
+
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<GetRecipeTradesHandler> _logger;
+    private readonly IOptions<QueryOptions> _queryOptions;
 
     public GetRecipeTradesHandler(
         ILogger<GetRecipeTradesHandler> logger,
-        PlutusDbContext dbContext
+        PlutusDbContext dbContext,
+        IOptions<QueryOptions> queryOptions
     )
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(dbContext);
+        Guard.Against.Null(queryOptions);
 
         _logger = logger;
         _dbContext = dbContext;
+        _queryOptions = queryOptions;
     }
 
-    public override async Task<WrapperResponse<IQueryable<GetRecipeTradesResponse>>> Handle(
-        GetRecipeTradesInput query,
+    public override async Task<PagedResponse<GetRecipeTradesResponse>> Handle(
+        GetRecipeTradesInput input,
         CancellationToken cancellationToken = default
     )
     {
-        _logger.LogTrace("Attempting to handle get recipe trades query '{@query}'.", query);
+        _logger.LogTrace("Attempting to handle get recipe trades query '{@query}'.", input);
         cancellationToken.ThrowIfCancellationRequested();
 
+        var limits = _queryOptions.Value;
+        Guard.Against.OutOfRange(input.Skip, nameof(input.Skip), 0, limits.MaxSkip);
+        Guard.Against.OutOfRange(input.Take, nameof(input.Take), limits.MinPageSize, limits.MaxPageSize);
+
+        if (input.Seconds.HasValue)
+        {
+            Guard.Against.NegativeOrZero(input.Seconds.Value);
+        }
+
         var recipes = await _dbContext.Recipes
-            .Where(r => r.MarketId == query.MarketId)
+            .AsNoTracking()
+            .Where(r => r.MarketId == input.MarketId)
             .ToListAsync(cancellationToken);
 
         if (recipes.Count == 0)
         {
-            _logger.LogDebug("No recipes found for market '{marketId}'.", query.MarketId);
-            return new WrapperResponse<IQueryable<GetRecipeTradesResponse>>(
-                new List<GetRecipeTradesResponse>().AsQueryable()
+            _logger.LogDebug("No recipes found for market '{marketId}'.", input.MarketId);
+            return new PagedResponse<GetRecipeTradesResponse>(
+                [],
+                0,
+                input.Skip,
+                input.Take
             );
         }
 
@@ -54,8 +85,8 @@ public sealed class GetRecipeTradesHandler
             .Distinct()
             .ToList();
 
-        DateTimeOffset? since = query.Seconds.HasValue
-            ? DateTimeOffset.UtcNow - TimeSpan.FromSeconds(query.Seconds.Value)
+        DateTimeOffset? since = input.Seconds.HasValue
+            ? DateTimeOffset.UtcNow - TimeSpan.FromSeconds(input.Seconds.Value)
             : null;
 
         var prices = await GetSymbolPrices(symbolIds, since, cancellationToken);
@@ -67,7 +98,7 @@ public sealed class GetRecipeTradesHandler
             )
             .ToList();
 
-        var response = validRecipes
+        var results = validRecipes
             .Select(r => new
             {
                 r.Id,
@@ -101,10 +132,30 @@ public sealed class GetRecipeTradesHandler
                     x.AverageSellPrice - x.AverageBuyPrice
                 )
             )
-            .AsQueryable();
+            .ToList();
+
+        var filtered = results.AsQueryable().FilterBy(input.Filter, FilterBuilder);
+        var totalCount = filtered.Count();
+
+        var page = filtered
+            .SortBy(
+                input.SortField,
+                input.SortDirection,
+                builder => builder
+                    .On(nameof(GetRecipeTradesResponse.RecipeName), x => x.RecipeName)
+                    .On(nameof(GetRecipeTradesResponse.LatestBuyPrice), x => x.LatestBuyPrice)
+                    .On(nameof(GetRecipeTradesResponse.LatestSellPrice), x => x.LatestSellPrice)
+                    .On(nameof(GetRecipeTradesResponse.LatestMargin), x => x.LatestMargin)
+                    .On(nameof(GetRecipeTradesResponse.AverageBuyPrice), x => x.AverageBuyPrice)
+                    .On(nameof(GetRecipeTradesResponse.AverageSellPrice), x => x.AverageSellPrice)
+                    .On(nameof(GetRecipeTradesResponse.AverageMargin), x => x.AverageMargin)
+                    .Default(x => x.AverageMargin)
+            )
+            .Paginate(input.Skip, input.Take)
+            .ToList();
 
         _logger.LogDebug("Successfully handled get recipe trades query.");
-        return new WrapperResponse<IQueryable<GetRecipeTradesResponse>>(response);
+        return new PagedResponse<GetRecipeTradesResponse>(page, totalCount, input.Skip, input.Take);
     }
 
     private async Task<Dictionary<Id<Symbol>, IntermediatePrice>> GetSymbolPrices(
@@ -114,6 +165,7 @@ public sealed class GetRecipeTradesHandler
     )
     {
         var priceQuery = _dbContext.Trades
+            .AsNoTracking()
             .Where(x =>
                 (since == null || x.Timestamp >= since) &&
                 symbolIds.Contains(x.SymbolId)

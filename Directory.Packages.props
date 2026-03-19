@@ -10,9 +10,6 @@
     <PackageVersion Include="Ardalis.GuardClauses" Version="5.0.0" />
     <PackageVersion Include="CsvHelper" Version="33.0.1" />
     <PackageVersion Include="EFCore.NamingConventions" Version="8.0.3" />
-    <PackageVersion Include="HotChocolate.AspNetCore" Version="14.3.0" />
-    <PackageVersion Include="HotChocolate.AspNetCore.CommandLine" Version="14.3.0" />
-    <PackageVersion Include="HotChocolate.Data" Version="14.3.0" />
     <PackageVersion Include="MassTransit" Version="8.3.7" />
     <PackageVersion Include="MassTransit.RabbitMQ" Version="8.3.7" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />

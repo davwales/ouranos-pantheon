@@ -1,4 +1,4 @@
-﻿using Ouranos.Pantheon.Modules.Shared.API.Extensions;
+using Ouranos.Pantheon.Modules.Shared.API.Extensions;
 using Ouranos.Pantheon.Modules.Hermes;
 using Ouranos.Pantheon.Modules.Plutus;
 using Ouranos.Pantheon.Modules.Shared;
@@ -15,10 +15,7 @@ public static class HostingExtensions
         builder
             .AddOuranosCore(
                 builder.Configuration,
-                Modules,
-                gql => gql
-                    .ModifyOptions(o => { o.EnableStream = true; })
-                    .ModifyCostOptions(o => o.EnforceCostLimits = false) // TODO - Refactor queries for lower cost
+                Modules
             )
             .Services
             .ConfigureCors(builder.Configuration);

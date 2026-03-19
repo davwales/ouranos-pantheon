@@ -4,4 +4,4 @@ var app = await WebApplication.CreateBuilder(args)
     .ConfigureBuilder()
     .ConfigureApp();
 
-await app.RunWithGraphQLCommandsAsync(args);
+await app.RunAsync();

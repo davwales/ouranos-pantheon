@@ -7,5 +7,10 @@ namespace Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetRecipeTrades.Schema
 
 public sealed record GetRecipeTradesInput(
     Id<Market> MarketId,
-    double? Seconds = null
-) : IQuery<WrapperResponse<IQueryable<GetRecipeTradesResponse>>>;
+    double? Seconds = null,
+    string? SortField = null,
+    string? SortDirection = null,
+    int Skip = 0,
+    int Take = 10,
+    string[]? Filter = null
+) : IQuery<PagedResponse<GetRecipeTradesResponse>>;

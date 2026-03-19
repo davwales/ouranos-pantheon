@@ -1,6 +1,5 @@
 import InfoCard from "@/app/components/info-card";
 import { AssistantForm } from "@/app/hermes/components/assistant_form";
-import { GET_DETAILED_ASSISTANT_LIST } from "@/app/hermes/queries";
 import ConversationAssistant from "@/app/hermes/types";
 import {
   Drawer,
@@ -10,8 +9,8 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { Role } from "@/gql/graphql";
-import { useQuery } from "@urql/next";
+import { useApi } from "@/hooks/use-api";
+import { hermesApi, Role } from "@/lib/api/hermes";
 import { useState } from "react";
 
 export default function SelectAssistantView({
@@ -27,19 +26,17 @@ export default function SelectAssistantView({
 }) {
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
 
-  const [{ data }] = useQuery({
-    query: GET_DETAILED_ASSISTANT_LIST,
-  });
+  const [state] = useApi(() => hermesApi.getAllAssistants(), []);
 
   const handleAssistantModified = (
-    modifiedAssistant: ConversationAssistant
+    modifiedAssistant: ConversationAssistant,
   ) => {
     setDrawerOpen(false);
     setAssistant(modifiedAssistant);
   };
 
   const handleAssistantSelected = (
-    selectedAssistant: ConversationAssistant
+    selectedAssistant: ConversationAssistant,
   ) => {
     if (selectedAssistant.id == assistant?.id) {
       setAssistant(undefined);
@@ -52,7 +49,7 @@ export default function SelectAssistantView({
   return (
     <div {...props} className={`mt-4 ${className}`}>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {data?.allAssistants.map((a) => (
+        {state.data?.map((a) => (
           <InfoCard
             key={a.id}
             label={a.assistantName}

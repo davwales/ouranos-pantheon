@@ -3,12 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
 using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.GetAssistant.Schemas;
-using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Assistants;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Assistants.GetAssistant;
 
-public sealed class GetAssistantHandler : QueryHandler<GetAssistantInput, Assistant>
+public sealed class GetAssistantHandler : QueryHandler<GetAssistantInput, GetAssistantResponse>
 {
     private readonly HermesDbContext _dbContext;
     private readonly ILogger<GetAssistantHandler> _logger;
@@ -25,7 +24,7 @@ public sealed class GetAssistantHandler : QueryHandler<GetAssistantInput, Assist
         _dbContext = dbContext;
     }
 
-    public override async Task<Assistant> Handle(
+    public override async Task<GetAssistantResponse> Handle(
         GetAssistantInput query,
         CancellationToken cancellationToken = default
     )
@@ -39,6 +38,15 @@ public sealed class GetAssistantHandler : QueryHandler<GetAssistantInput, Assist
         Guard.Against.NotFound(query.AssistantId, assistant);
 
         _logger.LogDebug("Successfully handled get assistant request.");
-        return assistant;
+        return new GetAssistantResponse(
+            assistant.Id,
+            assistant.Model,
+            assistant.SystemPrompt,
+            assistant.AssistantName,
+            assistant.UserName,
+            assistant.Temperature,
+            assistant.MaxTokens,
+            assistant.RepeatPenalty
+        );
     }
 }

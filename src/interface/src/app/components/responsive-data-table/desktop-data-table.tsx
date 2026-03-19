@@ -15,7 +15,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { SortEnumType } from "@/gql/graphql";
 import {
   flexRender,
   getCoreRowModel,
@@ -45,7 +44,7 @@ export default function DesktopDataTable<TData>({
     state: {
       sorting: Object.entries(state?.sort ?? {}).map(([id, value]) => ({
         id,
-        desc: value === SortEnumType.Desc,
+        desc: value === "DESC",
       })),
     },
   });

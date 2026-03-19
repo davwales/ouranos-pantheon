@@ -8,7 +8,6 @@ import {
 } from "@/app/components/responsive-data-table/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { SortEnumType } from "@/gql/graphql";
 import {
   flexRender,
   getCoreRowModel,
@@ -39,7 +38,7 @@ export default function MobileDataTable<TData>({
     state: {
       sorting: Object.entries(state?.sort ?? {}).map(([id, value]) => ({
         id,
-        desc: value === SortEnumType.Desc,
+        desc: value === "DESC",
       })),
     },
   });
@@ -72,8 +71,7 @@ export default function MobileDataTable<TData>({
       });
 
       const pageChanged =
-        updatedPaginationArgs.after != state?.pagination?.after ||
-        updatedPaginationArgs.before != state?.pagination?.before;
+        updatedPaginationArgs.skip != state?.pagination?.skip;
       if (pageChanged) {
         handleScrollToTop();
       }

@@ -6,4 +6,4 @@ namespace Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetMarket.Schemas;
 
 public sealed record GetMarketInput(
     Id<Market> MarketId
-) : IQuery<Market>;
+) : IQuery<GetMarketResponse>;

@@ -1,5 +1,6 @@
-using HotChocolate.Execution.Configuration;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Serilog;
 using MassTransit;
 using Microsoft.AspNetCore.Builder;
@@ -13,7 +14,6 @@ public static class CoreExtensions
         this IHostApplicationBuilder builder,
         IConfiguration configuration,
         IReadOnlyCollection<IPantheonModule> modules,
-        Action<IRequestExecutorBuilder>? gql = null,
         Action<LoggerConfiguration>? logger = null
     )
     {
@@ -21,8 +21,8 @@ public static class CoreExtensions
         logger?.Invoke(loggerConfig);
         Log.Logger = loggerConfig.CreateLogger();
 
-        var gqlBuilder = builder.Services.ConfigureGraphQl(configuration, modules);
-        gql?.Invoke(gqlBuilder);
+        builder.Services.ConfigureRest(configuration);
+        builder.Services.Configure<QueryOptions>(configuration.GetSection(QueryOptions.SectionName));
 
         builder.Services.AddMediator(m =>
             {
@@ -49,10 +49,10 @@ public static class CoreExtensions
     )
     {
         app.UseSerilogRequestLogging();
-        app.MapGraphQL();
 
         foreach (var module in modules)
         {
+            module.MapEndpoints(app);
             await module.Configure(app);
         }
 

@@ -1,6 +1,5 @@
-using HotChocolate.Data.Filters;
-using HotChocolate.Execution.Configuration;
 using MassTransit;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
 
 namespace Ouranos.Pantheon.Modules.Shared;
@@ -11,14 +10,8 @@ public interface IPantheonModule
 
     Task<IHost> Configure(IHost host);
 
-    IRequestExecutorBuilder ConfigureSchema(IRequestExecutorBuilder builder)
+    void MapEndpoints(WebApplication app)
     {
-        return builder;
-    }
-
-    IFilterConventionDescriptor ConfigureSchemaFilters(IFilterConventionDescriptor descriptor)
-    {
-        return descriptor;
     }
 
     IMediatorRegistrationConfigurator ConfigureMediator(IMediatorRegistrationConfigurator mediator)

@@ -3,12 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetSymbol.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetSymbol;
 
-public sealed class GetSymbolHandler : QueryHandler<GetSymbolInput, Symbol>
+public sealed class GetSymbolHandler : QueryHandler<GetSymbolInput, GetSymbolResponse>
 {
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<GetSymbolHandler> _logger;
@@ -25,7 +24,7 @@ public sealed class GetSymbolHandler : QueryHandler<GetSymbolInput, Symbol>
         _dbContext = dbContext;
     }
 
-    public override async Task<Symbol> Handle(
+    public override async Task<GetSymbolResponse> Handle(
         GetSymbolInput query,
         CancellationToken cancellationToken = default
     )
@@ -33,11 +32,19 @@ public sealed class GetSymbolHandler : QueryHandler<GetSymbolInput, Symbol>
         _logger.LogTrace("Attempting to handle get symbol query '{@query}'.", query);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var symbol = await _dbContext.Symbols.FirstOrDefaultAsync(s => s.Id == query.SymbolId, cancellationToken);
+        var symbol = await _dbContext.Symbols
+            .FirstOrDefaultAsync(s => s.Id == query.SymbolId, cancellationToken);
 
         Guard.Against.NotFound(query.SymbolId, symbol);
 
         _logger.LogDebug("Successfully handled get symbol request.");
-        return symbol;
+        return new GetSymbolResponse(
+            symbol.Id,
+            symbol.Code,
+            symbol.Subcode,
+            symbol.Name,
+            symbol.MarketId,
+            symbol.AdditionalFields
+        );
     }
 }
