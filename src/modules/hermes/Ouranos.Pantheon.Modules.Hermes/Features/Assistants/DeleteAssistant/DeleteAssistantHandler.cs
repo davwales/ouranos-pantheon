@@ -2,14 +2,14 @@ using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.DeleteAssistant.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Assistants;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Assistants.DeleteAssistant;
 
-public sealed class DeleteAssistantHandler : CommandHandler<DeleteAssistantInput, IdResponse<Assistant>>
+public sealed class DeleteAssistantHandler : IPantheonHandler<DeleteAssistantInput, IdResponse<Assistant>>
 {
     private readonly HermesDbContext _dbContext;
     private readonly ILogger<DeleteAssistantHandler> _logger;
@@ -26,7 +26,7 @@ public sealed class DeleteAssistantHandler : CommandHandler<DeleteAssistantInput
         _dbContext = dbContext;
     }
 
-    public override async Task<IdResponse<Assistant>> Handle(
+    public async Task<IdResponse<Assistant>> Handle(
         DeleteAssistantInput command,
         CancellationToken cancellationToken = default
     )

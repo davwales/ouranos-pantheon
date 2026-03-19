@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.UpdateRecipe.Schemas;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Recipes;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
+using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Recipes.UpdateRecipe;
 
@@ -15,10 +17,10 @@ public static class UpdateRecipeEndpoint
 
     private static async Task<IResult> Handle(
         UpdateRecipeInput input,
-        IScopedDispatcher dispatcher,
+        IMessageBus bus,
         CancellationToken ct
     )
     {
-        return Results.Ok(await dispatcher.Send(input, ct));
+        return Results.Ok(await bus.InvokeAsync<IdResponse<Recipe>>(input, ct));
     }
 }

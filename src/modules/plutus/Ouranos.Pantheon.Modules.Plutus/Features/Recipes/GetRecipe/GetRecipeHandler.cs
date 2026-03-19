@@ -1,13 +1,13 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.GetRecipe.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Recipes.GetRecipe;
 
-public sealed class GetRecipeHandler : QueryHandler<GetRecipeInput, GetRecipeResponse>
+public sealed class GetRecipeHandler : IPantheonHandler<GetRecipeInput, GetRecipeResponse>
 {
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<GetRecipeHandler> _logger;
@@ -24,7 +24,7 @@ public sealed class GetRecipeHandler : QueryHandler<GetRecipeInput, GetRecipeRes
         _dbContext = dbContext;
     }
 
-    public override async Task<GetRecipeResponse> Handle(
+    public async Task<GetRecipeResponse> Handle(
         GetRecipeInput query,
         CancellationToken cancellationToken = default
     )

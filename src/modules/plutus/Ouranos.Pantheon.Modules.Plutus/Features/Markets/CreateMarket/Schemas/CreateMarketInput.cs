@@ -1,5 +1,3 @@
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Markets.CreateMarket.Schemas;
@@ -10,4 +8,4 @@ public sealed record CreateMarketInput(
     bool IsForecastingEnabled = false,
     string? Description = null,
     string? Icon = null
-) : ICommand<IdResponse<Market>>;
+);

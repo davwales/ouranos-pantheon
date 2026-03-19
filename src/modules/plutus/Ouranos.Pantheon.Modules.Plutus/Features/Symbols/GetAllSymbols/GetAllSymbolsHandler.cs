@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetAllSymbols.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
@@ -14,7 +14,7 @@ using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetAllSymbols;
 
 public sealed class GetAllSymbolsHandler
-    : QueryHandler<GetAllSymbolsInput, PagedResponse<GetAllSymbolsResponse>>
+    : IPantheonHandler<GetAllSymbolsInput, PagedResponse<GetAllSymbolsResponse>>
 {
     private static readonly FilterBuilder<Symbol> FilterBuilder = new FilterBuilder<Symbol>()
         .On(nameof(Symbol.MarketId), s => s.MarketId)
@@ -45,7 +45,7 @@ public sealed class GetAllSymbolsHandler
         _queryOptions = queryOptions;
     }
 
-    public override async Task<PagedResponse<GetAllSymbolsResponse>> Handle(
+    public async Task<PagedResponse<GetAllSymbolsResponse>> Handle(
         GetAllSymbolsInput input,
         CancellationToken cancellationToken = default
     )

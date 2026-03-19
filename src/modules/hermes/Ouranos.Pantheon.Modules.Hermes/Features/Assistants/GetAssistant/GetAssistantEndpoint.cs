@@ -2,8 +2,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.GetAssistant.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Assistants;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
 using Ouranos.Pantheon.Modules.Shared.Domain;
+using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Assistants.GetAssistant;
 
@@ -17,11 +17,11 @@ public static class GetAssistantEndpoint
 
     private static async Task<IResult> Handle(
         Id<Assistant> assistantId,
-        IScopedDispatcher dispatcher,
+        IMessageBus bus,
         CancellationToken ct
     )
     {
-        var result = await dispatcher.Send(new GetAssistantInput(assistantId), ct);
+        var result = await bus.InvokeAsync<GetAssistantResponse>(new GetAssistantInput(assistantId), ct);
         return Results.Ok(result);
     }
 }

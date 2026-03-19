@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetAllForecasts.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
@@ -14,7 +14,7 @@ using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetAllForecasts;
 
 public sealed class GetAllForecastsHandler
-    : QueryHandler<GetAllForecastsInput, PagedResponse<GetAllForecastsResponse>>
+    : IPantheonHandler<GetAllForecastsInput, PagedResponse<GetAllForecastsResponse>>
 {
     private static readonly FilterBuilder<Forecast> FilterBuilder = new FilterBuilder<Forecast>()
         .On(nameof(Forecast.SymbolId), f => f.SymbolId)
@@ -43,7 +43,7 @@ public sealed class GetAllForecastsHandler
         _queryOptions = queryOptions;
     }
 
-    public override async Task<PagedResponse<GetAllForecastsResponse>> Handle(
+    public async Task<PagedResponse<GetAllForecastsResponse>> Handle(
         GetAllForecastsInput input,
         CancellationToken cancellationToken = default
     )

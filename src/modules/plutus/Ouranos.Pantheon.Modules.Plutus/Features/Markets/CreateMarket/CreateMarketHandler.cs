@@ -1,7 +1,7 @@
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.CreateMarket.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
@@ -9,7 +9,7 @@ using Ouranos.Pantheon.Modules.Shared.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Markets.CreateMarket;
 
-public sealed class CreateMarketHandler : CommandHandler<CreateMarketInput, IdResponse<Market>>
+public sealed class CreateMarketHandler : IPantheonHandler<CreateMarketInput, IdResponse<Market>>
 {
     private readonly ILogger<CreateMarketHandler> _logger;
     private readonly PlutusDbContext _dbContext;
@@ -26,7 +26,7 @@ public sealed class CreateMarketHandler : CommandHandler<CreateMarketInput, IdRe
         _dbContext = dbContext;
     }
 
-    public override async Task<IdResponse<Market>> Handle(
+    public async Task<IdResponse<Market>> Handle(
         CreateMarketInput command,
         CancellationToken cancellationToken = default
     )

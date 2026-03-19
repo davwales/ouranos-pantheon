@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Infra.Postgres;
 using Ouranos.Pantheon.Modules.Shared.WebSockets;
@@ -53,7 +52,6 @@ public sealed class PlutusModule : IPantheonModule
     public IHostApplicationBuilder Build(IHostApplicationBuilder builder)
     {
         builder.Services
-            .AddCoreApplicationModule()
             .AddCoreOuranosMachineLearningModule(builder.Configuration)
             .AddCorePostgresModule<PlutusDbContext>(
                 builder.Configuration,
@@ -91,12 +89,6 @@ public sealed class PlutusModule : IPantheonModule
         CreateRecipeEndpoint.Map(app);
         UpdateRecipeEndpoint.Map(app);
         DeleteRecipeEndpoint.Map(app);
-    }
-
-    public IMediatorRegistrationConfigurator ConfigureMediator(IMediatorRegistrationConfigurator mediator)
-    {
-        mediator.AddConsumers(typeof(PlutusModule).Assembly);
-        return mediator;
     }
 
     private static void ConfigureDataLoaders(IHostApplicationBuilder builder)

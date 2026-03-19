@@ -1,14 +1,14 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetDailySymbolSummary.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetDailySymbolSummary;
 
 public sealed class GetDailySymbolSummaryHandler
-    : QueryHandler<GetDailySymbolSummaryInput, GetDailySymbolSummaryResponse>
+    : IPantheonHandler<GetDailySymbolSummaryInput, GetDailySymbolSummaryResponse>
 {
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<GetDailySymbolSummaryHandler> _logger;
@@ -25,7 +25,7 @@ public sealed class GetDailySymbolSummaryHandler
         _dbContext = dbContext;
     }
 
-    public override async Task<GetDailySymbolSummaryResponse> Handle(
+    public async Task<GetDailySymbolSummaryResponse> Handle(
         GetDailySymbolSummaryInput query,
         CancellationToken cancellationToken = default
     )

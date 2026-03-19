@@ -1,4 +1,3 @@
-using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
 
@@ -12,10 +11,5 @@ public interface IPantheonModule
 
     void MapEndpoints(WebApplication app)
     {
-    }
-
-    IMediatorRegistrationConfigurator ConfigureMediator(IMediatorRegistrationConfigurator mediator)
-    {
-        return mediator;
     }
 }

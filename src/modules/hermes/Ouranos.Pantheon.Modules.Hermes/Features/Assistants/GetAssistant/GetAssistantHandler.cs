@@ -1,13 +1,13 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.GetAssistant.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Assistants.GetAssistant;
 
-public sealed class GetAssistantHandler : QueryHandler<GetAssistantInput, GetAssistantResponse>
+public sealed class GetAssistantHandler : IPantheonHandler<GetAssistantInput, GetAssistantResponse>
 {
     private readonly HermesDbContext _dbContext;
     private readonly ILogger<GetAssistantHandler> _logger;
@@ -24,7 +24,7 @@ public sealed class GetAssistantHandler : QueryHandler<GetAssistantInput, GetAss
         _dbContext = dbContext;
     }
 
-    public override async Task<GetAssistantResponse> Handle(
+    public async Task<GetAssistantResponse> Handle(
         GetAssistantInput query,
         CancellationToken cancellationToken = default
     )

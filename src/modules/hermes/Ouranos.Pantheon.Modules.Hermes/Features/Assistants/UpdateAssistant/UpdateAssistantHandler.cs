@@ -2,14 +2,14 @@ using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.UpdateAssistant.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Assistants;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Assistants.UpdateAssistant;
 
-public sealed class UpdateAssistantHandler : CommandHandler<UpdateAssistantInput, IdResponse<Assistant>>
+public sealed class UpdateAssistantHandler : IPantheonHandler<UpdateAssistantInput, IdResponse<Assistant>>
 {
     private readonly HermesDbContext _dbContext;
     private readonly ILogger<UpdateAssistantHandler> _logger;
@@ -26,7 +26,7 @@ public sealed class UpdateAssistantHandler : CommandHandler<UpdateAssistantInput
         _dbContext = dbContext;
     }
 
-    public override async Task<IdResponse<Assistant>> Handle(
+    public async Task<IdResponse<Assistant>> Handle(
         UpdateAssistantInput command,
         CancellationToken cancellationToken = default
     )

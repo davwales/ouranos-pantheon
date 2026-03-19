@@ -1,9 +1,8 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetAllMarkets.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
@@ -11,7 +10,7 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetAllMarkets;
 
 public sealed class GetAllMarketsHandler
-    : QueryHandler<GetAllMarketsInput, WrapperResponse<IQueryable<GetAllMarketsResponse>>>
+    : IPantheonHandler<GetAllMarketsInput, List<GetAllMarketsResponse>>
 {
     private static readonly FilterBuilder<Market> FilterBuilder = new FilterBuilder<Market>()
         .On(nameof(Market.Name), m => m.Name)
@@ -33,7 +32,7 @@ public sealed class GetAllMarketsHandler
         _dbContext = dbContext;
     }
 
-    public override async Task<WrapperResponse<IQueryable<GetAllMarketsResponse>>> Handle(
+    public async Task<List<GetAllMarketsResponse>> Handle(
         GetAllMarketsInput query,
         CancellationToken cancellationToken = default
     )
@@ -41,14 +40,22 @@ public sealed class GetAllMarketsHandler
         _logger.LogTrace("Attempting to handle get all markets query '{@query}'.", query);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var queryable = _dbContext.Markets
+        var markets = await _dbContext.Markets
             .AsQueryable()
             .AsNoTracking()
             .FilterBy(query.Filter, FilterBuilder)
-            .Select(m => new GetAllMarketsResponse(m.Id, m.Name, m.Taxes, m.IsForecastingEnabled, m.Description, m.Icon)
-            );
+            .Select(m => new GetAllMarketsResponse(
+                    m.Id,
+                    m.Name,
+                    m.Taxes,
+                    m.IsForecastingEnabled,
+                    m.Description,
+                    m.Icon
+                )
+            )
+            .ToListAsync(cancellationToken);
 
         _logger.LogDebug("Successfully handled get all markets request.");
-        return await Task.FromResult(new WrapperResponse<IQueryable<GetAllMarketsResponse>>(queryable));
+        return markets;
     }
 }

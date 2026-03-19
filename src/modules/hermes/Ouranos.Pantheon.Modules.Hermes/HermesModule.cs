@@ -1,9 +1,7 @@
-using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Infra.Postgres;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
@@ -41,18 +39,11 @@ public sealed class HermesModule : IPantheonModule
         GenerateCompletionEndpoint.Map(app);
     }
 
-    public IMediatorRegistrationConfigurator ConfigureMediator(IMediatorRegistrationConfigurator mediator)
-    {
-        mediator.AddConsumers(typeof(HermesModule).Assembly);
-        return mediator;
-    }
-
     public IServiceCollection ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
         // TODO: Consolidate this into the `Build` method once IOuranosModule can be removed.
 
         return services
-            .AddCoreApplicationModule()
             .AddCoreOuranosMachineLearningModule(configuration)
             .AddCorePostgresModule<HermesDbContext>(
                 configuration,

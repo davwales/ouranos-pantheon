@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
-using Ouranos.Pantheon.Modules.Shared.Application.Mediator;
+using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetMarketForecast.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
@@ -14,7 +14,7 @@ using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetMarketForecast;
 
 public sealed class GetMarketForecastHandler
-    : QueryHandler<GetMarketForecastInput, PagedResponse<GetMarketForecastResponse>>
+    : IPantheonHandler<GetMarketForecastInput, PagedResponse<GetMarketForecastResponse>>
 {
     private static readonly FilterBuilder<GetMarketForecastResponse> FilterBuilder =
         new FilterBuilder<GetMarketForecastResponse>()
@@ -57,7 +57,7 @@ public sealed class GetMarketForecastHandler
         _queryOptions = queryOptions;
     }
 
-    public override async Task<PagedResponse<GetMarketForecastResponse>> Handle(
+    public async Task<PagedResponse<GetMarketForecastResponse>> Handle(
         GetMarketForecastInput input,
         CancellationToken cancellationToken = default
     )
