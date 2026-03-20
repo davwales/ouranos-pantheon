@@ -10,8 +10,8 @@
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="CsvHelper" />
-    <PackageReference Include="MassTransit.RabbitMQ" />
     <PackageReference Include="WolverineFx" />
+    <PackageReference Include="WolverineFx.RabbitMq" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
     <PackageReference Include="Microsoft.Extensions.Http" />
     <PackageReference Include="MongoDB.Driver" />

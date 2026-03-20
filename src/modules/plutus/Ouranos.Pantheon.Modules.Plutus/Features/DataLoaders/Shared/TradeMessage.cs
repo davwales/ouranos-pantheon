@@ -11,4 +11,9 @@ public sealed record TradeMessage(
     decimal Volume,
     DateTimeOffset Timestamp,
     AdditionalFields AdditionalFields
-);
+)
+{
+    public const string Exchange = "plutus.trade";
+    public const string Queue = "plutus.trade.ingest";
+    public const string DeadLetterQueue = "plutus.trade.ingest.dlq";
+}

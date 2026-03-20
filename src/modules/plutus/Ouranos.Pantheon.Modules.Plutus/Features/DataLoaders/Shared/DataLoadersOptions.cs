@@ -6,7 +6,6 @@ using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Stocks;
 namespace Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Shared;
 
 public sealed record DataLoadersOptions(
-    RabbitMqOptions RabbitMq,
     FfxivDataLoaderOptions Ffxiv,
     OsrsDataLoaderOptions Osrs,
     StocksDataLoaderOptions Stocks,
@@ -16,7 +15,6 @@ public sealed record DataLoadersOptions(
     public const string SectionName = "DataLoaders";
 
     public DataLoadersOptions() : this(
-        RabbitMq: new RabbitMqOptions(),
         Ffxiv: new FfxivDataLoaderOptions(),
         Osrs: new OsrsDataLoaderOptions(),
         Stocks: new StocksDataLoaderOptions(),
