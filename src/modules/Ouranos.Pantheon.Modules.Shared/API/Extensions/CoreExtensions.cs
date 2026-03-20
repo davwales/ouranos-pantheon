@@ -2,8 +2,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Infra.RabbitMq;
 using Serilog;
 using Wolverine;
+using Wolverine.ErrorHandling;
+using Wolverine.RabbitMQ;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
 
@@ -25,24 +28,56 @@ public static class CoreExtensions
         builder.Services.ConfigureRest(configuration);
         builder.Services.Configure<QueryOptions>(configuration.GetSection(QueryOptions.SectionName));
 
-        ((WebApplicationBuilder)builder).Host.UseWolverine(opts =>
-        {
-            opts.Discovery.IncludeAssembly(typeof(IPantheonModule).Assembly);
-            foreach (var module in modules)
-            {
-                opts.Discovery.IncludeAssembly(module.GetType().Assembly);
-            }
+        var rabbit = configuration.GetSection(RabbitMqOptions.SectionName).Get<RabbitMqOptions>();
 
-            opts.Discovery.CustomizeHandlerDiscovery(x =>
-                x.Includes.Implements<IPantheonHandler>());
-        });
+        builder.UseWolverine(opts =>
+            {
+                opts.Discovery.IncludeAssembly(typeof(IPantheonModule).Assembly);
+
+                opts.Discovery.CustomizeHandlerDiscovery(x =>
+                    x.Includes.Implements<IPantheonHandler>()
+                );
+
+                if (rabbit is { Host.Length: > 0 })
+                {
+                    opts.Policies.DisableConventionalLocalRouting();
+
+                    opts
+                        .UseRabbitMq(factory =>
+                            {
+                                factory.HostName = rabbit.Host;
+                                factory.UserName = rabbit.Username;
+                                factory.Password = rabbit.Password;
+                            }
+                        )
+                        .AutoProvision();
+
+                    if (rabbit.RetryCount.HasValue)
+                    {
+                        var intervals = Enumerable
+                            .Repeat(TimeSpan.FromMilliseconds(250), rabbit.RetryCount.Value)
+                            .ToArray();
+
+                        opts.Policies.OnException<Exception>().RetryWithCooldown(intervals);
+                    }
+                }
+
+                foreach (var module in modules)
+                {
+                    opts.Discovery.IncludeAssembly(module.GetType().Assembly);
+                    module.ConfigureWolverine(opts, builder.Configuration);
+                }
+            }
+        );
 
         foreach (var module in modules)
         {
             module.Build(builder);
         }
 
-        builder.Services.AddSerilog();
+        builder.Services
+            .AddMemoryCache()
+            .AddSerilog();
 
         return builder;
     }

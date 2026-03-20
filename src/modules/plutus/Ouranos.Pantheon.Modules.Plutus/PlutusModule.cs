@@ -1,4 +1,3 @@
-using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,6 +23,8 @@ using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Stocks.Messages;
 using Ouranos.Pantheon.Modules.Plutus.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Shared;
+using Wolverine;
+using Wolverine.RabbitMQ;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Consumer;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetAllMarkets;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetMarket;
@@ -91,6 +92,32 @@ public sealed class PlutusModule : IPantheonModule
         DeleteRecipeEndpoint.Map(app);
     }
 
+    public void ConfigureWolverine(WolverineOptions opts, IConfiguration configuration)
+    {
+        var dataLoadersSection = configuration
+            .GetSection(PlutusOptions.SectionName)
+            .GetSection(DataLoadersOptions.SectionName);
+
+        var loaders = dataLoadersSection.Get<DataLoadersOptions>() ?? new DataLoadersOptions();
+
+        if (!loaders.Ffxiv.IsEnabled && !loaders.Osrs.IsEnabled &&
+            !loaders.Stocks.IsEnabled && !loaders.Consumer.IsEnabled)
+        {
+            return;
+        }
+
+        opts.PublishMessage<TradeMessage>().ToRabbitExchange(
+            TradeMessage.Exchange,
+            e => { e.BindQueue(TradeMessage.Queue); }
+        );
+
+        if (loaders.Consumer.IsEnabled)
+        {
+            opts.ListenToRabbitQueue(TradeMessage.Queue)
+                .DeadLetterQueueing(new DeadLetterQueue(TradeMessage.DeadLetterQueue));
+        }
+    }
+
     private static void ConfigureDataLoaders(IHostApplicationBuilder builder)
     {
         var plutusOptionsSection = builder.Configuration.GetSection(PlutusOptions.SectionName);
@@ -109,44 +136,7 @@ public sealed class PlutusModule : IPantheonModule
                                     loaders.Consumer.IsEnabled;
         if (areDataLoadersEnabled)
         {
-            builder.Services
-                .AddSingleton<IQueueTradeMessages, QueueTradeMessages>()
-                .AddMassTransit<IPlutusDataBus>(x =>
-                    {
-                        if (loaders.Consumer.IsEnabled)
-                        {
-                            x.AddConsumer<TradeConsumer>();
-                        }
-
-                        x.UsingRabbitMq((ctx, cfg) =>
-                            {
-                                var options = loaders.RabbitMq;
-
-                                cfg.Host(
-                                    options.Host,
-                                    "/",
-                                    h =>
-                                    {
-                                        h.Username(options.Username);
-                                        h.Password(options.Password);
-                                    }
-                                );
-
-                                if (options.ConcurrencyLimit.HasValue)
-                                {
-                                    cfg.UseConcurrencyLimit(options.ConcurrencyLimit.Value);
-                                }
-
-                                if (options.RetryCount.HasValue)
-                                {
-                                    cfg.UseMessageRetry(r => r.Immediate(options.RetryCount.Value));
-                                }
-
-                                cfg.ConfigureEndpoints(ctx);
-                            }
-                        );
-                    }
-                );
+            builder.Services.AddSingleton<IQueueTradeMessages, QueueTradeMessages>();
         }
 
         if (loaders.Ffxiv.IsEnabled)
@@ -154,7 +144,6 @@ public sealed class PlutusModule : IPantheonModule
             builder.Services
                 .AddTransient<FfxivListener>()
                 .AddTransient<FfxivSubscriptionInitializer>()
-                .AddMemoryCache()
                 .AddSingleton<IGetItems, GetItems>()
                 .AddHttpClient<IGithubClient, GithubClient>((sp, client) =>
                     {
