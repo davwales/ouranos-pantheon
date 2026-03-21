@@ -6,6 +6,9 @@
 
   <ItemGroup>
     <PackageReference Include="EFCore.NamingConventions" />
+    <PackageReference Include="TickerQ" />
+    <PackageReference Include="TickerQ.EntityFrameworkCore" />
+    <PackageReference Include="TickerQ.Dashboard" />
     <PackageReference Include="WolverineFx" />
     <PackageReference Include="WolverineFx.RabbitMq" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" >

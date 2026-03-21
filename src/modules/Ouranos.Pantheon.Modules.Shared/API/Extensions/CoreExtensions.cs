@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres;
 using Ouranos.Pantheon.Modules.Shared.Infra.RabbitMq;
 using Serilog;
 using Wolverine;
@@ -9,6 +10,11 @@ using Wolverine.ErrorHandling;
 using Wolverine.RabbitMQ;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
+using Microsoft.EntityFrameworkCore;
+using TickerQ.Dashboard.DependencyInjection;
+using TickerQ.DependencyInjection;
+using TickerQ.EntityFrameworkCore.DbContextFactory;
+using TickerQ.EntityFrameworkCore.DependencyInjection;
 
 namespace Ouranos.Pantheon.Modules.Shared.API.Extensions;
 
@@ -75,6 +81,27 @@ public static class CoreExtensions
             module.Build(builder);
         }
 
+        var postgresOptions = configuration.GetSection(PostgresOptions.SectionName).Get<PostgresOptions>()
+                              ?? new PostgresOptions();
+
+        builder.Services.AddTickerQ(options =>
+            {
+                options.AddOperationalStore(efOptions =>
+                    {
+                        efOptions.UseTickerQDbContext<TickerQDbContext>(db =>
+                            db.UseNpgsql(
+                                    postgresOptions.GetConnectionString(),
+                                    o => o.MigrationsAssembly(typeof(CoreExtensions).Assembly.FullName)
+                                )
+                                .UseSnakeCaseNamingConvention()
+                        );
+                    }
+                );
+
+                options.AddDashboard(dashboardOptions => dashboardOptions.SetBasePath("/tickerq/dashboard"));
+            }
+        );
+
         builder.Services
             .AddMemoryCache()
             .AddSerilog();
@@ -88,6 +115,12 @@ public static class CoreExtensions
     )
     {
         app.UseSerilogRequestLogging();
+
+        var tickerQDbContextFactory = app.Services.GetRequiredService<IDbContextFactory<TickerQDbContext>>();
+        var tickerQDbContext = await tickerQDbContextFactory.CreateDbContextAsync();
+        await tickerQDbContext.Database.MigrateAsync();
+
+        app.UseTickerQ();
 
         foreach (var module in modules)
         {

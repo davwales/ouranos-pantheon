@@ -129,53 +129,40 @@ public sealed class PlutusModule : IPantheonModule
             .Configure<FfxivDataLoaderOptions>(dataLoadersSection.GetSection(FfxivDataLoaderOptions.SectionName))
             .Configure<OsrsDataLoaderOptions>(dataLoadersSection.GetSection(OsrsDataLoaderOptions.SectionName))
             .Configure<StocksDataLoaderOptions>(dataLoadersSection.GetSection(StocksDataLoaderOptions.SectionName))
-            .Configure<ConsumerDataLoaderOptions>(dataLoadersSection.GetSection(ConsumerDataLoaderOptions.SectionName));
+            .Configure<ConsumerDataLoaderOptions>(dataLoadersSection.GetSection(ConsumerDataLoaderOptions.SectionName))
+            .AddSingleton<IQueueTradeMessages, QueueTradeMessages>()
+            .AddTransient<FfxivListener>()
+            .AddTransient<FfxivSubscriptionInitializer>()
+            .AddSingleton<IGetItems, GetItems>()
+            .AddTransient<StocksTradeListener>()
+            .AddTransient<StocksSuccessListener>()
+            .AddTransient<StocksSubscriptionListener>()
+            .AddTransient<StocksErrorListener>();
+
+        builder.Services.AddHttpClient<IGithubClient, GithubClient>((sp, client) =>
+            {
+                var options = sp.GetRequiredService<IOptions<FfxivDataLoaderOptions>>();
+                client.BaseAddress = new Uri(options.Value.XivApi.BaseAddress);
+            }
+        );
+
+        builder.Services.AddHttpClient<IWikiClient, OsrsWikiClient>((sp, client) =>
+            {
+                var options = sp.GetRequiredService<IOptions<OsrsDataLoaderOptions>>();
+                client.BaseAddress = new Uri(options.Value.Wiki.BaseAddress);
+            }
+        );
+
 
         var loaders = dataLoadersSection.Get<DataLoadersOptions>() ?? new DataLoadersOptions();
-        var areDataLoadersEnabled = loaders.Ffxiv.IsEnabled || loaders.Osrs.IsEnabled || loaders.Stocks.IsEnabled ||
-                                    loaders.Consumer.IsEnabled;
-        if (areDataLoadersEnabled)
-        {
-            builder.Services.AddSingleton<IQueueTradeMessages, QueueTradeMessages>();
-        }
 
         if (loaders.Ffxiv.IsEnabled)
         {
-            builder.Services
-                .AddTransient<FfxivListener>()
-                .AddTransient<FfxivSubscriptionInitializer>()
-                .AddSingleton<IGetItems, GetItems>()
-                .AddHttpClient<IGithubClient, GithubClient>((sp, client) =>
-                    {
-                        var options = sp.GetRequiredService<IOptions<FfxivDataLoaderOptions>>();
-                        client.BaseAddress = new Uri(options.Value.XivApi.BaseAddress);
-                    }
-                );
-
             builder.Services.AddHostedService(BuildFfxivWorker);
-        }
-
-        if (loaders.Osrs.IsEnabled)
-        {
-            builder.Services
-                .AddHttpClient<IWikiClient, OsrsWikiClient>((sp, client) =>
-                    {
-                        var options = sp.GetRequiredService<IOptions<OsrsDataLoaderOptions>>();
-                        client.BaseAddress = new Uri(options.Value.Wiki.BaseAddress);
-                    }
-                );
-
-            builder.Services.AddHostedService<OsrsWorker>();
         }
 
         if (loaders.Stocks.IsEnabled)
         {
-            builder.Services
-                .AddTransient<StocksTradeListener>()
-                .AddTransient<StocksSuccessListener>()
-                .AddTransient<StocksSubscriptionListener>()
-                .AddTransient<StocksErrorListener>();
-
             builder.Services.AddHostedService(BuildStocksWorker);
         }
     }
