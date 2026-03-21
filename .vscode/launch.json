@@ -6,7 +6,7 @@
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build",
-      "program": "${workspaceFolder}/src/apps/gateway/Ouranos.Pantheon.Apps.Gateway/bin/Debug/net8.0/Ouranos.Pantheon.Apps.Gateway.dll",
+      "program": "${workspaceFolder}/src/apps/gateway/Ouranos.Pantheon.Apps.Gateway/bin/Debug/net10.0/Ouranos.Pantheon.Apps.Gateway.dll",
       "args": [],
       "cwd": "${workspaceFolder}/src/apps/gateway/Ouranos.Pantheon.Apps.Gateway",
       "stopAtEntry": false,
