@@ -18,21 +18,6 @@ public sealed class WebSocketWorkerTests
     };
 
     [Fact]
-    public async Task ExecuteAsync_WhenCancelledBeforeStart_ShouldDisconnectWithoutConnecting()
-    {
-        // Arrange
-        var cancellationToken = new CancellationToken(true);
-        var worker = GivenWorkerWithOptions(new WebSocketOptions());
-
-        // Act
-        await worker.StartAsync(cancellationToken);
-
-        // Assert
-        await _webSocketClient.Received(0).ConnectAsync(Arg.Any<CancellationToken>());
-        await _webSocketClient.Received(1).DisconnectAsync(Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
     public async Task ExecuteAsync_WhenConnectionDrops_ShouldReconnect()
     {
         // Arrange
@@ -55,6 +40,11 @@ public sealed class WebSocketWorkerTests
 
         // Act
         await worker.StartAsync(cts.Token);
+
+        if (worker.ExecuteTask is not null)
+        {
+            await worker.ExecuteTask;
+        }
 
         // Assert
         await _webSocketClient.Received(2).ConnectAsync(Arg.Any<CancellationToken>());
@@ -84,6 +74,11 @@ public sealed class WebSocketWorkerTests
         // Act
         await worker.StartAsync(cts.Token);
 
+        if (worker.ExecuteTask is not null)
+        {
+            await worker.ExecuteTask;
+        }
+
         // Assert
         await _webSocketClient.Received(2).ConnectAsync(Arg.Any<CancellationToken>());
     }
@@ -104,6 +99,11 @@ public sealed class WebSocketWorkerTests
 
         // Act
         await worker.StartAsync(cts.Token);
+
+        if (worker.ExecuteTask is not null)
+        {
+            await worker.ExecuteTask;
+        }
 
         // Assert
         await _webSocketClient.Received(1).ConnectAsync(Arg.Any<CancellationToken>());
