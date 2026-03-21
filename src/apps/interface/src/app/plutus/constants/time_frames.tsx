@@ -1,49 +1,27 @@
-export const minuteSeconds = 60;
-export const hourSeconds = 60 * minuteSeconds;
-export const daySeconds = 24 * hourSeconds;
-export const monthSeconds = 30 * daySeconds;
-export const yearSeconds = 365 * daySeconds;
+export type TimeFrameKey =
+  | "FifteenMinutes"
+  | "OneHour"
+  | "FourHours"
+  | "OneDay"
+  | "OneWeek"
+  | "OneMonth"
+  | "SixMonths"
+  | "OneYear"
+  | "AllTime";
 
 export interface TimeFrame {
-    name: string,
-    seconds: number
-};
+  key: TimeFrameKey;
+  name: string;
+}
 
 export const timeFrames: TimeFrame[] = [
-    {
-        name: "One Hour",
-        seconds: hourSeconds
-    },
-    {
-        name: "Four Hours",
-        seconds: 4 * hourSeconds
-    },
-    {
-        name: "One Day",
-        seconds: daySeconds
-    },
-    {
-        name: "Five Days",
-        seconds: 5 * daySeconds
-    },
-    {
-        name: "One Week",
-        seconds: 7 * daySeconds
-    },
-    {
-        name: "One Month",
-        seconds: 30 * daySeconds
-    },
-    {
-        name: "Six Months",
-        seconds: 6 * monthSeconds
-    },
-    {
-        name: "One Year",
-        seconds: yearSeconds
-    },
-    {
-        name: "Max",
-        seconds: -1
-    }
+  { key: "FifteenMinutes", name: "15 Minutes" },
+  { key: "OneHour", name: "One Hour" },
+  { key: "FourHours", name: "Four Hours" },
+  { key: "OneDay", name: "One Day" },
+  { key: "OneWeek", name: "One Week" },
+  { key: "OneMonth", name: "One Month" },
+  { key: "SixMonths", name: "Six Months" },
+  { key: "OneYear", name: "One Year" },
+  { key: "AllTime", name: "All Time" },
 ];

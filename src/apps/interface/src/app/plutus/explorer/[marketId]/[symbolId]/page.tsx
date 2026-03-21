@@ -7,7 +7,6 @@ import PercentChange from "@/app/plutus/components/percent-change";
 import PriceChart from "@/app/plutus/components/price-chart";
 import TimeFrameSelection from "@/app/plutus/components/time_frame_selection";
 
-import { minuteSeconds } from "@/app/plutus/constants/time_frames";
 import { PlutusState, usePlutusStore } from "@/app/plutus/plutus_store";
 import { useApi } from "@/hooks/use-api";
 import useInterval from "@/hooks/use_interval";
@@ -33,18 +32,15 @@ interface SymbolDetails {
 
 export default function SymbolDetail() {
   const { symbolId } = useParams<{ marketId: string; symbolId: string }>();
-  const [timeFrameSeconds] = usePlutusStore((state: PlutusState) => [
-    state.timeFrameSeconds,
+  const [timeFrameKey] = usePlutusStore((state: PlutusState) => [
+    state.timeFrameKey,
   ]);
 
   const [state, reexecuteQuery] = useApi<SymbolDetails>(
     () =>
       Promise.all([
         plutusApi.getSymbol(symbolId),
-        plutusApi.getSymbolTrades(
-          symbolId,
-          timeFrameSeconds > 0 ? timeFrameSeconds : undefined,
-        ),
+        plutusApi.getSymbolTrades(symbolId, timeFrameKey),
         plutusApi.getDailySymbolSummary(symbolId),
         plutusApi.getAllTrades({
           filter: [`symbolId:eq:${symbolId}`],
@@ -65,10 +61,10 @@ export default function SymbolDetail() {
         latestTrade: allTrades[0],
         forecast: (forecasts.items as any[])[0],
       })),
-    [symbolId, timeFrameSeconds],
+    [symbolId, timeFrameKey],
   );
 
-  useInterval(() => reexecuteQuery(), minuteSeconds * 1000);
+  useInterval(() => reexecuteQuery(), 60000);
 
   const data = state.data;
 

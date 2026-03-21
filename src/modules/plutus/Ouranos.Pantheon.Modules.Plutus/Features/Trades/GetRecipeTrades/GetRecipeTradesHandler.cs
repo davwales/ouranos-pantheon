@@ -6,8 +6,9 @@ using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetRecipeTrades.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Pagination;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
@@ -26,6 +27,17 @@ public sealed class GetRecipeTradesHandler
             .On(nameof(GetRecipeTradesResponse.AverageBuyPrice), x => x.AverageBuyPrice)
             .On(nameof(GetRecipeTradesResponse.AverageSellPrice), x => x.AverageSellPrice)
             .On(nameof(GetRecipeTradesResponse.AverageMargin), x => x.AverageMargin);
+
+    private static readonly SortBuilder<GetRecipeTradesResponse> SortBuilder =
+        new SortBuilder<GetRecipeTradesResponse>()
+            .On(nameof(GetRecipeTradesResponse.RecipeName), x => x.RecipeName)
+            .On(nameof(GetRecipeTradesResponse.LatestBuyPrice), x => x.LatestBuyPrice)
+            .On(nameof(GetRecipeTradesResponse.LatestSellPrice), x => x.LatestSellPrice)
+            .On(nameof(GetRecipeTradesResponse.LatestMargin), x => x.LatestMargin)
+            .On(nameof(GetRecipeTradesResponse.AverageBuyPrice), x => x.AverageBuyPrice)
+            .On(nameof(GetRecipeTradesResponse.AverageSellPrice), x => x.AverageSellPrice)
+            .On(nameof(GetRecipeTradesResponse.AverageMargin), x => x.AverageMargin)
+            .Default(x => x.AverageMargin);
 
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<GetRecipeTradesHandler> _logger;
@@ -58,11 +70,6 @@ public sealed class GetRecipeTradesHandler
         Guard.Against.OutOfRange(input.Skip, nameof(input.Skip), 0, limits.MaxSkip);
         Guard.Against.OutOfRange(input.Take, nameof(input.Take), limits.MinPageSize, limits.MaxPageSize);
 
-        if (input.Seconds.HasValue)
-        {
-            Guard.Against.NegativeOrZero(input.Seconds.Value);
-        }
-
         var recipes = await _dbContext.Recipes
             .AsNoTracking()
             .Where(r => r.MarketId == input.MarketId)
@@ -85,8 +92,8 @@ public sealed class GetRecipeTradesHandler
             .Distinct()
             .ToList();
 
-        DateTimeOffset? since = input.Seconds.HasValue
-            ? DateTimeOffset.UtcNow - TimeSpan.FromSeconds(input.Seconds.Value)
+        DateTimeOffset? since = input.TimeFrame.ToTimeSpan() is { } span
+            ? DateTimeOffset.UtcNow - span
             : null;
 
         var prices = await GetSymbolPrices(symbolIds, since, cancellationToken);
@@ -141,15 +148,7 @@ public sealed class GetRecipeTradesHandler
             .SortBy(
                 input.SortField,
                 input.SortDirection,
-                builder => builder
-                    .On(nameof(GetRecipeTradesResponse.RecipeName), x => x.RecipeName)
-                    .On(nameof(GetRecipeTradesResponse.LatestBuyPrice), x => x.LatestBuyPrice)
-                    .On(nameof(GetRecipeTradesResponse.LatestSellPrice), x => x.LatestSellPrice)
-                    .On(nameof(GetRecipeTradesResponse.LatestMargin), x => x.LatestMargin)
-                    .On(nameof(GetRecipeTradesResponse.AverageBuyPrice), x => x.AverageBuyPrice)
-                    .On(nameof(GetRecipeTradesResponse.AverageSellPrice), x => x.AverageSellPrice)
-                    .On(nameof(GetRecipeTradesResponse.AverageMargin), x => x.AverageMargin)
-                    .Default(x => x.AverageMargin)
+                SortBuilder
             )
             .Paginate(input.Skip, input.Take)
             .ToList();

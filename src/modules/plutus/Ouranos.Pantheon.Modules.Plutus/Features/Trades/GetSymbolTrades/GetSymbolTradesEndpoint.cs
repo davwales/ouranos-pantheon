@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetSymbolTrades.Schemas;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Wolverine;
@@ -18,12 +19,15 @@ public static class GetSymbolTradesEndpoint
     private static async Task<IResult> Handle(
         Id<Symbol> symbolId,
         IMessageBus bus,
-        double? seconds,
+        TimeFrame timeFrame = TimeFrame.OneHour,
         int numBuckets = 100,
         CancellationToken ct = default
     )
     {
-        var result = await bus.InvokeAsync<GetSymbolTradesResponse>(new GetSymbolTradesInput(symbolId, numBuckets, seconds), ct);
+        var result = await bus.InvokeAsync<GetSymbolTradesResponse>(
+            new GetSymbolTradesInput(symbolId, timeFrame, numBuckets),
+            ct
+        );
         return Results.Ok(result);
     }
 }

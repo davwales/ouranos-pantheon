@@ -20,9 +20,9 @@ import { useMemo } from "react";
 
 export default function MarketDetail() {
   const { marketId } = useParams<{ marketId: string }>();
-  const [timeFrameSeconds, tableState, setTableState] = usePlutusStore(
+  const [timeFrameKey, tableState, setTableState] = usePlutusStore(
     (state: PlutusState) => [
-      state.timeFrameSeconds,
+      state.timeFrameKey,
       state.explorerTableState,
       state.setExplorerTableState,
     ],
@@ -33,20 +33,16 @@ export default function MarketDetail() {
 
   const [state, reexecute] = useApi(
     () =>
-      plutusApi.getMarketTrades(
-        marketId,
-        timeFrameSeconds > 0 ? timeFrameSeconds : undefined,
-        {
-          skip: tableState.pagination?.skip ?? 0,
-          take: tableState.pagination?.take ?? 10,
-          sortField,
-          sortDirection,
-          filter,
-        },
-      ),
+      plutusApi.getMarketTrades(marketId, timeFrameKey, {
+        skip: tableState.pagination?.skip ?? 0,
+        take: tableState.pagination?.take ?? 10,
+        sortField,
+        sortDirection,
+        filter,
+      }),
     [
       marketId,
-      timeFrameSeconds,
+      timeFrameKey,
       tableState.pagination,
       tableState.sort,
       tableState.filter,
