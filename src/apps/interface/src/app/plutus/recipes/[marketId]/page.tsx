@@ -20,9 +20,9 @@ import { useMemo } from "react";
 
 export default function RecipesPage() {
   const { marketId } = useParams<{ marketId: string }>();
-  const [timeFrameSeconds, tableState, setTableState] = usePlutusStore(
+  const [timeFrameKey, tableState, setTableState] = usePlutusStore(
     (state: PlutusState) => [
-      state.timeFrameSeconds,
+      state.timeFrameKey,
       state.recipesTableState,
       state.setRecipesTableState,
     ],
@@ -33,20 +33,16 @@ export default function RecipesPage() {
 
   const [state, reexecute] = useApi(
     () =>
-      plutusApi.getRecipeTrades(
-        marketId,
-        timeFrameSeconds > 0 ? timeFrameSeconds : undefined,
-        {
-          skip: tableState.pagination?.skip ?? 0,
-          take: tableState.pagination?.take ?? 10,
-          sortField,
-          sortDirection,
-          filter,
-        },
-      ),
+      plutusApi.getRecipeTrades(marketId, timeFrameKey, {
+        skip: tableState.pagination?.skip ?? 0,
+        take: tableState.pagination?.take ?? 10,
+        sortField,
+        sortDirection,
+        filter,
+      }),
     [
       marketId,
-      timeFrameSeconds,
+      timeFrameKey,
       tableState.pagination,
       tableState.sort,
       tableState.filter,

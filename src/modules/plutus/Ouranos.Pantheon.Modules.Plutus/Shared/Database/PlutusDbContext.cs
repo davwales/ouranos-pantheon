@@ -23,6 +23,8 @@ public class PlutusDbContext(DbContextOptions<PlutusDbContext> options) : Ourano
 
     public DbSet<Trade> Trades { get; set; }
 
+    public DbSet<MarketTradeSnapshot> MarketTradeSnapshots => Set<MarketTradeSnapshot>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -33,5 +35,6 @@ public class PlutusDbContext(DbContextOptions<PlutusDbContext> options) : Ourano
         modelBuilder.Entity<Recipe>();
         modelBuilder.Entity<Symbol>();
         modelBuilder.Entity<Trade>();
+        modelBuilder.Entity<MarketTradeSnapshot>();
     }
 }

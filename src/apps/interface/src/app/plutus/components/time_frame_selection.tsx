@@ -1,4 +1,4 @@
-import { timeFrames } from "@/app/plutus/constants/time_frames";
+import { TimeFrameKey, timeFrames } from "@/app/plutus/constants/time_frames";
 import { PlutusState, usePlutusStore } from "@/app/plutus/plutus_store";
 import {
   Select,
@@ -14,31 +14,23 @@ export default function TimeFrameSelection({
 }: React.ComponentProps<"div"> & {
   triggerClassName?: string;
 }) {
-  const [timeFrameSeconds, setTimeFrameSeconds] = usePlutusStore(
-    (state: PlutusState) => [state.timeFrameSeconds, state.setTimeFrameSeconds]
+  const [timeFrameKey, setTimeFrameKey] = usePlutusStore(
+    (state: PlutusState) => [state.timeFrameKey, state.setTimeFrameKey],
   );
 
   const handleValueChanged = (value: string) => {
-    const parsedSeconds = parseInt(value, 10);
-    if (isNaN(parsedSeconds)) {
-      return;
-    }
-
-    setTimeFrameSeconds(parsedSeconds);
+    setTimeFrameKey(value as TimeFrameKey);
   };
 
   return (
     <div {...props}>
-      <Select
-        onValueChange={handleValueChanged}
-        defaultValue={String(timeFrameSeconds)}
-      >
+      <Select onValueChange={handleValueChanged} defaultValue={timeFrameKey}>
         <SelectTrigger className={`w-50 ${triggerClassName}`}>
-          <SelectValue placeholder="Seconds" />
+          <SelectValue placeholder="Time Frame" />
         </SelectTrigger>
         <SelectContent>
           {timeFrames.map((t) => (
-            <SelectItem key={t.name} value={String(t.seconds)}>
+            <SelectItem key={t.key} value={t.key}>
               {t.name}
             </SelectItem>
           ))}

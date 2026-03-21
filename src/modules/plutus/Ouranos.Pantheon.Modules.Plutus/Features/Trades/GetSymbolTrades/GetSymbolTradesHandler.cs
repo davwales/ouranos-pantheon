@@ -5,6 +5,7 @@ using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Functions;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetSymbolTrades.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetSymbolTrades;
@@ -34,8 +35,8 @@ public sealed class GetSymbolTradesHandler : IPantheonHandler<GetSymbolTradesInp
         _logger.LogTrace("Attempting to handle get symbol trades query '{@query}'.", query);
         cancellationToken.ThrowIfCancellationRequested();
 
-        DateTimeOffset? since = query.Seconds.HasValue
-            ? DateTimeOffset.UtcNow - TimeSpan.FromSeconds(query.Seconds.Value)
+        DateTimeOffset? since = query.TimeFrame.ToTimeSpan() is { } span
+            ? DateTimeOffset.UtcNow - span
             : null;
 
         var baseQuery = _dbContext.Trades

@@ -1,10 +1,10 @@
 import { DataTableState } from "@/app/components/responsive-data-table";
-import { timeFrames } from "@/app/plutus/constants/time_frames";
+import { TimeFrameKey } from "@/app/plutus/constants/time_frames";
 import { create } from "zustand";
 
 export interface PlutusState {
-  timeFrameSeconds: number;
-  setTimeFrameSeconds: (seconds: number) => void;
+  timeFrameKey: TimeFrameKey;
+  setTimeFrameKey: (key: TimeFrameKey) => void;
   explorerTableState: DataTableState;
   setExplorerTableState: (state: DataTableState) => void;
   recipesTableState: DataTableState;
@@ -16,8 +16,8 @@ export interface PlutusState {
 }
 
 export const usePlutusStore = create<PlutusState>((set) => ({
-  timeFrameSeconds: timeFrames[0].seconds,
-  setTimeFrameSeconds: (seconds) => set({ timeFrameSeconds: seconds }),
+  timeFrameKey: "OneHour",
+  setTimeFrameKey: (key) => set({ timeFrameKey: key }),
   explorerTableState: {
     pagination: { pageSize: 10, skip: 0, take: 10 },
     filter: {},

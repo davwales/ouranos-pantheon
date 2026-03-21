@@ -1,6 +1,5 @@
+import { TimeFrameKey } from "@/app/plutus/constants/time_frames";
 import { api, PagedResponse } from "@/lib/api-client";
-
-// ---- Domain types ----
 
 export interface Market {
   id: string;
@@ -141,8 +140,6 @@ export interface IdResponse {
   id: string;
 }
 
-// ---- Pagination helpers ----
-
 export interface PageParams {
   skip?: number;
   take?: number;
@@ -151,8 +148,6 @@ export interface PageParams {
   filter?: string[];
   [key: string]: string | number | boolean | string[] | undefined;
 }
-
-// ---- Markets ----
 
 export const plutusApi = {
   getAllMarkets: (params?: Pick<PageParams, "filter">) =>
@@ -175,30 +170,38 @@ export const plutusApi = {
   deleteMarket: (marketId: string) =>
     api.del<IdResponse>(`/api/plutus/markets/${marketId}`),
 
-  // ---- Trades ----
-
-  getMarketTrades: (marketId: string, seconds?: number, page?: PageParams) =>
+  getMarketTrades: (
+    marketId: string,
+    timeFrame: TimeFrameKey,
+    page?: PageParams,
+  ) =>
     api.get<PagedResponse<GetMarketTradesRow>>(
       `/api/plutus/markets/${marketId}/trades`,
-      { seconds, ...page },
+      { timeFrame, ...page },
     ),
 
-  getRecipeTrades: (marketId: string, seconds?: number, page?: PageParams) =>
+  getRecipeTrades: (
+    marketId: string,
+    timeFrame: TimeFrameKey,
+    page?: PageParams,
+  ) =>
     api.get<PagedResponse<GetRecipeTradesRow>>(
       `/api/plutus/markets/${marketId}/recipe-trades`,
-      { seconds, ...page },
+      { timeFrame, ...page },
     ),
 
-  getSymbolTrades: (symbolId: string, seconds?: number, numBuckets?: number) =>
+  getSymbolTrades: (
+    symbolId: string,
+    timeFrame: TimeFrameKey,
+    numBuckets?: number,
+  ) =>
     api.get<GetSymbolTradesResponse>(`/api/plutus/symbols/${symbolId}/trades`, {
-      seconds,
+      timeFrame,
       numBuckets,
     }),
 
   getAllTrades: (params?: PageParams) =>
     api.get<Trade[]>("/api/plutus/trades", params),
-
-  // ---- Symbols ----
 
   getAllSymbols: (params?: PageParams) =>
     api.get<PagedResponse<Symbol>>("/api/plutus/symbols", params),
@@ -211,8 +214,6 @@ export const plutusApi = {
       `/api/plutus/symbols/${symbolId}/summary`,
     ),
 
-  // ---- Forecasts ----
-
   getAllForecasts: (params?: PageParams) =>
     api.get<PagedResponse<unknown>>("/api/plutus/forecasts", params),
 
@@ -221,8 +222,6 @@ export const plutusApi = {
       `/api/plutus/markets/${marketId}/forecasts`,
       params,
     ),
-
-  // ---- Recipes ----
 
   getAllRecipes: (params?: PageParams) =>
     api.get<PagedResponse<Recipe>>("/api/plutus/recipes", params),
