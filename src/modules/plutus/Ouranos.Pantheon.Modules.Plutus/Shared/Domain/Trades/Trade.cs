@@ -18,25 +18,30 @@ public class Trade : BaseEntity<Id<Trade>>
 
     public DateTimeOffset Timestamp { get; init; }
 
-    public virtual required Symbol Symbol { get; init; }
+    private Symbol? _symbol;
+    public Symbol Symbol => _symbol ?? throw new NavigationPropertyNotLoadedException<Trade>();
 
     public static Trade Create(
         Id<Trade> id,
-        Symbol symbol,
+        Id<Symbol> symbolId,
         decimal price,
         decimal volume,
-        DateTimeOffset timestamp
+        DateTimeOffset timestamp,
+        Symbol? symbol = null
     )
     {
-        Guard.Against.Null(symbol);
+        if (symbol is not null)
+        {
+            Guard.Against.InvalidInput(symbol, nameof(symbol), s => s.Id == symbolId);
+        }
 
         return new Trade(id)
         {
             Price = price,
             Volume = volume,
-            SymbolId = symbol.Id,
+            SymbolId = symbolId,
             Timestamp = timestamp,
-            Symbol = symbol
+            _symbol = symbol
         };
     }
 }

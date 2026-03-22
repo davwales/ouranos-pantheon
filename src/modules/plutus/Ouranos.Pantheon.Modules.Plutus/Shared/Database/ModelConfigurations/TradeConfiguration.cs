@@ -23,5 +23,7 @@ public sealed class TradeConfiguration : IEntityTypeConfiguration<Trade>
 
         builder.Property(t => t.Id).HasIdConversion();
         builder.Property(t => t.SymbolId).HasIdConversion();
+
+        builder.HasOne(t => t.Symbol).WithMany().HasForeignKey(t => t.SymbolId);
     }
 }

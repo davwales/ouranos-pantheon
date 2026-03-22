@@ -1,4 +1,4 @@
-﻿using Ardalis.GuardClauses;
+using Ardalis.GuardClauses;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 
@@ -17,34 +17,44 @@ public class Recipe : BaseEntity<Id<Recipe>>
 
     public decimal Cost { get; init; }
 
-    public virtual required ICollection<RecipeComponent> Inputs { get; init; }
+    private ICollection<RecipeComponent>? _inputs;
 
-    public virtual required ICollection<RecipeComponent> Outputs { get; init; }
+    public ICollection<RecipeComponent> Inputs => _inputs ?? throw new NavigationPropertyNotLoadedException<Recipe>();
 
-    public virtual required Market Market { get; init; }
+    private ICollection<RecipeComponent>? _outputs;
+
+    public ICollection<RecipeComponent> Outputs => _outputs ?? throw new NavigationPropertyNotLoadedException<Recipe>();
+
+    private Market? _market;
+    public Market Market => _market ?? throw new NavigationPropertyNotLoadedException<Recipe>();
 
     public static Recipe Create(
         Id<Recipe> id,
-        Market market,
+        Id<Market> marketId,
         string name,
         decimal cost,
         ICollection<RecipeComponent> inputs,
-        ICollection<RecipeComponent> outputs
+        ICollection<RecipeComponent> outputs,
+        Market? market = null
     )
     {
-        Guard.Against.Null(market);
         Guard.Against.NullOrWhiteSpace(name);
         Guard.Against.Null(inputs);
         Guard.Against.Null(outputs);
 
+        if (market is not null)
+        {
+            Guard.Against.InvalidInput(market, nameof(market), m => m.Id == marketId);
+        }
+
         return new Recipe(id)
         {
-            MarketId = market.Id,
+            MarketId = marketId,
             Name = name,
             Cost = cost,
-            Inputs = inputs,
-            Outputs = outputs,
-            Market = market
+            _inputs = inputs,
+            _outputs = outputs,
+            _market = market
         };
     }
 }

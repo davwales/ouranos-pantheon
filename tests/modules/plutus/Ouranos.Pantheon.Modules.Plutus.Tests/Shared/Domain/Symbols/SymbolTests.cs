@@ -20,7 +20,7 @@ public sealed class SymbolTests
         var additionalFields = new AdditionalFields();
 
         // Act
-        var symbol = Symbol.Create(id, code, subcode, name, market, additionalFields);
+        var symbol = Symbol.Create(id, code, subcode, name, market.Id, additionalFields);
 
         // Assert
         symbol.Id.ShouldBe(id);
@@ -44,7 +44,7 @@ public sealed class SymbolTests
         var additionalFields = new AdditionalFields();
 
         // Act
-        var create = () => Symbol.Create(id, code!, null, name, market, additionalFields);
+        var create = () => Symbol.Create(id, code!, null, name, market.Id, additionalFields);
 
         // Assert
         create.ShouldThrow<ArgumentException>();
@@ -63,7 +63,7 @@ public sealed class SymbolTests
         var additionalFields = new AdditionalFields();
 
         // Act
-        var create = () => Symbol.Create(id, code, null, name!, market, additionalFields);
+        var create = () => Symbol.Create(id, code, null, name!, market.Id, additionalFields);
 
         // Assert
         create.ShouldThrow<ArgumentException>();
@@ -79,7 +79,7 @@ public sealed class SymbolTests
         var market = _fixture.Create<Market>();
 
         // Act
-        var create = () => Symbol.Create(id, code, null, name, market, null!);
+        var create = () => Symbol.Create(id, code, null, name, market.Id, null!);
 
         // Assert
         create.ShouldThrow<ArgumentException>();
@@ -94,7 +94,7 @@ public sealed class SymbolTests
             _fixture.Create<string>(),
             null,
             "Original Name",
-            _fixture.Create<Market>(),
+            _fixture.Create<Market>().Id,
             new AdditionalFields()
         );
         const string newName = "Updated Name";
@@ -120,7 +120,7 @@ public sealed class SymbolTests
             _fixture.Create<string>(),
             null,
             "Original Name",
-            _fixture.Create<Market>(),
+            _fixture.Create<Market>().Id,
             new AdditionalFields()
         );
 
@@ -140,7 +140,7 @@ public sealed class SymbolTests
             _fixture.Create<string>(),
             null,
             "Original Name",
-            _fixture.Create<Market>(),
+            _fixture.Create<Market>().Id,
             new AdditionalFields()
         );
 

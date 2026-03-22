@@ -35,14 +35,13 @@ public sealed class UpdateRecipeHandlerTests
 
         var existingRecipe = Recipe.Create(
             _fixture.Create<Id<Recipe>>(),
-            market,
+            market.Id,
             _fixture.Create<string>(),
             _fixture.Create<decimal>(),
             _fixture.CreateMany<RecipeComponent>().ToList(),
             _fixture.CreateMany<RecipeComponent>().ToList()
         );
 
-        await _dbContext.SeedData(market);
         await _dbContext.SeedData(existingRecipe);
 
         var command = new UpdateRecipeInput(

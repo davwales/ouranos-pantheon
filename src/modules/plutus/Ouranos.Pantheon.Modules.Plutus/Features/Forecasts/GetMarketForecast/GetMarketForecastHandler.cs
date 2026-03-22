@@ -76,55 +76,55 @@ public sealed class GetMarketForecastHandler
 
         var flatTax = market.Taxes.Flat ?? new FlatTax(0, 0, 0);
 
-        var forecastsQuery = _dbContext.Forecasts
+        var forecasts = await _dbContext.Forecasts
             .AsNoTracking()
             .Where(f => f.MarketId == input.MarketId && f.Predictions.Count >= 7)
             .Select(f => new
-            {
-                f.Id,
-                f.MarketId,
-                f.SymbolId,
-                SymbolName = f.Symbol.Name,
-                SymbolSubcode = f.Symbol.Subcode,
-                f.Latest,
-                Predictions = f.Predictions.Select(p => new
                 {
-                    p.AveragePrice,
-                    p.MaxPrice,
-                    p.MinPrice,
-                    p.Volume,
-                    Margin = p.AveragePrice - (
-                            p.AveragePrice * flatTax.Rate > 0
-                                ? 0
-                                : p.AveragePrice * flatTax.Rate
-                        ) - f.Latest.AveragePrice
-                }
+                    f.Id,
+                    f.MarketId,
+                    f.SymbolId,
+                    SymbolName = f.Symbol.Name,
+                    SymbolSubcode = f.Symbol.Subcode,
+                    f.Latest,
+                    Predictions = f.Predictions.Select(p => new
+                        {
+                            p.AveragePrice,
+                            p.MaxPrice,
+                            p.MinPrice,
+                            p.Volume,
+                            Margin = p.AveragePrice - (
+                                p.AveragePrice * flatTax.Rate > 0
+                                    ? 0
+                                    : p.AveragePrice * flatTax.Rate
+                            ) - f.Latest.AveragePrice
+                        }
                     )
-            }
+                }
             )
             .Select(f => new
-            {
-                f.Id,
-                f.MarketId,
-                f.SymbolId,
-                f.SymbolName,
-                f.SymbolSubcode,
-                f.Latest,
-                Predictions = f.Predictions.Select(p => new GetMarketForecastPredictionResponse(
-                        p.AveragePrice,
-                        p.MinPrice,
-                        p.MaxPrice,
-                        p.Volume,
-                        p.Margin,
-                        p.Margin * p.Volume,
-                        p.AveragePrice - f.Latest.AveragePrice,
-                        p.MinPrice - f.Latest.MinPrice,
-                        p.MaxPrice - f.Latest.MaxPrice,
-                        p.Volume - f.Latest.Volume,
-                        p.AveragePrice * p.Volume - f.Latest.AveragePrice * f.Latest.Volume
+                {
+                    f.Id,
+                    f.MarketId,
+                    f.SymbolId,
+                    f.SymbolName,
+                    f.SymbolSubcode,
+                    f.Latest,
+                    Predictions = f.Predictions.Select(p => new GetMarketForecastPredictionResponse(
+                            p.AveragePrice,
+                            p.MinPrice,
+                            p.MaxPrice,
+                            p.Volume,
+                            p.Margin,
+                            p.Margin * p.Volume,
+                            p.AveragePrice - f.Latest.AveragePrice,
+                            p.MinPrice - f.Latest.MinPrice,
+                            p.MaxPrice - f.Latest.MaxPrice,
+                            p.Volume - f.Latest.Volume,
+                            p.AveragePrice * p.Volume - f.Latest.AveragePrice * f.Latest.Volume
+                        )
                     )
-                    )
-            }
+                }
             )
             .Select(x => new GetMarketForecastResponse(
                     x.Id,
@@ -141,19 +141,19 @@ public sealed class GetMarketForecastHandler
                     x.Predictions.ElementAt(5),
                     x.Predictions.ElementAt(6)
                 )
-            );
+            )
+            .ToListAsync(cancellationToken);
 
-        var results = await forecastsQuery.ToListAsync(cancellationToken);
-
-        var filtered = results
+        var filtered = forecasts
             .AsQueryable()
             .FilterBy(input.Filter, FilterBuilder);
+
         var totalCount = filtered.Count();
 
-        var page = await filtered
+        var page = filtered
             .SortBy(input.SortField, input.SortDirection, SortBuilder)
             .Paginate(input.Skip, input.Take)
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         _logger.LogDebug("Successfully handled get market forecast query.");
         return new PagedResponse<GetMarketForecastResponse>(page, totalCount, input.Skip, input.Take);

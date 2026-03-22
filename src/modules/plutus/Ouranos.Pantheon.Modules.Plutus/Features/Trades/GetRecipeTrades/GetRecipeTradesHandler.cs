@@ -72,6 +72,8 @@ public sealed class GetRecipeTradesHandler
 
         var recipes = await _dbContext.Recipes
             .AsNoTracking()
+            .Include(r => r.Inputs)
+            .Include(r => r.Outputs)
             .Where(r => r.MarketId == input.MarketId)
             .ToListAsync(cancellationToken);
 

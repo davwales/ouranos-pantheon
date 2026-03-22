@@ -16,5 +16,6 @@ public sealed class RecipeConfiguration : IEntityTypeConfiguration<Recipe>
 
         builder.OwnsMany(r => r.Inputs, c => c.Property(i => i.SymbolId).HasIdConversion());
         builder.OwnsMany(r => r.Outputs, c => c.Property(i => i.SymbolId).HasIdConversion());
+        builder.HasOne(r => r.Market).WithMany().HasForeignKey(r => r.MarketId);
     }
 }

@@ -9,21 +9,34 @@ public sealed class ForecastTests
 {
     private readonly IFixture _fixture = new Fixture();
 
+    private Symbol CreateSymbol()
+    {
+        var market = _fixture.Create<Market>();
+        return Symbol.Create(
+            _fixture.Create<Id<Symbol>>(),
+            _fixture.Create<string>(),
+            null,
+            _fixture.Create<string>(),
+            market.Id,
+            new AdditionalFields()
+        );
+    }
+
     [Fact]
     public void Constructor_WhenHappyPath_ShouldSetExpectedProperties()
     {
         // Arrange
         var id = _fixture.Create<Id<Forecast>>();
         var market = _fixture.Create<Market>();
-        var symbol = _fixture.Create<Symbol>();
+        var symbol = CreateSymbol();
         var latest = _fixture.Create<ForecastPoint>();
         var predictions = _fixture.CreateMany<ForecastPoint>().ToList();
 
         // Act
         var forecast = Forecast.Create(
             id,
-            market,
-            symbol,
+            market.Id,
+            symbol.Id,
             latest,
             predictions
         );
@@ -42,14 +55,14 @@ public sealed class ForecastTests
         // Arrange
         var id = _fixture.Create<Id<Forecast>>();
         var market = _fixture.Create<Market>();
-        var symbol = _fixture.Create<Symbol>();
+        var symbol = CreateSymbol();
         var predictions = _fixture.CreateMany<ForecastPoint>().ToList();
 
         // Act
         var action = () => Forecast.Create(
             id,
-            market,
-            symbol,
+            market.Id,
+            symbol.Id,
             null!,
             predictions
         );
@@ -64,14 +77,14 @@ public sealed class ForecastTests
         // Arrange
         var id = _fixture.Create<Id<Forecast>>();
         var market = _fixture.Create<Market>();
-        var symbol = _fixture.Create<Symbol>();
+        var symbol = CreateSymbol();
         var latest = _fixture.Create<ForecastPoint>();
 
         // Act
         var action = () => Forecast.Create(
             id,
-            market,
-            symbol,
+            market.Id,
+            symbol.Id,
             latest,
             null!
         );
@@ -86,14 +99,14 @@ public sealed class ForecastTests
         // Arrange
         var id = _fixture.Create<Id<Forecast>>();
         var market = _fixture.Create<Market>();
-        var symbol = _fixture.Create<Symbol>();
+        var symbol = CreateSymbol();
         var latest = _fixture.Create<ForecastPoint>();
 
         // Act
         var action = () => Forecast.Create(
             id,
-            market,
-            symbol,
+            market.Id,
+            symbol.Id,
             latest,
             []
         );

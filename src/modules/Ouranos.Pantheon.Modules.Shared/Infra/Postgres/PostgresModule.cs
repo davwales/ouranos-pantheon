@@ -22,7 +22,6 @@ public static class PostgresModule
                 {
                     var postgresOptions = sp.GetRequiredService<IOptions<PostgresOptions>>().Value;
                     options.EnableSensitiveDataLogging(postgresOptions.EnableSensitiveDataLogging);
-                    options.UseLazyLoadingProxies();
 
                     options
                         .UseNpgsql(

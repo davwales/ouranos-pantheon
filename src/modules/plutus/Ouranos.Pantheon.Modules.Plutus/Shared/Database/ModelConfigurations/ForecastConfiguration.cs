@@ -27,5 +27,6 @@ public sealed class ForecastConfiguration : IEntityTypeConfiguration<Forecast>
             }
         );
         builder.OwnsMany(p => p.Predictions);
+        builder.HasOne(f => f.Symbol).WithMany().HasForeignKey(f => f.SymbolId);
     }
 }

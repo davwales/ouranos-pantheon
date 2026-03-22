@@ -1,5 +1,4 @@
 using Ardalis.GuardClauses;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Application;
@@ -35,14 +34,9 @@ public sealed class CreateRecipeHandler : IPantheonHandler<CreateRecipeInput, Id
         _logger.LogTrace("Attempting to handle create recipe command '{@command}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var market = await _dbContext.Markets
-            .FirstOrDefaultAsync(m => m.Id == command.MarketId, cancellationToken);
-
-        Guard.Against.NotFound(command.MarketId, market);
-
         var recipe = Recipe.Create(
             DatabaseExtensions.CreateId<Recipe>(),
-            market,
+            command.MarketId,
             command.Name,
             command.Cost,
             command.Inputs,
@@ -52,9 +46,7 @@ public sealed class CreateRecipeHandler : IPantheonHandler<CreateRecipeInput, Id
         await _dbContext.Recipes.AddAsync(recipe, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        var response = new IdResponse<Recipe>(recipe.Id);
-
         _logger.LogDebug("Successfully handled create recipe command.");
-        return response;
+        return new IdResponse<Recipe>(recipe.Id);
     }
 }

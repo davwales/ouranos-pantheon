@@ -17,5 +17,6 @@ public sealed class MarketTradeSnapshotConfiguration : IEntityTypeConfiguration<
         builder.HasIndex(s => new { s.SymbolId, s.TimeFrame }).IsUnique();
         builder.HasIndex(s => new { s.MarketId, s.TimeFrame });
         builder.HasOne(s => s.Symbol).WithMany().HasForeignKey(s => s.SymbolId);
+        builder.HasOne(s => s.Market).WithMany().HasForeignKey(s => s.MarketId);
     }
 }
