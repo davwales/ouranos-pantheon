@@ -26,6 +26,7 @@ using Ouranos.Pantheon.Modules.Shared;
 using Wolverine;
 using Wolverine.RabbitMQ;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Consumer;
+using Ouranos.Pantheon.Modules.Plutus.Features.Trades.MarketTradeSnapshot;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetAllMarkets;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetMarket;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.CreateMarket;
@@ -125,6 +126,9 @@ public sealed class PlutusModule : IPantheonModule
 
         builder.Services
             .Configure<PlutusOptions>(plutusOptionsSection)
+            .Configure<MarketTradeSnapshotOptions>(
+                plutusOptionsSection.GetSection(MarketTradeSnapshotOptions.SectionName)
+            )
             .Configure<DataLoadersOptions>(dataLoadersSection)
             .Configure<FfxivDataLoaderOptions>(dataLoadersSection.GetSection(FfxivDataLoaderOptions.SectionName))
             .Configure<OsrsDataLoaderOptions>(dataLoadersSection.GetSection(OsrsDataLoaderOptions.SectionName))
