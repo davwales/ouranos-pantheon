@@ -1,6 +1,8 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Ouranos.Pantheon.Modules.Plutus.Features.Trades.MarketTradeSnapshot.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using TickerQ.Utilities.Base;
@@ -12,17 +14,21 @@ public sealed class MarketTradeSnapshotJob
 {
     private readonly ILogger<MarketTradeSnapshotJob> _logger;
     private readonly PlutusDbContext _dbContext;
+    private readonly MarketTradeSnapshotOptions _options;
 
     public MarketTradeSnapshotJob(
         ILogger<MarketTradeSnapshotJob> logger,
-        PlutusDbContext dbContext
+        PlutusDbContext dbContext,
+        IOptions<MarketTradeSnapshotOptions> options
     )
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(dbContext);
+        Guard.Against.Null(options);
 
         _logger = logger;
         _dbContext = dbContext;
+        _options = options.Value;
     }
 
     [TickerFunction("MarketTradeSnapshot_FifteenMinutes", "*/30 * * * * *")]
@@ -66,45 +72,67 @@ public sealed class MarketTradeSnapshotJob
         DateTimeOffset? since = frame.ToTimeSpan() is { } span ? DateTimeOffset.UtcNow - span : null;
 
         var taxRates = await _dbContext.Markets.AsNoTracking()
-            .ToDictionaryAsync(
-                m => m.Id,
-                m => m.Taxes.Flat != null ? m.Taxes.Flat.Rate : 0m,
-                ct
-            );
+            .ToDictionaryAsync(m => m.Id, m => m.Taxes.Flat != null ? m.Taxes.Flat.Rate : 0m, ct);
 
-        var aggregated = await _dbContext.Trades.AsNoTracking()
-            .Where(t => since == null || t.Timestamp >= since)
-            .Include(t => t.Symbol)
-            .GroupBy(t => t.Symbol)
-            .Select(g => new
-            {
-                Symbol = g.Key,
-                TotalSpent = g.Sum(t => t.Price * t.Volume),
-                MinPrice = g.Min(t => t.Price),
-                MaxPrice = g.Max(t => t.Price),
-                TotalVolume = g.Sum(t => t.Volume),
-                NumTx = g.Count(),
-                Limit = g.Key.AdditionalFields.Limit ?? g.Sum(t => t.Volume)
-            })
-            .ToListAsync(ct);
+        var aggregated = await AggregateBySymbolBatchAsync(since, ct);
 
         var snapshots = aggregated.Select(row => Snapshot.Create(
-            row.Symbol.MarketId,
-            row.Symbol.Id,
-            frame,
-            row.TotalSpent,
-            row.MinPrice,
-            row.MaxPrice,
-            row.TotalVolume,
-            row.NumTx,
-            row.Limit,
-            row.MaxPrice * taxRates.GetValueOrDefault(row.Symbol.MarketId, 0m)
-        )).ToList();
+                row.Symbol.MarketId,
+                row.Symbol.Id,
+                frame,
+                row.TotalSpent,
+                row.MinPrice,
+                row.MaxPrice,
+                row.TotalVolume,
+                row.NumTx,
+                row.Limit,
+                row.MaxPrice * taxRates.GetValueOrDefault(row.Symbol.MarketId, 0m)
+            )
+        ).ToList();
 
         await _dbContext.MarketTradeSnapshots.Where(s => s.TimeFrame == frame).ExecuteDeleteAsync(ct);
         _dbContext.MarketTradeSnapshots.AddRange(snapshots);
         await _dbContext.SaveChangesAsync(ct);
 
         _logger.LogInformation("Refreshed {Count} snapshots for {Frame}.", snapshots.Count, frame);
+    }
+
+    private async Task<List<SymbolAggregate>> AggregateBySymbolBatchAsync(
+        DateTimeOffset? since,
+        CancellationToken ct
+    )
+    {
+        var symbolIds = await _dbContext.Trades.AsNoTracking()
+            .Where(t => since == null || t.Timestamp >= since)
+            .Select(t => t.SymbolId)
+            .Distinct()
+            .ToListAsync(ct);
+
+        var results = new List<SymbolAggregate>(symbolIds.Count);
+
+        foreach (var batch in symbolIds.Chunk(_options.BatchSize))
+        {
+            var batchSet = batch.ToHashSet();
+
+            var batchAggs = await _dbContext.Trades.AsNoTracking()
+                .Where(t => batchSet.Contains(t.SymbolId) && (since == null || t.Timestamp >= since))
+                .Include(t => t.Symbol)
+                .GroupBy(t => t.Symbol)
+                .Select(g => new SymbolAggregate(
+                        g.Key,
+                        g.Sum(t => t.Price * t.Volume),
+                        g.Min(t => t.Price),
+                        g.Max(t => t.Price),
+                        g.Sum(t => t.Volume),
+                        g.Count(),
+                        g.Key.AdditionalFields.Limit ?? g.Sum(t => t.Volume)
+                    )
+                )
+                .ToListAsync(ct);
+
+            results.AddRange(batchAggs);
+        }
+
+        return results;
     }
 }
