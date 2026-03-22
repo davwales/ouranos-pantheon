@@ -5,6 +5,7 @@ import { PrettyNumber } from "@/app/components/pretty-number/pretty-number";
 import { Typography } from "@/app/components/typography";
 import PercentChange from "@/app/plutus/components/percent-change";
 import PriceChart from "@/app/plutus/components/price-chart";
+import { SignalsSection } from "@/app/plutus/components/signals-section";
 import TimeFrameSelection from "@/app/plutus/components/time_frame_selection";
 
 import { PlutusState, usePlutusStore } from "@/app/plutus/plutus_store";
@@ -161,6 +162,7 @@ export default function SymbolDetail() {
 
       <Stats className="mt-2 gap-x-40 grid grid-cols-1 md:grid-cols-2" />
       <PriceChart data={formattedTrades} className="mt-8 max-h-96 w-full" />
+      <SignalsSection symbolId={symbolId} />
     </div>
   );
 }

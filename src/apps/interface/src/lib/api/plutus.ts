@@ -136,6 +136,30 @@ export interface RecipeComponent {
   quantity: number;
 }
 
+export interface SignalResponse {
+  type: string;
+  label: string;
+  description: string;
+  intents: string[];
+  value: number;
+  direction: string;
+  strength: string;
+}
+
+export interface SignalSummary {
+  aggregatedScore: number;
+  bullishCount: number;
+  bearishCount: number;
+  neutralCount: number;
+  isFlipFavourable: boolean;
+  isMerchFavourable: boolean;
+}
+
+export interface GetSymbolSignalsResponse {
+  signals: SignalResponse[];
+  summary: SignalSummary;
+}
+
 export interface IdResponse {
   id: string;
 }
@@ -212,6 +236,12 @@ export const plutusApi = {
   getDailySymbolSummary: (symbolId: string) =>
     api.get<GetDailySymbolSummaryResponse>(
       `/api/plutus/symbols/${symbolId}/summary`,
+    ),
+
+  getSymbolSignals: (symbolId: string, intent?: string) =>
+    api.get<GetSymbolSignalsResponse>(
+      `/api/plutus/symbols/${symbolId}/signals`,
+      intent ? { intent } : undefined,
     ),
 
   getAllForecasts: (params?: PageParams) =>
