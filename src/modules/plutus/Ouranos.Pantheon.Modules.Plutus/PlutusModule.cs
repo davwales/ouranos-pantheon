@@ -27,6 +27,10 @@ using Wolverine;
 using Wolverine.RabbitMQ;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Consumer;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.MarketTradeSnapshot;
+using Ouranos.Pantheon.Modules.Plutus.Features.Signals.Shared;
+using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSymbolSignals;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals.Computers;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetAllMarkets;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetMarket;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.CreateMarket;
@@ -61,6 +65,7 @@ public sealed class PlutusModule : IPantheonModule
             );
 
         ConfigureDataLoaders(builder);
+        ConfigureSignalComputers(builder);
         return builder;
     }
 
@@ -91,6 +96,7 @@ public sealed class PlutusModule : IPantheonModule
         CreateRecipeEndpoint.Map(app);
         UpdateRecipeEndpoint.Map(app);
         DeleteRecipeEndpoint.Map(app);
+        GetSymbolSignalsEndpoint.Map(app);
     }
 
     public void ConfigureWolverine(WolverineOptions opts, IConfiguration configuration)
@@ -117,6 +123,21 @@ public sealed class PlutusModule : IPantheonModule
             opts.ListenToRabbitQueue(TradeMessage.Queue)
                 .DeadLetterQueueing(new DeadLetterQueue(TradeMessage.DeadLetterQueue));
         }
+    }
+
+    private static void ConfigureSignalComputers(IHostApplicationBuilder builder)
+    {
+        var plutusOptionsSection = builder.Configuration.GetSection(PlutusOptions.SectionName);
+
+        builder.Services
+            .Configure<SignalOptions>(plutusOptionsSection.GetSection(SignalOptions.SectionName))
+            .AddSingleton<ISignalComputer, TaxAdjustedRoiSignalComputer>()
+            .AddSingleton<ISignalComputer, VolumeAnomalySignalComputer>()
+            .AddSingleton<ISignalComputer, TrendMomentumSignalComputer>()
+            .AddSingleton<ISignalComputer, BollingerBandsSignalComputer>()
+            .AddSingleton<ISignalComputer, RsiSignalComputer>()
+            .AddSingleton<ISignalComputer, MovingAverageCrossoverSignalComputer>()
+            .AddSingleton<ISignalComputer, PriceVelocitySignalComputer>();
     }
 
     private static void ConfigureDataLoaders(IHostApplicationBuilder builder)

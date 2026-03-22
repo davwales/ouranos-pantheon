@@ -4,6 +4,7 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.DataLoaders;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Recipes;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 
@@ -25,6 +26,8 @@ public class PlutusDbContext(DbContextOptions<PlutusDbContext> options) : Ourano
 
     public DbSet<MarketTradeSnapshot> MarketTradeSnapshots => Set<MarketTradeSnapshot>();
 
+    public DbSet<Signal> Signals => Set<Signal>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -36,5 +39,6 @@ public class PlutusDbContext(DbContextOptions<PlutusDbContext> options) : Ourano
         modelBuilder.Entity<Symbol>();
         modelBuilder.Entity<Trade>();
         modelBuilder.Entity<MarketTradeSnapshot>();
+        modelBuilder.Entity<Signal>();
     }
 }
