@@ -1,4 +1,4 @@
-﻿using Ardalis.GuardClauses;
+using Ardalis.GuardClauses;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
@@ -18,30 +18,38 @@ public class Forecast : BaseEntity<Id<Forecast>>
 
     public ForecastPoint Latest { get; init; }
 
-    public virtual required ICollection<ForecastPoint> Predictions { get; init; }
+    private ICollection<ForecastPoint>? _predictions;
 
-    public virtual required Symbol Symbol { get; init; }
+    public ICollection<ForecastPoint> Predictions =>
+        _predictions ?? throw new NavigationPropertyNotLoadedException<Forecast>();
+
+    private Symbol? _symbol;
+    public Symbol Symbol => _symbol ?? throw new NavigationPropertyNotLoadedException<Forecast>();
 
     public static Forecast Create(
         Id<Forecast> id,
-        Market market,
-        Symbol symbol,
+        Id<Market> marketId,
+        Id<Symbol> symbolId,
         ForecastPoint latest,
-        ICollection<ForecastPoint> predictions
+        ICollection<ForecastPoint> predictions,
+        Symbol? symbol = null
     )
     {
-        Guard.Against.Null(market);
-        Guard.Against.Null(symbol);
         Guard.Against.Null(latest);
         Guard.Against.NullOrEmpty(predictions);
 
+        if (symbol is not null)
+        {
+            Guard.Against.InvalidInput(symbol, nameof(symbol), s => s.Id == symbolId);
+        }
+
         return new Forecast(id)
         {
-            SymbolId = symbol.Id,
-            MarketId = market.Id,
+            MarketId = marketId,
+            SymbolId = symbolId,
             Latest = latest,
-            Predictions = predictions,
-            Symbol = symbol
+            _predictions = predictions,
+            _symbol = symbol
         };
     }
 }

@@ -42,9 +42,11 @@ public sealed class TradeConsumer : IPantheonHandler<TradeMessage>
     {
         _logger.LogTrace("Attempting to consume trade message for symbol '{symbolCode}'.", message.SymbolCode);
 
+        var symbol = await UpsertSymbol(message, cancellationToken);
+
         var trade = Trade.Create(
             new Id<Trade>(Guid.NewGuid().ToString()),
-            await UpsertSymbol(message, cancellationToken),
+            symbol.Id,
             message.Price,
             message.Volume,
             message.Timestamp
@@ -89,7 +91,7 @@ public sealed class TradeConsumer : IPantheonHandler<TradeMessage>
             message.SymbolCode,
             message.SymbolSubcode,
             message.SymbolName,
-            market,
+            market.Id,
             message.AdditionalFields
         );
 

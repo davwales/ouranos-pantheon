@@ -1,3 +1,4 @@
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 using Ouranos.Pantheon.Modules.Shared.Domain;
@@ -13,13 +14,21 @@ public sealed class TradeTests
     {
         // Arrange
         var id = new Id<Trade>(_fixture.Create<string>());
-        var symbol = _fixture.Create<Symbol>();
+        var market = _fixture.Create<Market>();
+        var symbol = Symbol.Create(
+            _fixture.Create<Id<Symbol>>(),
+            _fixture.Create<string>(),
+            null,
+            _fixture.Create<string>(),
+            market.Id,
+            new AdditionalFields()
+        );
         var price = _fixture.Create<decimal>();
         var volume = _fixture.Create<decimal>();
         var timestamp = _fixture.Create<DateTimeOffset>();
 
         // Act
-        var trade = Trade.Create(id, symbol, price, volume, timestamp);
+        var trade = Trade.Create(id, symbol.Id, price, volume, timestamp);
 
         // Assert
         trade.Id.ShouldBe(id);

@@ -14,6 +14,7 @@ public sealed class SymbolConfiguration : IEntityTypeConfiguration<Symbol>
         builder.Property(s => s.Id).HasIdConversion();
         builder.Property(s => s.MarketId).HasIdConversion();
         builder.OwnsOne(s => s.AdditionalFields);
+        builder.HasOne(s => s.Market).WithMany().HasForeignKey(s => s.MarketId);
 
         builder
             .HasIndex(s => new { s.Code, s.Subcode, s.MarketId })

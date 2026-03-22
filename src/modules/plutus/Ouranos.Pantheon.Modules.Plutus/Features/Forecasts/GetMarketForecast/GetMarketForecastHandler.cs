@@ -76,7 +76,7 @@ public sealed class GetMarketForecastHandler
 
         var flatTax = market.Taxes.Flat ?? new FlatTax(0, 0, 0);
 
-        var forecastsQuery = _dbContext.Forecasts
+        var forecasts = await _dbContext.Forecasts
             .AsNoTracking()
             .Where(f => f.MarketId == input.MarketId && f.Predictions.Count >= 7)
             .Select(f => new
@@ -141,19 +141,19 @@ public sealed class GetMarketForecastHandler
                     x.Predictions.ElementAt(5),
                     x.Predictions.ElementAt(6)
                 )
-            );
+            )
+            .ToListAsync(cancellationToken);
 
-        var results = await forecastsQuery.ToListAsync(cancellationToken);
-
-        var filtered = results
+        var filtered = forecasts
             .AsQueryable()
             .FilterBy(input.Filter, FilterBuilder);
+
         var totalCount = filtered.Count();
 
-        var page = await filtered
+        var page = filtered
             .SortBy(input.SortField, input.SortDirection, SortBuilder)
             .Paginate(input.Skip, input.Take)
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         _logger.LogDebug("Successfully handled get market forecast query.");
         return new PagedResponse<GetMarketForecastResponse>(page, totalCount, input.Skip, input.Take);

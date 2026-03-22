@@ -23,30 +23,36 @@ public class Symbol : BaseEntity<Id<Symbol>>
 
     public AdditionalFields AdditionalFields { get; private set; }
 
-    public virtual required Market Market { get; init; }
+    private Market? _market;
+    public Market Market => _market ?? throw new NavigationPropertyNotLoadedException<Symbol>();
 
     public static Symbol Create(
         Id<Symbol> id,
         string code,
         string? subcode,
         string name,
-        Market market,
-        AdditionalFields additionalFields
+        Id<Market> marketId,
+        AdditionalFields additionalFields,
+        Market? market = null
     )
     {
         Guard.Against.NullOrWhiteSpace(code);
         Guard.Against.NullOrWhiteSpace(name);
-        Guard.Against.Null(market);
         Guard.Against.Null(additionalFields);
+
+        if (market is not null)
+        {
+            Guard.Against.InvalidInput(market, nameof(market), m => m.Id == marketId);
+        }
 
         return new Symbol(id)
         {
             Code = code,
             Subcode = subcode,
             Name = name,
-            MarketId = market.Id,
+            MarketId = marketId,
             AdditionalFields = additionalFields,
-            Market = market
+            _market = market
         };
     }
 

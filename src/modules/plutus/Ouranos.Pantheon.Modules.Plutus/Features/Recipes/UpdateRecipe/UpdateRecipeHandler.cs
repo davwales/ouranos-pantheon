@@ -34,11 +34,6 @@ public sealed class UpdateRecipeHandler : IPantheonHandler<UpdateRecipeInput, Id
         _logger.LogTrace("Attempting to handle update recipe command '{@command}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var market = await _dbContext.Markets
-            .FirstOrDefaultAsync(m => m.Id == command.MarketId, cancellationToken);
-
-        Guard.Against.NotFound(command.MarketId, market);
-
         var recipe = await _dbContext.Recipes
             .FirstOrDefaultAsync(r => r.Id == command.RecipeId, cancellationToken);
 
@@ -48,7 +43,7 @@ public sealed class UpdateRecipeHandler : IPantheonHandler<UpdateRecipeInput, Id
 
         var updatedRecipe = Recipe.Create(
             command.RecipeId,
-            market,
+            command.MarketId,
             command.Name,
             command.Cost,
             command.Inputs,
@@ -57,9 +52,8 @@ public sealed class UpdateRecipeHandler : IPantheonHandler<UpdateRecipeInput, Id
 
         await _dbContext.Recipes.AddAsync(updatedRecipe, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
-        var response = new IdResponse<Recipe>(updatedRecipe.Id);
 
         _logger.LogDebug("Successfully handled update recipe command.");
-        return response;
+        return new IdResponse<Recipe>(updatedRecipe.Id);
     }
 }

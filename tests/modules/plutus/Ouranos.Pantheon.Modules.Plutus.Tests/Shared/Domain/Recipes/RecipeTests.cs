@@ -20,7 +20,7 @@ public sealed class RecipeTests
         var outputs = _fixture.CreateMany<RecipeComponent>().ToList();
 
         // Act
-        var recipe = Recipe.Create(id, market, name, cost, inputs, outputs);
+        var recipe = Recipe.Create(id, market.Id, name, cost, inputs, outputs);
 
         // Assert
         recipe.Id.ShouldBe(id);
@@ -45,7 +45,7 @@ public sealed class RecipeTests
         var outputs = _fixture.CreateMany<RecipeComponent>().ToList();
 
         // Act
-        var create = () => Recipe.Create(id, market, name!, cost, inputs, outputs);
+        var create = () => Recipe.Create(id, market.Id, name!, cost, inputs, outputs);
 
         // Assert
         create.ShouldThrow<ArgumentException>();
@@ -62,7 +62,7 @@ public sealed class RecipeTests
         var outputs = _fixture.CreateMany<RecipeComponent>().ToList();
 
         // Act
-        var create = () => Recipe.Create(id, market, name, cost, null!, outputs);
+        var create = () => Recipe.Create(id, market.Id, name, cost, null!, outputs);
 
         // Assert
         create.ShouldThrow<ArgumentException>();
@@ -79,7 +79,7 @@ public sealed class RecipeTests
         var inputs = _fixture.CreateMany<RecipeComponent>().ToList();
 
         // Act
-        var create = () => Recipe.Create(id, market, name, cost, inputs, null!);
+        var create = () => Recipe.Create(id, market.Id, name, cost, inputs, null!);
 
         // Assert
         create.ShouldThrow<ArgumentException>();

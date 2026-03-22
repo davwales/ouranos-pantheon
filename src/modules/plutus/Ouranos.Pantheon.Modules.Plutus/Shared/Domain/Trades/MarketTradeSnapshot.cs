@@ -7,7 +7,9 @@ namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 
 public class MarketTradeSnapshot : BaseEntity<Id<MarketTradeSnapshot>>
 {
-    private MarketTradeSnapshot(Id<MarketTradeSnapshot> id) : base(id) { }
+    private MarketTradeSnapshot(Id<MarketTradeSnapshot> id) : base(id)
+    {
+    }
 
     public Id<Market> MarketId { get; private set; }
 
@@ -29,9 +31,13 @@ public class MarketTradeSnapshot : BaseEntity<Id<MarketTradeSnapshot>>
 
     public decimal Tax { get; private set; }
 
-    public virtual Market? Market { get; init; }
+    private Market? _market = null!;
 
-    public virtual Symbol? Symbol { get; init; }
+    public Market Market => _market ?? throw new NavigationPropertyNotLoadedException<MarketTradeSnapshot>();
+
+    private Symbol? _symbol = null!;
+
+    public Symbol Symbol => _symbol ?? throw new NavigationPropertyNotLoadedException<MarketTradeSnapshot>();
 
     public static MarketTradeSnapshot Create(
         Id<Market> marketId,
