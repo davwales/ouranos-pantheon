@@ -160,6 +160,20 @@ export interface GetSymbolSignalsResponse {
   summary: SignalSummary;
 }
 
+export interface GetSignalRankingsRow {
+  symbolId: string;
+  symbolName: string;
+  symbolSubcode?: string | null;
+  overallScore: number;
+  buyScore?: number | null;
+  sellScore?: number | null;
+  flipScore?: number | null;
+  merchScore?: number | null;
+  signalCount: number;
+  bullishCount: number;
+  bearishCount: number;
+}
+
 export interface IdResponse {
   id: string;
 }
@@ -242,6 +256,12 @@ export const plutusApi = {
     api.get<GetSymbolSignalsResponse>(
       `/api/plutus/symbols/${symbolId}/signals`,
       intent ? { intent } : undefined,
+    ),
+
+  getSignalRankings: (marketId: string, page?: PageParams) =>
+    api.get<PagedResponse<GetSignalRankingsRow>>(
+      `/api/plutus/markets/${marketId}/signal-rankings`,
+      page,
     ),
 
   getAllForecasts: (params?: PageParams) =>

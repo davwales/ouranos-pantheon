@@ -13,6 +13,8 @@ export interface PlutusState {
   setForecastsTableState: (state: DataTableState) => void;
   recentTradesTableState: DataTableState;
   setRecentTradesTableState: (state: DataTableState) => void;
+  signalRankingsTableState: DataTableState;
+  setSignalRankingsTableState: (state: DataTableState) => void;
 }
 
 export const usePlutusStore = create<PlutusState>((set) => ({
@@ -42,4 +44,11 @@ export const usePlutusStore = create<PlutusState>((set) => ({
     sort: {},
   },
   setRecentTradesTableState: (state) => set({ recentTradesTableState: state }),
+  signalRankingsTableState: {
+    pagination: { pageSize: 10, skip: 0, take: 10 },
+    filter: {},
+    sort: { overallScore: "DESC" },
+  },
+  setSignalRankingsTableState: (state) =>
+    set({ signalRankingsTableState: state }),
 }));
