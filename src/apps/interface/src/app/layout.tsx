@@ -1,4 +1,5 @@
 import { Footer } from "@/app/components/footer";
+import { NavBarActionsProvider } from "@/app/components/nav-bar-actions-context";
 import { NavigationBarItem } from "@/app/components/responsive-navigation-bar";
 import ResponsiveNavigationBar from "@/app/components/responsive-navigation-bar/responsive-navigation-bar";
 import { ThemeProvider } from "@/app/components/theme-provider";
@@ -25,15 +26,19 @@ const navigationItems: NavigationBarItem[] = [
     label: "Hermes",
     options: [
       {
-        label: "Create Conversation",
-        description:
-          "Have a conversation with the assistants you have created.",
+        label: "Chat",
+        description: "Have a conversation with a virtual assistant.",
         href: "/hermes/conversation",
       },
       {
-        label: "Manage Assistants",
-        description: "Create, edit, and delete assistants.",
-        href: "/hermes/assistants",
+        label: "Manage Personas",
+        description: "Configure personas you can interact with.",
+        href: "/hermes/personas",
+      },
+      {
+        label: "Manage Models",
+        description: "Configure LLM models and their parameters.",
+        href: "/hermes/models",
       },
     ],
   },
@@ -76,13 +81,15 @@ export default function RootLayout({ children }: React.PropsWithChildren) {
           enableSystem
           disableTransitionOnChange
         >
-          <SidebarProvider>
-            <div className="w-full flex flex-col min-h-[100dvh] h-[100dvh]">
-              <ResponsiveNavigationBar items={navigationItems} />
-              <main className="flex-auto overflow-auto">{children}</main>
-              <Footer />
-            </div>
-          </SidebarProvider>
+          <NavBarActionsProvider>
+            <SidebarProvider>
+              <div className="w-full flex flex-col min-h-[100dvh] h-[100dvh]">
+                <ResponsiveNavigationBar items={navigationItems} />
+                <main className="flex-auto overflow-auto">{children}</main>
+                <Footer />
+              </div>
+            </SidebarProvider>
+          </NavBarActionsProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -19,36 +19,40 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("hermes")
-                .HasAnnotation("ProductVersion", "8.0.11")
+                .HasAnnotation("ProductVersion", "10.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity(
-                "Ouranos.Pantheon.Hermes.Service.Domain.Assistants.Assistant",
+                "Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models.ModelConfig",
                 b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<string>("AssistantName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("assistant_name");
-
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_default");
 
                     b.Property<int?>("MaxTokens")
                         .HasColumnType("integer")
                         .HasColumnName("max_tokens");
 
-                    b.Property<string>("Model")
+                    b.Property<string>("ModelIdentifier")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("model");
+                        .HasColumnName("model_identifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
                     b.Property<float?>("RepeatPenalty")
                         .HasColumnType("real")
@@ -67,15 +71,55 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
-                    b.Property<string>("UserName")
+                    b.HasKey("Id")
+                        .HasName("pk_model_configs");
+
+                    b.ToTable("model_configs", "hermes");
+                }
+            );
+
+            modelBuilder.Entity(
+                "Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas.Persona",
+                b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("user_name");
+                        .HasColumnName("description");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_default");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Personality")
+                        .HasColumnType("text")
+                        .HasColumnName("personality");
+
+                    b.Property<string>("Scenario")
+                        .HasColumnType("text")
+                        .HasColumnName("scenario");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
 
                     b.HasKey("Id")
-                        .HasName("pk_assistants");
+                        .HasName("pk_personas");
 
-                    b.ToTable("assistants", "hermes");
+                    b.ToTable("personas", "hermes");
                 }
             );
 #pragma warning restore 612, 618

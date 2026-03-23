@@ -1,46 +1,81 @@
 "use client";
 
 import ChatInterfaceView from "@/app/hermes/conversation/views/chat_interface_view";
-import SelectAssistantView from "@/app/hermes/conversation/views/select_assistant_view";
-import ConversationAssistant from "@/app/hermes/types";
-import { Button } from "@/components/ui/button";
-import { Role } from "@/lib/api/hermes";
-import { useState } from "react";
+import SelectConfigView from "@/app/hermes/conversation/views/select_config_view";
+import { ModelFormInput, PersonaFormInput } from "@/app/hermes/types";
+import { hermesApi } from "@/lib/api/hermes";
+import { useEffect, useState } from "react";
+
+type ConversationState = "loading" | "setup" | "chat";
 
 export default function Conversation() {
-  const [assistant, setAssistant] = useState<ConversationAssistant>();
-  const [setupComplete, setSetupComplete] = useState(false);
+  const [persona, setPersona] = useState<PersonaFormInput>();
+  const [model, setModel] = useState<ModelFormInput>();
+  const [conversationState, setConversationState] =
+    useState<ConversationState>("loading");
+
+  useEffect(() => {
+    const loadDefaults = async () => {
+      try {
+        const [personas, models] = await Promise.all([
+          hermesApi.getAllPersonas(),
+          hermesApi.getAllModels(),
+        ]);
+
+        const defaultPersona = personas.find((p) => p.isDefault);
+        const defaultModel = models.find((m) => m.isDefault);
+
+        if (defaultPersona) {
+          setPersona({ ...defaultPersona });
+        }
+        if (defaultModel) {
+          setModel({ ...defaultModel });
+        }
+
+        if (defaultPersona && defaultModel) {
+          setConversationState("chat");
+        } else {
+          setConversationState("setup");
+        }
+      } catch {
+        setConversationState("setup");
+      }
+    };
+
+    loadDefaults();
+  }, []);
 
   const handleBeginConversation = () => {
-    if (assistant) {
-      setSetupComplete(true);
-    } else {
-      alert("Please select an assistant before starting the conversation.");
+    if (persona && model) {
+      setConversationState("chat");
     }
   };
 
-  return (
-    <div>
-      {setupComplete && assistant ? (
-        <ChatInterfaceView assistant={assistant} />
-      ) : (
-        <div className="m-4">
-          <SelectAssistantView
-            role={Role.Assistant}
-            assistant={assistant}
-            setAssistant={setAssistant}
-          />
+  if (conversationState === "loading") {
+    return <div className="m-4">Loading...</div>;
+  }
 
-          <Button
-            onClick={handleBeginConversation}
-            disabled={!assistant}
-            size="lg"
-            className="w-full mt-4"
-          >
-            Begin Conversation
-          </Button>
-        </div>
-      )}
+  if (conversationState === "chat" && persona && model) {
+    return (
+      <ChatInterfaceView
+        persona={persona}
+        model={model}
+        onPersonaChange={setPersona}
+        onModelChange={setModel}
+      />
+    );
+  }
+
+  return (
+    <div className="m-4">
+      <SelectConfigView
+        persona={persona}
+        setPersona={setPersona}
+        model={model}
+        setModel={setModel}
+        onBegin={handleBeginConversation}
+        beginDisabled={!persona || !model}
+      />
     </div>
   );
 }

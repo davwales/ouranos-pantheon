@@ -3,14 +3,13 @@ import {
   ResponsiveContextMenu,
 } from "@/app/components/responsive-context-menu";
 import { Message } from "@/app/hermes/conversation/components/message";
-import ConversationAssistant from "@/app/hermes/types";
 import { MessageInput, Role } from "@/lib/api/hermes";
 import { Pencil, RotateCcw, Trash } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 export default function ChatMessageList({
   messages,
-  assistant,
+  personaName,
   isGenerating,
   onEditMessage,
   onDeleteMessage,
@@ -18,7 +17,7 @@ export default function ChatMessageList({
   ...props
 }: React.ComponentProps<"div"> & {
   messages: MessageInput[];
-  assistant: ConversationAssistant;
+  personaName: string;
   onEditMessage?: (index: number) => void;
   onDeleteMessage?: (index: number) => void;
   onRetryMessage?: (index: number) => void;
@@ -76,11 +75,7 @@ export default function ChatMessageList({
             disabled={isGenerating}
           >
             <Message
-              name={
-                msg.role == Role.User
-                  ? assistant.userName
-                  : assistant.assistantName
-              }
+              name={msg.role == Role.User ? "You" : personaName}
               role={msg.role}
               content={msg.content}
               className="w-fit text-left break-words"

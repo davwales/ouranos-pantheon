@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Text;
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
@@ -54,19 +55,21 @@ public sealed class GenerateCompletionHandler
         _logger.LogTrace("Attempting to generate a chat completion for conversation '{@conversation}'.", conversation);
         cancellationToken.ThrowIfCancellationRequested();
 
+        var systemPrompt = ComposeSystemPrompt(conversation.Persona, conversation.Model.SystemPrompt);
+
         var request = new GenerateChatCompletionRequest(
-            conversation.Assistant.Model,
+            conversation.Model.ModelIdentifier,
             [
-                new MessageDto(conversation.Assistant.SystemPrompt, MapRole(Role.System)),
+                new MessageDto(systemPrompt, MapRole(Role.System)),
                 .. conversation.Messages.Select(m => new MessageDto(
                         m.Content,
                         MapRole(m.Role)
                     )
                 )
             ],
-            conversation.Assistant.Temperature,
-            conversation.Assistant.MaxTokens,
-            conversation.Assistant.RepeatPenalty
+            conversation.Model.Temperature,
+            conversation.Model.MaxTokens,
+            conversation.Model.RepeatPenalty
         );
 
         await foreach (var line in _ouranosMachineLearningClient.GenerateChatCompletion(request, cancellationToken))
@@ -76,6 +79,28 @@ public sealed class GenerateCompletionHandler
         }
 
         _logger.LogDebug("Successfully generated a chat completion.");
+    }
+
+    private static string ComposeSystemPrompt(PersonaInput persona, string systemPrompt)
+    {
+        var builder = new StringBuilder();
+
+        builder.AppendLine($"{persona.Name}: {persona.Description}");
+
+        if (!string.IsNullOrWhiteSpace(persona.Personality))
+        {
+            builder.AppendLine($"Personality: {persona.Personality}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(persona.Scenario))
+        {
+            builder.AppendLine($"Scenario: {persona.Scenario}");
+        }
+
+        builder.AppendLine();
+        builder.Append(systemPrompt);
+
+        return builder.ToString();
     }
 
     private static RoleDto MapRole(Role role)

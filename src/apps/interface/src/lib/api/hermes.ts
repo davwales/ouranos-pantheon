@@ -5,15 +5,26 @@ const API_BASE =
   process.env.NEXT_PUBLIC_API_HOST ??
   "http://localhost:8300";
 
-export interface Assistant {
+export interface Persona {
   id: string;
-  model: string;
+  name: string;
+  description: string;
+  personality?: string | null;
+  scenario?: string | null;
+  isDefault: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ModelConfig {
+  id: string;
+  name: string;
+  modelIdentifier: string;
   systemPrompt: string;
-  assistantName: string;
-  userName: string;
   temperature?: number | null;
   maxTokens?: number | null;
   repeatPenalty?: number | null;
+  isDefault: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -23,8 +34,15 @@ export interface MessageInput {
   content: string;
 }
 
-export interface AssistantInput {
-  model: string;
+export interface PersonaInput {
+  name: string;
+  description: string;
+  personality?: string | null;
+  scenario?: string | null;
+}
+
+export interface ModelInput {
+  modelIdentifier: string;
   systemPrompt: string;
   temperature?: number | null;
   maxTokens?: number | null;
@@ -32,7 +50,8 @@ export interface AssistantInput {
 }
 
 export interface ConversationInput {
-  assistant: AssistantInput;
+  model: ModelInput;
+  persona: PersonaInput;
   messages: MessageInput[];
 }
 
@@ -51,32 +70,50 @@ export enum Role {
 }
 
 export const hermesApi = {
-  getAllAssistants: (params?: { filter?: string[] }) =>
-    api.get<Assistant[]>("/api/hermes/assistants", params),
+  getAllPersonas: (params?: { filter?: string[] }) =>
+    api.get<Persona[]>("/api/hermes/personas", params),
 
-  getAssistant: (assistantId: string) =>
-    api.get<Assistant>(`/api/hermes/assistants/${assistantId}`),
+  getPersona: (personaId: string) =>
+    api.get<Persona>(`/api/hermes/personas/${personaId}`),
 
-  createAssistant: (input: Omit<Assistant, "id" | "createdAt" | "updatedAt">) =>
-    api.post<{ id: string }>("/api/hermes/assistants", input),
+  createPersona: (input: Omit<Persona, "id" | "createdAt" | "updatedAt">) =>
+    api.post<{ id: string }>("/api/hermes/personas", input),
 
-  updateAssistant: (input: {
-    assistantId: string;
-    model: string;
+  updatePersona: (input: {
+    personaId: string;
+    name: string;
+    description: string;
+    personality?: string | null;
+    scenario?: string | null;
+    isDefault: boolean;
+  }) =>
+    api.put<{ id: string }>(`/api/hermes/personas/${input.personaId}`, input),
+
+  deletePersona: (personaId: string) =>
+    api.del<{ id: string }>(`/api/hermes/personas/${personaId}`),
+
+  getAllModels: (params?: { filter?: string[] }) =>
+    api.get<ModelConfig[]>("/api/hermes/models", params),
+
+  getModel: (modelId: string) =>
+    api.get<ModelConfig>(`/api/hermes/models/${modelId}`),
+
+  createModel: (input: Omit<ModelConfig, "id" | "createdAt" | "updatedAt">) =>
+    api.post<{ id: string }>("/api/hermes/models", input),
+
+  updateModel: (input: {
+    modelId: string;
+    name: string;
+    modelIdentifier: string;
     systemPrompt: string;
-    assistantName?: string | null;
-    userName?: string | null;
     temperature?: number | null;
     maxTokens?: number | null;
     repeatPenalty?: number | null;
-  }) =>
-    api.put<{ id: string }>(
-      `/api/hermes/assistants/${input.assistantId}`,
-      input,
-    ),
+    isDefault: boolean;
+  }) => api.put<{ id: string }>(`/api/hermes/models/${input.modelId}`, input),
 
-  deleteAssistant: (assistantId: string) =>
-    api.del<{ id: string }>(`/api/hermes/assistants/${assistantId}`),
+  deleteModel: (modelId: string) =>
+    api.del<{ id: string }>(`/api/hermes/models/${modelId}`),
 };
 
 export async function* streamCompletion(
