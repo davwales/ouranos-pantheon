@@ -10,6 +10,7 @@ using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
 using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSignalRankings.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSignalRankings;
 
@@ -19,6 +20,8 @@ public sealed class GetSignalRankingsHandler
     private static readonly FilterBuilder<GetSignalRankingsResponse> FilterBuilder =
         new FilterBuilder<GetSignalRankingsResponse>()
             .On(nameof(GetSignalRankingsResponse.SymbolName), x => x.SymbolName)
+            .On(nameof(GetSignalRankingsResponse.DailyAveragePrice), x => x.DailyAveragePrice)
+            .On(nameof(GetSignalRankingsResponse.DailyVolume), x => x.DailyVolume)
             .On(nameof(GetSignalRankingsResponse.OverallScore), x => x.OverallScore)
             .On(nameof(GetSignalRankingsResponse.BuyScore), x => x.BuyScore)
             .On(nameof(GetSignalRankingsResponse.SellScore), x => x.SellScore)
@@ -28,6 +31,8 @@ public sealed class GetSignalRankingsHandler
 
     private static readonly SortBuilder<GetSignalRankingsResponse> SortBuilder =
         new SortBuilder<GetSignalRankingsResponse>()
+            .On(nameof(GetSignalRankingsResponse.DailyAveragePrice), x => x.DailyAveragePrice)
+            .On(nameof(GetSignalRankingsResponse.DailyVolume), x => x.DailyVolume)
             .On(nameof(GetSignalRankingsResponse.OverallScore), x => x.OverallScore)
             .On(nameof(GetSignalRankingsResponse.BuyScore), x => x.BuyScore)
             .On(nameof(GetSignalRankingsResponse.SellScore), x => x.SellScore)
@@ -35,7 +40,7 @@ public sealed class GetSignalRankingsHandler
             .On(nameof(GetSignalRankingsResponse.MerchScore), x => x.MerchScore)
             .On(nameof(GetSignalRankingsResponse.SymbolName), x => x.SymbolName)
             .On(nameof(GetSignalRankingsResponse.SignalCount), x => x.SignalCount)
-            .Default(x => x.OverallScore, SortDirection.Desc);
+            .Default(x => x.OverallScore);
 
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<GetSignalRankingsHandler> _logger;
@@ -84,32 +89,63 @@ public sealed class GetSignalRankingsHandler
         var flipTypes = _flipTypes;
         var merchTypes = _merchTypes;
 
-        var rankings = await _dbContext.Signals
+        var signalRankings = await _dbContext.Signals
             .AsNoTracking()
             .Where(s => s.MarketId == input.MarketId)
             .GroupBy(s => new { s.SymbolId, s.Symbol.Name, s.Symbol.Subcode })
-            .Select(g => new GetSignalRankingsResponse(
+            .Select(g => new
+            {
                 g.Key.SymbolId,
                 g.Key.Name,
                 g.Key.Subcode,
-                g.Average(x => x.Value),
-                buyTypes.Count > 0
-                    ? g.Average(x => buyTypes.Contains(x.Type) ? x.Value : null)
-                    : null,
-                sellTypes.Count > 0
-                    ? g.Average(x => sellTypes.Contains(x.Type) ? x.Value : null)
-                    : null,
-                flipTypes.Count > 0
-                    ? g.Average(x => flipTypes.Contains(x.Type) ? x.Value : null)
-                    : null,
-                merchTypes.Count > 0
-                    ? g.Average(x => merchTypes.Contains(x.Type) ? x.Value : null)
-                    : null,
-                g.Count(),
-                g.Count(x => x.Value > 0),
-                g.Count(x => x.Value < 0)
-            ))
+                OverallScore = g.Average(x => x.Value),
+                BuyScore = buyTypes.Count > 0
+                        ? g.Average(x => buyTypes.Contains(x.Type) ? x.Value : null)
+                        : null,
+                SellScore = sellTypes.Count > 0
+                        ? g.Average(x => sellTypes.Contains(x.Type) ? x.Value : null)
+                        : null,
+                FlipScore = flipTypes.Count > 0
+                        ? g.Average(x => flipTypes.Contains(x.Type) ? x.Value : null)
+                        : null,
+                MerchScore = merchTypes.Count > 0
+                        ? g.Average(x => merchTypes.Contains(x.Type) ? x.Value : null)
+                        : null,
+                SignalCount = g.Count(),
+                BullishCount = g.Count(x => x.Value > 0),
+                BearishCount = g.Count(x => x.Value < 0),
+            }
+            )
             .ToListAsync(cancellationToken);
+
+        var snapshotLookup = await _dbContext.MarketTradeSnapshots
+            .AsNoTracking()
+            .Where(s => s.MarketId == input.MarketId && s.TimeFrame == TimeFrame.OneDay)
+            .Select(s => new { s.SymbolId, s.TotalSpent, s.TotalVolume })
+            .ToDictionaryAsync(s => s.SymbolId, cancellationToken);
+
+        var rankings = signalRankings
+            .Select(r =>
+                {
+                    snapshotLookup.TryGetValue(r.SymbolId, out var snap);
+                    return new GetSignalRankingsResponse(
+                        r.SymbolId,
+                        r.Name,
+                        r.Subcode,
+                        snap is { TotalVolume: > 0 } ? snap.TotalSpent / snap.TotalVolume : null,
+                        snap?.TotalVolume,
+                        r.OverallScore,
+                        r.BuyScore,
+                        r.SellScore,
+                        r.FlipScore,
+                        r.MerchScore,
+                        r.SignalCount,
+                        r.BullishCount,
+                        r.BearishCount
+                    );
+                }
+            )
+            .ToList();
 
         var filtered = rankings.AsQueryable().FilterBy(input.Filter, FilterBuilder);
         var totalCount = filtered.Count();
@@ -141,6 +177,7 @@ public sealed class GetSignalRankingsHandler
                 types.Add(computer.Type);
             }
         }
+
         return map;
     }
 }
