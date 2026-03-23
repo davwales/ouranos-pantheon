@@ -3,6 +3,7 @@
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion.Schemas;
 
 public sealed record ConversationInput(
-    AssistantInput Assistant,
+    ModelInput Model,
+    PersonaInput Persona,
     List<Message> Messages
 );

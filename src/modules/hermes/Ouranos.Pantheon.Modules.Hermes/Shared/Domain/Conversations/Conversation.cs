@@ -1,9 +1,6 @@
-using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Assistants;
-
 namespace Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 
 public sealed record Conversation(
-    Assistant Assistant,
     List<Message>? Messages
 )
 {

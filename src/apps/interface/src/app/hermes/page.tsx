@@ -5,13 +5,18 @@ export default function Hermes() {
   const modules = [
     {
       name: "Create Conversation",
-      description: "Create a new conversation with an assistant.",
+      description: "Start a new conversation with a persona and model.",
       href: "/hermes/conversation",
     },
     {
-      name: "Manage Assistants",
-      description: "Manage your assistants.",
-      href: "/hermes/assistants",
+      name: "Manage Personas",
+      description: "Create and manage character personas.",
+      href: "/hermes/personas",
+    },
+    {
+      name: "Manage Models",
+      description: "Configure LLM models and their parameters.",
+      href: "/hermes/models",
     },
   ];
 

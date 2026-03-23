@@ -1,21 +1,24 @@
-export interface AssistantFormInput {
+export interface PersonaFormInput {
   id?: string;
-  model: string;
-  systemPrompt: string;
-  assistantName: string;
-  userName: string;
-  temperature?: number | null | undefined;
-  maxTokens?: number | null | undefined;
-  repeatPenalty?: number | null | undefined;
+  name: string;
+  description: string;
+  personality?: string | null;
+  scenario?: string | null;
+  isDefault: boolean;
 }
 
-export default interface ConversationAssistant {
+export interface ModelFormInput {
   id?: string;
-  model: string;
+  name: string;
+  modelIdentifier: string;
   systemPrompt: string;
-  assistantName: string;
-  userName: string;
-  temperature?: number | null | undefined;
-  maxTokens?: number | null | undefined;
-  repeatPenalty?: number | null | undefined;
+  temperature?: number | null;
+  maxTokens?: number | null;
+  repeatPenalty?: number | null;
+  isDefault: boolean;
+}
+
+export interface ConversationConfig {
+  persona: PersonaFormInput;
+  model: ModelFormInput;
 }
