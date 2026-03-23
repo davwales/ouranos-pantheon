@@ -40,7 +40,7 @@ public sealed class GetSignalRankingsHandler
             .On(nameof(GetSignalRankingsResponse.MerchScore), x => x.MerchScore)
             .On(nameof(GetSignalRankingsResponse.SymbolName), x => x.SymbolName)
             .On(nameof(GetSignalRankingsResponse.SignalCount), x => x.SignalCount)
-            .Default(x => x.OverallScore, SortDirection.Desc);
+            .Default(x => x.OverallScore);
 
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<GetSignalRankingsHandler> _logger;
@@ -94,55 +94,57 @@ public sealed class GetSignalRankingsHandler
             .Where(s => s.MarketId == input.MarketId)
             .GroupBy(s => new { s.SymbolId, s.Symbol.Name, s.Symbol.Subcode })
             .Select(g => new
-            {
-                g.Key.SymbolId,
-                g.Key.Name,
-                g.Key.Subcode,
-                OverallScore = g.Average(x => x.Value),
-                BuyScore = buyTypes.Count > 0
-                    ? g.Average(x => buyTypes.Contains(x.Type) ? x.Value : null)
-                    : null,
-                SellScore = sellTypes.Count > 0
-                    ? g.Average(x => sellTypes.Contains(x.Type) ? x.Value : null)
-                    : null,
-                FlipScore = flipTypes.Count > 0
-                    ? g.Average(x => flipTypes.Contains(x.Type) ? x.Value : null)
-                    : null,
-                MerchScore = merchTypes.Count > 0
-                    ? g.Average(x => merchTypes.Contains(x.Type) ? x.Value : null)
-                    : null,
-                SignalCount = g.Count(),
-                BullishCount = g.Count(x => x.Value > 0),
-                BearishCount = g.Count(x => x.Value < 0),
-            })
+                {
+                    g.Key.SymbolId,
+                    g.Key.Name,
+                    g.Key.Subcode,
+                    OverallScore = g.Average(x => x.Value),
+                    BuyScore = buyTypes.Count > 0
+                        ? g.Average(x => buyTypes.Contains(x.Type) ? x.Value : null)
+                        : null,
+                    SellScore = sellTypes.Count > 0
+                        ? g.Average(x => sellTypes.Contains(x.Type) ? x.Value : null)
+                        : null,
+                    FlipScore = flipTypes.Count > 0
+                        ? g.Average(x => flipTypes.Contains(x.Type) ? x.Value : null)
+                        : null,
+                    MerchScore = merchTypes.Count > 0
+                        ? g.Average(x => merchTypes.Contains(x.Type) ? x.Value : null)
+                        : null,
+                    SignalCount = g.Count(),
+                    BullishCount = g.Count(x => x.Value > 0),
+                    BearishCount = g.Count(x => x.Value < 0),
+                }
+            )
             .ToListAsync(cancellationToken);
 
         var snapshotLookup = await _dbContext.MarketTradeSnapshots
             .AsNoTracking()
-            .Where(s => s.MarketId == input.MarketId && s.TimeFrame == TimeFrame.AllTime)
+            .Where(s => s.MarketId == input.MarketId && s.TimeFrame == TimeFrame.OneDay)
             .Select(s => new { s.SymbolId, s.TotalSpent, s.TotalVolume })
             .ToDictionaryAsync(s => s.SymbolId, cancellationToken);
 
         var rankings = signalRankings
             .Select(r =>
-            {
-                snapshotLookup.TryGetValue(r.SymbolId, out var snap);
-                return new GetSignalRankingsResponse(
-                    r.SymbolId,
-                    r.Name,
-                    r.Subcode,
-                    snap is { TotalVolume: > 0 } ? snap.TotalSpent / snap.TotalVolume : null,
-                    snap?.TotalVolume,
-                    r.OverallScore,
-                    r.BuyScore,
-                    r.SellScore,
-                    r.FlipScore,
-                    r.MerchScore,
-                    r.SignalCount,
-                    r.BullishCount,
-                    r.BearishCount
-                );
-            })
+                {
+                    snapshotLookup.TryGetValue(r.SymbolId, out var snap);
+                    return new GetSignalRankingsResponse(
+                        r.SymbolId,
+                        r.Name,
+                        r.Subcode,
+                        snap is { TotalVolume: > 0 } ? snap.TotalSpent / snap.TotalVolume : null,
+                        snap?.TotalVolume,
+                        r.OverallScore,
+                        r.BuyScore,
+                        r.SellScore,
+                        r.FlipScore,
+                        r.MerchScore,
+                        r.SignalCount,
+                        r.BullishCount,
+                        r.BearishCount
+                    );
+                }
+            )
             .ToList();
 
         var filtered = rankings.AsQueryable().FilterBy(input.Filter, FilterBuilder);
@@ -175,6 +177,7 @@ public sealed class GetSignalRankingsHandler
                 types.Add(computer.Type);
             }
         }
+
         return map;
     }
 }

@@ -46,7 +46,7 @@ export const usePlutusStore = create<PlutusState>((set) => ({
   setRecentTradesTableState: (state) => set({ recentTradesTableState: state }),
   signalRankingsTableState: {
     pagination: { pageSize: 10, skip: 0, take: 10 },
-    filter: {},
+    filter: { signalCount: { gt: 1 } },
     sort: { overallScore: "DESC" },
   },
   setSignalRankingsTableState: (state) =>
