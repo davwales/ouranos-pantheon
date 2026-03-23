@@ -16,5 +16,7 @@ public sealed class SignalConfiguration : IEntityTypeConfiguration<Signal>
         builder.Property(s => s.Type).HasConversion<int>();
         builder.HasIndex(s => new { s.SymbolId, s.Type });
         builder.HasIndex(s => s.MarketId);
+        builder.HasOne(s => s.Market).WithMany().HasForeignKey(s => s.MarketId);
+        builder.HasOne(s => s.Symbol).WithMany().HasForeignKey(s => s.SymbolId);
     }
 }

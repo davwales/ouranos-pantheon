@@ -29,6 +29,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Consumer;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.MarketTradeSnapshot;
 using Ouranos.Pantheon.Modules.Plutus.Features.Signals.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSymbolSignals;
+using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSignalRankings;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals.Computers;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetAllMarkets;
@@ -97,6 +98,7 @@ public sealed class PlutusModule : IPantheonModule
         UpdateRecipeEndpoint.Map(app);
         DeleteRecipeEndpoint.Map(app);
         GetSymbolSignalsEndpoint.Map(app);
+        GetSignalRankingsEndpoint.Map(app);
     }
 
     public void ConfigureWolverine(WolverineOptions opts, IConfiguration configuration)

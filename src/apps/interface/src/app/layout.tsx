@@ -67,6 +67,11 @@ const navigationItems: NavigationBarItem[] = [
         description: "View trades for symbols as they are processed.",
         href: "/plutus/recent",
       },
+      {
+        label: "Signals",
+        description: "Find which symbols would be best to invest in.",
+        href: "/plutus/signals",
+      },
     ],
   },
 ];
