@@ -6,9 +6,6 @@
 
 An extensible modular monolith platform for building centralized personal services across any domain.
 
-<!-- Replace with an actual screenshot -->
-<!-- ![Dashboard Preview](docs/assets/dashboard-preview.png) -->
-
 ## Overview
 
 Ouranos Pantheon is a personal platform built to grow. It provides a structured foundation - a modular monolith with explicit domain boundaries - that makes it straightforward to add new functionality without touching existing modules. Each module is a self-contained vertical slice; adding a new domain means adding a new module and registering it in the gateway.
@@ -95,6 +92,11 @@ cd src/apps/interface
 npm install
 npm run dev
 ```
+
+## Screenshots
+
+<img src="docs/assets/plutus-preview.png" alt="Plutus Preview" width=250>
+<img src="docs/assets/hermes-preview.png" alt="Hermes Preview" width=250>
 
 ## Contributing
 
