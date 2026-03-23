@@ -164,6 +164,8 @@ export interface GetSignalRankingsRow {
   symbolId: string;
   symbolName: string;
   symbolSubcode?: string | null;
+  dailyAveragePrice?: number | null;
+  dailyVolume?: number | null;
   overallScore: number;
   buyScore?: number | null;
   sellScore?: number | null;

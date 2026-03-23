@@ -7,6 +7,8 @@ public sealed record GetSignalRankingsResponse(
     Id<Symbol> SymbolId,
     string SymbolName,
     string? SymbolSubcode,
+    decimal? DailyAveragePrice,
+    decimal? DailyVolume,
     decimal OverallScore,
     decimal? BuyScore,
     decimal? SellScore,

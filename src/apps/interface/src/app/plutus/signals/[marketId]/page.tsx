@@ -1,5 +1,7 @@
 "use client";
 
+import ClipboardCopy from "@/app/components/clipboard-copy";
+import { PrettyNumber } from "@/app/components/pretty-number/pretty-number";
 import { ExtendedColumnDef } from "@/app/components/responsive-data-table";
 import ResponsiveDataTable from "@/app/components/responsive-data-table/responsive-data-table";
 import {
@@ -16,7 +18,7 @@ import { useParams } from "next/navigation";
 import { useMemo } from "react";
 
 function ScoreCell({ value }: { value: number | null | undefined }) {
-  if (value == null) return <span className="text-muted-foreground">—</span>;
+  if (value == null) return <span className="text-muted-foreground">-</span>;
   const color =
     value > 0
       ? "text-green-600 dark:text-green-400"
@@ -87,6 +89,44 @@ export default function SignalRankingsDetail() {
         filterConfig: {
           type: "string",
           operators: ["eq", "neq", "contains", "startsWith", "endsWith"],
+        },
+      },
+      {
+        id: "dailyAveragePrice",
+        header: "Avg Price",
+        accessorFn: (row) => row.dailyAveragePrice,
+        cell: ({ getValue }) => {
+          const v = getValue<number | null | undefined>();
+          return v ? (
+            <ClipboardCopy value={v}>
+              <PrettyNumber number={v} />
+            </ClipboardCopy>
+          ) : (
+            <span className="text-muted-foreground">-</span>
+          );
+        },
+        filterConfig: {
+          type: "number",
+          operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
+        },
+      },
+      {
+        id: "dailyVolume",
+        header: "Volume",
+        accessorFn: (row) => row.dailyVolume,
+        cell: ({ getValue }) => {
+          const v = getValue<number | null | undefined>();
+          return v ? (
+            <ClipboardCopy value={v}>
+              <PrettyNumber number={v} />
+            </ClipboardCopy>
+          ) : (
+            <span className="text-muted-foreground">-</span>
+          );
+        },
+        filterConfig: {
+          type: "number",
+          operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
         },
       },
       {
