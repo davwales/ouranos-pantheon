@@ -24,6 +24,7 @@ export function useApi<T>(
       .catch((error) =>
         setState((prev) => ({ status: "error", data: prev.data, error })),
       );
+    // eslint-disable-next-line react-hooks/use-memo
   }, deps);
 
   useEffect(() => {

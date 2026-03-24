@@ -84,37 +84,32 @@ public sealed class GetSignalRankingsHandler
         Guard.Against.OutOfRange(input.Skip, nameof(input.Skip), 0, limits.MaxSkip);
         Guard.Against.OutOfRange(input.Take, nameof(input.Take), limits.MinPageSize, limits.MaxPageSize);
 
-        var buyTypes = _buyTypes;
-        var sellTypes = _sellTypes;
-        var flipTypes = _flipTypes;
-        var merchTypes = _merchTypes;
-
         var signalRankings = await _dbContext.Signals
             .AsNoTracking()
             .Where(s => s.MarketId == input.MarketId)
             .GroupBy(s => new { s.SymbolId, s.Symbol.Name, s.Symbol.Subcode })
             .Select(g => new
-            {
-                g.Key.SymbolId,
-                g.Key.Name,
-                g.Key.Subcode,
-                OverallScore = g.Average(x => x.Value),
-                BuyScore = buyTypes.Count > 0
-                        ? g.Average(x => buyTypes.Contains(x.Type) ? x.Value : null)
+                {
+                    g.Key.SymbolId,
+                    g.Key.Name,
+                    g.Key.Subcode,
+                    OverallScore = g.Average(x => x.Value),
+                    BuyScore = _buyTypes.Count > 0
+                        ? g.Average(x => _buyTypes.Contains(x.Type) ? x.Value : null)
                         : null,
-                SellScore = sellTypes.Count > 0
-                        ? g.Average(x => sellTypes.Contains(x.Type) ? x.Value : null)
+                    SellScore = _sellTypes.Count > 0
+                        ? g.Average(x => _sellTypes.Contains(x.Type) ? x.Value : null)
                         : null,
-                FlipScore = flipTypes.Count > 0
-                        ? g.Average(x => flipTypes.Contains(x.Type) ? x.Value : null)
+                    FlipScore = _flipTypes.Count > 0
+                        ? g.Average(x => _flipTypes.Contains(x.Type) ? x.Value : null)
                         : null,
-                MerchScore = merchTypes.Count > 0
-                        ? g.Average(x => merchTypes.Contains(x.Type) ? x.Value : null)
+                    MerchScore = _merchTypes.Count > 0
+                        ? g.Average(x => _merchTypes.Contains(x.Type) ? x.Value : null)
                         : null,
-                SignalCount = g.Count(),
-                BullishCount = g.Count(x => x.Value > 0),
-                BearishCount = g.Count(x => x.Value < 0),
-            }
+                    SignalCount = g.Count(),
+                    BullishCount = g.Count(x => x.Value > 0),
+                    BearishCount = g.Count(x => x.Value < 0),
+                }
             )
             .ToListAsync(cancellationToken);
 

@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useShallow } from "zustand/react/shallow";
 
 export default function TimeFrameSelection({
   triggerClassName,
@@ -15,7 +16,10 @@ export default function TimeFrameSelection({
   triggerClassName?: string;
 }) {
   const [timeFrameKey, setTimeFrameKey] = usePlutusStore(
-    (state: PlutusState) => [state.timeFrameKey, state.setTimeFrameKey],
+    useShallow((state: PlutusState) => [
+      state.timeFrameKey,
+      state.setTimeFrameKey,
+    ]),
   );
 
   const handleValueChanged = (value: string) => {

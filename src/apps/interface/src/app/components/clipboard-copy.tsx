@@ -1,5 +1,6 @@
+import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 export default function ClipboardCopy({
   value,
@@ -17,8 +18,13 @@ export default function ClipboardCopy({
   hideIfNotSupported?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
+  const [clipboardSupported, setClipboardSupported] = useState(false);
 
-  if (!navigator.clipboard) {
+  useEffect(() => {
+    setClipboardSupported(!!navigator.clipboard);
+  }, []);
+
+  if (!clipboardSupported) {
     if (hideIfNotSupported) {
       return null;
     }
@@ -50,7 +56,7 @@ export default function ClipboardCopy({
     <div
       {...props}
       onClick={handleCopy}
-      className={`hover:cursor-pointer ${className}`}
+      className={cn("hover:cursor-pointer", className)}
     >
       {copied ? copyConfirmation : children}
     </div>

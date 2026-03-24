@@ -78,7 +78,8 @@ const navigationItems: NavigationBarItem[] = [
 
 export default function RootLayout({ children }: React.PropsWithChildren) {
   return (
-    <html lang="en">
+    // See https://github.com/pacocoursey/next-themes?tab=readme-ov-file#with-app for why we need to suppress hydration.
+    <html lang="en" suppressHydrationWarning>
       <body>
         <ThemeProvider
           attribute="class"

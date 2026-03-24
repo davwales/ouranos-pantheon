@@ -17,15 +17,16 @@ import { RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo } from "react";
+import { useShallow } from "zustand/react/shallow";
 
 export default function MarketDetail() {
   const { marketId } = useParams<{ marketId: string }>();
   const [timeFrameKey, tableState, setTableState] = usePlutusStore(
-    (state: PlutusState) => [
+    useShallow((state: PlutusState) => [
       state.timeFrameKey,
       state.explorerTableState,
       state.setExplorerTableState,
-    ],
+    ]),
   );
 
   const { sortField, sortDirection } = extractSort(tableState.sort);

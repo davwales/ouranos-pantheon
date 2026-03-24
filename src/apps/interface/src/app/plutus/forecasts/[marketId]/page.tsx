@@ -17,13 +17,16 @@ import { RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo } from "react";
+import { useShallow } from "zustand/react/shallow";
 
 export default function RecentMarketTrades() {
   const { marketId } = useParams<{ marketId: string }>();
-  const [tableState, setTableState] = usePlutusStore((state: PlutusState) => [
-    state.forecastsTableState,
-    state.setForecastsTableState,
-  ]);
+  const [tableState, setTableState] = usePlutusStore(
+    useShallow((state: PlutusState) => [
+      state.forecastsTableState,
+      state.setForecastsTableState,
+    ]),
+  );
 
   const { sortField, sortDirection } = extractSort(tableState.sort);
   const filter = extractFilter(tableState.filter);
