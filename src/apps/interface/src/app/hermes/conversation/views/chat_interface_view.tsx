@@ -1,11 +1,17 @@
 "use client";
 
+import AutosizeTextarea from "@/app/components/autosize-textarea";
 import { FooterContent } from "@/app/components/footer";
 import InfoCard from "@/app/components/info-card";
 import { useNavBarActions } from "@/app/components/nav-bar-actions-context";
 import ChatInput from "@/app/hermes/conversation/components/chat_input";
 import ChatMessageList from "@/app/hermes/conversation/components/chat_message_list";
-import { ModelFormInput, PersonaFormInput } from "@/app/hermes/types";
+import {
+  ModelFormInput,
+  PersonaFormInput,
+  TraitFormInput,
+} from "@/app/hermes/types";
+import { Button } from "@/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
@@ -24,20 +30,24 @@ import {
   Role,
   streamCompletion,
 } from "@/lib/api/hermes";
-import { ChevronDown, SlidersHorizontal } from "lucide-react";
+import { ChevronDown, Plus, SlidersHorizontal } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function ChatInterfaceView({
   persona,
   model,
+  activeTraits,
   onPersonaChange,
   onModelChange,
+  onTraitsChange,
   ...props
 }: React.ComponentProps<"div"> & {
   persona: PersonaFormInput;
   model: ModelFormInput;
+  activeTraits: TraitFormInput[];
   onPersonaChange?: (persona: PersonaFormInput) => void;
   onModelChange?: (model: ModelFormInput) => void;
+  onTraitsChange?: (traits: TraitFormInput[]) => void;
 }) {
   const [messages, setMessages] = useState<MessageInput[]>([]);
   const [inputText, setInputText] = useState("");
@@ -87,6 +97,10 @@ export default function ChatInterfaceView({
             personality: persona.personality,
             scenario: persona.scenario,
           },
+          traits: activeTraits.map((t) => ({
+            name: t.name,
+            content: t.content,
+          })),
           messages: currentMessages.map(({ role, content }) => ({
             role,
             content,
@@ -179,8 +193,10 @@ export default function ChatInterfaceView({
         onOpenChange={setIsConfigOpen}
         persona={persona}
         model={model}
+        activeTraits={activeTraits}
         onPersonaChange={onPersonaChange}
         onModelChange={onModelChange}
+        onTraitsChange={onTraitsChange}
       />
     </div>
   );
@@ -191,20 +207,65 @@ function ConversationConfigSheet({
   onOpenChange,
   persona,
   model,
+  activeTraits,
   onPersonaChange,
   onModelChange,
+  onTraitsChange,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   persona: PersonaFormInput;
   model: ModelFormInput;
+  activeTraits: TraitFormInput[];
   onPersonaChange?: (persona: PersonaFormInput) => void;
   onModelChange?: (model: ModelFormInput) => void;
+  onTraitsChange?: (traits: TraitFormInput[]) => void;
 }) {
   const [personasState] = useApi(() => hermesApi.getAllPersonas());
   const [modelsState] = useApi(() => hermesApi.getAllModels());
+  const [traitsState] = useApi(() => hermesApi.getAllTraits());
   const [personasOpen, setPersonasOpen] = useState(false);
   const [modelsOpen, setModelsOpen] = useState(false);
+  const [traitsOpen, setTraitsOpen] = useState(false);
+  const [ephemeralTraits, setEphemeralTraits] = useState<TraitFormInput[]>([]);
+  const [isAddingTrait, setIsAddingTrait] = useState(false);
+  const [draftName, setDraftName] = useState("");
+  const [draftContent, setDraftContent] = useState("");
+
+  const handleToggleTrait = (trait: TraitFormInput) => {
+    if (!onTraitsChange) return;
+    const isActive = activeTraits.some((t) => t.id === trait.id);
+    if (isActive) {
+      onTraitsChange(activeTraits.filter((t) => t.id !== trait.id));
+    } else {
+      onTraitsChange([...activeTraits, trait]);
+    }
+  };
+
+  const handleConfirmEphemeralTrait = () => {
+    if (!draftContent.trim() || !onTraitsChange) return;
+    const newTrait: TraitFormInput = {
+      id: crypto.randomUUID(),
+      name: draftName.trim() || "Ephemeral Trait",
+      content: draftContent.trim(),
+    };
+    setEphemeralTraits((prev) => [...prev, newTrait]);
+    onTraitsChange([...activeTraits, newTrait]);
+    setDraftName("");
+    setDraftContent("");
+    setIsAddingTrait(false);
+  };
+
+  const handleCancelEphemeralTrait = () => {
+    setDraftName("");
+    setDraftContent("");
+    setIsAddingTrait(false);
+  };
+
+  const allTraits = [
+    ...(traitsState.data?.map((t) => ({ ...t, ephemeral: false })) ?? []),
+    ...ephemeralTraits.map((t) => ({ ...t, ephemeral: true })),
+  ];
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -238,6 +299,80 @@ function ConversationConfigSheet({
               selected: m.id === model.id,
             }))}
           />
+
+          <Collapsible open={traitsOpen} onOpenChange={setTraitsOpen}>
+            <CollapsibleTrigger className="flex items-center justify-between w-full rounded-md px-2 py-2 hover:bg-accent transition-colors">
+              <p className="text-sm font-medium">Traits</p>
+              <ChevronDown
+                className={`h-4 w-4 text-muted-foreground transition-transform ${traitsOpen ? "rotate-180" : ""}`}
+              />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="grid grid-cols-1 gap-3 mt-2">
+              {allTraits.map((trait) => {
+                const isActive = activeTraits.some(
+                  (t) => t === trait || (t.id && t.id === trait.id),
+                );
+                return (
+                  <InfoCard
+                    key={trait.id}
+                    label={trait.name}
+                    description={trait.content}
+                    onClick={() => handleToggleTrait(trait)}
+                    className={[
+                      "hover:bg-accent hover:cursor-pointer w-full",
+                      trait.ephemeral ? "border-dashed" : "",
+                      isActive ? "border-accent-foreground" : "",
+                    ].join(" ")}
+                  />
+                );
+              })}
+
+              {isAddingTrait ? (
+                <div className="rounded-4xl border-2 border-dashed border-accent py-4 px-3 space-y-3">
+                  <input
+                    type="text"
+                    value={draftName}
+                    onChange={(e) => setDraftName(e.target.value)}
+                    placeholder="Name (optional)"
+                    className="w-full text-sm font-medium bg-transparent outline-none placeholder:text-muted-foreground"
+                    autoFocus
+                  />
+                  <AutosizeTextarea
+                    value={draftContent}
+                    onChange={(e) => setDraftContent(e.target.value)}
+                    placeholder="Enter context or instruction to inject..."
+                    className="w-full text-sm bg-transparent border-none shadow-none resize-none p-0 focus-visible:ring-0 placeholder:text-muted-foreground"
+                  />
+                  <div className="flex gap-2 pt-1">
+                    <Button
+                      size="sm"
+                      onClick={handleConfirmEphemeralTrait}
+                      disabled={!draftContent.trim()}
+                      className="flex-1"
+                    >
+                      Add
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleCancelEphemeralTrait}
+                      className="flex-1"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsAddingTrait(true)}
+                  className="flex items-center justify-center gap-2 w-full rounded-4xl border-2 border-dashed border-accent py-4 px-3 text-sm text-muted-foreground hover:text-foreground hover:border-accent-foreground transition-colors"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add ephemeral trait
+                </button>
+              )}
+            </CollapsibleContent>
+          </Collapsible>
         </div>
       </SheetContent>
     </Sheet>

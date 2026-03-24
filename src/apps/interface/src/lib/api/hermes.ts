@@ -49,10 +49,16 @@ export interface ModelInput {
   repeatPenalty?: number | null;
 }
 
+export interface TraitInput {
+  name: string;
+  content: string;
+}
+
 export interface ConversationInput {
   model: ModelInput;
   persona: PersonaInput;
   messages: MessageInput[];
+  traits?: TraitInput[];
 }
 
 export interface GenerateCompletionInput {
@@ -67,6 +73,14 @@ export enum Role {
   System = "SYSTEM",
   User = "USER",
   Assistant = "ASSISTANT",
+}
+
+export interface Trait {
+  id: string;
+  name: string;
+  content: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export const hermesApi = {
@@ -114,6 +128,21 @@ export const hermesApi = {
 
   deleteModel: (modelId: string) =>
     api.del<{ id: string }>(`/api/hermes/models/${modelId}`),
+
+  getAllTraits: (params?: { filter?: string[] }) =>
+    api.get<Trait[]>("/api/hermes/traits", params),
+
+  getTrait: (traitId: string) =>
+    api.get<Trait>(`/api/hermes/traits/${traitId}`),
+
+  createTrait: (input: Omit<Trait, "id" | "createdAt" | "updatedAt">) =>
+    api.post<{ id: string }>("/api/hermes/traits", input),
+
+  updateTrait: (input: { traitId: string; name: string; content: string }) =>
+    api.put<{ id: string }>(`/api/hermes/traits/${input.traitId}`, input),
+
+  deleteTrait: (traitId: string) =>
+    api.del<{ id: string }>(`/api/hermes/traits/${traitId}`),
 };
 
 export async function* streamCompletion(

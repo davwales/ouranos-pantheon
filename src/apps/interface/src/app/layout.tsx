@@ -40,6 +40,11 @@ const navigationItems: NavigationBarItem[] = [
         description: "Configure LLM models and their parameters.",
         href: "/hermes/models",
       },
+      {
+        label: "Manage Traits",
+        description: "Create and manage conversation traits.",
+        href: "/hermes/traits",
+      },
     ],
   },
   {

@@ -55,7 +55,11 @@ public sealed class GenerateCompletionHandler
         _logger.LogTrace("Attempting to generate a chat completion for conversation '{@conversation}'.", conversation);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var systemPrompt = ComposeSystemPrompt(conversation.Persona, conversation.Model.SystemPrompt);
+        var systemPrompt = ComposeSystemPrompt(
+            conversation.Persona,
+            conversation.Model.SystemPrompt,
+            conversation.Traits
+        );
 
         var request = new GenerateChatCompletionRequest(
             conversation.Model.ModelIdentifier,
@@ -81,7 +85,7 @@ public sealed class GenerateCompletionHandler
         _logger.LogDebug("Successfully generated a chat completion.");
     }
 
-    private static string ComposeSystemPrompt(PersonaInput persona, string systemPrompt)
+    private static string ComposeSystemPrompt(PersonaInput persona, string systemPrompt, List<TraitInput>? traits)
     {
         var builder = new StringBuilder();
 
@@ -99,6 +103,17 @@ public sealed class GenerateCompletionHandler
 
         builder.AppendLine();
         builder.Append(systemPrompt);
+
+        if (traits is { Count: > 0 })
+        {
+            foreach (var trait in traits)
+            {
+                builder.AppendLine();
+                builder.AppendLine();
+                builder.AppendLine($"[{trait.Name}]");
+                builder.Append(trait.Content);
+            }
+        }
 
         return builder.ToString();
     }
