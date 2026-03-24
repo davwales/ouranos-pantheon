@@ -30,7 +30,10 @@ export default function RecipesPage() {
   );
 
   const { sortField, sortDirection } = extractSort(tableState.sort);
-  const filter = extractFilter(tableState.filter);
+  const filter = useMemo(
+    () => extractFilter(tableState.filter),
+    [tableState.filter],
+  );
 
   const [state, reexecute] = useApi(
     () =>
@@ -45,8 +48,9 @@ export default function RecipesPage() {
       marketId,
       timeFrameKey,
       tableState.pagination,
-      tableState.sort,
-      tableState.filter,
+      sortField,
+      sortDirection,
+      filter,
     ],
   );
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useRef, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 
 const FooterId = "footer-root";
@@ -11,15 +11,11 @@ export function Footer(props: React.ComponentProps<"div">) {
 }
 
 export function FooterContent({ children }: { children: React.ReactNode }) {
-  const [mounted, setMounted] = React.useState(false);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMounted(true);
-    return () => {
-      setMounted(false);
-    };
-  }, []);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   if (!mounted) return null;
 

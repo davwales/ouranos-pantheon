@@ -15,7 +15,7 @@ export default function MarketSelectionView({
   label: string;
   href: string;
 }) {
-  const [state] = useApi(() => plutusApi.getAllMarkets(), []);
+  const [state] = useApi(() => plutusApi.getAllMarkets());
 
   return (
     <div {...props}>

@@ -201,8 +201,8 @@ function ConversationConfigSheet({
   onPersonaChange?: (persona: PersonaFormInput) => void;
   onModelChange?: (model: ModelFormInput) => void;
 }) {
-  const [personasState] = useApi(() => hermesApi.getAllPersonas(), []);
-  const [modelsState] = useApi(() => hermesApi.getAllModels(), []);
+  const [personasState] = useApi(() => hermesApi.getAllPersonas());
+  const [modelsState] = useApi(() => hermesApi.getAllModels());
   const [personasOpen, setPersonasOpen] = useState(false);
   const [modelsOpen, setModelsOpen] = useState(false);
 

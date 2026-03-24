@@ -27,6 +27,7 @@ export default function MobileDataTable<TData>({
   disableFiltering = false,
   ...props
 }: React.ComponentProps<"div"> & DataTableProps<TData>) {
+  "use no memo";
   const tableData = useMemo(() => data ?? [], [data]);
   const topRef = useRef<HTMLDivElement>(null);
 
@@ -62,7 +63,7 @@ export default function MobileDataTable<TData>({
   };
 
   const handlePaginationArgsChanged = (
-    updatedPaginationArgs: PaginationArgs
+    updatedPaginationArgs: PaginationArgs,
   ) => {
     if (onStateChange) {
       onStateChange({
@@ -70,8 +71,7 @@ export default function MobileDataTable<TData>({
         pagination: updatedPaginationArgs,
       });
 
-      const pageChanged =
-        updatedPaginationArgs.skip != state?.pagination?.skip;
+      const pageChanged = updatedPaginationArgs.skip != state?.pagination?.skip;
       if (pageChanged) {
         handleScrollToTop();
       }
@@ -106,7 +106,7 @@ export default function MobileDataTable<TData>({
                 <CardTitle>
                   {flexRender(
                     columns[0].cell,
-                    row.getVisibleCells()[0].getContext()
+                    row.getVisibleCells()[0].getContext(),
                   )}
                 </CardTitle>
               </CardHeader>
@@ -128,7 +128,7 @@ export default function MobileDataTable<TData>({
                           <span>
                             {flexRender(
                               cell.column.columnDef.cell,
-                              cell.getContext()
+                              cell.getContext(),
                             )}
                           </span>
                         </div>
@@ -136,10 +136,10 @@ export default function MobileDataTable<TData>({
                         <div key={cell.id} className="w-full">
                           {flexRender(
                             cell.column.columnDef.cell,
-                            cell.getContext()
+                            cell.getContext(),
                           )}
                         </div>
-                      )
+                      ),
                     )}
                 </div>
               </CardContent>

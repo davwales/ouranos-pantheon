@@ -39,7 +39,10 @@ export default function SignalRankingsDetail() {
   );
 
   const { sortField, sortDirection } = extractSort(tableState.sort);
-  const filter = extractFilter(tableState.filter);
+  const filter = useMemo(
+    () => extractFilter(tableState.filter),
+    [tableState.filter],
+  );
 
   const [state, reexecute] = useApi(
     () =>
@@ -50,7 +53,7 @@ export default function SignalRankingsDetail() {
         sortDirection,
         filter,
       }),
-    [marketId, tableState.pagination, tableState.sort, tableState.filter],
+    [marketId, tableState.pagination, sortField, sortDirection, filter],
   );
 
   const data = state.data;

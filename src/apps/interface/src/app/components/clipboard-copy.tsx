@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useState, useSyncExternalStore } from "react";
 
 export default function ClipboardCopy({
   value,
@@ -18,11 +18,11 @@ export default function ClipboardCopy({
   hideIfNotSupported?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
-  const [clipboardSupported, setClipboardSupported] = useState(false);
-
-  useEffect(() => {
-    setClipboardSupported(!!navigator.clipboard);
-  }, []);
+  const clipboardSupported = useSyncExternalStore(
+    () => () => {},
+    () => !!navigator.clipboard,
+    () => false,
+  );
 
   if (!clipboardSupported) {
     if (hideIfNotSupported) {

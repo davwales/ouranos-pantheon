@@ -1,24 +1,37 @@
 import { Typography } from "@/app/components/typography";
+import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 export default function InfoCard({
   label,
   description,
   iconSrc,
+  alt,
   className,
   ...props
 }: React.ComponentProps<"div"> & {
   label: string;
   description?: string | null | undefined;
   iconSrc?: string | null | undefined;
+  alt?: string;
 }) {
   return (
     <div
       {...props}
-      className={`flex items-start rounded-4xl border-2 border-accent py-4 px-3 ${className}`}
+      className={cn(
+        "flex items-start rounded-4xl border-2 border-accent py-4 px-3",
+        className,
+      )}
     >
       {iconSrc && (
         <div className="flex-shrink-0 w-20 h-20 bg-accent-foreground rounded-2xl flex items-center justify-center">
-          <img src={iconSrc} className="w-fit rounded-xl" />
+          <Image
+            src={iconSrc}
+            alt={alt ?? ""}
+            width={80}
+            height={80}
+            className="w-fit rounded-xl"
+          />
         </div>
       )}
       <div className="ml-4">
