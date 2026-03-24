@@ -89,27 +89,27 @@ public sealed class GetSignalRankingsHandler
             .Where(s => s.MarketId == input.MarketId)
             .GroupBy(s => new { s.SymbolId, s.Symbol.Name, s.Symbol.Subcode })
             .Select(g => new
-                {
-                    g.Key.SymbolId,
-                    g.Key.Name,
-                    g.Key.Subcode,
-                    OverallScore = g.Average(x => x.Value),
-                    BuyScore = _buyTypes.Count > 0
+            {
+                g.Key.SymbolId,
+                g.Key.Name,
+                g.Key.Subcode,
+                OverallScore = g.Average(x => x.Value),
+                BuyScore = _buyTypes.Count > 0
                         ? g.Average(x => _buyTypes.Contains(x.Type) ? x.Value : null)
                         : null,
-                    SellScore = _sellTypes.Count > 0
+                SellScore = _sellTypes.Count > 0
                         ? g.Average(x => _sellTypes.Contains(x.Type) ? x.Value : null)
                         : null,
-                    FlipScore = _flipTypes.Count > 0
+                FlipScore = _flipTypes.Count > 0
                         ? g.Average(x => _flipTypes.Contains(x.Type) ? x.Value : null)
                         : null,
-                    MerchScore = _merchTypes.Count > 0
+                MerchScore = _merchTypes.Count > 0
                         ? g.Average(x => _merchTypes.Contains(x.Type) ? x.Value : null)
                         : null,
-                    SignalCount = g.Count(),
-                    BullishCount = g.Count(x => x.Value > 0),
-                    BearishCount = g.Count(x => x.Value < 0),
-                }
+                SignalCount = g.Count(),
+                BullishCount = g.Count(x => x.Value > 0),
+                BearishCount = g.Count(x => x.Value < 0),
+            }
             )
             .ToListAsync(cancellationToken);
 
