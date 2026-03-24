@@ -7,7 +7,7 @@ import { hermesApi } from "@/lib/api/hermes";
 import Link from "next/link";
 
 export default function ModelsPage() {
-  const [state] = useApi(() => hermesApi.getAllModels(), []);
+  const [state] = useApi(() => hermesApi.getAllModels());
 
   return (
     <div className="m-4">

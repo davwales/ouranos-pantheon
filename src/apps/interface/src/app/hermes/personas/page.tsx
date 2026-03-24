@@ -7,7 +7,7 @@ import { hermesApi } from "@/lib/api/hermes";
 import Link from "next/link";
 
 export default function PersonasPage() {
-  const [state] = useApi(() => hermesApi.getAllPersonas(), []);
+  const [state] = useApi(() => hermesApi.getAllPersonas());
 
   return (
     <div className="m-4">

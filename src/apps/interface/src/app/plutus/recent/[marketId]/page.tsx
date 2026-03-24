@@ -13,13 +13,16 @@ import { formatDistance } from "date-fns";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo } from "react";
+import { useShallow } from "zustand/react/shallow";
 
 export default function RecentMarketTrades() {
   const { marketId } = useParams<{ marketId: string }>();
-  const [tableState, setTableState] = usePlutusStore((state: PlutusState) => [
-    state.recentTradesTableState,
-    state.setRecentTradesTableState,
-  ]);
+  const [tableState, setTableState] = usePlutusStore(
+    useShallow((state: PlutusState) => [
+      state.recentTradesTableState,
+      state.setRecentTradesTableState,
+    ]),
+  );
 
   const take =
     tableState.pagination?.take ?? tableState.pagination?.pageSize ?? 10;

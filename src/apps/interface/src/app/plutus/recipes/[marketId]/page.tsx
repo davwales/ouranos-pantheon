@@ -17,19 +17,23 @@ import { Plus, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo } from "react";
+import { useShallow } from "zustand/react/shallow";
 
 export default function RecipesPage() {
   const { marketId } = useParams<{ marketId: string }>();
   const [timeFrameKey, tableState, setTableState] = usePlutusStore(
-    (state: PlutusState) => [
+    useShallow((state: PlutusState) => [
       state.timeFrameKey,
       state.recipesTableState,
       state.setRecipesTableState,
-    ],
+    ]),
   );
 
   const { sortField, sortDirection } = extractSort(tableState.sort);
-  const filter = extractFilter(tableState.filter);
+  const filter = useMemo(
+    () => extractFilter(tableState.filter),
+    [tableState.filter],
+  );
 
   const [state, reexecute] = useApi(
     () =>
@@ -44,8 +48,9 @@ export default function RecipesPage() {
       marketId,
       timeFrameKey,
       tableState.pagination,
-      tableState.sort,
-      tableState.filter,
+      sortField,
+      sortDirection,
+      filter,
     ],
   );
 

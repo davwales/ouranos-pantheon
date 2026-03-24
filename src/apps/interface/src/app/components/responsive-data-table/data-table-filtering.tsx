@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/select";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useLayoutEffect, useState } from "react";
 import {
   ExtendedColumnDef,
   FilterCondition,
@@ -33,16 +33,27 @@ function FilterInput({ columns, value, onChange, onRemove }: FilterInputProps) {
   );
   const debouncedTextValue = useDebounce(textInputValue);
 
+  const onChangeRef = React.useRef(onChange);
+  const valueRef = React.useRef(value);
+  const filterTypeRef = React.useRef(currentColumn?.filterConfig?.type);
+
+  useLayoutEffect(() => {
+    onChangeRef.current = onChange;
+    valueRef.current = value;
+    filterTypeRef.current = currentColumn?.filterConfig?.type;
+  });
+
   useEffect(() => {
-    if (currentColumn?.filterConfig?.type === "number") {
+    if (filterTypeRef.current === "number") {
       const parsed = parseFloat(debouncedTextValue);
-      if (!Number.isNaN(parsed)) onChange({ ...value, value: parsed });
+      if (!Number.isNaN(parsed))
+        onChangeRef.current({ ...valueRef.current, value: parsed });
     } else if (
-      currentColumn?.filterConfig?.type !== "boolean" &&
-      currentColumn?.filterConfig?.type !== "enum" &&
-      currentColumn?.filterConfig?.type !== "date"
+      filterTypeRef.current !== "boolean" &&
+      filterTypeRef.current !== "enum" &&
+      filterTypeRef.current !== "date"
     ) {
-      onChange({ ...value, value: debouncedTextValue });
+      onChangeRef.current({ ...valueRef.current, value: debouncedTextValue });
     }
   }, [debouncedTextValue]);
 

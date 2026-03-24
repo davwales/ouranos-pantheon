@@ -16,6 +16,7 @@ import { RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo } from "react";
+import { useShallow } from "zustand/react/shallow";
 
 function ScoreCell({ value }: { value: number | null | undefined }) {
   if (value == null) return <span className="text-muted-foreground">-</span>;
@@ -30,13 +31,18 @@ function ScoreCell({ value }: { value: number | null | undefined }) {
 
 export default function SignalRankingsDetail() {
   const { marketId } = useParams<{ marketId: string }>();
-  const [tableState, setTableState] = usePlutusStore((state: PlutusState) => [
-    state.signalRankingsTableState,
-    state.setSignalRankingsTableState,
-  ]);
+  const [tableState, setTableState] = usePlutusStore(
+    useShallow((state: PlutusState) => [
+      state.signalRankingsTableState,
+      state.setSignalRankingsTableState,
+    ]),
+  );
 
   const { sortField, sortDirection } = extractSort(tableState.sort);
-  const filter = extractFilter(tableState.filter);
+  const filter = useMemo(
+    () => extractFilter(tableState.filter),
+    [tableState.filter],
+  );
 
   const [state, reexecute] = useApi(
     () =>
@@ -47,7 +53,7 @@ export default function SignalRankingsDetail() {
         sortDirection,
         filter,
       }),
-    [marketId, tableState.pagination, tableState.sort, tableState.filter],
+    [marketId, tableState.pagination, sortField, sortDirection, filter],
   );
 
   const data = state.data;

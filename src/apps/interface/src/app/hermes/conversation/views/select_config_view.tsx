@@ -19,8 +19,8 @@ export default function SelectConfigView({
   onBegin: () => void;
   beginDisabled: boolean;
 }) {
-  const [personasState] = useApi(() => hermesApi.getAllPersonas(), []);
-  const [modelsState] = useApi(() => hermesApi.getAllModels(), []);
+  const [personasState] = useApi(() => hermesApi.getAllPersonas());
+  const [modelsState] = useApi(() => hermesApi.getAllModels());
 
   const handlePersonaSelected = (selected: PersonaFormInput) => {
     if (selected.id === persona?.id) {

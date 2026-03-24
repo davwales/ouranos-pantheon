@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 export type ApiState<T> =
   | { status: "idle"; data: undefined }
@@ -10,25 +10,41 @@ export type ApiState<T> =
 
 export function useApi<T>(
   fetcher: () => Promise<T>,
-  deps: React.DependencyList,
+  deps: React.DependencyList = [],
 ): [ApiState<T>, () => void] {
+  const fetcherRef = useRef(fetcher);
+  const [executeCount, setExecuteCount] = useState(0);
+  const depsKey = JSON.stringify(deps);
+
   const [state, setState] = useState<ApiState<T>>({
-    status: "idle",
+    status: "loading",
     data: undefined,
   });
 
+  useEffect(() => {
+    fetcherRef.current = fetcher;
+  });
+
   const execute = useCallback(() => {
-    setState((prev) => ({ status: "loading", data: prev.data }));
-    fetcher()
-      .then((data) => setState({ status: "success", data }))
-      .catch((error) =>
-        setState((prev) => ({ status: "error", data: prev.data, error })),
-      );
-  }, deps);
+    setState((prev) => ({ ...prev, status: "loading" }));
+    setExecuteCount((c) => c + 1);
+  }, []);
 
   useEffect(() => {
-    execute();
-  }, [execute]);
+    let cancelled = false;
+    fetcherRef
+      .current()
+      .then((data) => {
+        if (!cancelled) setState({ status: "success", data });
+      })
+      .catch((error) => {
+        if (!cancelled)
+          setState((prev) => ({ status: "error", data: prev.data, error }));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [depsKey, executeCount]);
 
   return [state, execute];
 }

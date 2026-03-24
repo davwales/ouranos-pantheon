@@ -9,6 +9,25 @@ import { TooltipContent } from "@radix-ui/react-tooltip";
 import { MoveRight, TrendingDown, TrendingUp } from "lucide-react";
 import { useMemo } from "react";
 
+function TooltipItem({
+  label,
+  value,
+  valueClassName,
+}: {
+  label: string;
+  value: number | null | undefined;
+  valueClassName?: string;
+}) {
+  return (
+    <div className="flex gap-2 justify-between items-center">
+      <Typography variant="muted">{label}</Typography>
+      <Typography variant="small" className={valueClassName}>
+        {value ? abbreviateNumber(value) : "-"}
+      </Typography>
+    </div>
+  );
+}
+
 export default function PercentChange({
   label,
   current,
@@ -46,26 +65,9 @@ export default function PercentChange({
   const icon = getIcon(percentChange);
   const formattedPercent = Math.abs(percentChange).toFixed(2);
 
-  const TooltipItem = ({
-    label,
-    value,
-    valueClassName,
-  }: {
-    label: string;
-    value: number | null | undefined;
-    valueClassName?: string;
-  }) => (
-    <div className="flex gap-2 justify-between items-center">
-      <Typography variant="muted">{label}</Typography>
-      <Typography variant="small" className={valueClassName}>
-        {value ? abbreviateNumber(value) : "-"}
-      </Typography>
-    </div>
-  );
-
   const difference = useMemo(
     () => (current || 0) - (previous || 0),
-    [current, previous]
+    [current, previous],
   );
 
   return (

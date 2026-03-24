@@ -34,6 +34,7 @@ export default function DesktopDataTable<TData>({
   scrollTop = true,
   ...props
 }: React.ComponentProps<"div"> & DataTableProps<TData>) {
+  "use no memo";
   const tableData = useMemo(() => data ?? [], [data]);
 
   const table = useReactTable({
@@ -62,7 +63,7 @@ export default function DesktopDataTable<TData>({
   };
 
   const handlePaginationArgsChanged = (
-    updatedPaginationArgs: PaginationArgs
+    updatedPaginationArgs: PaginationArgs,
   ) => {
     if (onStateChange) {
       onStateChange({
@@ -93,7 +94,7 @@ export default function DesktopDataTable<TData>({
                       ? null
                       : flexRender(
                           header.column.columnDef.header,
-                          header.getContext()
+                          header.getContext(),
                         )}
                     {!disableSorting && (
                       <DataTableSorting

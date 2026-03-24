@@ -1,35 +1,30 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useRef, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 
 const FooterId = "footer-root";
 
 export function Footer(props: React.ComponentProps<"div">) {
-    const footerRef = useRef<HTMLDivElement>(null);
-    return <div {...props} ref={footerRef} id={FooterId} />;
+  const footerRef = useRef<HTMLDivElement>(null);
+  return <div {...props} ref={footerRef} id={FooterId} />;
 }
 
-export function FooterContent({
-    children
-}: {
-    children: React.ReactNode
-}) {
-    const [mounted, setMounted] = React.useState(false);
+export function FooterContent({ children }: { children: React.ReactNode }) {
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
-    useEffect(() => {
-        setMounted(true);
-        return () => { setMounted(false); };
-    }, []);
+  if (!mounted) return null;
 
-    if (!mounted) return null;
+  const footerRoot = document.getElementById(FooterId);
 
-    const footerRoot = document.getElementById(FooterId);
+  if (!footerRoot) {
+    console.warn("Footer root not found");
+    return null;
+  }
 
-    if (!footerRoot) {
-        console.warn('Footer root not found');
-        return null;
-    }
-
-    return createPortal(children, footerRoot);
-};
+  return createPortal(children, footerRoot);
+}

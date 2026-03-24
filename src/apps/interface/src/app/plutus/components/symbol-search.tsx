@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { useApi } from "@/hooks/use-api";
 import { useDebounce } from "@/hooks/use-debounce";
 import { plutusApi } from "@/lib/api/plutus";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 export interface SelectedSymbol {
   id: string;
@@ -27,14 +27,17 @@ export function SymbolSearch({
 
   const take = Math.max(1, Math.min(numResults, 50));
 
-  const filter = [
-    `marketId:eq:${marketId}`,
-    ...(debouncedSearch ? [`name:like:${debouncedSearch}`] : []),
-  ];
+  const filter = useMemo(
+    () => [
+      `marketId:eq:${marketId}`,
+      ...(debouncedSearch ? [`name:like:${debouncedSearch}`] : []),
+    ],
+    [marketId, debouncedSearch],
+  );
 
   const [state] = useApi(
     () => plutusApi.getAllSymbols({ filter, skip: 0, take }),
-    [marketId, debouncedSearch, take],
+    [filter, take],
   );
 
   const handleSymbolSelected = (symbol: SelectedSymbol) => {
