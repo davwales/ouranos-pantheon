@@ -18,6 +18,11 @@ export default function Hermes() {
       description: "Configure LLM models and their parameters.",
       href: "/hermes/models",
     },
+    {
+      name: "Manage Traits",
+      description: "Create and manage conversation traits.",
+      href: "/hermes/traits",
+    },
   ];
 
   return (

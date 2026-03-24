@@ -5,5 +5,6 @@ namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateComplet
 public sealed record ConversationInput(
     ModelInput Model,
     PersonaInput Persona,
-    List<Message> Messages
+    List<Message> Messages,
+    List<TraitInput>? Traits = null
 );

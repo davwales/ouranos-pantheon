@@ -2,7 +2,7 @@
 
 import ChatInterfaceView from "@/app/hermes/conversation/views/chat_interface_view";
 import SelectConfigView from "@/app/hermes/conversation/views/select_config_view";
-import { ModelFormInput, PersonaFormInput } from "@/app/hermes/types";
+import { ModelFormInput, PersonaFormInput, TraitFormInput } from "@/app/hermes/types";
 import { hermesApi } from "@/lib/api/hermes";
 import { useEffect, useState } from "react";
 
@@ -11,6 +11,7 @@ type ConversationState = "loading" | "setup" | "chat";
 export default function Conversation() {
   const [persona, setPersona] = useState<PersonaFormInput>();
   const [model, setModel] = useState<ModelFormInput>();
+  const [activeTraits, setActiveTraits] = useState<TraitFormInput[]>([]);
   const [conversationState, setConversationState] =
     useState<ConversationState>("loading");
 
@@ -60,8 +61,10 @@ export default function Conversation() {
       <ChatInterfaceView
         persona={persona}
         model={model}
+        activeTraits={activeTraits}
         onPersonaChange={setPersona}
         onModelChange={setModel}
+        onTraitsChange={setActiveTraits}
       />
     );
   }

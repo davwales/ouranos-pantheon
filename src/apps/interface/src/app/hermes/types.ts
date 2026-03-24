@@ -18,6 +18,12 @@ export interface ModelFormInput {
   isDefault: boolean;
 }
 
+export interface TraitFormInput {
+  id?: string;
+  name: string;
+  content: string;
+}
+
 export interface ConversationConfig {
   persona: PersonaFormInput;
   model: ModelFormInput;
