@@ -2,16 +2,13 @@ import { ExtendedColumnDef } from "@/app/components/responsive-data-table";
 import ResponsiveDataTable from "@/app/components/responsive-data-table/responsive-data-table";
 import { ResponsiveDialog } from "@/app/components/responsive-dialog";
 import { ResponsiveDropdownMenu } from "@/app/components/responsive-dropdown-menu/responsive-dropdown-menu";
-import {
-  SelectedSymbol,
-  SymbolSearch,
-} from "@/app/plutus/components/symbol-search";
-import { RecipeSymbol } from "@/app/plutus/recipes/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { RecipeSymbol } from "../types";
+import { SelectedSymbol, SymbolSearch } from "./symbol-search";
 
 function QuantityInput({
   initialValue,
@@ -84,21 +81,21 @@ export function SymbolTable({
   const handleQuantityChange = useCallback(
     (item: RecipeSymbol, quantity: number) => {
       const newItems = items.map((i) =>
-        i.symbolId === item.symbolId ? { ...i, quantity } : i
+        i.symbolId === item.symbolId ? { ...i, quantity } : i,
       );
       onItemsChange(newItems);
     },
-    [items, onItemsChange]
+    [items, onItemsChange],
   );
 
   const handleRemove = useCallback(
     (item: RecipeSymbol) => {
       const newItems = items.filter(
-        (i: RecipeSymbol) => i.symbolId !== item.symbolId
+        (i: RecipeSymbol) => i.symbolId !== item.symbolId,
       );
       onItemsChange(newItems);
     },
-    [items, onItemsChange]
+    [items, onItemsChange],
   );
 
   const columns: ExtendedColumnDef<RecipeSymbol>[] = useMemo(
@@ -109,7 +106,7 @@ export function SymbolTable({
         accessorFn: (row: RecipeSymbol) => row.name,
         cell: ({ row, getValue }) => (
           <Link
-            href={`/plutus/explorer/${marketId}/${row.original.symbolId}`}
+            href={`/plutus/${marketId}/${row.original.symbolId}`}
             className="hover:underline"
           >
             {getValue<string>()}
@@ -153,7 +150,7 @@ export function SymbolTable({
         ),
       },
     ],
-    [marketId, title, handleQuantityChange, handleRemove]
+    [marketId, title, handleQuantityChange, handleRemove],
   );
 
   return (

@@ -49,7 +49,7 @@ export default function RecentMarketTrades() {
         accessorFn: (row) => row.symbolName,
         cell: ({ cell, row }) => (
           <Link
-            href={`/plutus/explorer/${marketId}/${row.original.symbolId}`}
+            href={`/plutus/${marketId}/${row.original.symbolId}`}
             className="hover:underline"
           >
             {cell.getValue<string>()}

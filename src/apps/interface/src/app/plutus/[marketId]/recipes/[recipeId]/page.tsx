@@ -1,19 +1,23 @@
 "use client";
 
+import { ConfirmationButton } from "@/app/components/confirmation-button";
 import { Typography } from "@/app/components/typography";
-import { SelectedSymbol } from "@/app/plutus/components/symbol-search";
-import { RecipeForm } from "@/app/plutus/recipes/components/recipe-form";
-import { SymbolTable } from "@/app/plutus/recipes/components/symbol-table";
-import { RecipeSymbol } from "@/app/plutus/recipes/types";
 import { Button } from "@/components/ui/button";
+import { useApi } from "@/hooks/use-api";
 import { plutusApi } from "@/lib/api/plutus";
 import { RefreshCw } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { RecipeForm } from "../components/recipe-form";
+import { SelectedSymbol } from "../components/symbol-search";
+import { SymbolTable } from "../components/symbol-table";
+import { RecipeSymbol } from "../types";
 
-export default function CreateRecipePage() {
-  const { marketId } = useParams<{ marketId: string }>();
-  const router = useRouter();
+export default function RecipeDetailPage() {
+  const { marketId, recipeId } = useParams<{
+    marketId: string;
+    recipeId: string;
+  }>();
   const [name, setName] = useState("");
   const [cost, setCost] = useState(0);
   const [inputs, setInputs] = useState<RecipeSymbol[]>([]);
@@ -23,10 +27,39 @@ export default function CreateRecipePage() {
   const [isOutputDialogOpen, setIsOutputDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleSubmit = async () => {
+  const router = useRouter();
+
+  const [state] = useApi(() => plutusApi.getRecipe(recipeId), [recipeId]);
+
+  const recipe = state.data;
+  const fetching = state.status === "loading";
+
+  useEffect(() => {
+    if (recipe) {
+      setName(recipe.name);
+      setCost(recipe.cost);
+      setInputs(recipe.inputs);
+      setOutputs(recipe.outputs);
+    }
+  }, [recipe]);
+
+  const handleDelete = async () => {
     setIsProcessing(true);
     try {
-      const response = await plutusApi.createRecipe({
+      await plutusApi.deleteRecipe(recipeId);
+      router.push(`/plutus/${marketId}/recipes`);
+    } catch (error) {
+      console.error("Failed to delete recipe:", error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setIsProcessing(true);
+    try {
+      await plutusApi.updateRecipe({
+        recipeId,
         marketId,
         name,
         cost,
@@ -41,27 +74,42 @@ export default function CreateRecipePage() {
           quantity: output.quantity,
         })),
       });
-
-      router.replace(`/plutus/recipes/${marketId}/${response.id}`);
     } catch (error) {
-      console.error("Failed to create recipe:", error);
+      console.error("Failed to save recipe:", error);
     } finally {
       setIsProcessing(false);
     }
   };
 
+  if (fetching) {
+    return <div>Loading...</div>;
+  }
+
+  if (!recipe) {
+    return <div>Recipe not found</div>;
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between">
         <Typography variant="h2" className="border-b-0">
-          Create New Recipe
+          Recipe Details
         </Typography>
 
         <div className="flex items-center gap-2">
           {isProcessing && <RefreshCw className="animate-spin" />}
-          <Button onClick={handleSubmit} disabled={isProcessing}>
+          <Button onClick={handleSave} disabled={isProcessing}>
             Save
           </Button>
+          <ConfirmationButton
+            title="Delete Recipe"
+            description="Are you sure you want to delete this recipe? This action cannot be undone."
+            onConfirm={handleDelete}
+            disabled={isProcessing}
+            variant="destructive"
+          >
+            Delete
+          </ConfirmationButton>
         </div>
       </div>
 
