@@ -51,31 +51,9 @@ const navigationItems: NavigationBarItem[] = [
     label: "Plutus",
     options: [
       {
-        label: "Explorer",
-        description:
-          "Explore symbols and their relevant market data over time.",
-        href: "/plutus/explorer",
-      },
-      {
-        label: "Recipes",
-        description:
-          "Manage and view how symbols can be combined to create other symbols.",
-        href: "/plutus/recipes",
-      },
-      {
-        label: "Forecasts",
-        description: "View the predicted symbol prices for the coming days.",
-        href: "/plutus/forecasts",
-      },
-      {
-        label: "Recent Trades",
-        description: "View trades for symbols as they are processed.",
-        href: "/plutus/recent",
-      },
-      {
-        label: "Signals",
-        description: "Find which symbols would be best to invest in.",
-        href: "/plutus/signals",
+        label: "Markets",
+        description: "Select a market to explore and analyze.",
+        href: "/plutus",
       },
     ],
   },
@@ -94,7 +72,7 @@ export default function RootLayout({ children }: React.PropsWithChildren) {
         >
           <NavBarActionsProvider>
             <SidebarProvider>
-              <div className="w-full flex flex-col min-h-[100dvh] h-[100dvh]">
+              <div className="w-full flex flex-col min-h-dvh h-dvh">
                 <ResponsiveNavigationBar items={navigationItems} />
                 <main className="flex-auto overflow-auto">{children}</main>
                 <Footer />
