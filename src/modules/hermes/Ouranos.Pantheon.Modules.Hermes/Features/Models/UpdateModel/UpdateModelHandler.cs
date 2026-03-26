@@ -51,7 +51,8 @@ public sealed class UpdateModelHandler : IPantheonHandler<UpdateModelInput, Upda
             command.Temperature,
             command.MaxTokens,
             command.RepeatPenalty,
-            command.IsDefault
+            command.IsDefault,
+            command.IsPublic
         );
 
         _dbContext.ModelConfigs.Update(model);

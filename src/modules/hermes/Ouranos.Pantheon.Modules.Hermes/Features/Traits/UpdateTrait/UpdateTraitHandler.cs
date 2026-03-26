@@ -39,7 +39,8 @@ public sealed class UpdateTraitHandler : IPantheonHandler<UpdateTraitInput, Upda
 
         trait.Update(
             command.Name,
-            command.Content
+            command.Content,
+            command.IsPublic
         );
 
         _dbContext.Traits.Update(trait);

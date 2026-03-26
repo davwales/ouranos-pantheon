@@ -49,7 +49,8 @@ public sealed class CreateModelHandler : IPantheonHandler<CreateModelInput, Crea
             command.Temperature,
             command.MaxTokens,
             command.RepeatPenalty,
-            command.IsDefault
+            command.IsDefault,
+            command.IsPublic
         );
 
         await _dbContext.ModelConfigs.AddAsync(model, cancellationToken);

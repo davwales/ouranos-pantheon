@@ -43,6 +43,7 @@ export default function EditTraitPage() {
         traitId: traitId,
         name: input.name,
         content: input.content,
+        isPublic: input.isPublic,
       });
       router.push("/hermes/traits");
     } catch (err) {

@@ -27,6 +27,7 @@ export function TraitForm({
     initial || {
       name: "",
       content: "",
+      isPublic: true,
     },
   );
 
@@ -64,6 +65,19 @@ export function TraitForm({
           placeholder="The context or instruction to inject into the conversation..."
           disabled={isReadOnly}
           className="w-full"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 items-center">
+        <Typography variant="h4">Public</Typography>
+        <input
+          type="checkbox"
+          checked={trait.isPublic}
+          disabled={isReadOnly}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            setTrait((prev) => ({ ...prev, isPublic: e.target.checked }))
+          }
+          className="h-5 w-5 cursor-pointer"
         />
       </div>
 

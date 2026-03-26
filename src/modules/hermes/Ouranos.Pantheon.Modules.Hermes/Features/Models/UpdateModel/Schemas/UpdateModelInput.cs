@@ -11,5 +11,6 @@ public sealed record UpdateModelInput(
     float? Temperature = null,
     int? MaxTokens = null,
     float? RepeatPenalty = null,
-    bool IsDefault = false
+    bool IsDefault = false,
+    bool IsPublic = true
 );

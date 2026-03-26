@@ -36,7 +36,8 @@ public sealed class CreateTraitHandler : IPantheonHandler<CreateTraitInput, Crea
         var trait = Trait.Create(
             DatabaseExtensions.CreateId<Trait>(),
             command.Name,
-            command.Content
+            command.Content,
+            command.IsPublic
         );
 
         await _dbContext.Traits.AddAsync(trait, cancellationToken);

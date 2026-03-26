@@ -20,6 +20,7 @@ export default function CreatePersonaPage() {
         personality: input.personality,
         scenario: input.scenario,
         isDefault: input.isDefault,
+        isPublic: input.isPublic,
       });
       router.push("/hermes/personas");
     } catch (err) {

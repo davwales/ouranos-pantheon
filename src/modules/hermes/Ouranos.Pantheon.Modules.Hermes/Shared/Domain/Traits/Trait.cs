@@ -15,10 +15,13 @@ public class Trait : BaseEntity<Id<Trait>>
 
     public string Content { get; private set; }
 
+    public bool IsPublic { get; private set; }
+
     public static Trait Create(
         Id<Trait> id,
         string name,
-        string content
+        string content,
+        bool isPublic = true
     )
     {
         Guard.Against.NullOrWhiteSpace(name);
@@ -27,13 +30,15 @@ public class Trait : BaseEntity<Id<Trait>>
         return new Trait(id)
         {
             Name = name,
-            Content = content
+            Content = content,
+            IsPublic = isPublic
         };
     }
 
     public void Update(
         string name,
-        string content
+        string content,
+        bool isPublic = true
     )
     {
         Guard.Against.NullOrWhiteSpace(name);
@@ -41,5 +46,6 @@ public class Trait : BaseEntity<Id<Trait>>
 
         Name = name;
         Content = content;
+        IsPublic = isPublic;
     }
 }

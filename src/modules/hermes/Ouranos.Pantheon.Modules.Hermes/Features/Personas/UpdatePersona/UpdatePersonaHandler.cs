@@ -49,7 +49,8 @@ public sealed class UpdatePersonaHandler : IPantheonHandler<UpdatePersonaInput, 
             command.Description,
             command.Personality,
             command.Scenario,
-            command.IsDefault
+            command.IsDefault,
+            command.IsPublic
         );
 
         _dbContext.Personas.Update(persona);

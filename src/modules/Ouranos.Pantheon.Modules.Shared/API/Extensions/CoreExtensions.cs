@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Infra.Flagsmith;
 using Ouranos.Pantheon.Modules.Shared.Infra.Postgres;
 using Ouranos.Pantheon.Modules.Shared.Infra.RabbitMq;
 using Serilog;
@@ -33,6 +34,7 @@ public static class CoreExtensions
 
         builder.Services.ConfigureRest(configuration);
         builder.Services.Configure<QueryOptions>(configuration.GetSection(QueryOptions.SectionName));
+        builder.Services.AddCoreFlagsmithModule(configuration);
 
         var rabbit = configuration.GetSection(RabbitMqOptions.SectionName).Get<RabbitMqOptions>();
 

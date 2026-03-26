@@ -3,25 +3,32 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.GetModel.Schemas;
+using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
+using Flagsmith;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Models.GetModel;
 
 public sealed class GetModelHandler : IPantheonHandler<GetModelInput, GetModelResponse>
 {
     private readonly HermesDbContext _dbContext;
+    private readonly IFlagsmithClient _flagsmith;
     private readonly ILogger<GetModelHandler> _logger;
 
     public GetModelHandler(
         ILogger<GetModelHandler> logger,
-        HermesDbContext dbContext
+        HermesDbContext dbContext,
+        IFlagsmithClient flagsmith
     )
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(dbContext);
+        Guard.Against.Null(flagsmith);
 
         _logger = logger;
         _dbContext = dbContext;
+        _flagsmith = flagsmith;
     }
 
     public async Task<GetModelResponse> Handle(
@@ -37,6 +44,15 @@ public sealed class GetModelHandler : IPantheonHandler<GetModelInput, GetModelRe
 
         Guard.Against.NotFound(query.ModelId, model);
 
+        if (!model.IsPublic)
+        {
+            var flags = await _flagsmith.GetEnvironmentFlags();
+            if (await flags.IsFeatureEnabled(HermesFeatureFlags.PublicMode))
+            {
+                Guard.Against.NotFound(query.ModelId, (ModelConfig?)null);
+            }
+        }
+
         _logger.LogDebug("Successfully handled get model request.");
         return new GetModelResponse(
             model.Id,
@@ -46,7 +62,8 @@ public sealed class GetModelHandler : IPantheonHandler<GetModelInput, GetModelRe
             model.Temperature,
             model.MaxTokens,
             model.RepeatPenalty,
-            model.IsDefault
+            model.IsDefault,
+            model.IsPublic
         );
     }
 }
