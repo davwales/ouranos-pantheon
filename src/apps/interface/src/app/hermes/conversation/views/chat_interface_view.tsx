@@ -248,6 +248,7 @@ function ConversationConfigSheet({
       id: crypto.randomUUID(),
       name: draftName.trim() || "Ephemeral Trait",
       content: draftContent.trim(),
+      isPublic: true,
     };
     setEphemeralTraits((prev) => [...prev, newTrait]);
     onTraitsChange([...activeTraits, newTrait]);

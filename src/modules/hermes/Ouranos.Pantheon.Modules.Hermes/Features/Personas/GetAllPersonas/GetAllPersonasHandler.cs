@@ -5,8 +5,10 @@ using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
 using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Hermes.Features.Personas.GetAllPersonas.Schemas;
+using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
+using Flagsmith;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Personas.GetAllPersonas;
 
@@ -14,7 +16,8 @@ public sealed class GetAllPersonasHandler
     : IPantheonHandler<GetAllPersonasInput, List<GetAllPersonasResponse>>
 {
     private static readonly FilterBuilder<Persona> FilterBuilder = new FilterBuilder<Persona>()
-        .On(nameof(Persona.Name), p => p.Name);
+        .On(nameof(Persona.Name), p => p.Name)
+        .On(nameof(Persona.IsPublic), p => p.IsPublic);
 
     private static readonly SortBuilder<Persona> SortBuilder = new SortBuilder<Persona>()
         .On(nameof(Persona.Name), p => p.Name)
@@ -22,18 +25,22 @@ public sealed class GetAllPersonasHandler
         .Default(p => p.Name, SortDirection.Asc);
 
     private readonly HermesDbContext _dbContext;
+    private readonly IFlagsmithClient _flagsmith;
     private readonly ILogger<GetAllPersonasHandler> _logger;
 
     public GetAllPersonasHandler(
         ILogger<GetAllPersonasHandler> logger,
-        HermesDbContext dbContext
+        HermesDbContext dbContext,
+        IFlagsmithClient flagsmith
     )
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(dbContext);
+        Guard.Against.Null(flagsmith);
 
         _logger = logger;
         _dbContext = dbContext;
+        _flagsmith = flagsmith;
     }
 
     public async Task<List<GetAllPersonasResponse>> Handle(
@@ -44,9 +51,19 @@ public sealed class GetAllPersonasHandler
         _logger.LogTrace("Attempting to handle get all personas query '{@query}'.", query);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var personas = await _dbContext.Personas
+        var flags = await _flagsmith.GetEnvironmentFlags();
+        var isPublicMode = await flags.IsFeatureEnabled(HermesFeatureFlags.PublicMode);
+
+        var dbQuery = _dbContext.Personas
             .AsQueryable()
-            .AsNoTracking()
+            .AsNoTracking();
+
+        if (isPublicMode)
+        {
+            dbQuery = dbQuery.Where(p => p.IsPublic);
+        }
+
+        var personas = await dbQuery
             .FilterBy(query.Filter, FilterBuilder)
             .SortBy(query.SortField, query.SortDirection, SortBuilder)
             .Select(p => new GetAllPersonasResponse(
@@ -55,7 +72,8 @@ public sealed class GetAllPersonasHandler
                     p.Description,
                     p.Personality,
                     p.Scenario,
-                    p.IsDefault
+                    p.IsDefault,
+                    p.IsPublic
                 )
             )
             .ToListAsync(cancellationToken);

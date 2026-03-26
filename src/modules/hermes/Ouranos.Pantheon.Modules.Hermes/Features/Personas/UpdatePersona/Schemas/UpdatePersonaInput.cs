@@ -9,5 +9,6 @@ public sealed record UpdatePersonaInput(
     string Description,
     string? Personality = null,
     string? Scenario = null,
-    bool IsDefault = false
+    bool IsDefault = false,
+    bool IsPublic = true
 );

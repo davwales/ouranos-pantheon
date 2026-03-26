@@ -9,5 +9,6 @@ public sealed record GetAllPersonasResponse(
     string Description,
     string? Personality,
     string? Scenario,
-    bool IsDefault
+    bool IsDefault,
+    bool IsPublic
 );

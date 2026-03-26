@@ -22,6 +22,7 @@ export default function CreateModelPage() {
         maxTokens: input.maxTokens,
         repeatPenalty: input.repeatPenalty,
         isDefault: input.isDefault,
+        isPublic: input.isPublic,
       });
       router.push("/hermes/models");
     } catch (err) {

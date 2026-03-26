@@ -26,6 +26,8 @@ public class ModelConfig : BaseEntity<Id<ModelConfig>>
 
     public bool IsDefault { get; private set; }
 
+    public bool IsPublic { get; private set; }
+
     public static ModelConfig Create(
         Id<ModelConfig> id,
         string name,
@@ -34,7 +36,8 @@ public class ModelConfig : BaseEntity<Id<ModelConfig>>
         float? temperature = null,
         int? maxTokens = null,
         float? repeatPenalty = null,
-        bool isDefault = false
+        bool isDefault = false,
+        bool isPublic = true
     )
     {
         Guard.Against.NullOrWhiteSpace(name);
@@ -49,7 +52,8 @@ public class ModelConfig : BaseEntity<Id<ModelConfig>>
             Temperature = temperature,
             MaxTokens = maxTokens,
             RepeatPenalty = repeatPenalty,
-            IsDefault = isDefault
+            IsDefault = isDefault,
+            IsPublic = isPublic
         };
     }
 
@@ -60,7 +64,8 @@ public class ModelConfig : BaseEntity<Id<ModelConfig>>
         float? temperature = null,
         int? maxTokens = null,
         float? repeatPenalty = null,
-        bool isDefault = false
+        bool isDefault = false,
+        bool isPublic = true
     )
     {
         Guard.Against.NullOrWhiteSpace(name);
@@ -74,5 +79,6 @@ public class ModelConfig : BaseEntity<Id<ModelConfig>>
         MaxTokens = maxTokens;
         RepeatPenalty = repeatPenalty;
         IsDefault = isDefault;
+        IsPublic = isPublic;
     }
 }

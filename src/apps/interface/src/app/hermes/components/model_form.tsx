@@ -32,6 +32,7 @@ export function ModelForm({
       maxTokens: null,
       repeatPenalty: null,
       isDefault: false,
+      isPublic: true,
     },
   );
 
@@ -145,6 +146,19 @@ export function ModelForm({
           disabled={isReadOnly}
           onChange={(e: ChangeEvent<HTMLInputElement>) =>
             setModel((prev) => ({ ...prev, isDefault: e.target.checked }))
+          }
+          className="h-5 w-5 cursor-pointer"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 items-center">
+        <Typography variant="h4">Public</Typography>
+        <input
+          type="checkbox"
+          checked={model.isPublic}
+          disabled={isReadOnly}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            setModel((prev) => ({ ...prev, isPublic: e.target.checked }))
           }
           className="h-5 w-5 cursor-pointer"
         />

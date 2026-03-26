@@ -47,7 +47,8 @@ public sealed class CreatePersonaHandler : IPantheonHandler<CreatePersonaInput, 
             command.Description,
             command.Personality,
             command.Scenario,
-            command.IsDefault
+            command.IsDefault,
+            command.IsPublic
         );
 
         await _dbContext.Personas.AddAsync(persona, cancellationToken);

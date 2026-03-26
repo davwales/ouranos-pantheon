@@ -12,6 +12,7 @@ export interface Persona {
   personality?: string | null;
   scenario?: string | null;
   isDefault: boolean;
+  isPublic: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -25,6 +26,7 @@ export interface ModelConfig {
   maxTokens?: number | null;
   repeatPenalty?: number | null;
   isDefault: boolean;
+  isPublic: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -79,6 +81,7 @@ export interface Trait {
   id: string;
   name: string;
   content: string;
+  isPublic: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -100,6 +103,7 @@ export const hermesApi = {
     personality?: string | null;
     scenario?: string | null;
     isDefault: boolean;
+    isPublic: boolean;
   }) =>
     api.put<{ id: string }>(`/api/hermes/personas/${input.personaId}`, input),
 
@@ -124,6 +128,7 @@ export const hermesApi = {
     maxTokens?: number | null;
     repeatPenalty?: number | null;
     isDefault: boolean;
+    isPublic: boolean;
   }) => api.put<{ id: string }>(`/api/hermes/models/${input.modelId}`, input),
 
   deleteModel: (modelId: string) =>
@@ -138,8 +143,12 @@ export const hermesApi = {
   createTrait: (input: Omit<Trait, "id" | "createdAt" | "updatedAt">) =>
     api.post<{ id: string }>("/api/hermes/traits", input),
 
-  updateTrait: (input: { traitId: string; name: string; content: string }) =>
-    api.put<{ id: string }>(`/api/hermes/traits/${input.traitId}`, input),
+  updateTrait: (input: {
+    traitId: string;
+    name: string;
+    content: string;
+    isPublic: boolean;
+  }) => api.put<{ id: string }>(`/api/hermes/traits/${input.traitId}`, input),
 
   deleteTrait: (traitId: string) =>
     api.del<{ id: string }>(`/api/hermes/traits/${traitId}`),

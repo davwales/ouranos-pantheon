@@ -17,6 +17,7 @@ export default function CreateTraitPage() {
       await hermesApi.createTrait({
         name: input.name,
         content: input.content,
+        isPublic: input.isPublic,
       });
       router.push("/hermes/traits");
     } catch (err) {

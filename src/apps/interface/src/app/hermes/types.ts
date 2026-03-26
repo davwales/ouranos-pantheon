@@ -5,6 +5,7 @@ export interface PersonaFormInput {
   personality?: string | null;
   scenario?: string | null;
   isDefault: boolean;
+  isPublic: boolean;
 }
 
 export interface ModelFormInput {
@@ -16,12 +17,14 @@ export interface ModelFormInput {
   maxTokens?: number | null;
   repeatPenalty?: number | null;
   isDefault: boolean;
+  isPublic: boolean;
 }
 
 export interface TraitFormInput {
   id?: string;
   name: string;
   content: string;
+  isPublic: boolean;
 }
 
 export interface ConversationConfig {

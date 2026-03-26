@@ -6,5 +6,6 @@ namespace Ouranos.Pantheon.Modules.Hermes.Features.Traits.GetTrait.Schemas;
 public sealed record GetTraitResponse(
     Id<Trait> Id,
     string Name,
-    string Content
+    string Content,
+    bool IsPublic
 );

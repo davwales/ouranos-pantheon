@@ -6,5 +6,6 @@ namespace Ouranos.Pantheon.Modules.Hermes.Features.Traits.UpdateTrait.Schemas;
 public sealed record UpdateTraitInput(
     Id<Trait> TraitId,
     string Name,
-    string Content
+    string Content,
+    bool IsPublic = true
 );

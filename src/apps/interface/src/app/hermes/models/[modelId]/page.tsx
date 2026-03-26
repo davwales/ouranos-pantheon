@@ -48,6 +48,7 @@ export default function EditModelPage() {
         maxTokens: input.maxTokens,
         repeatPenalty: input.repeatPenalty,
         isDefault: input.isDefault,
+        isPublic: input.isPublic,
       });
       router.push("/hermes/models");
     } catch (err) {

@@ -7,5 +7,6 @@ public sealed record CreateModelInput(
     float? Temperature = null,
     int? MaxTokens = null,
     float? RepeatPenalty = null,
-    bool IsDefault = false
+    bool IsDefault = false,
+    bool IsPublic = true
 );

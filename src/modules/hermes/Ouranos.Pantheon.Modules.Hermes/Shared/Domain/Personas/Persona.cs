@@ -21,13 +21,16 @@ public class Persona : BaseEntity<Id<Persona>>
 
     public bool IsDefault { get; private set; }
 
+    public bool IsPublic { get; private set; }
+
     public static Persona Create(
         Id<Persona> id,
         string name,
         string description,
         string? personality = null,
         string? scenario = null,
-        bool isDefault = false
+        bool isDefault = false,
+        bool isPublic = true
     )
     {
         Guard.Against.NullOrWhiteSpace(name);
@@ -39,7 +42,8 @@ public class Persona : BaseEntity<Id<Persona>>
             Description = description,
             Personality = personality,
             Scenario = scenario,
-            IsDefault = isDefault
+            IsDefault = isDefault,
+            IsPublic = isPublic
         };
     }
 
@@ -48,7 +52,8 @@ public class Persona : BaseEntity<Id<Persona>>
         string description,
         string? personality = null,
         string? scenario = null,
-        bool isDefault = false
+        bool isDefault = false,
+        bool isPublic = true
     )
     {
         Guard.Against.NullOrWhiteSpace(name);
@@ -59,5 +64,6 @@ public class Persona : BaseEntity<Id<Persona>>
         Personality = personality;
         Scenario = scenario;
         IsDefault = isDefault;
+        IsPublic = isPublic;
     }
 }
