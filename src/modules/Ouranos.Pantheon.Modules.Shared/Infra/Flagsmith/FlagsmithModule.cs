@@ -19,9 +19,10 @@ public static class FlagsmithModule
                     var opts = sp.GetRequiredService<IOptions<FlagsmithOptions>>().Value;
                     return new FlagsmithClient(
                         new FlagsmithConfiguration
-                            {
-                                ApiUri = new Uri(opts.ApiUrl), EnvironmentKey = opts.EnvironmentKey
-                            }
+                        {
+                            ApiUri = new Uri(opts.ApiUrl),
+                            EnvironmentKey = opts.EnvironmentKey
+                        }
                     );
                 }
             );
