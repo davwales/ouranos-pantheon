@@ -393,10 +393,13 @@ function ConversationConfigSheet({
   const [draftName, setDraftName] = useState("");
   const [draftContent, setDraftContent] = useState("");
   const [nameInput, setNameInput] = useState(conversationName ?? "");
+  const [prevConversationName, setPrevConversationName] =
+    useState(conversationName);
 
-  useEffect(() => {
+  if (conversationName !== prevConversationName) {
+    setPrevConversationName(conversationName);
     setNameInput(conversationName ?? "");
-  }, [conversationName]);
+  }
 
   const handleToggleTrait = (trait: TraitFormInput) => {
     if (!onTraitsChange) return;
