@@ -1,50 +1,98 @@
 using System.Runtime.CompilerServices;
 using System.Text;
 using Ardalis.GuardClauses;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Extensions;
 using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning.Dtos;
 using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning.Requests;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion.Schemas;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion;
 
 public sealed class GenerateCompletionHandler
-    : IPantheonHandler<GenerateCompletionInput, StreamResponse<string, GenerateCompletionResponse>>
+    : IPantheonStreamHandler<GenerateCompletionInput, GenerateCompletionResponse>
 {
     private readonly ILogger<GenerateCompletionHandler> _logger;
     private readonly IOuranosMachineLearningClient _ouranosMachineLearningClient;
+    private readonly IDbContextFactory<HermesDbContext> _dbContextFactory;
 
     public GenerateCompletionHandler(
         ILogger<GenerateCompletionHandler> logger,
-        IOuranosMachineLearningClient ouranosMachineLearningClient
+        IOuranosMachineLearningClient ouranosMachineLearningClient,
+        IDbContextFactory<HermesDbContext> dbContextFactory
     )
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(ouranosMachineLearningClient);
+        Guard.Against.Null(dbContextFactory);
 
         _logger = logger;
         _ouranosMachineLearningClient = ouranosMachineLearningClient;
+        _dbContextFactory = dbContextFactory;
     }
 
-    public async Task<StreamResponse<string, GenerateCompletionResponse>> Handle(
+    public async IAsyncEnumerable<GenerateCompletionResponse> Handle(
         GenerateCompletionInput command,
-        CancellationToken cancellationToken = default
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
     )
     {
         _logger.LogTrace("Attempting to handle generate completion query '{@query}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var stream = new StreamResponse<string, GenerateCompletionResponse>(
-            async token => await Task.FromResult(GenerateCompletionStream(command.Conversation, token)),
-            async chunk => await Task.FromResult(new GenerateCompletionResponse(chunk))
-        );
+        var buffer = new StringBuilder();
+
+        await foreach (var chunk in GenerateCompletionStream(command.Conversation, cancellationToken))
+        {
+            buffer.Append(chunk);
+            yield return new GenerateCompletionResponse(chunk);
+        }
+
+        if (command.ConversationId is not null)
+        {
+            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+            var existingCount = await dbContext.Messages
+                .CountAsync(m => m.ConversationId == command.ConversationId, cancellationToken);
+
+            var userInput = command.Conversation.Messages.LastOrDefault(m => m.Role == Role.User);
+            if (userInput is not null)
+            {
+                await dbContext.Messages.AddAsync(
+                    Message.Create(
+                        DatabaseExtensions.CreateId<Message>(),
+                        command.ConversationId.Value,
+                        userInput.Content,
+                        Role.User,
+                        existingCount
+                    ),
+                    cancellationToken
+                );
+            }
+
+            var assistantContent = buffer.ToString();
+            if (!string.IsNullOrWhiteSpace(assistantContent))
+            {
+                await dbContext.Messages.AddAsync(
+                    Message.Create(
+                        DatabaseExtensions.CreateId<Message>(),
+                        command.ConversationId.Value,
+                        assistantContent,
+                        Role.Assistant,
+                        existingCount + 1
+                    ),
+                    cancellationToken
+                );
+            }
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
 
         _logger.LogDebug("Successfully handled generate completion request.");
-        return await Task.FromResult(stream);
     }
 
     private async IAsyncEnumerable<string> GenerateCompletionStream(
@@ -65,11 +113,7 @@ public sealed class GenerateCompletionHandler
             conversation.Model.ModelIdentifier,
             [
                 new MessageDto(systemPrompt, MapRole(Role.System)),
-                .. conversation.Messages.Select(m => new MessageDto(
-                        m.Content,
-                        MapRole(m.Role)
-                    )
-                )
+                .. conversation.Messages.Select(m => new MessageDto(m.Content, MapRole(m.Role)))
             ],
             conversation.Model.Temperature,
             conversation.Model.MaxTokens,
@@ -118,14 +162,11 @@ public sealed class GenerateCompletionHandler
         return builder.ToString();
     }
 
-    private static RoleDto MapRole(Role role)
+    private static RoleDto MapRole(Role role) => role switch
     {
-        return role switch
-        {
-            Role.System => RoleDto.System,
-            Role.User => RoleDto.User,
-            Role.Assistant => RoleDto.Assistant,
-            _ => throw new InvalidOperationException($"Unknown role: {role}")
-        };
-    }
+        Role.System => RoleDto.System,
+        Role.User => RoleDto.User,
+        Role.Assistant => RoleDto.Assistant,
+        _ => throw new InvalidOperationException($"Unknown role: {role}")
+    };
 }

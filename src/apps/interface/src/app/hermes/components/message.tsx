@@ -19,7 +19,9 @@ export function Message({
           role == Role.User ? "bg-accent/30" : ""
         }`}
       >
-        <MarkdownRenderer componentClassName={{ blockCode: "my-4" }}>{content}</MarkdownRenderer>
+        <MarkdownRenderer componentClassName={{ blockCode: "my-4" }}>
+          {content}
+        </MarkdownRenderer>
       </div>
       <Typography
         variant="muted"

@@ -16,3 +16,10 @@ public interface IPantheonHandler<in TInput> : IPantheonHandler
 {
     Task Handle(TInput input, CancellationToken cancellationToken = default);
 }
+
+public interface IPantheonStreamHandler<in TInput, out TOutput> : IPantheonHandler
+    where TInput : class
+    where TOutput : class
+{
+    IAsyncEnumerable<TOutput> Handle(TInput input, CancellationToken cancellationToken = default);
+}

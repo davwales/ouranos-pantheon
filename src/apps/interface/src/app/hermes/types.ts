@@ -25,6 +25,7 @@ export interface TraitFormInput {
   name: string;
   content: string;
   isPublic: boolean;
+  isEphemeral?: boolean;
 }
 
 export interface ConversationConfig {

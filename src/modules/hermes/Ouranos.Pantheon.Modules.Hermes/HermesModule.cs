@@ -15,6 +15,11 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Models.CreateModel;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.UpdateModel;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.DeleteModel;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion;
+using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GetAllConversations;
+using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GetConversation;
+using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.CreateConversation;
+using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.UpdateConversation;
+using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.DeleteConversation;
 using Ouranos.Pantheon.Modules.Hermes.Features.Traits.GetAllTraits;
 using Ouranos.Pantheon.Modules.Hermes.Features.Traits.GetTrait;
 using Ouranos.Pantheon.Modules.Hermes.Features.Traits.CreateTrait;
@@ -58,6 +63,11 @@ public sealed class HermesModule : IPantheonModule
         DeleteModelEndpoint.Map(app);
 
         GenerateCompletionEndpoint.Map(app);
+        GetAllConversationsEndpoint.Map(app);
+        GetConversationEndpoint.Map(app);
+        CreateConversationEndpoint.Map(app);
+        UpdateConversationEndpoint.Map(app);
+        DeleteConversationEndpoint.Map(app);
 
         GetAllTraitsEndpoint.Map(app);
         GetTraitEndpoint.Map(app);
