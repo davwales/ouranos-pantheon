@@ -1,8 +1,12 @@
 "use client";
 
-import ChatInterfaceView from "@/app/hermes/conversation/views/chat_interface_view";
-import SelectConfigView from "@/app/hermes/conversation/views/select_config_view";
-import { ModelFormInput, PersonaFormInput, TraitFormInput } from "@/app/hermes/types";
+import SelectConfigView from "@/app/hermes/chat/views/select_config_view";
+import ChatInterfaceView from "@/app/hermes/components/chat_interface_view";
+import {
+  ModelFormInput,
+  PersonaFormInput,
+  TraitFormInput,
+} from "@/app/hermes/types";
 import { hermesApi } from "@/lib/api/hermes";
 import { useEffect, useState } from "react";
 
@@ -14,6 +18,10 @@ export default function Conversation() {
   const [activeTraits, setActiveTraits] = useState<TraitFormInput[]>([]);
   const [conversationState, setConversationState] =
     useState<ConversationState>("loading");
+  const [conversationId, setConversationId] = useState<string | undefined>();
+  const [conversationName, setConversationName] = useState<
+    string | undefined
+  >();
 
   useEffect(() => {
     const loadDefaults = async () => {
@@ -65,6 +73,11 @@ export default function Conversation() {
         onPersonaChange={setPersona}
         onModelChange={setModel}
         onTraitsChange={setActiveTraits}
+        conversationId={conversationId}
+        onConversationSaved={(id, name) => {
+          setConversationId(id);
+          setConversationName(name);
+        }}
       />
     );
   }

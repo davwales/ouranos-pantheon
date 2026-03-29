@@ -1,5 +1,9 @@
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
+using Ouranos.Pantheon.Modules.Shared.Domain;
+
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion.Schemas;
 
 public sealed record GenerateCompletionInput(
-    ConversationInput Conversation
+    ConversationInput Conversation,
+    Id<Conversation>? ConversationId = null
 );

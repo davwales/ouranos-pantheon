@@ -4,8 +4,8 @@ import AutosizeTextarea from "@/app/components/autosize-textarea";
 import { FooterContent } from "@/app/components/footer";
 import InfoCard from "@/app/components/info-card";
 import { useNavBarActions } from "@/app/components/nav-bar-actions-context";
-import ChatInput from "@/app/hermes/conversation/components/chat_input";
-import ChatMessageList from "@/app/hermes/conversation/components/chat_message_list";
+import ChatInput from "@/app/hermes/components/chat_input";
+import ChatMessageList from "@/app/hermes/components/chat_message_list";
 import {
   ModelFormInput,
   PersonaFormInput,
@@ -30,8 +30,14 @@ import {
   Role,
   streamCompletion,
 } from "@/lib/api/hermes";
-import { ChevronDown, Plus, SlidersHorizontal } from "lucide-react";
-import { useEffect, useState } from "react";
+import {
+  Bookmark,
+  ChevronDown,
+  Plus,
+  SlidersHorizontal,
+  Trash2,
+} from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 
 export default function ChatInterfaceView({
   persona,
@@ -40,6 +46,14 @@ export default function ChatInterfaceView({
   onPersonaChange,
   onModelChange,
   onTraitsChange,
+  conversationId,
+  conversationName,
+  conversationIsPublic = true,
+  initialMessages,
+  onConversationSaved,
+  onRename,
+  onDelete,
+  onVisibilityChange,
   ...props
 }: React.ComponentProps<"div"> & {
   persona: PersonaFormInput;
@@ -48,8 +62,18 @@ export default function ChatInterfaceView({
   onPersonaChange?: (persona: PersonaFormInput) => void;
   onModelChange?: (model: ModelFormInput) => void;
   onTraitsChange?: (traits: TraitFormInput[]) => void;
+  conversationId?: string;
+  conversationName?: string;
+  conversationIsPublic?: boolean;
+  initialMessages?: MessageInput[];
+  onConversationSaved?: (id: string, name: string) => void;
+  onRename?: (name: string) => void;
+  onDelete?: () => void;
+  onVisibilityChange?: (isPublic: boolean) => void;
 }) {
-  const [messages, setMessages] = useState<MessageInput[]>([]);
+  const [messages, setMessages] = useState<MessageInput[]>(
+    initialMessages ?? [],
+  );
   const [inputText, setInputText] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [editingMessageIndex, setEditingMessageIndex] = useState<number | null>(
@@ -58,18 +82,80 @@ export default function ChatInterfaceView({
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const { setActions, clearActions } = useNavBarActions();
 
+  const buildUpdatePayload = useCallback(
+    (overrides: {
+      messages?: MessageInput[];
+      personaId?: string;
+      modelConfigId?: string;
+      traitIds?: string[];
+    }) => ({
+      name: conversationName ?? "New Conversation",
+      personaId: overrides.personaId ?? persona.id!,
+      modelConfigId: overrides.modelConfigId ?? model.id!,
+      traitIds:
+        overrides.traitIds ??
+        activeTraits.filter((t) => t.id && !t.isEphemeral).map((t) => t.id!),
+      messages: overrides.messages ?? messages,
+      isPublic: conversationIsPublic,
+    }),
+    [
+      conversationName,
+      conversationIsPublic,
+      persona.id,
+      model.id,
+      activeTraits,
+      messages,
+    ],
+  );
+
+  const handleSaveConversation = useCallback(async () => {
+    try {
+      const result = await hermesApi.createConversation({
+        personaId: persona.id!,
+        modelConfigId: model.id!,
+        traitIds: activeTraits
+          .filter((t) => t.id && !t.isEphemeral)
+          .map((t) => t.id!),
+        messages: messages,
+      });
+      onConversationSaved?.(result.id, result.name);
+    } catch (error) {
+      console.error("Error saving conversation:", error);
+    }
+  }, [persona.id, model.id, activeTraits, messages, onConversationSaved]);
+
   useEffect(() => {
-    setActions(
-      <button
-        onClick={() => setIsConfigOpen(true)}
-        className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-        aria-label="Configure conversation"
-      >
-        <SlidersHorizontal className="h-5 w-5" />
-      </button>,
+    const actions = (
+      <div className="flex items-center gap-1">
+        {!conversationId && messages.length > 0 && !isGenerating && (
+          <button
+            onClick={handleSaveConversation}
+            className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            aria-label="Save conversation"
+          >
+            <Bookmark className="h-5 w-5" />
+          </button>
+        )}
+        <button
+          onClick={() => setIsConfigOpen(true)}
+          disabled={isGenerating}
+          className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          aria-label="Configure conversation"
+        >
+          <SlidersHorizontal className="h-5 w-5" />
+        </button>
+      </div>
     );
+    setActions(actions);
     return () => clearActions();
-  }, [setActions, clearActions]);
+  }, [
+    setActions,
+    clearActions,
+    handleSaveConversation,
+    messages.length,
+    conversationId,
+    isGenerating,
+  ]);
 
   const generateCompletion = async (currentMessages: MessageInput[]) => {
     if (isGenerating) return;
@@ -106,6 +192,7 @@ export default function ChatInterfaceView({
             content,
           })),
         },
+        ...(conversationId ? { conversationId } : {}),
       })) {
         setMessages((prev) => {
           const updated = [...prev];
@@ -128,6 +215,14 @@ export default function ChatInterfaceView({
     setMessages((prev) => {
       const updatedMessages = [...prev];
       updatedMessages[editingMessageIndex].content = inputText;
+      if (conversationId) {
+        hermesApi
+          .updateConversation(
+            conversationId,
+            buildUpdatePayload({ messages: updatedMessages }),
+          )
+          .catch((err) => console.error("Failed to update conversation:", err));
+      }
       return updatedMessages;
     });
     setEditingMessageIndex(null);
@@ -154,7 +249,18 @@ export default function ChatInterfaceView({
   };
 
   const handleMessageDeleted = (index: number) => {
-    setMessages((prev) => prev.filter((_, i) => i < index));
+    setMessages((prev) => {
+      const updatedMessages = prev.filter((_, i) => i < index);
+      if (conversationId) {
+        hermesApi
+          .updateConversation(
+            conversationId,
+            buildUpdatePayload({ messages: updatedMessages }),
+          )
+          .catch((err) => console.error("Failed to update conversation:", err));
+      }
+      return updatedMessages;
+    });
   };
 
   const handleMessageRetry = async (index: number) => {
@@ -194,9 +300,54 @@ export default function ChatInterfaceView({
         persona={persona}
         model={model}
         activeTraits={activeTraits}
-        onPersonaChange={onPersonaChange}
-        onModelChange={onModelChange}
-        onTraitsChange={onTraitsChange}
+        conversationName={conversationName}
+        conversationIsPublic={conversationIsPublic}
+        onRename={onRename}
+        onDelete={onDelete}
+        onVisibilityChange={onVisibilityChange}
+        onPersonaChange={(p) => {
+          onPersonaChange?.(p);
+          if (conversationId && p.id) {
+            hermesApi
+              .updateConversation(
+                conversationId,
+                buildUpdatePayload({ personaId: p.id }),
+              )
+              .catch((err) =>
+                console.error("Failed to update conversation:", err),
+              );
+          }
+        }}
+        onModelChange={(m) => {
+          onModelChange?.(m);
+          if (conversationId && m.id) {
+            hermesApi
+              .updateConversation(
+                conversationId,
+                buildUpdatePayload({ modelConfigId: m.id }),
+              )
+              .catch((err) =>
+                console.error("Failed to update conversation:", err),
+              );
+          }
+        }}
+        onTraitsChange={(traits) => {
+          onTraitsChange?.(traits);
+          if (conversationId) {
+            hermesApi
+              .updateConversation(
+                conversationId,
+                buildUpdatePayload({
+                  traitIds: traits
+                    .filter((t) => t.id && !t.isEphemeral)
+                    .map((t) => t.id!),
+                }),
+              )
+              .catch((err) =>
+                console.error("Failed to update conversation:", err),
+              );
+          }
+        }}
       />
     </div>
   );
@@ -211,6 +362,11 @@ function ConversationConfigSheet({
   onPersonaChange,
   onModelChange,
   onTraitsChange,
+  conversationName,
+  conversationIsPublic,
+  onRename,
+  onDelete,
+  onVisibilityChange,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -220,6 +376,11 @@ function ConversationConfigSheet({
   onPersonaChange?: (persona: PersonaFormInput) => void;
   onModelChange?: (model: ModelFormInput) => void;
   onTraitsChange?: (traits: TraitFormInput[]) => void;
+  conversationName?: string;
+  conversationIsPublic?: boolean;
+  onRename?: (name: string) => void;
+  onDelete?: () => void;
+  onVisibilityChange?: (isPublic: boolean) => void;
 }) {
   const [personasState] = useApi(() => hermesApi.getAllPersonas());
   const [modelsState] = useApi(() => hermesApi.getAllModels());
@@ -231,6 +392,11 @@ function ConversationConfigSheet({
   const [isAddingTrait, setIsAddingTrait] = useState(false);
   const [draftName, setDraftName] = useState("");
   const [draftContent, setDraftContent] = useState("");
+  const [nameInput, setNameInput] = useState(conversationName ?? "");
+
+  useEffect(() => {
+    setNameInput(conversationName ?? "");
+  }, [conversationName]);
 
   const handleToggleTrait = (trait: TraitFormInput) => {
     if (!onTraitsChange) return;
@@ -249,6 +415,7 @@ function ConversationConfigSheet({
       name: draftName.trim() || "Ephemeral Trait",
       content: draftContent.trim(),
       isPublic: true,
+      isEphemeral: true,
     };
     setEphemeralTraits((prev) => [...prev, newTrait]);
     onTraitsChange([...activeTraits, newTrait]);
@@ -374,6 +541,66 @@ function ConversationConfigSheet({
               )}
             </CollapsibleContent>
           </Collapsible>
+
+          {(onRename ?? onDelete ?? onVisibilityChange) && (
+            <>
+              <hr className="border-border" />
+              <div className="space-y-3">
+                <p className="text-sm font-medium px-2">Conversation</p>
+                {onVisibilityChange && (
+                  <label className="flex items-center justify-between px-2 py-1 cursor-pointer">
+                    <span className="text-sm">Public</span>
+                    <input
+                      type="checkbox"
+                      checked={conversationIsPublic ?? false}
+                      onChange={(e) => onVisibilityChange(e.target.checked)}
+                      className="h-4 w-4 cursor-pointer"
+                    />
+                  </label>
+                )}
+                {onRename && (
+                  <div className="flex gap-2">
+                    <input
+                      value={nameInput}
+                      onChange={(e) => setNameInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (
+                          e.key === "Enter" &&
+                          nameInput.trim() &&
+                          nameInput.trim() !== conversationName
+                        ) {
+                          onRename(nameInput.trim());
+                        }
+                      }}
+                      className="flex-1 text-sm bg-transparent border rounded-md px-3 py-2 outline-none focus:ring-1 focus:ring-ring"
+                      placeholder="Conversation name"
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={
+                        !nameInput.trim() ||
+                        nameInput.trim() === conversationName
+                      }
+                      onClick={() => onRename(nameInput.trim())}
+                    >
+                      Rename
+                    </Button>
+                  </div>
+                )}
+                {onDelete && (
+                  <Button
+                    variant="destructive"
+                    className="w-full"
+                    onClick={onDelete}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Conversation
+                  </Button>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </SheetContent>
     </Sheet>

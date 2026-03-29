@@ -28,7 +28,12 @@ const navigationItems: NavigationBarItem[] = [
       {
         label: "Chat",
         description: "Have a conversation with a virtual assistant.",
-        href: "/hermes/conversation",
+        href: "/hermes/chat",
+      },
+      {
+        label: "Saved Conversations",
+        description: "View and resume your saved conversations.",
+        href: "/hermes/conversations",
       },
       {
         label: "Manage Personas",

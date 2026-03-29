@@ -65,6 +65,65 @@ export interface ConversationInput {
 
 export interface GenerateCompletionInput {
   conversation: ConversationInput;
+  conversationId?: string;
+}
+
+export interface ConversationSummary {
+  id: string;
+  name: string;
+  isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SavedConversationPersona {
+  id: string;
+  name: string;
+  description: string;
+  personality?: string | null;
+  scenario?: string | null;
+}
+
+export interface SavedConversationModel {
+  id: string;
+  name: string;
+  modelIdentifier: string;
+  systemPrompt: string;
+  temperature?: number | null;
+  maxTokens?: number | null;
+  repeatPenalty?: number | null;
+}
+
+export interface SavedConversationTrait {
+  id: string;
+  name: string;
+  content: string;
+}
+
+export interface SavedConversationMessage {
+  content: string;
+  role: Role;
+}
+
+export interface SavedConversation {
+  id: string;
+  name: string;
+  isPublic: boolean;
+  persona: SavedConversationPersona;
+  model: SavedConversationModel;
+  traits: SavedConversationTrait[];
+  messages: SavedConversationMessage[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateConversationInput {
+  personaId: string;
+  modelConfigId: string;
+  traitIds: string[];
+  messages: MessageInput[];
+  name?: string;
+  isPublic?: boolean;
 }
 
 export interface CompletionChunk {
@@ -152,6 +211,30 @@ export const hermesApi = {
 
   deleteTrait: (traitId: string) =>
     api.del<{ id: string }>(`/api/hermes/traits/${traitId}`),
+
+  getAllConversations: () =>
+    api.get<ConversationSummary[]>("/api/hermes/conversations"),
+
+  getConversation: (id: string) =>
+    api.get<SavedConversation>(`/api/hermes/conversations/${id}`),
+
+  createConversation: (input: CreateConversationInput) =>
+    api.post<{ id: string; name: string }>("/api/hermes/conversations", input),
+
+  updateConversation: (
+    id: string,
+    input: {
+      name: string;
+      personaId: string;
+      modelConfigId: string;
+      traitIds: string[];
+      messages: MessageInput[];
+      isPublic: boolean;
+    },
+  ) => api.put<{ id: string }>(`/api/hermes/conversations/${id}`, input),
+
+  deleteConversation: (id: string) =>
+    api.del<{ id: string }>(`/api/hermes/conversations/${id}`),
 };
 
 export async function* streamCompletion(
@@ -163,7 +246,12 @@ export async function* streamCompletion(
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input),
+      body: JSON.stringify({
+        conversation: input.conversation,
+        ...(input.conversationId
+          ? { conversationId: input.conversationId }
+          : {}),
+      }),
       signal,
     },
   );

@@ -6,7 +6,12 @@ export default function Hermes() {
     {
       name: "Create Conversation",
       description: "Start a new conversation with a persona and model.",
-      href: "/hermes/conversation",
+      href: "/hermes/chat",
+    },
+    {
+      name: "Saved Conversations",
+      description: "View and resume your saved conversations.",
+      href: "/hermes/conversations",
     },
     {
       name: "Manage Personas",

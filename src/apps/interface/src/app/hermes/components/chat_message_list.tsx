@@ -2,7 +2,7 @@ import {
   MenuAction,
   ResponsiveContextMenu,
 } from "@/app/components/responsive-context-menu";
-import { Message } from "@/app/hermes/conversation/components/message";
+import { Message } from "@/app/hermes/components/message";
 import { MessageInput, Role } from "@/lib/api/hermes";
 import { Pencil, RotateCcw, Trash } from "lucide-react";
 import { useEffect, useRef } from "react";
@@ -78,7 +78,7 @@ export default function ChatMessageList({
               name={msg.role == Role.User ? "You" : personaName}
               role={msg.role}
               content={msg.content}
-              className="w-fit text-left break-words"
+              className="w-fit text-left wrap-break-word"
             />
           </ResponsiveContextMenu>
         </div>
