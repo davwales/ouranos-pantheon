@@ -7,7 +7,6 @@ using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Shared.Extensions;
 using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning.Dtos;
-using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning.Requests;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
@@ -109,20 +108,22 @@ public sealed class GenerateCompletionHandler
             conversation.Traits
         );
 
-        var request = new GenerateChatCompletionRequest(
-            conversation.Model.ModelIdentifier,
-            [
-                new MessageDto(systemPrompt, MapRole(Role.System)),
-                .. conversation.Messages.Select(m => new MessageDto(m.Content, MapRole(m.Role)))
-            ],
-            conversation.Model.Temperature,
-            conversation.Model.MaxTokens,
-            conversation.Model.RepeatPenalty
-        );
+        List<MessageDto> messages =
+        [
+            new(systemPrompt, RoleDto.System),
+            .. conversation.Messages.Select(m => new MessageDto(m.Content, MapRole(m.Role)))
+        ];
 
-        await foreach (var line in _ouranosMachineLearningClient.GenerateChatCompletion(request, cancellationToken))
+        await foreach (var chunk in _ouranosMachineLearningClient.StreamChatCompletionAsync(
+                           conversation.Model.ModelIdentifier,
+                           messages,
+                           conversation.Model.Temperature,
+                           conversation.Model.MaxTokens,
+                           conversation.Model.RepeatPenalty,
+                           cancellationToken
+                       ))
         {
-            yield return line;
+            yield return chunk;
             cancellationToken.ThrowIfCancellationRequested();
         }
 
