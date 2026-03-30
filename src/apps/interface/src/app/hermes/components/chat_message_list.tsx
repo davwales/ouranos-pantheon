@@ -78,6 +78,7 @@ export default function ChatMessageList({
               name={msg.role == Role.User ? "You" : personaName}
               role={msg.role}
               content={msg.content}
+              isStreaming={isGenerating && index === messages.length - 1}
               className="w-fit text-left wrap-break-word"
             />
           </ResponsiveContextMenu>
