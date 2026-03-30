@@ -4,12 +4,18 @@ import { NavigationBarItem } from "@/app/components/responsive-navigation-bar";
 import ResponsiveNavigationBar from "@/app/components/responsive-navigation-bar/responsive-navigation-bar";
 import { ThemeProvider } from "@/app/components/theme-provider";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Ouranos",
   description: "UI to interact with Ouranos applications.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  interactiveWidget: "resizes-content",
 };
 
 const navigationItems: NavigationBarItem[] = [

@@ -1,10 +1,10 @@
 import ClipboardCopy from "@/app/components/clipboard-copy";
 import { Copy } from "lucide-react";
-import React from "react";
+import React, { memo } from "react";
 import SyntaxHighlighter from "react-syntax-highlighter";
 import { dracula } from "react-syntax-highlighter/dist/esm/styles/hljs";
 
-export function CodeBlock({
+export const CodeBlock = memo(function CodeBlock({
   code,
   language = "text",
   syntaxProps,
@@ -42,4 +42,4 @@ export function CodeBlock({
       </SyntaxHighlighter>
     </div>
   );
-}
+});
