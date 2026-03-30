@@ -1,17 +1,27 @@
-import { MarkdownRenderer } from "@/app/components/markdown-renderer";
 import { Typography } from "@/app/components/typography";
+import { LoadingSegment } from "@/app/hermes/components/segments/loading-segment";
+import { TextSegment } from "@/app/hermes/components/segments/text-segment";
+import { ThinkingSegment } from "@/app/hermes/components/segments/thinking-segment";
+import { parseSegments } from "@/app/hermes/utils/parse-segments";
 import { Role } from "@/lib/api/hermes";
 
 export function Message({
   name,
   role,
   content,
+  isStreaming = false,
   ...props
 }: React.ComponentProps<"div"> & {
   name: string;
   role: Role;
   content: string;
+  isStreaming?: boolean;
 }) {
+  const segments =
+    role === Role.User
+      ? [{ type: "text" as const, content }]
+      : parseSegments(content, isStreaming);
+
   return (
     <div {...props}>
       <div
@@ -19,9 +29,22 @@ export function Message({
           role == Role.User ? "bg-accent/30" : ""
         }`}
       >
-        <MarkdownRenderer componentClassName={{ blockCode: "my-4" }}>
-          {content}
-        </MarkdownRenderer>
+        {segments.map((segment, i) => {
+          switch (segment.type) {
+            case "loading":
+              return <LoadingSegment key={i} />;
+            case "thinking":
+              return (
+                <ThinkingSegment
+                  key={i}
+                  content={segment.content}
+                  isStreaming={segment.isStreaming}
+                />
+              );
+            case "text":
+              return <TextSegment key={i} content={segment.content} />;
+          }
+        })}
       </div>
       <Typography
         variant="muted"
