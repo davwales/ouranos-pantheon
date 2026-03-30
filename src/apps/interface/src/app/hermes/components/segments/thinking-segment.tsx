@@ -7,9 +7,9 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Brain, ChevronDown } from "lucide-react";
-import { useState } from "react";
+import { memo, useState } from "react";
 
-export function ThinkingSegment({
+export const ThinkingSegment = memo(function ThinkingSegment({
   content,
   isStreaming,
 }: {
@@ -48,4 +48,4 @@ export function ThinkingSegment({
       </CollapsibleContent>
     </Collapsible>
   );
-}
+});

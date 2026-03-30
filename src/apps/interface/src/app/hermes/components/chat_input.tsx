@@ -1,6 +1,6 @@
 import AutosizeTextarea from "@/app/components/autosize-textarea";
 import { Button } from "@/components/ui/button";
-import { ChangeEvent } from "react";
+import { ChangeEvent, useRef } from "react";
 
 export default function ChatInput({
   inputText,
@@ -21,6 +21,8 @@ export default function ChatInput({
   onUpdateMessage: () => void;
   onCancelEdit?: () => void;
 }) {
+  const formRef = useRef<HTMLFormElement>(null);
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -35,6 +37,15 @@ export default function ChatInput({
     return onInputChange(event.target.value);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      if (!isGenerating && inputText.trim()) {
+        formRef.current?.requestSubmit();
+      }
+    }
+  };
+
   const inputPlaceholder = isEditing
     ? "Editing message..."
     : "Type your message...";
@@ -45,12 +56,14 @@ export default function ChatInput({
   return (
     <form
       {...props}
+      ref={formRef}
       onSubmit={handleSubmit}
       className={`flex items-center gap-4 ${className}`}
     >
       <AutosizeTextarea
         value={inputText}
         onChange={handleInputChange}
+        onKeyDown={handleKeyDown}
         placeholder={placeholder}
         disabled={isGenerating}
         className="min-h-16 max-h-64"

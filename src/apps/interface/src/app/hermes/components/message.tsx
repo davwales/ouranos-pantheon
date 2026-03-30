@@ -32,17 +32,19 @@ export function Message({
         {segments.map((segment, i) => {
           switch (segment.type) {
             case "loading":
-              return <LoadingSegment key={i} />;
+              return <LoadingSegment key={`loading-${i}`} />;
             case "thinking":
               return (
                 <ThinkingSegment
-                  key={i}
+                  key={`thinking-${i}`}
                   content={segment.content}
                   isStreaming={segment.isStreaming}
                 />
               );
             case "text":
-              return <TextSegment key={i} content={segment.content} />;
+              return (
+                <TextSegment key={`text-${i}`} content={segment.content} />
+              );
           }
         })}
       </div>
