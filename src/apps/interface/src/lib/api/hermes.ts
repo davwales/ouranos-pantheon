@@ -131,9 +131,9 @@ export interface CompletionChunk {
 }
 
 export enum Role {
-  System = "SYSTEM",
-  User = "USER",
-  Assistant = "ASSISTANT",
+  System = "System",
+  User = "User",
+  Assistant = "Assistant",
 }
 
 export interface Trait {
