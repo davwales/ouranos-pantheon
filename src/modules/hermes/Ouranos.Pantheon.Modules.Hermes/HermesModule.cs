@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Infra.Postgres;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
@@ -33,6 +35,7 @@ public sealed class HermesModule : IPantheonModule
     public IHostApplicationBuilder Build(IHostApplicationBuilder builder)
     {
         builder.Services
+            .Configure<HermesOptions>(builder.Configuration.GetSection(HermesOptions.SectionName))
             .AddCoreOuranosMachineLearningModule(builder.Configuration)
             .AddCorePostgresModule<HermesDbContext>(
                 builder.Configuration,

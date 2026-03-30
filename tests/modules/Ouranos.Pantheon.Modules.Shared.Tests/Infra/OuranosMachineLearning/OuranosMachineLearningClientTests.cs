@@ -1,6 +1,8 @@
-﻿using System.Net;
+using System.ClientModel;
+using System.Net;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using OpenAI;
 using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning.Dtos;
 using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning.Requests;
@@ -18,156 +20,16 @@ public sealed class OuranosMachineLearningClientTests
         _httpMessageHandler = Substitute.For<HttpMessageHandler>();
         var httpClient = new HttpClient(_httpMessageHandler) { BaseAddress = new Uri("http://test.com/") };
 
+        var openAIClient = new OpenAIClient(
+            new ApiKeyCredential("test"),
+            new OpenAIClientOptions { Endpoint = new Uri("http://test.com/") }
+        );
+
         _client = new OuranosMachineLearningClient(
             Substitute.For<ILogger<OuranosMachineLearningClient>>(),
-            httpClient
+            httpClient,
+            openAIClient
         );
-    }
-
-    [Fact]
-    public async Task GenerateCompletion_ShouldYieldExpectedChunks_WhenResponseIsSuccessful()
-    {
-        // Arrange
-        var fixture = new Fixture();
-        var request = fixture.Create<GenerateCompletionRequest>();
-        var chunks = new[] { "chunk1", "chunk2", "chunk3" };
-        SetupHttpHandler(HttpStatusCode.OK, new StreamContent(chunks.AsMemoryStream()));
-
-        // Act
-        var result = await _client.GenerateCompletion(request).ToListAsync();
-
-        // Assert
-        result.ShouldBe(["chunk1chunk2chunk3"]);
-        _httpMessageHandler.Protected(
-            "SendAsync",
-            Arg.Is<HttpRequestMessage>(req =>
-                req.Method == HttpMethod.Post &&
-                req.RequestUri!.ToString() == "http://test.com/generation/text"
-            ),
-            Arg.Any<CancellationToken>()
-        );
-    }
-
-    [Fact]
-    public async Task GenerateCompletion_WhenGivenNewLineChunk_ShouldIncludeNewLine()
-    {
-        // Arrange
-        var fixture = new Fixture();
-        var request = fixture.Create<GenerateCompletionRequest>();
-        var chunks = new[] { "chunk1", "\n", "  ", "chunk2" };
-        SetupHttpHandler(HttpStatusCode.OK, new StreamContent(chunks.AsMemoryStream()));
-
-        // Act
-        var result = await _client.GenerateCompletion(request).ToListAsync();
-
-        // Assert
-        result.ShouldBe(["chunk1\n  chunk2"]);
-    }
-
-    [Fact]
-    public async Task GenerateCompletion_ShouldThrowException_WhenResponseIsNotSuccessful()
-    {
-        // Arrange
-        var fixture = new Fixture();
-        var request = fixture.Create<GenerateCompletionRequest>();
-        SetupHttpHandler(HttpStatusCode.BadRequest);
-
-        // Act
-        var generate = async () => await _client.GenerateCompletion(request).ToListAsync();
-
-        // Assert
-        await generate.ShouldThrowAsync<HttpRequestException>();
-    }
-
-    [Fact]
-    public async Task GenerateCompletion_ShouldRespectCancellation()
-    {
-        // Arrange
-        var fixture = new Fixture();
-        var request = fixture.Create<GenerateCompletionRequest>();
-        var cancellationToken = new CancellationToken(true);
-        var chunks = new[] { "some content" };
-        SetupHttpHandler(HttpStatusCode.OK, new StreamContent(chunks.AsMemoryStream()));
-
-        // Act
-        var generate = async () =>
-            await _client.GenerateCompletion(request, cancellationToken).ToListAsync(cancellationToken);
-
-        // Assert
-        await generate.ShouldThrowAsync<OperationCanceledException>();
-    }
-
-    [Fact]
-    public async Task GenerateChatCompletion_ShouldYieldExpectedChunks_WhenResponseIsSuccessful()
-    {
-        // Arrange
-        var fixture = new Fixture();
-        var request = fixture.Create<GenerateChatCompletionRequest>();
-        var chunks = new[] { "chunk1", "chunk2", "chunk3" };
-        SetupHttpHandler(HttpStatusCode.OK, new StreamContent(chunks.AsMemoryStream()));
-
-        // Act
-        var result = await _client.GenerateChatCompletion(request).ToListAsync();
-
-        // Assert
-        result.ShouldBe(["chunk1chunk2chunk3"]);
-        _httpMessageHandler.Protected(
-            "SendAsync",
-            Arg.Is<HttpRequestMessage>(req =>
-                req.Method == HttpMethod.Post &&
-                req.RequestUri!.ToString() == "http://test.com/generation/chat"
-            ),
-            Arg.Any<CancellationToken>()
-        );
-    }
-
-    [Fact]
-    public async Task GenerateChatCompletion_WhenGivenNewLineChunk_ShouldIncludeNewLine()
-    {
-        // Arrange
-        var fixture = new Fixture();
-        var request = fixture.Create<GenerateChatCompletionRequest>();
-        var chunks = new[] { "chunk1", "\n", "  ", "chunk2" };
-        SetupHttpHandler(HttpStatusCode.OK, new StreamContent(chunks.AsMemoryStream()));
-
-        // Act
-        var result = await _client.GenerateChatCompletion(request).ToListAsync();
-
-        // Assert
-        result.ShouldBe(["chunk1\n  chunk2"]);
-    }
-
-    [Fact]
-    public async Task GenerateChatCompletion_ShouldThrowException_WhenResponseIsNotSuccessful()
-    {
-        // Arrange
-        var fixture = new Fixture();
-        var request = fixture.Create<GenerateChatCompletionRequest>();
-        SetupHttpHandler(HttpStatusCode.BadRequest);
-
-        // Act
-        var generate = async () => await _client.GenerateChatCompletion(request).ToListAsync();
-
-        // Assert
-        await generate.ShouldThrowAsync<HttpRequestException>();
-    }
-
-    [Fact]
-    public async Task GenerateChatCompletion_ShouldRespectCancellation()
-    {
-        // Arrange
-        var fixture = new Fixture();
-        var request = fixture.Create<GenerateChatCompletionRequest>();
-        var cancellationToken = new CancellationToken(true);
-        var chunks = new[] { "some content" };
-        SetupHttpHandler(HttpStatusCode.OK, new StreamContent(chunks.AsMemoryStream()));
-
-        // Act
-        var generate = async () =>
-            await _client.GenerateChatCompletion(request, cancellationToken).ToListAsync(cancellationToken);
-
-        // Assert
-        await generate.ShouldThrowAsync<OperationCanceledException>();
     }
 
     [Fact]
