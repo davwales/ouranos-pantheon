@@ -51,6 +51,11 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.GetRecipe;
 using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.CreateRecipe;
 using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.UpdateRecipe;
 using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.DeleteRecipe;
+using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.CreateSymbolGroup;
+using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetAllSymbolGroups;
+using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetSymbolGroup;
+using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.UpdateSymbolGroup;
+using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.DeleteSymbolGroup;
 
 namespace Ouranos.Pantheon.Modules.Plutus;
 
@@ -83,22 +88,33 @@ public sealed class PlutusModule : IPantheonModule
         CreateMarketEndpoint.Map(app);
         UpdateMarketEndpoint.Map(app);
         DeleteMarketEndpoint.Map(app);
+
         GetMarketTradesEndpoint.Map(app);
         GetAllTradesEndpoint.Map(app);
         GetRecipeTradesEndpoint.Map(app);
         GetSymbolTradesEndpoint.Map(app);
+
         GetAllSymbolsEndpoint.Map(app);
         GetSymbolEndpoint.Map(app);
         GetDailySymbolSummaryEndpoint.Map(app);
+
         GetAllForecastsEndpoint.Map(app);
         GetMarketForecastEndpoint.Map(app);
+
         GetAllRecipesEndpoint.Map(app);
         GetRecipeEndpoint.Map(app);
         CreateRecipeEndpoint.Map(app);
         UpdateRecipeEndpoint.Map(app);
         DeleteRecipeEndpoint.Map(app);
+
         GetSymbolSignalsEndpoint.Map(app);
         GetSignalRankingsEndpoint.Map(app);
+
+        CreateSymbolGroupEndpoint.Map(app);
+        GetAllSymbolGroupsEndpoint.Map(app);
+        GetSymbolGroupEndpoint.Map(app);
+        UpdateSymbolGroupEndpoint.Map(app);
+        DeleteSymbolGroupEndpoint.Map(app);
     }
 
     public void ConfigureWolverine(WolverineOptions opts, IConfiguration configuration)

@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { useApi } from "@/hooks/use-api";
 import { useDebounce } from "@/hooks/use-debounce";
 import { plutusApi } from "@/lib/api/plutus";
+import { Check } from "lucide-react";
 import { useMemo, useState } from "react";
 
 export interface SelectedSymbol {
@@ -14,11 +15,13 @@ export interface SelectedSymbol {
 export function SymbolSearch({
   marketId,
   numResults = 10,
+  excludeIds,
   onSymbolSelected,
   ...props
 }: React.ComponentProps<"div"> & {
   marketId: string;
   numResults?: number;
+  excludeIds?: string[];
   onSymbolSelected?: (symbol: SelectedSymbol) => void;
 }) {
   const [search, setSearch] = useState("");
@@ -53,17 +56,28 @@ export function SymbolSearch({
         onChange={(e) => setSearch(e.target.value)}
       />
       <div className="mt-4 space-y-2">
-        {state.data?.items?.map((symbol) => (
-          <div
-            key={symbol.id}
-            onClick={() =>
-              handleSymbolSelected({ id: symbol.id, name: symbol.name })
-            }
-            className={`cursor-pointer border-2 rounded-md p-2 hover:bg-accent ${selectedSymbol?.id === symbol.id ? "bg-accent" : ""}`}
-          >
-            {symbol.name}
-          </div>
-        ))}
+        {state.data?.items?.map((symbol) => {
+          const alreadyAdded = excludeIds?.includes(symbol.id);
+          return (
+            <div
+              key={symbol.id}
+              onClick={() =>
+                !alreadyAdded &&
+                handleSymbolSelected({ id: symbol.id, name: symbol.name })
+              }
+              className={`flex items-center justify-between rounded-md p-2 border-2 ${
+                alreadyAdded
+                  ? "opacity-50 cursor-not-allowed"
+                  : `cursor-pointer hover:bg-accent ${selectedSymbol?.id === symbol.id ? "bg-accent" : ""}`
+              }`}
+            >
+              <span>{symbol.name}</span>
+              {alreadyAdded && (
+                <Check className="w-4 h-4 text-muted-foreground" />
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
