@@ -6,6 +6,7 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Recipes;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.SymbolGroups;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Database;
@@ -28,6 +29,10 @@ public class PlutusDbContext(DbContextOptions<PlutusDbContext> options) : Ourano
 
     public DbSet<Signal> Signals => Set<Signal>();
 
+    public DbSet<SymbolGroup> SymbolGroups { get; set; }
+
+    public DbSet<SymbolGroupMember> SymbolGroupMembers { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -40,5 +45,7 @@ public class PlutusDbContext(DbContextOptions<PlutusDbContext> options) : Ourano
         modelBuilder.Entity<Trade>();
         modelBuilder.Entity<MarketTradeSnapshot>();
         modelBuilder.Entity<Signal>();
+        modelBuilder.Entity<SymbolGroup>();
+        modelBuilder.Entity<SymbolGroupMember>();
     }
 }

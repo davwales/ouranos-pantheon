@@ -176,6 +176,40 @@ export interface GetSignalRankingsRow {
   bearishCount: number;
 }
 
+export interface SymbolGroup {
+  id: string;
+  marketId: string;
+  name: string;
+  description?: string | null;
+  symbolCount: number;
+  totalVolume?: number | null;
+  totalGain?: number | null;
+  averageRoi?: number | null;
+  averageOverallScore?: number | null;
+  bullishCount: number;
+  bearishCount: number;
+}
+
+export interface SymbolGroupDetail {
+  id: string;
+  marketId: string;
+  name: string;
+  description?: string | null;
+  symbols: SymbolGroupSymbol[];
+}
+
+export interface SymbolGroupSymbol {
+  symbolId: string;
+  code: string;
+  subcode?: string | null;
+  name: string;
+  addedAt: string;
+  volume?: number | null;
+  gain?: number | null;
+  roi?: number | null;
+  signalScore?: number | null;
+}
+
 export interface IdResponse {
   id: string;
 }
@@ -300,4 +334,40 @@ export const plutusApi = {
 
   deleteRecipe: (recipeId: string) =>
     api.del<IdResponse>(`/api/plutus/recipes/${recipeId}`),
+
+  getAllSymbolGroups: (
+    marketId: string,
+    timeFrame: TimeFrameKey,
+    page?: PageParams,
+  ) =>
+    api.get<PagedResponse<SymbolGroup>>("/api/plutus/symbol-groups", {
+      marketId,
+      timeFrame,
+      ...page,
+    }),
+
+  getSymbolGroup: (symbolGroupId: string, timeFrame: TimeFrameKey) =>
+    api.get<SymbolGroupDetail>(`/api/plutus/symbol-groups/${symbolGroupId}`, {
+      timeFrame,
+    }),
+
+  createSymbolGroup: (input: {
+    marketId: string;
+    name: string;
+    description?: string | null;
+  }) => api.post<IdResponse>("/api/plutus/symbol-groups", input),
+
+  updateSymbolGroup: (input: {
+    symbolGroupId: string;
+    name: string;
+    description?: string | null;
+    symbolIds: string[];
+  }) =>
+    api.put<IdResponse>(
+      `/api/plutus/symbol-groups/${input.symbolGroupId}`,
+      input,
+    ),
+
+  deleteSymbolGroup: (symbolGroupId: string) =>
+    api.del<IdResponse>(`/api/plutus/symbol-groups/${symbolGroupId}`),
 };

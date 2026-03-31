@@ -3,6 +3,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
@@ -12,9 +13,11 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 namespace Ouranos.Pantheon.Modules.Plutus.Migrations
 {
     [DbContext(typeof(PlutusDbContext))]
-    partial class PlutusDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260331161943_AddSymbolGroups")]
+    partial class AddSymbolGroups
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

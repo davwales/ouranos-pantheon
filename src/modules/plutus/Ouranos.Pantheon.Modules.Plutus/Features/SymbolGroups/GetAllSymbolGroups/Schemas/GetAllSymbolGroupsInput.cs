@@ -1,0 +1,15 @@
+using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
+
+namespace Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetAllSymbolGroups.Schemas;
+
+public sealed record GetAllSymbolGroupsInput(
+    Id<Market> MarketId,
+    TimeFrame TimeFrame = TimeFrame.OneDay,
+    string? SortField = null,
+    string? SortDirection = null,
+    int Skip = 0,
+    int Take = 10,
+    string[]? Filter = null
+);

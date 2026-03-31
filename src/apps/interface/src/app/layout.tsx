@@ -56,6 +56,12 @@ const navigationItems: NavigationBarItem[] = [
         description: "Create and manage conversation traits.",
         href: "/hermes/traits",
       },
+      {
+        label: "Groups",
+        description:
+          "Organize symbols into custom groups like wishlists or categories to browse related items together.",
+        href: "/hermes/groups",
+      },
     ],
   },
   {

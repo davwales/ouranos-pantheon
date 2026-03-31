@@ -1,0 +1,16 @@
+using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
+
+namespace Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetSymbolGroup.Schemas;
+
+public sealed record SymbolGroupSymbolResponse(
+    Id<Symbol> SymbolId,
+    string Code,
+    string? Subcode,
+    string Name,
+    DateTimeOffset AddedAt,
+    decimal? Volume,
+    decimal? Gain,
+    decimal? Roi,
+    decimal? SignalScore
+);

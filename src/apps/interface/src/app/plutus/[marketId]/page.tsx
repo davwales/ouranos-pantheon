@@ -35,6 +35,12 @@ const features: {
       "See which symbols have the strongest signals across all investment intents.",
     segment: "signals",
   },
+  {
+    name: "Groups",
+    description:
+      "Organize symbols into custom groups like wishlists or categories to browse related items together.",
+    segment: "groups",
+  },
 ];
 
 export default async function MarketLanding({
