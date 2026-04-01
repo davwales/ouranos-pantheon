@@ -16,7 +16,7 @@ public static class GetSymbolTradesEndpoint
             .WithTags("Plutus.Trades");
     }
 
-    private static async Task<IResult> Handle(
+    internal static async Task<IResult> Handle(
         Id<Symbol> symbolId,
         IMessageBus bus,
         TimeFrame timeFrame = TimeFrame.OneHour,

@@ -34,9 +34,14 @@ public sealed class DeleteSymbolGroupHandler : IPantheonHandler<DeleteSymbolGrou
         _logger.LogTrace("Attempting to handle delete symbol group command '{@command}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
-        await _dbContext.SymbolGroups
-            .Where(sg => sg.Id == command.SymbolGroupId)
-            .ExecuteDeleteAsync(cancellationToken);
+        var group = await _dbContext.SymbolGroups
+            .FirstOrDefaultAsync(sg => sg.Id == command.SymbolGroupId, cancellationToken);
+
+        if (group is not null)
+        {
+            _dbContext.SymbolGroups.Remove(group);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
 
         _logger.LogDebug("Successfully handled delete symbol group command.");
         return new IdResponse<SymbolGroup>(command.SymbolGroupId);

@@ -1,3 +1,4 @@
+using Ardalis.GuardClauses;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
@@ -31,11 +32,11 @@ public class MarketTradeSnapshot : BaseEntity<Id<MarketTradeSnapshot>>
 
     public decimal Tax { get; private set; }
 
-    private Market? _market = null!;
+    private Market? _market;
 
     public Market Market => _market ?? throw new NavigationPropertyNotLoadedException<MarketTradeSnapshot>();
 
-    private Symbol? _symbol = null!;
+    private Symbol? _symbol;
 
     public Symbol Symbol => _symbol ?? throw new NavigationPropertyNotLoadedException<MarketTradeSnapshot>();
 
@@ -49,18 +50,35 @@ public class MarketTradeSnapshot : BaseEntity<Id<MarketTradeSnapshot>>
         decimal totalVolume,
         int numTransactions,
         decimal limit,
-        decimal tax
-    ) => new(DatabaseExtensions.CreateId<MarketTradeSnapshot>())
+        decimal tax,
+        Market? market = null,
+        Symbol? symbol = null
+    )
     {
-        MarketId = marketId,
-        SymbolId = symbolId,
-        TimeFrame = timeFrame,
-        TotalSpent = totalSpent,
-        MinPrice = minPrice,
-        MaxPrice = maxPrice,
-        TotalVolume = totalVolume,
-        NumTransactions = numTransactions,
-        Limit = limit,
-        Tax = tax,
-    };
+        if (market is not null)
+        {
+            Guard.Against.InvalidInput(market, nameof(market), m => m.Id == marketId);
+        }
+
+        if (symbol is not null)
+        {
+            Guard.Against.InvalidInput(symbol, nameof(symbol), s => s.Id == symbolId);
+        }
+
+        return new MarketTradeSnapshot(DatabaseExtensions.CreateId<MarketTradeSnapshot>())
+        {
+            MarketId = marketId,
+            SymbolId = symbolId,
+            TimeFrame = timeFrame,
+            TotalSpent = totalSpent,
+            MinPrice = minPrice,
+            MaxPrice = maxPrice,
+            TotalVolume = totalVolume,
+            NumTransactions = numTransactions,
+            Limit = limit,
+            Tax = tax,
+            _market = market,
+            _symbol = symbol
+        };
+    }
 }

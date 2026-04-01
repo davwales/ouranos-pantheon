@@ -15,7 +15,7 @@ public static class GetMarketEndpoint
             .WithTags("Plutus.Markets");
     }
 
-    private static async Task<IResult> Handle(
+    internal static async Task<IResult> Handle(
         Id<Market> marketId,
         IMessageBus bus,
         CancellationToken ct
