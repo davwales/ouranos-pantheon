@@ -37,4 +37,27 @@ public sealed class TradeTests
         trade.Volume.ShouldBe(volume);
         trade.Timestamp.ShouldBe(timestamp);
     }
+
+    [Fact]
+    public void Create_WhenSymbolNavigationMismatch_ShouldThrow()
+    {
+        // Arrange
+        var tradeId = new Id<Trade>(_fixture.Create<string>());
+        var symbolId = new Id<Symbol>(_fixture.Create<string>());
+        var market = _fixture.Create<Market>();
+        var wrongSymbol = Symbol.Create(
+            new Id<Symbol>(_fixture.Create<string>()),
+            _fixture.Create<string>(),
+            null,
+            _fixture.Create<string>(),
+            market.Id,
+            new AdditionalFields()
+        );
+
+        // Act
+        var create = () => Trade.Create(tradeId, symbolId, 100m, 10m, DateTimeOffset.UtcNow, wrongSymbol);
+
+        // Assert
+        create.ShouldThrow<ArgumentException>();
+    }
 }

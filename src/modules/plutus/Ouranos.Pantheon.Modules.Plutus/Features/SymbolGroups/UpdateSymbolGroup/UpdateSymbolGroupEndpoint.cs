@@ -15,7 +15,7 @@ public static class UpdateSymbolGroupEndpoint
             .WithTags("Plutus.SymbolGroups");
     }
 
-    private static async Task<IResult> Handle(
+    internal static async Task<IResult> Handle(
         UpdateSymbolGroupInput input,
         IMessageBus bus,
         CancellationToken ct

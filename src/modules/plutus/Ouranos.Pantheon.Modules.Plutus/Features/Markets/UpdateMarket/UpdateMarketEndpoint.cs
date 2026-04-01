@@ -15,7 +15,7 @@ public static class UpdateMarketEndpoint
             .WithTags("Plutus.Markets");
     }
 
-    private static async Task<IResult> Handle(
+    internal static async Task<IResult> Handle(
         UpdateMarketInput input,
         IMessageBus bus,
         CancellationToken ct

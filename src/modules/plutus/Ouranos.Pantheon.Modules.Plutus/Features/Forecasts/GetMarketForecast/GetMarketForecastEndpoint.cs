@@ -14,7 +14,7 @@ public static class GetMarketForecastEndpoint
             .WithTags("Plutus.Forecasts");
     }
 
-    private static async Task<IResult> Handle(
+    internal static async Task<IResult> Handle(
         [AsParameters] GetMarketForecastInput input,
         IMessageBus bus,
         CancellationToken ct = default

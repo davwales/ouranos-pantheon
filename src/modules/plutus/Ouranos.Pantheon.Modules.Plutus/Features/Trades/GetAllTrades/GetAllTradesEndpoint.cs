@@ -13,7 +13,7 @@ public static class GetAllTradesEndpoint
             .WithTags("Plutus.Trades");
     }
 
-    private static async Task<IResult> Handle(
+    internal static async Task<IResult> Handle(
         [AsParameters] GetAllTradesInput input,
         IMessageBus bus,
         CancellationToken ct = default

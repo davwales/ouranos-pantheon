@@ -16,7 +16,7 @@ public static class GetSymbolGroupEndpoint
             .WithTags("Plutus.SymbolGroups");
     }
 
-    private static async Task<IResult> Handle(
+    internal static async Task<IResult> Handle(
         Id<SymbolGroup> symbolGroupId,
         TimeFrame timeFrame,
         IMessageBus bus,

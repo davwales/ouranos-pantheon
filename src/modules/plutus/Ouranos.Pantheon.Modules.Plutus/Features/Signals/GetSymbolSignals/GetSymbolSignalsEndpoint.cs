@@ -13,7 +13,7 @@ public static class GetSymbolSignalsEndpoint
             .WithTags("Plutus.Signals");
     }
 
-    private static async Task<IResult> Handle(
+    internal static async Task<IResult> Handle(
         [AsParameters] GetSymbolSignalsInput input,
         IMessageBus bus,
         CancellationToken ct = default

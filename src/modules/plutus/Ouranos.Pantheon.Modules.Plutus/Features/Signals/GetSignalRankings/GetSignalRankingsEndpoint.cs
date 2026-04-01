@@ -14,7 +14,7 @@ public static class GetSignalRankingsEndpoint
             .WithTags("Plutus.Signals");
     }
 
-    private static async Task<IResult> Handle(
+    internal static async Task<IResult> Handle(
         [AsParameters] GetSignalRankingsInput input,
         IMessageBus bus,
         CancellationToken ct = default

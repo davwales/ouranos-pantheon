@@ -16,7 +16,7 @@ public static class DeleteSymbolGroupEndpoint
             .WithTags("Plutus.SymbolGroups");
     }
 
-    private static async Task<IResult> Handle(
+    internal static async Task<IResult> Handle(
         Id<SymbolGroup> symbolGroupId,
         IMessageBus bus,
         CancellationToken ct

@@ -16,7 +16,7 @@ public static class DeleteRecipeEndpoint
             .WithTags("Plutus.Recipes");
     }
 
-    private static async Task<IResult> Handle(
+    internal static async Task<IResult> Handle(
         Id<Recipe> recipeId,
         IMessageBus bus,
         CancellationToken ct

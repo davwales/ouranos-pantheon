@@ -14,7 +14,7 @@ public static class GetAllRecipesEndpoint
             .WithTags("Plutus.Recipes");
     }
 
-    private static async Task<IResult> Handle(
+    internal static async Task<IResult> Handle(
         [AsParameters] GetAllRecipesInput input,
         IMessageBus bus,
         CancellationToken ct = default

@@ -14,7 +14,7 @@ public static class GetAllForecastsEndpoint
             .WithTags("Plutus.Forecasts");
     }
 
-    private static async Task<IResult> Handle(
+    internal static async Task<IResult> Handle(
         [AsParameters] GetAllForecastsInput input,
         IMessageBus bus,
         CancellationToken ct = default
