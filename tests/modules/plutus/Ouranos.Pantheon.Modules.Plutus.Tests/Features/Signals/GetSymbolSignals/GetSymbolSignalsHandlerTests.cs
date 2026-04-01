@@ -154,7 +154,7 @@ public sealed class GetSymbolSignalsHandlerTests
             market.Id,
             new AdditionalFields()
         );
-        
+
         var signal1 = Signal.Create(market.Id, symbol.Id, SignalType.Rsi, 0.8m);
         var signal2 = Signal.Create(market.Id, symbol.Id, SignalType.BollingerBands, -0.4m);
 

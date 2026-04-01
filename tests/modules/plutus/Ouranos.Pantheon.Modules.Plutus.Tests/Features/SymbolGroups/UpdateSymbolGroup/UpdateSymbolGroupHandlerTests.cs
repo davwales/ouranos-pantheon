@@ -83,7 +83,7 @@ public sealed class UpdateSymbolGroupHandlerTests
         );
 
         var existingMember = SymbolGroupMember.Create(group.Id, symbol1.Id);
-        
+
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(symbol1, symbol2, symbol3);
         await _dbContext.SeedData(group);
