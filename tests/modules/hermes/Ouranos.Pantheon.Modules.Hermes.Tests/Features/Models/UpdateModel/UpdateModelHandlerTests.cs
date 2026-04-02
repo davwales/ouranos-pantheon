@@ -1,5 +1,4 @@
 using Ardalis.GuardClauses;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.UpdateModel;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.UpdateModel.Schemas;
@@ -30,11 +29,21 @@ public sealed class UpdateModelHandlerTests
     public async Task Handle_WhenHappyPath_ShouldUpdateModelAndReturnId()
     {
         // Arrange
-        var existingModel = ModelConfig.Create(new Id<ModelConfig>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>(), _fixture.Create<string>());
+        var existingModel = ModelConfig.Create(
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
         await _dbContext.SeedData(existingModel);
 
         var newName = _fixture.Create<string>();
-        var command = new UpdateModelInput(existingModel.Id, newName, _fixture.Create<string>(), _fixture.Create<string>());
+        var command = new UpdateModelInput(
+            existingModel.Id,
+            newName,
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -52,11 +61,29 @@ public sealed class UpdateModelHandlerTests
     public async Task Handle_WhenIsDefaultTrue_ShouldClearOtherDefaults()
     {
         // Arrange
-        var otherDefault = ModelConfig.Create(new Id<ModelConfig>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>(), _fixture.Create<string>(), isDefault: true);
-        var targetModel = ModelConfig.Create(new Id<ModelConfig>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>(), _fixture.Create<string>(), isDefault: false);
+        var otherDefault = ModelConfig.Create(
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            isDefault: true
+        );
+        var targetModel = ModelConfig.Create(
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            isDefault: false
+        );
         await _dbContext.SeedData(otherDefault, targetModel);
 
-        var command = new UpdateModelInput(targetModel.Id, _fixture.Create<string>(), _fixture.Create<string>(), _fixture.Create<string>(), IsDefault: true);
+        var command = new UpdateModelInput(
+            targetModel.Id,
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            IsDefault: true
+        );
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -75,7 +102,12 @@ public sealed class UpdateModelHandlerTests
     public async Task Handle_WhenModelNotFound_ShouldThrowNotFoundException()
     {
         // Arrange
-        var command = new UpdateModelInput(new Id<ModelConfig>(_fixture.Create<string>()), _fixture.Create<string>(), _fixture.Create<string>(), _fixture.Create<string>());
+        var command = new UpdateModelInput(
+            new Id<ModelConfig>(_fixture.Create<string>()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
 
         // Act
         var handle = async () => await _handler.Handle(command, CancellationToken.None);
@@ -88,7 +120,12 @@ public sealed class UpdateModelHandlerTests
     public async Task Handle_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange
-        var command = new UpdateModelInput(new Id<ModelConfig>(_fixture.Create<string>()), _fixture.Create<string>(), _fixture.Create<string>(), _fixture.Create<string>());
+        var command = new UpdateModelInput(
+            new Id<ModelConfig>(_fixture.Create<string>()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
         var cancellationToken = new CancellationToken(true);
 
         // Act

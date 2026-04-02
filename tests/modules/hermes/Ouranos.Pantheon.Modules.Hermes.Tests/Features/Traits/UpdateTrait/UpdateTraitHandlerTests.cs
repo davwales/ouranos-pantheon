@@ -1,5 +1,4 @@
 using Ardalis.GuardClauses;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Hermes.Features.Traits.UpdateTrait;
 using Ouranos.Pantheon.Modules.Hermes.Features.Traits.UpdateTrait.Schemas;
@@ -30,7 +29,11 @@ public sealed class UpdateTraitHandlerTests
     public async Task Handle_WhenHappyPath_ShouldUpdateTraitAndReturnId()
     {
         // Arrange
-        var existingTrait = Trait.Create(new Id<Trait>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>());
+        var existingTrait = Trait.Create(
+            new Id<Trait>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
         await _dbContext.SeedData(existingTrait);
 
         var newName = _fixture.Create<string>();
@@ -54,7 +57,11 @@ public sealed class UpdateTraitHandlerTests
     public async Task Handle_WhenTraitNotFound_ShouldThrowNotFoundException()
     {
         // Arrange
-        var command = new UpdateTraitInput(new Id<Trait>(_fixture.Create<string>()), _fixture.Create<string>(), _fixture.Create<string>());
+        var command = new UpdateTraitInput(
+            new Id<Trait>(_fixture.Create<string>()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
 
         // Act
         var handle = async () => await _handler.Handle(command, CancellationToken.None);
@@ -67,7 +74,11 @@ public sealed class UpdateTraitHandlerTests
     public async Task Handle_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange
-        var command = new UpdateTraitInput(new Id<Trait>(_fixture.Create<string>()), _fixture.Create<string>(), _fixture.Create<string>());
+        var command = new UpdateTraitInput(
+            new Id<Trait>(_fixture.Create<string>()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
         var cancellationToken = new CancellationToken(true);
 
         // Act
