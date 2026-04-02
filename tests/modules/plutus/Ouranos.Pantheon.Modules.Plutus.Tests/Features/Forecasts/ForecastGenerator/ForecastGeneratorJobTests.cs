@@ -85,7 +85,7 @@ public sealed class ForecastGeneratorJobTests
         // Arrange
         var market = CreateMarket(isForecastingEnabled: true);
         var symbol = CreateSymbol(market.Id);
-        var trades = CreateTrades(symbol.Id, count: 3, daysAgo: 1);
+        var trades = CreateTrades(symbol.Id);
 
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(symbol);
@@ -118,8 +118,8 @@ public sealed class ForecastGeneratorJobTests
         var market = CreateMarket(isForecastingEnabled: true);
         var symbolA = CreateSymbol(market.Id);
         var symbolB = CreateSymbol(market.Id);
-        var tradesA = CreateTrades(symbolA.Id, count: 2, daysAgo: 1);
-        var tradesB = CreateTrades(symbolB.Id, count: 2, daysAgo: 2);
+        var tradesA = CreateTrades(symbolA.Id);
+        var tradesB = CreateTrades(symbolB.Id);
 
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(symbolA, symbolB);
@@ -148,7 +148,7 @@ public sealed class ForecastGeneratorJobTests
         var market = CreateMarket(isForecastingEnabled: true);
         var symbolWithTrades = CreateSymbol(market.Id);
         var symbolWithoutTrades = CreateSymbol(market.Id);
-        var trades = CreateTrades(symbolWithTrades.Id, count: 2, daysAgo: 1);
+        var trades = CreateTrades(symbolWithTrades.Id);
 
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(symbolWithTrades, symbolWithoutTrades);
@@ -177,7 +177,7 @@ public sealed class ForecastGeneratorJobTests
         // Arrange
         var market = CreateMarket(isForecastingEnabled: true);
         var symbol = CreateSymbol(market.Id);
-        var trades = CreateTrades(symbol.Id, count: 2, daysAgo: 1);
+        var trades = CreateTrades(symbol.Id);
 
         var existingForecast = Forecast.Create(
             new Id<Forecast>(Guid.NewGuid().ToString()),
@@ -222,23 +222,19 @@ public sealed class ForecastGeneratorJobTests
             new AdditionalFields()
         );
 
-    private static Trade[] CreateTrades(Id<Symbol> symbolId, int count, int daysAgo)
-    {
-        var baseTime = DateTimeOffset.UtcNow - TimeSpan.FromDays(daysAgo);
-        return
-        [
-            .. Enumerable
-                .Range(0, count)
-                .Select(i => Trade.Create(
-                        new Id<Trade>(Guid.NewGuid().ToString()),
-                        symbolId,
-                        100m + i,
-                        10m,
-                        baseTime.AddHours(i)
-                    )
+    private static Trade[] CreateTrades(Id<Symbol> symbolId) =>
+    [
+        .. Enumerable
+            .Range(0, 30)
+            .Select(i => Trade.Create(
+                    new Id<Trade>(Guid.NewGuid().ToString()),
+                    symbolId,
+                    100m + i,
+                    10m,
+                    DateTimeOffset.UtcNow.AddDays(-(29 - i))
                 )
-        ];
-    }
+            )
+    ];
 
     private static List<MlForecastPoint> CreateMlPredictions(int count) =>
     [
