@@ -15,7 +15,7 @@ public static class GetPersonaEndpoint
             .WithTags("Hermes.Personas");
     }
 
-    private static async Task<IResult> Handle(
+    internal static async Task<IResult> Handle(
         Id<Persona> personaId,
         IMessageBus bus,
         CancellationToken ct

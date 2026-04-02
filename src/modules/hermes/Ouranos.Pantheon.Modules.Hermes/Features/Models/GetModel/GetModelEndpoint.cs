@@ -15,7 +15,7 @@ public static class GetModelEndpoint
             .WithTags("Hermes.Models");
     }
 
-    private static async Task<IResult> Handle(
+    internal static async Task<IResult> Handle(
         Id<ModelConfig> modelId,
         IMessageBus bus,
         CancellationToken ct

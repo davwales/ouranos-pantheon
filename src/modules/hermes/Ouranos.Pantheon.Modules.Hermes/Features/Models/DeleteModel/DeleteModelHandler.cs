@@ -32,9 +32,13 @@ public sealed class DeleteModelHandler : IPantheonHandler<DeleteModelInput, Dele
         _logger.LogTrace("Attempting to handle delete model command '{@command}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
-        await _dbContext.ModelConfigs
-            .Where(m => m.Id == command.ModelId)
-            .ExecuteDeleteAsync(cancellationToken);
+        var model = await _dbContext.ModelConfigs
+            .FirstOrDefaultAsync(m => m.Id == command.ModelId, cancellationToken);
+
+        Guard.Against.NotFound(command.ModelId, model);
+
+        _dbContext.ModelConfigs.Remove(model);
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         _logger.LogDebug("Successfully handled delete model request.");
         return new DeleteModelResponse(command.ModelId);

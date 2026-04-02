@@ -34,9 +34,13 @@ public sealed class DeleteConversationHandler : IPantheonHandler<DeleteConversat
         _logger.LogTrace("Attempting to handle delete conversation command '{@command}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
-        await _dbContext.Conversations
-            .Where(c => c.Id == command.ConversationId)
-            .ExecuteDeleteAsync(cancellationToken);
+        var conversation = await _dbContext.Conversations
+            .FirstOrDefaultAsync(c => c.Id == command.ConversationId, cancellationToken);
+
+        Guard.Against.NotFound(command.ConversationId, conversation);
+
+        _dbContext.Conversations.Remove(conversation);
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         _logger.LogDebug("Successfully handled delete conversation request.");
         return new IdResponse<Conversation>(command.ConversationId);

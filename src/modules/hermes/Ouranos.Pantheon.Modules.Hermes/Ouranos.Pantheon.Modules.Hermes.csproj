@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Ouranos.Pantheon.Modules.Hermes.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="WolverineFx" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" >

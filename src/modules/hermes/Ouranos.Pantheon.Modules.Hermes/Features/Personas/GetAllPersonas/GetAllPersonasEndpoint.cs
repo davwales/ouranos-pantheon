@@ -13,7 +13,7 @@ public static class GetAllPersonasEndpoint
             .WithTags("Hermes.Personas");
     }
 
-    private static async Task<IResult> Handle(
+    internal static async Task<IResult> Handle(
         [AsParameters] GetAllPersonasInput input,
         IMessageBus bus,
         CancellationToken ct

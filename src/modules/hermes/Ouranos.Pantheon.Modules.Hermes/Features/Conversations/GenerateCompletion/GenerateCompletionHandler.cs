@@ -130,7 +130,7 @@ public sealed class GenerateCompletionHandler
         _logger.LogDebug("Successfully generated a chat completion.");
     }
 
-    private static string ComposeSystemPrompt(PersonaInput persona, string systemPrompt, List<TraitInput>? traits)
+    internal static string ComposeSystemPrompt(PersonaInput persona, string systemPrompt, List<TraitInput>? traits)
     {
         var builder = new StringBuilder();
 

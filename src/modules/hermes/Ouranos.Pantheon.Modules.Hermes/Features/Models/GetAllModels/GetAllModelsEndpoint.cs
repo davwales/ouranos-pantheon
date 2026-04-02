@@ -13,7 +13,7 @@ public static class GetAllModelsEndpoint
             .WithTags("Hermes.Models");
     }
 
-    private static async Task<IResult> Handle(
+    internal static async Task<IResult> Handle(
         [AsParameters] GetAllModelsInput input,
         IMessageBus bus,
         CancellationToken ct

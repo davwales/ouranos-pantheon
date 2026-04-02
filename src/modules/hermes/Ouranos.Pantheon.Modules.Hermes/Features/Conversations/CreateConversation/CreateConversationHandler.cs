@@ -94,7 +94,7 @@ public sealed class CreateConversationHandler : IPantheonHandler<CreateConversat
     private async Task<string?> GenerateNameAsync(CreateConversationInput command, CancellationToken cancellationToken)
     {
         var options = _options.Value;
-        if (command.Messages.Count == 0 || options.IsConversationNameGenerationEnabled)
+        if (command.Messages.Count == 0 || !options.IsConversationNameGenerationEnabled)
         {
             return null;
         }

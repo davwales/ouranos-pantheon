@@ -32,9 +32,13 @@ public sealed class DeletePersonaHandler : IPantheonHandler<DeletePersonaInput, 
         _logger.LogTrace("Attempting to handle delete persona command '{@command}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
-        await _dbContext.Personas
-            .Where(p => p.Id == command.PersonaId)
-            .ExecuteDeleteAsync(cancellationToken);
+        var persona = await _dbContext.Personas
+            .FirstOrDefaultAsync(p => p.Id == command.PersonaId, cancellationToken);
+
+        Guard.Against.NotFound(command.PersonaId, persona);
+
+        _dbContext.Personas.Remove(persona);
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         _logger.LogDebug("Successfully handled delete persona request.");
         return new DeletePersonaResponse(command.PersonaId);

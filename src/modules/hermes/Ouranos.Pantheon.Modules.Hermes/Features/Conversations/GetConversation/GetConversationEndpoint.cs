@@ -15,7 +15,7 @@ public static class GetConversationEndpoint
             .WithTags("Hermes.Conversations");
     }
 
-    private static async Task<IResult> Handle(
+    internal static async Task<IResult> Handle(
         Id<Conversation> conversationId,
         IMessageBus bus,
         CancellationToken ct
