@@ -39,9 +39,21 @@ public sealed class UpdatePersonaHandler : IPantheonHandler<UpdatePersonaInput, 
 
         if (command.IsDefault)
         {
-            await _dbContext.Personas
+            var existingDefaults = await _dbContext.Personas
                 .Where(p => p.IsDefault && p.Id != command.PersonaId)
-                .ExecuteUpdateAsync(s => s.SetProperty(p => p.IsDefault, false), cancellationToken);
+                .ToListAsync(cancellationToken);
+
+            foreach (var existing in existingDefaults)
+            {
+                existing.Update(
+                    existing.Name,
+                    existing.Description,
+                    existing.Personality,
+                    existing.Scenario,
+                    false,
+                    existing.IsPublic
+                );
+            }
         }
 
         persona.Update(

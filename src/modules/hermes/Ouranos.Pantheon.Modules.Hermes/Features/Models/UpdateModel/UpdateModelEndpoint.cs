@@ -13,7 +13,7 @@ public static class UpdateModelEndpoint
             .WithTags("Hermes.Models");
     }
 
-    private static async Task<IResult> Handle(
+    internal static async Task<IResult> Handle(
         UpdateModelInput input,
         IMessageBus bus,
         CancellationToken ct

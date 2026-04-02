@@ -13,7 +13,7 @@ public static class GetAllConversationsEndpoint
             .WithTags("Hermes.Conversations");
     }
 
-    private static async Task<IResult> Handle(
+    internal static async Task<IResult> Handle(
         [AsParameters] GetAllConversationsInput input,
         IMessageBus bus,
         CancellationToken ct

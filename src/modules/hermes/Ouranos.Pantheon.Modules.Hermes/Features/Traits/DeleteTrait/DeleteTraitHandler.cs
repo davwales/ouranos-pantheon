@@ -32,9 +32,13 @@ public sealed class DeleteTraitHandler : IPantheonHandler<DeleteTraitInput, Dele
         _logger.LogTrace("Attempting to handle delete trait command '{@command}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
-        await _dbContext.Traits
-            .Where(t => t.Id == command.TraitId)
-            .ExecuteDeleteAsync(cancellationToken);
+        var trait = await _dbContext.Traits
+            .FirstOrDefaultAsync(t => t.Id == command.TraitId, cancellationToken);
+
+        Guard.Against.NotFound(command.TraitId, trait);
+
+        _dbContext.Traits.Remove(trait);
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         _logger.LogDebug("Successfully handled delete trait request.");
         return new DeleteTraitResponse(command.TraitId);

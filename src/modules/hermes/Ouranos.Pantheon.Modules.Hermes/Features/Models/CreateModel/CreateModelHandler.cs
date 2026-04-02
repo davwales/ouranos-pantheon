@@ -36,9 +36,23 @@ public sealed class CreateModelHandler : IPantheonHandler<CreateModelInput, Crea
 
         if (command.IsDefault)
         {
-            await _dbContext.ModelConfigs
+            var existingDefaults = await _dbContext.ModelConfigs
                 .Where(m => m.IsDefault)
-                .ExecuteUpdateAsync(s => s.SetProperty(m => m.IsDefault, false), cancellationToken);
+                .ToListAsync(cancellationToken);
+
+            foreach (var existing in existingDefaults)
+            {
+                existing.Update(
+                    existing.Name,
+                    existing.ModelIdentifier,
+                    existing.SystemPrompt,
+                    existing.Temperature,
+                    existing.MaxTokens,
+                    existing.RepeatPenalty,
+                    false,
+                    existing.IsPublic
+                );
+            }
         }
 
         var model = ModelConfig.Create(

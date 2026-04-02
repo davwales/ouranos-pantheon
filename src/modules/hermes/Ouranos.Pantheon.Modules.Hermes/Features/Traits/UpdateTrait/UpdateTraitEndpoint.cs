@@ -13,7 +13,7 @@ public static class UpdateTraitEndpoint
             .WithTags("Hermes.Traits");
     }
 
-    private static async Task<IResult> Handle(
+    internal static async Task<IResult> Handle(
         UpdateTraitInput input,
         IMessageBus bus,
         CancellationToken ct

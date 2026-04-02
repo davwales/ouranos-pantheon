@@ -16,7 +16,7 @@ public static class UpdateConversationEndpoint
             .WithTags("Hermes.Conversations");
     }
 
-    private static async Task<IResult> Handle(
+    internal static async Task<IResult> Handle(
         Id<Conversation> conversationId,
         UpdateConversationInput input,
         IMessageBus bus,

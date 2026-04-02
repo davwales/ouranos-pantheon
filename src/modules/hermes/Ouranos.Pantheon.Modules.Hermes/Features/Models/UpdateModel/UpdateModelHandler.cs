@@ -39,9 +39,23 @@ public sealed class UpdateModelHandler : IPantheonHandler<UpdateModelInput, Upda
 
         if (command.IsDefault)
         {
-            await _dbContext.ModelConfigs
+            var existingDefaults = await _dbContext.ModelConfigs
                 .Where(m => m.IsDefault && m.Id != command.ModelId)
-                .ExecuteUpdateAsync(s => s.SetProperty(m => m.IsDefault, false), cancellationToken);
+                .ToListAsync(cancellationToken);
+
+            foreach (var existing in existingDefaults)
+            {
+                existing.Update(
+                    existing.Name,
+                    existing.ModelIdentifier,
+                    existing.SystemPrompt,
+                    existing.Temperature,
+                    existing.MaxTokens,
+                    existing.RepeatPenalty,
+                    false,
+                    existing.IsPublic
+                );
+            }
         }
 
         model.Update(

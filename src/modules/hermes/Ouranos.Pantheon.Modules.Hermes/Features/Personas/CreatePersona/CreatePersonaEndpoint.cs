@@ -13,7 +13,7 @@ public static class CreatePersonaEndpoint
             .WithTags("Hermes.Personas");
     }
 
-    private static async Task<IResult> Handle(
+    internal static async Task<IResult> Handle(
         CreatePersonaInput input,
         IMessageBus bus,
         CancellationToken ct

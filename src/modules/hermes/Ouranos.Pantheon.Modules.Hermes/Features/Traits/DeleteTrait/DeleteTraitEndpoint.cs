@@ -15,7 +15,7 @@ public static class DeleteTraitEndpoint
             .WithTags("Hermes.Traits");
     }
 
-    private static async Task<IResult> Handle(
+    internal static async Task<IResult> Handle(
         Id<Trait> traitId,
         IMessageBus bus,
         CancellationToken ct
