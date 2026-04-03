@@ -7,12 +7,14 @@ public static class TimescaleDbFunctions
 {
     public static DateTime TimeBucket(TimeSpan interval, DateTime timestamp)
     {
-        throw new InvalidOperationException("This method is for use in EF Core queries only");
+        var ticks = timestamp.Ticks / interval.Ticks * interval.Ticks;
+        return new DateTime(ticks, timestamp.Kind);
     }
 
     public static DateTimeOffset TimeBucket(TimeSpan interval, DateTimeOffset timestamp)
     {
-        throw new InvalidOperationException("This method is for use in EF Core queries only");
+        var ticks = timestamp.UtcTicks / interval.Ticks * interval.Ticks;
+        return new DateTimeOffset(ticks, TimeSpan.Zero);
     }
 
     public static string ToTimescaleInterval(this TimeSpan timeSpan)

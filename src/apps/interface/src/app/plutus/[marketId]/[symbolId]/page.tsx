@@ -13,6 +13,7 @@ import { useApi } from "@/hooks/use-api";
 import useInterval from "@/hooks/use_interval";
 import {
   GetDailySymbolSummaryResponse,
+  GetMarketForecastRow,
   GetSymbolTradesResponse,
   plutusApi,
   Symbol,
@@ -26,10 +27,7 @@ interface SymbolDetails {
   trades: GetSymbolTradesResponse;
   summary: GetDailySymbolSummaryResponse;
   latestTrade?: { price: number; volume: number };
-  forecast?: {
-    latest: { averagePrice: number };
-    predictions: Array<{ averagePrice: number }>;
-  };
+  forecast?: GetMarketForecastRow;
 }
 
 function StatDisplay({
@@ -105,7 +103,10 @@ function PriceChange({
 }
 
 export default function SymbolDetail() {
-  const { symbolId } = useParams<{ marketId: string; symbolId: string }>();
+  const { marketId, symbolId } = useParams<{
+    marketId: string;
+    symbolId: string;
+  }>();
   const [timeFrameKey] = usePlutusStore(
     useShallow((state: PlutusState) => [state.timeFrameKey]),
   );
@@ -123,7 +124,7 @@ export default function SymbolDetail() {
           sortField: "timestamp",
           sortDirection: "desc",
         }),
-        plutusApi.getAllForecasts({
+        plutusApi.getMarketForecasts(marketId, {
           filter: [`symbolId:eq:${symbolId}`],
           skip: 0,
           take: 1,
@@ -133,7 +134,7 @@ export default function SymbolDetail() {
         trades,
         summary,
         latestTrade: allTrades[0],
-        forecast: (forecasts.items as any[])[0],
+        forecast: forecasts.items[0],
       })),
     [symbolId, timeFrameKey],
   );
@@ -176,7 +177,7 @@ export default function SymbolDetail() {
         />
         <PriceChange
           label="Predicted"
-          current={data?.forecast?.predictions[0]?.averagePrice}
+          current={data?.forecast?.dayOne?.averagePrice}
           forecast={data?.forecast}
         />
       </div>
