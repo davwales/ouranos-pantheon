@@ -37,7 +37,13 @@ public sealed class ForecastGeneratorJobTests
             Options.Create(
                 new PlutusOptions
                 {
-                    Forecasting = new ForecastingOptions(IsEnabled: true, RemoveOutdatedForecasts: false)
+                    Forecasting = new ForecastingOptions(
+                        IsEnabled: true,
+                        RemoveOutdatedForecasts: false,
+                        NumPredictions: 7,
+                        HistoryDays: 30,
+                        BatchSize: 500
+                    )
                 }
             )
         );
