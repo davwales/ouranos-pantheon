@@ -158,20 +158,20 @@ public sealed class ForecastGeneratorJob
         var bucketedTrades = await _dbContext.Trades.AsNoTracking()
             .Where(t => symbolIds.Contains(t.SymbolId) && t.Timestamp >= since)
             .GroupBy(t => new
-                {
-                    t.SymbolId,
-                    Bucket = TimescaleDbFunctions.TimeBucket(TimeSpan.FromDays(1), t.Timestamp)
-                }
+            {
+                t.SymbolId,
+                Bucket = TimescaleDbFunctions.TimeBucket(TimeSpan.FromDays(1), t.Timestamp)
+            }
             )
             .Select(g => new
-                {
-                    g.Key.SymbolId,
-                    g.Key.Bucket,
-                    Volume = g.Sum(t => t.Volume),
-                    AveragePrice = g.Sum(t => t.Price * t.Volume) / g.Sum(t => t.Volume),
-                    MinPrice = g.Min(t => t.Price),
-                    MaxPrice = g.Max(t => t.Price)
-                }
+            {
+                g.Key.SymbolId,
+                g.Key.Bucket,
+                Volume = g.Sum(t => t.Volume),
+                AveragePrice = g.Sum(t => t.Price * t.Volume) / g.Sum(t => t.Volume),
+                MinPrice = g.Min(t => t.Price),
+                MaxPrice = g.Max(t => t.Price)
+            }
             )
             .ToListAsync(ct);
 

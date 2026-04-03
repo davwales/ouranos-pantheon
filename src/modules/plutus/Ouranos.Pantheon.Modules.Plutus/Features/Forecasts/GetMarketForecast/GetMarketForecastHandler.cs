@@ -81,51 +81,51 @@ public sealed class GetMarketForecastHandler
             .AsNoTracking()
             .Where(f => f.MarketId == input.MarketId && f.Predictions.Count >= 7)
             .Select(f => new
+            {
+                f.Id,
+                f.MarketId,
+                f.SymbolId,
+                SymbolName = f.Symbol.Name,
+                SymbolSubcode = f.Symbol.Subcode,
+                f.Latest,
+                Predictions = f.Predictions.Select(p => new
                 {
-                    f.Id,
-                    f.MarketId,
-                    f.SymbolId,
-                    SymbolName = f.Symbol.Name,
-                    SymbolSubcode = f.Symbol.Subcode,
-                    f.Latest,
-                    Predictions = f.Predictions.Select(p => new
-                        {
-                            p.AveragePrice,
-                            p.MaxPrice,
-                            p.MinPrice,
-                            p.Volume,
-                            Margin = p.AveragePrice - (
-                                p.AveragePrice * flatTax.Rate > 0
-                                    ? 0
-                                    : p.AveragePrice * flatTax.Rate
-                            ) - f.Latest.AveragePrice
-                        }
-                    )
+                    p.AveragePrice,
+                    p.MaxPrice,
+                    p.MinPrice,
+                    p.Volume,
+                    Margin = p.AveragePrice - (
+                            p.AveragePrice * flatTax.Rate > 0
+                                ? 0
+                                : p.AveragePrice * flatTax.Rate
+                        ) - f.Latest.AveragePrice
                 }
+                    )
+            }
             )
             .Select(f => new
-                {
-                    f.Id,
-                    f.MarketId,
-                    f.SymbolId,
-                    f.SymbolName,
-                    f.SymbolSubcode,
-                    f.Latest,
-                    Predictions = f.Predictions.Select(p => new GetMarketForecastPredictionResponse(
-                            p.AveragePrice,
-                            p.MinPrice,
-                            p.MaxPrice,
-                            p.Volume,
-                            p.Margin,
-                            p.Margin * p.Volume,
-                            p.AveragePrice - f.Latest.AveragePrice,
-                            p.MinPrice - f.Latest.MinPrice,
-                            p.MaxPrice - f.Latest.MaxPrice,
-                            p.Volume - f.Latest.Volume,
-                            p.AveragePrice * p.Volume - f.Latest.AveragePrice * f.Latest.Volume
-                        )
+            {
+                f.Id,
+                f.MarketId,
+                f.SymbolId,
+                f.SymbolName,
+                f.SymbolSubcode,
+                f.Latest,
+                Predictions = f.Predictions.Select(p => new GetMarketForecastPredictionResponse(
+                        p.AveragePrice,
+                        p.MinPrice,
+                        p.MaxPrice,
+                        p.Volume,
+                        p.Margin,
+                        p.Margin * p.Volume,
+                        p.AveragePrice - f.Latest.AveragePrice,
+                        p.MinPrice - f.Latest.MinPrice,
+                        p.MaxPrice - f.Latest.MaxPrice,
+                        p.Volume - f.Latest.Volume,
+                        p.AveragePrice * p.Volume - f.Latest.AveragePrice * f.Latest.Volume
                     )
-                }
+                    )
+            }
             )
             .Select(x => new GetMarketForecastResponse(
                     x.Id,
