@@ -2,13 +2,15 @@
   "version": 1,
   "isRoot": true,
   "tools": {
-    "hotchocolate.fusion.commandline": {
-      "version": "13.9.14",
-      "commands": ["fusion"]
-    },
     "dotnet-ef": {
-      "version": "9.0.8",
-      "commands": ["dotnet-ef"]
+      "version": "10.0.5",
+      "commands": ["dotnet-ef"],
+      "rollForward": false
+    },
+    "dotnet-reportgenerator-globaltool": {
+      "version": "5.4.4",
+      "commands": ["reportgenerator"],
+      "rollForward": false
     }
   }
 }
