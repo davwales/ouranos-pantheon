@@ -411,6 +411,7 @@ CLAUDE.md
 .memory/
 .prompt_history/
 memory/*.md
+AGENTS.md
 
 appsettings.Local.json
 appsettings.Development.json
@@ -420,3 +421,4 @@ appsettings.Development.Migration.json
 *.graphql
 .aider*
 dev/
+coverage-report/

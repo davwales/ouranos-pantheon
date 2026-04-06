@@ -63,6 +63,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "hermes", "hermes", "{3DEBC8
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Modules.Hermes.Tests", "tests\modules\hermes\Ouranos.Pantheon.Modules.Hermes.Tests\Ouranos.Pantheon.Modules.Hermes.Tests.csproj", "{AC6CF52D-D08C-45ED-808D-BD6A1BBDE6CF}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "apps", "apps", "{89B464FC-0066-5EE8-C7AE-4CCBACED43EE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ouranos.Pantheon.Apps.Gateway.Tests", "tests\apps\Ouranos.Pantheon.Apps.Gateway.Tests\Ouranos.Pantheon.Apps.Gateway.Tests.csproj", "{BD9639FB-A07F-4942-BDF0-2463D82A888C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -181,6 +185,18 @@ Global
 		{AC6CF52D-D08C-45ED-808D-BD6A1BBDE6CF}.Release|x64.Build.0 = Release|Any CPU
 		{AC6CF52D-D08C-45ED-808D-BD6A1BBDE6CF}.Release|x86.ActiveCfg = Release|Any CPU
 		{AC6CF52D-D08C-45ED-808D-BD6A1BBDE6CF}.Release|x86.Build.0 = Release|Any CPU
+		{BD9639FB-A07F-4942-BDF0-2463D82A888C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD9639FB-A07F-4942-BDF0-2463D82A888C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD9639FB-A07F-4942-BDF0-2463D82A888C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{BD9639FB-A07F-4942-BDF0-2463D82A888C}.Debug|x64.Build.0 = Debug|Any CPU
+		{BD9639FB-A07F-4942-BDF0-2463D82A888C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{BD9639FB-A07F-4942-BDF0-2463D82A888C}.Debug|x86.Build.0 = Debug|Any CPU
+		{BD9639FB-A07F-4942-BDF0-2463D82A888C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD9639FB-A07F-4942-BDF0-2463D82A888C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BD9639FB-A07F-4942-BDF0-2463D82A888C}.Release|x64.ActiveCfg = Release|Any CPU
+		{BD9639FB-A07F-4942-BDF0-2463D82A888C}.Release|x64.Build.0 = Release|Any CPU
+		{BD9639FB-A07F-4942-BDF0-2463D82A888C}.Release|x86.ActiveCfg = Release|Any CPU
+		{BD9639FB-A07F-4942-BDF0-2463D82A888C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -203,5 +219,7 @@ Global
 		{F69D1E39-FF56-49CF-BD55-625CB6263459} = {065EDAE0-BA88-43B0-8C19-0A1221AA7B09}
 		{3DEBC856-A711-D8F7-4172-4427B76151F4} = {0591C2DB-5B12-48AE-9E9B-61B96F6524A5}
 		{AC6CF52D-D08C-45ED-808D-BD6A1BBDE6CF} = {3DEBC856-A711-D8F7-4172-4427B76151F4}
+		{89B464FC-0066-5EE8-C7AE-4CCBACED43EE} = {F392701E-51BD-4568-8747-EEB6210D34B1}
+		{BD9639FB-A07F-4942-BDF0-2463D82A888C} = {89B464FC-0066-5EE8-C7AE-4CCBACED43EE}
 	EndGlobalSection
 EndGlobal
