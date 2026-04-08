@@ -9,6 +9,7 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
+using Ouranos.Pantheon.Tests.Utils.Extensions;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Forecasts.GetMarketForecast;
@@ -17,17 +18,59 @@ public sealed class GetMarketForecastHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly GetMarketForecastHandler _handler;
+    private readonly PlutusDbContext _dbContext;
     private readonly ILogger<GetMarketForecastHandler> _logger = Substitute.For<ILogger<GetMarketForecastHandler>>();
 
     public GetMarketForecastHandlerTests()
     {
         _fixture.Customize(new IdCustomization());
 
+        _dbContext = DbContextExtensions.Mock<PlutusDbContext>();
         _handler = new GetMarketForecastHandler(
             _logger,
-            DbContextExtensions.Mock<PlutusDbContext>(),
+            _dbContext,
             Options.Create(new QueryOptions())
         );
+    }
+
+    [Fact]
+    public async Task Handle_WhenSkipExceedsMax_ShouldThrow()
+    {
+        // Arrange
+        var market = Market.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            new Taxes(null)
+        );
+        await _dbContext.SeedData(market);
+
+        var query = new GetMarketForecastInput(market.Id, Skip: 99999, Take: 10);
+
+        // Act
+        var get = async () => await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        await get.ShouldThrowAsync<Exception>();
+    }
+
+    [Fact]
+    public async Task Handle_WhenTakeExceedsMax_ShouldThrow()
+    {
+        // Arrange
+        var market = Market.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            new Taxes(null)
+        );
+        await _dbContext.SeedData(market);
+
+        var query = new GetMarketForecastInput(market.Id, Take: 9999);
+
+        // Act
+        var get = async () => await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        await get.ShouldThrowAsync<Exception>();
     }
 
     [Fact]

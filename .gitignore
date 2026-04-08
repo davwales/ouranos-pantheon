@@ -422,3 +422,4 @@ appsettings.Development.Migration.json
 .aider*
 dev/
 coverage-report/
+coverage-merged/

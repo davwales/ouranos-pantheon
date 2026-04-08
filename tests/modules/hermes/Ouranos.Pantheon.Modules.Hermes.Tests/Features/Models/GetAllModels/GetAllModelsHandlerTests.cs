@@ -126,4 +126,36 @@ public sealed class GetAllModelsHandlerTests
         // Assert
         await handle.ShouldThrowAsync<OperationCanceledException>();
     }
+
+    [Fact]
+    public async Task Handle_WhenModelsExist_ShouldReturnResponseWithAllProperties()
+    {
+        // Arrange
+        var model = ModelConfig.Create(
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            temperature: 0.7f,
+            maxTokens: 512,
+            repeatPenalty: 1.1f,
+            isDefault: true,
+            isPublic: false
+        );
+        await _dbContext.SeedData(model);
+
+        var query = new GetAllModelsInput();
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Count.ShouldBe(1);
+        var item = result[0];
+        item.Temperature.ShouldBe(0.7f);
+        item.MaxTokens.ShouldBe(512);
+        item.RepeatPenalty.ShouldBe(1.1f);
+        item.IsDefault.ShouldBeTrue();
+        item.IsPublic.ShouldBeFalse();
+    }
 }

@@ -170,4 +170,31 @@ public sealed class GetSymbolTradesHandlerTests
         bucket.AveragePrice.ShouldBe(100m);
         bucket.Margin.ShouldBe(20m);
     }
+
+    [Fact]
+    public void GetSymbolTradeBucketsResponse_AllProperties_ShouldBeAccessible()
+    {
+        // Arrange
+        var date = DateTimeOffset.UtcNow;
+
+        // Act
+        var response = new GetSymbolTradeBucketsResponse(
+            Price: 100m,
+            Volume: 50m,
+            TotalSpent: 5000m,
+            MinPrice: 90m,
+            MaxPrice: 110m,
+            NumTransactions: 10,
+            Date: date
+        );
+
+        // Assert
+        response.Price.ShouldBe(100m);
+        response.Volume.ShouldBe(50m);
+        response.TotalSpent.ShouldBe(5000m);
+        response.MinPrice.ShouldBe(90m);
+        response.MaxPrice.ShouldBe(110m);
+        response.NumTransactions.ShouldBe(10);
+        response.Date.ShouldBe(date);
+    }
 }

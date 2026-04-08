@@ -115,4 +115,23 @@ public sealed class GetAllConversationsHandlerTests
         // Assert
         await handle.ShouldThrowAsync<OperationCanceledException>();
     }
+
+    [Fact]
+    public async Task Handle_WhenConversationsExist_ShouldReturnResponseWithAllProperties()
+    {
+        // Arrange
+        var conv = CreateConversation(true);
+        await _dbContext.SeedData(conv);
+
+        var query = new GetAllConversationsInput();
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Count.ShouldBe(1);
+        var item = result[0];
+        item.CreatedAt.ShouldBeGreaterThan(DateTimeOffset.MinValue);
+        item.UpdatedAt.ShouldBeGreaterThan(DateTimeOffset.MinValue);
+    }
 }

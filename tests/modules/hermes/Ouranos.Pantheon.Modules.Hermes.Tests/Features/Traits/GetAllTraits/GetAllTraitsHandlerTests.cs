@@ -119,4 +119,27 @@ public sealed class GetAllTraitsHandlerTests
         // Assert
         await handle.ShouldThrowAsync<OperationCanceledException>();
     }
+
+    [Fact]
+    public async Task Handle_WhenTraitsExist_ShouldReturnResponseWithAllProperties()
+    {
+        // Arrange
+        await _dbContext.SeedData(
+            Trait.Create(
+                new Id<Trait>(Guid.NewGuid().ToString()),
+                _fixture.Create<string>(),
+                _fixture.Create<string>(),
+                isPublic: false
+            )
+        );
+
+        var query = new GetAllTraitsInput();
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Count.ShouldBe(1);
+        result[0].IsPublic.ShouldBeFalse();
+    }
 }

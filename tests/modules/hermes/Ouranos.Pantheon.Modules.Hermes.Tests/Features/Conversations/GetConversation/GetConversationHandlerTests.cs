@@ -249,4 +249,52 @@ public sealed class GetConversationHandlerTests
         // Assert
         await handle.ShouldThrowAsync<OperationCanceledException>();
     }
+
+    [Fact]
+    public async Task Handle_WhenConversationHasAllFields_ShouldReturnResponseWithAllProperties()
+    {
+        // Arrange
+        var persona = Persona.Create(
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            personality: "Friendly",
+            scenario: "In a chat"
+        );
+        var modelConfig = ModelConfig.Create(
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            temperature: 0.7f,
+            maxTokens: 512,
+            repeatPenalty: 1.1f
+        );
+        var conversation = Conversation.Create(
+            new Id<Conversation>(Guid.NewGuid().ToString()),
+            persona.Id,
+            modelConfig.Id,
+            [],
+            [],
+            _fixture.Create<string>()
+        );
+
+        await _dbContext.SeedData(persona);
+        await _dbContext.SeedData(modelConfig);
+        await _dbContext.SeedData(conversation);
+
+        var query = new GetConversationInput(conversation.Id);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.CreatedAt.ShouldBeGreaterThan(DateTimeOffset.MinValue);
+        result.UpdatedAt.ShouldBeGreaterThan(DateTimeOffset.MinValue);
+        result.Persona.Personality.ShouldBe("Friendly");
+        result.Persona.Scenario.ShouldBe("In a chat");
+        result.Model.Temperature.ShouldBe(0.7f);
+        result.Model.MaxTokens.ShouldBe(512);
+        result.Model.RepeatPenalty.ShouldBe(1.1f);
+    }
 }

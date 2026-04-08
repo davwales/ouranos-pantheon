@@ -5,20 +5,15 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using TickerQ.Utilities.Base;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
 
-namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Trades.MarketSnapshot;
+namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Trades.MarketTradeSnapshot;
 
 public sealed class MarketTradeSnapshotJobTests
 {
     private readonly ILogger<MarketTradeSnapshotJob> _logger =
         Substitute.For<ILogger<MarketTradeSnapshotJob>>();
 
-    private readonly PlutusDbContext _dbContext;
+    private readonly PlutusDbContext _dbContext = DbContextExtensions.Mock<PlutusDbContext>();
     private readonly TickerFunctionContext _context = new();
-
-    public MarketTradeSnapshotJobTests()
-    {
-        _dbContext = DbContextExtensions.Mock<PlutusDbContext>();
-    }
 
     private MarketTradeSnapshotJob CreateJob() =>
         new(_logger, _dbContext, Options.Create(new MarketTradeSnapshotOptions(BatchSize: 500)));
@@ -49,4 +44,94 @@ public sealed class MarketTradeSnapshotJobTests
         _dbContext.MarketTradeSnapshots.Count().ShouldBe(0);
     }
 
+    [Fact]
+    public async Task ExecuteFourHours_WhenNoTrades_ShouldCreateNoSnapshots()
+    {
+        // Arrange
+        var job = CreateJob();
+
+        // Act
+        await job.ExecuteFourHours(_context, CancellationToken.None);
+
+        // Assert
+        _dbContext.MarketTradeSnapshots.Count().ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task ExecuteOneDay_WhenNoTrades_ShouldCreateNoSnapshots()
+    {
+        // Arrange
+        var job = CreateJob();
+
+        // Act
+        await job.ExecuteOneDay(_context, CancellationToken.None);
+
+        // Assert
+        _dbContext.MarketTradeSnapshots.Count().ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task ExecuteAllTime_WhenNoTrades_ShouldCreateNoSnapshots()
+    {
+        // Arrange
+        var job = CreateJob();
+
+        // Act
+        await job.ExecuteAllTime(_context, CancellationToken.None);
+
+        // Assert
+        _dbContext.MarketTradeSnapshots.Count().ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task ExecuteOneWeek_WhenNoTrades_ShouldCreateNoSnapshots()
+    {
+        // Arrange
+        var job = CreateJob();
+
+        // Act
+        await job.ExecuteOneWeek(_context, CancellationToken.None);
+
+        // Assert
+        _dbContext.MarketTradeSnapshots.Count().ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task ExecuteOneMonth_WhenNoTrades_ShouldCreateNoSnapshots()
+    {
+        // Arrange
+        var job = CreateJob();
+
+        // Act
+        await job.ExecuteOneMonth(_context, CancellationToken.None);
+
+        // Assert
+        _dbContext.MarketTradeSnapshots.Count().ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task ExecuteSixMonths_WhenNoTrades_ShouldCreateNoSnapshots()
+    {
+        // Arrange
+        var job = CreateJob();
+
+        // Act
+        await job.ExecuteSixMonths(_context, CancellationToken.None);
+
+        // Assert
+        _dbContext.MarketTradeSnapshots.Count().ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task ExecuteOneYear_WhenNoTrades_ShouldCreateNoSnapshots()
+    {
+        // Arrange
+        var job = CreateJob();
+
+        // Act
+        await job.ExecuteOneYear(_context, CancellationToken.None);
+
+        // Assert
+        _dbContext.MarketTradeSnapshots.Count().ShouldBe(0);
+    }
 }

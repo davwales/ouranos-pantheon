@@ -129,4 +129,31 @@ public sealed class GetPersonaHandlerTests
         // Assert
         await handle.ShouldThrowAsync<OperationCanceledException>();
     }
+
+    [Fact]
+    public async Task Handle_WhenPersonaHasAllFields_ShouldReturnResponseWithAllProperties()
+    {
+        // Arrange
+        var persona = Persona.Create(
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            personality: "Friendly",
+            scenario: "In a chat",
+            isDefault: true,
+            isPublic: false
+        );
+        await _dbContext.SeedData(persona);
+
+        var query = new GetPersonaInput(persona.Id);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Personality.ShouldBe("Friendly");
+        result.Scenario.ShouldBe("In a chat");
+        result.IsDefault.ShouldBeTrue();
+        result.IsPublic.ShouldBeFalse();
+    }
 }
