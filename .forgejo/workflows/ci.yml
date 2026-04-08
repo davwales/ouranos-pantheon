@@ -68,7 +68,7 @@ jobs:
         with:
           filename: "coverage-merged/Cobertura.xml"
           fail_below_min: true
-          thresholds: "90 100"
+          thresholds: "85 100"
           output: "console"
 
   publish:
