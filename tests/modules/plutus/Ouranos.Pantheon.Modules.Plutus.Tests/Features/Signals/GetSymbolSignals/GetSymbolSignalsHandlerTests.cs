@@ -24,7 +24,8 @@ public sealed class GetSymbolSignalsHandlerTests
         _fixture.Customize(new IdCustomization());
         _dbContext = DbContextExtensions.Mock<PlutusDbContext>();
 
-        _computers = [
+        _computers =
+        [
             new StubSignalComputer(SignalType.Rsi, "RSI", [InvestmentIntent.Buy, InvestmentIntent.Flip]),
             new StubSignalComputer(SignalType.BollingerBands, "Bollinger Bands", [InvestmentIntent.Flip]),
             new StubSignalComputer(SignalType.PriceVelocity, "Price Velocity", [InvestmentIntent.Sell]),
@@ -121,11 +122,17 @@ public sealed class GetSymbolSignalsHandlerTests
 
         // Assert
         result.ShouldNotBeNull();
+        result.SymbolId.ShouldBe(symbol.Id);
+        result.SymbolName.ShouldNotBeNull();
         result.Signals.Count.ShouldBe(3);
 
         var bullish = result.Signals.Single(s => s.Value == 0.8m);
         bullish.Direction.ShouldBe(SignalDirection.Bullish);
         bullish.Strength.ShouldBe(SignalStrength.Strong);
+        bullish.Type.ShouldNotBeNull();
+        bullish.Label.ShouldNotBeNull();
+        bullish.Description.ShouldNotBeNull();
+        bullish.Intents.ShouldNotBeNull();
 
         var bearish = result.Signals.Single(s => s.Value == -0.5m);
         bearish.Direction.ShouldBe(SignalDirection.Bearish);
@@ -173,6 +180,43 @@ public sealed class GetSymbolSignalsHandlerTests
         result.Summary.BearishCount.ShouldBe(1);
         result.Summary.NeutralCount.ShouldBe(0);
         result.Summary.AggregatedScore.ShouldBe((0.8m + -0.4m) / 2m);
+    }
+
+    [Fact]
+    public async Task Handle_WhenIntentProvided_ShouldFilterSignalsByMatchingComputers()
+    {
+        // Arrange
+        var market = Market.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<Taxes>()
+        );
+        var symbol = Symbol.Create(
+            new Id<Symbol>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            null,
+            _fixture.Create<string>(),
+            market.Id,
+            new AdditionalFields()
+        );
+
+        var rsiSignal = Signal.Create(market.Id, symbol.Id, SignalType.Rsi, 0.7m);
+        var bbSignal = Signal.Create(market.Id, symbol.Id, SignalType.BollingerBands, -0.3m);
+
+        await _dbContext.SeedData(market);
+        await _dbContext.SeedData(symbol);
+        await _dbContext.SeedData(rsiSignal, bbSignal);
+
+        var handler = new GetSymbolSignalsHandler(_logger, _dbContext, _computers);
+        var query = new GetSymbolSignalsInput(symbol.Id, Intent: InvestmentIntent.Buy);
+
+        // Act
+        var result = await handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Signals.ShouldContain(s => s.Type == nameof(SignalType.Rsi));
+        result.Signals.ShouldNotContain(s => s.Type == nameof(SignalType.BollingerBands));
     }
 
     [Fact]

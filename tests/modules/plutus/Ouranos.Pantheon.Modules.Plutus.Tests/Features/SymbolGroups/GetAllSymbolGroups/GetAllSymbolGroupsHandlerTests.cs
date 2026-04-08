@@ -4,7 +4,11 @@ using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetAllSymbolGroups;
 using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetAllSymbolGroups.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.SymbolGroups;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
@@ -39,11 +43,12 @@ public sealed class GetAllSymbolGroupsHandlerTests
         );
 
         var groups = Enumerable.Range(0, 2).Select(_ => SymbolGroup.Create(
-            new Id<SymbolGroup>(Guid.NewGuid().ToString()),
-            _fixture.Create<string>(),
-            null,
-            market.Id
-        )).ToArray();
+                new Id<SymbolGroup>(Guid.NewGuid().ToString()),
+                _fixture.Create<string>(),
+                null,
+                market.Id
+            )
+        ).ToArray();
 
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(groups);
@@ -57,6 +62,73 @@ public sealed class GetAllSymbolGroupsHandlerTests
         result.ShouldNotBeNull();
         result.Items.Count().ShouldBe(2);
         result.TotalCount.ShouldBe(2);
+        var item = result.Items.First();
+        item.Id.ShouldNotBe(default);
+        item.Name.ShouldNotBeNull();
+        item.MarketId.ShouldBe(market.Id);
+    }
+
+    [Fact]
+    public async Task Handle_WhenGroupHasMembersWithSnapshots_ShouldProjectGroupStats()
+    {
+        // Arrange
+        var market = Market.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<Taxes>()
+        );
+
+        var symbol = Symbol.Create(
+            new Id<Symbol>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            null,
+            _fixture.Create<string>(),
+            market.Id,
+            new AdditionalFields()
+        );
+
+        var member = SymbolGroupMember.Create(
+            new Id<SymbolGroup>(Guid.NewGuid().ToString()),
+            symbol.Id
+        );
+
+        var group = SymbolGroup.Create(
+            member.SymbolGroupId,
+            _fixture.Create<string>(),
+            null,
+            market.Id,
+            members: [member]
+        );
+
+        var snapshot = MarketTradeSnapshot.Create(
+            market.Id,
+            symbol.Id,
+            TimeFrame.OneDay,
+            totalSpent: 10000m,
+            minPrice: 90m,
+            maxPrice: 110m,
+            totalVolume: 100m,
+            numTransactions: 50,
+            limit: 200m,
+            tax: 1m
+        );
+
+        await _dbContext.SeedData(market);
+        await _dbContext.SeedData(symbol);
+        await _dbContext.SeedData(group);
+        await _dbContext.SeedData(snapshot);
+
+        var query = new GetAllSymbolGroupsInput(market.Id, TimeFrame: TimeFrame.OneDay, Take: 10);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Items.Count().ShouldBe(1);
+        var item = result.Items.First();
+        item.SymbolCount.ShouldBe(1);
+        item.TotalVolume.ShouldNotBeNull();
     }
 
     [Fact]
@@ -75,6 +147,55 @@ public sealed class GetAllSymbolGroupsHandlerTests
         result.ShouldNotBeNull();
         result.Items.ShouldBeEmpty();
         result.TotalCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task Handle_WhenGroupHasMembersWithSignals_ShouldProjectSignalScores()
+    {
+        // Arrange
+        var market = Market.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<Taxes>()
+        );
+        var symbol = Symbol.Create(
+            new Id<Symbol>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            null,
+            _fixture.Create<string>(),
+            market.Id,
+            new AdditionalFields()
+        );
+
+        var member = SymbolGroupMember.Create(new Id<SymbolGroup>(Guid.NewGuid().ToString()), symbol.Id);
+        var group = SymbolGroup.Create(
+            member.SymbolGroupId,
+            _fixture.Create<string>(),
+            null,
+            market.Id,
+            members: [member]
+        );
+
+        var bullishSignal = Signal.Create(market.Id, symbol.Id, SignalType.BollingerBands, 0.8m);
+        var bearishSignal = Signal.Create(market.Id, symbol.Id, SignalType.Rsi, -0.4m);
+
+        await _dbContext.SeedData(market);
+        await _dbContext.SeedData(symbol);
+        await _dbContext.SeedData(group);
+        await _dbContext.SeedData(bullishSignal, bearishSignal);
+
+        var query = new GetAllSymbolGroupsInput(market.Id, Take: 10);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Items.Count().ShouldBe(1);
+        var item = result.Items.First();
+        item.AverageOverallScore.ShouldNotBeNull();
+        item.BullishCount.ShouldBe(1);
+        item.BearishCount.ShouldBe(0);
     }
 
     [Fact]

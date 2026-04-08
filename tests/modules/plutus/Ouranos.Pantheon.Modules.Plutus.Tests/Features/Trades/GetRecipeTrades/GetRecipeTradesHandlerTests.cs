@@ -133,9 +133,12 @@ public sealed class GetRecipeTradesHandlerTests
         // Assert
         result.ShouldNotBeNull();
         result.Items.Count().ShouldBe(1);
-        result.Items.ElementAt(0).LatestBuyPrice.ShouldBe(105m);
-        result.Items.ElementAt(0).LatestSellPrice.ShouldBe(200m);
-        result.Items.ElementAt(0).LatestMargin.ShouldBe(95m);
+        var item = result.Items.ElementAt(0);
+        item.LatestBuyPrice.ShouldBe(105m);
+        item.LatestSellPrice.ShouldBe(200m);
+        item.LatestMargin.ShouldBe(95m);
+        item.RecipeId.ShouldBe(recipe.Id);
+        item.RecipeName.ShouldBe(recipe.Name);
     }
 
     [Fact]

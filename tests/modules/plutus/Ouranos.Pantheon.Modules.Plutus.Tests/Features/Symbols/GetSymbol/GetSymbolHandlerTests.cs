@@ -59,6 +59,7 @@ public sealed class GetSymbolHandlerTests
         result.Code.ShouldBe(symbol.Code);
         result.Name.ShouldBe(symbol.Name);
         result.MarketId.ShouldBe(symbol.MarketId);
+        result.AdditionalFields.ShouldNotBeNull();
     }
 
     [Fact]

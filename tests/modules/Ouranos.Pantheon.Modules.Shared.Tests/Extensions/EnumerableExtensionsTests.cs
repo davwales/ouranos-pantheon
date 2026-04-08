@@ -25,4 +25,18 @@ public sealed class EnumerableExtensionsTests
             actualBatch.ShouldBe(values.Skip(i * batchSize).Take(batchSize));
         }
     }
+
+    [Fact]
+    public void Batch_WhenSourceSizeIsNotMultipleOfBatchSize_ShouldReturnRemainderInLastBatch()
+    {
+        // Arrange
+        var values = Enumerable.Range(1, 11).ToList();
+
+        // Act
+        var batches = values.Batch(5).ToList();
+
+        // Assert
+        batches.Count.ShouldBe(3);
+        batches[2].ToList().ShouldBe([11]);
+    }
 }

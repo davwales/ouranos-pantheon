@@ -36,7 +36,13 @@ public sealed class GetModelHandlerTests
     public async Task Handle_WhenHappyPath_ShouldReturnModelResponse()
     {
         // Arrange
-        var model = ModelConfig.Create(new Id<ModelConfig>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>(), _fixture.Create<string>(), isPublic: true);
+        var model = ModelConfig.Create(
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            isPublic: true
+        );
         await _dbContext.SeedData(model);
 
         var query = new GetModelInput(model.Id);
@@ -50,6 +56,7 @@ public sealed class GetModelHandlerTests
         result.Name.ShouldBe(model.Name);
         result.ModelIdentifier.ShouldBe(model.ModelIdentifier);
         result.SystemPrompt.ShouldBe(model.SystemPrompt);
+        result.IsPublic.ShouldBeTrue();
     }
 
     [Fact]
@@ -69,7 +76,13 @@ public sealed class GetModelHandlerTests
     public async Task Handle_WhenNotPublicAndPublicModeEnabled_ShouldThrowNotFoundException()
     {
         // Arrange
-        var model = ModelConfig.Create(new Id<ModelConfig>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>(), _fixture.Create<string>(), isPublic: false);
+        var model = ModelConfig.Create(
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            isPublic: false
+        );
         await _dbContext.SeedData(model);
 
         var flags = Substitute.For<IFlags>();
@@ -89,7 +102,13 @@ public sealed class GetModelHandlerTests
     public async Task Handle_WhenNotPublicAndPublicModeDisabled_ShouldReturnModel()
     {
         // Arrange
-        var model = ModelConfig.Create(new Id<ModelConfig>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>(), _fixture.Create<string>(), isPublic: false);
+        var model = ModelConfig.Create(
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            isPublic: false
+        );
         await _dbContext.SeedData(model);
 
         var query = new GetModelInput(model.Id);

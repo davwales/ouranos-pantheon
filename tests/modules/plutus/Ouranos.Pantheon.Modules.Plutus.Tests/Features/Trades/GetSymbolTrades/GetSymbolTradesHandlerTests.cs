@@ -69,6 +69,50 @@ public sealed class GetSymbolTradesHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenTradesSpanDifferentTimes_ShouldReturnBuckets()
+    {
+        // Arrange
+        var market = Market.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<Taxes>()
+        );
+
+        var symbol = Symbol.Create(
+            new Id<Symbol>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            null,
+            _fixture.Create<string>(),
+            market.Id,
+            new AdditionalFields()
+        );
+
+        var now = DateTimeOffset.UtcNow;
+        var trade1 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 90m, 5m, now.AddHours(-2));
+        var trade2 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 100m, 3m, now.AddHours(-1));
+        var trade3 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 110m, 4m, now);
+
+        await _dbContext.SeedData(market);
+        await _dbContext.SeedData(symbol);
+        await _dbContext.SeedData(trade1, trade2, trade3);
+
+        var query = new GetSymbolTradesInput(symbol.Id, TimeFrame.AllTime, NumBuckets: 10);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.MinPrice.ShouldBe(90m);
+        result.MaxPrice.ShouldBe(110m);
+        result.NumTransactions.ShouldBe(3);
+        result.AveragePrice.ShouldBeGreaterThan(0m);
+        result.TotalSpent.ShouldBeGreaterThan(0m);
+        result.Volume.ShouldBeGreaterThan(0m);
+        result.Trades.ShouldNotBeNull();
+    }
+
+    [Fact]
     public async Task Handle_WhenNoTrades_ShouldReturnZeroStats()
     {
         // Arrange
@@ -105,5 +149,25 @@ public sealed class GetSymbolTradesHandlerTests
 
         // Assert
         await get.ShouldThrowAsync<OperationCanceledException>();
+    }
+
+    [Fact]
+    public void BucketDto_AllProperties_ShouldBeAccessible()
+    {
+        // Arrange
+        var symbolId = new Id<Symbol>(Guid.NewGuid().ToString());
+        var bucketStart = DateTimeOffset.UtcNow;
+        var bucket = new BucketDto(symbolId, bucketStart, 1000m, 10m, 90m, 110m, 5, 100m, 20m);
+
+        // Assert
+        bucket.SymbolId.ShouldBe(symbolId);
+        bucket.BucketStart.ShouldBe(bucketStart);
+        bucket.TotalSpent.ShouldBe(1000m);
+        bucket.Volume.ShouldBe(10m);
+        bucket.MinPrice.ShouldBe(90m);
+        bucket.MaxPrice.ShouldBe(110m);
+        bucket.NumTransactions.ShouldBe(5);
+        bucket.AveragePrice.ShouldBe(100m);
+        bucket.Margin.ShouldBe(20m);
     }
 }

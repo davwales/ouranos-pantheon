@@ -8,9 +8,7 @@ public sealed class FilterBuilderTests
 
     private readonly IQueryable<Item> _items = new Item[]
     {
-        new("Sword", 100, true),
-        new("Shield", 50, false),
-        new("Bow", 75, true),
+        new("Sword", 100, true), new("Shield", 50, false), new("Bow", 75, true),
     }.AsQueryable();
 
     [Fact]
@@ -82,7 +80,7 @@ public sealed class FilterBuilderTests
         // Arrange
         var builder = new FilterBuilder<Item>().AutoMap();
 
-        // Act — each property should be filterable without error
+        // Act
         var byName = _items.FilterBy(["Name:eq:Sword"], builder).ToList();
         var byPrice = _items.FilterBy(["Price:eq:75"], builder).ToList();
         var byActive = _items.FilterBy(["IsActive:eq:true"], builder).ToList();
@@ -129,8 +127,7 @@ public sealed class FilterBuilderTests
         // Arrange
         var builder = new FilterBuilder<Item>().AutoMap();
 
-        // Act — and() with no children is a format/parse error, not a builder error;
-        // an empty pipe list still produces one empty child which fails at leaf parsing
+        // Act
         var filter = () => _items.FilterBy(["and()"], builder).ToList();
 
         // Assert

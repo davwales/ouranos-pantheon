@@ -90,7 +90,8 @@ public sealed class MarketTradeSnapshotJob
             )
         ).ToList();
 
-        await _dbContext.MarketTradeSnapshots.Where(s => s.TimeFrame == frame).ExecuteDeleteAsync(ct);
+        var existing = await _dbContext.MarketTradeSnapshots.Where(s => s.TimeFrame == frame).ToListAsync(ct);
+        _dbContext.MarketTradeSnapshots.RemoveRange(existing);
         _dbContext.MarketTradeSnapshots.AddRange(snapshots);
         await _dbContext.SaveChangesAsync(ct);
 

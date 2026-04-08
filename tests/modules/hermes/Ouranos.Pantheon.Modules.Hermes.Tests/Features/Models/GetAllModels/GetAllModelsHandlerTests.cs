@@ -35,8 +35,20 @@ public sealed class GetAllModelsHandlerTests
     public async Task Handle_WhenModelsExist_ShouldReturnAllModels()
     {
         // Arrange
-        var model1 = ModelConfig.Create(new Id<ModelConfig>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>(), _fixture.Create<string>(), isPublic: true);
-        var model2 = ModelConfig.Create(new Id<ModelConfig>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>(), _fixture.Create<string>(), isPublic: false);
+        var model1 = ModelConfig.Create(
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            isPublic: true
+        );
+        var model2 = ModelConfig.Create(
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            isPublic: false
+        );
         await _dbContext.SeedData(model1, model2);
 
         var query = new GetAllModelsInput();
@@ -47,6 +59,11 @@ public sealed class GetAllModelsHandlerTests
         // Assert
         result.ShouldBeOfType<List<GetAllModelsResponse>>();
         result.Count.ShouldBe(2);
+        var item = result[0];
+        item.Id.ShouldNotBe(default);
+        item.Name.ShouldNotBeNull();
+        item.ModelIdentifier.ShouldNotBeNull();
+        item.SystemPrompt.ShouldNotBeNull();
     }
 
     [Fact]
@@ -66,8 +83,20 @@ public sealed class GetAllModelsHandlerTests
     public async Task Handle_WhenPublicModeEnabled_ShouldOnlyReturnPublicModels()
     {
         // Arrange
-        var publicModel = ModelConfig.Create(new Id<ModelConfig>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>(), _fixture.Create<string>(), isPublic: true);
-        var privateModel = ModelConfig.Create(new Id<ModelConfig>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>(), _fixture.Create<string>(), isPublic: false);
+        var publicModel = ModelConfig.Create(
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            isPublic: true
+        );
+        var privateModel = ModelConfig.Create(
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            isPublic: false
+        );
         await _dbContext.SeedData(publicModel, privateModel);
 
         var flags = Substitute.For<IFlags>();

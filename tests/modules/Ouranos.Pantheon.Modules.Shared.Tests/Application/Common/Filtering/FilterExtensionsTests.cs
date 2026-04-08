@@ -6,7 +6,9 @@ public sealed class FilterExtensionsTests
 {
     private sealed record Product(string Name, int Price, string? Category);
 
-    private static readonly IQueryable<Product> Items = new Product[]
+    private sealed record NullableProduct(string Name, int? Price, decimal? Score);
+
+    private static readonly IQueryable<Product> Items = new[]
     {
         new Product("Sword", 100, "Weapon"),
         new Product("Shield", 50, "Armor"),
@@ -175,5 +177,69 @@ public sealed class FilterExtensionsTests
         // Assert
         result.Count.ShouldBe(1);
         result[0].Name.ShouldBe("Helmet");
+    }
+
+    [Fact]
+    public void FilterBy_WhenEqFilterOnNullableInt_ShouldReturnMatchingItems()
+    {
+        // Arrange
+        var items =
+            new NullableProduct[] { new("A", 10, null), new("B", null, null), new("C", 20, null), }.AsQueryable();
+        var builder = new FilterBuilder<NullableProduct>()
+            .On(nameof(NullableProduct.Price), p => p.Price);
+
+        // Act
+        var result = items.FilterBy(["Price:eq:10"], builder).ToList();
+
+        // Assert
+        result.Count.ShouldBe(1);
+        result[0].Name.ShouldBe("A");
+    }
+
+    [Fact]
+    public void FilterBy_WhenNeFilterOnNullableDecimal_ShouldReturnNonMatchingItems()
+    {
+        // Arrange
+        var items = new NullableProduct[] { new("X", null, 1.5m), new("Z", null, 2.5m), }.AsQueryable();
+        var builder = new FilterBuilder<NullableProduct>()
+            .On(nameof(NullableProduct.Score), p => p.Score);
+
+        // Act
+        var result = items.FilterBy(["Score:ne:1.5"], builder).ToList();
+
+        // Assert
+        result.Count.ShouldBe(1);
+        result[0].Name.ShouldBe("Z");
+    }
+
+    [Fact]
+    public void FilterBy_WhenGteFilterOnNullableDecimal_ShouldReturnMatchingItems()
+    {
+        // Arrange
+        var items = new NullableProduct[] { new("X", null, 1.5m), new("Y", null, 2.5m), new("Z", null, 3.5m), }
+            .AsQueryable();
+        var builder = new FilterBuilder<NullableProduct>()
+            .On(nameof(NullableProduct.Score), p => p.Score);
+
+        // Act
+        var result = items.FilterBy(["Score:gte:2.5"], builder).ToList();
+
+        // Assert
+        result.Count.ShouldBe(2);
+        result.ShouldAllBe(p => p.Score >= 2.5m);
+    }
+
+    [Fact]
+    public void FilterBy_WhenFiltersNullWithActionOverload_ShouldReturnOriginalQuery()
+    {
+        // Arrange
+        var items = new Product[] { new("Sword", 100, "Weapon"), new("Shield", 50, "Armor"), }.AsQueryable();
+
+        // Act
+        var result = items.FilterBy(null, b => b.On(nameof(Product.Name), p => p.Name))
+            .ToList();
+
+        // Assert
+        result.Count.ShouldBe(2);
     }
 }

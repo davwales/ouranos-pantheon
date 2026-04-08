@@ -39,6 +39,10 @@ public sealed class GetAllMarketsHandlerTests
         // Assert
         result.ShouldNotBeNull();
         result.Count.ShouldBe(3);
+        var item = result[0];
+        item.Id.ShouldNotBe(default);
+        item.Name.ShouldNotBeNull();
+        item.Taxes.ShouldNotBeNull();
     }
 
     [Fact]

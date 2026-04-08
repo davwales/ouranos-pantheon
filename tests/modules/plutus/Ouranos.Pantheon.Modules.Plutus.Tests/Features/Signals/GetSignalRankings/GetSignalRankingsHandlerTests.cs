@@ -5,6 +5,8 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSignalRankings.Schemas
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
+using Ouranos.Pantheon.Tests.Utils.Extensions;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
@@ -47,6 +49,57 @@ public sealed class GetSignalRankingsHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenSignalsExist_ShouldReturnRankings()
+    {
+        // Arrange
+        var market = Market.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            new Taxes(null)
+        );
+
+        var symbol = Symbol.Create(
+            new Id<Symbol>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            null,
+            _fixture.Create<string>(),
+            market.Id,
+            new AdditionalFields()
+        );
+
+        var signal = Signal.Create(
+            market.Id,
+            symbol.Id,
+            SignalType.BollingerBands,
+            0.5m,
+            market,
+            symbol
+        );
+
+        await _dbContext.SeedData(market);
+        await _dbContext.SeedData(symbol);
+        await _dbContext.SeedData(signal);
+
+        var handler = BuildHandler();
+        var query = new GetSignalRankingsInput(market.Id, Take: 10);
+
+        // Act
+        var result = await handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Items.Count().ShouldBe(1);
+        result.TotalCount.ShouldBe(1);
+        var item = result.Items.First();
+        item.OverallScore.ShouldBe(0.5m);
+        item.SymbolId.ShouldBe(symbol.Id);
+        item.SymbolName.ShouldBe(symbol.Name);
+        item.SignalCount.ShouldBe(1);
+        item.BullishCount.ShouldBe(1);
+        item.BearishCount.ShouldBe(0);
+    }
+
+    [Fact]
     public async Task Handle_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange
@@ -62,5 +115,26 @@ public sealed class GetSignalRankingsHandlerTests
 
         // Assert
         await get.ShouldThrowAsync<OperationCanceledException>();
+    }
+
+    [Fact]
+    public async Task Handle_WhenComputersHaveIntents_ShouldBuildIntentMap()
+    {
+        // Arrange
+        var computer = Substitute.For<ISignalComputer>();
+        computer.Intents.Returns([InvestmentIntent.Buy, InvestmentIntent.Sell]);
+        computer.Type.Returns(SignalType.Rsi);
+
+        var handler = BuildHandler([computer]);
+        var query = new GetSignalRankingsInput(
+            new Id<Market>(_fixture.Create<string>()),
+            Take: 10
+        );
+
+        // Act
+        var result = await handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
     }
 }
