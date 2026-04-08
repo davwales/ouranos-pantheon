@@ -92,4 +92,47 @@ public sealed class TrendMomentumSignalComputerTests
         // Assert
         result.ShouldBeNull();
     }
+
+    [Fact]
+    public async Task ComputeAsync_WhenMomentumThresholdIsZero_ReturnsNull()
+    {
+        // Arrange
+        var shortSnap = MakeSnapshot(TimeFrame.OneHour, avgPrice: 105m);
+        var longSnap = MakeSnapshot(TimeFrame.OneMonth, avgPrice: 100m);
+        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, shortSnap, null, longSnap, []);
+
+        // Act
+        var result = await BuildComputer(threshold: 0m).ComputeAsync(context, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task ComputeAsync_WhenLongSnapshotHasZeroVolume_ReturnsNull()
+    {
+        // Arrange
+        var shortSnap = MakeSnapshot(TimeFrame.OneHour, avgPrice: 105m, volume: 1000m);
+        var longSnap = MakeSnapshot(TimeFrame.OneMonth, avgPrice: 100m, volume: 0m);
+        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, shortSnap, null, longSnap, []);
+
+        // Act
+        var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Metadata_ShouldExposeExpectedValues()
+    {
+        // Arrange & Act
+        var computer = BuildComputer();
+
+        // Assert
+        computer.Type.ShouldBe(SignalType.TrendMomentum);
+        computer.Label.ShouldBe("Trend Momentum");
+        computer.Description.ShouldNotBeNullOrEmpty();
+        computer.Intents.ShouldNotBeEmpty();
+    }
 }

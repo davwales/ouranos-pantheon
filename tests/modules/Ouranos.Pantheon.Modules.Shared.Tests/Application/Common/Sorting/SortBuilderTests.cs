@@ -154,4 +154,32 @@ public sealed class SortBuilderTests
         // Assert
         result.Select(e => e.Score).ShouldBe([10, 20, 30]);
     }
+
+    [Fact]
+    public void SortBy_WhenNoDefaultAndFieldUnknown_ShouldReturnUnsortedQuery()
+    {
+        // Arrange
+        var builder = new SortBuilder<Entry>()
+            .On(nameof(Entry.Name), e => e.Name);
+
+        // Act
+        var result = Items.SortBy("Unknown", "asc", builder).ToList();
+
+        // Assert
+        result.Count.ShouldBe(3);
+    }
+
+    [Fact]
+    public void SortBy_WhenInvalidDirection_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var builder = new SortBuilder<Entry>()
+            .On(nameof(Entry.Name), e => e.Name);
+
+        // Act
+        var act = () => Items.SortBy("Name", "invalid", builder).ToList();
+
+        // Assert
+        act.ShouldThrow<ArgumentException>();
+    }
 }

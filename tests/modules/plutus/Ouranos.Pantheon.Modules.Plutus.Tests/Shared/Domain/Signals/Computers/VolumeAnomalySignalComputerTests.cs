@@ -97,4 +97,67 @@ public sealed class VolumeAnomalySignalComputerTests
         // Assert
         result.ShouldBeNull();
     }
+
+    [Fact]
+    public async Task ComputeAsync_WhenThresholdIsOne_ReturnsNull()
+    {
+        // Arrange
+        var shortSnap = SnapshotWithRate(TimeFrame.OneHour, ratePerMinute: 3m);
+        var longSnap = SnapshotWithRate(TimeFrame.OneMonth, ratePerMinute: 1m);
+        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, shortSnap, null, longSnap, []);
+
+        // Act
+        var result = await BuildComputer(threshold: 1m).ComputeAsync(context, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task ComputeAsync_WhenShortRateIsBelowLongRate_ReturnsBearish()
+    {
+        // Arrange
+        var shortSnap = SnapshotWithRate(TimeFrame.OneHour, ratePerMinute: 0.5m);
+        var longSnap = SnapshotWithRate(TimeFrame.OneMonth, ratePerMinute: 2m);
+        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, shortSnap, null, longSnap, []);
+
+        // Act
+        var result = await BuildComputer(threshold: 3.0m).ComputeAsync(context, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Value.ShouldBeLessThan(0m);
+    }
+
+    [Fact]
+    public async Task ComputeAsync_WhenTimeFrameIsAllTime_ReturnsNull()
+    {
+        // Arrange
+        var shortSnap = SnapshotWithRate(TimeFrame.OneHour, ratePerMinute: 3m);
+        var longSnap = SnapshotWithRate(TimeFrame.AllTime, ratePerMinute: 1m);
+        var options = Options.Create(
+            new SignalOptions { ShortTimeFrame = TimeFrame.AllTime, LongTimeFrame = TimeFrame.AllTime }
+        );
+        var computer = new VolumeAnomalySignalComputer(options);
+        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, shortSnap, null, longSnap, []);
+
+        // Act
+        var result = await computer.ComputeAsync(context, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Metadata_ShouldExposeExpectedValues()
+    {
+        // Arrange & Act
+        var computer = BuildComputer();
+
+        // Assert
+        computer.Type.ShouldBe(SignalType.VolumeAnomaly);
+        computer.Label.ShouldBe("Volume Anomaly");
+        computer.Description.ShouldNotBeNullOrEmpty();
+        computer.Intents.ShouldNotBeEmpty();
+    }
 }

@@ -291,4 +291,32 @@ public sealed class WebSocketClientBuilderTests
 
         _services.ShouldContainService<IWebSocketClient>(ServiceLifetime.Singleton);
     }
+
+    [Fact]
+    public void Build_WhenConstantMessageConfigured_ShouldInvokeConfigureMessaging()
+    {
+        // Arrange
+        var builder = new WebSocketClientBuilder(_services);
+        builder.UseConstantMessage<TestEntity>(_ => { });
+
+        // Act
+        var act = () => builder.Build();
+
+        // Assert
+        act.ShouldNotThrow();
+    }
+
+    [Fact]
+    public void Build_WhenDiscriminatedMessagesConfigured_ShouldInvokeConfigureMessaging()
+    {
+        // Arrange
+        var builder = new WebSocketClientBuilder(_services);
+        builder.UseDiscriminatedMessages(b => b.UseDiscriminatorPath("type"));
+
+        // Act
+        var act = () => builder.Build();
+
+        // Assert
+        act.ShouldNotThrow();
+    }
 }

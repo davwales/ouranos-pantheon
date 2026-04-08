@@ -6,12 +6,12 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
+using Snapshot = Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades.MarketTradeSnapshot;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Trades.GetMarketTrades;
 
@@ -49,7 +49,7 @@ public sealed class GetMarketTradesHandlerTests
             new AdditionalFields()
         );
 
-        var snapshot = MarketTradeSnapshot.Create(
+        var snapshot = Snapshot.Create(
             market.Id,
             symbol.Id,
             TimeFrame.OneDay,
@@ -133,6 +133,16 @@ public sealed class GetMarketTradesHandlerTests
         );
 
         // Act & Assert
+        response.SymbolId.ShouldBe(symbolId);
+        response.SymbolName.ShouldBe("Symbol");
+        response.SymbolSubcode.ShouldBe("NQ");
+        response.TotalSpent.ShouldBe(1000m);
+        response.MinPrice.ShouldBe(90m);
+        response.MaxPrice.ShouldBe(110m);
+        response.TotalVolume.ShouldBe(10m);
+        response.NumTransactions.ShouldBe(5);
+        response.Limit.ShouldBe(100m);
+        response.Tax.ShouldBe(1m);
         response.Margin.ShouldBe(110m - 90m - 1m);
         response.AveragePrice.ShouldBe(1000m / 10m);
         response.Roi.ShouldBe((110m - 90m - 1m) / 90m);

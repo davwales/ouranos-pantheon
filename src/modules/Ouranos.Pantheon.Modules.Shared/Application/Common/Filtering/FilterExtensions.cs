@@ -15,7 +15,7 @@ public static class FilterExtensions
     /// <para>
     /// Filter syntax:
     /// <list type="bullet">
-    ///   <item><description>Leaf:      <c>field:op:value</c> — e.g. <c>price:gt:100</c>, <c>name:like:sword</c>, <c>deletedAt:null</c></description></item>
+    ///   <item><description>Leaf:      <c>field:op:value</c> - e.g. <c>price:gt:100</c>, <c>name:like:sword</c>, <c>deletedAt:null</c></description></item>
     ///   <item><description>And group: <c>and(expr|expr|...)</c></description></item>
     ///   <item><description>Or group:  <c>or(expr|expr|...)</c></description></item>
     /// </list>

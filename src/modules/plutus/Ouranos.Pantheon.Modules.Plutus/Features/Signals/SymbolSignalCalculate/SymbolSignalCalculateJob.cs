@@ -103,7 +103,8 @@ public sealed class SymbolSignalCalculateJob
         }
 
         var symbolIds = symbols.Select(s => s.Id).ToHashSet();
-        await _dbContext.Signals.Where(s => symbolIds.Contains(s.SymbolId)).ExecuteDeleteAsync(ct);
+        var existing = await _dbContext.Signals.Where(s => symbolIds.Contains(s.SymbolId)).ToListAsync(ct);
+        _dbContext.Signals.RemoveRange(existing);
         _dbContext.Signals.AddRange(signals);
         await _dbContext.SaveChangesAsync(ct);
 

@@ -150,4 +150,67 @@ public sealed class SymbolTests
         // Assert
         update.ShouldThrow<ArgumentException>();
     }
+
+    [Fact]
+    public void Market_WhenNotLoaded_ShouldThrowNavigationPropertyNotLoadedException()
+    {
+        // Arrange
+        var symbol = Symbol.Create(
+            _fixture.Create<Id<Symbol>>(),
+            _fixture.Create<string>(),
+            null,
+            "Test",
+            _fixture.Create<Market>().Id,
+            new AdditionalFields()
+        );
+
+        // Act
+        var access = () => _ = symbol.Market;
+
+        // Assert
+        access.ShouldThrow<Exception>();
+    }
+
+    [Fact]
+    public void Create_WhenMarketIdMismatch_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var market = _fixture.Create<Market>();
+        var differentMarketId = _fixture.Create<Id<Market>>();
+
+        // Act
+        var create = () => Symbol.Create(
+            _fixture.Create<Id<Symbol>>(),
+            _fixture.Create<string>(),
+            null,
+            "Test",
+            differentMarketId,
+            new AdditionalFields(),
+            market
+        );
+
+        // Assert
+        create.ShouldThrow<ArgumentException>();
+    }
+
+    [Fact]
+    public void Create_WhenMarketProvided_ShouldExposeMarket()
+    {
+        // Arrange
+        var market = _fixture.Create<Market>();
+
+        // Act
+        var symbol = Symbol.Create(
+            _fixture.Create<Id<Symbol>>(),
+            _fixture.Create<string>(),
+            null,
+            "Test",
+            market.Id,
+            new AdditionalFields(),
+            market
+        );
+
+        // Assert
+        symbol.Market.ShouldBe(market);
+    }
 }

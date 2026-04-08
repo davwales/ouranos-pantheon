@@ -36,7 +36,8 @@ public sealed class UpdateConversationHandlerTests
             new Id<Conversation>(Guid.NewGuid().ToString()),
             new Id<Persona>(Guid.NewGuid().ToString()),
             new Id<ModelConfig>(Guid.NewGuid().ToString()),
-            [], [],
+            [],
+            [],
             _fixture.Create<string>()
         );
         await _dbContext.SeedData(conversation);
@@ -44,7 +45,15 @@ public sealed class UpdateConversationHandlerTests
         var newName = _fixture.Create<string>();
         var newPersonaId = new Id<Persona>(Guid.NewGuid().ToString());
         var newModelConfigId = new Id<ModelConfig>(Guid.NewGuid().ToString());
-        var command = new UpdateConversationInput(conversation.Id, newName, newPersonaId, newModelConfigId, [], [], true);
+        var command = new UpdateConversationInput(
+            conversation.Id,
+            newName,
+            newPersonaId,
+            newModelConfigId,
+            [],
+            [],
+            true
+        );
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -61,10 +70,53 @@ public sealed class UpdateConversationHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenMessagesProvided_ShouldReplaceMessages()
+    {
+        // Arrange
+        var conversation = Conversation.Create(
+            new Id<Conversation>(Guid.NewGuid().ToString()),
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [],
+            [],
+            _fixture.Create<string>()
+        );
+        await _dbContext.SeedData(conversation);
+
+        var messageInput = new UpdateConversationMessageInput("Hello World", Role.User);
+        var command = new UpdateConversationInput(
+            conversation.Id,
+            _fixture.Create<string>(),
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [],
+            [messageInput],
+            true
+        );
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeOfType<IdResponse<Conversation>>();
+        result.Id.ShouldBe(conversation.Id);
+        messageInput.Content.ShouldBe("Hello World");
+        messageInput.Role.ShouldBe(Role.User);
+    }
+
+    [Fact]
     public async Task Handle_WhenConversationNotFound_ShouldThrowNotFoundException()
     {
         // Arrange
-        var command = new UpdateConversationInput(new Id<Conversation>(_fixture.Create<string>()), _fixture.Create<string>(), new Id<Persona>(Guid.NewGuid().ToString()), new Id<ModelConfig>(Guid.NewGuid().ToString()), [], [], true);
+        var command = new UpdateConversationInput(
+            new Id<Conversation>(_fixture.Create<string>()),
+            _fixture.Create<string>(),
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [],
+            [],
+            true
+        );
 
         // Act
         var handle = async () => await _handler.Handle(command, CancellationToken.None);
@@ -77,7 +129,15 @@ public sealed class UpdateConversationHandlerTests
     public async Task Handle_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange
-        var command = new UpdateConversationInput(new Id<Conversation>(_fixture.Create<string>()), _fixture.Create<string>(), new Id<Persona>(Guid.NewGuid().ToString()), new Id<ModelConfig>(Guid.NewGuid().ToString()), [], [], true);
+        var command = new UpdateConversationInput(
+            new Id<Conversation>(_fixture.Create<string>()),
+            _fixture.Create<string>(),
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [],
+            [],
+            true
+        );
         var cancellationToken = new CancellationToken(true);
 
         // Act

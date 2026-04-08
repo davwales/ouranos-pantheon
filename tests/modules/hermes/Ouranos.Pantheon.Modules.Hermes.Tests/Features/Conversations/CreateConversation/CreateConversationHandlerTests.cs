@@ -61,7 +61,7 @@ public sealed class CreateConversationHandlerTests
         // Arrange
         var personaId = new Id<Persona>(Guid.NewGuid().ToString());
         var modelConfigId = new Id<ModelConfig>(Guid.NewGuid().ToString());
-        var command = new CreateConversationInput(personaId, modelConfigId, [], [], null);
+        var command = new CreateConversationInput(personaId, modelConfigId, [], []);
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -78,18 +78,37 @@ public sealed class CreateConversationHandlerTests
         var modelConfigId = new Id<ModelConfig>(Guid.NewGuid().ToString());
         var generatedName = _fixture.Create<string>();
 
-        _mlClient.GenerateChatCompletionAsync(Arg.Any<string>(), Arg.Any<List<MessageDto>>(), Arg.Any<float?>(), Arg.Any<int?>(), Arg.Any<float?>(), Arg.Any<CancellationToken>())
+        _mlClient.GenerateChatCompletionAsync(
+                Arg.Any<string>(),
+                Arg.Any<List<MessageDto>>(),
+                Arg.Any<float?>(),
+                Arg.Any<int?>(),
+                Arg.Any<float?>(),
+                Arg.Any<CancellationToken>()
+            )
             .Returns(generatedName);
 
         var options = Options.Create(new HermesOptions("Generate a name.", "test-model"));
         var handler = new CreateConversationHandler(_logger, _dbContext, _mlClient, options);
-        var command = new CreateConversationInput(personaId, modelConfigId, [], [new CreateConversationMessageInput("Hello", Role.User)], null);
+        var command = new CreateConversationInput(
+            personaId,
+            modelConfigId,
+            [],
+            [new CreateConversationMessageInput("Hello", Role.User)]
+        );
 
         // Act
         var result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await _mlClient.Received(1).GenerateChatCompletionAsync(Arg.Any<string>(), Arg.Any<List<MessageDto>>(), Arg.Any<float?>(), Arg.Any<int?>(), Arg.Any<float?>(), Arg.Any<CancellationToken>());
+        await _mlClient.Received(1).GenerateChatCompletionAsync(
+            Arg.Any<string>(),
+            Arg.Any<List<MessageDto>>(),
+            Arg.Any<float?>(),
+            Arg.Any<int?>(),
+            Arg.Any<float?>(),
+            Arg.Any<CancellationToken>()
+        );
         result.Name.ShouldBe(generatedName.Trim().Length > 60 ? generatedName.Trim()[..60] : generatedName.Trim());
     }
 
@@ -101,12 +120,24 @@ public sealed class CreateConversationHandlerTests
         var modelConfigId = new Id<ModelConfig>(Guid.NewGuid().ToString());
         var longName = new string('a', 80);
 
-        _mlClient.GenerateChatCompletionAsync(Arg.Any<string>(), Arg.Any<List<MessageDto>>(), Arg.Any<float?>(), Arg.Any<int?>(), Arg.Any<float?>(), Arg.Any<CancellationToken>())
+        _mlClient.GenerateChatCompletionAsync(
+                Arg.Any<string>(),
+                Arg.Any<List<MessageDto>>(),
+                Arg.Any<float?>(),
+                Arg.Any<int?>(),
+                Arg.Any<float?>(),
+                Arg.Any<CancellationToken>()
+            )
             .Returns(longName);
 
         var options = Options.Create(new HermesOptions("Generate a name.", "test-model"));
         var handler = new CreateConversationHandler(_logger, _dbContext, _mlClient, options);
-        var command = new CreateConversationInput(personaId, modelConfigId, [], [new CreateConversationMessageInput("Hello", Role.User)], null);
+        var command = new CreateConversationInput(
+            personaId,
+            modelConfigId,
+            [],
+            [new CreateConversationMessageInput("Hello", Role.User)]
+        );
 
         // Act
         var result = await handler.Handle(command, CancellationToken.None);
@@ -122,12 +153,24 @@ public sealed class CreateConversationHandlerTests
         var personaId = new Id<Persona>(Guid.NewGuid().ToString());
         var modelConfigId = new Id<ModelConfig>(Guid.NewGuid().ToString());
 
-        _mlClient.GenerateChatCompletionAsync(Arg.Any<string>(), Arg.Any<List<MessageDto>>(), Arg.Any<float?>(), Arg.Any<int?>(), Arg.Any<float?>(), Arg.Any<CancellationToken>())
+        _mlClient.GenerateChatCompletionAsync(
+                Arg.Any<string>(),
+                Arg.Any<List<MessageDto>>(),
+                Arg.Any<float?>(),
+                Arg.Any<int?>(),
+                Arg.Any<float?>(),
+                Arg.Any<CancellationToken>()
+            )
             .Returns<string>(_ => throw new Exception("ML service unavailable"));
 
         var options = Options.Create(new HermesOptions("Generate a name.", "test-model"));
         var handler = new CreateConversationHandler(_logger, _dbContext, _mlClient, options);
-        var command = new CreateConversationInput(personaId, modelConfigId, [], [new CreateConversationMessageInput("Hello", Role.User)], null);
+        var command = new CreateConversationInput(
+            personaId,
+            modelConfigId,
+            [],
+            [new CreateConversationMessageInput("Hello", Role.User)]
+        );
 
         // Act
         var result = await handler.Handle(command, CancellationToken.None);
@@ -140,13 +183,27 @@ public sealed class CreateConversationHandlerTests
     public async Task Handle_WhenTraitIdsProvided_ShouldLoadTraitsFromDb()
     {
         // Arrange
-        var trait1 = Trait.Create(new Id<Trait>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>());
-        var trait2 = Trait.Create(new Id<Trait>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>());
+        var trait1 = Trait.Create(
+            new Id<Trait>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
+        var trait2 = Trait.Create(
+            new Id<Trait>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
         await _dbContext.SeedData(trait1, trait2);
 
         var personaId = new Id<Persona>(Guid.NewGuid().ToString());
         var modelConfigId = new Id<ModelConfig>(Guid.NewGuid().ToString());
-        var command = new CreateConversationInput(personaId, modelConfigId, [trait1.Id, trait2.Id], [], _fixture.Create<string>());
+        var command = new CreateConversationInput(
+            personaId,
+            modelConfigId,
+            [trait1.Id, trait2.Id],
+            [],
+            _fixture.Create<string>()
+        );
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -187,10 +244,54 @@ public sealed class CreateConversationHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenSystemAndAssistantMessagesProvided_ShouldMapRolesCorrectly()
+    {
+        // Arrange
+        var personaId = new Id<Persona>(Guid.NewGuid().ToString());
+        var modelConfigId = new Id<ModelConfig>(Guid.NewGuid().ToString());
+
+        _mlClient.GenerateChatCompletionAsync(
+                Arg.Any<string>(),
+                Arg.Any<List<MessageDto>>(),
+                Arg.Any<float?>(),
+                Arg.Any<int?>(),
+                Arg.Any<float?>(),
+                Arg.Any<CancellationToken>()
+            )
+            .Returns("Generated Name");
+
+        var options = Options.Create(new HermesOptions("Generate a name.", "test-model"));
+        var handler = new CreateConversationHandler(_logger, _dbContext, _mlClient, options);
+
+        var command = new CreateConversationInput(
+            personaId,
+            modelConfigId,
+            [],
+            [
+                new CreateConversationMessageInput("System prompt", Role.System),
+                new CreateConversationMessageInput("Hello", Role.User),
+                new CreateConversationMessageInput("Hi there", Role.Assistant),
+            ]
+        );
+
+        // Act
+        var result = await handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+    }
+
+    [Fact]
     public async Task Handle_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange
-        var command = new CreateConversationInput(new Id<Persona>(Guid.NewGuid().ToString()), new Id<ModelConfig>(Guid.NewGuid().ToString()), [], [], _fixture.Create<string>());
+        var command = new CreateConversationInput(
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [],
+            [],
+            _fixture.Create<string>()
+        );
         var cancellationToken = new CancellationToken(true);
 
         // Act

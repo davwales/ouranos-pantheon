@@ -18,7 +18,10 @@ public sealed class GetAllConversationsHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly GetAllConversationsHandler _handler;
-    private readonly ILogger<GetAllConversationsHandler> _logger = Substitute.For<ILogger<GetAllConversationsHandler>>();
+
+    private readonly ILogger<GetAllConversationsHandler>
+        _logger = Substitute.For<ILogger<GetAllConversationsHandler>>();
+
     private readonly HermesDbContext _dbContext;
     private readonly IFlagsmithClient _flagsmith = Substitute.For<IFlagsmithClient>();
 
@@ -37,7 +40,8 @@ public sealed class GetAllConversationsHandlerTests
         new Id<Conversation>(Guid.NewGuid().ToString()),
         new Id<Persona>(Guid.NewGuid().ToString()),
         new Id<ModelConfig>(Guid.NewGuid().ToString()),
-        [], [],
+        [],
+        [],
         Guid.NewGuid().ToString(),
         isPublic
     );
@@ -92,7 +96,10 @@ public sealed class GetAllConversationsHandlerTests
 
         // Assert
         result.Count.ShouldBe(1);
-        result[0].Id.ShouldBe(publicConv.Id);
+        var item = result[0];
+        item.Id.ShouldBe(publicConv.Id);
+        item.Name.ShouldNotBeNull();
+        item.IsPublic.ShouldBeTrue();
     }
 
     [Fact]
@@ -107,5 +114,24 @@ public sealed class GetAllConversationsHandlerTests
 
         // Assert
         await handle.ShouldThrowAsync<OperationCanceledException>();
+    }
+
+    [Fact]
+    public async Task Handle_WhenConversationsExist_ShouldReturnResponseWithAllProperties()
+    {
+        // Arrange
+        var conv = CreateConversation(true);
+        await _dbContext.SeedData(conv);
+
+        var query = new GetAllConversationsInput();
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Count.ShouldBe(1);
+        var item = result[0];
+        item.CreatedAt.ShouldBeGreaterThan(DateTimeOffset.MinValue);
+        item.UpdatedAt.ShouldBeGreaterThan(DateTimeOffset.MinValue);
     }
 }

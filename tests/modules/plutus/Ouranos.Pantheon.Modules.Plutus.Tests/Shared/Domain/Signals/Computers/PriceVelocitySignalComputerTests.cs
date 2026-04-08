@@ -90,4 +90,31 @@ public sealed class PriceVelocitySignalComputerTests
         // Assert
         result.ShouldBe(-1m);
     }
+
+    [Fact]
+    public async Task ComputeAsync_WhenThresholdIsZero_ReturnsNull()
+    {
+        // Arrange
+        var buckets = new List<PriceBucket> { Bucket(100m), Bucket(103m) };
+        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, null, null, null, buckets);
+
+        // Act
+        var result = await BuildComputer(threshold: 0m).ComputeAsync(context, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Metadata_ShouldExposeExpectedValues()
+    {
+        // Arrange & Act
+        var computer = BuildComputer();
+
+        // Assert
+        computer.Type.ShouldBe(SignalType.PriceVelocity);
+        computer.Label.ShouldBe("Price Velocity");
+        computer.Description.ShouldNotBeNullOrEmpty();
+        computer.Intents.ShouldNotBeEmpty();
+    }
 }

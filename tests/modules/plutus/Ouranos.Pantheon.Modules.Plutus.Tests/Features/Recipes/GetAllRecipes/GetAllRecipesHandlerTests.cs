@@ -39,13 +39,14 @@ public sealed class GetAllRecipesHandlerTests
         );
 
         var recipes = Enumerable.Range(0, 3).Select(_ => Recipe.Create(
-            new Id<Recipe>(Guid.NewGuid().ToString()),
-            market.Id,
-            _fixture.Create<string>(),
-            _fixture.Create<decimal>(),
-            _fixture.CreateMany<RecipeComponent>().ToList(),
-            _fixture.CreateMany<RecipeComponent>().ToList()
-        )).ToArray();
+                new Id<Recipe>(Guid.NewGuid().ToString()),
+                market.Id,
+                _fixture.Create<string>(),
+                _fixture.Create<decimal>(),
+                _fixture.CreateMany<RecipeComponent>().ToList(),
+                _fixture.CreateMany<RecipeComponent>().ToList()
+            )
+        ).ToArray();
 
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(recipes);
@@ -59,6 +60,11 @@ public sealed class GetAllRecipesHandlerTests
         result.ShouldNotBeNull();
         result.Items.Count().ShouldBe(3);
         result.TotalCount.ShouldBe(3);
+        var item = result.Items.First();
+        item.Id.ShouldNotBe(default);
+        item.MarketId.ShouldNotBe(default);
+        item.Name.ShouldNotBeNull();
+        item.Cost.ShouldBeGreaterThan(0m);
     }
 
     [Fact]

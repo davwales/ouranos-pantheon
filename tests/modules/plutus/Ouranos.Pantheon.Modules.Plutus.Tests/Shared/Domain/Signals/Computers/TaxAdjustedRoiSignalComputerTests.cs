@@ -90,4 +90,30 @@ public sealed class TaxAdjustedRoiSignalComputerTests
         // Assert
         result.ShouldBeNull();
     }
+
+    [Fact]
+    public async Task ComputeAsync_WhenRoiThresholdIsZero_ReturnsNull()
+    {
+        // Arrange
+        var context = BuildContext(minPrice: 1000m, maxPrice: 1100m);
+
+        // Act
+        var result = await BuildComputer(roiThreshold: 0m).ComputeAsync(context, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Metadata_ShouldExposeExpectedValues()
+    {
+        // Arrange & Act
+        var computer = BuildComputer();
+
+        // Assert
+        computer.Type.ShouldBe(SignalType.TaxAdjustedRoi);
+        computer.Label.ShouldBe("Tax-Adjusted ROI");
+        computer.Description.ShouldNotBeNullOrEmpty();
+        computer.Intents.ShouldNotBeEmpty();
+    }
 }

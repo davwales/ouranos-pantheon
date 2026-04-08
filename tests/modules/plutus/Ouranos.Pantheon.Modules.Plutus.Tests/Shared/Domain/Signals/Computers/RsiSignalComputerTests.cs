@@ -74,4 +74,31 @@ public sealed class RsiSignalComputerTests
         result.ShouldNotBeNull();
         result.Value.ShouldBeInRange(-1m, 1m);
     }
+
+    [Fact]
+    public async Task ComputeAsync_WhenNoLosses_ReturnsMaxBearish()
+    {
+        // Arrange
+        var buckets = Enumerable.Range(1, 20).Select(i => Bucket(i * 10m)).ToList();
+        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, null, null, null, buckets);
+
+        // Act
+        var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(-1m);
+    }
+
+    [Fact]
+    public void Metadata_ShouldExposeExpectedValues()
+    {
+        // Arrange & Act
+        var computer = BuildComputer();
+
+        // Assert
+        computer.Type.ShouldBe(SignalType.Rsi);
+        computer.Label.ShouldBe("RSI");
+        computer.Description.ShouldNotBeNullOrEmpty();
+        computer.Intents.ShouldNotBeEmpty();
+    }
 }

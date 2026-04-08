@@ -17,7 +17,10 @@ public sealed class GenerateCompletionHandlerTests
 {
     private readonly ILogger<GenerateCompletionHandler> _logger = Substitute.For<ILogger<GenerateCompletionHandler>>();
     private readonly IOuranosMachineLearningClient _mlClient = Substitute.For<IOuranosMachineLearningClient>();
-    private readonly IDbContextFactory<HermesDbContext> _dbContextFactory = Substitute.For<IDbContextFactory<HermesDbContext>>();
+
+    private readonly IDbContextFactory<HermesDbContext> _dbContextFactory =
+        Substitute.For<IDbContextFactory<HermesDbContext>>();
+
     private readonly GenerateCompletionHandler _handler;
 
     public GenerateCompletionHandlerTests()
@@ -52,7 +55,12 @@ public sealed class GenerateCompletionHandlerTests
 
         _mlClient
             .StreamChatCompletionAsync(
-                Arg.Any<string>(), Arg.Any<List<MessageDto>>(), Arg.Any<float?>(), Arg.Any<int?>(), Arg.Any<float?>(), Arg.Any<CancellationToken>()
+                Arg.Any<string>(),
+                Arg.Any<List<MessageDto>>(),
+                Arg.Any<float?>(),
+                Arg.Any<int?>(),
+                Arg.Any<float?>(),
+                Arg.Any<CancellationToken>()
             )
             .Returns(CreateStream(chunks));
 
@@ -73,7 +81,12 @@ public sealed class GenerateCompletionHandlerTests
 
         _mlClient
             .StreamChatCompletionAsync(
-                Arg.Any<string>(), Arg.Any<List<MessageDto>>(), Arg.Any<float?>(), Arg.Any<int?>(), Arg.Any<float?>(), Arg.Any<CancellationToken>()
+                Arg.Any<string>(),
+                Arg.Any<List<MessageDto>>(),
+                Arg.Any<float?>(),
+                Arg.Any<int?>(),
+                Arg.Any<float?>(),
+                Arg.Any<CancellationToken>()
             )
             .Returns(CreateStream(["Hi there"]));
 
@@ -84,7 +97,9 @@ public sealed class GenerateCompletionHandlerTests
         );
 
         // Act
-        await foreach (var _ in _handler.Handle(command, CancellationToken.None)) { }
+        await foreach (var _ in _handler.Handle(command, CancellationToken.None))
+        {
+        }
 
         // Assert
         var checkContext = DbContextExtensions.Mock<HermesDbContext>(dbName);
@@ -99,13 +114,20 @@ public sealed class GenerateCompletionHandlerTests
     {
         // Arrange
         _mlClient.StreamChatCompletionAsync(
-            Arg.Any<string>(), Arg.Any<List<MessageDto>>(), Arg.Any<float?>(), Arg.Any<int?>(), Arg.Any<float?>(), Arg.Any<CancellationToken>()
+            Arg.Any<string>(),
+            Arg.Any<List<MessageDto>>(),
+            Arg.Any<float?>(),
+            Arg.Any<int?>(),
+            Arg.Any<float?>(),
+            Arg.Any<CancellationToken>()
         ).Returns(CreateStream(["Hi"]));
 
         var command = new GenerateCompletionInput(CreateConversation(new CompletionMessageInput("Hello", Role.User)));
 
         // Act
-        await foreach (var _ in _handler.Handle(command, CancellationToken.None)) { }
+        await foreach (var _ in _handler.Handle(command, CancellationToken.None))
+        {
+        }
 
         // Assert
         await _dbContextFactory.DidNotReceive().CreateDbContextAsync(Arg.Any<CancellationToken>());
@@ -151,11 +173,7 @@ public sealed class GenerateCompletionHandlerTests
         // Arrange
         var persona = new PersonaInput("TestBot", "A helpful bot");
         var systemPrompt = "Base prompt.";
-        List<TraitInput> traits =
-        [
-            new("Kindness", "Always be kind"),
-            new("Brevity", "Be concise")
-        ];
+        List<TraitInput> traits = [new("Kindness", "Always be kind"), new("Brevity", "Be concise")];
 
         // Act
         var result = GenerateCompletionHandler.ComposeSystemPrompt(persona, systemPrompt, traits);
@@ -177,10 +195,22 @@ public sealed class GenerateCompletionHandlerTests
         // Act
         var handle = async () =>
         {
-            await foreach (var _ in _handler.Handle(command, cancellationToken)) { }
+            await foreach (var _ in _handler.Handle(command, cancellationToken))
+            {
+            }
         };
 
         // Assert
         await handle.ShouldThrowAsync<OperationCanceledException>();
+    }
+
+    [Fact]
+    public void GenerateCompletionResponse_Content_ShouldBeAccessible()
+    {
+        // Arrange & Act
+        var response = new GenerateCompletionResponse("Hello world");
+
+        // Assert
+        response.Content.ShouldBe("Hello world");
     }
 }

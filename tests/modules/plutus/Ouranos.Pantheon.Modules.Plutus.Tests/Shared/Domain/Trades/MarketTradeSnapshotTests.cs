@@ -137,4 +137,91 @@ public sealed class MarketTradeSnapshotTests
         // Assert
         act.ShouldThrow<ArgumentException>();
     }
+
+    [Fact]
+    public void Market_WhenNotLoaded_ShouldThrowNavigationPropertyNotLoadedException()
+    {
+        // Arrange
+        var snapshot = MarketTradeSnapshot.Create(
+            _fixture.Create<Id<Market>>(),
+            _fixture.Create<Id<Symbol>>(),
+            TimeFrame.OneDay,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+        );
+
+        // Act
+        var access = () => _ = snapshot.Market;
+
+        // Assert
+        access.ShouldThrow<Exception>();
+    }
+
+    [Fact]
+    public void Symbol_WhenNotLoaded_ShouldThrowNavigationPropertyNotLoadedException()
+    {
+        // Arrange
+        var snapshot = MarketTradeSnapshot.Create(
+            _fixture.Create<Id<Market>>(),
+            _fixture.Create<Id<Symbol>>(),
+            TimeFrame.OneDay,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+        );
+
+        // Act
+        var access = () => _ = snapshot.Symbol;
+
+        // Assert
+        access.ShouldThrow<Exception>();
+    }
+
+    [Fact]
+    public void Create_WhenValidMarketAndSymbolProvided_ShouldExposeNavigationProperties()
+    {
+        // Arrange
+        var market = Market.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            new Taxes(null)
+        );
+        var symbol = Symbol.Create(
+            new Id<Symbol>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            null,
+            _fixture.Create<string>(),
+            market.Id,
+            new AdditionalFields()
+        );
+
+        // Act
+        var snapshot = MarketTradeSnapshot.Create(
+            market.Id,
+            symbol.Id,
+            TimeFrame.OneDay,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            market: market,
+            symbol: symbol
+        );
+
+        // Assert
+        snapshot.Market.ShouldBe(market);
+        snapshot.Symbol.ShouldBe(symbol);
+    }
 }

@@ -83,4 +83,45 @@ public sealed class MovingAverageCrossoverSignalComputerTests
         result.ShouldNotBeNull();
         result.Value.ShouldBeLessThan(0m);
     }
+
+    [Fact]
+    public async Task ComputeAsync_WhenThresholdIsZero_ReturnsNull()
+    {
+        // Arrange
+        var buckets = Enumerable.Range(0, 25).Select(_ => Bucket(100m)).ToList();
+        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, null, null, null, buckets);
+
+        // Act
+        var result = await BuildComputer(threshold: 0m).ComputeAsync(context, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task ComputeAsync_WhenSma20IsZero_ReturnsNull()
+    {
+        // Arrange
+        var buckets = Enumerable.Range(0, 25).Select(_ => Bucket(0m)).ToList();
+        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, null, null, null, buckets);
+
+        // Act
+        var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Metadata_ShouldExposeExpectedValues()
+    {
+        // Arrange & Act
+        var computer = BuildComputer();
+
+        // Assert
+        computer.Type.ShouldBe(SignalType.MovingAverageCrossover);
+        computer.Label.ShouldBe("Moving Average Crossover");
+        computer.Description.ShouldNotBeNullOrEmpty();
+        computer.Intents.ShouldNotBeEmpty();
+    }
 }

@@ -35,8 +35,17 @@ public sealed class GetAllTraitsHandlerTests
     public async Task Handle_WhenTraitsExist_ShouldReturnAllTraits()
     {
         // Arrange
-        var trait1 = Trait.Create(new Id<Trait>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>(), true);
-        var trait2 = Trait.Create(new Id<Trait>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>(), false);
+        var trait1 = Trait.Create(
+            new Id<Trait>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
+        var trait2 = Trait.Create(
+            new Id<Trait>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            false
+        );
         await _dbContext.SeedData(trait1, trait2);
 
         var query = new GetAllTraitsInput();
@@ -47,6 +56,10 @@ public sealed class GetAllTraitsHandlerTests
         // Assert
         result.ShouldBeOfType<List<GetAllTraitsResponse>>();
         result.Count.ShouldBe(2);
+        var item = result[0];
+        item.Id.ShouldNotBe(default);
+        item.Name.ShouldNotBeNull();
+        item.Content.ShouldNotBeNull();
     }
 
     [Fact]
@@ -66,8 +79,17 @@ public sealed class GetAllTraitsHandlerTests
     public async Task Handle_WhenPublicModeEnabled_ShouldOnlyReturnPublicTraits()
     {
         // Arrange
-        var publicTrait = Trait.Create(new Id<Trait>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>(), true);
-        var privateTrait = Trait.Create(new Id<Trait>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>(), false);
+        var publicTrait = Trait.Create(
+            new Id<Trait>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
+        var privateTrait = Trait.Create(
+            new Id<Trait>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            false
+        );
         await _dbContext.SeedData(publicTrait, privateTrait);
 
         var flags = Substitute.For<IFlags>();
@@ -96,5 +118,28 @@ public sealed class GetAllTraitsHandlerTests
 
         // Assert
         await handle.ShouldThrowAsync<OperationCanceledException>();
+    }
+
+    [Fact]
+    public async Task Handle_WhenTraitsExist_ShouldReturnResponseWithAllProperties()
+    {
+        // Arrange
+        await _dbContext.SeedData(
+            Trait.Create(
+                new Id<Trait>(Guid.NewGuid().ToString()),
+                _fixture.Create<string>(),
+                _fixture.Create<string>(),
+                isPublic: false
+            )
+        );
+
+        var query = new GetAllTraitsInput();
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Count.ShouldBe(1);
+        result[0].IsPublic.ShouldBeFalse();
     }
 }

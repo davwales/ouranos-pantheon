@@ -10,7 +10,7 @@ public sealed record HermesOptions(
     public HermesOptions() : this(
         ConversationNameSystemPrompt: """
                                       Generate a short, descriptive title (maximum 5 words) for the following message.
-                                      Respond with only the title — no punctuation, no quotes, no explanation.
+                                      Respond with only the title - no punctuation, no quotes, no explanation.
                                       """,
         ConversationNameModel: string.Empty
     )

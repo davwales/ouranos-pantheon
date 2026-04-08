@@ -46,4 +46,14 @@ public sealed class TimeFrameExtensionsTests
             action.ShouldNotThrow();
         }
     }
+
+    [Fact]
+    public void ToTimeSpan_WhenInvalidEnumValue_ShouldThrowArgumentOutOfRangeException()
+    {
+        // Act
+        Action act = () => ((TimeFrame)999).ToTimeSpan();
+
+        // Assert
+        act.ShouldThrow<ArgumentOutOfRangeException>();
+    }
 }

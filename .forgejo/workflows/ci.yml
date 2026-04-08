@@ -60,13 +60,15 @@ jobs:
         with:
           dotnet-version: "10.0.x"
       - run: dotnet restore --verbosity quiet
+      - run: dotnet tool restore
       - run: dotnet test --collect:"XPlat Code Coverage"
-      - name: Code Coverage Summary
+      - run: dotnet tool run reportgenerator -reports:"**/TestResults/**/coverage.cobertura.xml" -targetdir:coverage-merged -reporttypes:Cobertura
+      - name: code coverage
         uses: https://github.com/irongut/CodeCoverageSummary@v1.3.0
         with:
-          filename: "**/TestResults/**/coverage.cobertura.xml"
+          filename: "coverage-merged/Cobertura.xml"
           fail_below_min: true
-          thresholds: "60 100"
+          thresholds: "85 100"
           output: "console"
 
   publish:

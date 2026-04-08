@@ -110,4 +110,82 @@ public sealed class SymbolGroupTests
         // Assert
         update.ShouldThrow<ArgumentException>();
     }
+
+    [Fact]
+    public void Market_WhenNotLoaded_ShouldThrowNavigationPropertyNotLoadedException()
+    {
+        // Arrange
+        var group = SymbolGroup.Create(
+            _fixture.Create<Id<SymbolGroup>>(),
+            "Test Group",
+            null,
+            _fixture.Create<Id<Market>>()
+        );
+
+        // Act
+        var access = () => _ = group.Market;
+
+        // Assert
+        access.ShouldThrow<Exception>();
+    }
+
+    [Fact]
+    public void Members_WhenNotLoaded_ShouldThrowNavigationPropertyNotLoadedException()
+    {
+        // Arrange
+        var group = SymbolGroup.Create(
+            _fixture.Create<Id<SymbolGroup>>(),
+            "Test Group",
+            null,
+            _fixture.Create<Id<Market>>()
+        );
+
+        // Act
+        var access = () => _ = group.Members;
+
+        // Assert
+        access.ShouldThrow<Exception>();
+    }
+
+    [Fact]
+    public void Create_WhenMarketIdMismatch_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var market = _fixture.Create<Market>();
+        var differentMarketId = _fixture.Create<Id<Market>>();
+
+        // Act
+        var create = () => SymbolGroup.Create(
+            _fixture.Create<Id<SymbolGroup>>(),
+            "Test Group",
+            null,
+            differentMarketId,
+            market
+        );
+
+        // Assert
+        create.ShouldThrow<ArgumentException>();
+    }
+
+    [Fact]
+    public void Create_WhenMarketAndMembersProvided_ShouldExposeNavigationProperties()
+    {
+        // Arrange
+        var market = _fixture.Create<Market>();
+        var members = new List<SymbolGroupMember>();
+
+        // Act
+        var group = SymbolGroup.Create(
+            _fixture.Create<Id<SymbolGroup>>(),
+            "Test Group",
+            null,
+            market.Id,
+            market,
+            members
+        );
+
+        // Assert
+        group.Market.ShouldBe(market);
+        group.Members.ShouldBe(members);
+    }
 }

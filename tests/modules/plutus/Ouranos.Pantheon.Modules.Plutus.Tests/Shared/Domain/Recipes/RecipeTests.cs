@@ -84,4 +84,70 @@ public sealed class RecipeTests
         // Assert
         create.ShouldThrow<ArgumentException>();
     }
+
+    [Fact]
+    public void Market_WhenNotLoaded_ShouldThrowNavigationPropertyNotLoadedException()
+    {
+        // Arrange
+        var id = _fixture.Create<Id<Recipe>>();
+        var market = _fixture.Create<Market>();
+        var recipe = Recipe.Create(
+            id,
+            market.Id,
+            "Test Recipe",
+            100m,
+            _fixture.CreateMany<RecipeComponent>().ToList(),
+            _fixture.CreateMany<RecipeComponent>().ToList()
+        );
+
+        // Act
+        var access = () => _ = recipe.Market;
+
+        // Assert
+        access.ShouldThrow<Exception>();
+    }
+
+    [Fact]
+    public void Create_WhenMarketProvided_ShouldExposeMarket()
+    {
+        // Arrange
+        var id = _fixture.Create<Id<Recipe>>();
+        var market = _fixture.Create<Market>();
+
+        // Act
+        var recipe = Recipe.Create(
+            id,
+            market.Id,
+            "Test Recipe",
+            100m,
+            _fixture.CreateMany<RecipeComponent>().ToList(),
+            _fixture.CreateMany<RecipeComponent>().ToList(),
+            market
+        );
+
+        // Assert
+        recipe.Market.ShouldBe(market);
+    }
+
+    [Fact]
+    public void Create_WhenMarketIdMismatch_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var market = _fixture.Create<Market>();
+        var differentMarketId = _fixture.Create<Id<Market>>();
+
+        // Act
+        var create = () => Recipe.Create(
+            _fixture.Create<Id<Recipe>>(),
+            differentMarketId,
+            "Test Recipe",
+            100m,
+            _fixture.CreateMany<RecipeComponent>().ToList(),
+            _fixture.CreateMany<RecipeComponent>().ToList(),
+            market
+        );
+
+        // Assert
+        create.ShouldThrow<ArgumentException>();
+    }
 }

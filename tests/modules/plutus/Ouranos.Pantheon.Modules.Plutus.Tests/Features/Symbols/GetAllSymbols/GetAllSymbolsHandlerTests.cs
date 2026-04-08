@@ -39,13 +39,14 @@ public sealed class GetAllSymbolsHandlerTests
         );
 
         var symbols = Enumerable.Range(0, 3).Select(_ => Symbol.Create(
-            new Id<Symbol>(Guid.NewGuid().ToString()),
-            _fixture.Create<string>(),
-            null,
-            _fixture.Create<string>(),
-            market.Id,
-            new AdditionalFields()
-        )).ToArray();
+                new Id<Symbol>(Guid.NewGuid().ToString()),
+                _fixture.Create<string>(),
+                null,
+                _fixture.Create<string>(),
+                market.Id,
+                new AdditionalFields()
+            )
+        ).ToArray();
 
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(symbols);
@@ -59,6 +60,11 @@ public sealed class GetAllSymbolsHandlerTests
         result.ShouldNotBeNull();
         result.Items.Count().ShouldBe(3);
         result.TotalCount.ShouldBe(3);
+        var item = result.Items.First();
+        item.Id.ShouldNotBe(default);
+        item.Code.ShouldNotBeNull();
+        item.Name.ShouldNotBeNull();
+        item.MarketId.ShouldNotBe(default);
     }
 
     [Fact]

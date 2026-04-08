@@ -58,7 +58,7 @@ public sealed class SignalTests
         var symbolId = _fixture.Create<Id<Symbol>>();
 
         // Act
-        var signal = Signal.Create(marketId, symbolId, SignalType.BollingerBands, 0m, null, null);
+        var signal = Signal.Create(marketId, symbolId, SignalType.BollingerBands, 0m);
 
         // Assert
         signal.ShouldNotBeNull();
@@ -108,5 +108,57 @@ public sealed class SignalTests
 
         // Assert
         create.ShouldThrow<ArgumentException>();
+    }
+
+    [Fact]
+    public void Market_WhenNotLoaded_ShouldThrowNavigationPropertyNotLoadedException()
+    {
+        // Arrange
+        var signal = Signal.Create(_fixture.Create<Id<Market>>(), _fixture.Create<Id<Symbol>>(), SignalType.Rsi, 0.5m);
+
+        // Act
+        var access = () => _ = signal.Market;
+
+        // Assert
+        access.ShouldThrow<Exception>();
+    }
+
+    [Fact]
+    public void Symbol_WhenNotLoaded_ShouldThrowNavigationPropertyNotLoadedException()
+    {
+        // Arrange
+        var signal = Signal.Create(_fixture.Create<Id<Market>>(), _fixture.Create<Id<Symbol>>(), SignalType.Rsi, 0.5m);
+
+        // Act
+        var access = () => _ = signal.Symbol;
+
+        // Assert
+        access.ShouldThrow<Exception>();
+    }
+
+    [Fact]
+    public void Create_WhenValidMarketAndSymbolProvided_ShouldExposeNavigationProperties()
+    {
+        // Arrange
+        var market = Market.Create(
+            _fixture.Create<Id<Market>>(),
+            _fixture.Create<string>(),
+            _fixture.Create<Taxes>()
+        );
+        var symbol = Symbol.Create(
+            _fixture.Create<Id<Symbol>>(),
+            _fixture.Create<string>(),
+            null,
+            _fixture.Create<string>(),
+            market.Id,
+            new AdditionalFields()
+        );
+
+        // Act
+        var signal = Signal.Create(market.Id, symbol.Id, SignalType.Rsi, 0.5m, market, symbol);
+
+        // Assert
+        signal.Market.ShouldBe(market);
+        signal.Symbol.ShouldBe(symbol);
     }
 }

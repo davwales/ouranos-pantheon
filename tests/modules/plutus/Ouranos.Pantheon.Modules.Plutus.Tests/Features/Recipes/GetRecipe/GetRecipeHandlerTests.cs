@@ -59,6 +59,8 @@ public sealed class GetRecipeHandlerTests
         result.MarketId.ShouldBe(recipe.MarketId);
         result.Name.ShouldBe(recipe.Name);
         result.Cost.ShouldBe(recipe.Cost);
+        result.Inputs.ShouldNotBeNull();
+        result.Outputs.ShouldNotBeNull();
     }
 
     [Fact]
