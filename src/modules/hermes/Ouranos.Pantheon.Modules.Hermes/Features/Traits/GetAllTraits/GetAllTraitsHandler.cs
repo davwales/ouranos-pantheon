@@ -16,8 +16,8 @@ public sealed class GetAllTraitsHandler
     : IPantheonHandler<GetAllTraitsInput, List<GetAllTraitsResponse>>
 {
     private static readonly FilterBuilder<Trait> FilterBuilder = new FilterBuilder<Trait>()
-        .On(nameof(Trait.Name), t => t.Name)
-        .On(nameof(Trait.Content), t => t.Content)
+        .On(nameof(Trait.Name), t => t.Name, caseInsensitive: true)
+        .On(nameof(Trait.Content), t => t.Content, caseInsensitive: true)
         .On(nameof(Trait.IsPublic), t => t.IsPublic);
 
     private static readonly SortBuilder<Trait> SortBuilder = new SortBuilder<Trait>()

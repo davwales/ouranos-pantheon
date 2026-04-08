@@ -133,4 +133,74 @@ public sealed class FilterBuilderTests
         // Assert
         filter.ShouldThrow<Exception>();
     }
+
+    [Fact]
+    public void On_WhenCaseInsensitiveEq_ShouldMatchRegardlessOfCasing()
+    {
+        // Arrange
+        var builder = new FilterBuilder<Item>()
+            .On(nameof(Item.Name), x => x.Name, caseInsensitive: true);
+
+        // Act
+        var result = _items.FilterBy(["Name:eq:sword"], builder).ToList();
+
+        // Assert
+        result.ShouldHaveSingleItem().Name.ShouldBe("Sword");
+    }
+
+    [Fact]
+    public void On_WhenCaseInsensitiveLike_ShouldMatchRegardlessOfCasing()
+    {
+        // Arrange
+        var builder = new FilterBuilder<Item>()
+            .On(nameof(Item.Name), x => x.Name, caseInsensitive: true);
+
+        // Act
+        var result = _items.FilterBy(["Name:like:IELD"], builder).ToList();
+
+        // Assert
+        result.ShouldHaveSingleItem().Name.ShouldBe("Shield");
+    }
+
+    [Fact]
+    public void On_WhenCaseInsensitiveStartsWith_ShouldMatchRegardlessOfCasing()
+    {
+        // Arrange
+        var builder = new FilterBuilder<Item>()
+            .On(nameof(Item.Name), x => x.Name, caseInsensitive: true);
+
+        // Act
+        var result = _items.FilterBy(["Name:startswith:SHI"], builder).ToList();
+
+        // Assert
+        result.ShouldHaveSingleItem().Name.ShouldBe("Shield");
+    }
+
+    [Fact]
+    public void On_WhenCaseInsensitiveEndsWith_ShouldMatchRegardlessOfCasing()
+    {
+        // Arrange
+        var builder = new FilterBuilder<Item>()
+            .On(nameof(Item.Name), x => x.Name, caseInsensitive: true);
+
+        // Act
+        var result = _items.FilterBy(["Name:endswith:OW"], builder).ToList();
+
+        // Assert
+        result.ShouldHaveSingleItem().Name.ShouldBe("Bow");
+    }
+
+    [Fact]
+    public void On_WhenCaseSensitiveEq_ShouldNotMatchWrongCase()
+    {
+        // Arrange
+        var builder = new FilterBuilder<Item>()
+            .On(nameof(Item.Name), x => x.Name);
+
+        // Act
+        var result = _items.FilterBy(["Name:eq:sword"], builder).ToList();
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
 }

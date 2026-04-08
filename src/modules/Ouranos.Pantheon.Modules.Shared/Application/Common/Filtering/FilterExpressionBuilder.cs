@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Globalization;
 using System.Linq.Expressions;
+using System.Reflection;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering.Schemas;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 
@@ -13,6 +14,10 @@ namespace Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
 /// </summary>
 internal static class FilterExpressionBuilder
 {
+    private static readonly MethodInfo ToLowerMethod =
+        typeof(string).GetMethod(nameof(string.ToLower), Type.EmptyTypes)
+        ?? throw new MissingMethodException(nameof(String), nameof(string.ToLower));
+
     internal static Dictionary<Type, Func<string, object>> TypeMap = new()
     {
         [typeof(string)] = s => s,
@@ -31,30 +36,52 @@ internal static class FilterExpressionBuilder
         FilterOperator op,
         string? value,
         Expression propAccess,
-        Type propType
+        Type propType,
+        bool caseInsensitive = false
     )
     {
         var underlyingType = Nullable.GetUnderlyingType(propType) ?? propType;
 
+        if (op is FilterOperator.Null or FilterOperator.NotNull)
+        {
+            return BuildNullCheck(propAccess, propType, underlyingType, isNull: op == FilterOperator.Null);
+        }
+
+        if (value is null)
+        {
+            throw new InvalidOperationException($"Operator '{op}' requires a value.");
+        }
+
+        var effectivePropAccess = caseInsensitive && underlyingType == typeof(string)
+            ? Expression.Call(propAccess, ToLowerMethod)
+            : propAccess;
+
+        var effectiveValue = caseInsensitive && underlyingType == typeof(string)
+            ? value.ToLower()
+            : value;
+
         return op switch
         {
-            FilterOperator.Null => BuildNullCheck(propAccess, propType, underlyingType, isNull: true),
-            FilterOperator.NotNull => BuildNullCheck(propAccess, propType, underlyingType, isNull: false),
-            FilterOperator.Like => BuildStringOp(propAccess, underlyingType, value!, nameof(string.Contains)),
-            FilterOperator.StartsWith => BuildStringOp(
-                propAccess,
+            FilterOperator.Like => BuildStringOp(
+                effectivePropAccess,
                 underlyingType,
-                value!,
+                effectiveValue,
+                nameof(string.Contains)
+            ),
+            FilterOperator.StartsWith => BuildStringOp(
+                effectivePropAccess,
+                underlyingType,
+                effectiveValue,
                 nameof(string.StartsWith)
             ),
             FilterOperator.EndsWith => BuildStringOp(
-                propAccess,
+                effectivePropAccess,
                 underlyingType,
-                value!,
+                effectiveValue,
                 nameof(string.EndsWith)
             ),
-            FilterOperator.In => BuildInExpression(propAccess, propType, underlyingType, value!),
-            _ => BuildComparisonExpression(op, propAccess, propType, underlyingType, value!),
+            FilterOperator.In => BuildInExpression(effectivePropAccess, propType, underlyingType, effectiveValue),
+            _ => BuildComparisonExpression(op, effectivePropAccess, propType, underlyingType, effectiveValue),
         };
     }
 
@@ -94,7 +121,8 @@ internal static class FilterExpressionBuilder
             );
         }
 
-        var method = typeof(string).GetMethod(methodName, [typeof(string)])!;
+        var method = typeof(string).GetMethod(methodName, [typeof(string)])
+                     ?? throw new MissingMethodException(nameof(String), methodName);
         return Expression.Call(propAccess, method, Expression.Constant(value));
     }
 
@@ -109,13 +137,15 @@ internal static class FilterExpressionBuilder
         var convertedValues = rawValues.Select(v => ConvertValue(v, underlyingType)).ToList();
 
         var listType = typeof(List<>).MakeGenericType(underlyingType);
-        var list = (IList)Activator.CreateInstance(listType)!;
+        var list = Activator.CreateInstance(listType) as IList
+                   ?? throw new InvalidOperationException($"Failed to create List<{underlyingType.Name}>.");
         foreach (var v in convertedValues)
         {
             list.Add(v);
         }
 
-        var containsMethod = listType.GetMethod(nameof(List<object>.Contains), [underlyingType])!;
+        var containsMethod = listType.GetMethod(nameof(List<>.Contains), [underlyingType])
+                             ?? throw new MissingMethodException(listType.Name, nameof(List<>.Contains));
 
         Expression target =
             Nullable.GetUnderlyingType(propType) != null

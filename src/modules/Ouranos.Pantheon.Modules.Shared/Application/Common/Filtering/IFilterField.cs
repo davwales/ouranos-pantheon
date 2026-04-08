@@ -5,5 +5,7 @@ namespace Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
 
 internal interface IFilterField
 {
+    bool CaseInsensitive { get; }
+
     Expression BuildBody(FilterOperator op, string? value, ParameterExpression outerParam);
 }

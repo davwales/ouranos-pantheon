@@ -19,7 +19,7 @@ public sealed class GetSignalRankingsHandler
 {
     private static readonly FilterBuilder<GetSignalRankingsResponse> FilterBuilder =
         new FilterBuilder<GetSignalRankingsResponse>()
-            .On(nameof(GetSignalRankingsResponse.SymbolName), x => x.SymbolName)
+            .On(nameof(GetSignalRankingsResponse.SymbolName), x => x.SymbolName, caseInsensitive: true)
             .On(nameof(GetSignalRankingsResponse.DailyAveragePrice), x => x.DailyAveragePrice)
             .On(nameof(GetSignalRankingsResponse.DailyVolume), x => x.DailyVolume)
             .On(nameof(GetSignalRankingsResponse.OverallScore), x => x.OverallScore)

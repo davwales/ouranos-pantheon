@@ -3,8 +3,13 @@ using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering.Schemas;
 
 namespace Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
 
-internal sealed class TypedFilterField<T, TValue>(Expression<Func<T, TValue>> selector) : IFilterField
+internal sealed class TypedFilterField<T, TValue>(
+    Expression<Func<T, TValue>> selector,
+    bool caseInsensitive = false
+) : IFilterField
 {
+    public bool CaseInsensitive => caseInsensitive;
+
     public Expression BuildBody(FilterOperator op, string? value, ParameterExpression outerParam)
     {
         var propAccess = ParameterSubstitutor.Substitute(
@@ -13,6 +18,6 @@ internal sealed class TypedFilterField<T, TValue>(Expression<Func<T, TValue>> se
             outerParam
         );
 
-        return FilterExpressionBuilder.BuildPredicateBody(op, value, propAccess, typeof(TValue));
+        return FilterExpressionBuilder.BuildPredicateBody(op, value, propAccess, typeof(TValue), caseInsensitive);
     }
 }

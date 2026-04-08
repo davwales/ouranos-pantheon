@@ -18,7 +18,7 @@ public sealed class GetAllRecipesHandler
 {
     private static readonly FilterBuilder<Recipe> FilterBuilder = new FilterBuilder<Recipe>()
         .On(nameof(Recipe.MarketId), r => r.MarketId)
-        .On(nameof(Recipe.Name), r => r.Name)
+        .On(nameof(Recipe.Name), r => r.Name, caseInsensitive: true)
         .On(nameof(Recipe.Cost), r => r.Cost);
 
     private static readonly SortBuilder<Recipe> SortBuilder = new SortBuilder<Recipe>()

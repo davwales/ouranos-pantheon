@@ -16,7 +16,7 @@ public sealed class GetAllPersonasHandler
     : IPantheonHandler<GetAllPersonasInput, List<GetAllPersonasResponse>>
 {
     private static readonly FilterBuilder<Persona> FilterBuilder = new FilterBuilder<Persona>()
-        .On(nameof(Persona.Name), p => p.Name)
+        .On(nameof(Persona.Name), p => p.Name, caseInsensitive: true)
         .On(nameof(Persona.IsPublic), p => p.IsPublic);
 
     private static readonly SortBuilder<Persona> SortBuilder = new SortBuilder<Persona>()

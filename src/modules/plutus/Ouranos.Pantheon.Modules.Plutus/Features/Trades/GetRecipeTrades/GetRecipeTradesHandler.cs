@@ -20,7 +20,7 @@ public sealed class GetRecipeTradesHandler
 {
     private static readonly FilterBuilder<GetRecipeTradesResponse> FilterBuilder =
         new FilterBuilder<GetRecipeTradesResponse>()
-            .On(nameof(GetRecipeTradesResponse.RecipeName), x => x.RecipeName)
+            .On(nameof(GetRecipeTradesResponse.RecipeName), x => x.RecipeName, caseInsensitive: true)
             .On(nameof(GetRecipeTradesResponse.LatestBuyPrice), x => x.LatestBuyPrice)
             .On(nameof(GetRecipeTradesResponse.LatestSellPrice), x => x.LatestSellPrice)
             .On(nameof(GetRecipeTradesResponse.LatestMargin), x => x.LatestMargin)
