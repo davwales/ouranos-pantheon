@@ -6,13 +6,12 @@ namespace Ouranos.Pantheon.Modules.Shared.Tests.Application.Common.Filtering;
 public sealed class FilterExpressionBuilderTests
 {
     private sealed record Item(string Name, int Price, bool IsActive, string? Category);
+
     private sealed record ItemWithId(Id<Item> Id, string Name);
 
     private readonly IQueryable<Item> _items = new Item[]
     {
-        new("Sword", 100, true, "Weapon"),
-        new("Shield", 50, false, "Armor"),
-        new("Bow", 75, true, "Weapon"),
+        new("Sword", 100, true, "Weapon"), new("Shield", 50, false, "Armor"), new("Bow", 75, true, "Weapon"),
     }.AsQueryable();
 
     [Fact]
@@ -74,11 +73,8 @@ public sealed class FilterExpressionBuilderTests
     public void ConvertValue_WhenIdType_ShouldCreateIdInstance()
     {
         // Arrange
-        var items = new ItemWithId[]
-        {
-            new(new Id<Item>("id-1"), "Alpha"),
-            new(new Id<Item>("id-2"), "Beta"),
-        }.AsQueryable();
+        var items = new ItemWithId[] { new(new Id<Item>("id-1"), "Alpha"), new(new Id<Item>("id-2"), "Beta"), }
+            .AsQueryable();
 
         var builder = new FilterBuilder<ItemWithId>().On(nameof(ItemWithId.Id), x => x.Id);
 
@@ -116,7 +112,29 @@ public sealed class FilterExpressionBuilderTests
         act.ShouldThrow<InvalidOperationException>();
     }
 
-    private sealed record TypedItem(long LongVal, float FloatVal, double DoubleVal, Guid GuidVal, DateTime DateVal, DateTimeOffset DateOffsetVal);
+    [Fact]
+    public void FilterBy_WhenCaseInsensitiveIn_ShouldMatchRegardlessOfCasing()
+    {
+        // Arrange
+        var builder = new FilterBuilder<Item>()
+            .On(nameof(Item.Name), x => x.Name, caseInsensitive: true);
+
+        // Act
+        var result = _items.FilterBy(["Name:in:SWORD,BOW"], builder).ToList();
+
+        // Assert
+        result.Count.ShouldBe(2);
+        result.Select(i => i.Name).ShouldBe(["Sword", "Bow"], ignoreOrder: true);
+    }
+
+    private sealed record TypedItem(
+        long LongVal,
+        float FloatVal,
+        double DoubleVal,
+        Guid GuidVal,
+        DateTime DateVal,
+        DateTimeOffset DateOffsetVal
+    );
 
     [Theory]
     [InlineData("LongVal:eq:42")]
@@ -130,10 +148,7 @@ public sealed class FilterExpressionBuilderTests
         // Arrange
         var guid = new Guid("00000000-0000-0000-0000-000000000001");
         var now = DateTime.UtcNow;
-        var items = new TypedItem[]
-        {
-            new(42L, 1.5f, 2.5, guid, now, DateTimeOffset.UtcNow)
-        }.AsQueryable();
+        var items = new TypedItem[] { new(42L, 1.5f, 2.5, guid, now, DateTimeOffset.UtcNow) }.AsQueryable();
 
         var builder = new FilterBuilder<TypedItem>()
             .On(nameof(TypedItem.LongVal), x => x.LongVal)

@@ -16,8 +16,8 @@ public sealed class GetAllModelsHandler
     : IPantheonHandler<GetAllModelsInput, List<GetAllModelsResponse>>
 {
     private static readonly FilterBuilder<ModelConfig> FilterBuilder = new FilterBuilder<ModelConfig>()
-        .On(nameof(ModelConfig.Name), m => m.Name)
-        .On(nameof(ModelConfig.ModelIdentifier), m => m.ModelIdentifier)
+        .On(nameof(ModelConfig.Name), m => m.Name, caseInsensitive: true)
+        .On(nameof(ModelConfig.ModelIdentifier), m => m.ModelIdentifier, caseInsensitive: true)
         .On(nameof(ModelConfig.IsPublic), m => m.IsPublic);
 
     private static readonly SortBuilder<ModelConfig> SortBuilder = new SortBuilder<ModelConfig>()

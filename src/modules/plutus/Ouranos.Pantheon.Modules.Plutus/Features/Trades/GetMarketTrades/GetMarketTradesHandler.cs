@@ -17,8 +17,8 @@ public sealed class GetMarketTradesHandler
 {
     private static readonly FilterBuilder<GetMarketTradesResponse> FilterBuilder =
         new FilterBuilder<GetMarketTradesResponse>()
-            .On(nameof(GetMarketTradesResponse.SymbolName), x => x.SymbolName)
-            .On(nameof(GetMarketTradesResponse.SymbolSubcode), x => x.SymbolSubcode)
+            .On(nameof(GetMarketTradesResponse.SymbolName), x => x.SymbolName, caseInsensitive: true)
+            .On(nameof(GetMarketTradesResponse.SymbolSubcode), x => x.SymbolSubcode, caseInsensitive: true)
             .On(nameof(GetMarketTradesResponse.MinPrice), x => x.MinPrice)
             .On(nameof(GetMarketTradesResponse.MaxPrice), x => x.MaxPrice)
             .On(nameof(GetMarketTradesResponse.TotalVolume), x => x.TotalVolume)

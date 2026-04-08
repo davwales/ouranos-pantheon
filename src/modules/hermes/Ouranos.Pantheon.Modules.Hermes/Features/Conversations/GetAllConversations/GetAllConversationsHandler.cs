@@ -16,13 +16,13 @@ public sealed class GetAllConversationsHandler
     : IPantheonHandler<GetAllConversationsInput, List<GetAllConversationsResponse>>
 {
     private static readonly FilterBuilder<Conversation> FilterBuilder = new FilterBuilder<Conversation>()
-        .On(nameof(Conversation.Name), c => c.Name)
+        .On(nameof(Conversation.Name), c => c.Name, caseInsensitive: true)
         .On(nameof(Conversation.IsPublic), c => c.IsPublic);
 
     private static readonly SortBuilder<Conversation> SortBuilder = new SortBuilder<Conversation>()
         .On(nameof(Conversation.Name), c => c.Name)
         .On(nameof(Conversation.UpdatedAt), c => c.UpdatedAt)
-        .Default(c => c.UpdatedAt, SortDirection.Desc);
+        .Default(c => c.UpdatedAt);
 
     private readonly HermesDbContext _dbContext;
     private readonly IFlagsmithClient _flagsmith;
@@ -67,12 +67,13 @@ public sealed class GetAllConversationsHandler
             .FilterBy(query.Filter, FilterBuilder)
             .SortBy(query.SortField, query.SortDirection, SortBuilder)
             .Select(c => new GetAllConversationsResponse(
-                c.Id,
-                c.Name,
-                c.IsPublic,
-                c.CreatedAt,
-                c.UpdatedAt
-            ))
+                    c.Id,
+                    c.Name,
+                    c.IsPublic,
+                    c.CreatedAt,
+                    c.UpdatedAt
+                )
+            )
             .ToListAsync(cancellationToken);
 
         _logger.LogDebug("Successfully handled get all conversations request.");

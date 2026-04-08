@@ -21,9 +21,9 @@ public sealed class FilterBuilder<T>
     /// Registers a filterable field by name, backed by the given property selector.
     /// No reflection is used at query time.
     /// </summary>
-    public FilterBuilder<T> On<TValue>(string key, Expression<Func<T, TValue>> selector)
+    public FilterBuilder<T> On<TValue>(string key, Expression<Func<T, TValue>> selector, bool caseInsensitive = false)
     {
-        _fields[key] = new TypedFilterField<T, TValue>(selector);
+        _fields[key] = new TypedFilterField<T, TValue>(selector, caseInsensitive);
         return this;
     }
 
@@ -41,7 +41,10 @@ public sealed class FilterBuilder<T>
             var lambdaType = typeof(Func<,>).MakeGenericType(typeof(T), prop.PropertyType);
             var lambda = Expression.Lambda(lambdaType, propAccess, param);
             var fieldType = typeof(TypedFilterField<,>).MakeGenericType(typeof(T), prop.PropertyType);
-            _fields[prop.Name] = (IFilterField)Activator.CreateInstance(fieldType, lambda)!;
+            _fields[prop.Name] = Activator.CreateInstance(fieldType, lambda, false) as IFilterField
+                                 ?? throw new InvalidOperationException(
+                                     $"Failed to create filter field for property '{prop.Name}' on '{typeof(T).Name}'."
+                                 );
         }
 
         return this;
@@ -77,15 +80,15 @@ public sealed class FilterBuilder<T>
 
     private Expression BuildFieldBody(FieldFilterNode node, ParameterExpression param)
     {
-        if (!_fields.TryGetValue(node.Field, out var field))
+        if (_fields.TryGetValue(node.Field, out var field))
         {
-            var registered = string.Join(", ", _fields.Keys);
-            throw new InvalidOperationException(
-                $"Field '{node.Field}' is not registered as filterable on '{typeof(T).Name}'. "
-                    + $"Registered fields: {registered}."
-            );
+            return field.BuildBody(node.Operator, node.Value, param);
         }
 
-        return field.BuildBody(node.Operator, node.Value, param);
+        var registered = string.Join(", ", _fields.Keys);
+        throw new InvalidOperationException(
+            $"Field '{node.Field}' is not registered as filterable on '{typeof(T).Name}'. "
+            + $"Registered fields: {registered}."
+        );
     }
 }

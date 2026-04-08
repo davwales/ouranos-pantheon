@@ -20,7 +20,7 @@ public sealed class GetAllSymbolGroupsHandler
 {
     private static readonly FilterBuilder<GetAllSymbolGroupsResponse> FilterBuilder =
         new FilterBuilder<GetAllSymbolGroupsResponse>()
-            .On(nameof(GetAllSymbolGroupsResponse.Name), x => x.Name)
+            .On(nameof(GetAllSymbolGroupsResponse.Name), x => x.Name, caseInsensitive: true)
             .On(nameof(GetAllSymbolGroupsResponse.SymbolCount), x => x.SymbolCount)
             .On(nameof(GetAllSymbolGroupsResponse.TotalVolume), x => x.TotalVolume)
             .On(nameof(GetAllSymbolGroupsResponse.TotalGain), x => x.TotalGain)
@@ -155,10 +155,13 @@ public sealed class GetAllSymbolGroupsHandler
             SymbolCount: memberIds.Count,
             TotalVolume: groupSnapshots.Count > 0 ? groupSnapshots.Sum(s => s!.TotalVolume) : null,
             TotalGain: groupSnapshots.Count > 0
-                ? groupSnapshots.Sum(s => (s!.MaxPrice - s.MinPrice - s.Tax) * (s.TotalVolume > s.Limit ? s.Limit : s.TotalVolume))
+                ? groupSnapshots.Sum(s =>
+                    (s!.MaxPrice - s.MinPrice - s.Tax) * (s.TotalVolume > s.Limit ? s.Limit : s.TotalVolume)
+                )
                 : null,
             AverageRoi: groupSnapshots.Count > 0 && groupSnapshots.Any(s => s!.MinPrice > 0)
-                ? groupSnapshots.Where(s => s!.MinPrice > 0).Average(s => (s!.MaxPrice - s.MinPrice - s.Tax) / s.MinPrice)
+                ? groupSnapshots.Where(s => s!.MinPrice > 0)
+                    .Average(s => (s!.MaxPrice - s.MinPrice - s.Tax) / s.MinPrice)
                 : null,
             AverageOverallScore: groupSignalScores.Count > 0 ? groupSignalScores.Average() : null,
             BullishCount: groupSignalScores.Count(score => score > 0),

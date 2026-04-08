@@ -19,8 +19,8 @@ public sealed class GetMarketForecastHandler
     private static readonly FilterBuilder<GetMarketForecastResponse> FilterBuilder =
         new FilterBuilder<GetMarketForecastResponse>()
             .On(nameof(GetMarketForecastResponse.SymbolId), x => x.SymbolId)
-            .On(nameof(GetMarketForecastResponse.SymbolName), x => x.SymbolName)
-            .On(nameof(GetMarketForecastResponse.SymbolSubcode), x => x.SymbolSubcode);
+            .On(nameof(GetMarketForecastResponse.SymbolName), x => x.SymbolName, caseInsensitive: true)
+            .On(nameof(GetMarketForecastResponse.SymbolSubcode), x => x.SymbolSubcode, caseInsensitive: true);
 
     private static readonly SortBuilder<GetMarketForecastResponse> SortBuilder =
         new SortBuilder<GetMarketForecastResponse>()

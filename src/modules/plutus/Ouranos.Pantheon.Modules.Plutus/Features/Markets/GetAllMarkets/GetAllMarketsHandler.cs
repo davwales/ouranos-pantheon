@@ -13,9 +13,9 @@ public sealed class GetAllMarketsHandler
     : IPantheonHandler<GetAllMarketsInput, List<GetAllMarketsResponse>>
 {
     private static readonly FilterBuilder<Market> FilterBuilder = new FilterBuilder<Market>()
-        .On(nameof(Market.Name), m => m.Name)
+        .On(nameof(Market.Name), m => m.Name, caseInsensitive: true)
         .On(nameof(Market.IsForecastingEnabled), m => m.IsForecastingEnabled)
-        .On(nameof(Market.Description), m => m.Description);
+        .On(nameof(Market.Description), m => m.Description, caseInsensitive: true);
 
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<GetAllMarketsHandler> _logger;

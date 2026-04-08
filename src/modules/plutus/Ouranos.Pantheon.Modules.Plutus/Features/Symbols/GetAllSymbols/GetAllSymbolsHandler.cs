@@ -18,9 +18,9 @@ public sealed class GetAllSymbolsHandler
 {
     private static readonly FilterBuilder<Symbol> FilterBuilder = new FilterBuilder<Symbol>()
         .On(nameof(Symbol.MarketId), s => s.MarketId)
-        .On(nameof(Symbol.Name), s => s.Name)
-        .On(nameof(Symbol.Code), s => s.Code)
-        .On(nameof(Symbol.Subcode), s => s.Subcode);
+        .On(nameof(Symbol.Name), s => s.Name, caseInsensitive: true)
+        .On(nameof(Symbol.Code), s => s.Code, caseInsensitive: true)
+        .On(nameof(Symbol.Subcode), s => s.Subcode, caseInsensitive: true);
 
     private static readonly SortBuilder<Symbol> SortBuilder = new SortBuilder<Symbol>()
         .On(nameof(GetAllSymbolsResponse.Name), s => s.Name)
