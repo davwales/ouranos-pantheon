@@ -9,6 +9,6 @@ public sealed record GetRecipeResponse(
     Id<Market> MarketId,
     string Name,
     decimal Cost,
-    IReadOnlyList<RecipeComponent> Inputs,
-    IReadOnlyList<RecipeComponent> Outputs
+    IReadOnlyList<PricedRecipeComponent> Inputs,
+    IReadOnlyList<PricedRecipeComponent> Outputs
 );

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.GetRecipe;
 using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.GetRecipe.Schemas;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Recipes;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Wolverine;
@@ -24,7 +25,7 @@ public sealed class GetRecipeEndpointTests
             .Returns(Task.FromResult(expected));
 
         // Act
-        var result = await GetRecipeEndpoint.Handle(recipeId, _bus, ct);
+        var result = await GetRecipeEndpoint.Handle(recipeId, TimeFrame.OneHour, _bus, ct);
 
         // Assert
         result.ShouldBeOfType<Ok<GetRecipeResponse>>();

@@ -1,3 +1,4 @@
+import { PrettyNumber } from "@/app/components/pretty-number";
 import { ExtendedColumnDef } from "@/app/components/responsive-data-table";
 import ResponsiveDataTable from "@/app/components/responsive-data-table/responsive-data-table";
 import { ResponsiveDialog } from "@/app/components/responsive-dialog";
@@ -16,6 +17,10 @@ interface TableSymbol {
   name: string;
   quantity: number;
   symbolId: string;
+  latestPrice?: number | null;
+  averagePrice?: number | null;
+  totalValue?: number | null;
+  volume?: number | null;
 }
 
 function QuantityInput({
@@ -137,6 +142,39 @@ export function SymbolTable({
             }
           />
         ),
+      },
+      {
+        id: "latestPrice",
+        header: "Latest Price",
+        accessorFn: (row: TableSymbol) => row.latestPrice,
+        cell: ({ row }) =>
+          row.original.latestPrice != null ? (
+            <PrettyNumber number={row.original.latestPrice} />
+          ) : (
+            "-"
+          ),
+      },
+      {
+        id: "totalValue",
+        header: "Total Value",
+        accessorFn: (row: TableSymbol) => row.totalValue,
+        cell: ({ row }) =>
+          row.original.totalValue != null ? (
+            <PrettyNumber number={row.original.totalValue} />
+          ) : (
+            "-"
+          ),
+      },
+      {
+        id: "volume",
+        header: "Volume",
+        accessorFn: (row: TableSymbol) => row.volume,
+        cell: ({ row }) =>
+          row.original.volume != null ? (
+            <PrettyNumber number={row.original.volume} />
+          ) : (
+            "-"
+          ),
       },
       {
         id: "actions",
