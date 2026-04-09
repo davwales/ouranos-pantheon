@@ -2,6 +2,8 @@
 
 import { ConfirmationButton } from "@/app/components/confirmation-button";
 import { Typography } from "@/app/components/typography";
+import { SymbolTable } from "@/app/plutus/[marketId]/recipes/components/symbol-table";
+import { SelectedSymbol } from "@/app/plutus/components/symbol-search";
 import { Button } from "@/components/ui/button";
 import { useApi } from "@/hooks/use-api";
 import { plutusApi } from "@/lib/api/plutus";
@@ -9,8 +11,6 @@ import { RefreshCw } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { RecipeForm } from "../components/recipe-form";
-import { SelectedSymbol } from "../components/symbol-search";
-import { SymbolTable } from "../components/symbol-table";
 import { RecipeSymbol } from "../types";
 
 export default function RecipeDetailPage() {
@@ -22,7 +22,7 @@ export default function RecipeDetailPage() {
   const [cost, setCost] = useState(0);
   const [inputs, setInputs] = useState<RecipeSymbol[]>([]);
   const [outputs, setOutputs] = useState<RecipeSymbol[]>([]);
-  const [selectedSymbol, setSelectedSymbol] = useState<SelectedSymbol>();
+  const [selectedSymbols, setSelectedSymbols] = useState<SelectedSymbol[]>([]);
   const [isInputDialogOpen, setIsInputDialogOpen] = useState(false);
   const [isOutputDialogOpen, setIsOutputDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -128,8 +128,8 @@ export default function RecipeDetailPage() {
           onItemsChange={setInputs}
           isDialogOpen={isInputDialogOpen}
           onDialogOpenChange={setIsInputDialogOpen}
-          selectedSymbol={selectedSymbol}
-          onSymbolSelected={setSelectedSymbol}
+          selectedSymbols={selectedSymbols}
+          onSymbolsChanged={setSelectedSymbols}
         />
 
         <SymbolTable
@@ -139,8 +139,8 @@ export default function RecipeDetailPage() {
           onItemsChange={setOutputs}
           isDialogOpen={isOutputDialogOpen}
           onDialogOpenChange={setIsOutputDialogOpen}
-          selectedSymbol={selectedSymbol}
-          onSymbolSelected={setSelectedSymbol}
+          selectedSymbols={selectedSymbols}
+          onSymbolsChanged={setSelectedSymbols}
         />
       </div>
     </div>
