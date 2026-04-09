@@ -7,6 +7,10 @@ import ResponsiveDataTable from "@/app/components/responsive-data-table/responsi
 import { ResponsiveDialog } from "@/app/components/responsive-dialog/responsive-dialog";
 import { ResponsiveDropdownMenu } from "@/app/components/responsive-dropdown-menu/responsive-dropdown-menu";
 import { Typography } from "@/app/components/typography";
+import {
+  SelectedSymbol,
+  SymbolSearch,
+} from "@/app/plutus/components/symbol-search";
 import TimeFrameSelection from "@/app/plutus/components/time_frame_selection";
 import { PlutusState, usePlutusStore } from "@/app/plutus/plutus_store";
 import { Button } from "@/components/ui/button";
@@ -19,10 +23,6 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
-import {
-  SelectedSymbol,
-  SymbolSearch,
-} from "../../recipes/components/symbol-search";
 
 export default function GroupDetailPage() {
   const { marketId, groupId } = useParams<{
@@ -40,7 +40,7 @@ export default function GroupDetailPage() {
   const [symbols, setSymbols] = useState<SymbolGroupSymbol[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [selectedSymbol, setSelectedSymbol] = useState<SelectedSymbol>();
+  const [selectedSymbols, setSelectedSymbols] = useState<SelectedSymbol[]>([]);
   const [state, reexecute] = useApi(
     () => plutusApi.getSymbolGroup(groupId, timeFrameKey),
     [groupId, timeFrameKey],
@@ -87,21 +87,22 @@ export default function GroupDetailPage() {
   };
 
   const handleAddSymbol = () => {
-    if (!selectedSymbol) return;
-    if (!symbols.some((s) => s.symbolId === selectedSymbol.id)) {
-      setSymbols((prev) => [
-        ...prev,
-        {
-          symbolId: selectedSymbol.id,
-          name: selectedSymbol.name,
-          code: "",
-          subcode: null,
-          addedAt: new Date().toISOString(),
-        },
-      ]);
+    if (selectedSymbols.length === 0) return;
+    const existingIds = new Set(symbols.map((s) => s.symbolId));
+    const newSymbols = selectedSymbols
+      .filter((s) => !existingIds.has(s.id))
+      .map((s) => ({
+        symbolId: s.id,
+        name: s.name,
+        code: "",
+        subcode: null,
+        addedAt: new Date().toISOString(),
+      }));
+    if (newSymbols.length > 0) {
+      setSymbols((prev) => [...prev, ...newSymbols]);
     }
     setIsAddDialogOpen(false);
-    setSelectedSymbol(undefined);
+    setSelectedSymbols([]);
   };
 
   const handleRemoveSymbol = (symbolId: string) => {
@@ -269,14 +270,16 @@ export default function GroupDetailPage() {
                 <SymbolSearch
                   marketId={marketId}
                   excludeIds={symbols.map((s) => s.symbolId)}
-                  onSymbolSelected={setSelectedSymbol}
+                  onSymbolsChanged={setSelectedSymbols}
                 />
                 <Button
                   onClick={handleAddSymbol}
-                  disabled={!selectedSymbol}
+                  disabled={selectedSymbols.length === 0}
                   className="mt-2 w-full"
                 >
-                  Add
+                  {selectedSymbols.length > 0
+                    ? `Add (${selectedSymbols.length})`
+                    : "Add"}
                 </Button>
               </div>
             </ResponsiveDialog>

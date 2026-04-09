@@ -7,8 +7,16 @@ import { Input } from "@/components/ui/input";
 import { MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { RecipeSymbol } from "../types";
-import { SelectedSymbol, SymbolSearch } from "./symbol-search";
+import {
+  SelectedSymbol,
+  SymbolSearch,
+} from "../../../components/symbol-search";
+
+interface TableSymbol {
+  name: string;
+  quantity: number;
+  symbolId: string;
+}
 
 function QuantityInput({
   initialValue,
@@ -54,32 +62,36 @@ export function SymbolTable({
   onItemsChange,
   isDialogOpen,
   onDialogOpenChange,
-  selectedSymbol,
-  onSymbolSelected,
+  selectedSymbols,
+  onSymbolsChanged,
 }: {
   marketId: string;
   title: string;
-  items: RecipeSymbol[];
-  onItemsChange: (items: RecipeSymbol[]) => void;
+  items: TableSymbol[];
+  onItemsChange: (items: TableSymbol[]) => void;
   isDialogOpen: boolean;
   onDialogOpenChange: (open: boolean) => void;
-  selectedSymbol?: SelectedSymbol;
-  onSymbolSelected: (symbol: SelectedSymbol) => void;
+  selectedSymbols: SelectedSymbol[];
+  onSymbolsChanged: (symbols: SelectedSymbol[]) => void;
 }) {
   const handleAdd = () => {
-    if (selectedSymbol) {
+    if (selectedSymbols.length > 0) {
       const newItems = [
         ...items,
-        { name: selectedSymbol.name, quantity: 1, symbolId: selectedSymbol.id },
+        ...selectedSymbols.map((s) => ({
+          name: s.name,
+          quantity: 1,
+          symbolId: s.id,
+        })),
       ];
       onItemsChange(newItems);
       onDialogOpenChange(false);
-      onSymbolSelected(null as unknown as SelectedSymbol);
+      onSymbolsChanged([]);
     }
   };
 
   const handleQuantityChange = useCallback(
-    (item: RecipeSymbol, quantity: number) => {
+    (item: TableSymbol, quantity: number) => {
       const newItems = items.map((i) =>
         i.symbolId === item.symbolId ? { ...i, quantity } : i,
       );
@@ -89,21 +101,21 @@ export function SymbolTable({
   );
 
   const handleRemove = useCallback(
-    (item: RecipeSymbol) => {
+    (item: TableSymbol) => {
       const newItems = items.filter(
-        (i: RecipeSymbol) => i.symbolId !== item.symbolId,
+        (i: TableSymbol) => i.symbolId !== item.symbolId,
       );
       onItemsChange(newItems);
     },
     [items, onItemsChange],
   );
 
-  const columns: ExtendedColumnDef<RecipeSymbol>[] = useMemo(
+  const columns: ExtendedColumnDef<TableSymbol>[] = useMemo(
     () => [
       {
         id: "name",
         header: "Symbol",
-        accessorFn: (row: RecipeSymbol) => row.name,
+        accessorFn: (row: TableSymbol) => row.name,
         cell: ({ row, getValue }) => (
           <Link
             href={`/plutus/${marketId}/${row.original.symbolId}`}
@@ -116,7 +128,7 @@ export function SymbolTable({
       {
         id: "quantity",
         header: "Quantity",
-        accessorFn: (row: RecipeSymbol) => row.quantity,
+        accessorFn: (row: TableSymbol) => row.quantity,
         cell: ({ row }) => (
           <QuantityInput
             initialValue={row.original.quantity}
@@ -141,7 +153,7 @@ export function SymbolTable({
               },
             ]}
           >
-            <div className="border-1 rounded-md">
+            <div className="border rounded-md">
               <Button variant="ghost" className="w-full">
                 <MoreHorizontal className="m-auto" />
               </Button>
@@ -175,15 +187,17 @@ export function SymbolTable({
           <div>
             <SymbolSearch
               marketId={marketId}
-              onSymbolSelected={onSymbolSelected}
+              onSymbolsChanged={onSymbolsChanged}
             />
 
             <Button
               onClick={handleAdd}
-              disabled={!selectedSymbol}
+              disabled={selectedSymbols.length === 0}
               className="mt-2 w-full"
             >
-              Add
+              {selectedSymbols.length > 0
+                ? `Add (${selectedSymbols.length})`
+                : "Add"}
             </Button>
           </div>
         </ResponsiveDialog>
@@ -194,6 +208,8 @@ export function SymbolTable({
         data={items}
         scrollTop={false}
         disablePagination
+        disableFiltering
+        disableSorting
         className="my-2"
       />
     </div>

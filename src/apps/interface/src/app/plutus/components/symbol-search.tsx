@@ -16,16 +16,16 @@ export function SymbolSearch({
   marketId,
   numResults = 10,
   excludeIds,
-  onSymbolSelected,
+  onSymbolsChanged,
   ...props
 }: React.ComponentProps<"div"> & {
   marketId: string;
   numResults?: number;
   excludeIds?: string[];
-  onSymbolSelected?: (symbol: SelectedSymbol) => void;
+  onSymbolsChanged?: (symbols: SelectedSymbol[]) => void;
 }) {
   const [search, setSearch] = useState("");
-  const [selectedSymbol, setSelectedSymbol] = useState<SelectedSymbol>();
+  const [selectedSymbols, setSelectedSymbols] = useState<SelectedSymbol[]>([]);
   const debouncedSearch = useDebounce(search);
 
   const take = Math.max(1, Math.min(numResults, 50));
@@ -43,9 +43,12 @@ export function SymbolSearch({
     [filter, take],
   );
 
-  const handleSymbolSelected = (symbol: SelectedSymbol) => {
-    setSelectedSymbol(symbol);
-    onSymbolSelected?.(symbol);
+  const handleSymbolToggled = (symbol: SelectedSymbol) => {
+    const next = selectedSymbols.some((s) => s.id === symbol.id)
+      ? selectedSymbols.filter((s) => s.id !== symbol.id)
+      : [...selectedSymbols, symbol];
+    setSelectedSymbols(next);
+    onSymbolsChanged?.(next);
   };
 
   return (
@@ -58,21 +61,22 @@ export function SymbolSearch({
       <div className="mt-4 space-y-2">
         {state.data?.items?.map((symbol) => {
           const alreadyAdded = excludeIds?.includes(symbol.id);
+          const isSelected = selectedSymbols.some((s) => s.id === symbol.id);
           return (
             <div
               key={symbol.id}
               onClick={() =>
                 !alreadyAdded &&
-                handleSymbolSelected({ id: symbol.id, name: symbol.name })
+                handleSymbolToggled({ id: symbol.id, name: symbol.name })
               }
               className={`flex items-center justify-between rounded-md p-2 border-2 ${
                 alreadyAdded
                   ? "opacity-50 cursor-not-allowed"
-                  : `cursor-pointer hover:bg-accent ${selectedSymbol?.id === symbol.id ? "bg-accent" : ""}`
+                  : `cursor-pointer hover:bg-accent ${isSelected ? "bg-accent" : ""}`
               }`}
             >
               <span>{symbol.name}</span>
-              {alreadyAdded && (
+              {(alreadyAdded || isSelected) && (
                 <Check className="w-4 h-4 text-muted-foreground" />
               )}
             </div>
