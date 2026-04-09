@@ -134,6 +134,10 @@ export interface RecipeComponent {
   symbolId: string;
   name: string;
   quantity: number;
+  latestPrice?: number | null;
+  averagePrice?: number | null;
+  totalValue?: number | null;
+  volume?: number | null;
 }
 
 export interface SignalResponse {
@@ -312,8 +316,8 @@ export const plutusApi = {
   getAllRecipes: (params?: PageParams) =>
     api.get<PagedResponse<Recipe>>("/api/plutus/recipes", params),
 
-  getRecipe: (recipeId: string) =>
-    api.get<Recipe>(`/api/plutus/recipes/${recipeId}`),
+  getRecipe: (recipeId: string, timeFrame: TimeFrameKey) =>
+    api.get<Recipe>(`/api/plutus/recipes/${recipeId}`, { timeFrame }),
 
   createRecipe: (input: {
     marketId: string;

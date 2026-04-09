@@ -4,12 +4,15 @@ import { ConfirmationButton } from "@/app/components/confirmation-button";
 import { Typography } from "@/app/components/typography";
 import { SymbolTable } from "@/app/plutus/[marketId]/recipes/components/symbol-table";
 import { SelectedSymbol } from "@/app/plutus/components/symbol-search";
+import TimeFrameSelection from "@/app/plutus/components/time_frame_selection";
+import { PlutusState, usePlutusStore } from "@/app/plutus/plutus_store";
 import { Button } from "@/components/ui/button";
 import { useApi } from "@/hooks/use-api";
 import { plutusApi } from "@/lib/api/plutus";
 import { RefreshCw } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { RecipeForm } from "../components/recipe-form";
 import { RecipeSymbol } from "../types";
 
@@ -29,7 +32,14 @@ export default function RecipeDetailPage() {
 
   const router = useRouter();
 
-  const [state] = useApi(() => plutusApi.getRecipe(recipeId), [recipeId]);
+  const [timeFrameKey] = usePlutusStore(
+    useShallow((state: PlutusState) => [state.timeFrameKey]),
+  );
+
+  const [state] = useApi(
+    () => plutusApi.getRecipe(recipeId, timeFrameKey),
+    [recipeId, timeFrameKey],
+  );
 
   const recipe = state.data;
   const fetching = state.status === "loading";
@@ -97,6 +107,7 @@ export default function RecipeDetailPage() {
         </Typography>
 
         <div className="flex items-center gap-2">
+          <TimeFrameSelection />
           {isProcessing && <RefreshCw className="animate-spin" />}
           <Button onClick={handleSave} disabled={isProcessing}>
             Save
