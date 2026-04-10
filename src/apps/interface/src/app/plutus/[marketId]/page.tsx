@@ -1,4 +1,5 @@
 import InfoCard from "@/app/components/info-card";
+import MarketOverview from "@/app/plutus/[marketId]/components/market-overview";
 import Link from "next/link";
 
 const features: {
@@ -51,16 +52,20 @@ export default async function MarketLanding({
   const { marketId } = await params;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {features.map((feature, i) => (
-        <Link href={`/plutus/${marketId}/${feature.segment}`} key={i}>
-          <InfoCard
-            label={feature.name}
-            description={feature.description}
-            className="hover:bg-accent h-full w-full"
-          />
-        </Link>
-      ))}
+    <div className="space-y-6">
+      <MarketOverview marketId={marketId} />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {features.map((feature, i) => (
+          <Link href={`/plutus/${marketId}/${feature.segment}`} key={i}>
+            <InfoCard
+              label={feature.name}
+              description={feature.description}
+              className="hover:bg-accent h-full w-full"
+            />
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }

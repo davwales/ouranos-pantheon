@@ -59,6 +59,16 @@ export interface GetRecipeTradesRow {
   averageMargin: number;
 }
 
+export interface TradeBucket {
+  date: string;
+  maxPrice: number;
+  minPrice: number;
+  numTransactions: number;
+  price: number;
+  totalSpent: number;
+  volume: number;
+}
+
 export interface GetSymbolTradesResponse {
   minPrice: number;
   maxPrice: number;
@@ -66,15 +76,17 @@ export interface GetSymbolTradesResponse {
   totalSpent: number;
   volume: number;
   numTransactions: number;
-  trades: Array<{
-    date: string;
-    maxPrice: number;
-    minPrice: number;
-    numTransactions: number;
-    price: number;
-    totalSpent: number;
-    volume: number;
-  }>;
+  trades: TradeBucket[];
+}
+
+export interface GetMarketOverviewResponse {
+  minPrice: number;
+  maxPrice: number;
+  averagePrice: number;
+  totalSpent: number;
+  volume: number;
+  numTransactions: number;
+  trades: TradeBucket[];
 }
 
 export interface GetDailySymbolSummaryResponse {
@@ -266,6 +278,16 @@ export const plutusApi = {
     api.get<PagedResponse<GetRecipeTradesRow>>(
       `/api/plutus/markets/${marketId}/recipe-trades`,
       { timeFrame, ...page },
+    ),
+
+  getMarketOverview: (
+    marketId: string,
+    timeFrame: TimeFrameKey,
+    numBuckets?: number,
+  ) =>
+    api.get<GetMarketOverviewResponse>(
+      `/api/plutus/markets/${marketId}/overview`,
+      { timeFrame, numBuckets },
     ),
 
   getSymbolTrades: (
