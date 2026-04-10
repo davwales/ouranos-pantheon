@@ -26,6 +26,7 @@ using Ouranos.Pantheon.Modules.Shared;
 using Wolverine;
 using Wolverine.RabbitMQ;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Consumer;
+using Ouranos.Pantheon.Modules.Plutus.Features.Trades.MarketOverviewBucket;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.MarketTradeSnapshot;
 using Ouranos.Pantheon.Modules.Plutus.Features.Signals.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSymbolSignals;
@@ -39,6 +40,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Markets.UpdateMarket;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.DeleteMarket;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketTrades;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetAllTrades;
+using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketOverview;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetRecipeTrades;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetSymbolTrades;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetAllSymbols;
@@ -90,6 +92,7 @@ public sealed class PlutusModule : IPantheonModule
         DeleteMarketEndpoint.Map(app);
 
         GetMarketTradesEndpoint.Map(app);
+        GetMarketOverviewEndpoint.Map(app);
         GetAllTradesEndpoint.Map(app);
         GetRecipeTradesEndpoint.Map(app);
         GetSymbolTradesEndpoint.Map(app);
@@ -167,6 +170,9 @@ public sealed class PlutusModule : IPantheonModule
             .Configure<PlutusOptions>(plutusOptionsSection)
             .Configure<MarketTradeSnapshotOptions>(
                 plutusOptionsSection.GetSection(MarketTradeSnapshotOptions.SectionName)
+            )
+            .Configure<MarketOverviewBucketOptions>(
+                plutusOptionsSection.GetSection(MarketOverviewBucketOptions.SectionName)
             )
             .Configure<DataLoadersOptions>(dataLoadersSection)
             .Configure<FfxivDataLoaderOptions>(dataLoadersSection.GetSection(FfxivDataLoaderOptions.SectionName))

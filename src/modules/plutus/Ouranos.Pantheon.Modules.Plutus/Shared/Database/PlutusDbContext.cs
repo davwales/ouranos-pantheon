@@ -27,6 +27,8 @@ public class PlutusDbContext(DbContextOptions<PlutusDbContext> options) : Ourano
 
     public DbSet<MarketTradeSnapshot> MarketTradeSnapshots => Set<MarketTradeSnapshot>();
 
+    public DbSet<MarketOverviewBucket> MarketOverviewBuckets => Set<MarketOverviewBucket>();
+
     public DbSet<Signal> Signals => Set<Signal>();
 
     public DbSet<SymbolGroup> SymbolGroups { get; set; }
@@ -44,6 +46,7 @@ public class PlutusDbContext(DbContextOptions<PlutusDbContext> options) : Ourano
         modelBuilder.Entity<Symbol>();
         modelBuilder.Entity<Trade>();
         modelBuilder.Entity<MarketTradeSnapshot>();
+        modelBuilder.Entity<MarketOverviewBucket>();
         modelBuilder.Entity<Signal>();
         modelBuilder.Entity<SymbolGroup>();
         modelBuilder.Entity<SymbolGroupMember>();

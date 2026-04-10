@@ -85,7 +85,7 @@ export default function PriceChart({
   return (
     <ChartContainer
       config={chartConfig}
-      className={`min-h-[300px] ${className}`}
+      className={`min-h-75 ${className}`}
       {...props}
     >
       <ComposedChart
