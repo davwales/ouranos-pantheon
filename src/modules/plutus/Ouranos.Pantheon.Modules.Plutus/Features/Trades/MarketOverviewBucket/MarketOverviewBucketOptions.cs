@@ -1,10 +1,10 @@
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Trades.MarketOverviewBucket;
 
-public sealed record MarketOverviewBucketOptions(int NumBuckets)
+public sealed record MarketOverviewBucketOptions(int NumBuckets, int ChunkDays, int ChunkThresholdDays)
 {
     public const string SectionName = "MarketOverviewBucket";
 
-    public MarketOverviewBucketOptions() : this(NumBuckets: 100)
+    public MarketOverviewBucketOptions() : this(NumBuckets: 100, ChunkDays: 1, ChunkThresholdDays: 7)
     {
     }
 }
