@@ -27,7 +27,7 @@ public sealed class MarketOverviewBucketJobTests
     }
 
     private MarketOverviewBucketJob CreateJob(int numBuckets = 10) =>
-        new(_logger, _dbContext, Options.Create(new MarketOverviewBucketOptions(NumBuckets: numBuckets)));
+        new(_logger, _dbContext, Options.Create(new MarketOverviewBucketOptions(NumBuckets: numBuckets, ChunkDays: 1, ChunkThresholdDays: 7)));
 
     [Fact]
     public async Task ExecuteFifteenMinutes_WhenNoTrades_ShouldCreateNoBuckets()

@@ -7,6 +7,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Trades.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Functions;
 using TickerQ.Utilities.Base;
@@ -18,7 +19,7 @@ public sealed class MarketOverviewBucketJob
 {
     private readonly ILogger<MarketOverviewBucketJob> _logger;
     private readonly PlutusDbContext _dbContext;
-    private readonly MarketOverviewBucketOptions _options;
+    private readonly IOptions<MarketOverviewBucketOptions> _options;
 
     public MarketOverviewBucketJob(
         ILogger<MarketOverviewBucketJob> logger,
@@ -32,7 +33,7 @@ public sealed class MarketOverviewBucketJob
 
         _logger = logger;
         _dbContext = dbContext;
-        _options = options.Value;
+        _options = options;
     }
 
     [TickerFunction("MarketOverviewBucket_FifteenMinutes", "*/30 * * * * *")]
@@ -79,25 +80,27 @@ public sealed class MarketOverviewBucketJob
             .Select(m => m.Id)
             .ToListAsync(ct);
 
-        var newBuckets = new List<Bucket>();
+        var totalBuckets = 0;
 
         foreach (var marketId in marketIds)
         {
             var buckets = await ComputeBucketsForMarketAsync(marketId, since, frame, ct);
-            newBuckets.AddRange(buckets);
+
+            var existing = await _dbContext.MarketOverviewBuckets
+                .Where(b => b.TimeFrame == frame && b.MarketId == marketId)
+                .ToListAsync(ct);
+
+            _dbContext.MarketOverviewBuckets.RemoveRange(existing);
+            _dbContext.MarketOverviewBuckets.AddRange(buckets);
+            await _dbContext.SaveChangesAsync(ct);
+            _dbContext.ChangeTracker.Clear();
+
+            totalBuckets += buckets.Count;
         }
-
-        var existing = await _dbContext.MarketOverviewBuckets
-            .Where(b => b.TimeFrame == frame)
-            .ToListAsync(ct);
-
-        _dbContext.MarketOverviewBuckets.RemoveRange(existing);
-        _dbContext.MarketOverviewBuckets.AddRange(newBuckets);
-        await _dbContext.SaveChangesAsync(ct);
 
         _logger.LogInformation(
             "Refreshed {Count} overview buckets across {Markets} market(s) for {Frame}.",
-            newBuckets.Count,
+            totalBuckets,
             marketIds.Count,
             frame
         );
@@ -110,49 +113,113 @@ public sealed class MarketOverviewBucketJob
         CancellationToken ct
     )
     {
-        var query = _dbContext.Trades.AsNoTracking()
+        var baseQuery = _dbContext.Trades.AsNoTracking()
             .Where(t => t.Symbol.MarketId == marketId && (since == null || t.Timestamp >= since));
 
-        var timeRange = await query
+        var timeRange = await baseQuery
             .GroupBy(t => 1)
-            .Select(g => new
-            {
-                Duration = g.Max(t => t.Timestamp) - g.Min(t => t.Timestamp)
-            })
+            .Select(g => new { Min = g.Min(t => t.Timestamp), Max = g.Max(t => t.Timestamp) })
             .FirstOrDefaultAsync(ct);
 
-        if (timeRange is null || timeRange.Duration <= TimeSpan.Zero)
+        if (timeRange is null || timeRange.Max <= timeRange.Min)
         {
             return [];
         }
 
-        var interval = SmartIntervalCalculator.Calculate(timeRange.Duration, _options.NumBuckets);
+        var duration = timeRange.Max - timeRange.Min;
+        var interval = SmartIntervalCalculator.Calculate(duration, _options.Value.NumBuckets);
+        var chunkThreshold = TimeSpan.FromDays(_options.Value.ChunkThresholdDays);
 
-        var aggregates = await query
+        var aggregates = duration > chunkThreshold
+            ? await AggregateInChunksAsync(marketId, timeRange.Min, timeRange.Max, interval, ct)
+            : await AggregateQuery(baseQuery, interval).ToListAsync(ct);
+
+        return
+        [
+            .. aggregates
+                .OrderBy(a => a.BucketStart)
+                .Select(a => Bucket.Create(
+                        marketId,
+                        frame,
+                        a.BucketStart,
+                        a.AveragePrice,
+                        a.MinPrice,
+                        a.MaxPrice,
+                        a.Volume,
+                        a.TotalSpent,
+                        a.NumTransactions
+                    )
+                )
+        ];
+    }
+
+    private async Task<List<MarketBucketAggregate>> AggregateInChunksAsync(
+        Id<Market> marketId,
+        DateTimeOffset rangeStart,
+        DateTimeOffset rangeEnd,
+        TimeSpan interval,
+        CancellationToken ct
+    )
+    {
+        var chunkSize = TimeSpan.FromDays(_options.Value.ChunkDays);
+        var accumulated = new Dictionary<DateTimeOffset, MarketBucketAggregate>();
+
+        var chunkStart = rangeStart;
+        while (chunkStart < rangeEnd)
+        {
+            var chunkEnd = chunkStart + chunkSize;
+            var start = chunkStart;
+
+            var chunkQuery = _dbContext.Trades.AsNoTracking()
+                .Where(t => t.Symbol.MarketId == marketId
+                            && t.Timestamp >= start
+                            && t.Timestamp < chunkEnd
+                );
+
+            var chunkAggregates = await AggregateQuery(chunkQuery, interval).ToListAsync(ct);
+
+            foreach (var agg in chunkAggregates)
+            {
+                if (!accumulated.TryGetValue(agg.BucketStart, out var existing))
+                {
+                    accumulated[agg.BucketStart] = agg;
+                    continue;
+                }
+
+                var mergedTotalSpent = existing.TotalSpent + agg.TotalSpent;
+                var mergedVolume = existing.Volume + agg.Volume;
+
+                accumulated[agg.BucketStart] = new MarketBucketAggregate(
+                    agg.BucketStart,
+                    mergedTotalSpent,
+                    mergedVolume,
+                    Math.Min(existing.MinPrice, agg.MinPrice),
+                    Math.Max(existing.MaxPrice, agg.MaxPrice),
+                    existing.NumTransactions + agg.NumTransactions,
+                    mergedVolume > 0 ? mergedTotalSpent / mergedVolume : 0
+                );
+            }
+
+            chunkStart = chunkEnd;
+        }
+
+        return [.. accumulated.Values];
+    }
+
+    private static IQueryable<MarketBucketAggregate> AggregateQuery(
+        IQueryable<Trade> query,
+        TimeSpan interval
+    ) =>
+        query
             .GroupBy(t => TimescaleDbFunctions.TimeBucket(interval, t.Timestamp))
             .Select(g => new MarketBucketAggregate(
-                g.Key,
-                g.Sum(t => t.Price * t.Volume),
-                g.Sum(t => t.Volume),
-                g.Min(t => t.Price),
-                g.Max(t => t.Price),
-                g.Count(),
-                g.Sum(t => t.Price * t.Volume) / g.Sum(t => t.Volume)
-            ))
-            .ToListAsync(ct);
-
-        return [.. aggregates
-            .OrderBy(a => a.BucketStart)
-            .Select(a => Bucket.Create(
-                marketId,
-                frame,
-                a.BucketStart,
-                a.AveragePrice,
-                a.MinPrice,
-                a.MaxPrice,
-                a.Volume,
-                a.TotalSpent,
-                a.NumTransactions
-            ))];
-    }
+                    g.Key,
+                    g.Sum(t => t.Price * t.Volume),
+                    g.Sum(t => t.Volume),
+                    g.Min(t => t.Price),
+                    g.Max(t => t.Price),
+                    g.Count(),
+                    g.Sum(t => t.Price * t.Volume) / g.Sum(t => t.Volume)
+                )
+            );
 }
