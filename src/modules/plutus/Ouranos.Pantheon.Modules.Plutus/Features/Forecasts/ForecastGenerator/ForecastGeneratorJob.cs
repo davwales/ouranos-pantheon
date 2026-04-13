@@ -63,6 +63,17 @@ public sealed class ForecastGeneratorJob
             await _dbContext.Forecasts.ExecuteDeleteAsync(ct);
         }
 
+        var generatedAt = DateTimeOffset.UtcNow;
+        var targetBase = new DateTimeOffset(generatedAt.UtcDateTime.Date, TimeSpan.Zero);
+
+        var run = ForecastRun.Create(
+            DatabaseExtensions.CreateId<ForecastRun>(),
+            _options.Value.Forecasting.ModelName,
+            generatedAt
+        );
+
+        _dbContext.ForecastRuns.Add(run);
+
         var totalForecasts = 0;
 
         foreach (var batch in symbols.Batch(_options.Value.Forecasting.BatchSize))
@@ -76,40 +87,64 @@ public sealed class ForecastGeneratorJob
             }
 
             var predictions = await _mlClient.GetPlutusForecasts(
-                new GetPlutusForecastsRequest(_options.Value.Forecasting.NumPredictions, [.. inputs.Select(i => i.HistoricalPoints)]),
+                new GetPlutusForecastsRequest(
+                    _options.Value.Forecasting.NumPredictions,
+                    [.. inputs.Select(i => i.HistoricalPoints)]
+                ),
                 ct
             );
 
-            var forecasts = inputs
-                .Select((input, i) =>
-                    {
-                        var latestMlPoint = input.HistoricalPoints[^1];
+            var forecasts = new List<Forecast>(inputs.Count);
+            var records = new List<ForecastRecord>();
 
-                        return Forecast.Create(
-                            DatabaseExtensions.CreateId<Forecast>(),
+            for (var i = 0; i < inputs.Count; i++)
+            {
+                var input = inputs[i];
+                var latestMlPoint = input.HistoricalPoints[^1];
+
+                forecasts.Add(
+                    Forecast.Create(
+                        DatabaseExtensions.CreateId<Forecast>(),
+                        input.Symbol.MarketId,
+                        input.Symbol.Id,
+                        latest: new ForecastPoint(
+                            latestMlPoint.AveragePrice,
+                            latestMlPoint.MinPrice,
+                            latestMlPoint.MaxPrice,
+                            latestMlPoint.Volume
+                        ),
+                        predictions:
+                        [
+                            .. predictions[i]
+                                .Select(p => new ForecastPoint(
+                                        p.AveragePrice,
+                                        p.MinPrice,
+                                        p.MaxPrice,
+                                        p.Volume
+                                    )
+                                )
+                        ]
+                    )
+                );
+
+                for (var h = 0; h < predictions[i].Count; h++)
+                {
+                    var p = predictions[i][h];
+                    records.Add(
+                        ForecastRecord.Create(
+                            DatabaseExtensions.CreateId<ForecastRecord>(),
+                            run.Id,
                             input.Symbol.MarketId,
                             input.Symbol.Id,
-                            latest: new ForecastPoint(
-                                latestMlPoint.AveragePrice,
-                                latestMlPoint.MinPrice,
-                                latestMlPoint.MaxPrice,
-                                latestMlPoint.Volume
-                            ),
-                            predictions:
-                            [
-                                .. predictions[i]
-                                    .Select(p => new ForecastPoint(
-                                            p.AveragePrice,
-                                            p.MinPrice,
-                                            p.MaxPrice,
-                                            p.Volume
-                                        )
-                                    )
-                            ]
-                        );
-                    }
-                )
-                .ToList();
+                            _options.Value.Forecasting.ModelName,
+                            generatedAt,
+                            targetBase.AddDays(h + 1),
+                            h + 1,
+                            new ForecastPoint(p.AveragePrice, p.MinPrice, p.MaxPrice, p.Volume)
+                        )
+                    );
+                }
+            }
 
             if (!_options.Value.Forecasting.RemoveOutdatedForecasts)
             {
@@ -121,6 +156,7 @@ public sealed class ForecastGeneratorJob
             }
 
             _dbContext.Forecasts.AddRange(forecasts);
+            _dbContext.ForecastRecords.AddRange(records);
             await _dbContext.SaveChangesAsync(ct);
 
             totalForecasts += forecasts.Count;
@@ -158,20 +194,19 @@ public sealed class ForecastGeneratorJob
         var bucketedTrades = await _dbContext.Trades.AsNoTracking()
             .Where(t => symbolIds.Contains(t.SymbolId) && t.Timestamp >= since)
             .GroupBy(t => new
-            {
-                t.SymbolId,
-                Bucket = TimescaleDbFunctions.TimeBucket(TimeSpan.FromDays(1), t.Timestamp)
-            }
+                {
+                    t.SymbolId, Bucket = TimescaleDbFunctions.TimeBucket(TimeSpan.FromDays(1), t.Timestamp)
+                }
             )
             .Select(g => new
-            {
-                g.Key.SymbolId,
-                g.Key.Bucket,
-                Volume = g.Sum(t => t.Volume),
-                AveragePrice = g.Sum(t => t.Price * t.Volume) / g.Sum(t => t.Volume),
-                MinPrice = g.Min(t => t.Price),
-                MaxPrice = g.Max(t => t.Price)
-            }
+                {
+                    g.Key.SymbolId,
+                    g.Key.Bucket,
+                    Volume = g.Sum(t => t.Volume),
+                    AveragePrice = g.Sum(t => t.Price * t.Volume) / g.Sum(t => t.Volume),
+                    MinPrice = g.Min(t => t.Price),
+                    MaxPrice = g.Max(t => t.Price)
+                }
             )
             .ToListAsync(ct);
 
@@ -181,12 +216,21 @@ public sealed class ForecastGeneratorJob
 
         var symbolDict = symbols.ToDictionary(s => s.Id);
 
-        return [
+        return
+        [
             .. bucketsBySymbol
                 .Where(kvp => kvp.Value.Count == historyDays)
                 .Select(kvp => new SymbolForecastInput(
                         symbolDict[kvp.Key],
-                        [.. kvp.Value.Select(b => new MlForecastPoint(b.AveragePrice, b.MinPrice, b.MaxPrice, b.Volume))]
+                        [
+                            .. kvp.Value.Select(b => new MlForecastPoint(
+                                    b.AveragePrice,
+                                    b.MinPrice,
+                                    b.MaxPrice,
+                                    b.Volume
+                                )
+                            )
+                        ]
                     )
                 )
         ];

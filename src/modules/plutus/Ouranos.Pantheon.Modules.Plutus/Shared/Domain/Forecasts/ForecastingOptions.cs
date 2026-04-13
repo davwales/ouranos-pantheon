@@ -5,7 +5,9 @@ public sealed record ForecastingOptions(
     bool RemoveOutdatedForecasts,
     int NumPredictions,
     int HistoryDays,
-    int BatchSize
+    int BatchSize,
+    string ModelName,
+    int MaxEvaluationAgeDays
 )
 {
     public ForecastingOptions() : this(
@@ -13,7 +15,9 @@ public sealed record ForecastingOptions(
         RemoveOutdatedForecasts: true,
         NumPredictions: 7,
         HistoryDays: 30,
-        BatchSize: 500
+        BatchSize: 500,
+        ModelName: "plutus-forecasting-v1",
+        MaxEvaluationAgeDays: 90
     )
     {
     }

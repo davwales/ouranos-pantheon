@@ -42,7 +42,9 @@ public sealed class ForecastGeneratorJobTests
                         RemoveOutdatedForecasts: false,
                         NumPredictions: 7,
                         HistoryDays: 30,
-                        BatchSize: 500
+                        BatchSize: 500,
+                        ModelName: "plutus-forecasting-v1",
+                        MaxEvaluationAgeDays: 90
                     )
                 }
             )
@@ -115,6 +117,19 @@ public sealed class ForecastGeneratorJobTests
         var forecast = _dbContext.Forecasts.Single();
         forecast.MarketId.ShouldBe(market.Id);
         forecast.SymbolId.ShouldBe(symbol.Id);
+
+        _dbContext.ForecastRuns.Count().ShouldBe(1);
+        var run = _dbContext.ForecastRuns.Single();
+        run.ModelName.ShouldBe("plutus-forecasting-v1");
+
+        _dbContext.ForecastRecords.Count().ShouldBe(7);
+        foreach (var record in _dbContext.ForecastRecords)
+        {
+            record.RunId.ShouldBe(run.Id);
+            record.ModelName.ShouldBe("plutus-forecasting-v1");
+            record.SymbolId.ShouldBe(symbol.Id);
+            record.MarketId.ShouldBe(market.Id);
+        }
     }
 
     [Fact]
