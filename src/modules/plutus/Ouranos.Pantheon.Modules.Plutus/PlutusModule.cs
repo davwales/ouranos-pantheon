@@ -47,6 +47,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetAllSymbols;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetSymbol;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetDailySymbolSummary;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetAllForecasts;
+using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetForecastEfficacy;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetMarketForecast;
 using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.GetAllRecipes;
 using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.GetRecipe;
@@ -103,6 +104,7 @@ public sealed class PlutusModule : IPantheonModule
 
         GetAllForecastsEndpoint.Map(app);
         GetMarketForecastEndpoint.Map(app);
+        GetForecastEfficacyEndpoint.Map(app);
 
         GetAllRecipesEndpoint.Map(app);
         GetRecipeEndpoint.Map(app);

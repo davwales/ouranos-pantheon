@@ -17,6 +17,10 @@ public class PlutusDbContext(DbContextOptions<PlutusDbContext> options) : Ourano
 
     public DbSet<Forecast> Forecasts { get; set; }
 
+    public DbSet<ForecastRecord> ForecastRecords { get; set; }
+
+    public DbSet<ForecastRun> ForecastRuns { get; set; }
+
     public DbSet<Market> Markets { get; set; }
 
     public DbSet<Recipe> Recipes { get; set; }
@@ -41,6 +45,8 @@ public class PlutusDbContext(DbContextOptions<PlutusDbContext> options) : Ourano
 
         modelBuilder.Entity<OsrsDataLoaderState>();
         modelBuilder.Entity<Forecast>();
+        modelBuilder.Entity<ForecastRecord>();
+        modelBuilder.Entity<ForecastRun>();
         modelBuilder.Entity<Market>();
         modelBuilder.Entity<Recipe>();
         modelBuilder.Entity<Symbol>();
