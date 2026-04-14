@@ -123,14 +123,14 @@ export default function PriceChart({
   data: DataPoint[];
   volumePercent?: number;
 }) {
-  if (!data || data.length < 2) {
-    return <div {...props}>Not enough data to visualize.</div>;
-  }
-
   const { data: processedData, gaps } = useMemo(
     () => processChartData(data),
     [data],
   );
+
+  if (!data || data.length < 2) {
+    return <div {...props}>Not enough data to visualize.</div>;
+  }
 
   const hasGaps = gaps.length > 0;
 
