@@ -27,7 +27,11 @@ public sealed class MarketOverviewBucketJobTests
     }
 
     private MarketOverviewBucketJob CreateJob(int numBuckets = 10) =>
-        new(_logger, _dbContext, Options.Create(new MarketOverviewBucketOptions(NumBuckets: numBuckets, ChunkDays: 1, ChunkThresholdDays: 7)));
+        new(
+            _logger,
+            _dbContext,
+            Options.Create(new MarketOverviewBucketOptions(NumBuckets: numBuckets, ChunkDays: 1, ChunkThresholdDays: 7))
+        );
 
     [Fact]
     public async Task ExecuteFifteenMinutes_WhenNoTrades_ShouldCreateNoBuckets()
@@ -109,13 +113,19 @@ public sealed class MarketOverviewBucketJobTests
 
         var symbolA = Symbol.Create(
             new Id<Symbol>(Guid.NewGuid().ToString()),
-            _fixture.Create<string>(), null, _fixture.Create<string>(),
-            marketA.Id, new AdditionalFields()
+            _fixture.Create<string>(),
+            null,
+            _fixture.Create<string>(),
+            marketA.Id,
+            new AdditionalFields()
         );
         var symbolB = Symbol.Create(
             new Id<Symbol>(Guid.NewGuid().ToString()),
-            _fixture.Create<string>(), null, _fixture.Create<string>(),
-            marketB.Id, new AdditionalFields()
+            _fixture.Create<string>(),
+            null,
+            _fixture.Create<string>(),
+            marketB.Id,
+            new AdditionalFields()
         );
 
         var now = DateTimeOffset.UtcNow;
@@ -139,6 +149,129 @@ public sealed class MarketOverviewBucketJobTests
     }
 
     [Fact]
+    public async Task ExecuteAllTime_WhenTradesExist_BucketsShouldHaveOpenAndClosePricePopulated()
+    {
+        // Arrange
+        var market = Market.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<Taxes>()
+        );
+        var symbol = Symbol.Create(
+            new Id<Symbol>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            null,
+            _fixture.Create<string>(),
+            market.Id,
+            new AdditionalFields()
+        );
+
+        var now = DateTimeOffset.UtcNow;
+        var trade1 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 100m, 5m, now.AddHours(-2));
+        var trade2 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 110m, 3m, now.AddHours(-1));
+
+        await _dbContext.SeedData(market);
+        await _dbContext.SeedData(symbol);
+        await _dbContext.SeedData(trade1, trade2);
+
+        // Act
+        await CreateJob(numBuckets: 10).ExecuteAllTime(_context, CancellationToken.None);
+
+        // Assert
+        var buckets = _dbContext.MarketOverviewBuckets.ToList();
+        buckets.ShouldNotBeEmpty();
+        buckets.ShouldAllBe(b => b.OpenPrice > 0);
+        buckets.ShouldAllBe(b => b.ClosePrice > 0);
+    }
+
+    [Fact]
+    public async Task ExecuteAllTime_WhenChunkingIsForced_ShouldCreateBucketsWithOpenAndClosePrice()
+    {
+        // Arrange
+        var job = new MarketOverviewBucketJob(
+            _logger,
+            _dbContext,
+            Options.Create(new MarketOverviewBucketOptions(NumBuckets: 10, ChunkDays: 1, ChunkThresholdDays: 0))
+        );
+
+        var market = Market.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<Taxes>()
+        );
+        var symbol = Symbol.Create(
+            new Id<Symbol>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            null,
+            _fixture.Create<string>(),
+            market.Id,
+            new AdditionalFields()
+        );
+
+        var now = DateTimeOffset.UtcNow;
+        var trade1 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 100m, 5m, now.AddHours(-2));
+        var trade2 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 110m, 3m, now.AddHours(-1));
+
+        await _dbContext.SeedData(market);
+        await _dbContext.SeedData(symbol);
+        await _dbContext.SeedData(trade1, trade2);
+
+        // Act
+        await job.ExecuteAllTime(_context, CancellationToken.None);
+
+        // Assert
+        var buckets = _dbContext.MarketOverviewBuckets.ToList();
+        buckets.ShouldNotBeEmpty();
+        buckets.ShouldAllBe(b => b.OpenPrice > 0);
+        buckets.ShouldAllBe(b => b.ClosePrice > 0);
+    }
+
+    [Fact]
+    public async Task ExecuteAllTime_WhenChunkingIsForced_ChunkMergeShouldPreserveOpenFromFirstChunk()
+    {
+        // Arrange
+        var job = new MarketOverviewBucketJob(
+            _logger,
+            _dbContext,
+            Options.Create(new MarketOverviewBucketOptions(NumBuckets: 1, ChunkDays: 1, ChunkThresholdDays: 0))
+        );
+
+        var market = Market.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<Taxes>()
+        );
+        var symbol = Symbol.Create(
+            new Id<Symbol>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            null,
+            _fixture.Create<string>(),
+            market.Id,
+            new AdditionalFields()
+        );
+
+        var base1 = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        var trade1 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 50m, 1m, base1);
+        var trade2 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 150m, 1m, base1.AddHours(25));
+
+        await _dbContext.SeedData(market);
+        await _dbContext.SeedData(symbol);
+        await _dbContext.SeedData(trade1, trade2);
+
+        // Act
+        await job.ExecuteAllTime(_context, CancellationToken.None);
+
+        // Assert
+        var buckets = _dbContext.MarketOverviewBuckets.OrderBy(b => b.BucketStart).ToList();
+        buckets.ShouldNotBeEmpty();
+        buckets.ShouldAllBe(b => b.OpenPrice > 0);
+        buckets.ShouldAllBe(b => b.ClosePrice > 0);
+
+        buckets.ShouldAllBe(b => b.OpenPrice == 50m || b.OpenPrice == 150m);
+        buckets.ShouldAllBe(b => b.ClosePrice == 50m || b.ClosePrice == 150m);
+    }
+
+    [Fact]
     public async Task ExecuteAllTime_WhenRunTwice_ShouldReplaceExistingBuckets()
     {
         // Arrange
@@ -149,8 +282,11 @@ public sealed class MarketOverviewBucketJobTests
         );
         var symbol = Symbol.Create(
             new Id<Symbol>(Guid.NewGuid().ToString()),
-            _fixture.Create<string>(), null, _fixture.Create<string>(),
-            market.Id, new AdditionalFields()
+            _fixture.Create<string>(),
+            null,
+            _fixture.Create<string>(),
+            market.Id,
+            new AdditionalFields()
         );
 
         var now = DateTimeOffset.UtcNow;

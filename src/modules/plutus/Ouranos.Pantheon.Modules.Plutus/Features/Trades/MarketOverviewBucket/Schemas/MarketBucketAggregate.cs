@@ -7,5 +7,7 @@ internal sealed record MarketBucketAggregate(
     decimal MinPrice,
     decimal MaxPrice,
     int NumTransactions,
-    decimal AveragePrice
+    decimal AveragePrice,
+    decimal OpenPrice,
+    decimal ClosePrice
 );

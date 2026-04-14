@@ -12,5 +12,7 @@ public sealed record BucketDto(
     decimal MaxPrice,
     int NumTransactions,
     decimal AveragePrice,
-    decimal Margin
+    decimal Margin,
+    decimal OpenPrice,
+    decimal ClosePrice
 );

@@ -82,7 +82,9 @@ public sealed class GetSymbolTradesHandler : IPantheonHandler<GetSymbolTradesInp
                             b.MinPrice,
                             b.MaxPrice,
                             b.NumTransactions,
-                            b.BucketStart
+                            b.BucketStart,
+                            b.OpenPrice,
+                            b.ClosePrice
                         )
                     )
             ]
@@ -114,12 +116,10 @@ public sealed class GetSymbolTradesHandler : IPantheonHandler<GetSymbolTradesInp
             return [];
         }
 
+        var interval = SmartIntervalCalculator.Calculate(timeRange.Duration, numBuckets);
+
         var buckets = await query
-            .GroupBy(t => TimescaleDbFunctions.TimeBucket(
-                    SmartIntervalCalculator.Calculate(timeRange.Duration, numBuckets),
-                    t.Timestamp
-                )
-            )
+            .GroupBy(t => TimescaleDbFunctions.TimeBucket(interval, t.Timestamp))
             .Select(group => new BucketDto(
                     group.First().SymbolId,
                     group.Key,
@@ -129,7 +129,9 @@ public sealed class GetSymbolTradesHandler : IPantheonHandler<GetSymbolTradesInp
                     group.Max(x => x.Price),
                     group.Count(),
                     group.Sum(x => x.Price * x.Volume) / group.Sum(x => x.Volume),
-                    group.Max(x => x.Price) - group.Min(x => x.Price)
+                    group.Max(x => x.Price) - group.Min(x => x.Price),
+                    group.OrderBy(x => x.Timestamp).Select(x => x.Price).First(),
+                    group.OrderByDescending(x => x.Timestamp).Select(x => x.Price).First()
                 )
             )
             .ToListAsync(cancellationToken);

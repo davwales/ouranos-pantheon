@@ -57,17 +57,28 @@ public sealed class GetMarketOverviewHandler : IPantheonHandler<GetMarketOvervie
 
         var trades = buckets
             .Select(b => new GetMarketOverviewBucketResponse(
-                b.AveragePrice,
-                b.Volume,
-                b.TotalSpent,
-                b.MinPrice,
-                b.MaxPrice,
-                b.NumTransactions,
-                b.BucketStart
-            ))
+                    b.AveragePrice,
+                    b.Volume,
+                    b.TotalSpent,
+                    b.MinPrice,
+                    b.MaxPrice,
+                    b.NumTransactions,
+                    b.BucketStart,
+                    b.OpenPrice,
+                    b.ClosePrice
+                )
+            )
             .ToList();
 
         _logger.LogDebug("Successfully handled get market overview request.");
-        return new GetMarketOverviewResponse(minPrice, maxPrice, averagePrice, totalSpent, volume, numTransactions, trades);
+        return new GetMarketOverviewResponse(
+            minPrice,
+            maxPrice,
+            averagePrice,
+            totalSpent,
+            volume,
+            numTransactions,
+            trades
+        );
     }
 }

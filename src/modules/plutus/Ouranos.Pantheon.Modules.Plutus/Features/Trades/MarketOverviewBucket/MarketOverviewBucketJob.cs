@@ -147,7 +147,9 @@ public sealed class MarketOverviewBucketJob
                         a.MaxPrice,
                         a.Volume,
                         a.TotalSpent,
-                        a.NumTransactions
+                        a.NumTransactions,
+                        a.OpenPrice,
+                        a.ClosePrice
                     )
                 )
         ];
@@ -196,7 +198,9 @@ public sealed class MarketOverviewBucketJob
                     Math.Min(existing.MinPrice, agg.MinPrice),
                     Math.Max(existing.MaxPrice, agg.MaxPrice),
                     existing.NumTransactions + agg.NumTransactions,
-                    mergedVolume > 0 ? mergedTotalSpent / mergedVolume : 0
+                    mergedVolume > 0 ? mergedTotalSpent / mergedVolume : 0,
+                    existing.OpenPrice,
+                    agg.ClosePrice
                 );
             }
 
@@ -219,7 +223,9 @@ public sealed class MarketOverviewBucketJob
                     g.Min(t => t.Price),
                     g.Max(t => t.Price),
                     g.Count(),
-                    g.Sum(t => t.Price * t.Volume) / g.Sum(t => t.Volume)
+                    g.Sum(t => t.Price * t.Volume) / g.Sum(t => t.Volume),
+                    g.OrderBy(t => t.Timestamp).Select(t => t.Price).First(),
+                    g.OrderByDescending(t => t.Timestamp).Select(t => t.Price).First()
                 )
             );
 }

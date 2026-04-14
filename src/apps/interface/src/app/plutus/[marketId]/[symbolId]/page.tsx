@@ -3,6 +3,7 @@
 import ClipboardCopy from "@/app/components/clipboard-copy";
 import { PrettyNumber } from "@/app/components/pretty-number/pretty-number";
 import { Typography } from "@/app/components/typography";
+import CandlestickChart from "@/app/plutus/components/candlestick-chart";
 import PriceChart from "@/app/plutus/components/price-chart";
 import TimeFrameSelection from "@/app/plutus/components/time_frame_selection";
 import PercentChange from "./components/percent-change";
@@ -187,6 +188,10 @@ export default function SymbolDetail() {
         className="mt-2 gap-x-40 grid grid-cols-1 md:grid-cols-2"
       />
       <PriceChart data={formattedTrades} className="mt-8 max-h-96 w-full" />
+      <CandlestickChart
+        data={formattedTrades}
+        className="mt-4 max-h-96 w-full"
+      />
       <SignalsSection symbolId={symbolId} />
     </div>
   );

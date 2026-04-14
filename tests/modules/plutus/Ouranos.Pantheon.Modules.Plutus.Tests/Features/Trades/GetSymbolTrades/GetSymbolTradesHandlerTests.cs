@@ -152,12 +152,94 @@ public sealed class GetSymbolTradesHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenSingleTradeInBucket_OpenAndClosePriceShouldEqualTradePrice()
+    {
+        // Arrange
+        var market = Market.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<Taxes>()
+        );
+
+        var symbol = Symbol.Create(
+            new Id<Symbol>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            null,
+            _fixture.Create<string>(),
+            market.Id,
+            new AdditionalFields()
+        );
+
+        var now = DateTimeOffset.UtcNow;
+        var trade1 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 75m, 2m, now.AddHours(-2));
+        var trade2 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 125m, 3m, now);
+
+        await _dbContext.SeedData(market);
+        await _dbContext.SeedData(symbol);
+        await _dbContext.SeedData(trade1, trade2);
+
+        var query = new GetSymbolTradesInput(symbol.Id, TimeFrame.AllTime, NumBuckets: 100);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Trades.ShouldNotBeNull();
+        result.Trades.ShouldAllBe(b => b.OpenPrice > 0);
+        result.Trades.ShouldAllBe(b => b.ClosePrice > 0);
+    }
+
+    [Fact]
+    public async Task Handle_WhenTradesExist_BucketsShouldIncludeOpenAndClosePrice()
+    {
+        // Arrange
+        var market = Market.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<Taxes>()
+        );
+
+        var symbol = Symbol.Create(
+            new Id<Symbol>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            null,
+            _fixture.Create<string>(),
+            market.Id,
+            new AdditionalFields()
+        );
+
+        var now = DateTimeOffset.UtcNow;
+        var trade1 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 90m, 5m, now.AddHours(-2));
+        var trade2 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 100m, 3m, now.AddHours(-1));
+        var trade3 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 110m, 4m, now);
+
+        await _dbContext.SeedData(market);
+        await _dbContext.SeedData(symbol);
+        await _dbContext.SeedData(trade1, trade2, trade3);
+
+        var query = new GetSymbolTradesInput(symbol.Id, TimeFrame.AllTime, NumBuckets: 10);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Trades.ShouldNotBeNull();
+        result.Trades.ShouldNotBeEmpty();
+        result.Trades.ShouldAllBe(b => b.OpenPrice > 0);
+        result.Trades.ShouldAllBe(b => b.ClosePrice > 0);
+        result.Trades.ShouldAllBe(b => b.OpenPrice >= result.MinPrice);
+        result.Trades.ShouldAllBe(b => b.ClosePrice >= result.MinPrice);
+        result.Trades.ShouldAllBe(b => b.OpenPrice <= result.MaxPrice);
+        result.Trades.ShouldAllBe(b => b.ClosePrice <= result.MaxPrice);
+    }
+
+    [Fact]
     public void BucketDto_AllProperties_ShouldBeAccessible()
     {
         // Arrange
         var symbolId = new Id<Symbol>(Guid.NewGuid().ToString());
         var bucketStart = DateTimeOffset.UtcNow;
-        var bucket = new BucketDto(symbolId, bucketStart, 1000m, 10m, 90m, 110m, 5, 100m, 20m);
+        var bucket = new BucketDto(symbolId, bucketStart, 1000m, 10m, 90m, 110m, 5, 100m, 20m, 91m, 109m);
 
         // Assert
         bucket.SymbolId.ShouldBe(symbolId);
@@ -185,7 +267,9 @@ public sealed class GetSymbolTradesHandlerTests
             MinPrice: 90m,
             MaxPrice: 110m,
             NumTransactions: 10,
-            Date: date
+            Date: date,
+            OpenPrice: 92m,
+            ClosePrice: 108m
         );
 
         // Assert
@@ -196,5 +280,7 @@ public sealed class GetSymbolTradesHandlerTests
         response.MaxPrice.ShouldBe(110m);
         response.NumTransactions.ShouldBe(10);
         response.Date.ShouldBe(date);
+        response.OpenPrice.ShouldBe(92m);
+        response.ClosePrice.ShouldBe(108m);
     }
 }
