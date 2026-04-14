@@ -34,14 +34,62 @@ public sealed class GetMarketOverviewHandlerTests
         var otherMarketId = new Id<Market>(Guid.NewGuid().ToString());
         var now = DateTimeOffset.UtcNow;
 
-        var bucket1 = Bucket.Create(marketId, TimeFrame.OneHour, now.AddHours(-2), 100m, 90m, 110m, 5m, 500m, 10);
-        var bucket2 = Bucket.Create(marketId, TimeFrame.OneHour, now.AddHours(-1), 120m, 100m, 130m, 8m, 960m, 15);
-        var wrongFrame = Bucket.Create(marketId, TimeFrame.OneDay, now.AddDays(-1), 50m, 40m, 60m, 3m, 150m, 5);
-        var wrongMarket = Bucket.Create(otherMarketId, TimeFrame.OneHour, now.AddHours(-1), 999m, 900m, 1000m, 1m, 999m, 1);
+        var bucket1 = Bucket.Create(
+            marketId,
+            TimeFrame.OneHour,
+            now.AddHours(-2),
+            100m,
+            90m,
+            110m,
+            5m,
+            500m,
+            10,
+            91m,
+            109m
+        );
+        var bucket2 = Bucket.Create(
+            marketId,
+            TimeFrame.OneHour,
+            now.AddHours(-1),
+            120m,
+            100m,
+            130m,
+            8m,
+            960m,
+            15,
+            101m,
+            129m
+        );
+        var wrongFrame = Bucket.Create(
+            marketId,
+            TimeFrame.OneDay,
+            now.AddDays(-1),
+            50m,
+            40m,
+            60m,
+            3m,
+            150m,
+            5,
+            41m,
+            59m
+        );
+        var wrongMarket = Bucket.Create(
+            otherMarketId,
+            TimeFrame.OneHour,
+            now.AddHours(-1),
+            999m,
+            900m,
+            1000m,
+            1m,
+            999m,
+            1,
+            901m,
+            999m
+        );
 
         await _dbContext.SeedData(bucket1, bucket2, wrongFrame, wrongMarket);
 
-        var query = new GetMarketOverviewInput(marketId, TimeFrame.OneHour);
+        var query = new GetMarketOverviewInput(marketId);
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
@@ -58,8 +106,32 @@ public sealed class GetMarketOverviewHandlerTests
         // Arrange
         var marketId = new Id<Market>(Guid.NewGuid().ToString());
         var now = DateTimeOffset.UtcNow;
-        var bucket1 = Bucket.Create(marketId, TimeFrame.AllTime, now.AddDays(-2), 100m, 90m, 110m, 4m, 400m, 8);
-        var bucket2 = Bucket.Create(marketId, TimeFrame.AllTime, now.AddDays(-1), 200m, 180m, 220m, 1m, 200m, 2);
+        var bucket1 = Bucket.Create(
+            marketId,
+            TimeFrame.AllTime,
+            now.AddDays(-2),
+            100m,
+            90m,
+            110m,
+            4m,
+            400m,
+            8,
+            91m,
+            109m
+        );
+        var bucket2 = Bucket.Create(
+            marketId,
+            TimeFrame.AllTime,
+            now.AddDays(-1),
+            200m,
+            180m,
+            220m,
+            1m,
+            200m,
+            2,
+            181m,
+            219m
+        );
 
         await _dbContext.SeedData(bucket1, bucket2);
 
@@ -81,10 +153,7 @@ public sealed class GetMarketOverviewHandlerTests
     public async Task Handle_WhenNoBuckets_ShouldReturnZeroStats()
     {
         // Arrange
-        var query = new GetMarketOverviewInput(
-            new Id<Market>(_fixture.Create<string>()),
-            TimeFrame.OneHour
-        );
+        var query = new GetMarketOverviewInput(new Id<Market>(_fixture.Create<string>()));
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
@@ -98,13 +167,93 @@ public sealed class GetMarketOverviewHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenBucketsExist_ShouldIncludeOpenAndClosePriceInResponse()
+    {
+        // Arrange
+        var marketId = new Id<Market>(Guid.NewGuid().ToString());
+        var now = DateTimeOffset.UtcNow;
+
+        var bucket = Bucket.Create(
+            marketId,
+            TimeFrame.OneHour,
+            now.AddHours(-1),
+            100m,
+            90m,
+            110m,
+            5m,
+            500m,
+            10,
+            91m,
+            109m
+        );
+
+        await _dbContext.SeedData(bucket);
+
+        var query = new GetMarketOverviewInput(marketId);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Trades.Count.ShouldBe(1);
+        result.Trades[0].OpenPrice.ShouldBe(91m);
+        result.Trades[0].ClosePrice.ShouldBe(109m);
+    }
+
+    [Fact]
+    public async Task Handle_WhenMultipleBucketsExist_OpenAndClosePriceShouldMatchEntityValues()
+    {
+        // Arrange
+        var marketId = new Id<Market>(Guid.NewGuid().ToString());
+        var now = DateTimeOffset.UtcNow;
+
+        var bucket1 = Bucket.Create(
+            marketId,
+            TimeFrame.OneHour,
+            now.AddHours(-2),
+            100m,
+            80m,
+            120m,
+            4m,
+            400m,
+            8,
+            82m,
+            118m
+        );
+        var bucket2 = Bucket.Create(
+            marketId,
+            TimeFrame.OneHour,
+            now.AddHours(-1),
+            200m,
+            180m,
+            220m,
+            2m,
+            400m,
+            4,
+            183m,
+            217m
+        );
+
+        await _dbContext.SeedData(bucket1, bucket2);
+
+        var query = new GetMarketOverviewInput(marketId);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Trades.Count.ShouldBe(2);
+        result.Trades[0].OpenPrice.ShouldBe(82m);
+        result.Trades[0].ClosePrice.ShouldBe(118m);
+        result.Trades[1].OpenPrice.ShouldBe(183m);
+        result.Trades[1].ClosePrice.ShouldBe(217m);
+    }
+
+    [Fact]
     public async Task Handle_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange
-        var query = new GetMarketOverviewInput(
-            new Id<Market>(_fixture.Create<string>()),
-            TimeFrame.OneHour
-        );
+        var query = new GetMarketOverviewInput(new Id<Market>(_fixture.Create<string>()));
 
         // Act
         var get = async () => await _handler.Handle(query, new CancellationToken(true));
@@ -127,7 +276,9 @@ public sealed class GetMarketOverviewHandlerTests
             MinPrice: 90m,
             MaxPrice: 110m,
             NumTransactions: 10,
-            Date: date
+            Date: date,
+            OpenPrice: 92m,
+            ClosePrice: 108m
         );
 
         // Assert
@@ -138,5 +289,7 @@ public sealed class GetMarketOverviewHandlerTests
         response.MaxPrice.ShouldBe(110m);
         response.NumTransactions.ShouldBe(10);
         response.Date.ShouldBe(date);
+        response.OpenPrice.ShouldBe(92m);
+        response.ClosePrice.ShouldBe(108m);
     }
 }

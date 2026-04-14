@@ -2,6 +2,7 @@
 
 import { abbreviateNumber } from "@/app/components/pretty-number";
 import { Typography } from "@/app/components/typography";
+import CandlestickChart from "@/app/plutus/components/candlestick-chart";
 import PriceChart from "@/app/plutus/components/price-chart";
 import TimeFrameSelection from "@/app/plutus/components/time_frame_selection";
 import { PlutusState, usePlutusStore } from "@/app/plutus/plutus_store";
@@ -65,6 +66,10 @@ export default function MarketOverview({ marketId }: { marketId: string }) {
       )}
 
       <PriceChart data={formattedTrades} className="mt-2 max-h-96 w-full" />
+      <CandlestickChart
+        data={formattedTrades}
+        className="mt-2 max-h-96 w-full"
+      />
     </div>
   );
 }

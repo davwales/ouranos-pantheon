@@ -29,6 +29,10 @@ public class MarketOverviewBucket : BaseEntity<Id<MarketOverviewBucket>>
 
     public int NumTransactions { get; private set; }
 
+    public decimal OpenPrice { get; private set; }
+
+    public decimal ClosePrice { get; private set; }
+
     private Market? _market;
 
     public Market Market => _market ?? throw new NavigationPropertyNotLoadedException<MarketOverviewBucket>();
@@ -43,6 +47,8 @@ public class MarketOverviewBucket : BaseEntity<Id<MarketOverviewBucket>>
         decimal volume,
         decimal totalSpent,
         int numTransactions,
+        decimal openPrice,
+        decimal closePrice,
         Market? market = null
     )
     {
@@ -62,6 +68,8 @@ public class MarketOverviewBucket : BaseEntity<Id<MarketOverviewBucket>>
             Volume = volume,
             TotalSpent = totalSpent,
             NumTransactions = numTransactions,
+            OpenPrice = openPrice,
+            ClosePrice = closePrice,
             _market = market
         };
     }

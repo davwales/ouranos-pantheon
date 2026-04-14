@@ -18,7 +18,6 @@ import {
   BarShapeProps,
   CartesianGrid,
   ComposedChart,
-  Line,
   XAxis,
   YAxis,
 } from "recharts";
@@ -27,10 +26,8 @@ import { processChartData } from "./chart-utils";
 import { GapAxisTick } from "./gap-axis-tick";
 
 const chartConfig: ChartConfig = {
-  maxPrice: { label: "Maximum Price", color: "var(--chart-2)" },
-  price: { label: "Average Price", color: "var(--chart-3)" },
-  minPrice: { label: "Minimum Price", color: "var(--chart-5)" },
-  volume: { label: "Volume", color: "var(--chart-4)" },
+  bullish: { label: "Bullish", color: "#22c55e" },
+  bearish: { label: "Bearish", color: "#ef4444" },
 };
 
 function Tooltip({
@@ -65,44 +62,93 @@ function Tooltip({
         </p>
       )}
       <div className="grid gap-1">
-        {payload
-          .filter((item) => item.type !== "none")
-          .map((item, index) => {
-            const cfg = chartConfig[item.dataKey as string];
-            const color = item.color ?? cfg?.color;
-            return (
-              <div
-                key={`${item.dataKey ?? index}`}
-                className="flex items-center justify-between gap-4"
-              >
-                <div className="flex items-center gap-1.5">
-                  <div
-                    className="h-2 w-2 shrink-0 rounded-[2px]"
-                    style={{ backgroundColor: color }}
-                  />
-                  <span className="text-muted-foreground">
-                    {cfg?.label ?? item.name}
-                  </span>
-                </div>
-                <span className="font-mono font-medium tabular-nums">
-                  {abbreviateNumber(Number(item.value))}
-                </span>
-              </div>
-            );
-          })}
+        {[
+          { label: "Open", value: point.openPrice },
+          { label: "High", value: point.maxPrice },
+          { label: "Low", value: point.minPrice },
+          { label: "Close", value: point.closePrice },
+        ].map(({ label, value }) => (
+          <div key={label} className="flex items-center justify-between gap-4">
+            <span className="text-muted-foreground">{label}</span>
+            <span className="font-mono font-medium tabular-nums">
+              {abbreviateNumber(value)}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
-export default function PriceChart({
+function CandlestickShape({
+  x,
+  y,
+  width,
+  height,
+  payload,
+  active = false,
+}: BarShapeProps & { payload?: DataPoint; active?: boolean }) {
+  if (!payload) return null;
+
+  const px = Number(x ?? 0);
+  const py = Number(y ?? 0);
+  const pw = Math.max(Number(width ?? 0), 1);
+  const ph = Number(height ?? 0);
+  const wickX = px + pw / 2;
+
+  const bullish = payload.closePrice >= payload.openPrice;
+  const color = bullish ? "#22c55e" : "#ef4444";
+
+  const range = payload.maxPrice - payload.minPrice;
+  if (range === 0) {
+    return (
+      <line
+        x1={px}
+        x2={px + pw}
+        y1={py}
+        y2={py}
+        stroke={color}
+        strokeWidth={active ? 3 : 2}
+      />
+    );
+  }
+
+  const openY = py + ph * (1 - (payload.openPrice - payload.minPrice) / range);
+  const closeY =
+    py + ph * (1 - (payload.closePrice - payload.minPrice) / range);
+  const bodyTop = Math.min(openY, closeY);
+  const bodyHeight = Math.max(Math.abs(closeY - openY), 1);
+
+  return (
+    <g>
+      <line
+        x1={wickX}
+        x2={wickX}
+        y1={py}
+        y2={py + ph}
+        stroke={color}
+        strokeWidth={active ? 2 : 1}
+      />
+      <rect
+        x={px}
+        y={bodyTop}
+        width={pw}
+        height={bodyHeight}
+        fill={color}
+        stroke={active ? "white" : color}
+        strokeWidth={active ? 1.5 : 0}
+        strokeOpacity={active ? 0.6 : 0}
+      />
+    </g>
+  );
+}
+
+export default function CandlestickChart({
   data,
-  volumePercent = 0.25,
   className,
   ...props
 }: React.ComponentProps<"div"> & {
   data: DataPoint[];
-  volumePercent?: number;
 }) {
   const { data: processedData, gaps } = useMemo(
     () => processChartData(data),
@@ -125,16 +171,10 @@ export default function PriceChart({
     return point ? format(point.date, "MMM d, HH:mm") : "";
   };
 
-  const barShape = (opacity: number, p: BarShapeProps) => (
-    <rect
-      x={p.x}
-      y={p.y}
-      width={Math.max(1, Number(p.width) || 0)}
-      height={p.height}
-      fill={p.fill}
-      opacity={opacity}
-    />
-  );
+  const processedWithRange = processedData.map((d) => ({
+    ...d,
+    priceRange: [d.minPrice, d.maxPrice] as [number, number],
+  }));
 
   return (
     <ChartContainer
@@ -142,7 +182,7 @@ export default function PriceChart({
       className={`min-h-75 ${className}`}
       {...props}
     >
-      <ComposedChart accessibilityLayer data={processedData}>
+      <ComposedChart accessibilityLayer data={processedWithRange}>
         <CartesianGrid vertical={false} />
         <ChartLegend
           content={() => (
@@ -197,40 +237,16 @@ export default function PriceChart({
           tickFormatter={(x) => abbreviateNumber(x)}
           domain={["auto", "auto"]}
         />
-        <YAxis
-          yAxisId="right"
-          orientation="right"
-          hide={true}
-          domain={[0, (dataMax: number) => dataMax * (1 / volumePercent)]}
-        />
 
         <Bar
-          yAxisId="right"
-          dataKey="volume"
-          fill="var(--color-volume)"
-          activeBar={(p: BarShapeProps) => barShape(1, p)}
-          shape={(p: BarShapeProps) => barShape(0.5, p)}
-        />
-        <Line
-          dataKey="minPrice"
-          type="monotone"
-          stroke="var(--color-minPrice)"
-          strokeWidth={2}
-          dot={false}
-        />
-        <Line
-          dataKey="price"
-          type="monotone"
-          stroke="var(--color-price)"
-          strokeWidth={2}
-          dot={false}
-        />
-        <Line
-          dataKey="maxPrice"
-          type="monotone"
-          stroke="var(--color-maxPrice)"
-          strokeWidth={2}
-          dot={false}
+          dataKey="priceRange"
+          shape={(p: BarShapeProps) => (
+            <CandlestickShape {...p} payload={p.payload as DataPoint} />
+          )}
+          activeBar={(p: BarShapeProps) => (
+            <CandlestickShape {...p} payload={p.payload as DataPoint} active />
+          )}
+          isAnimationActive={false}
         />
       </ComposedChart>
     </ChartContainer>

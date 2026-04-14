@@ -67,6 +67,8 @@ export interface TradeBucket {
   price: number;
   totalSpent: number;
   volume: number;
+  openPrice: number;
+  closePrice: number;
 }
 
 export interface GetSymbolTradesResponse {
