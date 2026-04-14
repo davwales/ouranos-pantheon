@@ -4,7 +4,7 @@ public sealed record MarketOverviewBucketOptions(int NumBuckets, int ChunkDays, 
 {
     public const string SectionName = "MarketOverviewBucket";
 
-    public MarketOverviewBucketOptions() : this(NumBuckets: 100, ChunkDays: 1, ChunkThresholdDays: 7)
+    public MarketOverviewBucketOptions() : this(NumBuckets: 100, ChunkDays: 30, ChunkThresholdDays: 90)
     {
     }
 }
