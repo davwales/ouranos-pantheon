@@ -18,7 +18,7 @@ public sealed class GetMarketOverviewEndpointTests
         // Arrange
         var ct = CancellationToken.None;
         var marketId = new Id<Market>(Guid.NewGuid().ToString());
-        var expected = new GetMarketOverviewResponse(0m, 0m, 0m, 0m, 0m, 0, []);
+        var expected = new GetMarketOverviewResponse(0m, 0m, 0m, 0, []);
 
         _bus.InvokeAsync<GetMarketOverviewResponse>(Arg.Any<object>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expected));

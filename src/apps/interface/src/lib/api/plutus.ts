@@ -81,14 +81,20 @@ export interface GetSymbolTradesResponse {
   trades: TradeBucket[];
 }
 
+export interface MarketOverviewBucket {
+  date: string;
+  numTransactions: number;
+  price: number;
+  totalSpent: number;
+  volume: number;
+}
+
 export interface GetMarketOverviewResponse {
-  minPrice: number;
-  maxPrice: number;
   averagePrice: number;
   totalSpent: number;
   volume: number;
   numTransactions: number;
-  trades: TradeBucket[];
+  trades: MarketOverviewBucket[];
 }
 
 export interface GetDailySymbolSummaryResponse {

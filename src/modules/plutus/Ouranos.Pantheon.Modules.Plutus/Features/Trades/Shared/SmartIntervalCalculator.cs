@@ -17,7 +17,7 @@ internal static class SmartIntervalCalculator
 
         return targetBucketSize switch
         {
-            <= 60 => TimeSpan.FromSeconds(Math.Max(1, Math.Floor(targetBucketSize / 60) * 60)),
+            <= 60 => TimeSpan.FromSeconds(Math.Max(10, Math.Round(targetBucketSize))),
             <= 3600 => TimeSpan.FromMinutes(Math.Max(1, Math.Floor(targetBucketSize / 60))),
             <= 86400 => TimeSpan.FromMinutes(Math.Max(5, Math.Floor(targetBucketSize / 3600) * 60)),
             <= 604800 => TimeSpan.FromHours(Math.Max(1, Math.Floor(targetBucketSize / 3600))),

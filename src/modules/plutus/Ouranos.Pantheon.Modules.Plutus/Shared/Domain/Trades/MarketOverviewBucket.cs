@@ -19,19 +19,11 @@ public class MarketOverviewBucket : BaseEntity<Id<MarketOverviewBucket>>
 
     public decimal AveragePrice { get; private set; }
 
-    public decimal MinPrice { get; private set; }
-
-    public decimal MaxPrice { get; private set; }
-
     public decimal Volume { get; private set; }
 
     public decimal TotalSpent { get; private set; }
 
     public int NumTransactions { get; private set; }
-
-    public decimal OpenPrice { get; private set; }
-
-    public decimal ClosePrice { get; private set; }
 
     private Market? _market;
 
@@ -42,13 +34,9 @@ public class MarketOverviewBucket : BaseEntity<Id<MarketOverviewBucket>>
         TimeFrame timeFrame,
         DateTimeOffset bucketStart,
         decimal averagePrice,
-        decimal minPrice,
-        decimal maxPrice,
         decimal volume,
         decimal totalSpent,
         int numTransactions,
-        decimal openPrice,
-        decimal closePrice,
         Market? market = null
     )
     {
@@ -63,13 +51,9 @@ public class MarketOverviewBucket : BaseEntity<Id<MarketOverviewBucket>>
             TimeFrame = timeFrame,
             BucketStart = bucketStart,
             AveragePrice = averagePrice,
-            MinPrice = minPrice,
-            MaxPrice = maxPrice,
             Volume = volume,
             TotalSpent = totalSpent,
             NumTransactions = numTransactions,
-            OpenPrice = openPrice,
-            ClosePrice = closePrice,
             _market = market
         };
     }

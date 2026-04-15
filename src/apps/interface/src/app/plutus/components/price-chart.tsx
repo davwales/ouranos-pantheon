@@ -26,10 +26,15 @@ import { DataPoint } from "./chart-types";
 import { processChartData } from "./chart-utils";
 import { GapAxisTick } from "./gap-axis-tick";
 
-const chartConfig: ChartConfig = {
+const chartConfigFull: ChartConfig = {
   maxPrice: { label: "Maximum Price", color: "var(--chart-2)" },
   price: { label: "Average Price", color: "var(--chart-3)" },
   minPrice: { label: "Minimum Price", color: "var(--chart-5)" },
+  volume: { label: "Volume", color: "var(--chart-4)" },
+};
+
+const chartConfigAvgOnly: ChartConfig = {
+  price: { label: "Average Price", color: "var(--chart-3)" },
   volume: { label: "Volume", color: "var(--chart-4)" },
 };
 
@@ -68,7 +73,7 @@ function Tooltip({
         {payload
           .filter((item) => item.type !== "none")
           .map((item, index) => {
-            const cfg = chartConfig[item.dataKey as string];
+            const cfg = chartConfigFull[item.dataKey as string];
             const color = item.color ?? cfg?.color;
             return (
               <div
@@ -104,6 +109,10 @@ export default function PriceChart({
   data: DataPoint[];
   volumePercent?: number;
 }) {
+  const showMinMax = data.some((d) => d.minPrice != null || d.maxPrice != null);
+
+  const chartConfig = showMinMax ? chartConfigFull : chartConfigAvgOnly;
+
   const { data: processedData, gaps } = useMemo(
     () => processChartData(data),
     [data],
@@ -211,13 +220,15 @@ export default function PriceChart({
           activeBar={(p: BarShapeProps) => barShape(1, p)}
           shape={(p: BarShapeProps) => barShape(0.5, p)}
         />
-        <Line
-          dataKey="minPrice"
-          type="monotone"
-          stroke="var(--color-minPrice)"
-          strokeWidth={2}
-          dot={false}
-        />
+        {showMinMax && (
+          <Line
+            dataKey="minPrice"
+            type="monotone"
+            stroke="var(--color-minPrice)"
+            strokeWidth={2}
+            dot={false}
+          />
+        )}
         <Line
           dataKey="price"
           type="monotone"
@@ -225,13 +236,15 @@ export default function PriceChart({
           strokeWidth={2}
           dot={false}
         />
-        <Line
-          dataKey="maxPrice"
-          type="monotone"
-          stroke="var(--color-maxPrice)"
-          strokeWidth={2}
-          dot={false}
-        />
+        {showMinMax && (
+          <Line
+            dataKey="maxPrice"
+            type="monotone"
+            stroke="var(--color-maxPrice)"
+            strokeWidth={2}
+            dot={false}
+          />
+        )}
       </ComposedChart>
     </ChartContainer>
   );

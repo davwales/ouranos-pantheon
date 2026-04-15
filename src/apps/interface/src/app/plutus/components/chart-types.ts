@@ -1,9 +1,9 @@
 export type DataPoint = {
-  minPrice: number;
   price: number;
-  maxPrice: number;
   volume: number;
   date: Date;
-  openPrice: number;
-  closePrice: number;
+  minPrice?: number;
+  maxPrice?: number;
+  openPrice?: number;
+  closePrice?: number;
 };
