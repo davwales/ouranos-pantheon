@@ -51,13 +51,13 @@ public sealed class GetSymbolTradesHandler : IPantheonHandler<GetSymbolTradesInp
         var aggregatedStats = await baseQuery
             .GroupBy(t => 1)
             .Select(g => new
-                {
-                    MinPrice = g.Min(t => t.Price),
-                    MaxPrice = g.Max(t => t.Price),
-                    TotalSpent = g.Sum(t => t.Price * t.Volume),
-                    Volume = g.Sum(t => t.Volume),
-                    NumTransactions = g.Count()
-                }
+            {
+                MinPrice = g.Min(t => t.Price),
+                MaxPrice = g.Max(t => t.Price),
+                TotalSpent = g.Sum(t => t.Price * t.Volume),
+                Volume = g.Sum(t => t.Volume),
+                NumTransactions = g.Count()
+            }
             )
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -185,11 +185,11 @@ public sealed class GetSymbolTradesHandler : IPantheonHandler<GetSymbolTradesInp
         var timeRange = await query
             .GroupBy(t => 1)
             .Select(g => new
-                {
-                    StartTime = g.Min(t => t.Timestamp),
-                    EndTime = g.Max(t => t.Timestamp),
-                    Duration = g.Max(t => t.Timestamp) - g.Min(t => t.Timestamp)
-                }
+            {
+                StartTime = g.Min(t => t.Timestamp),
+                EndTime = g.Max(t => t.Timestamp),
+                Duration = g.Max(t => t.Timestamp) - g.Min(t => t.Timestamp)
+            }
             )
             .FirstOrDefaultAsync(cancellationToken);
 
