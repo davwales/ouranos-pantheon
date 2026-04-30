@@ -30,6 +30,7 @@ import {
   Role,
   streamCompletion,
 } from "@/lib/api/hermes";
+import { generateID } from "@/lib/utils";
 import {
   Bookmark,
   ChevronDown,
@@ -414,7 +415,7 @@ function ConversationConfigSheet({
   const handleConfirmEphemeralTrait = () => {
     if (!draftContent.trim() || !onTraitsChange) return;
     const newTrait: TraitFormInput = {
-      id: crypto.randomUUID(),
+      id: generateID(),
       name: draftName.trim() || "Ephemeral Trait",
       content: draftContent.trim(),
       isPublic: true,
