@@ -59,6 +59,12 @@ using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetAllSymbolGroups;
 using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetSymbolGroup;
 using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.UpdateSymbolGroup;
 using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.DeleteSymbolGroup;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.CreateStrategy;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetAllStrategies;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetStrategy;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.UpdateStrategy;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.DeleteStrategy;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.SetStrategyActive;
 
 namespace Ouranos.Pantheon.Modules.Plutus;
 
@@ -120,6 +126,13 @@ public sealed class PlutusModule : IPantheonModule
         GetSymbolGroupEndpoint.Map(app);
         UpdateSymbolGroupEndpoint.Map(app);
         DeleteSymbolGroupEndpoint.Map(app);
+
+        CreateStrategyEndpoint.Map(app);
+        GetAllStrategiesEndpoint.Map(app);
+        GetStrategyEndpoint.Map(app);
+        UpdateStrategyEndpoint.Map(app);
+        DeleteStrategyEndpoint.Map(app);
+        SetStrategyActiveEndpoint.Map(app);
     }
 
     public void ConfigureWolverine(WolverineOptions opts, IConfiguration configuration)
