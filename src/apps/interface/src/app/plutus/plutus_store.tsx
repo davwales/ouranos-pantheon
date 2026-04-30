@@ -17,6 +17,10 @@ export interface PlutusState {
   setSignalRankingsTableState: (state: DataTableState) => void;
   symbolGroupsTableState: DataTableState;
   setSymbolGroupsTableState: (state: DataTableState) => void;
+  strategiesTableState: DataTableState;
+  setStrategiesTableState: (state: DataTableState) => void;
+  backtestsTableState: DataTableState;
+  setBacktestsTableState: (state: DataTableState) => void;
 }
 
 export const usePlutusStore = create<PlutusState>((set) => ({
@@ -59,4 +63,16 @@ export const usePlutusStore = create<PlutusState>((set) => ({
     sort: { name: "ASC" },
   },
   setSymbolGroupsTableState: (state) => set({ symbolGroupsTableState: state }),
+  strategiesTableState: {
+    pagination: { pageSize: 10, skip: 0, take: 10 },
+    filter: {},
+    sort: { createdAt: "DESC" },
+  },
+  setStrategiesTableState: (state) => set({ strategiesTableState: state }),
+  backtestsTableState: {
+    pagination: { pageSize: 10, skip: 0, take: 10 },
+    filter: {},
+    sort: { createdAt: "DESC" },
+  },
+  setBacktestsTableState: (state) => set({ backtestsTableState: state }),
 }));
