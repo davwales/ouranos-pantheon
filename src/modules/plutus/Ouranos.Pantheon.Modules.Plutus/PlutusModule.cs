@@ -65,6 +65,13 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetStrategy;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.UpdateStrategy;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.DeleteStrategy;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.SetStrategyActive;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetAllBacktests;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetBacktest;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetRecommendations;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Executors;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
 
 namespace Ouranos.Pantheon.Modules.Plutus;
 
@@ -81,6 +88,7 @@ public sealed class PlutusModule : IPantheonModule
 
         ConfigureDataLoaders(builder);
         ConfigureSignalComputers(builder);
+        ConfigureStrategyExecutors(builder);
         return builder;
     }
 
@@ -133,10 +141,23 @@ public sealed class PlutusModule : IPantheonModule
         UpdateStrategyEndpoint.Map(app);
         DeleteStrategyEndpoint.Map(app);
         SetStrategyActiveEndpoint.Map(app);
+
+        GetAllBacktestsEndpoint.Map(app);
+        GetBacktestEndpoint.Map(app);
+        GetRecommendationsEndpoint.Map(app);
+        RunBacktestEndpoint.Map(app);
     }
 
     public void ConfigureWolverine(WolverineOptions opts, IConfiguration configuration)
     {
+        opts.PublishMessage<RunBacktestMessage>().ToRabbitExchange(
+            RunBacktestMessage.Exchange,
+            e => { e.BindQueue(RunBacktestMessage.Queue); }
+        );
+
+        opts.ListenToRabbitQueue(RunBacktestMessage.Queue)
+            .DeadLetterQueueing(new DeadLetterQueue(RunBacktestMessage.DeadLetterQueue));
+
         var dataLoadersSection = configuration
             .GetSection(PlutusOptions.SectionName)
             .GetSection(DataLoadersOptions.SectionName);
@@ -174,6 +195,17 @@ public sealed class PlutusModule : IPantheonModule
             .AddSingleton<ISignalComputer, RsiSignalComputer>()
             .AddSingleton<ISignalComputer, MovingAverageCrossoverSignalComputer>()
             .AddSingleton<ISignalComputer, PriceVelocitySignalComputer>();
+    }
+
+    private static void ConfigureStrategyExecutors(IHostApplicationBuilder builder)
+    {
+        builder.Services
+            .AddSingleton<IStrategyExecutor, SignalWeightedExecutor>()
+            .AddSingleton<IStrategyExecutor, ForecastMomentumExecutor>()
+            .AddSingleton<IStrategyExecutor, MeanReversionExecutor>()
+            .AddSingleton<IStrategyExecutor, RecipeArbitrageExecutor>()
+            .AddSingleton<CompositeExecutor>()
+            .AddScoped<BacktestEngine>();
     }
 
     private static void ConfigureDataLoaders(IHostApplicationBuilder builder)
