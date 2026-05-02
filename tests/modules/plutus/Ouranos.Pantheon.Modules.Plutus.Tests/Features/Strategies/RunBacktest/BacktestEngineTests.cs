@@ -533,6 +533,86 @@ public sealed class BacktestEngineTests
     }
 
     [Fact]
+    public void BuildPriceBuckets_WhenExactly25Trades_CreatesExactly25Buckets()
+    {
+        // Arrange
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var trades = Enumerable.Range(0, 25)
+            .Select(i => Trade.Create(
+                    _fixture.Create<Id<Trade>>(),
+                    symbolId,
+                    100m + i,
+                    10m,
+                    DateTimeOffset.UtcNow.AddDays(i)
+                )
+            )
+            .ToList();
+
+        // Act
+        var result = BacktestEngine.BuildPriceBuckets(trades);
+
+        // Assert
+        result.Count.ShouldBe(25);
+        foreach (var bucket in result)
+        {
+            bucket.MinPrice.ShouldBeLessThanOrEqualTo(bucket.MaxPrice);
+        }
+    }
+
+    [Fact]
+    public void BuyCandidates_WhenSingleTradeAtExactBudget_CalculatesVolumeCorrectly()
+    {
+        // Arrange
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var symbol = Symbol.Create(
+            symbolId,
+            "SYM",
+            null,
+            "Test Symbol",
+            _fixture.Create<Id<Market>>(),
+            new AdditionalFields()
+        );
+
+        var scoredSymbols = new List<(Symbol Symbol, decimal Score, decimal Price)> { (symbol, 0.5m, 100m) };
+        var config = new StrategyConfiguration { BuyThreshold = 0.1m, MaxPositions = 5, MaxPositionPercent = 1m };
+        var state = new BacktestLoopState(10000m);
+
+        // Act
+        BacktestEngine.BuyCandidates(scoredSymbols, config, 0m, state, DateTimeOffset.UtcNow, CancellationToken.None);
+
+        // Assert
+        state.OpenPositions.Count.ShouldBe(1);
+        state.OpenPositions[symbolId].Volume.ShouldBe(100m);
+        state.Balance.ShouldBe(0m);
+    }
+
+    [Fact]
+    public void BuyCandidates_WhenMaxPositionPercentLimitsBudget_RespectsLimit()
+    {
+        // Arrange
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var symbol = Symbol.Create(
+            symbolId,
+            "SYM",
+            null,
+            "Test Symbol",
+            _fixture.Create<Id<Market>>(),
+            new AdditionalFields()
+        );
+        var scoredSymbols = new List<(Symbol Symbol, decimal Score, decimal Price)> { (symbol, 0.5m, 100m) };
+        var config = new StrategyConfiguration { BuyThreshold = 0.1m, MaxPositions = 5, MaxPositionPercent = 0.5m };
+        var state = new BacktestLoopState(10000m);
+
+        // Act
+        BacktestEngine.BuyCandidates(scoredSymbols, config, 0m, state, DateTimeOffset.UtcNow, CancellationToken.None);
+
+        // Assert
+        state.OpenPositions.Count.ShouldBe(1);
+        state.OpenPositions[symbolId].Volume.ShouldBe(50m);
+        state.Balance.ShouldBe(5000m);
+    }
+
+    [Fact]
     public void BuyCandidates_WhenScoreAboveThreshold_BuysPosition()
     {
         // Arrange
@@ -1059,6 +1139,26 @@ public sealed class BacktestEngineTests
     {
         // Arrange
         var values = new List<decimal> { 100m, 200m };
+
+        // Act
+        var result = BacktestEngine.ComputeSharpeRatio(values);
+
+        // Assert
+        result.ShouldBe(0m);
+    }
+
+    [Fact]
+    public void ComputeSharpeRatio_WhenAllZeroValues_ReturnsZero()
+    {
+        // Arrange
+        var values = new List<decimal>
+        {
+            0m,
+            0m,
+            0m,
+            0m,
+            0m
+        };
 
         // Act
         var result = BacktestEngine.ComputeSharpeRatio(values);
