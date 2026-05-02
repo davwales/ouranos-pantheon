@@ -12,22 +12,22 @@ namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest;
 
 public sealed class RunBacktestHandler : IPantheonHandler<RunBacktestInput, RunBacktestResponse>
 {
-    private readonly PlutusDbContext _dbContext;
+    private readonly IDbContextFactory<PlutusDbContext> _dbContextFactory;
     private readonly ILogger<RunBacktestHandler> _logger;
     private readonly IMessageBus _bus;
 
     public RunBacktestHandler(
         ILogger<RunBacktestHandler> logger,
-        PlutusDbContext dbContext,
+        IDbContextFactory<PlutusDbContext> dbContextFactory,
         IMessageBus bus
     )
     {
         Guard.Against.Null(logger);
-        Guard.Against.Null(dbContext);
+        Guard.Against.Null(dbContextFactory);
         Guard.Against.Null(bus);
 
         _logger = logger;
-        _dbContext = dbContext;
+        _dbContextFactory = dbContextFactory;
         _bus = bus;
     }
 
@@ -39,7 +39,17 @@ public sealed class RunBacktestHandler : IPantheonHandler<RunBacktestInput, RunB
         _logger.LogTrace("Attempting to handle run backtest command '{@command}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var strategy = await _dbContext.Strategies
+        Guard.Against.NegativeOrZero(command.Budget, nameof(command.Budget));
+        Guard.Against.InvalidInput(
+            command.EndDate,
+            nameof(command.EndDate),
+            d => d > command.StartDate,
+            "End date must be after start date."
+        );
+
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        var strategy = await dbContext.Strategies
             .FirstOrDefaultAsync(s => s.Id == command.StrategyId, cancellationToken);
 
         Guard.Against.NotFound(command.StrategyId, strategy);
@@ -53,8 +63,8 @@ public sealed class RunBacktestHandler : IPantheonHandler<RunBacktestInput, RunB
             strategy
         );
 
-        await _dbContext.Backtests.AddAsync(backtest, cancellationToken);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.Backtests.AddAsync(backtest, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         await _bus.PublishAsync(new RunBacktestMessage(backtest.Id));
 

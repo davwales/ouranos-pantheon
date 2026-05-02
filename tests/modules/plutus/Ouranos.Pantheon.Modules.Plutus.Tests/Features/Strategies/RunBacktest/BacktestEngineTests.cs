@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
@@ -1070,18 +1071,18 @@ public sealed class BacktestEngineTests
     public void Constructor_WhenNullLogger_Throws()
     {
         // Arrange
-        var dbContext = DbContextExtensions.Mock<PlutusDbContext>();
+        var dbContextFactory = DbContextExtensions.MockFactory<PlutusDbContext>();
         var composite = new CompositeExecutor([]);
 
         // Act
-        var act = () => new BacktestEngine(null!, dbContext, [], composite, []);
+        var act = () => new BacktestEngine(null!, dbContextFactory, [], composite, []);
 
         // Assert
         act.ShouldThrow<ArgumentNullException>();
     }
 
     [Fact]
-    public void Constructor_WhenNullDbContext_Throws()
+    public void Constructor_WhenNullDbContextFactory_Throws()
     {
         // Arrange
         var logger = Substitute.For<ILogger<BacktestEngine>>();
@@ -1099,10 +1100,10 @@ public sealed class BacktestEngineTests
     {
         // Arrange
         var logger = Substitute.For<ILogger<BacktestEngine>>();
-        var dbContext = DbContextExtensions.Mock<PlutusDbContext>();
+        var dbContextFactory = DbContextExtensions.MockFactory<PlutusDbContext>();
 
         // Act
-        var act = () => new BacktestEngine(logger, dbContext, [], null!, []);
+        var act = () => new BacktestEngine(logger, dbContextFactory, [], null!, []);
 
         // Assert
         act.ShouldThrow<ArgumentNullException>();
@@ -1129,12 +1130,17 @@ public sealed class BacktestEngineTests
             new StrategyConfiguration { BuyThreshold = 0.1m }
         );
 
-        await using var dbContext = DbContextExtensions.Mock<PlutusDbContext>();
-        var market = Market.Create(marketId, "Test Market", new Taxes(null));
-        await dbContext.SeedData(market);
-        await dbContext.SeedData(symbol);
-        await dbContext.SeedData(strategy);
-        var engine = CreateEngine(dbContext);
+        var dbContextFactory = DbContextExtensions.MockFactory<PlutusDbContext>();
+
+        await using (var dbContext = await dbContextFactory.CreateDbContextAsync())
+        {
+            var market = Market.Create(marketId, "Test Market", new Taxes(null));
+            await dbContext.SeedData(market);
+            await dbContext.SeedData(symbol);
+            await dbContext.SeedData(strategy);
+        }
+
+        var engine = CreateEngine(dbContextFactory);
 
         // Act
         var result = await engine.RunAsync(
@@ -1174,12 +1180,17 @@ public sealed class BacktestEngineTests
             new StrategyConfiguration()
         );
 
-        await using var dbContext = DbContextExtensions.Mock<PlutusDbContext>();
-        var market = Market.Create(marketId, "Test Market", new Taxes(null));
-        await dbContext.SeedData(market);
-        await dbContext.SeedData(symbol);
-        await dbContext.SeedData(strategy);
-        var engine = CreateEngine(dbContext);
+        var dbContextFactory = DbContextExtensions.MockFactory<PlutusDbContext>();
+
+        await using (var dbContext = await dbContextFactory.CreateDbContextAsync())
+        {
+            var market = Market.Create(marketId, "Test Market", new Taxes(null));
+            await dbContext.SeedData(market);
+            await dbContext.SeedData(symbol);
+            await dbContext.SeedData(strategy);
+        }
+
+        var engine = CreateEngine(dbContextFactory);
         var cts = new CancellationTokenSource();
         await cts.CancelAsync();
 
@@ -1224,14 +1235,19 @@ public sealed class BacktestEngineTests
             )
             .ToList();
 
-        await using var dbContext = DbContextExtensions.Mock<PlutusDbContext>();
-        var market = Market.Create(marketId, "Test Market", new Taxes(null));
-        await dbContext.SeedData(market);
-        await dbContext.SeedData(symbol);
-        await dbContext.SeedData(strategy);
-        await dbContext.Trades.AddRangeAsync(trades);
-        await dbContext.SaveChangesAsync();
-        var engine = CreateEngine(dbContext);
+        var dbContextFactory = DbContextExtensions.MockFactory<PlutusDbContext>();
+
+        await using (var dbContext = await dbContextFactory.CreateDbContextAsync())
+        {
+            var market = Market.Create(marketId, "Test Market", new Taxes(null));
+            await dbContext.SeedData(market);
+            await dbContext.SeedData(symbol);
+            await dbContext.SeedData(strategy);
+            await dbContext.Trades.AddRangeAsync(trades);
+            await dbContext.SaveChangesAsync();
+        }
+
+        var engine = CreateEngine(dbContextFactory);
 
         var startDate = baseTime.AddDays(-3);
         var endDate = baseTime.AddDays(-1);
@@ -1265,13 +1281,18 @@ public sealed class BacktestEngineTests
             new StrategyConfiguration { MinMarginPercent = 0.01m }
         );
 
-        await using var dbContext = DbContextExtensions.Mock<PlutusDbContext>();
-        var market = Market.Create(marketId, "Test Market", new Taxes(null));
-        await dbContext.SeedData(market);
-        await dbContext.SeedData(symbol);
-        await dbContext.SeedData(strategy);
+        var dbContextFactory = DbContextExtensions.MockFactory<PlutusDbContext>();
+
+        await using (var dbContext = await dbContextFactory.CreateDbContextAsync())
+        {
+            var market = Market.Create(marketId, "Test Market", new Taxes(null));
+            await dbContext.SeedData(market);
+            await dbContext.SeedData(symbol);
+            await dbContext.SeedData(strategy);
+        }
+
         // No executor registered for RecipeArbitrage
-        var engine = CreateEngine(dbContext, executors: []);
+        var engine = CreateEngine(dbContextFactory, executors: []);
 
         // Act
         var act = async () => await engine.RunAsync(
@@ -1288,7 +1309,7 @@ public sealed class BacktestEngineTests
     }
 
     private static BacktestEngine CreateEngine(
-        PlutusDbContext dbContext,
+        IDbContextFactory<PlutusDbContext> dbContextFactory,
         List<IStrategyExecutor>? executors = null,
         List<ISignalComputer>? signalComputers = null
     )
@@ -1298,6 +1319,6 @@ public sealed class BacktestEngineTests
         var composite = new CompositeExecutor(executors);
         signalComputers ??= [];
 
-        return new BacktestEngine(logger, dbContext, executors, composite, signalComputers);
+        return new BacktestEngine(logger, dbContextFactory, executors, composite, signalComputers);
     }
 }

@@ -5,6 +5,7 @@ namespace Ouranos.Pantheon.Modules.Shared.Algorithms.Genetic;
 public sealed class GeneticAlgorithmBuilder<T> : IGeneticAlgorithmEngineBuilder<T>
 {
     private readonly List<FitnessComponent<T>> _fitnessComponents = [];
+    private readonly List<FitnessComponent<T>> _asyncFitnessComponents = [];
     public double ElitismRate { get; private set; } = 0.1;
 
     public double MutationRate { get; private set; } = 0.01;
@@ -42,18 +43,35 @@ public sealed class GeneticAlgorithmBuilder<T> : IGeneticAlgorithmEngineBuilder<
         return this;
     }
 
+    public IGeneticAlgorithmEngineBuilder<T> AddFitnessComponent(Func<IChromosome<T>, Task<double>> asyncFitnessFunction)
+    {
+        _asyncFitnessComponents.Add(new FitnessComponent<T>(1, _ => 0, asyncFitnessFunction));
+        return this;
+    }
+
+    public IGeneticAlgorithmEngineBuilder<T> AddFitnessComponent(
+        double weight,
+        Func<IChromosome<T>, Task<double>> asyncFitnessFunction
+    )
+    {
+        _asyncFitnessComponents.Add(new FitnessComponent<T>(weight, _ => 0, asyncFitnessFunction));
+        return this;
+    }
+
     public IGeneticAlgorithmEngine<T> Build()
     {
-        if (_fitnessComponents.Count == 0)
+        if (_fitnessComponents.Count == 0 && _asyncFitnessComponents.Count == 0)
         {
             throw new InvalidOperationException("No Fitness Components were found.");
         }
+
+        var allComponents = _fitnessComponents.Concat(_asyncFitnessComponents).ToList();
 
         return new GeneticAlgorithmEngine<T>(
             PopulationSize,
             MutationRate,
             ElitismRate,
-            _fitnessComponents
+            allComponents
         );
     }
 

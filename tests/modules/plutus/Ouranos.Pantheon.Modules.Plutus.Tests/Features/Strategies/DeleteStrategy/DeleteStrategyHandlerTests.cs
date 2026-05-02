@@ -1,10 +1,10 @@
+using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.DeleteStrategy;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.DeleteStrategy.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
@@ -30,7 +30,13 @@ public sealed class DeleteStrategyHandlerTests
     {
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
-        var strategy = Strategy.Create(marketId, "Test", null, StrategyType.SignalWeighted, new StrategyConfiguration());
+        var strategy = Strategy.Create(
+            marketId,
+            "Test",
+            null,
+            StrategyType.SignalWeighted,
+            new StrategyConfiguration()
+        );
         await _dbContext.Strategies.AddAsync(strategy);
         await _dbContext.SaveChangesAsync();
 
@@ -45,17 +51,16 @@ public sealed class DeleteStrategyHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenStrategyNotFound_ShouldStillReturnId()
+    public async Task Handle_WhenStrategyNotFound_ShouldThrow()
     {
         // Arrange
         var command = new DeleteStrategyInput(_fixture.Create<Id<Strategy>>());
 
         // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
+        var delete = async () => await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        result.ShouldBeOfType<IdResponse<Strategy>>();
-        result.Id.ShouldBe(command.StrategyId);
+        await delete.ShouldThrowAsync<NotFoundException>();
     }
 
     [Fact]

@@ -55,6 +55,13 @@ public sealed class GetRecommendationsHandler : IPantheonHandler<GetRecommendati
             .FirstOrDefaultAsync(m => m.Id == query.MarketId, cancellationToken);
         Guard.Against.NotFound(query.MarketId, market);
 
+        Guard.Against.InvalidInput(
+            query.MarketId,
+            nameof(query.MarketId),
+            m => m == strategy.MarketId,
+            $"Strategy '{strategy.Id}' does not belong to market '{query.MarketId}'."
+        );
+
         var symbols = await _dbContext.Symbols
             .AsNoTracking()
             .Where(s => s.MarketId == query.MarketId)

@@ -110,6 +110,39 @@ public sealed class GetRecommendationsHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenStrategyDoesNotBelongToMarket_ShouldThrow()
+    {
+        // Arrange
+        var marketId1 = _fixture.Create<Id<Market>>();
+        var marketId2 = _fixture.Create<Id<Market>>();
+        var market1 = Market.Create(marketId1, "Market 1", new Taxes(null));
+        var market2 = Market.Create(marketId2, "Market 2", new Taxes(null));
+        await _dbContext.Markets.AddRangeAsync(market1, market2);
+
+        var strategy = Strategy.Create(
+            marketId1,
+            "Test Strategy",
+            null,
+            StrategyType.SignalWeighted,
+            new StrategyConfiguration()
+        );
+        await _dbContext.Strategies.AddAsync(strategy);
+        await _dbContext.SaveChangesAsync();
+
+        var query = new GetRecommendationsInput(
+            strategy.Id,
+            marketId2,
+            10000m
+        );
+
+        // Act
+        var act = async () => await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        await act.ShouldThrowAsync<ArgumentException>();
+    }
+
+    [Fact]
     public async Task Handle_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange

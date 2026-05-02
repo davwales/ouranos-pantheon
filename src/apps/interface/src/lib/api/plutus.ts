@@ -615,6 +615,9 @@ export const plutusApi = {
       budget: number;
       generations?: number;
       populationSize?: number;
+      sharpeRatioWeight?: number;
+      totalReturnWeight?: number;
+      maxDrawdownWeight?: number;
     },
   ) =>
     api.post<RunBacktestResponse>(

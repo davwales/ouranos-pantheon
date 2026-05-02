@@ -21,15 +21,15 @@ public sealed class RunBacktestConsumerTests
     public RunBacktestConsumerTests()
     {
         _fixture.Customize(new IdCustomization());
-        var dbContext = DbContextExtensions.Mock<PlutusDbContext>();
+        var dbContextFactory = DbContextExtensions.MockFactory<PlutusDbContext>();
 
         var engineLogger = Substitute.For<ILogger<BacktestEngine>>();
         var executors = Substitute.For<IEnumerable<IStrategyExecutor>>();
         var compositeExecutor = new CompositeExecutor([]);
         var signalComputers = Substitute.For<IEnumerable<ISignalComputer>>();
-        var engine = new BacktestEngine(engineLogger, dbContext, executors, compositeExecutor, signalComputers);
+        var engine = new BacktestEngine(engineLogger, dbContextFactory, executors, compositeExecutor, signalComputers);
 
-        _consumer = new RunBacktestConsumer(_logger, dbContext, engine);
+        _consumer = new RunBacktestConsumer(_logger, dbContextFactory, engine);
     }
 
     [Fact]

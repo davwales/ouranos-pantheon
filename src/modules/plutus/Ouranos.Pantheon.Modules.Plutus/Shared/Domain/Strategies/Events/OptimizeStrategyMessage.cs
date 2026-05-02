@@ -1,0 +1,17 @@
+using Ouranos.Pantheon.Modules.Shared.Domain;
+
+namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
+
+public sealed record OptimizeStrategyMessage(
+    Id<Backtest> BacktestId,
+    uint Generations,
+    uint PopulationSize,
+    double SharpeRatioWeight = 0.5,
+    double TotalReturnWeight = 0.3,
+    double MaxDrawdownWeight = -0.2
+)
+{
+    public const string Exchange = "plutus.backtest";
+    public const string Queue = "plutus.backtest.optimize";
+    public const string DeadLetterQueue = "plutus.backtest.optimize.dlq";
+}

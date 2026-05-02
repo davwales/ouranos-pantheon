@@ -20,28 +20,72 @@ public sealed class BacktestEngine
 {
     private const int PriceBucketCount = 25;
 
-    private readonly PlutusDbContext _dbContext;
+    private readonly IDbContextFactory<PlutusDbContext> _dbContextFactory;
     private readonly IEnumerable<ISignalComputer> _signalComputers;
     private readonly Dictionary<StrategyType, IStrategyExecutor> _executors;
     private readonly ILogger<BacktestEngine> _logger;
 
     public BacktestEngine(
         ILogger<BacktestEngine> logger,
-        PlutusDbContext dbContext,
+        IDbContextFactory<PlutusDbContext> dbContextFactory,
         IEnumerable<IStrategyExecutor> executors,
         CompositeExecutor compositeExecutor,
         IEnumerable<ISignalComputer> signalComputers
     )
     {
         Guard.Against.Null(logger);
-        Guard.Against.Null(dbContext);
+        Guard.Against.Null(dbContextFactory);
         Guard.Against.Null(compositeExecutor);
 
         _logger = logger;
-        _dbContext = dbContext;
+        _dbContextFactory = dbContextFactory;
         _signalComputers = signalComputers;
         _executors = executors.ToDictionary(e => e.SupportedType);
         _executors[StrategyType.Composite] = compositeExecutor;
+    }
+
+    public async Task<BacktestData> LoadDataAsync(
+        Id<Market> marketId,
+        DateTimeOffset startDate,
+        DateTimeOffset endDate,
+        CancellationToken cancellationToken
+    )
+    {
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        var market = await dbContext.Markets.AsNoTracking().FirstAsync(m => m.Id == marketId, cancellationToken);
+        var symbols = await dbContext.Symbols
+            .AsNoTracking()
+            .Where(s => s.MarketId == marketId)
+            .ToListAsync(cancellationToken);
+
+        var symbolIds = symbols.Select(s => s.Id).ToList();
+
+        var snapshots = await dbContext.MarketTradeSnapshots
+            .AsNoTracking()
+            .Where(s => symbolIds.Contains(s.SymbolId) && s.MarketId == marketId)
+            .ToListAsync(cancellationToken);
+
+        var forecasts = await dbContext.Forecasts
+            .AsNoTracking()
+            .Include(f => f.Predictions)
+            .Where(f => symbolIds.Contains(f.SymbolId) && f.MarketId == marketId)
+            .ToListAsync(cancellationToken);
+
+        var signals = await dbContext.Signals
+            .AsNoTracking()
+            .Where(s => symbolIds.Contains(s.SymbolId))
+            .ToListAsync(cancellationToken);
+
+        var trades = await dbContext.Trades
+            .AsNoTracking()
+            .Where(t => symbolIds.Contains(t.SymbolId)
+                        && t.Timestamp >= startDate
+                        && t.Timestamp <= endDate
+            )
+            .ToListAsync(cancellationToken);
+
+        return new BacktestData(market, symbols, snapshots, forecasts, signals, trades);
     }
 
     public async Task<BacktestResults> RunAsync(
@@ -51,18 +95,18 @@ public sealed class BacktestEngine
         DateTimeOffset endDate,
         decimal budget,
         CancellationToken cancellationToken,
-        StrategyConfiguration? configurationOverride = null
+        StrategyConfiguration? configurationOverride = null,
+        BacktestData? data = null
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        data ??= await LoadDataAsync(marketId, startDate, endDate, cancellationToken);
+
         var configuration = configurationOverride ?? strategy.Configuration;
         var executor = ResolveExecutor(strategy.Type);
-        var market = await _dbContext.Markets.AsNoTracking().FirstAsync(m => m.Id == marketId, cancellationToken);
-        var symbols = await _dbContext.Symbols
-            .AsNoTracking()
-            .Where(s => s.MarketId == marketId)
-            .ToListAsync(cancellationToken);
+        var market = data.Market;
+        var symbols = data.Symbols;
 
         var symbolIds = symbols.Select(s => s.Id).ToList();
         var taxRate = GetTaxRate(market);
@@ -78,21 +122,9 @@ public sealed class BacktestEngine
         );
 
         // TODO: Filter snapshots/forecasts by point-in-time once historical versions are supported
-        var allSnapshots = await _dbContext.MarketTradeSnapshots
-            .AsNoTracking()
-            .Where(s => symbolIds.Contains(s.SymbolId) && s.MarketId == marketId)
-            .ToListAsync(cancellationToken);
-
-        var allForecasts = await _dbContext.Forecasts
-            .AsNoTracking()
-            .Include(f => f.Predictions)
-            .Where(f => symbolIds.Contains(f.SymbolId) && f.MarketId == marketId)
-            .ToListAsync(cancellationToken);
-
-        var allSignals = await _dbContext.Signals
-            .AsNoTracking()
-            .Where(s => symbolIds.Contains(s.SymbolId))
-            .ToListAsync(cancellationToken);
+        var allSnapshots = data.Snapshots;
+        var allForecasts = data.Forecasts;
+        var allSignals = data.Signals;
 
         var state = new BacktestLoopState(budget);
 
@@ -101,7 +133,7 @@ public sealed class BacktestEngine
             cancellationToken.ThrowIfCancellationRequested();
             var currentDate = startDate.AddDays(dayOffset);
 
-            await CloseExitingPositionsAsync(
+            CloseExitingPositions(
                 state,
                 configuration,
                 symbols,
@@ -113,7 +145,7 @@ public sealed class BacktestEngine
                 allSignals,
                 allForecasts,
                 currentDate,
-                cancellationToken
+                data
             );
 
             var scoredSymbols = await ScoreSymbolsAsync(
@@ -128,6 +160,7 @@ public sealed class BacktestEngine
                 allForecasts,
                 currentDate,
                 windowDays,
+                data,
                 cancellationToken
             );
 
@@ -135,11 +168,11 @@ public sealed class BacktestEngine
             UpdatePortfolioMetrics(state);
         }
 
-        await CloseRemainingPositionsAsync(state, endDate, taxRate, market, cancellationToken);
+        CloseRemainingPositions(state, endDate, taxRate, market, data);
         return ComputeResults(budget, state);
     }
 
-    private async Task CloseExitingPositionsAsync(
+    private void CloseExitingPositions(
         BacktestLoopState state,
         StrategyConfiguration configuration,
         List<Symbol> symbols,
@@ -151,7 +184,7 @@ public sealed class BacktestEngine
         List<Signal> allSignals,
         List<Forecast> allForecasts,
         DateTimeOffset currentDate,
-        CancellationToken cancellationToken
+        BacktestData data
     )
     {
         var holdLimit = configuration.HoldPeriodDays ?? int.MaxValue;
@@ -177,7 +210,7 @@ public sealed class BacktestEngine
                 }
 
                 var symbolObj = symbols.First(s => s.Id.Equals(kvp.Value.SymbolId));
-                var (shouldSell, _) = await EvaluateSellSignalAsync(
+                var shouldSell = EvaluateSellSignal(
                     symbolObj,
                     marketId,
                     taxRate,
@@ -188,7 +221,7 @@ public sealed class BacktestEngine
                     allSignals,
                     allForecasts,
                     currentDate,
-                    cancellationToken
+                    data
                 );
 
                 if (shouldSell)
@@ -200,7 +233,7 @@ public sealed class BacktestEngine
 
         foreach (var kvp in toClose)
         {
-            var exitPrice = await GetClosePrice(kvp.Key, currentDate, cancellationToken);
+            var exitPrice = GetClosePrice(kvp.Key, currentDate, data);
             if (exitPrice == 0)
             {
                 continue;
@@ -225,6 +258,7 @@ public sealed class BacktestEngine
         List<Forecast> allForecasts,
         DateTimeOffset currentDate,
         int windowDays,
+        BacktestData data,
         CancellationToken cancellationToken
     )
     {
@@ -232,13 +266,12 @@ public sealed class BacktestEngine
         var windowStart = currentDate.AddDays(-windowDays);
         var previousClose = currentDate;
 
-        var windowTradesRaw = await _dbContext.Trades
-            .AsNoTracking()
+        var windowTradesRaw = data.Trades
             .Where(t => symbolIds.Contains(t.SymbolId)
                         && t.Timestamp >= windowStart
                         && t.Timestamp < previousClose
             )
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         var windowTrades = windowTradesRaw
             .GroupBy(t => t.SymbolId)
@@ -366,17 +399,17 @@ public sealed class BacktestEngine
         state.PortfolioValues.Add(currentPortfolioValue);
     }
 
-    private async Task CloseRemainingPositionsAsync(
+    private void CloseRemainingPositions(
         BacktestLoopState state,
         DateTimeOffset endDate,
         decimal taxRate,
         Market market,
-        CancellationToken cancellationToken
+        BacktestData data
     )
     {
         foreach (var pos in state.OpenPositions.Values.ToList())
         {
-            var exitPrice = await GetClosePrice(pos.SymbolId, endDate, cancellationToken);
+            var exitPrice = GetClosePrice(pos.SymbolId, endDate, data);
             if (exitPrice == 0)
             {
                 exitPrice = pos.EntryPrice;
@@ -398,7 +431,7 @@ public sealed class BacktestEngine
         return executor;
     }
 
-    private async Task<(bool ShouldSell, decimal? Score)> EvaluateSellSignalAsync(
+    private bool EvaluateSellSignal(
         Symbol symbol,
         Id<Market> marketId,
         decimal taxRate,
@@ -409,7 +442,7 @@ public sealed class BacktestEngine
         List<Signal> allSignals,
         List<Forecast> allForecasts,
         DateTimeOffset currentDate,
-        CancellationToken ct
+        BacktestData data
     )
     {
         var sellThreshold = configuration.SellThreshold!.Value;
@@ -417,10 +450,10 @@ public sealed class BacktestEngine
         var symbolSignals = GetSignalsForSymbol(symbol.Id, allSignals);
         var forecast = allForecasts.FirstOrDefault(f => f.SymbolId.Equals(symbol.Id));
 
-        var currentPrice = await GetClosePrice(symbol.Id, currentDate, ct);
+        var currentPrice = GetClosePrice(symbol.Id, currentDate, data);
         if (currentPrice == 0)
         {
-            return (false, null);
+            return false;
         }
 
         var limit = market.Taxes.Flat?.Maximum ?? decimal.MaxValue;
@@ -444,7 +477,7 @@ public sealed class BacktestEngine
         );
 
         var score = executor.Score(context, configuration);
-        return (score.HasValue && score.Value < sellThreshold, score);
+        return score < sellThreshold;
     }
 
     internal static int DetermineWindowSize(int totalDays)
@@ -492,15 +525,11 @@ public sealed class BacktestEngine
         return (netProceeds, exitVolume, netPnl);
     }
 
-    private async Task<decimal> GetClosePrice(Id<Symbol> symbolId, DateTimeOffset date, CancellationToken ct)
+    private static decimal GetClosePrice(Id<Symbol> symbolId, DateTimeOffset date, BacktestData data)
     {
-        var price = await _dbContext.Trades
-            .AsNoTracking()
+        var price = data.Trades
             .Where(t => t.SymbolId == symbolId && t.Timestamp <= date)
-            .OrderByDescending(t => t.Timestamp)
-            .Select(t => t.Price)
-            .FirstOrDefaultAsync(ct);
-
+            .MaxBy(t => t.Timestamp)?.Price ?? 0m;
         return price;
     }
 

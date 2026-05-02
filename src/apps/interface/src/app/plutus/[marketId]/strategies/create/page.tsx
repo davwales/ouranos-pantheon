@@ -55,6 +55,7 @@ export default function CreateStrategyPage() {
   const [description, setDescription] = useState("");
   const [type, setType] = useState<StrategyType>("SignalWeighted");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [config, setConfig] = useState<StrategyConfiguration>({
     signalWeights: null,
@@ -64,6 +65,7 @@ export default function CreateStrategyPage() {
 
   const handleSubmit = async () => {
     setIsProcessing(true);
+    setError(null);
     try {
       const response = await plutusApi.createStrategy({
         marketId,
@@ -73,8 +75,10 @@ export default function CreateStrategyPage() {
         configuration: config,
       });
       router.replace(`/plutus/${marketId}/strategies/${response.id}`);
-    } catch (error) {
-      console.error("Failed to create strategy:", error);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to create strategy",
+      );
     } finally {
       setIsProcessing(false);
     }
@@ -82,6 +86,11 @@ export default function CreateStrategyPage() {
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+          {error}
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold tracking-tight">
           Create New Strategy

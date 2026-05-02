@@ -6,16 +6,7 @@ import {
   type StrategyType,
 } from "@/lib/api/plutus";
 import { NumberInput } from "./number-input";
-
-const signalTypeLabels: Record<string, string> = {
-  TaxAdjustedRoi: "Tax Adjusted ROI",
-  VolumeAnomaly: "Volume Anomaly",
-  TrendMomentum: "Trend Momentum",
-  BollingerBands: "Bollinger Bands",
-  Rsi: "RSI",
-  MovingAverageCrossover: "Moving Average Crossover",
-  PriceVelocity: "Price Velocity",
-};
+import { signalTypeLabels } from "./strategy-constants";
 
 function SignalWeightedConfig({
   config,
@@ -193,6 +184,12 @@ export function StrategyConfigForm({
       )}
       {type === "RecipeArbitrage" && (
         <RecipeArbitrageConfig config={config} onChange={onChange} />
+      )}
+      {type === "Composite" && (
+        <p className="text-sm text-muted-foreground">
+          Composite strategies are managed through their component strategies.
+          Configuration is determined by the weighted components.
+        </p>
       )}
     </div>
   );
