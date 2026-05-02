@@ -31,12 +31,33 @@ public sealed class BacktestTests
         backtest.Id.ShouldNotBe(default);
         backtest.StrategyId.ShouldBe(strategyId);
         backtest.MarketId.ShouldBe(marketId);
-        backtest.StartDate.ShouldBe(startDate);
-        backtest.EndDate.ShouldBe(endDate);
+        backtest.StartDate.ShouldBe(startDate.ToUniversalTime());
+        backtest.EndDate.ShouldBe(endDate.ToUniversalTime());
         backtest.Budget.ShouldBe(budget);
         backtest.Status.ShouldBe(BacktestStatus.Pending);
         backtest.Results.ShouldBeNull();
         backtest.ErrorMessage.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Create_WhenNonUtcOffset_ShouldNormalizeToUtc()
+    {
+        // Arrange
+        var strategyId = _fixture.Create<Id<Strategy>>();
+        var marketId = _fixture.Create<Id<Market>>();
+        var localOffset = TimeSpan.FromHours(2);
+        var startDate = new DateTimeOffset(2025, 1, 1, 0, 0, 0, localOffset);
+        var endDate = startDate.AddDays(30);
+        var budget = 10000m;
+
+        // Act
+        var backtest = Backtest.Create(strategyId, marketId, startDate, endDate, budget);
+
+        // Assert
+        backtest.StartDate.Offset.ShouldBe(TimeSpan.Zero);
+        backtest.EndDate.Offset.ShouldBe(TimeSpan.Zero);
+        backtest.StartDate.UtcDateTime.ShouldBe(startDate.UtcDateTime);
+        backtest.EndDate.UtcDateTime.ShouldBe(endDate.UtcDateTime);
     }
 
     [Theory]
@@ -106,6 +127,7 @@ public sealed class BacktestTests
     {
         // Arrange
         var backtest = CreateValidBacktest();
+        backtest.MarkRunning();
 
         var results = new BacktestResults(
             TotalReturn: 100m,
@@ -137,6 +159,7 @@ public sealed class BacktestTests
     {
         // Arrange
         var backtest = CreateValidBacktest();
+        backtest.MarkRunning();
 
         // Act
         var complete = () => backtest.Complete(null!);
@@ -146,7 +169,52 @@ public sealed class BacktestTests
     }
 
     [Fact]
-    public void Fail_WhenValidMessage_ShouldSetFailedStatus()
+    public void Complete_WhenNotRunning_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var backtest = CreateValidBacktest();
+
+        var results = new BacktestResults(
+            TotalReturn: 100m,
+            TotalReturnPercent: 0.1m,
+            MaxDrawdown: 50m,
+            MaxDrawdownPercent: 0.05m,
+            WinRate: 0.6m,
+            TotalTrades: 10,
+            WinningTrades: 6,
+            LosingTrades: 4,
+            SharpeRatio: 1.5m,
+            AverageTradeReturn: 10m,
+            BestTrade: 50m,
+            WorstTrade: -20m,
+            FinalBalance: 11000m,
+            Positions: []
+        );
+
+        // Act
+        var complete = () => backtest.Complete(results);
+
+        // Assert
+        complete.ShouldThrow<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void Fail_WhenValidMessageFromRunningState_ShouldSetFailedStatus()
+    {
+        // Arrange
+        var backtest = CreateValidBacktest();
+        backtest.MarkRunning();
+
+        // Act
+        backtest.Fail("Something went wrong");
+
+        // Assert
+        backtest.Status.ShouldBe(BacktestStatus.Failed);
+        backtest.ErrorMessage.ShouldBe("Something went wrong");
+    }
+
+    [Fact]
+    public void Fail_WhenValidMessageFromPendingState_ShouldSetFailedStatus()
     {
         // Arrange
         var backtest = CreateValidBacktest();
@@ -157,6 +225,35 @@ public sealed class BacktestTests
         // Assert
         backtest.Status.ShouldBe(BacktestStatus.Failed);
         backtest.ErrorMessage.ShouldBe("Something went wrong");
+    }
+
+    [Fact]
+    public void Fail_WhenAlreadyCompleted_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var backtest = CreateValidBacktest();
+        backtest.MarkRunning();
+        backtest.Complete(new BacktestResults());
+
+        // Act
+        var fail = () => backtest.Fail("Something went wrong");
+
+        // Assert
+        fail.ShouldThrow<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void MarkRunning_WhenAlreadyRunning_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var backtest = CreateValidBacktest();
+        backtest.MarkRunning();
+
+        // Act
+        var markRunning = () => backtest.MarkRunning();
+
+        // Assert
+        markRunning.ShouldThrow<InvalidOperationException>();
     }
 
     [Theory]

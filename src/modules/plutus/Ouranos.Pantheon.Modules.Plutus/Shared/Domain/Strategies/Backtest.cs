@@ -39,7 +39,7 @@ public class Backtest : BaseEntity<Id<Backtest>>
         Strategy? strategy = null
     )
     {
-        Guard.Against.NegativeOrZero(budget, nameof(budget));
+        Guard.Against.NegativeOrZero(budget);
         Guard.Against.InvalidInput(endDate, nameof(endDate), d => d > startDate);
 
         if (strategy is not null)
@@ -51,8 +51,8 @@ public class Backtest : BaseEntity<Id<Backtest>>
         {
             StrategyId = strategyId,
             MarketId = marketId,
-            StartDate = startDate,
-            EndDate = endDate,
+            StartDate = startDate.ToUniversalTime(),
+            EndDate = endDate.ToUniversalTime(),
             Budget = budget,
             _strategy = strategy
         };
@@ -60,6 +60,11 @@ public class Backtest : BaseEntity<Id<Backtest>>
 
     public void MarkRunning()
     {
+        if (Status != BacktestStatus.Pending)
+        {
+            throw new InvalidOperationException($"Cannot transition backtest '{Id}' from {Status} to {BacktestStatus.Running}.");
+        }
+
         Status = BacktestStatus.Running;
         Update();
     }
@@ -67,6 +72,11 @@ public class Backtest : BaseEntity<Id<Backtest>>
     public void Complete(BacktestResults results)
     {
         Guard.Against.Null(results);
+
+        if (Status != BacktestStatus.Running)
+        {
+            throw new InvalidOperationException($"Cannot transition backtest '{Id}' from {Status} to {BacktestStatus.Completed}.");
+        }
 
         Results = results;
         Status = BacktestStatus.Completed;
@@ -76,6 +86,11 @@ public class Backtest : BaseEntity<Id<Backtest>>
     public void Fail(string errorMessage)
     {
         Guard.Against.NullOrWhiteSpace(errorMessage);
+
+        if (Status != BacktestStatus.Running && Status != BacktestStatus.Pending)
+        {
+            throw new InvalidOperationException($"Cannot transition backtest '{Id}' from {Status} to {BacktestStatus.Failed}.");
+        }
 
         ErrorMessage = errorMessage;
         Status = BacktestStatus.Failed;

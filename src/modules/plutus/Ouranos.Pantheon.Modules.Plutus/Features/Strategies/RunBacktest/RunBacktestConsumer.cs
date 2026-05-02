@@ -10,21 +10,21 @@ namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest;
 public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
 {
     private readonly ILogger<RunBacktestConsumer> _logger;
-    private readonly PlutusDbContext _dbContext;
+    private readonly IDbContextFactory<PlutusDbContext> _dbContextFactory;
     private readonly BacktestEngine _engine;
 
     public RunBacktestConsumer(
         ILogger<RunBacktestConsumer> logger,
-        PlutusDbContext dbContext,
+        IDbContextFactory<PlutusDbContext> dbContextFactory,
         BacktestEngine engine
     )
     {
         Guard.Against.Null(logger);
-        Guard.Against.Null(dbContext);
+        Guard.Against.Null(dbContextFactory);
         Guard.Against.Null(engine);
 
         _logger = logger;
-        _dbContext = dbContext;
+        _dbContextFactory = dbContextFactory;
         _engine = engine;
     }
 
@@ -33,7 +33,9 @@ public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
         _logger.LogTrace("Processing backtest '{backtestId}'.", message.BacktestId);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var backtest = await _dbContext.Backtests
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        var backtest = await dbContext.Backtests
             .Include(b => b.Strategy)
             .FirstOrDefaultAsync(b => b.Id == message.BacktestId, cancellationToken);
 
@@ -46,7 +48,14 @@ public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
         try
         {
             backtest.MarkRunning();
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            var data = await _engine.LoadDataAsync(
+                backtest.MarketId,
+                backtest.StartDate,
+                backtest.EndDate,
+                cancellationToken
+            );
 
             var results = await _engine.RunAsync(
                 backtest.Strategy,
@@ -54,11 +63,12 @@ public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
                 backtest.StartDate,
                 backtest.EndDate,
                 backtest.Budget,
-                cancellationToken
+                cancellationToken,
+                data: data
             );
 
             backtest.Complete(results);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
 
             _logger.LogDebug("Backtest '{backtestId}' completed successfully.", message.BacktestId);
         }
@@ -70,7 +80,7 @@ public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
         {
             _logger.LogError(ex, "Backtest '{backtestId}' failed.", message.BacktestId);
             backtest.Fail(ex.Message);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
         }
     }
 }

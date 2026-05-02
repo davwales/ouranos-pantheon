@@ -68,9 +68,11 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.SetStrategyActive;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetAllBacktests;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetBacktest;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetRecommendations;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.OptimizeStrategy;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Executors;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
 
 namespace Ouranos.Pantheon.Modules.Plutus;
@@ -79,12 +81,15 @@ public sealed class PlutusModule : IPantheonModule
 {
     public IHostApplicationBuilder Build(IHostApplicationBuilder builder)
     {
+        var plutusOptionsSection = builder.Configuration.GetSection(PlutusOptions.SectionName);
+
         builder.Services
             .AddCoreOuranosMachineLearningModule(builder.Configuration)
             .AddCorePostgresModule<PlutusDbContext>(
                 builder.Configuration,
                 typeof(PlutusModule).Assembly
-            );
+            )
+            .Configure<OptimizationOptions>(plutusOptionsSection.GetSection(OptimizationOptions.SectionName));
 
         ConfigureDataLoaders(builder);
         ConfigureSignalComputers(builder);
@@ -146,6 +151,7 @@ public sealed class PlutusModule : IPantheonModule
         GetBacktestEndpoint.Map(app);
         GetRecommendationsEndpoint.Map(app);
         RunBacktestEndpoint.Map(app);
+        OptimizeStrategyEndpoint.Map(app);
     }
 
     public void ConfigureWolverine(WolverineOptions opts, IConfiguration configuration)
@@ -157,6 +163,14 @@ public sealed class PlutusModule : IPantheonModule
 
         opts.ListenToRabbitQueue(RunBacktestMessage.Queue)
             .DeadLetterQueueing(new DeadLetterQueue(RunBacktestMessage.DeadLetterQueue));
+
+        opts.PublishMessage<OptimizeStrategyMessage>().ToRabbitExchange(
+            OptimizeStrategyMessage.Exchange,
+            e => { e.BindQueue(OptimizeStrategyMessage.Queue); }
+        );
+
+        opts.ListenToRabbitQueue(OptimizeStrategyMessage.Queue)
+            .DeadLetterQueueing(new DeadLetterQueue(OptimizeStrategyMessage.DeadLetterQueue));
 
         var dataLoadersSection = configuration
             .GetSection(PlutusOptions.SectionName)
@@ -205,7 +219,7 @@ public sealed class PlutusModule : IPantheonModule
             .AddSingleton<IStrategyExecutor, MeanReversionExecutor>()
             .AddSingleton<IStrategyExecutor, RecipeArbitrageExecutor>()
             .AddSingleton<CompositeExecutor>()
-            .AddScoped<BacktestEngine>();
+            .AddSingleton<BacktestEngine>();
     }
 
     private static void ConfigureDataLoaders(IHostApplicationBuilder builder)

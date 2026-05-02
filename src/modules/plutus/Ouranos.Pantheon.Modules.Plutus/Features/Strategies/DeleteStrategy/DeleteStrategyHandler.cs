@@ -37,11 +37,10 @@ public sealed class DeleteStrategyHandler : IPantheonHandler<DeleteStrategyInput
         var strategy = await _dbContext.Strategies
             .FirstOrDefaultAsync(s => s.Id == command.StrategyId, cancellationToken);
 
-        if (strategy is not null)
-        {
-            _dbContext.Strategies.Remove(strategy);
-            await _dbContext.SaveChangesAsync(cancellationToken);
-        }
+        Guard.Against.NotFound(command.StrategyId, strategy);
+
+        _dbContext.Strategies.Remove(strategy);
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         _logger.LogDebug("Successfully handled delete strategy command.");
         return new IdResponse<Strategy>(command.StrategyId);
