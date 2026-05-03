@@ -1,7 +1,5 @@
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using OpenAI;
@@ -14,33 +12,25 @@ namespace Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
 public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
 {
     private readonly HttpClient _httpClient;
-    private readonly OpenAIClient _openAIClient;
-    private readonly JsonSerializerOptions _jsonSerializerOptions;
+    private readonly OpenAIClient _openAiClient;
     private readonly ILogger<OuranosMachineLearningClient> _logger;
 
     public OuranosMachineLearningClient(
         ILogger<OuranosMachineLearningClient> logger,
         HttpClient httpClient,
-        OpenAIClient openAIClient
+        OpenAIClient openAiClient
     )
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(httpClient);
-        Guard.Against.Null(openAIClient);
+        Guard.Against.Null(openAiClient);
 
         _logger = logger;
         _httpClient = httpClient;
-        _openAIClient = openAIClient;
-
-        _jsonSerializerOptions = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
-        };
+        _openAiClient = openAiClient;
     }
 
-    public async IAsyncEnumerable<string> StreamChatCompletionAsync(
+    public async IAsyncEnumerable<ChatCompletionChunk> StreamChatCompletionAsync(
         string model,
         List<MessageDto> messages,
         float? temperature = null,
@@ -54,10 +44,13 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
             model,
             messages.Count
         );
+        cancellationToken.ThrowIfCancellationRequested();
 
-        var chatClient = _openAIClient.GetChatClient(model);
+        var chatClient = _openAiClient.GetChatClient(model);
         var chatMessages = messages.Select(MapMessage).ToList();
         var options = BuildOptions(temperature, maxTokens, frequencyPenalty);
+
+        ChatTokenUsage? usage = null;
 
         await foreach (var update in chatClient.CompleteChatStreamingAsync(chatMessages, options, cancellationToken))
         {
@@ -65,9 +58,26 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
             {
                 if (!string.IsNullOrEmpty(part.Text))
                 {
-                    yield return part.Text;
+                    yield return new ChatCompletionChunk(part.Text, null);
                 }
             }
+
+            if (update.Usage is not null)
+            {
+                usage = update.Usage;
+            }
+        }
+
+        if (usage is not null)
+        {
+            yield return new ChatCompletionChunk(
+                null,
+                new ChatCompletionUsage(
+                    usage.InputTokenCount,
+                    usage.OutputTokenCount,
+                    usage.TotalTokenCount
+                )
+            );
         }
 
         _logger.LogDebug("Successfully streamed chat completion using model '{Model}'.", model);
@@ -88,7 +98,7 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
             messages.Count
         );
 
-        var chatClient = _openAIClient.GetChatClient(model);
+        var chatClient = _openAiClient.GetChatClient(model);
         var chatMessages = messages.Select(MapMessage).ToList();
         var options = BuildOptions(temperature, maxTokens, frequencyPenalty);
 
@@ -110,11 +120,9 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
         );
         cancellationToken.ThrowIfCancellationRequested();
 
-        var jsonBody = JsonSerializer.Serialize(payload, _jsonSerializerOptions);
-        var request = new HttpRequestMessage(HttpMethod.Post, "plutus/forecast")
-        {
-            Content = new StringContent(jsonBody, System.Text.Encoding.UTF8, "application/json")
-        };
+        var json = System.Text.Json.JsonSerializer.Serialize(payload);
+        using var request = new HttpRequestMessage(HttpMethod.Post, "plutus/forecast");
+        request.Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
         using var response = await _httpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();

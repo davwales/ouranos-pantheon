@@ -21,6 +21,7 @@ export default function CreateModelPage() {
         temperature: input.temperature,
         maxTokens: input.maxTokens,
         repeatPenalty: input.repeatPenalty,
+        contextWindow: input.contextWindow,
         isDefault: input.isDefault,
         isPublic: input.isPublic,
       });

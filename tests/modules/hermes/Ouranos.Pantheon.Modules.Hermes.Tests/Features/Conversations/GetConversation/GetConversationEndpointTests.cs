@@ -26,7 +26,7 @@ public sealed class GetConversationEndpointTests
             "Test Conversation",
             true,
             new GetConversationPersonaResponse(personaId, "Bot", "A bot", null, null),
-            new GetConversationModelResponse(modelId, "GPT-4", "gpt-4", "Prompt", null, null, null),
+            new GetConversationModelResponse(modelId, "GPT-4", "gpt-4", "Prompt", null, null, null, null),
             [],
             [],
             DateTimeOffset.UtcNow,

@@ -16,6 +16,7 @@ export interface ModelFormInput {
   temperature?: number | null;
   maxTokens?: number | null;
   repeatPenalty?: number | null;
+  contextWindow?: number | null;
   isDefault: boolean;
   isPublic: boolean;
 }

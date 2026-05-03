@@ -17,7 +17,18 @@ public sealed class GetModelEndpointTests
         // Arrange
         var ct = CancellationToken.None;
         var modelId = new Id<ModelConfig>(Guid.NewGuid().ToString());
-        var expected = new GetModelResponse(modelId, "GPT-4", "gpt-4", "You are helpful.", null, null, null, false, true);
+        var expected = new GetModelResponse(
+            modelId,
+            "GPT-4",
+            "gpt-4",
+            "You are helpful.",
+            null,
+            null,
+            null,
+            null,
+            false,
+            true
+        );
 
         _bus.InvokeAsync<GetModelResponse>(Arg.Any<object>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expected));

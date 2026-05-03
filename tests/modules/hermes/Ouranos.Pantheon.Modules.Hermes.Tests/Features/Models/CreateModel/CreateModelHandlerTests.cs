@@ -28,7 +28,11 @@ public sealed class CreateModelHandlerTests
     public async Task Handle_WhenHappyPath_ShouldCreateModelAndReturnId()
     {
         // Arrange
-        var command = new CreateModelInput(_fixture.Create<string>(), _fixture.Create<string>(), _fixture.Create<string>());
+        var command = new CreateModelInput(
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -46,10 +50,21 @@ public sealed class CreateModelHandlerTests
     public async Task Handle_WhenIsDefaultTrue_ShouldClearOtherDefaults()
     {
         // Arrange
-        var existingDefault = ModelConfig.Create(new Id<ModelConfig>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>(), _fixture.Create<string>(), isDefault: true);
+        var existingDefault = ModelConfig.Create(
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            isDefault: true
+        );
         await _dbContext.SeedData(existingDefault);
 
-        var command = new CreateModelInput(_fixture.Create<string>(), _fixture.Create<string>(), _fixture.Create<string>(), IsDefault: true);
+        var command = new CreateModelInput(
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            IsDefault: true
+        );
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -65,10 +80,53 @@ public sealed class CreateModelHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenContextWindowProvided_ShouldSaveContextWindow()
+    {
+        // Arrange
+        var command = new CreateModelInput(
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            ContextWindow: 128_000
+        );
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var savedModel = await _dbContext.ModelConfigs.FindAsync(result.ModelId);
+        savedModel.ShouldNotBeNull();
+        savedModel.ContextWindow.ShouldBe(128_000);
+    }
+
+    [Fact]
+    public async Task Handle_WhenContextWindowNotProvided_ShouldLeaveContextWindowNull()
+    {
+        // Arrange
+        var command = new CreateModelInput(
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var savedModel = await _dbContext.ModelConfigs.FindAsync(result.ModelId);
+        savedModel.ShouldNotBeNull();
+        savedModel.ContextWindow.ShouldBeNull();
+    }
+
+    [Fact]
     public async Task Handle_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange
-        var command = new CreateModelInput(_fixture.Create<string>(), _fixture.Create<string>(), _fixture.Create<string>());
+        var command = new CreateModelInput(
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
         var cancellationToken = new CancellationToken(true);
 
         // Act
