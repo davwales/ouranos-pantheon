@@ -1,9 +1,10 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Npgsql;
 using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Extensions;
 using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Functions;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Querying;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetSymbolTrades.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
@@ -141,37 +142,28 @@ public sealed class GetSymbolTradesHandler : IPantheonHandler<GetSymbolTradesInp
     {
         var intervalLiteral = interval.ToTimescaleInterval();
 
-        string sql;
-        object[] parameters;
+        var command = since is not null
+            ? RawSqlCommand.FromSql($"""
+                SELECT time_bucket('{intervalLiteral}'::interval, "timestamp") AS bucket_start,
+                       first(price, "timestamp") AS open_price,
+                       last(price, "timestamp") AS close_price
+                FROM plutus.trades
+                WHERE symbol_id = @symbolId AND "timestamp" >= @since
+                GROUP BY bucket_start
+                """)
+                .WithId("@symbolId", symbolId)
+                .WithDateTimeOffset("@since", since)
+            : RawSqlCommand.FromSql($"""
+                SELECT time_bucket('{intervalLiteral}'::interval, "timestamp") AS bucket_start,
+                       first(price, "timestamp") AS open_price,
+                       last(price, "timestamp") AS close_price
+                FROM plutus.trades
+                WHERE symbol_id = @symbolId
+                GROUP BY bucket_start
+                """)
+                .WithId("@symbolId", symbolId);
 
-        if (since is not null)
-        {
-            sql = $"""
-                   SELECT time_bucket('{intervalLiteral}'::interval, "timestamp") AS bucket_start,
-                          first(price, "timestamp") AS open_price,
-                          last(price, "timestamp") AS close_price
-                   FROM plutus.trades
-                   WHERE symbol_id = @symbolId AND "timestamp" >= @since
-                   GROUP BY bucket_start
-                   """;
-            parameters = [new NpgsqlParameter("@symbolId", symbolId.Value), new NpgsqlParameter("@since", since.Value)];
-        }
-        else
-        {
-            sql = $"""
-                   SELECT time_bucket('{intervalLiteral}'::interval, "timestamp") AS bucket_start,
-                          first(price, "timestamp") AS open_price,
-                          last(price, "timestamp") AS close_price
-                   FROM plutus.trades
-                   WHERE symbol_id = @symbolId
-                   GROUP BY bucket_start
-                   """;
-            parameters = [new NpgsqlParameter("@symbolId", symbolId.Value)];
-        }
-
-        var results = await dbContext.Database
-            .SqlQueryRaw<BucketOpenClose>(sql, parameters)
-            .ToListAsync(cancellationToken);
+        var results = await dbContext.Database.ExecuteQueryAsync<BucketOpenClose>(command, cancellationToken);
 
         return results.ToDictionary(r => r.BucketStart);
     }
