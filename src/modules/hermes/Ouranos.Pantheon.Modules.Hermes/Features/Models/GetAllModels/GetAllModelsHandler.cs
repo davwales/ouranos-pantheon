@@ -78,6 +78,7 @@ public sealed class GetAllModelsHandler
                     m.Temperature,
                     m.MaxTokens,
                     m.RepeatPenalty,
+                    m.ContextWindow,
                     m.IsDefault,
                     m.IsPublic
                 )

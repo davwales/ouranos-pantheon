@@ -28,7 +28,18 @@ public sealed class ModelConfigTests
         var isPublic = _fixture.Create<bool>();
 
         // Act
-        var model = ModelConfig.Create(id, name, modelIdentifier, systemPrompt, temperature, maxTokens, repeatPenalty, isDefault, isPublic);
+        var model = ModelConfig.Create(
+            id,
+            name,
+            modelIdentifier,
+            systemPrompt,
+            temperature,
+            maxTokens,
+            repeatPenalty,
+            null,
+            isDefault,
+            isPublic
+        );
 
         // Assert
         model.Id.ShouldBe(id);
@@ -68,7 +79,12 @@ public sealed class ModelConfigTests
         var id = new Id<ModelConfig>(Guid.NewGuid().ToString());
 
         // Act
-        var create = () => ModelConfig.Create(id, _fixture.Create<string>(), modelIdentifier!, _fixture.Create<string>());
+        var create = () => ModelConfig.Create(
+            id,
+            _fixture.Create<string>(),
+            modelIdentifier!,
+            _fixture.Create<string>()
+        );
 
         // Assert
         create.ShouldThrow<ArgumentException>();
@@ -95,13 +111,18 @@ public sealed class ModelConfigTests
     {
         // Arrange
         var id = new Id<ModelConfig>(Guid.NewGuid().ToString());
-        var model = ModelConfig.Create(id, _fixture.Create<string>(), _fixture.Create<string>(), _fixture.Create<string>());
+        var model = ModelConfig.Create(
+            id,
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
         var newName = _fixture.Create<string>();
         var newModelIdentifier = _fixture.Create<string>();
         var newSystemPrompt = _fixture.Create<string>();
 
         // Act
-        model.Update(newName, newModelIdentifier, newSystemPrompt, 0.5f, 1024, 1.1f, true, false);
+        model.Update(newName, newModelIdentifier, newSystemPrompt, 0.5f, 1024, 1.1f, null, true, false);
 
         // Assert
         model.Name.ShouldBe(newName);
@@ -121,7 +142,12 @@ public sealed class ModelConfigTests
     public void Update_WhenInvalidName_ShouldThrowArgumentException(string? newName)
     {
         // Arrange
-        var model = ModelConfig.Create(new Id<ModelConfig>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>(), _fixture.Create<string>());
+        var model = ModelConfig.Create(
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
 
         // Act
         var update = () => model.Update(newName!, _fixture.Create<string>(), _fixture.Create<string>());
@@ -137,7 +163,12 @@ public sealed class ModelConfigTests
     public void Update_WhenInvalidModelIdentifier_ShouldThrowArgumentException(string? newModelIdentifier)
     {
         // Arrange
-        var model = ModelConfig.Create(new Id<ModelConfig>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>(), _fixture.Create<string>());
+        var model = ModelConfig.Create(
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
 
         // Act
         var update = () => model.Update(_fixture.Create<string>(), newModelIdentifier!, _fixture.Create<string>());
@@ -153,12 +184,103 @@ public sealed class ModelConfigTests
     public void Update_WhenInvalidSystemPrompt_ShouldThrowArgumentException(string? newSystemPrompt)
     {
         // Arrange
-        var model = ModelConfig.Create(new Id<ModelConfig>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>(), _fixture.Create<string>());
+        var model = ModelConfig.Create(
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
 
         // Act
         var update = () => model.Update(_fixture.Create<string>(), _fixture.Create<string>(), newSystemPrompt!);
 
         // Assert
         update.ShouldThrow<ArgumentException>();
+    }
+
+    [Fact]
+    public void Create_WhenContextWindowProvided_ShouldSetContextWindow()
+    {
+        // Arrange
+        var id = new Id<ModelConfig>(Guid.NewGuid().ToString());
+        const int contextWindow = 128000;
+
+        // Act
+        var model = ModelConfig.Create(
+            id,
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            contextWindow: contextWindow
+        );
+
+        // Assert
+        model.ContextWindow.ShouldBe(contextWindow);
+    }
+
+    [Fact]
+    public void Create_WhenContextWindowNotProvided_ShouldLeaveContextWindowNull()
+    {
+        // Arrange
+        var id = new Id<ModelConfig>(Guid.NewGuid().ToString());
+
+        // Act
+        var model = ModelConfig.Create(
+            id,
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
+
+        // Assert
+        model.ContextWindow.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Update_WhenContextWindowProvided_ShouldUpdateContextWindow()
+    {
+        // Arrange
+        var model = ModelConfig.Create(
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
+        const int contextWindow = 32768;
+
+        // Act
+        model.Update(
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            contextWindow: contextWindow
+        );
+
+        // Assert
+        model.ContextWindow.ShouldBe(contextWindow);
+    }
+
+    [Fact]
+    public void Update_WhenContextWindowSetToNull_ShouldClearContextWindow()
+    {
+        // Arrange
+        var model = ModelConfig.Create(
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            contextWindow: 128000
+        );
+
+        // Act
+        model.Update(
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            contextWindow: null
+        );
+
+        // Assert
+        model.ContextWindow.ShouldBeNull();
     }
 }

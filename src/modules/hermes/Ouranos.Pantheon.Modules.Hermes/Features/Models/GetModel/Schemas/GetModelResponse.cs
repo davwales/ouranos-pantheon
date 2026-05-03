@@ -11,6 +11,7 @@ public sealed record GetModelResponse(
     float? Temperature,
     int? MaxTokens,
     float? RepeatPenalty,
+    int? ContextWindow,
     bool IsDefault,
     bool IsPublic
 );

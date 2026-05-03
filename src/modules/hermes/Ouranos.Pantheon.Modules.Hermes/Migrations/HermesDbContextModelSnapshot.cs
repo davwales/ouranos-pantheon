@@ -144,6 +144,10 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<int?>("ContextWindow")
+                        .HasColumnType("integer")
+                        .HasColumnName("context_window");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");

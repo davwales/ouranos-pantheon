@@ -59,6 +59,21 @@ using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetAllSymbolGroups;
 using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetSymbolGroup;
 using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.UpdateSymbolGroup;
 using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.DeleteSymbolGroup;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.CreateStrategy;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetAllStrategies;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetStrategy;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.UpdateStrategy;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.DeleteStrategy;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.SetStrategyActive;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetAllBacktests;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetBacktest;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetRecommendations;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.OptimizeStrategy;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Executors;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
 
 namespace Ouranos.Pantheon.Modules.Plutus;
 
@@ -66,15 +81,19 @@ public sealed class PlutusModule : IPantheonModule
 {
     public IHostApplicationBuilder Build(IHostApplicationBuilder builder)
     {
+        var plutusOptionsSection = builder.Configuration.GetSection(PlutusOptions.SectionName);
+
         builder.Services
             .AddCoreOuranosMachineLearningModule(builder.Configuration)
             .AddCorePostgresModule<PlutusDbContext>(
                 builder.Configuration,
                 typeof(PlutusModule).Assembly
-            );
+            )
+            .Configure<OptimizationOptions>(plutusOptionsSection.GetSection(OptimizationOptions.SectionName));
 
         ConfigureDataLoaders(builder);
         ConfigureSignalComputers(builder);
+        ConfigureStrategyExecutors(builder);
         return builder;
     }
 
@@ -120,10 +139,39 @@ public sealed class PlutusModule : IPantheonModule
         GetSymbolGroupEndpoint.Map(app);
         UpdateSymbolGroupEndpoint.Map(app);
         DeleteSymbolGroupEndpoint.Map(app);
+
+        CreateStrategyEndpoint.Map(app);
+        GetAllStrategiesEndpoint.Map(app);
+        GetStrategyEndpoint.Map(app);
+        UpdateStrategyEndpoint.Map(app);
+        DeleteStrategyEndpoint.Map(app);
+        SetStrategyActiveEndpoint.Map(app);
+
+        GetAllBacktestsEndpoint.Map(app);
+        GetBacktestEndpoint.Map(app);
+        GetRecommendationsEndpoint.Map(app);
+        RunBacktestEndpoint.Map(app);
+        OptimizeStrategyEndpoint.Map(app);
     }
 
     public void ConfigureWolverine(WolverineOptions opts, IConfiguration configuration)
     {
+        opts.PublishMessage<RunBacktestMessage>().ToRabbitExchange(
+            RunBacktestMessage.Exchange,
+            e => { e.BindQueue(RunBacktestMessage.Queue); }
+        );
+
+        opts.ListenToRabbitQueue(RunBacktestMessage.Queue)
+            .DeadLetterQueueing(new DeadLetterQueue(RunBacktestMessage.DeadLetterQueue));
+
+        opts.PublishMessage<OptimizeStrategyMessage>().ToRabbitExchange(
+            OptimizeStrategyMessage.Exchange,
+            e => { e.BindQueue(OptimizeStrategyMessage.Queue); }
+        );
+
+        opts.ListenToRabbitQueue(OptimizeStrategyMessage.Queue)
+            .DeadLetterQueueing(new DeadLetterQueue(OptimizeStrategyMessage.DeadLetterQueue));
+
         var dataLoadersSection = configuration
             .GetSection(PlutusOptions.SectionName)
             .GetSection(DataLoadersOptions.SectionName);
@@ -161,6 +209,17 @@ public sealed class PlutusModule : IPantheonModule
             .AddSingleton<ISignalComputer, RsiSignalComputer>()
             .AddSingleton<ISignalComputer, MovingAverageCrossoverSignalComputer>()
             .AddSingleton<ISignalComputer, PriceVelocitySignalComputer>();
+    }
+
+    private static void ConfigureStrategyExecutors(IHostApplicationBuilder builder)
+    {
+        builder.Services
+            .AddSingleton<IStrategyExecutor, SignalWeightedExecutor>()
+            .AddSingleton<IStrategyExecutor, ForecastMomentumExecutor>()
+            .AddSingleton<IStrategyExecutor, MeanReversionExecutor>()
+            .AddSingleton<IStrategyExecutor, RecipeArbitrageExecutor>()
+            .AddSingleton<CompositeExecutor>()
+            .AddSingleton<BacktestEngine>();
     }
 
     private static void ConfigureDataLoaders(IHostApplicationBuilder builder)

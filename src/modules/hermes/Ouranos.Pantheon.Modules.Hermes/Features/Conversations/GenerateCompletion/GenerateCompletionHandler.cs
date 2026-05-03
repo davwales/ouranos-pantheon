@@ -10,6 +10,7 @@ using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning.Dtos;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
+using ChatCompletionUsage = Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning.Dtos.ChatCompletionUsage;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion;
 
@@ -44,11 +45,28 @@ public sealed class GenerateCompletionHandler
         cancellationToken.ThrowIfCancellationRequested();
 
         var buffer = new StringBuilder();
+        ChatCompletionUsage? tokenUsage = null;
 
         await foreach (var chunk in GenerateCompletionStream(command.Conversation, cancellationToken))
         {
-            buffer.Append(chunk);
-            yield return new GenerateCompletionResponse(chunk);
+            if (chunk.Text is not null)
+            {
+                buffer.Append(chunk.Text);
+                yield return new ContentChunkResponse(chunk.Text);
+            }
+            else if (chunk.Usage is not null)
+            {
+                tokenUsage = chunk.Usage;
+            }
+        }
+
+        if (tokenUsage is not null)
+        {
+            yield return new UsageChunkResponse(
+                tokenUsage.InputTokens,
+                tokenUsage.OutputTokens,
+                tokenUsage.TotalTokens
+            );
         }
 
         if (command.ConversationId is not null)
@@ -94,7 +112,7 @@ public sealed class GenerateCompletionHandler
         _logger.LogDebug("Successfully handled generate completion request.");
     }
 
-    private async IAsyncEnumerable<string> GenerateCompletionStream(
+    private async IAsyncEnumerable<ChatCompletionChunk> GenerateCompletionStream(
         ConversationInput conversation,
         [EnumeratorCancellation] CancellationToken cancellationToken = default
     )

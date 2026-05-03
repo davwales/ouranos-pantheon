@@ -52,6 +52,7 @@ public sealed class UpdateModelHandler : IPantheonHandler<UpdateModelInput, Upda
                     existing.Temperature,
                     existing.MaxTokens,
                     existing.RepeatPenalty,
+                    existing.ContextWindow,
                     false,
                     existing.IsPublic
                 );
@@ -65,11 +66,11 @@ public sealed class UpdateModelHandler : IPantheonHandler<UpdateModelInput, Upda
             command.Temperature,
             command.MaxTokens,
             command.RepeatPenalty,
+            command.ContextWindow,
             command.IsDefault,
             command.IsPublic
         );
 
-        _dbContext.ModelConfigs.Update(model);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         _logger.LogDebug("Successfully handled update model request.");

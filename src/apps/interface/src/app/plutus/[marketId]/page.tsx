@@ -42,6 +42,12 @@ const features: {
       "Organize symbols into custom groups like wishlists or categories to browse related items together.",
     segment: "groups",
   },
+  {
+    name: "Strategies",
+    description:
+      "Define and manage trading strategies. Configure parameters, toggle active status, and review past performance.",
+    segment: "strategies",
+  },
 ];
 
 export default async function MarketLanding({

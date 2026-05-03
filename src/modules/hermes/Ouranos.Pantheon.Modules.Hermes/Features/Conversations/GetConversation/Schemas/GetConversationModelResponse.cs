@@ -10,5 +10,6 @@ public sealed record GetConversationModelResponse(
     string SystemPrompt,
     float? Temperature,
     int? MaxTokens,
-    float? RepeatPenalty
+    float? RepeatPenalty,
+    int? ContextWindow
 );

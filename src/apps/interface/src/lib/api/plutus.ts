@@ -238,6 +238,142 @@ export interface IdResponse {
   id: string;
 }
 
+export type StrategyType =
+  | "SignalWeighted"
+  | "ForecastMomentum"
+  | "MeanReversion"
+  | "RecipeArbitrage"
+  | "Composite";
+
+export type BacktestStatus = "Pending" | "Running" | "Completed" | "Failed";
+
+export interface SignalWeight {
+  type: string;
+  weight: number;
+}
+
+export interface CompositeComponent {
+  strategyId: string;
+  type: StrategyType;
+  weight: number;
+}
+
+export interface StrategyConfiguration {
+  signalWeights?: SignalWeight[] | null;
+  buyThreshold?: number | null;
+  sellThreshold?: number | null;
+  forecastMovementThreshold?: number | null;
+  forecastHorizonDays?: number | null;
+  deviationMultiplier?: number | null;
+  meanTimeFrameValue?: number | null;
+  minMarginPercent?: number | null;
+  components?: CompositeComponent[] | null;
+  maxPositions?: number | null;
+  maxPositionPercent?: number | null;
+  holdPeriodDays?: number | null;
+}
+
+export interface Strategy {
+  id: string;
+  marketId: string;
+  name: string;
+  description?: string | null;
+  type: StrategyType;
+  isActive: boolean;
+  createdAt: string;
+  backtestCount: number;
+  lastBacktestReturn?: number | null;
+  lastBacktestWinRate?: number | null;
+}
+
+export interface StrategyDetail {
+  id: string;
+  marketId: string;
+  name: string;
+  description?: string | null;
+  type: StrategyType;
+  configuration: StrategyConfiguration;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BacktestSummary {
+  id: string;
+  marketId: string;
+  startDate: string;
+  endDate: string;
+  budget: number;
+  status: BacktestStatus;
+  totalReturnPercent?: number | null;
+  winRate?: number | null;
+  sharpeRatio?: number | null;
+  totalTrades?: number | null;
+  createdAt: string;
+}
+
+export interface BacktestPosition {
+  symbolId: string;
+  symbolName: string;
+  entryPrice: number;
+  exitPrice: number;
+  volume: number;
+  profitLoss: number;
+  returnPercent: number;
+  entryTime: string;
+  exitTime: string;
+}
+
+export interface BacktestResults {
+  totalReturn: number;
+  totalReturnPercent: number;
+  maxDrawdown: number;
+  maxDrawdownPercent: number;
+  winRate: number;
+  totalTrades: number;
+  winningTrades: number;
+  losingTrades: number;
+  sharpeRatio: number;
+  averageTradeReturn: number;
+  bestTrade: number;
+  worstTrade: number;
+  finalBalance: number;
+  positions: BacktestPosition[];
+}
+
+export interface BacktestDetail {
+  id: string;
+  strategyId: string;
+  marketId: string;
+  startDate: string;
+  endDate: string;
+  budget: number;
+  status: BacktestStatus;
+  results?: BacktestResults | null;
+  errorMessage?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RunBacktestResponse {
+  backtestId: string;
+}
+
+export interface StrategyRecommendation {
+  symbolId: string;
+  symbolName: string;
+  symbolSubcode?: string | null;
+  score: number;
+  suggestedAllocation: number;
+  currentPrice: number;
+  suggestedVolume: number;
+  rationale: string;
+}
+
+export interface GetRecommendationsResponse {
+  recommendations: StrategyRecommendation[];
+}
+
 export interface PageParams {
   skip?: number;
   take?: number;
@@ -404,4 +540,94 @@ export const plutusApi = {
 
   deleteSymbolGroup: (symbolGroupId: string) =>
     api.del<IdResponse>(`/api/plutus/symbol-groups/${symbolGroupId}`),
+
+  getAllStrategies: (marketId: string, page?: PageParams) =>
+    api.get<PagedResponse<Strategy>>("/api/plutus/strategies", {
+      marketId,
+      ...page,
+    }),
+
+  getStrategy: (strategyId: string) =>
+    api.get<StrategyDetail>(`/api/plutus/strategies/${strategyId}`),
+
+  createStrategy: (input: {
+    marketId: string;
+    name: string;
+    description?: string | null;
+    type: StrategyType;
+    configuration: StrategyConfiguration;
+  }) => api.post<IdResponse>("/api/plutus/strategies", input),
+
+  updateStrategy: (
+    strategyId: string,
+    input: {
+      name: string;
+      description?: string | null;
+      configuration: StrategyConfiguration;
+    },
+  ) => api.put<IdResponse>(`/api/plutus/strategies/${strategyId}`, input),
+
+  deleteStrategy: (strategyId: string) =>
+    api.del<IdResponse>(`/api/plutus/strategies/${strategyId}`),
+
+  setStrategyActive: (strategyId: string, isActive: boolean) =>
+    api.patch<IdResponse>(`/api/plutus/strategies/${strategyId}/active`, {
+      isActive,
+    }),
+
+  runBacktest: (
+    strategyId: string,
+    input: {
+      marketId: string;
+      startDate: string;
+      endDate: string;
+      budget: number;
+    },
+  ) =>
+    api.post<RunBacktestResponse>(
+      `/api/plutus/strategies/${strategyId}/backtest`,
+      input,
+    ),
+
+  getAllBacktests: (strategyId: string, page?: PageParams) =>
+    api.get<PagedResponse<BacktestSummary>>(
+      `/api/plutus/strategies/${strategyId}/backtests`,
+      {
+        ...page,
+      },
+    ),
+
+  getBacktest: (backtestId: string) =>
+    api.get<BacktestDetail>(`/api/plutus/backtests/${backtestId}`),
+
+  getRecommendations: (
+    strategyId: string,
+    input: {
+      marketId: string;
+      budget: number;
+    },
+  ) =>
+    api.post<GetRecommendationsResponse>(
+      `/api/plutus/strategies/${strategyId}/recommendations`,
+      input,
+    ),
+
+  optimizeStrategy: (
+    strategyId: string,
+    input: {
+      marketId: string;
+      startDate: string;
+      endDate: string;
+      budget: number;
+      generations?: number;
+      populationSize?: number;
+      sharpeRatioWeight?: number;
+      totalReturnWeight?: number;
+      maxDrawdownWeight?: number;
+    },
+  ) =>
+    api.post<RunBacktestResponse>(
+      `/api/plutus/strategies/${strategyId}/optimize`,
+      input,
+    ),
 };
