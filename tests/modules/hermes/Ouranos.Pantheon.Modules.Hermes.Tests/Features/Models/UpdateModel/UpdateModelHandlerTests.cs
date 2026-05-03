@@ -117,6 +117,65 @@ public sealed class UpdateModelHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenContextWindowProvided_ShouldUpdateContextWindow()
+    {
+        // Arrange
+        var existingModel = ModelConfig.Create(
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
+        await _dbContext.SeedData(existingModel);
+
+        var command = new UpdateModelInput(
+            existingModel.Id,
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            ContextWindow: 32768
+        );
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var updatedModel = await _dbContext.ModelConfigs.FindAsync(existingModel.Id);
+        updatedModel.ShouldNotBeNull();
+        updatedModel.ContextWindow.ShouldBe(32768);
+    }
+
+    [Fact]
+    public async Task Handle_WhenContextWindowClearedToNull_ShouldClearContextWindow()
+    {
+        // Arrange
+        var existingModel = ModelConfig.Create(
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            contextWindow: 128000
+        );
+        await _dbContext.SeedData(existingModel);
+
+        var command = new UpdateModelInput(
+            existingModel.Id,
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            ContextWindow: null
+        );
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var updatedModel = await _dbContext.ModelConfigs.FindAsync(existingModel.Id);
+        updatedModel.ShouldNotBeNull();
+        updatedModel.ContextWindow.ShouldBeNull();
+    }
+
+    [Fact]
     public async Task Handle_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange

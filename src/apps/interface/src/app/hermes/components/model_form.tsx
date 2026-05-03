@@ -31,6 +31,7 @@ export function ModelForm({
       temperature: null,
       maxTokens: null,
       repeatPenalty: null,
+      contextWindow: null,
       isDefault: false,
       isPublic: true,
     },
@@ -133,6 +134,25 @@ export function ModelForm({
             if (!isNaN(repeatPenalty)) {
               setModel((prev) => ({ ...prev, repeatPenalty }));
             }
+          }}
+          className="w-full"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        <Typography variant="h4">Context Window</Typography>
+        <Input
+          type="number"
+          readOnly={isReadOnly}
+          value={model.contextWindow ?? ""}
+          step={1}
+          placeholder="e.g. 128000"
+          onChange={(e: ChangeEvent<HTMLInputElement>) => {
+            const contextWindow = parseInt(e.target.value);
+            setModel((prev) => ({
+              ...prev,
+              contextWindow: isNaN(contextWindow) ? null : contextWindow,
+            }));
           }}
           className="w-full"
         />

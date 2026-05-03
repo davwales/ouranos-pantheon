@@ -49,6 +49,7 @@ public sealed class CreateModelHandler : IPantheonHandler<CreateModelInput, Crea
                     existing.Temperature,
                     existing.MaxTokens,
                     existing.RepeatPenalty,
+                    existing.ContextWindow,
                     false,
                     existing.IsPublic
                 );
@@ -63,6 +64,7 @@ public sealed class CreateModelHandler : IPantheonHandler<CreateModelInput, Crea
             command.Temperature,
             command.MaxTokens,
             command.RepeatPenalty,
+            command.ContextWindow,
             command.IsDefault,
             command.IsPublic
         );

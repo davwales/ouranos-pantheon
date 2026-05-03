@@ -24,6 +24,8 @@ public class ModelConfig : BaseEntity<Id<ModelConfig>>
 
     public float? RepeatPenalty { get; private set; }
 
+    public int? ContextWindow { get; private set; }
+
     public bool IsDefault { get; private set; }
 
     public bool IsPublic { get; private set; }
@@ -36,6 +38,7 @@ public class ModelConfig : BaseEntity<Id<ModelConfig>>
         float? temperature = null,
         int? maxTokens = null,
         float? repeatPenalty = null,
+        int? contextWindow = null,
         bool isDefault = false,
         bool isPublic = true
     )
@@ -52,6 +55,7 @@ public class ModelConfig : BaseEntity<Id<ModelConfig>>
             Temperature = temperature,
             MaxTokens = maxTokens,
             RepeatPenalty = repeatPenalty,
+            ContextWindow = contextWindow,
             IsDefault = isDefault,
             IsPublic = isPublic
         };
@@ -64,6 +68,7 @@ public class ModelConfig : BaseEntity<Id<ModelConfig>>
         float? temperature = null,
         int? maxTokens = null,
         float? repeatPenalty = null,
+        int? contextWindow = null,
         bool isDefault = false,
         bool isPublic = true
     )
@@ -78,6 +83,7 @@ public class ModelConfig : BaseEntity<Id<ModelConfig>>
         Temperature = temperature;
         MaxTokens = maxTokens;
         RepeatPenalty = repeatPenalty;
+        ContextWindow = contextWindow;
         IsDefault = isDefault;
         IsPublic = isPublic;
     }

@@ -28,7 +28,7 @@ public sealed class GenerateCompletionHandlerTests
         _handler = new GenerateCompletionHandler(_logger, _mlClient, _dbContextFactory);
     }
 
-    private static async IAsyncEnumerable<string> CreateStream(
+    private static async IAsyncEnumerable<ChatCompletionChunk> CreateStream(
         IEnumerable<string> chunks,
         [EnumeratorCancellation] CancellationToken cancellationToken = default
     )
@@ -37,8 +37,24 @@ public sealed class GenerateCompletionHandlerTests
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            yield return chunk;
+            yield return new ChatCompletionChunk(chunk, null);
         }
+    }
+
+    private static async IAsyncEnumerable<ChatCompletionChunk> CreateStreamWithUsage(
+        IEnumerable<string> chunks,
+        ChatCompletionUsage usage,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
+    )
+    {
+        foreach (var chunk in chunks)
+        {
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+            yield return new ChatCompletionChunk(chunk, null);
+        }
+
+        yield return new ChatCompletionChunk(null, usage);
     }
 
     private static ConversationInput CreateConversation(params CompletionMessageInput[] messages) => new(
@@ -65,7 +81,7 @@ public sealed class GenerateCompletionHandlerTests
             .Returns(CreateStream(chunks));
 
         var command = new GenerateCompletionInput(CreateConversation(new CompletionMessageInput("Hi", Role.User)));
-        var expected = chunks.Select(c => new GenerateCompletionResponse(c)).ToList();
+        var expected = chunks.Select(c => new ContentChunkResponse(c)).ToList();
 
         // Act + Assert
         await _handler.Handle(command, CancellationToken.None).ShouldMatchAsync(expected);
@@ -205,12 +221,64 @@ public sealed class GenerateCompletionHandlerTests
     }
 
     [Fact]
-    public void GenerateCompletionResponse_Content_ShouldBeAccessible()
+    public async Task Handle_WhenUsageProvided_ShouldYieldUsageChunkResponse()
     {
-        // Arrange & Act
-        var response = new GenerateCompletionResponse("Hello world");
+        // Arrange
+        var usage = new ChatCompletionUsage(InputTokens: 100, OutputTokens: 50, TotalTokens: 150);
+
+        _mlClient
+            .StreamChatCompletionAsync(
+                Arg.Any<string>(),
+                Arg.Any<List<MessageDto>>(),
+                Arg.Any<float?>(),
+                Arg.Any<int?>(),
+                Arg.Any<float?>(),
+                Arg.Any<CancellationToken>()
+            )
+            .Returns(CreateStreamWithUsage(["Hello"], usage));
+
+        var command = new GenerateCompletionInput(CreateConversation(new CompletionMessageInput("Hi", Role.User)));
+
+        // Act
+        var responses = new List<GenerateCompletionResponse>();
+        await foreach (var r in _handler.Handle(command, CancellationToken.None))
+        {
+            responses.Add(r);
+        }
 
         // Assert
-        response.Content.ShouldBe("Hello world");
+        var usageResponse = responses.OfType<UsageChunkResponse>().SingleOrDefault();
+        usageResponse.ShouldNotBeNull();
+        usageResponse.InputTokens.ShouldBe(100);
+        usageResponse.OutputTokens.ShouldBe(50);
+        usageResponse.TotalTokens.ShouldBe(150);
+    }
+
+    [Fact]
+    public async Task Handle_WhenNoUsageProvided_ShouldNotYieldUsageChunkResponse()
+    {
+        // Arrange
+        _mlClient
+            .StreamChatCompletionAsync(
+                Arg.Any<string>(),
+                Arg.Any<List<MessageDto>>(),
+                Arg.Any<float?>(),
+                Arg.Any<int?>(),
+                Arg.Any<float?>(),
+                Arg.Any<CancellationToken>()
+            )
+            .Returns(CreateStream(["Hello"]));
+
+        var command = new GenerateCompletionInput(CreateConversation(new CompletionMessageInput("Hi", Role.User)));
+
+        // Act
+        var responses = new List<GenerateCompletionResponse>();
+        await foreach (var r in _handler.Handle(command, CancellationToken.None))
+        {
+            responses.Add(r);
+        }
+
+        // Assert
+        responses.ShouldNotContain(r => r is UsageChunkResponse);
     }
 }

@@ -25,6 +25,7 @@ export interface ModelConfig {
   temperature?: number | null;
   maxTokens?: number | null;
   repeatPenalty?: number | null;
+  contextWindow?: number | null;
   isDefault: boolean;
   isPublic: boolean;
   createdAt?: string;
@@ -92,6 +93,7 @@ export interface SavedConversationModel {
   temperature?: number | null;
   maxTokens?: number | null;
   repeatPenalty?: number | null;
+  contextWindow?: number | null;
 }
 
 export interface SavedConversationTrait {
@@ -126,9 +128,9 @@ export interface CreateConversationInput {
   isPublic?: boolean;
 }
 
-export interface CompletionChunk {
-  content: string;
-}
+export type CompletionChunk =
+  | { $type: "content"; content: string }
+  | { $type: "usage"; inputTokens: number; outputTokens: number; totalTokens: number };
 
 export enum Role {
   System = "System",
@@ -186,6 +188,7 @@ export const hermesApi = {
     temperature?: number | null;
     maxTokens?: number | null;
     repeatPenalty?: number | null;
+    contextWindow?: number | null;
     isDefault: boolean;
     isPublic: boolean;
   }) => api.put<{ id: string }>(`/api/hermes/models/${input.modelId}`, input),

@@ -121,6 +121,51 @@ public sealed class GetModelHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenContextWindowSet_ShouldIncludeContextWindowInResponse()
+    {
+        // Arrange
+        var model = ModelConfig.Create(
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            contextWindow: 128000,
+            isPublic: true
+        );
+        await _dbContext.SeedData(model);
+
+        var query = new GetModelInput(model.Id);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.ContextWindow.ShouldBe(128000);
+    }
+
+    [Fact]
+    public async Task Handle_WhenContextWindowNotSet_ShouldReturnNullContextWindow()
+    {
+        // Arrange
+        var model = ModelConfig.Create(
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            isPublic: true
+        );
+        await _dbContext.SeedData(model);
+
+        var query = new GetModelInput(model.Id);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.ContextWindow.ShouldBeNull();
+    }
+
+    [Fact]
     public async Task Handle_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange

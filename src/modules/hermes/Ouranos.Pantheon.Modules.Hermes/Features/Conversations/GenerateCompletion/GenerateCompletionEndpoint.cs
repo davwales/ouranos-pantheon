@@ -1,7 +1,7 @@
-using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion.Schemas;
+using Ouranos.Pantheon.Modules.Shared.API;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion;
@@ -21,16 +21,12 @@ public static class GenerateCompletionEndpoint
         CancellationToken ct
     )
     {
-        httpContext.Response.Headers.ContentType = "text/event-stream";
-        httpContext.Response.Headers.CacheControl = "no-cache";
-        httpContext.Response.Headers.Connection = "keep-alive";
+        SseWriter.SetSseHeaders(httpContext.Response);
 
         var stream = await bus.InvokeAsync<IAsyncEnumerable<GenerateCompletionResponse>>(input, ct);
         await foreach (var chunk in stream.WithCancellation(ct))
         {
-            var json = JsonSerializer.Serialize(chunk, new JsonSerializerOptions(JsonSerializerDefaults.Web));
-            await httpContext.Response.WriteAsync($"data: {json}\n\n", ct);
-            await httpContext.Response.Body.FlushAsync(ct);
+            await SseWriter.WriteEventAsync(httpContext.Response, chunk, ct);
         }
     }
 }

@@ -77,6 +77,11 @@ export default function ChatInterfaceView({
   );
   const [inputText, setInputText] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [tokenUsage, setTokenUsage] = useState<{
+    inputTokens: number;
+    outputTokens: number;
+    totalTokens: number;
+  } | null>(null);
   const [editingMessageIndex, setEditingMessageIndex] = useState<number | null>(
     null,
   );
@@ -195,14 +200,22 @@ export default function ChatInterfaceView({
         },
         ...(conversationId ? { conversationId } : {}),
       })) {
-        setMessages((prev) => {
-          const updated = [...prev];
-          updated[updated.length - 1] = {
-            ...updated[updated.length - 1],
-            content: updated[updated.length - 1].content + chunk.content,
-          };
-          return updated;
-        });
+        if (chunk.$type === "usage") {
+          setTokenUsage({
+            inputTokens: chunk.inputTokens,
+            outputTokens: chunk.outputTokens,
+            totalTokens: chunk.totalTokens,
+          });
+        } else if (chunk.$type === "content") {
+          setMessages((prev) => {
+            const updated = [...prev];
+            updated[updated.length - 1] = {
+              ...updated[updated.length - 1],
+              content: updated[updated.length - 1].content + chunk.content,
+            };
+            return updated;
+          });
+        }
       }
     } catch (error) {
       console.error("Error sending message:", error);
@@ -303,6 +316,8 @@ export default function ChatInterfaceView({
         activeTraits={activeTraits}
         conversationName={conversationName}
         conversationIsPublic={conversationIsPublic}
+        tokenUsage={tokenUsage}
+        contextWindow={model.contextWindow}
         onRename={onRename}
         onDelete={onDelete}
         onVisibilityChange={onVisibilityChange}
@@ -368,6 +383,8 @@ function ConversationConfigSheet({
   onRename,
   onDelete,
   onVisibilityChange,
+  tokenUsage,
+  contextWindow,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -382,6 +399,12 @@ function ConversationConfigSheet({
   onRename?: (name: string) => void;
   onDelete?: () => void;
   onVisibilityChange?: (isPublic: boolean) => void;
+  tokenUsage?: {
+    inputTokens: number;
+    outputTokens: number;
+    totalTokens: number;
+  } | null;
+  contextWindow?: number | null;
 }) {
   const [personasState] = useApi(() => hermesApi.getAllPersonas());
   const [modelsState] = useApi(() => hermesApi.getAllModels());
@@ -447,6 +470,12 @@ function ConversationConfigSheet({
         </SheetHeader>
 
         <div className="px-4 pb-4 space-y-4">
+          {contextWindow && tokenUsage && (
+            <ContextUsageBar
+              tokenUsage={tokenUsage}
+              contextWindow={contextWindow}
+            />
+          )}
           <CollapsibleCardSection
             label="Persona"
             open={personasOpen}
@@ -608,6 +637,46 @@ function ConversationConfigSheet({
         </div>
       </SheetContent>
     </Sheet>
+  );
+}
+
+function ContextUsageBar({
+  tokenUsage,
+  contextWindow,
+}: {
+  tokenUsage: {
+    inputTokens: number;
+    outputTokens: number;
+    totalTokens: number;
+  };
+  contextWindow: number;
+}) {
+  const pct = (tokenUsage.totalTokens / contextWindow) * 100;
+  const barColor =
+    pct >= 100 ? "bg-red-500" : pct >= 75 ? "bg-yellow-500" : "bg-primary";
+  const textColor =
+    pct >= 100
+      ? "text-red-500"
+      : pct >= 75
+        ? "text-yellow-500"
+        : "text-muted-foreground";
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between px-2">
+        <p className="text-sm font-medium">Context Usage</p>
+        <p className={`text-xs font-mono ${textColor}`}>
+          {tokenUsage.totalTokens.toLocaleString()} /{" "}
+          {contextWindow.toLocaleString()} ({pct.toFixed(1)}%)
+        </p>
+      </div>
+      <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all ${barColor}`}
+          style={{ width: `${Math.min(pct, 100)}%` }}
+        />
+      </div>
+    </div>
   );
 }
 

@@ -76,10 +76,15 @@ public sealed class GetConversationHandler : IPantheonHandler<GetConversationInp
                 conversation.ModelConfig.SystemPrompt,
                 conversation.ModelConfig.Temperature,
                 conversation.ModelConfig.MaxTokens,
-                conversation.ModelConfig.RepeatPenalty
+                conversation.ModelConfig.RepeatPenalty,
+                conversation.ModelConfig.ContextWindow
             ),
             [.. conversation.Traits.Select(t => new GetConversationTraitResponse(t.Id, t.Name, t.Content))],
-            [.. conversation.Messages.Select(m => new GetConversationMessageResponse(m.Id, m.Content, m.Role, m.SortOrder))],
+            [
+                .. conversation.Messages.Select(m =>
+                    new GetConversationMessageResponse(m.Id, m.Content, m.Role, m.SortOrder)
+                )
+            ],
             conversation.CreatedAt,
             conversation.UpdatedAt
         );

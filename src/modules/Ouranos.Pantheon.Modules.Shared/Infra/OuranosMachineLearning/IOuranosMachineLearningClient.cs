@@ -5,7 +5,7 @@ namespace Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
 
 public interface IOuranosMachineLearningClient
 {
-    IAsyncEnumerable<string> StreamChatCompletionAsync(
+    IAsyncEnumerable<ChatCompletionChunk> StreamChatCompletionAsync(
         string model,
         List<MessageDto> messages,
         float? temperature = null,
