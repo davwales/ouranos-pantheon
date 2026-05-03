@@ -149,7 +149,7 @@ public sealed class MarketOverviewBucketJobTests
     }
 
     [Fact]
-    public async Task ExecuteAllTime_WhenTradesExist_BucketsShouldHaveOpenAndClosePricePopulated()
+    public async Task ExecuteAllTime_WhenTradesExist_BucketsShouldHaveVwapPopulated()
     {
         // Arrange
         var market = Market.Create(
@@ -180,12 +180,12 @@ public sealed class MarketOverviewBucketJobTests
         // Assert
         var buckets = _dbContext.MarketOverviewBuckets.ToList();
         buckets.ShouldNotBeEmpty();
-        buckets.ShouldAllBe(b => b.OpenPrice > 0);
-        buckets.ShouldAllBe(b => b.ClosePrice > 0);
+        buckets.ShouldAllBe(b => b.AveragePrice > 0);
+        buckets.ShouldAllBe(b => b.Volume > 0);
     }
 
     [Fact]
-    public async Task ExecuteAllTime_WhenChunkingIsForced_ShouldCreateBucketsWithOpenAndClosePrice()
+    public async Task ExecuteAllTime_WhenChunkingIsForced_ShouldCreateBucketsWithVwap()
     {
         // Arrange
         var job = new MarketOverviewBucketJob(
@@ -222,12 +222,12 @@ public sealed class MarketOverviewBucketJobTests
         // Assert
         var buckets = _dbContext.MarketOverviewBuckets.ToList();
         buckets.ShouldNotBeEmpty();
-        buckets.ShouldAllBe(b => b.OpenPrice > 0);
-        buckets.ShouldAllBe(b => b.ClosePrice > 0);
+        buckets.ShouldAllBe(b => b.AveragePrice > 0);
+        buckets.ShouldAllBe(b => b.Volume > 0);
     }
 
     [Fact]
-    public async Task ExecuteAllTime_WhenChunkingIsForced_ChunkMergeShouldPreserveOpenFromFirstChunk()
+    public async Task ExecuteAllTime_WhenChunkingIsForced_ChunkMergeShouldCorrectlyAggregateVwap()
     {
         // Arrange
         var job = new MarketOverviewBucketJob(
@@ -264,11 +264,8 @@ public sealed class MarketOverviewBucketJobTests
         // Assert
         var buckets = _dbContext.MarketOverviewBuckets.OrderBy(b => b.BucketStart).ToList();
         buckets.ShouldNotBeEmpty();
-        buckets.ShouldAllBe(b => b.OpenPrice > 0);
-        buckets.ShouldAllBe(b => b.ClosePrice > 0);
-
-        buckets.ShouldAllBe(b => b.OpenPrice == 50m || b.OpenPrice == 150m);
-        buckets.ShouldAllBe(b => b.ClosePrice == 50m || b.ClosePrice == 150m);
+        buckets.ShouldAllBe(b => b.AveragePrice > 0);
+        buckets.ShouldAllBe(b => b.Volume > 0);
     }
 
     [Fact]

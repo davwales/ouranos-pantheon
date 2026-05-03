@@ -45,11 +45,9 @@ public sealed class GetMarketOverviewHandler : IPantheonHandler<GetMarketOvervie
                 query.MarketId,
                 query.TimeFrame
             );
-            return new GetMarketOverviewResponse(0, 0, 0, 0, 0, 0, []);
+            return new GetMarketOverviewResponse(0, 0, 0, 0, []);
         }
 
-        var minPrice = buckets.Min(b => b.MinPrice);
-        var maxPrice = buckets.Max(b => b.MaxPrice);
         var totalSpent = buckets.Sum(b => b.TotalSpent);
         var volume = buckets.Sum(b => b.Volume);
         var numTransactions = buckets.Sum(b => b.NumTransactions);
@@ -60,25 +58,13 @@ public sealed class GetMarketOverviewHandler : IPantheonHandler<GetMarketOvervie
                     b.AveragePrice,
                     b.Volume,
                     b.TotalSpent,
-                    b.MinPrice,
-                    b.MaxPrice,
                     b.NumTransactions,
-                    b.BucketStart,
-                    b.OpenPrice,
-                    b.ClosePrice
+                    b.BucketStart
                 )
             )
             .ToList();
 
         _logger.LogDebug("Successfully handled get market overview request.");
-        return new GetMarketOverviewResponse(
-            minPrice,
-            maxPrice,
-            averagePrice,
-            totalSpent,
-            volume,
-            numTransactions,
-            trades
-        );
+        return new GetMarketOverviewResponse(averagePrice, totalSpent, volume, numTransactions, trades);
     }
 }

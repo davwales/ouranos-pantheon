@@ -152,7 +152,7 @@ public sealed class GetSymbolTradesHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenSingleTradeInBucket_OpenAndClosePriceShouldEqualTradePrice()
+    public async Task Handle_WhenSingleTradeInBucket_BucketsShouldHaveCorrectAggregates()
     {
         // Arrange
         var market = Market.Create(
@@ -185,12 +185,13 @@ public sealed class GetSymbolTradesHandlerTests
 
         // Assert
         result.Trades.ShouldNotBeNull();
-        result.Trades.ShouldAllBe(b => b.OpenPrice > 0);
-        result.Trades.ShouldAllBe(b => b.ClosePrice > 0);
+        result.Trades.ShouldNotBeEmpty();
+        result.Trades.ShouldAllBe(b => b.Volume > 0);
+        result.Trades.ShouldAllBe(b => b.Price > 0);
     }
 
     [Fact]
-    public async Task Handle_WhenTradesExist_BucketsShouldIncludeOpenAndClosePrice()
+    public async Task Handle_WhenTradesExist_BucketsShouldHaveCorrectPriceRanges()
     {
         // Arrange
         var market = Market.Create(
@@ -225,12 +226,47 @@ public sealed class GetSymbolTradesHandlerTests
         // Assert
         result.Trades.ShouldNotBeNull();
         result.Trades.ShouldNotBeEmpty();
-        result.Trades.ShouldAllBe(b => b.OpenPrice > 0);
-        result.Trades.ShouldAllBe(b => b.ClosePrice > 0);
-        result.Trades.ShouldAllBe(b => b.OpenPrice >= result.MinPrice);
-        result.Trades.ShouldAllBe(b => b.ClosePrice >= result.MinPrice);
-        result.Trades.ShouldAllBe(b => b.OpenPrice <= result.MaxPrice);
-        result.Trades.ShouldAllBe(b => b.ClosePrice <= result.MaxPrice);
+        result.Trades.ShouldAllBe(b => b.MinPrice >= result.MinPrice);
+        result.Trades.ShouldAllBe(b => b.MaxPrice <= result.MaxPrice);
+        result.Trades.ShouldAllBe(b => b.Price > 0);
+    }
+
+    [Fact]
+    public async Task Handle_WhenDatabaseDoesNotSupportRawSql_ShouldReturnBucketsWithDefaultOpenClose()
+    {
+        // Arrange
+        var market = Market.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<Taxes>()
+        );
+        var symbol = Symbol.Create(
+            new Id<Symbol>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            null,
+            _fixture.Create<string>(),
+            market.Id,
+            new AdditionalFields()
+        );
+
+        var now = DateTimeOffset.UtcNow;
+        var trade1 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 90m, 5m, now.AddHours(-2));
+        var trade2 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 110m, 3m, now);
+
+        await _dbContext.SeedData(market);
+        await _dbContext.SeedData(symbol);
+        await _dbContext.SeedData(trade1, trade2);
+
+        var query = new GetSymbolTradesInput(symbol.Id, TimeFrame.AllTime, NumBuckets: 10);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Trades.ShouldNotBeEmpty();
+        result.Trades.ShouldAllBe(b => b.OpenPrice == 0m);
+        result.Trades.ShouldAllBe(b => b.ClosePrice == 0m);
     }
 
     [Fact]

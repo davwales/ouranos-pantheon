@@ -63,10 +63,10 @@ function Tooltip({
       )}
       <div className="grid gap-1">
         {[
-          { label: "Open", value: point.openPrice },
-          { label: "High", value: point.maxPrice },
-          { label: "Low", value: point.minPrice },
-          { label: "Close", value: point.closePrice },
+          { label: "Open", value: point.openPrice ?? 0 },
+          { label: "High", value: point.maxPrice ?? 0 },
+          { label: "Low", value: point.minPrice ?? 0 },
+          { label: "Close", value: point.closePrice ?? 0 },
         ].map(({ label, value }) => (
           <div key={label} className="flex items-center justify-between gap-4">
             <span className="text-muted-foreground">{label}</span>
@@ -96,10 +96,15 @@ function CandlestickShape({
   const ph = Number(height ?? 0);
   const wickX = px + pw / 2;
 
-  const bullish = payload.closePrice >= payload.openPrice;
+  const openPrice = payload.openPrice ?? 0;
+  const closePrice = payload.closePrice ?? 0;
+  const minPrice = payload.minPrice ?? 0;
+  const maxPrice = payload.maxPrice ?? 0;
+
+  const bullish = closePrice >= openPrice;
   const color = bullish ? "#22c55e" : "#ef4444";
 
-  const range = payload.maxPrice - payload.minPrice;
+  const range = maxPrice - minPrice;
   if (range === 0) {
     return (
       <line
@@ -113,9 +118,8 @@ function CandlestickShape({
     );
   }
 
-  const openY = py + ph * (1 - (payload.openPrice - payload.minPrice) / range);
-  const closeY =
-    py + ph * (1 - (payload.closePrice - payload.minPrice) / range);
+  const openY = py + ph * (1 - (openPrice - minPrice) / range);
+  const closeY = py + ph * (1 - (closePrice - minPrice) / range);
   const bodyTop = Math.min(openY, closeY);
   const bodyHeight = Math.max(Math.abs(closeY - openY), 1);
 
@@ -173,7 +177,7 @@ export default function CandlestickChart({
 
   const processedWithRange = processedData.map((d) => ({
     ...d,
-    priceRange: [d.minPrice, d.maxPrice] as [number, number],
+    priceRange: [d.minPrice ?? 0, d.maxPrice ?? 0] as [number, number],
   }));
 
   return (
