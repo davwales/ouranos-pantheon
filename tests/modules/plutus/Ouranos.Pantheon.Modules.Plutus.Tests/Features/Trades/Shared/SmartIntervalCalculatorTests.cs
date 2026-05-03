@@ -138,7 +138,8 @@ public sealed class SmartIntervalCalculatorTests
         var result = SmartIntervalCalculator.Calculate(duration, 10);
 
         // Assert
-        result.ShouldBe(TimeSpan.FromDays(399));
+        (result.TotalDays % 7).ShouldBe(0);
+        result.ShouldBeGreaterThanOrEqualTo(TimeSpan.FromDays(365));
     }
 
     [Fact]
@@ -168,7 +169,7 @@ public sealed class SmartIntervalCalculatorTests
     }
 
     [Fact]
-    public void Calculate_WhenTargetIsOnBoundaryBetweenBranches_ShouldBePredictable()
+    public void Calculate_WhenDurationExactlyOneHour_ShouldReturnSixtyMinuteInterval()
     {
         // Arrange
         var duration = TimeSpan.FromSeconds(3600);

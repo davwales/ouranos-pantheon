@@ -95,9 +95,9 @@ public sealed class GetSymbolTradesHandler : IPantheonHandler<GetSymbolTradesInp
                     )
                 ];
             }
-            catch (InvalidOperationException ex) when (ex.Message.Contains("relational"))
+            catch (InvalidOperationException)
             {
-                _logger.LogWarning("Open/close prices unavailable: database is not relational.");
+                _logger.LogDebug("Open/close prices unavailable for this query.");
             }
         }
 

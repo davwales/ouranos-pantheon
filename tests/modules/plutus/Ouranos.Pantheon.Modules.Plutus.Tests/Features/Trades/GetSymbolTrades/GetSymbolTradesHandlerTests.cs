@@ -232,7 +232,7 @@ public sealed class GetSymbolTradesHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenNonRelationalDatabase_OpenAndClosePriceShouldFallBackToZero()
+    public async Task Handle_WhenDatabaseDoesNotSupportRawSql_ShouldReturnBucketsWithDefaultOpenClose()
     {
         // Arrange
         var market = Market.Create(
@@ -263,6 +263,7 @@ public sealed class GetSymbolTradesHandlerTests
         var result = await _handler.Handle(query, CancellationToken.None);
 
         // Assert
+        result.ShouldNotBeNull();
         result.Trades.ShouldNotBeEmpty();
         result.Trades.ShouldAllBe(b => b.OpenPrice == 0m);
         result.Trades.ShouldAllBe(b => b.ClosePrice == 0m);
