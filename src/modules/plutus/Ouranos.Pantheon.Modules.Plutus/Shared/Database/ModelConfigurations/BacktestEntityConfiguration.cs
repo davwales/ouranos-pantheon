@@ -14,6 +14,8 @@ public sealed class BacktestEntityConfiguration : IEntityTypeConfiguration<Backt
         builder.Property(b => b.StrategyId).HasIdConversion();
         builder.Property(b => b.MarketId).HasIdConversion();
         builder.Property(b => b.Status).HasConversion<int>();
+        builder.Property(b => b.ProgressPercent).HasDefaultValue(0);
+        builder.Property(b => b.ProgressMessage).HasMaxLength(256);
         builder.Property(b => b.Budget).HasPrecision(18, 2);
 
         builder.HasOne(b => b.Strategy).WithMany().HasForeignKey(b => b.StrategyId).OnDelete(DeleteBehavior.Cascade);

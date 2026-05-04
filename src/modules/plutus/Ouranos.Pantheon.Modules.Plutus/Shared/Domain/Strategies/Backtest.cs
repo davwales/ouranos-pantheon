@@ -23,6 +23,10 @@ public class Backtest : BaseEntity<Id<Backtest>>
 
     public BacktestStatus Status { get; private set; } = BacktestStatus.Pending;
 
+    public int ProgressPercent { get; private set; }
+
+    public string? ProgressMessage { get; private set; }
+
     public BacktestResults? Results { get; private set; }
 
     public string? ErrorMessage { get; private set; }
@@ -67,12 +71,30 @@ public class Backtest : BaseEntity<Id<Backtest>>
 
         if (Status != BacktestStatus.Pending)
         {
-            throw new InvalidOperationException($"Cannot transition backtest '{Id}' from {Status} to {BacktestStatus.Running}.");
+            throw new InvalidOperationException(
+                $"Cannot transition backtest '{Id}' from {Status} to {BacktestStatus.Running}."
+            );
         }
 
         Status = BacktestStatus.Running;
+        ProgressPercent = 0;
+        ProgressMessage = "Loading market data...";
         Update();
         return true;
+    }
+
+    public void UpdateProgress(int percent, string message)
+    {
+        Guard.Against.NullOrWhiteSpace(message);
+
+        if (Status != BacktestStatus.Running)
+        {
+            return;
+        }
+
+        ProgressPercent = Math.Clamp(percent, 0, 100);
+        ProgressMessage = message;
+        Update();
     }
 
     public bool Complete(BacktestResults results)
@@ -86,7 +108,9 @@ public class Backtest : BaseEntity<Id<Backtest>>
 
         if (Status != BacktestStatus.Running)
         {
-            throw new InvalidOperationException($"Cannot transition backtest '{Id}' from {Status} to {BacktestStatus.Completed}.");
+            throw new InvalidOperationException(
+                $"Cannot transition backtest '{Id}' from {Status} to {BacktestStatus.Completed}."
+            );
         }
 
         Results = results;
@@ -106,7 +130,9 @@ public class Backtest : BaseEntity<Id<Backtest>>
 
         if (Status != BacktestStatus.Running && Status != BacktestStatus.Pending)
         {
-            throw new InvalidOperationException($"Cannot transition backtest '{Id}' from {Status} to {BacktestStatus.Failed}.");
+            throw new InvalidOperationException(
+                $"Cannot transition backtest '{Id}' from {Status} to {BacktestStatus.Failed}."
+            );
         }
 
         ErrorMessage = errorMessage;

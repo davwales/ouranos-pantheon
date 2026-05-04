@@ -120,6 +120,8 @@ public sealed class BacktestTests
 
         // Assert
         backtest.Status.ShouldBe(BacktestStatus.Running);
+        backtest.ProgressPercent.ShouldBe(0);
+        backtest.ProgressMessage.ShouldBe("Loading market data...");
     }
 
     [Fact]
@@ -318,6 +320,81 @@ public sealed class BacktestTests
 
         // Assert
         fail.ShouldThrow<ArgumentException>();
+    }
+
+    [Fact]
+    public void UpdateProgress_WhenRunning_ShouldUpdatePercentAndMessage()
+    {
+        // Arrange
+        var backtest = CreateValidBacktest();
+        backtest.MarkRunning();
+
+        // Act
+        backtest.UpdateProgress(50, "Simulating day 25 of 50...");
+
+        // Assert
+        backtest.ProgressPercent.ShouldBe(50);
+        backtest.ProgressMessage.ShouldBe("Simulating day 25 of 50...");
+    }
+
+    [Fact]
+    public void UpdateProgress_WhenPercentAbove100_ShouldClampTo100()
+    {
+        // Arrange
+        var backtest = CreateValidBacktest();
+        backtest.MarkRunning();
+
+        // Act
+        backtest.UpdateProgress(150, "Over 100%");
+
+        // Assert
+        backtest.ProgressPercent.ShouldBe(100);
+    }
+
+    [Fact]
+    public void UpdateProgress_WhenPercentBelow0_ShouldClampTo0()
+    {
+        // Arrange
+        var backtest = CreateValidBacktest();
+        backtest.MarkRunning();
+
+        // Act
+        backtest.UpdateProgress(-10, "Under 0%");
+
+        // Assert
+        backtest.ProgressPercent.ShouldBe(0);
+    }
+
+    [Fact]
+    public void UpdateProgress_WhenNotRunning_ShouldDoNothing()
+    {
+        // Arrange
+        var backtest = CreateValidBacktest();
+
+        // Act
+        var update = () => backtest.UpdateProgress(50, "Should not work");
+
+        // Assert
+        update.ShouldNotThrow();
+        backtest.ProgressPercent.ShouldBe(0);
+        backtest.ProgressMessage.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" ")]
+    public void UpdateProgress_WhenMessageIsInvalid_ShouldThrowArgumentException(string? message)
+    {
+        // Arrange
+        var backtest = CreateValidBacktest();
+        backtest.MarkRunning();
+
+        // Act
+        var update = () => backtest.UpdateProgress(50, message!);
+
+        // Assert
+        update.ShouldThrow<ArgumentException>();
     }
 
     private Backtest CreateValidBacktest()

@@ -47,6 +47,8 @@ public sealed class GetBacktestHandler : IPantheonHandler<GetBacktestInput, GetB
             backtest.EndDate,
             backtest.Budget,
             backtest.Status,
+            backtest.ProgressPercent,
+            backtest.ProgressMessage,
             backtest.Results,
             backtest.ErrorMessage,
             backtest.CreatedAt,

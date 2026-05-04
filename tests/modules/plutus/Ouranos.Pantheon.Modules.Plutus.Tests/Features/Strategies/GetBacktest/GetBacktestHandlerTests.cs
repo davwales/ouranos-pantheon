@@ -29,11 +29,23 @@ public sealed class GetBacktestHandlerTests
     {
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
-        var strategy = Strategy.Create(marketId, "Test Strategy", null, StrategyType.SignalWeighted, new StrategyConfiguration());
+        var strategy = Strategy.Create(
+            marketId,
+            "Test Strategy",
+            null,
+            StrategyType.SignalWeighted,
+            new StrategyConfiguration()
+        );
         await _dbContext.Strategies.AddAsync(strategy);
         await _dbContext.SaveChangesAsync();
 
-        var backtest = Backtest.Create(strategy.Id, marketId, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddDays(30), 10000m);
+        var backtest = Backtest.Create(
+            strategy.Id,
+            marketId,
+            DateTimeOffset.UtcNow,
+            DateTimeOffset.UtcNow.AddDays(30),
+            10000m
+        );
         await _dbContext.Backtests.AddAsync(backtest);
         await _dbContext.SaveChangesAsync();
 
@@ -49,6 +61,8 @@ public sealed class GetBacktestHandlerTests
         result.MarketId.ShouldBe(marketId);
         result.Status.ShouldBe(BacktestStatus.Pending);
         result.Budget.ShouldBe(10000m);
+        result.ProgressPercent.ShouldBe(0);
+        result.ProgressMessage.ShouldBeNull();
         result.Results.ShouldBeNull();
         result.ErrorMessage.ShouldBeNull();
     }

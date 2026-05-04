@@ -11,6 +11,7 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization;
 using Ouranos.Pantheon.Modules.Shared.Domain;
+using Wolverine.Attributes;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.OptimizeStrategy;
 
@@ -39,6 +40,7 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
         _options = options;
     }
 
+    [MessageTimeout(3600)]
     public async Task Handle(OptimizeStrategyMessage message, CancellationToken cancellationToken = default)
     {
         _logger.LogTrace("Processing optimization for backtest '{backtestId}'.", message.BacktestId);
