@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest;
@@ -45,11 +46,17 @@ public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
             return;
         }
 
+        if (backtest.Status != BacktestStatus.Pending)
+        {
+            _logger.LogWarning("Backtest '{backtestId}' is already in {status} state. Skipping as duplicate delivery.", message.BacktestId, backtest.Status);
+            return;
+        }
+
+        backtest.MarkRunning();
+        await dbContext.SaveChangesAsync(cancellationToken);
+
         try
         {
-            backtest.MarkRunning();
-            await dbContext.SaveChangesAsync(cancellationToken);
-
             var data = await _engine.LoadDataAsync(
                 backtest.MarketId,
                 backtest.StartDate,

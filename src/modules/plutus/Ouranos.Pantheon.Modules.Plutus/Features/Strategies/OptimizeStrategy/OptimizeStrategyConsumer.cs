@@ -56,11 +56,17 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
             return;
         }
 
+        if (backtest.Status != BacktestStatus.Pending)
+        {
+            _logger.LogWarning("Backtest '{backtestId}' is already in {status} state. Skipping as duplicate delivery.", message.BacktestId, backtest.Status);
+            return;
+        }
+
+        backtest.MarkRunning();
+        await dbContext.SaveChangesAsync(cancellationToken);
+
         try
         {
-            backtest.MarkRunning();
-            await dbContext.SaveChangesAsync(cancellationToken);
-
             var data = await _engine.LoadDataAsync(
                 backtest.MarketId,
                 backtest.StartDate,

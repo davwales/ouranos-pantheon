@@ -28,6 +28,8 @@ public static class CoreExtensions
         Action<LoggerConfiguration>? logger = null
     )
     {
+        Serilog.Debugging.SelfLog.Enable(msg => Console.Error.WriteLine($"[Serilog SelfLog] {msg}"));
+
         var loggerConfig = new LoggerConfiguration().ReadFrom.Configuration(configuration);
         logger?.Invoke(loggerConfig);
         Log.Logger = loggerConfig.CreateLogger();
@@ -66,7 +68,17 @@ public static class CoreExtensions
                             .Repeat(TimeSpan.FromMilliseconds(250), rabbit.RetryCount.Value)
                             .ToArray();
 
-                        opts.Policies.OnException<Exception>().RetryWithCooldown(intervals);
+                        opts.Policies
+                            .OnException<InvalidOperationException>()
+                            .MoveToErrorQueue();
+
+                        opts.Policies
+                            .OnException<ArgumentException>()
+                            .MoveToErrorQueue();
+
+                        opts.Policies
+                            .OnException<Exception>()
+                            .RetryWithCooldown(intervals);
                     }
                 }
 

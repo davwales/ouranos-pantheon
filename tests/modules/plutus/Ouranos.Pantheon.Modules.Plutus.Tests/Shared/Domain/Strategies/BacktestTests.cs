@@ -162,7 +162,7 @@ public sealed class BacktestTests
         backtest.MarkRunning();
 
         // Act
-        var complete = () => backtest.Complete(null!);
+        var complete = () => { backtest.Complete(null!); };
 
         // Assert
         complete.ShouldThrow<ArgumentNullException>();
@@ -192,7 +192,7 @@ public sealed class BacktestTests
         );
 
         // Act
-        var complete = () => backtest.Complete(results);
+        var complete = () => { backtest.Complete(results); };
 
         // Assert
         complete.ShouldThrow<InvalidOperationException>();
@@ -236,21 +236,69 @@ public sealed class BacktestTests
         backtest.Complete(new BacktestResults());
 
         // Act
-        var fail = () => backtest.Fail("Something went wrong");
+        var fail = () => { backtest.Fail("Something went wrong"); };
 
         // Assert
         fail.ShouldThrow<InvalidOperationException>();
     }
 
     [Fact]
-    public void MarkRunning_WhenAlreadyRunning_ShouldThrowInvalidOperationException()
+    public void MarkRunning_WhenAlreadyRunning_ShouldReturnFalse()
     {
         // Arrange
         var backtest = CreateValidBacktest();
         backtest.MarkRunning();
 
         // Act
-        var markRunning = () => backtest.MarkRunning();
+        var result = backtest.MarkRunning();
+
+        // Assert
+        result.ShouldBeFalse();
+        backtest.Status.ShouldBe(BacktestStatus.Running);
+    }
+
+    [Fact]
+    public void Complete_WhenAlreadyCompleted_ShouldReturnFalse()
+    {
+        // Arrange
+        var backtest = CreateValidBacktest();
+        backtest.MarkRunning();
+        backtest.Complete(new BacktestResults());
+
+        // Act
+        var result = backtest.Complete(new BacktestResults());
+
+        // Assert
+        result.ShouldBeFalse();
+        backtest.Status.ShouldBe(BacktestStatus.Completed);
+    }
+
+    [Fact]
+    public void Fail_WhenAlreadyFailed_ShouldReturnFalse()
+    {
+        // Arrange
+        var backtest = CreateValidBacktest();
+        backtest.Fail("Something went wrong");
+
+        // Act
+        var result = backtest.Fail("Another error");
+
+        // Assert
+        result.ShouldBeFalse();
+        backtest.Status.ShouldBe(BacktestStatus.Failed);
+        backtest.ErrorMessage.ShouldBe("Something went wrong");
+    }
+
+    [Fact]
+    public void MarkRunning_WhenNotPending_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var backtest = CreateValidBacktest();
+        backtest.MarkRunning();
+        backtest.Complete(new BacktestResults());
+
+        // Act
+        var markRunning = () => { backtest.MarkRunning(); };
 
         // Assert
         markRunning.ShouldThrow<InvalidOperationException>();
@@ -266,7 +314,7 @@ public sealed class BacktestTests
         var backtest = CreateValidBacktest();
 
         // Act
-        var fail = () => backtest.Fail(message!);
+        var fail = () => { backtest.Fail(message!); };
 
         // Assert
         fail.ShouldThrow<ArgumentException>();

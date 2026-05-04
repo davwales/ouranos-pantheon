@@ -58,8 +58,13 @@ public class Backtest : BaseEntity<Id<Backtest>>
         };
     }
 
-    public void MarkRunning()
+    public bool MarkRunning()
     {
+        if (Status == BacktestStatus.Running)
+        {
+            return false;
+        }
+
         if (Status != BacktestStatus.Pending)
         {
             throw new InvalidOperationException($"Cannot transition backtest '{Id}' from {Status} to {BacktestStatus.Running}.");
@@ -67,11 +72,17 @@ public class Backtest : BaseEntity<Id<Backtest>>
 
         Status = BacktestStatus.Running;
         Update();
+        return true;
     }
 
-    public void Complete(BacktestResults results)
+    public bool Complete(BacktestResults results)
     {
         Guard.Against.Null(results);
+
+        if (Status == BacktestStatus.Completed)
+        {
+            return false;
+        }
 
         if (Status != BacktestStatus.Running)
         {
@@ -81,11 +92,17 @@ public class Backtest : BaseEntity<Id<Backtest>>
         Results = results;
         Status = BacktestStatus.Completed;
         Update();
+        return true;
     }
 
-    public void Fail(string errorMessage)
+    public bool Fail(string errorMessage)
     {
         Guard.Against.NullOrWhiteSpace(errorMessage);
+
+        if (Status == BacktestStatus.Failed)
+        {
+            return false;
+        }
 
         if (Status != BacktestStatus.Running && Status != BacktestStatus.Pending)
         {
@@ -95,5 +112,6 @@ public class Backtest : BaseEntity<Id<Backtest>>
         ErrorMessage = errorMessage;
         Status = BacktestStatus.Failed;
         Update();
+        return true;
     }
 }
