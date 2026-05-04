@@ -1,17 +1,23 @@
 import { Typography } from "@/app/components/typography";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { BacktestStatus } from "@/lib/api/plutus";
+import { X } from "lucide-react";
 
 interface InProgressBacktestViewProps {
   status: BacktestStatus;
   progressPercent: number;
   progressMessage: string;
+  onCancel?: () => void;
+  isCancelling?: boolean;
 }
 
 export function InProgressBacktestView({
   status,
   progressPercent,
   progressMessage,
+  onCancel,
+  isCancelling = false,
 }: InProgressBacktestViewProps) {
   const isPending = status === "Pending";
 
@@ -50,6 +56,19 @@ export function InProgressBacktestView({
             </p>
           )}
         </div>
+        {onCancel && (
+          <div className="flex justify-center">
+            <Button
+              onClick={onCancel}
+              disabled={isCancelling}
+              variant="outline"
+              size="sm"
+            >
+              <X className="w-4 h-4 mr-2" />
+              {isCancelling ? "Cancelling..." : "Cancel Backtest"}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

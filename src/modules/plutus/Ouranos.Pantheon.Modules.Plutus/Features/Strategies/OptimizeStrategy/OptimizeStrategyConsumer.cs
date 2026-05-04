@@ -19,23 +19,27 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
 {
     private readonly ILogger<OptimizeStrategyConsumer> _logger;
     private readonly IDbContextFactory<PlutusDbContext> _dbContextFactory;
+    private readonly BacktestDataQueryService _dataService;
     private readonly BacktestEngine _engine;
     private readonly IOptions<OptimizationOptions> _options;
 
     public OptimizeStrategyConsumer(
         ILogger<OptimizeStrategyConsumer> logger,
         IDbContextFactory<PlutusDbContext> dbContextFactory,
+        BacktestDataQueryService dataService,
         BacktestEngine engine,
         IOptions<OptimizationOptions> options
     )
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(dbContextFactory);
+        Guard.Against.Null(dataService);
         Guard.Against.Null(engine);
         Guard.Against.Null(options);
 
         _logger = logger;
         _dbContextFactory = dbContextFactory;
+        _dataService = dataService;
         _engine = engine;
         _options = options;
     }
@@ -69,7 +73,7 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
 
         try
         {
-            var data = await _engine.LoadDataAsync(
+            var data = await _dataService.LoadDataAsync(
                 backtest.MarketId,
                 backtest.StartDate,
                 backtest.EndDate,

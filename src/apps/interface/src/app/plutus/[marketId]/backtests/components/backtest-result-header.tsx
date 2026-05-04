@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { BacktestDetail, StrategyDetail } from "@/lib/api/plutus";
-import { RefreshCw } from "lucide-react";
+import { Play, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { StatusChip } from "./status-chip";
 
@@ -10,11 +10,13 @@ export function BacktestResultHeader({
   marketId,
   strategy,
   onRefresh,
+  onRunAgain,
 }: {
   backtest: BacktestDetail;
   marketId: string;
   strategy: StrategyDetail | null | undefined;
   onRefresh: () => void;
+  onRunAgain?: () => void;
 }) {
   return (
     <Card className="border-l-4">
@@ -56,6 +58,12 @@ export function BacktestResultHeader({
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
+            {onRunAgain && (
+              <Button variant="outline" size="sm" onClick={onRunAgain}>
+                <Play className="w-4 h-4 mr-1" />
+                Run Again
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={onRefresh}>
               <RefreshCw className="w-4 h-4 mr-1" />
               Refresh

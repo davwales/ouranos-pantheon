@@ -245,7 +245,12 @@ export type StrategyType =
   | "RecipeArbitrage"
   | "Composite";
 
-export type BacktestStatus = "Pending" | "Running" | "Completed" | "Failed";
+export type BacktestStatus =
+  | "Pending"
+  | "Running"
+  | "Completed"
+  | "Failed"
+  | "Cancelled";
 
 export interface SignalWeight {
   type: string;
@@ -359,6 +364,16 @@ export interface BacktestDetail {
 
 export interface RunBacktestResponse {
   backtestId: string;
+}
+
+export interface CancelBacktestResponse {
+  backtestId: string;
+  status: BacktestStatus;
+}
+
+export interface RestartBacktestResponse {
+  backtestId: string;
+  status: BacktestStatus;
 }
 
 export interface StrategyRecommendation {
@@ -601,6 +616,18 @@ export const plutusApi = {
 
   getBacktest: (backtestId: string) =>
     api.get<BacktestDetail>(`/api/plutus/backtests/${backtestId}`),
+
+  cancelBacktest: (backtestId: string, reason?: string) =>
+    api.post<CancelBacktestResponse>(
+      `/api/plutus/backtests/${backtestId}/cancel`,
+      reason ? { reason } : {},
+    ),
+
+  restartBacktest: (backtestId: string) =>
+    api.post<RestartBacktestResponse>(
+      `/api/plutus/backtests/${backtestId}/restart`,
+      {},
+    ),
 
   getRecommendations: (
     strategyId: string,

@@ -1,9 +1,6 @@
 using Ardalis.GuardClauses;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Shared.Domain;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
@@ -20,72 +17,28 @@ public sealed class BacktestEngine
 {
     private const int PriceBucketCount = 25;
 
-    private readonly IDbContextFactory<PlutusDbContext> _dbContextFactory;
+    private readonly BacktestDataQueryService _dataService;
     private readonly IEnumerable<ISignalComputer> _signalComputers;
     private readonly Dictionary<StrategyType, IStrategyExecutor> _executors;
     private readonly ILogger<BacktestEngine> _logger;
 
     public BacktestEngine(
         ILogger<BacktestEngine> logger,
-        IDbContextFactory<PlutusDbContext> dbContextFactory,
+        BacktestDataQueryService dataService,
         IEnumerable<IStrategyExecutor> executors,
         CompositeExecutor compositeExecutor,
         IEnumerable<ISignalComputer> signalComputers
     )
     {
         Guard.Against.Null(logger);
-        Guard.Against.Null(dbContextFactory);
+        Guard.Against.Null(dataService);
         Guard.Against.Null(compositeExecutor);
 
         _logger = logger;
-        _dbContextFactory = dbContextFactory;
+        _dataService = dataService;
         _signalComputers = signalComputers;
         _executors = executors.ToDictionary(e => e.SupportedType);
         _executors[StrategyType.Composite] = compositeExecutor;
-    }
-
-    public async Task<BacktestData> LoadDataAsync(
-        Id<Market> marketId,
-        DateTimeOffset startDate,
-        DateTimeOffset endDate,
-        CancellationToken cancellationToken
-    )
-    {
-        await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-
-        var market = await dbContext.Markets.AsNoTracking().FirstAsync(m => m.Id == marketId, cancellationToken);
-        var symbols = await dbContext.Symbols
-            .AsNoTracking()
-            .Where(s => s.MarketId == marketId)
-            .ToListAsync(cancellationToken);
-
-        var symbolIds = symbols.Select(s => s.Id).ToList();
-
-        var snapshots = await dbContext.MarketTradeSnapshots
-            .AsNoTracking()
-            .Where(s => symbolIds.Contains(s.SymbolId) && s.MarketId == marketId)
-            .ToListAsync(cancellationToken);
-
-        var forecasts = await dbContext.Forecasts
-            .AsNoTracking()
-            .Include(f => f.Predictions)
-            .Where(f => symbolIds.Contains(f.SymbolId) && f.MarketId == marketId)
-            .ToListAsync(cancellationToken);
-
-        var signals = await dbContext.Signals
-            .AsNoTracking()
-            .Where(s => symbolIds.Contains(s.SymbolId))
-            .ToListAsync(cancellationToken);
-
-        var trades = await dbContext.Trades
-            .AsNoTracking()
-            .Where(t => symbolIds.Contains(t.SymbolId)
-                        && t.Timestamp >= startDate
-                        && t.Timestamp <= endDate
-            )
-            .ToListAsync(cancellationToken);
-
-        return new BacktestData(market, symbols, snapshots, forecasts, signals, trades);
     }
 
     public async Task<BacktestResults> RunAsync(
@@ -97,19 +50,18 @@ public sealed class BacktestEngine
         CancellationToken cancellationToken,
         StrategyConfiguration? configurationOverride = null,
         BacktestData? data = null,
-        Func<int, string, Task>? onProgress = null
+        Func<int, string, Task>? onCheckpoint = null
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        data ??= await LoadDataAsync(marketId, startDate, endDate, cancellationToken);
+        data ??= await _dataService.LoadDataAsync(marketId, startDate, endDate, cancellationToken);
 
         var configuration = configurationOverride ?? strategy.Configuration;
         var executor = ResolveExecutor(strategy.Type);
         var market = data.Market;
         var symbols = data.Symbols;
 
-        var symbolIds = symbols.Select(s => s.Id).ToList();
         var taxRate = GetTaxRate(market);
         var totalDays = (int)(endDate - startDate).TotalDays;
         var windowDays = DetermineWindowSize(totalDays);
@@ -122,15 +74,10 @@ public sealed class BacktestEngine
             windowDays
         );
 
-        if (onProgress is not null)
+        if (onCheckpoint is not null)
         {
-            await onProgress(5, "Market data loaded, starting simulation...");
+            await onCheckpoint(5, "Market data loaded, starting simulation...");
         }
-
-        // TODO: Filter snapshots/forecasts by point-in-time once historical versions are supported
-        var allSnapshots = data.Snapshots;
-        var allForecasts = data.Forecasts;
-        var allSignals = data.Signals;
 
         var state = new BacktestLoopState(budget);
 
@@ -144,9 +91,9 @@ public sealed class BacktestEngine
             if (dayOffset % progressInterval == 0 || dayOffset == totalDays)
             {
                 var percent = 10 + (int)(80.0 * dayOffset / totalDays);
-                if (onProgress is not null)
+                if (onCheckpoint is not null)
                 {
-                    await onProgress(
+                    await onCheckpoint(
                         Math.Min(percent, 90),
                         $"Simulating day {dayOffset} of {totalDays}..."
                     );
@@ -156,28 +103,20 @@ public sealed class BacktestEngine
             CloseExitingPositions(
                 state,
                 configuration,
-                symbols,
                 marketId,
                 taxRate,
                 market,
                 executor,
-                allSnapshots,
-                allSignals,
-                allForecasts,
                 currentDate,
                 data
             );
 
             var scoredSymbols = await ScoreSymbolsAsync(
                 symbols,
-                symbolIds,
                 marketId,
-                market,
                 taxRate,
                 executor,
                 configuration,
-                allSnapshots,
-                allForecasts,
                 currentDate,
                 windowDays,
                 data,
@@ -185,19 +124,19 @@ public sealed class BacktestEngine
             );
 
             BuyCandidates(scoredSymbols, configuration, taxRate, state, currentDate, cancellationToken);
-            UpdatePortfolioMetrics(state);
+            UpdatePortfolioMetrics(state, currentDate, data);
         }
 
-        if (onProgress is not null)
+        if (onCheckpoint is not null)
         {
-            await onProgress(95, "Closing remaining positions...");
+            await onCheckpoint(95, "Closing remaining positions...");
         }
 
         CloseRemainingPositions(state, endDate, taxRate, market, data);
 
-        if (onProgress is not null)
+        if (onCheckpoint is not null)
         {
-            await onProgress(99, "Computing results...");
+            await onCheckpoint(99, "Computing results...");
         }
 
         return ComputeResults(budget, state);
@@ -206,14 +145,10 @@ public sealed class BacktestEngine
     private void CloseExitingPositions(
         BacktestLoopState state,
         StrategyConfiguration configuration,
-        List<Symbol> symbols,
         Id<Market> marketId,
         decimal taxRate,
         Market market,
         IStrategyExecutor executor,
-        List<MarketTradeSnapshot> allSnapshots,
-        List<Signal> allSignals,
-        List<Forecast> allForecasts,
         DateTimeOffset currentDate,
         BacktestData data
     )
@@ -240,17 +175,15 @@ public sealed class BacktestEngine
                     continue;
                 }
 
-                var symbolObj = symbols.First(s => s.Id.Equals(kvp.Value.SymbolId));
                 var shouldSell = EvaluateSellSignal(
-                    symbolObj,
+                    kvp.Value.SymbolId,
+                    kvp.Value.SymbolName,
+                    kvp.Value.SymbolSubcode,
                     marketId,
                     taxRate,
                     market,
                     executor,
                     configuration,
-                    allSnapshots,
-                    allSignals,
-                    allForecasts,
                     currentDate,
                     data
                 );
@@ -264,7 +197,8 @@ public sealed class BacktestEngine
 
         foreach (var kvp in toClose)
         {
-            var exitPrice = GetClosePrice(kvp.Key, currentDate, data);
+            var exitPrice = data.GetClosePrice(kvp.Key, currentDate);
+
             if (exitPrice == 0)
             {
                 continue;
@@ -279,14 +213,10 @@ public sealed class BacktestEngine
 
     private async Task<List<(Symbol Symbol, decimal Score, decimal Price)>> ScoreSymbolsAsync(
         List<Symbol> symbols,
-        List<Id<Symbol>> symbolIds,
         Id<Market> marketId,
-        Market market,
         decimal taxRate,
         IStrategyExecutor executor,
         StrategyConfiguration configuration,
-        List<MarketTradeSnapshot> allSnapshots,
-        List<Forecast> allForecasts,
         DateTimeOffset currentDate,
         int windowDays,
         BacktestData data,
@@ -295,18 +225,6 @@ public sealed class BacktestEngine
     {
         // Exclude current day to avoid look-ahead bias
         var windowStart = currentDate.AddDays(-windowDays);
-        var previousClose = currentDate;
-
-        var windowTradesRaw = data.Trades
-            .Where(t => symbolIds.Contains(t.SymbolId)
-                        && t.Timestamp >= windowStart
-                        && t.Timestamp < previousClose
-            )
-            .ToList();
-
-        var windowTrades = windowTradesRaw
-            .GroupBy(t => t.SymbolId)
-            .ToDictionary(g => g.Key, g => g.ToList());
 
         var scored = new List<(Symbol Symbol, decimal Score, decimal Price)>();
 
@@ -314,21 +232,23 @@ public sealed class BacktestEngine
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (!windowTrades.TryGetValue(symbol.Id, out var trades) || trades.Count == 0)
+            var windowAggregates = data.GetWindowAggregates(symbol.Id, windowStart, currentDate);
+
+            if (windowAggregates.Count == 0)
             {
                 continue;
             }
 
-            var currentPrice = trades.MaxBy(t => t.Timestamp)?.Price ?? 0;
+            var currentPrice = windowAggregates.MaxBy(a => a.Date)?.AveragePrice ?? 0;
             if (currentPrice == 0)
             {
                 continue;
             }
 
-            var limit = market.Taxes.Flat?.Maximum ?? decimal.MaxValue;
-            var snapshots = GetSnapshotsForSymbol(symbol.Id, allSnapshots);
-            var priceBuckets = BuildPriceBuckets(trades);
-            var forecast = allForecasts.FirstOrDefault(f => f.SymbolId.Equals(symbol.Id));
+            var limit = data.Market.Taxes.Flat?.Maximum ?? decimal.MaxValue;
+            var snapshots = data.GetSnapshotsForSymbol(symbol.Id);
+            var priceBuckets = BuildPriceBucketsFromAggregates(windowAggregates);
+            var forecast = data.GetForecastForSymbol(symbol.Id);
             var (forecastedPrice, forecastedChange) = GetForecastData(forecast, currentPrice);
 
             var signals = await ReconstructSignalsAsync(
@@ -417,9 +337,14 @@ public sealed class BacktestEngine
         }
     }
 
-    internal static void UpdatePortfolioMetrics(BacktestLoopState state)
+    internal static void UpdatePortfolioMetrics(
+        BacktestLoopState state,
+        DateTimeOffset currentDate,
+        BacktestData data
+    )
     {
-        var openPositionValue = state.OpenPositions.Values.Sum(p => p.EntryPrice * p.Volume);
+        var openPositionValue = state.OpenPositions.Values
+            .Sum(p => data.GetClosePrice(p.SymbolId, currentDate) * p.Volume);
         var currentPortfolioValue = state.Balance + openPositionValue;
         state.PeakPortfolioValue = Math.Max(state.PeakPortfolioValue, currentPortfolioValue);
 
@@ -440,7 +365,7 @@ public sealed class BacktestEngine
     {
         foreach (var pos in state.OpenPositions.Values.ToList())
         {
-            var exitPrice = GetClosePrice(pos.SymbolId, endDate, data);
+            var exitPrice = data.GetClosePrice(pos.SymbolId, endDate);
             if (exitPrice == 0)
             {
                 exitPrice = pos.EntryPrice;
@@ -463,25 +388,24 @@ public sealed class BacktestEngine
     }
 
     private bool EvaluateSellSignal(
-        Symbol symbol,
+        Id<Symbol> symbolId,
+        string symbolName,
+        string? symbolSubcode,
         Id<Market> marketId,
         decimal taxRate,
         Market market,
         IStrategyExecutor executor,
         StrategyConfiguration configuration,
-        List<MarketTradeSnapshot> allSnapshots,
-        List<Signal> allSignals,
-        List<Forecast> allForecasts,
         DateTimeOffset currentDate,
         BacktestData data
     )
     {
         var sellThreshold = configuration.SellThreshold!.Value;
-        var snapshots = GetSnapshotsForSymbol(symbol.Id, allSnapshots);
-        var symbolSignals = GetSignalsForSymbol(symbol.Id, allSignals);
-        var forecast = allForecasts.FirstOrDefault(f => f.SymbolId.Equals(symbol.Id));
+        var snapshots = data.GetSnapshotsForSymbol(symbolId);
+        var symbolSignals = data.GetSignalsForSymbol(symbolId);
+        var forecast = data.GetForecastForSymbol(symbolId);
 
-        var currentPrice = GetClosePrice(symbol.Id, currentDate, data);
+        var currentPrice = data.GetClosePrice(symbolId, currentDate);
         if (currentPrice == 0)
         {
             return false;
@@ -491,10 +415,10 @@ public sealed class BacktestEngine
         var (forecastedPrice, forecastedChange) = GetForecastData(forecast, currentPrice);
 
         var context = new StrategyScoreContext(
-            symbol.Id,
+            symbolId,
             marketId,
-            symbol.Name,
-            symbol.Subcode,
+            symbolName,
+            symbolSubcode,
             currentPrice,
             taxRate,
             limit,
@@ -556,30 +480,6 @@ public sealed class BacktestEngine
         return (netProceeds, exitVolume, netPnl);
     }
 
-    private static decimal GetClosePrice(Id<Symbol> symbolId, DateTimeOffset date, BacktestData data)
-    {
-        var price = data.Trades
-            .Where(t => t.SymbolId == symbolId && t.Timestamp <= date)
-            .MaxBy(t => t.Timestamp)?.Price ?? 0m;
-        return price;
-    }
-
-    internal static (MarketTradeSnapshot? Short, MarketTradeSnapshot? Medium, MarketTradeSnapshot? Long)
-        GetSnapshotsForSymbol(Id<Symbol> symbolId, List<MarketTradeSnapshot> allSnapshots)
-    {
-        var symbolSnaps = allSnapshots.Where(s => s.SymbolId.Equals(symbolId)).ToList();
-        return (
-            symbolSnaps.FirstOrDefault(s => s.TimeFrame == TimeFrame.OneHour),
-            symbolSnaps.FirstOrDefault(s => s.TimeFrame == TimeFrame.OneWeek),
-            symbolSnaps.FirstOrDefault(s => s.TimeFrame == TimeFrame.OneMonth)
-        );
-    }
-
-    internal static List<Signal> GetSignalsForSymbol(Id<Symbol> symbolId, List<Signal> allSignals)
-    {
-        return allSignals.Where(s => s.SymbolId.Equals(symbolId)).ToList();
-    }
-
     internal static (decimal? Price, decimal? Change) GetForecastData(Forecast? forecast, decimal currentPrice)
     {
         if (forecast is null || currentPrice == 0)
@@ -596,29 +496,39 @@ public sealed class BacktestEngine
         return (forecastedPrice, (forecastedPrice - currentPrice) / currentPrice);
     }
 
-    internal static IReadOnlyList<PriceBucket> BuildPriceBuckets(List<Trade> trades)
+    /// <summary>
+    ///     Builds PriceBuckets from pre-aggregated daily trade data,
+    ///     avoiding the need to load and sort raw trades in memory.
+    /// </summary>
+    internal static IReadOnlyList<PriceBucket> BuildPriceBucketsFromAggregates(
+        List<DailyTradeAggregate> aggregates
+    )
     {
-        if (trades.Count == 0)
+        if (aggregates.Count == 0)
         {
             return [];
         }
 
-        var sorted = trades.OrderBy(t => t.Timestamp).ToList();
-        var bucketSize = Math.Max(1, sorted.Count / PriceBucketCount);
+        var bucketSize = Math.Max(1, aggregates.Count / PriceBucketCount);
         var buckets = new List<PriceBucket>();
 
-        for (var i = 0; i < sorted.Count; i += bucketSize)
+        for (var i = 0; i < aggregates.Count; i += bucketSize)
         {
-            var remaining = Math.Min(bucketSize, sorted.Count - i);
-            var chunk = sorted.GetRange(i, remaining);
+            var remaining = Math.Min(bucketSize, aggregates.Count - i);
+            var chunk = aggregates.GetRange(i, remaining);
+
+            var totalVolume = chunk.Sum(a => a.TotalVolume);
+            var weightedAvgPrice = totalVolume > 0
+                ? chunk.Sum(a => a.AveragePrice * a.TotalVolume) / totalVolume
+                : chunk.Average(a => a.AveragePrice);
 
             buckets.Add(
                 new PriceBucket(
-                    chunk[0].Timestamp,
-                    chunk.Average(t => t.Price),
-                    chunk.Min(t => t.Price),
-                    chunk.Max(t => t.Price),
-                    chunk.Sum(t => t.Volume)
+                    chunk[0].Date.ToDateTime(TimeOnly.MinValue),
+                    weightedAvgPrice,
+                    chunk.Min(a => a.MinPrice),
+                    chunk.Max(a => a.MaxPrice),
+                    totalVolume
                 )
             );
         }

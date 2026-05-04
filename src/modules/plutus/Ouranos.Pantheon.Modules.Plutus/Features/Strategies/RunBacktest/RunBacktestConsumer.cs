@@ -15,20 +15,24 @@ public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
 
     private readonly ILogger<RunBacktestConsumer> _logger;
     private readonly IDbContextFactory<PlutusDbContext> _dbContextFactory;
+    private readonly BacktestDataQueryService _dataService;
     private readonly BacktestEngine _engine;
 
     public RunBacktestConsumer(
         ILogger<RunBacktestConsumer> logger,
         IDbContextFactory<PlutusDbContext> dbContextFactory,
+        BacktestDataQueryService dataService,
         BacktestEngine engine
     )
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(dbContextFactory);
+        Guard.Against.Null(dataService);
         Guard.Against.Null(engine);
 
         _logger = logger;
         _dbContextFactory = dbContextFactory;
+        _dataService = dataService;
         _engine = engine;
     }
 
@@ -53,7 +57,7 @@ public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
         if (backtest.Status != BacktestStatus.Pending)
         {
             _logger.LogWarning(
-                "Backtest '{backtestId}' is already in {status} state. Skipping as duplicate delivery.",
+                "Backtest '{backtestId}' is in {status} state. Skipping.",
                 message.BacktestId,
                 backtest.Status
             );
@@ -67,7 +71,7 @@ public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
 
         try
         {
-            var data = await _engine.LoadDataAsync(
+            var data = await _dataService.LoadDataAsync(
                 backtest.MarketId,
                 backtest.StartDate,
                 backtest.EndDate,
@@ -82,7 +86,7 @@ public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
                 backtest.Budget,
                 cancellationToken,
                 data: data,
-                onProgress: async (percent, progressMessage) =>
+                onCheckpoint: async (percent, progressMessage) =>
                 {
                     if (percent - lastSavedPercent < MinimumProgressUpdate)
                     {
@@ -90,6 +94,18 @@ public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
                     }
 
                     lastSavedPercent = percent;
+
+                    var currentStatus = await dbContext.Backtests
+                        .AsNoTracking()
+                        .Where(b => b.Id == backtest.Id)
+                        .Select(b => b.Status)
+                        .FirstOrDefaultAsync(CancellationToken.None);
+
+                    if (currentStatus == BacktestStatus.Cancelled)
+                    {
+                        throw new OperationCanceledException($"Backtest '{backtest.Id}' was cancelled.");
+                    }
+
                     backtest.UpdateProgress(percent, progressMessage);
 
                     try
@@ -114,13 +130,23 @@ public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
         }
         catch (OperationCanceledException)
         {
-            throw;
+            _logger.LogInformation("Backtest '{backtestId}' was cancelled.", message.BacktestId);
+
+            if (backtest.Status is BacktestStatus.Pending or BacktestStatus.Running)
+            {
+                backtest.Cancel("Cancelled by user.");
+                await dbContext.SaveChangesAsync(CancellationToken.None);
+            }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Backtest '{backtestId}' failed.", message.BacktestId);
-            backtest.Fail(ex.Message);
-            await dbContext.SaveChangesAsync(cancellationToken);
+
+            if (backtest.Status is BacktestStatus.Pending or BacktestStatus.Running)
+            {
+                backtest.Fail(ex.Message);
+                await dbContext.SaveChangesAsync(CancellationToken.None);
+            }
         }
     }
 }

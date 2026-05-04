@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { plutusApi } from "@/lib/api/plutus";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NumberInput } from "./number-input";
 
 export function RunBacktestDialog({
@@ -13,26 +13,42 @@ export function RunBacktestDialog({
   marketId,
   open,
   onOpenChange,
+  defaultStartDate,
+  defaultEndDate,
+  defaultBudget,
 }: {
   strategyId: string;
   marketId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  defaultStartDate?: string;
+  defaultEndDate?: string;
+  defaultBudget?: number;
 }) {
   const router = useRouter();
   const [startDate, setStartDate] = useState(() => {
+    if (defaultStartDate) return defaultStartDate;
     const d = new Date();
     d.setDate(d.getDate() - 30);
     return d.toISOString().split("T")[0];
   });
   const [endDate, setEndDate] = useState(() => {
+    if (defaultEndDate) return defaultEndDate;
     const d = new Date();
     return d.toISOString().split("T")[0];
   });
-  const [budget, setBudget] = useState(10000);
+  const [budget, setBudget] = useState(defaultBudget ?? 10000);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dateInvalid = startDate > endDate;
+
+  useEffect(() => {
+    if (open) {
+      if (defaultStartDate) setStartDate(defaultStartDate);
+      if (defaultEndDate) setEndDate(defaultEndDate);
+      if (defaultBudget != null) setBudget(defaultBudget);
+    }
+  }, [open, defaultStartDate, defaultEndDate, defaultBudget]);
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
