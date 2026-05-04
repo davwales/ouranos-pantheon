@@ -2,17 +2,18 @@
 
 import { Typography } from "@/app/components/typography";
 import { useApi } from "@/hooks/use-api";
+import useInterval from "@/hooks/use_interval";
 import { BacktestDetail, StrategyDetail, plutusApi } from "@/lib/api/plutus";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useCallback } from "react";
 import { BacktestMetricsGrid } from "../components/backtest-metrics-grid";
 import { BacktestPositionsTable } from "../components/backtest-positions-table";
 import { BacktestResultHeader } from "../components/backtest-result-header";
 import { BacktestStatisticsGrid } from "../components/backtest-statistics-grid";
 import { FailedBacktestView } from "../components/failed-backtest-view";
-import { PendingBacktestView } from "../components/pending-backtest-view";
-import { RunningBacktestView } from "../components/running-backtest-view";
+import { InProgressBacktestView } from "../components/in-progress-backtest-view";
 
 export default function BacktestDetailPage() {
   const { marketId, backtestId } = useParams<{
@@ -26,6 +27,15 @@ export default function BacktestDetailPage() {
   );
 
   const backtest = backtestState.data;
+
+  const isPolling =
+    backtest?.status === "Pending" || backtest?.status === "Running";
+
+  const pollBacktest = useCallback(() => {
+    reexecute();
+  }, [reexecute]);
+
+  useInterval(pollBacktest, isPolling ? 3000 : null);
 
   const [strategyState] = useApi<StrategyDetail | null>(
     () =>
@@ -72,10 +82,22 @@ export default function BacktestDetailPage() {
         Back to Backtests
       </Link>
 
-      {backtest.status === "Pending" && <PendingBacktestView />}
+      {backtest.status === "Pending" && (
+        <InProgressBacktestView
+          status={backtest.status}
+          progressPercent={backtest.progressPercent}
+          progressMessage={
+            backtest.progressMessage ?? "Waiting to be queued for execution..."
+          }
+        />
+      )}
 
       {backtest.status === "Running" && (
-        <RunningBacktestView onRefresh={reexecute} />
+        <InProgressBacktestView
+          status={backtest.status}
+          progressPercent={backtest.progressPercent}
+          progressMessage={backtest.progressMessage ?? "Running simulation..."}
+        />
       )}
 
       {backtest.status === "Failed" && (

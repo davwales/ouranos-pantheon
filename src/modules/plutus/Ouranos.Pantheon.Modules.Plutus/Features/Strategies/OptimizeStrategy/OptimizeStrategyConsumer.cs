@@ -11,6 +11,7 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization;
 using Ouranos.Pantheon.Modules.Shared.Domain;
+using Wolverine.Attributes;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.OptimizeStrategy;
 
@@ -39,6 +40,7 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
         _options = options;
     }
 
+    [MessageTimeout(3600)]
     public async Task Handle(OptimizeStrategyMessage message, CancellationToken cancellationToken = default)
     {
         _logger.LogTrace("Processing optimization for backtest '{backtestId}'.", message.BacktestId);
@@ -56,11 +58,17 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
             return;
         }
 
+        if (backtest.Status != BacktestStatus.Pending)
+        {
+            _logger.LogWarning("Backtest '{backtestId}' is already in {status} state. Skipping as duplicate delivery.", message.BacktestId, backtest.Status);
+            return;
+        }
+
+        backtest.MarkRunning();
+        await dbContext.SaveChangesAsync(cancellationToken);
+
         try
         {
-            backtest.MarkRunning();
-            await dbContext.SaveChangesAsync(cancellationToken);
-
             var data = await _engine.LoadDataAsync(
                 backtest.MarketId,
                 backtest.StartDate,

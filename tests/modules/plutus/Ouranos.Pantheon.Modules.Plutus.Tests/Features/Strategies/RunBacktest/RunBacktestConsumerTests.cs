@@ -172,6 +172,58 @@ public sealed class RunBacktestConsumerTests
     }
 
     [Fact]
+    public async Task Handle_WhenBacktestAlreadyCompleted_ShouldSkipWithoutError()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var baseTime = DateTimeOffset.UtcNow;
+
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var strategy = Strategy.Create(
+            marketId,
+            "Test Strategy",
+            null,
+            StrategyType.SignalWeighted,
+            new StrategyConfiguration { BuyThreshold = 0m, MaxPositions = 10 }
+        );
+        var backtest = Backtest.Create(
+            strategy.Id,
+            marketId,
+            baseTime.AddDays(-5),
+            baseTime.AddDays(-1),
+            10000m,
+            strategy
+        );
+
+        await using (var dbContext = await _dbContextFactory.CreateDbContextAsync())
+        {
+            await dbContext.SeedData(market);
+            await dbContext.SeedData(strategy);
+            await dbContext.SeedData(backtest);
+            await dbContext.SaveChangesAsync();
+        }
+
+        await _consumer.Handle(new RunBacktestMessage(backtest.Id), CancellationToken.None);
+
+        await using var verifyContext1 = await _dbContextFactory.CreateDbContextAsync();
+        var saved1 = await verifyContext1.Backtests.AsNoTracking().FirstAsync(b => b.Id == backtest.Id);
+        saved1.Status.ShouldBe(BacktestStatus.Completed);
+
+        // Act
+        var secondDelivery = async () => await _consumer.Handle(
+            new RunBacktestMessage(backtest.Id),
+            CancellationToken.None
+        );
+
+        // Assert
+        await secondDelivery.ShouldNotThrowAsync();
+
+        await using var verifyContext2 = await _dbContextFactory.CreateDbContextAsync();
+        var saved2 = await verifyContext2.Backtests.AsNoTracking().FirstAsync(b => b.Id == backtest.Id);
+        saved2.Status.ShouldBe(BacktestStatus.Completed);
+    }
+
+    [Fact]
     public async Task Handle_WhenEngineThrowsException_ShouldNotLeaveBacktestInRunningState()
     {
         // Arrange

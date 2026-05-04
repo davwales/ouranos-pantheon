@@ -23,6 +23,10 @@ public class Backtest : BaseEntity<Id<Backtest>>
 
     public BacktestStatus Status { get; private set; } = BacktestStatus.Pending;
 
+    public int ProgressPercent { get; private set; }
+
+    public string? ProgressMessage { get; private set; }
+
     public BacktestResults? Results { get; private set; }
 
     public string? ErrorMessage { get; private set; }
@@ -58,42 +62,82 @@ public class Backtest : BaseEntity<Id<Backtest>>
         };
     }
 
-    public void MarkRunning()
+    public bool MarkRunning()
     {
+        if (Status == BacktestStatus.Running)
+        {
+            return false;
+        }
+
         if (Status != BacktestStatus.Pending)
         {
-            throw new InvalidOperationException($"Cannot transition backtest '{Id}' from {Status} to {BacktestStatus.Running}.");
+            throw new InvalidOperationException(
+                $"Cannot transition backtest '{Id}' from {Status} to {BacktestStatus.Running}."
+            );
         }
 
         Status = BacktestStatus.Running;
+        ProgressPercent = 0;
+        ProgressMessage = "Loading market data...";
         Update();
+        return true;
     }
 
-    public void Complete(BacktestResults results)
+    public void UpdateProgress(int percent, string message)
     {
-        Guard.Against.Null(results);
+        Guard.Against.NullOrWhiteSpace(message);
 
         if (Status != BacktestStatus.Running)
         {
-            throw new InvalidOperationException($"Cannot transition backtest '{Id}' from {Status} to {BacktestStatus.Completed}.");
+            return;
+        }
+
+        ProgressPercent = Math.Clamp(percent, 0, 100);
+        ProgressMessage = message;
+        Update();
+    }
+
+    public bool Complete(BacktestResults results)
+    {
+        Guard.Against.Null(results);
+
+        if (Status == BacktestStatus.Completed)
+        {
+            return false;
+        }
+
+        if (Status != BacktestStatus.Running)
+        {
+            throw new InvalidOperationException(
+                $"Cannot transition backtest '{Id}' from {Status} to {BacktestStatus.Completed}."
+            );
         }
 
         Results = results;
         Status = BacktestStatus.Completed;
         Update();
+        return true;
     }
 
-    public void Fail(string errorMessage)
+    public bool Fail(string errorMessage)
     {
         Guard.Against.NullOrWhiteSpace(errorMessage);
 
+        if (Status == BacktestStatus.Failed)
+        {
+            return false;
+        }
+
         if (Status != BacktestStatus.Running && Status != BacktestStatus.Pending)
         {
-            throw new InvalidOperationException($"Cannot transition backtest '{Id}' from {Status} to {BacktestStatus.Failed}.");
+            throw new InvalidOperationException(
+                $"Cannot transition backtest '{Id}' from {Status} to {BacktestStatus.Failed}."
+            );
         }
 
         ErrorMessage = errorMessage;
         Status = BacktestStatus.Failed;
         Update();
+        return true;
     }
 }

@@ -96,7 +96,8 @@ public sealed class BacktestEngine
         decimal budget,
         CancellationToken cancellationToken,
         StrategyConfiguration? configurationOverride = null,
-        BacktestData? data = null
+        BacktestData? data = null,
+        Func<int, string, Task>? onProgress = null
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -121,6 +122,11 @@ public sealed class BacktestEngine
             windowDays
         );
 
+        if (onProgress is not null)
+        {
+            await onProgress(5, "Market data loaded, starting simulation...");
+        }
+
         // TODO: Filter snapshots/forecasts by point-in-time once historical versions are supported
         var allSnapshots = data.Snapshots;
         var allForecasts = data.Forecasts;
@@ -128,10 +134,24 @@ public sealed class BacktestEngine
 
         var state = new BacktestLoopState(budget);
 
+        var progressInterval = Math.Max(1, totalDays / 20);
+
         for (var dayOffset = 0; dayOffset <= totalDays; dayOffset++)
         {
             cancellationToken.ThrowIfCancellationRequested();
             var currentDate = startDate.AddDays(dayOffset);
+
+            if (dayOffset % progressInterval == 0 || dayOffset == totalDays)
+            {
+                var percent = 10 + (int)(80.0 * dayOffset / totalDays);
+                if (onProgress is not null)
+                {
+                    await onProgress(
+                        Math.Min(percent, 90),
+                        $"Simulating day {dayOffset} of {totalDays}..."
+                    );
+                }
+            }
 
             CloseExitingPositions(
                 state,
@@ -168,7 +188,18 @@ public sealed class BacktestEngine
             UpdatePortfolioMetrics(state);
         }
 
+        if (onProgress is not null)
+        {
+            await onProgress(95, "Closing remaining positions...");
+        }
+
         CloseRemainingPositions(state, endDate, taxRate, market, data);
+
+        if (onProgress is not null)
+        {
+            await onProgress(99, "Computing results...");
+        }
+
         return ComputeResults(budget, state);
     }
 

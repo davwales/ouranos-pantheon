@@ -120,6 +120,8 @@ public sealed class BacktestTests
 
         // Assert
         backtest.Status.ShouldBe(BacktestStatus.Running);
+        backtest.ProgressPercent.ShouldBe(0);
+        backtest.ProgressMessage.ShouldBe("Loading market data...");
     }
 
     [Fact]
@@ -162,7 +164,7 @@ public sealed class BacktestTests
         backtest.MarkRunning();
 
         // Act
-        var complete = () => backtest.Complete(null!);
+        var complete = () => { backtest.Complete(null!); };
 
         // Assert
         complete.ShouldThrow<ArgumentNullException>();
@@ -192,7 +194,7 @@ public sealed class BacktestTests
         );
 
         // Act
-        var complete = () => backtest.Complete(results);
+        var complete = () => { backtest.Complete(results); };
 
         // Assert
         complete.ShouldThrow<InvalidOperationException>();
@@ -236,21 +238,69 @@ public sealed class BacktestTests
         backtest.Complete(new BacktestResults());
 
         // Act
-        var fail = () => backtest.Fail("Something went wrong");
+        var fail = () => { backtest.Fail("Something went wrong"); };
 
         // Assert
         fail.ShouldThrow<InvalidOperationException>();
     }
 
     [Fact]
-    public void MarkRunning_WhenAlreadyRunning_ShouldThrowInvalidOperationException()
+    public void MarkRunning_WhenAlreadyRunning_ShouldReturnFalse()
     {
         // Arrange
         var backtest = CreateValidBacktest();
         backtest.MarkRunning();
 
         // Act
-        var markRunning = () => backtest.MarkRunning();
+        var result = backtest.MarkRunning();
+
+        // Assert
+        result.ShouldBeFalse();
+        backtest.Status.ShouldBe(BacktestStatus.Running);
+    }
+
+    [Fact]
+    public void Complete_WhenAlreadyCompleted_ShouldReturnFalse()
+    {
+        // Arrange
+        var backtest = CreateValidBacktest();
+        backtest.MarkRunning();
+        backtest.Complete(new BacktestResults());
+
+        // Act
+        var result = backtest.Complete(new BacktestResults());
+
+        // Assert
+        result.ShouldBeFalse();
+        backtest.Status.ShouldBe(BacktestStatus.Completed);
+    }
+
+    [Fact]
+    public void Fail_WhenAlreadyFailed_ShouldReturnFalse()
+    {
+        // Arrange
+        var backtest = CreateValidBacktest();
+        backtest.Fail("Something went wrong");
+
+        // Act
+        var result = backtest.Fail("Another error");
+
+        // Assert
+        result.ShouldBeFalse();
+        backtest.Status.ShouldBe(BacktestStatus.Failed);
+        backtest.ErrorMessage.ShouldBe("Something went wrong");
+    }
+
+    [Fact]
+    public void MarkRunning_WhenNotPending_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var backtest = CreateValidBacktest();
+        backtest.MarkRunning();
+        backtest.Complete(new BacktestResults());
+
+        // Act
+        var markRunning = () => { backtest.MarkRunning(); };
 
         // Assert
         markRunning.ShouldThrow<InvalidOperationException>();
@@ -266,10 +316,85 @@ public sealed class BacktestTests
         var backtest = CreateValidBacktest();
 
         // Act
-        var fail = () => backtest.Fail(message!);
+        var fail = () => { backtest.Fail(message!); };
 
         // Assert
         fail.ShouldThrow<ArgumentException>();
+    }
+
+    [Fact]
+    public void UpdateProgress_WhenRunning_ShouldUpdatePercentAndMessage()
+    {
+        // Arrange
+        var backtest = CreateValidBacktest();
+        backtest.MarkRunning();
+
+        // Act
+        backtest.UpdateProgress(50, "Simulating day 25 of 50...");
+
+        // Assert
+        backtest.ProgressPercent.ShouldBe(50);
+        backtest.ProgressMessage.ShouldBe("Simulating day 25 of 50...");
+    }
+
+    [Fact]
+    public void UpdateProgress_WhenPercentAbove100_ShouldClampTo100()
+    {
+        // Arrange
+        var backtest = CreateValidBacktest();
+        backtest.MarkRunning();
+
+        // Act
+        backtest.UpdateProgress(150, "Over 100%");
+
+        // Assert
+        backtest.ProgressPercent.ShouldBe(100);
+    }
+
+    [Fact]
+    public void UpdateProgress_WhenPercentBelow0_ShouldClampTo0()
+    {
+        // Arrange
+        var backtest = CreateValidBacktest();
+        backtest.MarkRunning();
+
+        // Act
+        backtest.UpdateProgress(-10, "Under 0%");
+
+        // Assert
+        backtest.ProgressPercent.ShouldBe(0);
+    }
+
+    [Fact]
+    public void UpdateProgress_WhenNotRunning_ShouldDoNothing()
+    {
+        // Arrange
+        var backtest = CreateValidBacktest();
+
+        // Act
+        var update = () => backtest.UpdateProgress(50, "Should not work");
+
+        // Assert
+        update.ShouldNotThrow();
+        backtest.ProgressPercent.ShouldBe(0);
+        backtest.ProgressMessage.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" ")]
+    public void UpdateProgress_WhenMessageIsInvalid_ShouldThrowArgumentException(string? message)
+    {
+        // Arrange
+        var backtest = CreateValidBacktest();
+        backtest.MarkRunning();
+
+        // Act
+        var update = () => backtest.UpdateProgress(50, message!);
+
+        // Assert
+        update.ShouldThrow<ArgumentException>();
     }
 
     private Backtest CreateValidBacktest()

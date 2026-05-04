@@ -349,6 +349,8 @@ export interface BacktestDetail {
   endDate: string;
   budget: number;
   status: BacktestStatus;
+  progressPercent: number;
+  progressMessage: string | null;
   results?: BacktestResults | null;
   errorMessage?: string | null;
   createdAt: string;

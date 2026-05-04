@@ -3,12 +3,16 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
+using Wolverine.Attributes;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest;
 
 public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
 {
+    private const int MinimumProgressUpdate = 1;
+
     private readonly ILogger<RunBacktestConsumer> _logger;
     private readonly IDbContextFactory<PlutusDbContext> _dbContextFactory;
     private readonly BacktestEngine _engine;
@@ -28,6 +32,7 @@ public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
         _engine = engine;
     }
 
+    [MessageTimeout(3600)]
     public async Task Handle(RunBacktestMessage message, CancellationToken cancellationToken = default)
     {
         _logger.LogTrace("Processing backtest '{backtestId}'.", message.BacktestId);
@@ -45,11 +50,23 @@ public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
             return;
         }
 
+        if (backtest.Status != BacktestStatus.Pending)
+        {
+            _logger.LogWarning(
+                "Backtest '{backtestId}' is already in {status} state. Skipping as duplicate delivery.",
+                message.BacktestId,
+                backtest.Status
+            );
+            return;
+        }
+
+        backtest.MarkRunning();
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        var lastSavedPercent = 0;
+
         try
         {
-            backtest.MarkRunning();
-            await dbContext.SaveChangesAsync(cancellationToken);
-
             var data = await _engine.LoadDataAsync(
                 backtest.MarketId,
                 backtest.StartDate,
@@ -64,7 +81,30 @@ public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
                 backtest.EndDate,
                 backtest.Budget,
                 cancellationToken,
-                data: data
+                data: data,
+                onProgress: async (percent, progressMessage) =>
+                {
+                    if (percent - lastSavedPercent < MinimumProgressUpdate)
+                    {
+                        return;
+                    }
+
+                    lastSavedPercent = percent;
+                    backtest.UpdateProgress(percent, progressMessage);
+
+                    try
+                    {
+                        await dbContext.SaveChangesAsync(CancellationToken.None);
+                    }
+                    catch (Exception ex) when (ex is not OperationCanceledException)
+                    {
+                        _logger.LogWarning(
+                            ex,
+                            "Failed to save progress for backtest '{backtestId}'.",
+                            message.BacktestId
+                        );
+                    }
+                }
             );
 
             backtest.Complete(results);
