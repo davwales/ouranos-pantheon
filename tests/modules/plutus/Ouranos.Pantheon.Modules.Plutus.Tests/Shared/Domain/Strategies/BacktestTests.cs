@@ -407,4 +407,174 @@ public sealed class BacktestTests
             10000m
         );
     }
+
+    [Fact]
+    public void Cancel_WhenPending_ShouldSetCancelledStatus()
+    {
+        // Arrange
+        var backtest = CreateValidBacktest();
+
+        // Act
+        var result = backtest.Cancel();
+
+        // Assert
+        result.ShouldBeTrue();
+        backtest.Status.ShouldBe(BacktestStatus.Cancelled);
+        backtest.ErrorMessage.ShouldBe("Cancelled by user.");
+    }
+
+    [Fact]
+    public void Cancel_WhenRunning_ShouldSetCancelledStatus()
+    {
+        // Arrange
+        var backtest = CreateValidBacktest();
+        backtest.MarkRunning();
+
+        // Act
+        var result = backtest.Cancel();
+
+        // Assert
+        result.ShouldBeTrue();
+        backtest.Status.ShouldBe(BacktestStatus.Cancelled);
+        backtest.ErrorMessage.ShouldBe("Cancelled by user.");
+    }
+
+    [Fact]
+    public void Cancel_WhenCustomReason_ShouldSetCustomErrorMessage()
+    {
+        // Arrange
+        var backtest = CreateValidBacktest();
+        backtest.MarkRunning();
+
+        // Act
+        backtest.Cancel("Server shutdown");
+
+        // Assert
+        backtest.ErrorMessage.ShouldBe("Server shutdown");
+    }
+
+    [Fact]
+    public void Cancel_WhenAlreadyCancelled_ShouldReturnFalse()
+    {
+        // Arrange
+        var backtest = CreateValidBacktest();
+        backtest.Cancel();
+
+        // Act
+        var result = backtest.Cancel();
+
+        // Assert
+        result.ShouldBeFalse();
+        backtest.Status.ShouldBe(BacktestStatus.Cancelled);
+    }
+
+    [Theory]
+    [InlineData(BacktestStatus.Completed)]
+    [InlineData(BacktestStatus.Failed)]
+    public void Cancel_WhenInvalidState_ShouldThrowInvalidOperationException(BacktestStatus targetStatus)
+    {
+        // Arrange
+        var backtest = CreateValidBacktest();
+        backtest.MarkRunning();
+
+        if (targetStatus == BacktestStatus.Completed)
+        {
+            backtest.Complete(new BacktestResults());
+        }
+        else
+        {
+            backtest.Fail("error");
+        }
+
+        // Act
+        var cancel = () => { backtest.Cancel(); };
+
+        // Assert
+        cancel.ShouldThrow<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void Restart_WhenFailed_ShouldResetToPending()
+    {
+        // Arrange
+        var backtest = CreateValidBacktest();
+        backtest.MarkRunning();
+        backtest.Fail("Something went wrong");
+
+        // Act
+        var result = backtest.Restart();
+
+        // Assert
+        result.ShouldBeTrue();
+        backtest.Status.ShouldBe(BacktestStatus.Pending);
+        backtest.ProgressPercent.ShouldBe(0);
+        backtest.ProgressMessage.ShouldBeNull();
+        backtest.Results.ShouldBeNull();
+        backtest.ErrorMessage.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Restart_WhenCancelled_ShouldResetToPending()
+    {
+        // Arrange
+        var backtest = CreateValidBacktest();
+        backtest.MarkRunning();
+        backtest.Cancel("Cancelled by user");
+
+        // Act
+        var result = backtest.Restart();
+
+        // Assert
+        result.ShouldBeTrue();
+        backtest.Status.ShouldBe(BacktestStatus.Pending);
+        backtest.ProgressPercent.ShouldBe(0);
+        backtest.ProgressMessage.ShouldBeNull();
+        backtest.Results.ShouldBeNull();
+        backtest.ErrorMessage.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(BacktestStatus.Pending)]
+    [InlineData(BacktestStatus.Running)]
+    [InlineData(BacktestStatus.Completed)]
+    public void Restart_WhenInvalidState_ShouldThrowInvalidOperationException(BacktestStatus targetStatus)
+    {
+        // Arrange
+        var backtest = CreateValidBacktest();
+
+        switch (targetStatus)
+        {
+            case BacktestStatus.Running:
+                backtest.MarkRunning();
+                break;
+            case BacktestStatus.Completed:
+                backtest.MarkRunning();
+                backtest.Complete(new BacktestResults());
+                break;
+        }
+
+        // Act
+        var restart = () => { backtest.Restart(); };
+
+        // Assert
+        restart.ShouldThrow<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void Cancel_ThenRestart_ThenMarkRunning_ShouldTransitionCorrectly()
+    {
+        // Arrange
+        var backtest = CreateValidBacktest();
+        backtest.MarkRunning();
+        backtest.Cancel("Server shutdown");
+        backtest.Restart();
+
+        // Act
+        backtest.MarkRunning();
+
+        // Assert
+        backtest.Status.ShouldBe(BacktestStatus.Running);
+        backtest.ProgressPercent.ShouldBe(0);
+        backtest.ProgressMessage.ShouldBe("Loading market data...");
+    }
 }

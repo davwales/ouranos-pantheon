@@ -7,11 +7,13 @@ import { BacktestDetail, StrategyDetail, plutusApi } from "@/lib/api/plutus";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
+import { RunBacktestDialog } from "../../strategies/components/run-backtest-dialog";
 import { BacktestMetricsGrid } from "../components/backtest-metrics-grid";
 import { BacktestPositionsTable } from "../components/backtest-positions-table";
 import { BacktestResultHeader } from "../components/backtest-result-header";
 import { BacktestStatisticsGrid } from "../components/backtest-statistics-grid";
+import { CancelledBacktestView } from "../components/cancelled-backtest-view";
 import { FailedBacktestView } from "../components/failed-backtest-view";
 import { InProgressBacktestView } from "../components/in-progress-backtest-view";
 
@@ -46,6 +48,30 @@ export default function BacktestDetailPage() {
   );
 
   const strategy = strategyState.data ?? undefined;
+
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [isRestarting, setIsRestarting] = useState(false);
+  const [runAgainOpen, setRunAgainOpen] = useState(false);
+
+  const handleCancel = useCallback(async () => {
+    setIsCancelling(true);
+    try {
+      await plutusApi.cancelBacktest(backtestId);
+      reexecute();
+    } finally {
+      setIsCancelling(false);
+    }
+  }, [backtestId, reexecute]);
+
+  const handleRestart = useCallback(async () => {
+    setIsRestarting(true);
+    try {
+      await plutusApi.restartBacktest(backtestId);
+      reexecute();
+    } finally {
+      setIsRestarting(false);
+    }
+  }, [backtestId, reexecute]);
 
   if (backtestState.status === "error") {
     return (
@@ -89,6 +115,8 @@ export default function BacktestDetailPage() {
           progressMessage={
             backtest.progressMessage ?? "Waiting to be queued for execution..."
           }
+          onCancel={handleCancel}
+          isCancelling={isCancelling}
         />
       )}
 
@@ -97,11 +125,25 @@ export default function BacktestDetailPage() {
           status={backtest.status}
           progressPercent={backtest.progressPercent}
           progressMessage={backtest.progressMessage ?? "Running simulation..."}
+          onCancel={handleCancel}
+          isCancelling={isCancelling}
         />
       )}
 
       {backtest.status === "Failed" && (
-        <FailedBacktestView errorMessage={backtest.errorMessage} />
+        <FailedBacktestView
+          errorMessage={backtest.errorMessage}
+          onRestart={handleRestart}
+          isRestarting={isRestarting}
+        />
+      )}
+
+      {backtest.status === "Cancelled" && (
+        <CancelledBacktestView
+          errorMessage={backtest.errorMessage}
+          onRestart={handleRestart}
+          isRestarting={isRestarting}
+        />
       )}
 
       {backtest.status === "Completed" && results && (
@@ -111,6 +153,7 @@ export default function BacktestDetailPage() {
             marketId={marketId}
             strategy={strategy}
             onRefresh={reexecute}
+            onRunAgain={() => setRunAgainOpen(true)}
           />
 
           <BacktestMetricsGrid results={results} />
@@ -122,6 +165,16 @@ export default function BacktestDetailPage() {
           )}
         </>
       )}
+
+      <RunBacktestDialog
+        strategyId={backtest.strategyId}
+        marketId={marketId}
+        open={runAgainOpen}
+        onOpenChange={setRunAgainOpen}
+        defaultStartDate={backtest.startDate.split("T")[0]}
+        defaultEndDate={backtest.endDate.split("T")[0]}
+        defaultBudget={backtest.budget}
+      />
     </div>
   );
 }

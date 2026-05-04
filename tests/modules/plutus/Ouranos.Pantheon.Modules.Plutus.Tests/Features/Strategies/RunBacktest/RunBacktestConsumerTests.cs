@@ -28,11 +28,13 @@ public sealed class RunBacktestConsumerTests
         _dbContextFactory = DbContextExtensions.MockFactory<PlutusDbContext>();
 
         var engineLogger = Substitute.For<ILogger<BacktestEngine>>();
+        var dataServiceLogger = Substitute.For<ILogger<BacktestDataQueryService>>();
+        var dataService = new BacktestDataQueryService(dataServiceLogger, _dbContextFactory);
         var executors = new List<IStrategyExecutor> { new SignalWeightedExecutor() };
         var compositeExecutor = new CompositeExecutor(executors);
-        var engine = new BacktestEngine(engineLogger, _dbContextFactory, executors, compositeExecutor, []);
+        var engine = new BacktestEngine(engineLogger, dataService, executors, compositeExecutor, []);
 
-        _consumer = new RunBacktestConsumer(_logger, _dbContextFactory, engine);
+        _consumer = new RunBacktestConsumer(_logger, _dbContextFactory, dataService, engine);
     }
 
     [Fact]

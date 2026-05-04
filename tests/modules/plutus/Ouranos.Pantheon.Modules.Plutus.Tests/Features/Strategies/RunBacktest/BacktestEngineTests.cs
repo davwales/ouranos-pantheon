@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
@@ -210,6 +209,7 @@ public sealed class BacktestEngineTests
         // Arrange
         var symbolId = _fixture.Create<Id<Symbol>>();
         var marketId = _fixture.Create<Id<Market>>();
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
         var shortSnap = MarketTradeSnapshot.Create(
             marketId,
             symbolId,
@@ -248,9 +248,18 @@ public sealed class BacktestEngineTests
         );
         var allSnapshots = new List<MarketTradeSnapshot> { shortSnap, mediumSnap, longSnap };
 
+        var data = BacktestData.FromRaw(
+            market,
+            [],
+            allSnapshots,
+            [],
+            [],
+            [],
+            []
+        );
+
         // Act
-        var (shortResult, mediumResult, longResult) =
-            BacktestEngine.GetSnapshotsForSymbol(symbolId, allSnapshots);
+        var (shortResult, mediumResult, longResult) = data.GetSnapshotsForSymbol(symbolId);
 
         // Assert
         shortResult.ShouldNotBeNull();
@@ -268,6 +277,7 @@ public sealed class BacktestEngineTests
         var targetSymbolId = _fixture.Create<Id<Symbol>>();
         var otherSymbolId = _fixture.Create<Id<Symbol>>();
         var marketId = _fixture.Create<Id<Market>>();
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
         var snap = MarketTradeSnapshot.Create(
             marketId,
             otherSymbolId,
@@ -282,9 +292,18 @@ public sealed class BacktestEngineTests
         );
         var allSnapshots = new List<MarketTradeSnapshot> { snap };
 
+        var data = BacktestData.FromRaw(
+            market,
+            [],
+            allSnapshots,
+            [],
+            [],
+            [],
+            []
+        );
+
         // Act
-        var (shortResult, mediumResult, longResult) =
-            BacktestEngine.GetSnapshotsForSymbol(targetSymbolId, allSnapshots);
+        var (shortResult, mediumResult, longResult) = data.GetSnapshotsForSymbol(targetSymbolId);
 
         // Assert
         shortResult.ShouldBeNull();
@@ -297,11 +316,22 @@ public sealed class BacktestEngineTests
     {
         // Arrange
         var symbolId = _fixture.Create<Id<Symbol>>();
+        var marketId = _fixture.Create<Id<Market>>();
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
         var allSnapshots = new List<MarketTradeSnapshot>();
 
+        var data = BacktestData.FromRaw(
+            market,
+            [],
+            allSnapshots,
+            [],
+            [],
+            [],
+            []
+        );
+
         // Act
-        var (shortResult, mediumResult, longResult) =
-            BacktestEngine.GetSnapshotsForSymbol(symbolId, allSnapshots);
+        var (shortResult, mediumResult, longResult) = data.GetSnapshotsForSymbol(symbolId);
 
         // Assert
         shortResult.ShouldBeNull();
@@ -315,14 +345,25 @@ public sealed class BacktestEngineTests
         // Arrange
         var symbolId = _fixture.Create<Id<Symbol>>();
         var marketId = _fixture.Create<Id<Market>>();
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
         var signal1 = Signal.Create(marketId, symbolId, SignalType.TaxAdjustedRoi, 0.8m);
         var signal2 = Signal.Create(marketId, symbolId, SignalType.TrendMomentum, 0.5m);
         var otherSymbolId = _fixture.Create<Id<Symbol>>();
         var signal3 = Signal.Create(marketId, otherSymbolId, SignalType.Rsi, 0.3m);
         var allSignals = new List<Signal> { signal1, signal2, signal3 };
 
+        var data = BacktestData.FromRaw(
+            market,
+            [],
+            [],
+            [],
+            allSignals,
+            [],
+            []
+        );
+
         // Act
-        var result = BacktestEngine.GetSignalsForSymbol(symbolId, allSignals);
+        var result = data.GetSignalsForSymbol(symbolId);
 
         // Assert
         result.Count.ShouldBe(2);
@@ -335,10 +376,22 @@ public sealed class BacktestEngineTests
     {
         // Arrange
         var symbolId = _fixture.Create<Id<Symbol>>();
+        var marketId = _fixture.Create<Id<Market>>();
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
         var allSignals = new List<Signal>();
 
+        var data = BacktestData.FromRaw(
+            market,
+            [],
+            [],
+            [],
+            allSignals,
+            [],
+            []
+        );
+
         // Act
-        var result = BacktestEngine.GetSignalsForSymbol(symbolId, allSignals);
+        var result = data.GetSignalsForSymbol(symbolId);
 
         // Assert
         result.ShouldBeEmpty();
@@ -441,35 +494,37 @@ public sealed class BacktestEngineTests
     }
 
     [Fact]
-    public void BuildPriceBuckets_WhenEmptyTrades_ReturnsEmptyList()
+    public void BuildPriceBucketsFromAggregates_WhenEmptyAggregates_ReturnsEmptyList()
     {
         // Arrange
-        var trades = new List<Trade>();
+        var aggregates = new List<DailyTradeAggregate>();
 
         // Act
-        var result = BacktestEngine.BuildPriceBuckets(trades);
+        var result = BacktestEngine.BuildPriceBucketsFromAggregates(aggregates);
 
         // Assert
         result.ShouldBeEmpty();
     }
 
     [Fact]
-    public void BuildPriceBuckets_WhenSingleTrade_ReturnsOneBucket()
+    public void BuildPriceBucketsFromAggregates_WhenSingleAggregate_ReturnsOneBucket()
     {
         // Arrange
-        var trades = new List<Trade>
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var aggregates = new List<DailyTradeAggregate>
         {
-            Trade.Create(
-                _fixture.Create<Id<Trade>>(),
-                _fixture.Create<Id<Symbol>>(),
+            new DailyTradeAggregate(
+                symbolId,
+                new DateOnly(2025, 1, 15),
                 100m,
-                50m,
-                DateTimeOffset.UtcNow
+                100m,
+                100m,
+                50m
             )
         };
 
         // Act
-        var result = BacktestEngine.BuildPriceBuckets(trades);
+        var result = BacktestEngine.BuildPriceBucketsFromAggregates(aggregates);
 
         // Assert
         result.Count.ShouldBe(1);
@@ -480,24 +535,24 @@ public sealed class BacktestEngineTests
     }
 
     [Fact]
-    public void BuildPriceBuckets_WhenMultipleTrades_AggregatesIntoBuckets()
+    public void BuildPriceBucketsFromAggregates_WhenMultipleAggregates_AggregatesIntoBuckets()
     {
         // Arrange
         var symbolId = _fixture.Create<Id<Symbol>>();
-        var baseTime = DateTimeOffset.UtcNow;
-        var trades = Enumerable.Range(0, 50)
-            .Select(i => Trade.Create(
-                    _fixture.Create<Id<Trade>>(),
+        var aggregates = Enumerable.Range(0, 50)
+            .Select(i => new DailyTradeAggregate(
                     symbolId,
+                    new DateOnly(2025, 1, 1).AddDays(i),
                     100m + i,
-                    10m + i,
-                    baseTime.AddDays(i)
+                    100m + i,
+                    100m + i,
+                    10m + i
                 )
             )
             .ToList();
 
         // Act
-        var result = BacktestEngine.BuildPriceBuckets(trades);
+        var result = BacktestEngine.BuildPriceBucketsFromAggregates(aggregates);
 
         // Assert
         result.ShouldNotBeEmpty();
@@ -510,46 +565,48 @@ public sealed class BacktestEngineTests
     }
 
     [Fact]
-    public void BuildPriceBuckets_WhenFewerThan25Trades_CreatesSmallBuckets()
+    public void BuildPriceBucketsFromAggregates_WhenFewerThan25Aggregates_CreatesSmallBuckets()
     {
         // Arrange
         var symbolId = _fixture.Create<Id<Symbol>>();
-        var trades = Enumerable.Range(0, 10)
-            .Select(i => Trade.Create(
-                    _fixture.Create<Id<Trade>>(),
+        var aggregates = Enumerable.Range(0, 10)
+            .Select(i => new DailyTradeAggregate(
                     symbolId,
+                    new DateOnly(2025, 1, 1).AddDays(i),
                     100m + i,
-                    10m,
-                    DateTimeOffset.UtcNow.AddDays(i)
+                    100m + i,
+                    100m + i,
+                    10m
                 )
             )
             .ToList();
 
         // Act
-        var result = BacktestEngine.BuildPriceBuckets(trades);
+        var result = BacktestEngine.BuildPriceBucketsFromAggregates(aggregates);
 
         // Assert
         result.Count.ShouldBe(10);
     }
 
     [Fact]
-    public void BuildPriceBuckets_WhenExactly25Trades_CreatesExactly25Buckets()
+    public void BuildPriceBucketsFromAggregates_WhenExactly25Aggregates_CreatesExactly25Buckets()
     {
         // Arrange
         var symbolId = _fixture.Create<Id<Symbol>>();
-        var trades = Enumerable.Range(0, 25)
-            .Select(i => Trade.Create(
-                    _fixture.Create<Id<Trade>>(),
+        var aggregates = Enumerable.Range(0, 25)
+            .Select(i => new DailyTradeAggregate(
                     symbolId,
+                    new DateOnly(2025, 1, 1).AddDays(i),
                     100m + i,
-                    10m,
-                    DateTimeOffset.UtcNow.AddDays(i)
+                    100m + i,
+                    100m + i,
+                    10m
                 )
             )
             .ToList();
 
         // Act
-        var result = BacktestEngine.BuildPriceBuckets(trades);
+        var result = BacktestEngine.BuildPriceBucketsFromAggregates(aggregates);
 
         // Assert
         result.Count.ShouldBe(25);
@@ -834,9 +891,13 @@ public sealed class BacktestEngineTests
     {
         // Arrange
         var state = new BacktestLoopState(10000m);
+        var currentDate = new DateTimeOffset(2025, 1, 15, 12, 0, 0, TimeSpan.Zero);
+        var marketId = _fixture.Create<Id<Market>>();
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var data = BacktestData.FromRaw(market, [], [], [], [], [], []);
 
         // Act
-        BacktestEngine.UpdatePortfolioMetrics(state);
+        BacktestEngine.UpdatePortfolioMetrics(state, currentDate, data);
 
         // Assert
         state.PortfolioValues.Count.ShouldBe(2);
@@ -849,9 +910,13 @@ public sealed class BacktestEngineTests
     {
         // Arrange
         var state = new BacktestLoopState(10000m) { Balance = 12000m };
+        var currentDate = new DateTimeOffset(2025, 1, 15, 12, 0, 0, TimeSpan.Zero);
+        var marketId = _fixture.Create<Id<Market>>();
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var data = BacktestData.FromRaw(market, [], [], [], [], [], []);
 
         // Act
-        BacktestEngine.UpdatePortfolioMetrics(state);
+        BacktestEngine.UpdatePortfolioMetrics(state, currentDate, data);
 
         // Assert
         state.PeakPortfolioValue.ShouldBe(12000m);
@@ -863,9 +928,13 @@ public sealed class BacktestEngineTests
     {
         // Arrange
         var state = new BacktestLoopState(10000m) { PeakPortfolioValue = 10000m, Balance = 8000m };
+        var currentDate = new DateTimeOffset(2025, 1, 15, 12, 0, 0, TimeSpan.Zero);
+        var marketId = _fixture.Create<Id<Market>>();
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var data = BacktestData.FromRaw(market, [], [], [], [], [], []);
 
         // Act
-        BacktestEngine.UpdatePortfolioMetrics(state);
+        BacktestEngine.UpdatePortfolioMetrics(state, currentDate, data);
 
         // Assert
         state.MaxDrawdown.ShouldBe(0.2m);
@@ -877,10 +946,16 @@ public sealed class BacktestEngineTests
         // Arrange
         var state = new BacktestLoopState(10000m) { Balance = 5000m };
         var symbolId = _fixture.Create<Id<Symbol>>();
+        var currentDate = new DateTimeOffset(2025, 1, 15, 12, 0, 0, TimeSpan.Zero);
         state.OpenPositions[symbolId] = new OpenPosition(symbolId, "SYM", null, 100m, 50m, DateTimeOffset.UtcNow);
 
+        var marketId = _fixture.Create<Id<Market>>();
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var dailyPrices = new List<DailyPrice> { new DailyPrice(symbolId, new DateOnly(2025, 1, 15), 100m) };
+        var data = BacktestData.FromRaw(market, [], [], [], [], dailyPrices, []);
+
         // Act
-        BacktestEngine.UpdatePortfolioMetrics(state);
+        BacktestEngine.UpdatePortfolioMetrics(state, currentDate, data);
 
         // Assert
         state.PortfolioValues[1].ShouldBe(10000m);
@@ -1171,18 +1246,18 @@ public sealed class BacktestEngineTests
     public void Constructor_WhenNullLogger_Throws()
     {
         // Arrange
-        var dbContextFactory = DbContextExtensions.MockFactory<PlutusDbContext>();
+        var dataService = CreateDataService();
         var composite = new CompositeExecutor([]);
 
         // Act
-        var act = () => new BacktestEngine(null!, dbContextFactory, [], composite, []);
+        var act = () => new BacktestEngine(null!, dataService, [], composite, []);
 
         // Assert
         act.ShouldThrow<ArgumentNullException>();
     }
 
     [Fact]
-    public void Constructor_WhenNullDbContextFactory_Throws()
+    public void Constructor_WhenNullDataService_Throws()
     {
         // Arrange
         var logger = Substitute.For<ILogger<BacktestEngine>>();
@@ -1200,10 +1275,10 @@ public sealed class BacktestEngineTests
     {
         // Arrange
         var logger = Substitute.For<ILogger<BacktestEngine>>();
-        var dbContextFactory = DbContextExtensions.MockFactory<PlutusDbContext>();
+        var dataService = CreateDataService();
 
         // Act
-        var act = () => new BacktestEngine(logger, dbContextFactory, [], null!, []);
+        var act = () => new BacktestEngine(logger, dataService, [], null!, []);
 
         // Assert
         act.ShouldThrow<ArgumentNullException>();
@@ -1229,18 +1304,11 @@ public sealed class BacktestEngineTests
             StrategyType.SignalWeighted,
             new StrategyConfiguration { BuyThreshold = 0.1m }
         );
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
 
-        var dbContextFactory = DbContextExtensions.MockFactory<PlutusDbContext>();
+        var data = BacktestData.FromRaw(market, [symbol], [], [], [], [], []);
 
-        await using (var dbContext = await dbContextFactory.CreateDbContextAsync())
-        {
-            var market = Market.Create(marketId, "Test Market", new Taxes(null));
-            await dbContext.SeedData(market);
-            await dbContext.SeedData(symbol);
-            await dbContext.SeedData(strategy);
-        }
-
-        var engine = CreateEngine(dbContextFactory);
+        var engine = CreateEngine();
 
         // Act
         var result = await engine.RunAsync(
@@ -1249,7 +1317,8 @@ public sealed class BacktestEngineTests
             DateTimeOffset.UtcNow.AddDays(-10),
             DateTimeOffset.UtcNow,
             10000m,
-            CancellationToken.None
+            CancellationToken.None,
+            data: data
         );
 
         // Assert
@@ -1279,18 +1348,11 @@ public sealed class BacktestEngineTests
             StrategyType.SignalWeighted,
             new StrategyConfiguration()
         );
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
 
-        var dbContextFactory = DbContextExtensions.MockFactory<PlutusDbContext>();
+        var data = BacktestData.FromRaw(market, [symbol], [], [], [], [], []);
 
-        await using (var dbContext = await dbContextFactory.CreateDbContextAsync())
-        {
-            var market = Market.Create(marketId, "Test Market", new Taxes(null));
-            await dbContext.SeedData(market);
-            await dbContext.SeedData(symbol);
-            await dbContext.SeedData(strategy);
-        }
-
-        var engine = CreateEngine(dbContextFactory);
+        var engine = CreateEngine();
         var cts = new CancellationTokenSource();
         await cts.CancelAsync();
 
@@ -1301,7 +1363,8 @@ public sealed class BacktestEngineTests
             DateTimeOffset.UtcNow.AddDays(-10),
             DateTimeOffset.UtcNow,
             10000m,
-            cts.Token
+            cts.Token,
+            data: data
         );
 
         // Assert
@@ -1324,36 +1387,58 @@ public sealed class BacktestEngineTests
         );
 
         var baseTime = DateTimeOffset.UtcNow;
-        var trades = Enumerable.Range(0, 5)
-            .Select(i => Trade.Create(
-                    _fixture.Create<Id<Trade>>(),
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+
+        // Create daily aggregates and daily prices spanning the test window
+        var aggregates = Enumerable.Range(0, 5)
+            .Select(i => new DailyTradeAggregate(
                     symbolId,
+                    DateOnly.FromDateTime(baseTime.AddDays(-3 + i).UtcDateTime),
                     100m,
-                    10m,
-                    baseTime.AddDays(-10 + i)
+                    100m,
+                    100m,
+                    10m
                 )
             )
             .ToList();
 
-        var dbContextFactory = DbContextExtensions.MockFactory<PlutusDbContext>();
+        var dailyPrices = Enumerable.Range(0, 5)
+            .Select(i => new DailyPrice(
+                    symbolId,
+                    DateOnly.FromDateTime(baseTime.AddDays(-3 + i).UtcDateTime),
+                    100m
+                )
+            )
+            .ToList();
 
-        await using (var dbContext = await dbContextFactory.CreateDbContextAsync())
-        {
-            var market = Market.Create(marketId, "Test Market", new Taxes(null));
-            await dbContext.SeedData(market);
-            await dbContext.SeedData(symbol);
-            await dbContext.SeedData(strategy);
-            await dbContext.Trades.AddRangeAsync(trades);
-            await dbContext.SaveChangesAsync();
-        }
+        // Provide a signal so SignalWeightedExecutor produces a positive score
+        var signal = Signal.Create(marketId, symbolId, SignalType.TaxAdjustedRoi, 0.8m);
 
-        var engine = CreateEngine(dbContextFactory);
+        var data = BacktestData.FromRaw(
+            market,
+            [symbol],
+            [],
+            [],
+            [signal],
+            dailyPrices,
+            aggregates
+        );
+
+        var engine = CreateEngine();
 
         var startDate = baseTime.AddDays(-3);
         var endDate = baseTime.AddDays(-1);
 
         // Act
-        var result = await engine.RunAsync(strategy, marketId, startDate, endDate, 10000m, CancellationToken.None);
+        var result = await engine.RunAsync(
+            strategy,
+            marketId,
+            startDate,
+            endDate,
+            10000m,
+            CancellationToken.None,
+            data: data
+        );
 
         // Assert
         result.ShouldNotBeNull();
@@ -1380,19 +1465,12 @@ public sealed class BacktestEngineTests
             StrategyType.RecipeArbitrage,
             new StrategyConfiguration { MinMarginPercent = 0.01m }
         );
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
 
-        var dbContextFactory = DbContextExtensions.MockFactory<PlutusDbContext>();
-
-        await using (var dbContext = await dbContextFactory.CreateDbContextAsync())
-        {
-            var market = Market.Create(marketId, "Test Market", new Taxes(null));
-            await dbContext.SeedData(market);
-            await dbContext.SeedData(symbol);
-            await dbContext.SeedData(strategy);
-        }
+        var data = BacktestData.FromRaw(market, [symbol], [], [], [], [], []);
 
         // No executor registered for RecipeArbitrage
-        var engine = CreateEngine(dbContextFactory, executors: []);
+        var engine = CreateEngine(executors: []);
 
         // Act
         var act = async () => await engine.RunAsync(
@@ -1401,7 +1479,8 @@ public sealed class BacktestEngineTests
             DateTimeOffset.UtcNow.AddDays(-5),
             DateTimeOffset.UtcNow,
             10000m,
-            CancellationToken.None
+            CancellationToken.None,
+            data: data
         );
 
         // Assert
@@ -1409,16 +1488,23 @@ public sealed class BacktestEngineTests
     }
 
     private static BacktestEngine CreateEngine(
-        IDbContextFactory<PlutusDbContext> dbContextFactory,
         List<IStrategyExecutor>? executors = null,
         List<ISignalComputer>? signalComputers = null
     )
     {
         var logger = Substitute.For<ILogger<BacktestEngine>>();
+        var dataService = CreateDataService();
         executors ??= [new SignalWeightedExecutor()];
         var composite = new CompositeExecutor(executors);
         signalComputers ??= [];
 
-        return new BacktestEngine(logger, dbContextFactory, executors, composite, signalComputers);
+        return new BacktestEngine(logger, dataService, executors, composite, signalComputers);
+    }
+
+    private static BacktestDataQueryService CreateDataService()
+    {
+        var logger = Substitute.For<ILogger<BacktestDataQueryService>>();
+        var factory = DbContextExtensions.MockFactory<PlutusDbContext>();
+        return new BacktestDataQueryService(logger, factory);
     }
 }

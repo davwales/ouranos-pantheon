@@ -70,6 +70,8 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetBacktest;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetRecommendations;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.OptimizeStrategy;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.CancelBacktest;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RestartBacktest;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Executors;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization;
@@ -149,6 +151,8 @@ public sealed class PlutusModule : IPantheonModule
 
         GetAllBacktestsEndpoint.Map(app);
         GetBacktestEndpoint.Map(app);
+        CancelBacktestEndpoint.Map(app);
+        RestartBacktestEndpoint.Map(app);
         GetRecommendationsEndpoint.Map(app);
         RunBacktestEndpoint.Map(app);
         OptimizeStrategyEndpoint.Map(app);
@@ -219,6 +223,7 @@ public sealed class PlutusModule : IPantheonModule
             .AddSingleton<IStrategyExecutor, MeanReversionExecutor>()
             .AddSingleton<IStrategyExecutor, RecipeArbitrageExecutor>()
             .AddSingleton<CompositeExecutor>()
+            .AddSingleton<BacktestDataQueryService>()
             .AddSingleton<BacktestEngine>();
     }
 

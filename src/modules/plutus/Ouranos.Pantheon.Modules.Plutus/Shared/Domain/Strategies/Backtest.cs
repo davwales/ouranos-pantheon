@@ -140,4 +140,40 @@ public class Backtest : BaseEntity<Id<Backtest>>
         Update();
         return true;
     }
+
+    public bool Cancel(string? reason = null)
+    {
+        if (Status == BacktestStatus.Cancelled)
+        {
+            return false;
+        }
+
+        if (Status != BacktestStatus.Pending && Status != BacktestStatus.Running)
+        {
+            throw new InvalidOperationException($"Cannot cancel backtest '{Id}' from {Status} state.");
+        }
+
+        ErrorMessage = reason ?? "Cancelled by user.";
+        Status = BacktestStatus.Cancelled;
+        Update();
+        return true;
+    }
+
+    public bool Restart()
+    {
+        if (Status != BacktestStatus.Failed && Status != BacktestStatus.Cancelled)
+        {
+            throw new InvalidOperationException(
+                $"Cannot restart backtest '{Id}' from {Status} state. Only Failed or Cancelled backtests can be restarted."
+            );
+        }
+
+        Status = BacktestStatus.Pending;
+        ProgressPercent = 0;
+        ProgressMessage = null;
+        Results = null;
+        ErrorMessage = null;
+        Update();
+        return true;
+    }
 }

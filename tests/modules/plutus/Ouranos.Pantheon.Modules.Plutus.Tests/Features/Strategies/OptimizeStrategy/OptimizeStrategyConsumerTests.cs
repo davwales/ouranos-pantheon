@@ -26,13 +26,14 @@ public sealed class OptimizeStrategyConsumerTests
     private readonly ILogger<OptimizeStrategyConsumer> _logger = Substitute.For<ILogger<OptimizeStrategyConsumer>>();
     private readonly IDbContextFactory<PlutusDbContext> _dbContextFactory;
     private readonly BacktestEngine _engine;
+    private readonly BacktestDataQueryService _dataService;
     private readonly IOptions<OptimizationOptions> _options;
 
     public OptimizeStrategyConsumerTests()
     {
         _fixture.Customize(new IdCustomization());
         _dbContextFactory = DbContextExtensions.MockFactory<PlutusDbContext>();
-        _engine = CreateEngine(_dbContextFactory);
+        (_engine, _dataService) = CreateEngineAndDataService(_dbContextFactory);
         _options = Options.Create(new OptimizationOptions());
     }
 
@@ -40,7 +41,7 @@ public sealed class OptimizeStrategyConsumerTests
     public void Constructor_WhenNullLogger_ShouldThrow()
     {
         // Arrange & Act
-        var act = () => new OptimizeStrategyConsumer(null!, _dbContextFactory, _engine, _options);
+        var act = () => new OptimizeStrategyConsumer(null!, _dbContextFactory, _dataService, _engine, _options);
 
         // Assert
         act.ShouldThrow<ArgumentNullException>();
@@ -50,7 +51,17 @@ public sealed class OptimizeStrategyConsumerTests
     public void Constructor_WhenNullDbContextFactory_ShouldThrow()
     {
         // Arrange & Act
-        var act = () => new OptimizeStrategyConsumer(_logger, null!, _engine, _options);
+        var act = () => new OptimizeStrategyConsumer(_logger, null!, _dataService, _engine, _options);
+
+        // Assert
+        act.ShouldThrow<ArgumentNullException>();
+    }
+
+    [Fact]
+    public void Constructor_WhenNullDataService_ShouldThrow()
+    {
+        // Arrange & Act
+        var act = () => new OptimizeStrategyConsumer(_logger, _dbContextFactory, null!, _engine, _options);
 
         // Assert
         act.ShouldThrow<ArgumentNullException>();
@@ -60,7 +71,7 @@ public sealed class OptimizeStrategyConsumerTests
     public void Constructor_WhenNullEngine_ShouldThrow()
     {
         // Arrange & Act
-        var act = () => new OptimizeStrategyConsumer(_logger, _dbContextFactory, null!, _options);
+        var act = () => new OptimizeStrategyConsumer(_logger, _dbContextFactory, _dataService, null!, _options);
 
         // Assert
         act.ShouldThrow<ArgumentNullException>();
@@ -70,7 +81,7 @@ public sealed class OptimizeStrategyConsumerTests
     public void Constructor_WhenNullOptions_ShouldThrow()
     {
         // Arrange & Act
-        var act = () => new OptimizeStrategyConsumer(_logger, _dbContextFactory, _engine, null!);
+        var act = () => new OptimizeStrategyConsumer(_logger, _dbContextFactory, _dataService, _engine, null!);
 
         // Assert
         act.ShouldThrow<ArgumentNullException>();
@@ -80,7 +91,7 @@ public sealed class OptimizeStrategyConsumerTests
     public async Task Handle_WhenBacktestNotFound_ShouldReturnWithoutError()
     {
         // Arrange
-        var consumer = new OptimizeStrategyConsumer(_logger, _dbContextFactory, _engine, _options);
+        var consumer = new OptimizeStrategyConsumer(_logger, _dbContextFactory, _dataService, _engine, _options);
         var message = new OptimizeStrategyMessage(
             _fixture.Create<Id<Backtest>>(),
             Generations: 10,
@@ -98,7 +109,7 @@ public sealed class OptimizeStrategyConsumerTests
     public async Task Handle_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange
-        var consumer = new OptimizeStrategyConsumer(_logger, _dbContextFactory, _engine, _options);
+        var consumer = new OptimizeStrategyConsumer(_logger, _dbContextFactory, _dataService, _engine, _options);
         var message = new OptimizeStrategyMessage(
             _fixture.Create<Id<Backtest>>(),
             Generations: 10,
@@ -160,7 +171,7 @@ public sealed class OptimizeStrategyConsumerTests
             await dbContext.SaveChangesAsync();
         }
 
-        var consumer = new OptimizeStrategyConsumer(_logger, _dbContextFactory, _engine, _options);
+        var consumer = new OptimizeStrategyConsumer(_logger, _dbContextFactory, _dataService, _engine, _options);
         var message = new OptimizeStrategyMessage(
             backtest.Id,
             Generations: 1,
@@ -208,7 +219,7 @@ public sealed class OptimizeStrategyConsumerTests
             await dbContext.SeedData(backtest);
         }
 
-        var consumer = new OptimizeStrategyConsumer(_logger, _dbContextFactory, _engine, _options);
+        var consumer = new OptimizeStrategyConsumer(_logger, _dbContextFactory, _dataService, _engine, _options);
         var message = new OptimizeStrategyMessage(
             backtest.Id,
             Generations: 1,
@@ -279,12 +290,17 @@ public sealed class OptimizeStrategyConsumerTests
         exception.InnerException!.Message.ShouldContain("StrategyConfigurationChromosome");
     }
 
-    private static BacktestEngine CreateEngine(IDbContextFactory<PlutusDbContext> dbContextFactory)
+    private static (BacktestEngine engine, BacktestDataQueryService dataService) CreateEngineAndDataService(
+        IDbContextFactory<PlutusDbContext> dbContextFactory
+    )
     {
         var logger = Substitute.For<ILogger<BacktestEngine>>();
+        var dataServiceLogger = Substitute.For<ILogger<BacktestDataQueryService>>();
+        var dataService = new BacktestDataQueryService(dataServiceLogger, dbContextFactory);
         var executors = new List<IStrategyExecutor> { new SignalWeightedExecutor() };
         var composite = new CompositeExecutor(executors);
+        var engine = new BacktestEngine(logger, dataService, executors, composite, []);
 
-        return new BacktestEngine(logger, dbContextFactory, executors, composite, []);
+        return (engine, dataService);
     }
 }
