@@ -11,6 +11,7 @@ public sealed record GetConversationResponse(
     GetConversationModelResponse Model,
     List<GetConversationTraitResponse> Traits,
     List<GetConversationMessageResponse> Messages,
+    GetConversationTokenUsageResponse? TokenUsage,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt
 );

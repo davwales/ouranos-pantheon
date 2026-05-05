@@ -83,7 +83,7 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
         _logger.LogDebug("Successfully streamed chat completion using model '{Model}'.", model);
     }
 
-    public async Task<string> GenerateChatCompletionAsync(
+    public async Task<ChatCompletionResult> GenerateChatCompletionAsync(
         string model,
         List<MessageDto> messages,
         float? temperature = null,
@@ -105,8 +105,18 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
         var result = await chatClient.CompleteChatAsync(chatMessages, options, cancellationToken);
         var content = result.Value.Content[0].Text;
 
+        ChatCompletionUsage? usage = null;
+        if (result.Value.Usage is not null)
+        {
+            usage = new ChatCompletionUsage(
+                result.Value.Usage.InputTokenCount,
+                result.Value.Usage.OutputTokenCount,
+                result.Value.Usage.TotalTokenCount
+            );
+        }
+
         _logger.LogDebug("Successfully completed chat using model '{Model}'.", model);
-        return content;
+        return new ChatCompletionResult(content, usage);
     }
 
     public async Task<List<List<ForecastPoint>>> GetPlutusForecasts(

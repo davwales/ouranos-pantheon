@@ -21,6 +21,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GetAllConversations
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GetConversation;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.CreateConversation;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.UpdateConversation;
+using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.CompactConversation;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.DeleteConversation;
 using Ouranos.Pantheon.Modules.Hermes.Features.Traits.GetAllTraits;
 using Ouranos.Pantheon.Modules.Hermes.Features.Traits.GetTrait;
@@ -66,6 +67,7 @@ public sealed class HermesModule : IPantheonModule
         DeleteModelEndpoint.Map(app);
 
         GenerateCompletionEndpoint.Map(app);
+        CompactConversationEndpoint.Map(app);
         GetAllConversationsEndpoint.Map(app);
         GetConversationEndpoint.Map(app);
         CreateConversationEndpoint.Map(app);

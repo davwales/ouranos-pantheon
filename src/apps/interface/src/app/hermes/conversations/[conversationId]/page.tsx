@@ -57,6 +57,7 @@ export default function ResumeConversationPage() {
       temperature: saved.model.temperature,
       maxTokens: saved.model.maxTokens,
       repeatPenalty: saved.model.repeatPenalty,
+      contextWindow: saved.model.contextWindow,
       isDefault: false,
       isPublic: false,
     };
@@ -97,6 +98,7 @@ export default function ResumeConversationPage() {
       onModelChange={setModel}
       onTraitsChange={setActiveTraits}
       initialMessages={saved.messages}
+      initialTokenUsage={saved.tokenUsage}
       conversationId={savedConversationId}
       conversationName={conversationName ?? saved.name}
       conversationIsPublic={isPublic ?? saved.isPublic}

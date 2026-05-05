@@ -1,9 +1,4 @@
-import { api } from "@/lib/api-client";
-
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE ??
-  process.env.NEXT_PUBLIC_API_HOST ??
-  "http://localhost:8300";
+import { api, streamSse } from "@/lib/api-client";
 
 export interface Persona {
   id: string;
@@ -35,6 +30,7 @@ export interface ModelConfig {
 export interface MessageInput {
   role: Role;
   content: string;
+  sortOrder?: number;
 }
 
 export interface PersonaInput {
@@ -105,6 +101,7 @@ export interface SavedConversationTrait {
 export interface SavedConversationMessage {
   content: string;
   role: Role;
+  sortOrder: number;
 }
 
 export interface SavedConversation {
@@ -115,9 +112,36 @@ export interface SavedConversation {
   model: SavedConversationModel;
   traits: SavedConversationTrait[];
   messages: SavedConversationMessage[];
+  tokenUsage?: {
+    inputTokens: number;
+    outputTokens: number;
+    totalTokens: number;
+  } | null;
   createdAt: string;
   updatedAt: string;
 }
+
+export interface CompactConversationInput {
+  conversationId?: string;
+  modelIdentifier: string;
+  systemPrompt: string;
+  personaName: string;
+  personaDescription: string;
+  messages: MessageInput[];
+}
+
+export type CompactChunk =
+  | { $type: "content"; content: string }
+  | {
+      $type: "usage";
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+    }
+  | {
+      $type: "complete";
+      summaryMessageId: string | null;
+    };
 
 export interface CreateConversationInput {
   personaId: string;
@@ -126,16 +150,25 @@ export interface CreateConversationInput {
   messages: MessageInput[];
   name?: string;
   isPublic?: boolean;
+  inputTokenCount?: number | null;
+  outputTokenCount?: number | null;
+  totalTokenCount?: number | null;
 }
 
 export type CompletionChunk =
   | { $type: "content"; content: string }
-  | { $type: "usage"; inputTokens: number; outputTokens: number; totalTokens: number };
+  | {
+      $type: "usage";
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+    };
 
 export enum Role {
   System = "System",
   User = "User",
   Assistant = "Assistant",
+  Summary = "Summary",
 }
 
 export interface Trait {
@@ -244,39 +277,23 @@ export async function* streamCompletion(
   input: GenerateCompletionInput,
   signal?: AbortSignal,
 ): AsyncGenerator<CompletionChunk> {
-  const res = await fetch(
-    `${API_BASE}/api/hermes/conversations/completions/stream`,
+  yield* streamSse<CompletionChunk>(
+    "/api/hermes/conversations/completions/stream",
     {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        conversation: input.conversation,
-        ...(input.conversationId
-          ? { conversationId: input.conversationId }
-          : {}),
-      }),
-      signal,
+      conversation: input.conversation,
+      ...(input.conversationId ? { conversationId: input.conversationId } : {}),
     },
+    signal,
   );
+}
 
-  if (!res.ok || !res.body) {
-    throw new Error(`Streaming failed: ${res.statusText}`);
-  }
-
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split("\n\n");
-    buffer = lines.pop() ?? "";
-    for (const line of lines) {
-      if (line.startsWith("data: ")) {
-        yield JSON.parse(line.slice(6)) as CompletionChunk;
-      }
-    }
-  }
+export async function* streamCompact(
+  input: CompactConversationInput,
+  signal?: AbortSignal,
+): AsyncGenerator<CompactChunk> {
+  yield* streamSse<CompactChunk>(
+    "/api/hermes/conversations/compact",
+    input,
+    signal,
+  );
 }

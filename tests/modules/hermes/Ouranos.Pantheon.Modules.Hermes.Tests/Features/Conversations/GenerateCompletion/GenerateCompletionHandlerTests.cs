@@ -5,6 +5,8 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning.Dtos;
@@ -107,6 +109,19 @@ public sealed class GenerateCompletionHandlerTests
             .Returns(CreateStream(["Hi there"]));
 
         var conversationId = new Id<Conversation>(Guid.NewGuid().ToString());
+        var personaId = new Id<Persona>(Guid.NewGuid().ToString());
+        var modelConfigId = new Id<ModelConfig>(Guid.NewGuid().ToString());
+        var conversation = Conversation.Create(
+            conversationId,
+            personaId,
+            modelConfigId,
+            [],
+            [],
+            "Test"
+        );
+        await dbContext.Conversations.AddAsync(conversation);
+        await dbContext.SaveChangesAsync();
+
         var command = new GenerateCompletionInput(
             CreateConversation(new CompletionMessageInput("Hello", Role.User)),
             conversationId

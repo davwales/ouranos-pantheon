@@ -10,6 +10,7 @@ using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
+using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning.Dtos;
 using MessageDto = Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning.Dtos.MessageDto;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
@@ -86,7 +87,7 @@ public sealed class CreateConversationHandlerTests
                 Arg.Any<float?>(),
                 Arg.Any<CancellationToken>()
             )
-            .Returns(generatedName);
+            .Returns(new ChatCompletionResult(generatedName, null));
 
         var options = Options.Create(new HermesOptions("Generate a name.", "test-model"));
         var handler = new CreateConversationHandler(_logger, _dbContext, _mlClient, options);
@@ -128,7 +129,7 @@ public sealed class CreateConversationHandlerTests
                 Arg.Any<float?>(),
                 Arg.Any<CancellationToken>()
             )
-            .Returns(longName);
+            .Returns(new ChatCompletionResult(longName, null));
 
         var options = Options.Create(new HermesOptions("Generate a name.", "test-model"));
         var handler = new CreateConversationHandler(_logger, _dbContext, _mlClient, options);
@@ -161,7 +162,7 @@ public sealed class CreateConversationHandlerTests
                 Arg.Any<float?>(),
                 Arg.Any<CancellationToken>()
             )
-            .Returns<string>(_ => throw new Exception("ML service unavailable"));
+            .Returns<ChatCompletionResult>(_ => throw new Exception("ML service unavailable"));
 
         var options = Options.Create(new HermesOptions("Generate a name.", "test-model"));
         var handler = new CreateConversationHandler(_logger, _dbContext, _mlClient, options);
@@ -258,7 +259,7 @@ public sealed class CreateConversationHandlerTests
                 Arg.Any<float?>(),
                 Arg.Any<CancellationToken>()
             )
-            .Returns("Generated Name");
+            .Returns(new ChatCompletionResult("Generated Name", null));
 
         var options = Options.Create(new HermesOptions("Generate a name.", "test-model"));
         var handler = new CreateConversationHandler(_logger, _dbContext, _mlClient, options);
@@ -279,6 +280,59 @@ public sealed class CreateConversationHandlerTests
 
         // Assert
         result.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task Handle_WhenTokenCountsProvided_ShouldRecordTokenUsage()
+    {
+        // Arrange
+        var personaId = new Id<Persona>(Guid.NewGuid().ToString());
+        var modelConfigId = new Id<ModelConfig>(Guid.NewGuid().ToString());
+        var command = new CreateConversationInput(
+            personaId,
+            modelConfigId,
+            [],
+            [new CreateConversationMessageInput("Hello", Role.User)],
+            _fixture.Create<string>(),
+            InputTokenCount: 100,
+            OutputTokenCount: 50,
+            TotalTokenCount: 150
+        );
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var savedConversation = await _dbContext.Conversations.FindAsync(result.Id);
+        savedConversation.ShouldNotBeNull();
+        savedConversation.InputTokenCount.ShouldBe(100);
+        savedConversation.OutputTokenCount.ShouldBe(50);
+        savedConversation.TotalTokenCount.ShouldBe(150);
+    }
+
+    [Fact]
+    public async Task Handle_WhenTokenCountsNotProvided_ShouldNotRecordTokenUsage()
+    {
+        // Arrange
+        var personaId = new Id<Persona>(Guid.NewGuid().ToString());
+        var modelConfigId = new Id<ModelConfig>(Guid.NewGuid().ToString());
+        var command = new CreateConversationInput(
+            personaId,
+            modelConfigId,
+            [],
+            [],
+            _fixture.Create<string>()
+        );
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var savedConversation = await _dbContext.Conversations.FindAsync(result.Id);
+        savedConversation.ShouldNotBeNull();
+        savedConversation.InputTokenCount.ShouldBeNull();
+        savedConversation.OutputTokenCount.ShouldBeNull();
+        savedConversation.TotalTokenCount.ShouldBeNull();
     }
 
     [Fact]
