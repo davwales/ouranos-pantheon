@@ -29,6 +29,7 @@ public sealed class GetConversationEndpointTests
             new GetConversationModelResponse(modelId, "GPT-4", "gpt-4", "Prompt", null, null, null, null),
             [],
             [],
+            null,
             DateTimeOffset.UtcNow,
             DateTimeOffset.UtcNow
         );

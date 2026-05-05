@@ -11,5 +11,8 @@ public sealed record CreateConversationInput(
     Id<Trait>[] TraitIds,
     List<CreateConversationMessageInput> Messages,
     string? Name = null,
-    bool IsPublic = true
+    bool IsPublic = true,
+    int? InputTokenCount = null,
+    int? OutputTokenCount = null,
+    int? TotalTokenCount = null
 );

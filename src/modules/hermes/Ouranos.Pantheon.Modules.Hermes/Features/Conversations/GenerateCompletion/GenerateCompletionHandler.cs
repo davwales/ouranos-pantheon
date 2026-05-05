@@ -73,6 +73,11 @@ public sealed class GenerateCompletionHandler
         {
             await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
+            var conversation = await dbContext.Conversations
+                .FirstOrDefaultAsync(c => c.Id == command.ConversationId, cancellationToken);
+
+            Guard.Against.NotFound(command.ConversationId.Value, conversation);
+
             var existingCount = await dbContext.Messages
                 .CountAsync(m => m.ConversationId == command.ConversationId, cancellationToken);
 
@@ -103,6 +108,15 @@ public sealed class GenerateCompletionHandler
                         existingCount + 1
                     ),
                     cancellationToken
+                );
+            }
+
+            if (tokenUsage is not null)
+            {
+                conversation.RecordTokenUsage(
+                    tokenUsage.InputTokens,
+                    tokenUsage.OutputTokens,
+                    tokenUsage.TotalTokens
                 );
             }
 
@@ -186,6 +200,7 @@ public sealed class GenerateCompletionHandler
         Role.System => RoleDto.System,
         Role.User => RoleDto.User,
         Role.Assistant => RoleDto.Assistant,
+        Role.Summary => RoleDto.Assistant,
         _ => throw new InvalidOperationException($"Unknown role: {role}")
     };
 }

@@ -58,6 +58,18 @@ public sealed class GetConversationHandler : IPantheonHandler<GetConversationInp
         }
 
         _logger.LogDebug("Successfully handled get conversation request.");
+
+        GetConversationTokenUsageResponse? tokenUsage = null;
+        if (conversation.InputTokenCount.HasValue && conversation.OutputTokenCount.HasValue &&
+            conversation.TotalTokenCount.HasValue)
+        {
+            tokenUsage = new GetConversationTokenUsageResponse(
+                conversation.InputTokenCount.Value,
+                conversation.OutputTokenCount.Value,
+                conversation.TotalTokenCount.Value
+            );
+        }
+
         return new GetConversationResponse(
             conversation.Id,
             conversation.Name,
@@ -85,6 +97,7 @@ public sealed class GetConversationHandler : IPantheonHandler<GetConversationInp
                     new GetConversationMessageResponse(m.Id, m.Content, m.Role, m.SortOrder)
                 )
             ],
+            tokenUsage,
             conversation.CreatedAt,
             conversation.UpdatedAt
         );

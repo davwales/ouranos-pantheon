@@ -31,6 +31,40 @@ export interface PagedResponse<T> {
   take: number;
 }
 
+export async function* streamSse<T>(
+  path: string,
+  body: unknown,
+  signal?: AbortSignal,
+): AsyncGenerator<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal,
+  });
+
+  if (!res.ok || !res.body) {
+    throw new ApiError(res.status, `Streaming failed: ${res.statusText}`);
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n\n");
+    buffer = lines.pop() ?? "";
+    for (const line of lines) {
+      if (line.startsWith("data: ")) {
+        yield JSON.parse(line.slice(6)) as T;
+      }
+    }
+  }
+}
+
 export const api = {
   get: <T>(
     path: string,

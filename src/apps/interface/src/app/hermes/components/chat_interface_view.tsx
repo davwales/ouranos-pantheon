@@ -1,43 +1,24 @@
 "use client";
 
-import AutosizeTextarea from "@/app/components/autosize-textarea";
 import { FooterContent } from "@/app/components/footer";
-import InfoCard from "@/app/components/info-card";
 import { useNavBarActions } from "@/app/components/nav-bar-actions-context";
 import ChatInput from "@/app/hermes/components/chat_input";
 import ChatMessageList from "@/app/hermes/components/chat_message_list";
+import { ContextUsageBar } from "@/app/hermes/components/context-usage-bar";
+import { ConversationConfigSheet } from "@/app/hermes/components/conversation-config-sheet";
 import {
   ModelFormInput,
   PersonaFormInput,
   TraitFormInput,
 } from "@/app/hermes/types";
-import { Button } from "@/components/ui/button";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { useApi } from "@/hooks/use-api";
 import {
   hermesApi,
   MessageInput,
   Role,
+  streamCompact,
   streamCompletion,
 } from "@/lib/api/hermes";
-import { generateID } from "@/lib/utils";
-import {
-  Bookmark,
-  ChevronDown,
-  Plus,
-  SlidersHorizontal,
-  Trash2,
-} from "lucide-react";
+import { Bookmark, SlidersHorizontal } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 export default function ChatInterfaceView({
@@ -51,6 +32,7 @@ export default function ChatInterfaceView({
   conversationName,
   conversationIsPublic = true,
   initialMessages,
+  initialTokenUsage,
   onConversationSaved,
   onRename,
   onDelete,
@@ -67,6 +49,11 @@ export default function ChatInterfaceView({
   conversationName?: string;
   conversationIsPublic?: boolean;
   initialMessages?: MessageInput[];
+  initialTokenUsage?: {
+    inputTokens: number;
+    outputTokens: number;
+    totalTokens: number;
+  } | null;
   onConversationSaved?: (id: string, name: string) => void;
   onRename?: (name: string) => void;
   onDelete?: () => void;
@@ -77,11 +64,12 @@ export default function ChatInterfaceView({
   );
   const [inputText, setInputText] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isCompacting, setIsCompacting] = useState(false);
   const [tokenUsage, setTokenUsage] = useState<{
     inputTokens: number;
     outputTokens: number;
     totalTokens: number;
-  } | null>(null);
+  } | null>(initialTokenUsage ?? null);
   const [editingMessageIndex, setEditingMessageIndex] = useState<number | null>(
     null,
   );
@@ -123,12 +111,22 @@ export default function ChatInterfaceView({
           .filter((t) => t.id && !t.isEphemeral)
           .map((t) => t.id!),
         messages: messages,
+        inputTokenCount: tokenUsage?.inputTokens ?? null,
+        outputTokenCount: tokenUsage?.outputTokens ?? null,
+        totalTokenCount: tokenUsage?.totalTokens ?? null,
       });
       onConversationSaved?.(result.id, result.name);
     } catch (error) {
       console.error("Error saving conversation:", error);
     }
-  }, [persona.id, model.id, activeTraits, messages, onConversationSaved]);
+  }, [
+    persona.id,
+    model.id,
+    activeTraits,
+    messages,
+    tokenUsage,
+    onConversationSaved,
+  ]);
 
   useEffect(() => {
     const actions = (
@@ -163,6 +161,24 @@ export default function ChatInterfaceView({
     isGenerating,
   ]);
 
+  const getMessagesForLlm = useCallback(
+    (allMessages: MessageInput[]): MessageInput[] => {
+      const lastSummaryIndex = allMessages.findLastIndex(
+        (m) => m.role === Role.Summary,
+      );
+
+      if (lastSummaryIndex === -1) {
+        return allMessages;
+      }
+
+      const messagesAfterSummary = allMessages.slice(lastSummaryIndex);
+      return messagesAfterSummary.map((m) =>
+        m.role === Role.Summary ? { ...m, role: Role.Assistant } : m,
+      );
+    },
+    [],
+  );
+
   const generateCompletion = async (currentMessages: MessageInput[]) => {
     if (isGenerating) return;
     setIsGenerating(true);
@@ -172,6 +188,8 @@ export default function ChatInterfaceView({
       content: "",
     };
     setMessages((prev) => [...prev, assistantMessage]);
+
+    const messagesForLlm = getMessagesForLlm(currentMessages);
 
     try {
       for await (const chunk of streamCompletion({
@@ -193,7 +211,7 @@ export default function ChatInterfaceView({
             name: t.name,
             content: t.content,
           })),
-          messages: currentMessages.map(({ role, content }) => ({
+          messages: messagesForLlm.map(({ role, content }) => ({
             role,
             content,
           })),
@@ -283,6 +301,54 @@ export default function ChatInterfaceView({
     await generateCompletion(updatedMessages);
   };
 
+  const handleCompact = async () => {
+    if (isCompacting || isGenerating) return;
+
+    const compactableMessages = messages.filter(
+      (m) => m.role === Role.User || m.role === Role.Assistant,
+    );
+    if (compactableMessages.length === 0) return;
+
+    setIsCompacting(true);
+    try {
+      const summaryMessage: MessageInput = {
+        role: Role.Summary,
+        content: "",
+      };
+      setMessages((prev) => [...prev, summaryMessage]);
+
+      for await (const chunk of streamCompact({
+        ...(conversationId ? { conversationId } : {}),
+        modelIdentifier: model.modelIdentifier,
+        systemPrompt: model.systemPrompt,
+        personaName: persona.name,
+        personaDescription: persona.description,
+        messages,
+      })) {
+        if (chunk.$type === "content") {
+          setMessages((prev) => {
+            const updated = [...prev];
+            updated[updated.length - 1] = {
+              ...updated[updated.length - 1],
+              content: updated[updated.length - 1].content + chunk.content,
+            };
+            return updated;
+          });
+        } else if (chunk.$type === "usage") {
+          setTokenUsage({
+            inputTokens: chunk.inputTokens,
+            outputTokens: chunk.outputTokens,
+            totalTokens: chunk.totalTokens,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error compacting conversation:", error);
+    } finally {
+      setIsCompacting(false);
+    }
+  };
+
   return (
     <div {...props}>
       <ChatMessageList
@@ -296,16 +362,24 @@ export default function ChatInterfaceView({
       />
 
       <FooterContent>
-        <ChatInput
-          inputText={inputText}
-          isGenerating={isGenerating}
-          isEditing={editingMessageIndex !== null}
-          onInputChange={setInputText}
-          onNewMessage={handleNewMessage}
-          onUpdateMessage={handleUpdateMessage}
-          onCancelEdit={handleCancelEdit}
-          className="p-4 border-t"
-        />
+        {model.contextWindow && tokenUsage && (
+          <ContextUsageBar
+            tokenUsage={tokenUsage}
+            contextWindow={model.contextWindow}
+          />
+        )}
+        <div className="flex items-center gap-2 p-4 border-t">
+          <ChatInput
+            inputText={inputText}
+            isGenerating={isGenerating}
+            isEditing={editingMessageIndex !== null}
+            onInputChange={setInputText}
+            onNewMessage={handleNewMessage}
+            onUpdateMessage={handleUpdateMessage}
+            onCancelEdit={handleCancelEdit}
+            className="flex-1"
+          />
+        </div>
       </FooterContent>
 
       <ConversationConfigSheet
@@ -316,11 +390,13 @@ export default function ChatInterfaceView({
         activeTraits={activeTraits}
         conversationName={conversationName}
         conversationIsPublic={conversationIsPublic}
-        tokenUsage={tokenUsage}
-        contextWindow={model.contextWindow}
         onRename={onRename}
         onDelete={onDelete}
         onVisibilityChange={onVisibilityChange}
+        tokenUsage={tokenUsage}
+        contextWindow={model.contextWindow}
+        isCompacting={isCompacting}
+        onCompact={messages.length > 0 ? handleCompact : undefined}
         onPersonaChange={(p) => {
           onPersonaChange?.(p);
           if (conversationId && p.id) {
@@ -366,358 +442,5 @@ export default function ChatInterfaceView({
         }}
       />
     </div>
-  );
-}
-
-function ConversationConfigSheet({
-  open,
-  onOpenChange,
-  persona,
-  model,
-  activeTraits,
-  onPersonaChange,
-  onModelChange,
-  onTraitsChange,
-  conversationName,
-  conversationIsPublic,
-  onRename,
-  onDelete,
-  onVisibilityChange,
-  tokenUsage,
-  contextWindow,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  persona: PersonaFormInput;
-  model: ModelFormInput;
-  activeTraits: TraitFormInput[];
-  onPersonaChange?: (persona: PersonaFormInput) => void;
-  onModelChange?: (model: ModelFormInput) => void;
-  onTraitsChange?: (traits: TraitFormInput[]) => void;
-  conversationName?: string;
-  conversationIsPublic?: boolean;
-  onRename?: (name: string) => void;
-  onDelete?: () => void;
-  onVisibilityChange?: (isPublic: boolean) => void;
-  tokenUsage?: {
-    inputTokens: number;
-    outputTokens: number;
-    totalTokens: number;
-  } | null;
-  contextWindow?: number | null;
-}) {
-  const [personasState] = useApi(() => hermesApi.getAllPersonas());
-  const [modelsState] = useApi(() => hermesApi.getAllModels());
-  const [traitsState] = useApi(() => hermesApi.getAllTraits());
-  const [personasOpen, setPersonasOpen] = useState(false);
-  const [modelsOpen, setModelsOpen] = useState(false);
-  const [traitsOpen, setTraitsOpen] = useState(false);
-  const [ephemeralTraits, setEphemeralTraits] = useState<TraitFormInput[]>([]);
-  const [isAddingTrait, setIsAddingTrait] = useState(false);
-  const [draftName, setDraftName] = useState("");
-  const [draftContent, setDraftContent] = useState("");
-  const [nameInput, setNameInput] = useState(conversationName ?? "");
-  const [prevConversationName, setPrevConversationName] =
-    useState(conversationName);
-
-  if (conversationName !== prevConversationName) {
-    setPrevConversationName(conversationName);
-    setNameInput(conversationName ?? "");
-  }
-
-  const handleToggleTrait = (trait: TraitFormInput) => {
-    if (!onTraitsChange) return;
-    const isActive = activeTraits.some((t) => t.id === trait.id);
-    if (isActive) {
-      onTraitsChange(activeTraits.filter((t) => t.id !== trait.id));
-    } else {
-      onTraitsChange([...activeTraits, trait]);
-    }
-  };
-
-  const handleConfirmEphemeralTrait = () => {
-    if (!draftContent.trim() || !onTraitsChange) return;
-    const newTrait: TraitFormInput = {
-      id: generateID(),
-      name: draftName.trim() || "Ephemeral Trait",
-      content: draftContent.trim(),
-      isPublic: true,
-      isEphemeral: true,
-    };
-    setEphemeralTraits((prev) => [...prev, newTrait]);
-    onTraitsChange([...activeTraits, newTrait]);
-    setDraftName("");
-    setDraftContent("");
-    setIsAddingTrait(false);
-  };
-
-  const handleCancelEphemeralTrait = () => {
-    setDraftName("");
-    setDraftContent("");
-    setIsAddingTrait(false);
-  };
-
-  const allTraits = [
-    ...(traitsState.data?.map((t) => ({ ...t, ephemeral: false })) ?? []),
-    ...ephemeralTraits.map((t) => ({ ...t, ephemeral: true })),
-  ];
-
-  return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>Conversation Settings</SheetTitle>
-        </SheetHeader>
-
-        <div className="px-4 pb-4 space-y-4">
-          {contextWindow && tokenUsage && (
-            <ContextUsageBar
-              tokenUsage={tokenUsage}
-              contextWindow={contextWindow}
-            />
-          )}
-          <CollapsibleCardSection
-            label="Persona"
-            open={personasOpen}
-            onOpenChange={setPersonasOpen}
-            items={personasState.data?.map((p) => ({
-              id: p.id ?? "",
-              label: p.name,
-              description: p.description,
-              onSelect: () => onPersonaChange?.(p),
-              selected: p.id === persona.id,
-            }))}
-          />
-          <CollapsibleCardSection
-            label="Model"
-            open={modelsOpen}
-            onOpenChange={setModelsOpen}
-            items={modelsState.data?.map((m) => ({
-              id: m.id ?? "",
-              label: m.name,
-              description: m.modelIdentifier,
-              onSelect: () => onModelChange?.(m),
-              selected: m.id === model.id,
-            }))}
-          />
-
-          <Collapsible open={traitsOpen} onOpenChange={setTraitsOpen}>
-            <CollapsibleTrigger className="flex items-center justify-between w-full rounded-md px-2 py-2 hover:bg-accent transition-colors">
-              <p className="text-sm font-medium">Traits</p>
-              <ChevronDown
-                className={`h-4 w-4 text-muted-foreground transition-transform ${traitsOpen ? "rotate-180" : ""}`}
-              />
-            </CollapsibleTrigger>
-            <CollapsibleContent className="grid grid-cols-1 gap-3 mt-2">
-              {allTraits.map((trait) => {
-                const isActive = activeTraits.some(
-                  (t) => t === trait || (t.id && t.id === trait.id),
-                );
-                return (
-                  <InfoCard
-                    key={trait.id}
-                    label={trait.name}
-                    description={trait.content}
-                    onClick={() => handleToggleTrait(trait)}
-                    className={[
-                      "hover:bg-accent hover:cursor-pointer w-full",
-                      trait.ephemeral ? "border-dashed" : "",
-                      isActive ? "border-accent-foreground" : "",
-                    ].join(" ")}
-                  />
-                );
-              })}
-
-              {isAddingTrait ? (
-                <div className="rounded-4xl border-2 border-dashed border-accent py-4 px-3 space-y-3">
-                  <input
-                    type="text"
-                    value={draftName}
-                    onChange={(e) => setDraftName(e.target.value)}
-                    placeholder="Name (optional)"
-                    className="w-full text-sm font-medium bg-transparent outline-none placeholder:text-muted-foreground"
-                    autoFocus
-                  />
-                  <AutosizeTextarea
-                    value={draftContent}
-                    onChange={(e) => setDraftContent(e.target.value)}
-                    placeholder="Enter context or instruction to inject..."
-                    className="w-full text-sm bg-transparent border-none shadow-none resize-none p-0 focus-visible:ring-0 placeholder:text-muted-foreground"
-                  />
-                  <div className="flex gap-2 pt-1">
-                    <Button
-                      size="sm"
-                      onClick={handleConfirmEphemeralTrait}
-                      disabled={!draftContent.trim()}
-                      className="flex-1"
-                    >
-                      Add
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={handleCancelEphemeralTrait}
-                      className="flex-1"
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setIsAddingTrait(true)}
-                  className="flex items-center justify-center gap-2 w-full rounded-4xl border-2 border-dashed border-accent py-4 px-3 text-sm text-muted-foreground hover:text-foreground hover:border-accent-foreground transition-colors"
-                >
-                  <Plus className="h-4 w-4" />
-                  Add ephemeral trait
-                </button>
-              )}
-            </CollapsibleContent>
-          </Collapsible>
-
-          {(onRename ?? onDelete ?? onVisibilityChange) && (
-            <>
-              <hr className="border-border" />
-              <div className="space-y-3">
-                <p className="text-sm font-medium px-2">Conversation</p>
-                {onVisibilityChange && (
-                  <label className="flex items-center justify-between px-2 py-1 cursor-pointer">
-                    <span className="text-sm">Public</span>
-                    <input
-                      type="checkbox"
-                      checked={conversationIsPublic ?? false}
-                      onChange={(e) => onVisibilityChange(e.target.checked)}
-                      className="h-4 w-4 cursor-pointer"
-                    />
-                  </label>
-                )}
-                {onRename && (
-                  <div className="flex gap-2">
-                    <input
-                      value={nameInput}
-                      onChange={(e) => setNameInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (
-                          e.key === "Enter" &&
-                          nameInput.trim() &&
-                          nameInput.trim() !== conversationName
-                        ) {
-                          onRename(nameInput.trim());
-                        }
-                      }}
-                      className="flex-1 text-sm bg-transparent border rounded-md px-3 py-2 outline-none focus:ring-1 focus:ring-ring"
-                      placeholder="Conversation name"
-                    />
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={
-                        !nameInput.trim() ||
-                        nameInput.trim() === conversationName
-                      }
-                      onClick={() => onRename(nameInput.trim())}
-                    >
-                      Rename
-                    </Button>
-                  </div>
-                )}
-                {onDelete && (
-                  <Button
-                    variant="destructive"
-                    className="w-full"
-                    onClick={onDelete}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete Conversation
-                  </Button>
-                )}
-              </div>
-            </>
-          )}
-        </div>
-      </SheetContent>
-    </Sheet>
-  );
-}
-
-function ContextUsageBar({
-  tokenUsage,
-  contextWindow,
-}: {
-  tokenUsage: {
-    inputTokens: number;
-    outputTokens: number;
-    totalTokens: number;
-  };
-  contextWindow: number;
-}) {
-  const pct = (tokenUsage.totalTokens / contextWindow) * 100;
-  const barColor =
-    pct >= 100 ? "bg-red-500" : pct >= 75 ? "bg-yellow-500" : "bg-primary";
-  const textColor =
-    pct >= 100
-      ? "text-red-500"
-      : pct >= 75
-        ? "text-yellow-500"
-        : "text-muted-foreground";
-
-  return (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between px-2">
-        <p className="text-sm font-medium">Context Usage</p>
-        <p className={`text-xs font-mono ${textColor}`}>
-          {tokenUsage.totalTokens.toLocaleString()} /{" "}
-          {contextWindow.toLocaleString()} ({pct.toFixed(1)}%)
-        </p>
-      </div>
-      <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
-        <div
-          className={`h-full rounded-full transition-all ${barColor}`}
-          style={{ width: `${Math.min(pct, 100)}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
-function CollapsibleCardSection({
-  label,
-  open,
-  onOpenChange,
-  items,
-}: {
-  label: string;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  items?: {
-    id: string;
-    label: string;
-    description?: string | null;
-    onSelect: () => void;
-    selected: boolean;
-  }[];
-}) {
-  return (
-    <Collapsible open={open} onOpenChange={onOpenChange}>
-      <CollapsibleTrigger className="flex items-center justify-between w-full rounded-md px-2 py-2 hover:bg-accent transition-colors">
-        <p className="text-sm font-medium">{label}</p>
-        <ChevronDown
-          className={`h-4 w-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
-        />
-      </CollapsibleTrigger>
-      <CollapsibleContent className="grid grid-cols-1 gap-3 mt-2">
-        {items?.map((item) => (
-          <InfoCard
-            key={item.id}
-            label={item.label}
-            description={item.description}
-            onClick={item.onSelect}
-            className={`hover:bg-accent hover:cursor-pointer w-full ${
-              item.selected ? "border-accent-foreground" : ""
-            }`}
-          />
-        ))}
-      </CollapsibleContent>
-    </Collapsible>
   );
 }

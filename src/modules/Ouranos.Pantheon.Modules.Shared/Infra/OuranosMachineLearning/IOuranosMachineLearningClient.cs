@@ -14,7 +14,7 @@ public interface IOuranosMachineLearningClient
         CancellationToken cancellationToken = default
     );
 
-    Task<string> GenerateChatCompletionAsync(
+    Task<ChatCompletionResult> GenerateChatCompletionAsync(
         string model,
         List<MessageDto> messages,
         float? temperature = null,

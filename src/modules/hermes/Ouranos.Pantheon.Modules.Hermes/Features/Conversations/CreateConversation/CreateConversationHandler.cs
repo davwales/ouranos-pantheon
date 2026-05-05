@@ -81,6 +81,16 @@ public sealed class CreateConversationHandler : IPantheonHandler<CreateConversat
             command.IsPublic
         );
 
+        if (command.InputTokenCount.HasValue && command.OutputTokenCount.HasValue &&
+            command.TotalTokenCount.HasValue)
+        {
+            conversation.RecordTokenUsage(
+                command.InputTokenCount.Value,
+                command.OutputTokenCount.Value,
+                command.TotalTokenCount.Value
+            );
+        }
+
         await _dbContext.Conversations.AddAsync(conversation, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -117,13 +127,13 @@ public sealed class CreateConversationHandler : IPantheonHandler<CreateConversat
                 messages.Add(new MessageDto("Generate a name using the prior content.", RoleDto.User));
             }
 
-            var generatedName = await _mlClient.GenerateChatCompletionAsync(
+            var result = await _mlClient.GenerateChatCompletionAsync(
                 options.ConversationNameModel,
                 messages,
                 cancellationToken: cancellationToken
             );
 
-            var trimmed = generatedName.Trim();
+            var trimmed = result.Content.Trim();
             if (string.IsNullOrWhiteSpace(trimmed))
             {
                 return null;

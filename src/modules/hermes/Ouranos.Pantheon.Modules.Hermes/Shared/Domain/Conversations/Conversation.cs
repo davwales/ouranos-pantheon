@@ -31,6 +31,12 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
 
     public bool IsPublic { get; private set; }
 
+    public int? InputTokenCount { get; private set; }
+
+    public int? OutputTokenCount { get; private set; }
+
+    public int? TotalTokenCount { get; private set; }
+
     public List<Trait> Traits { get; private set; } = [];
 
     public static Conversation Create(
@@ -92,6 +98,14 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
         Messages = [.. messages];
         Traits = [.. traits];
         IsPublic = isPublic;
+        Update();
+    }
+
+    public void RecordTokenUsage(int inputTokens, int outputTokens, int totalTokens)
+    {
+        InputTokenCount = inputTokens;
+        OutputTokenCount = outputTokens;
+        TotalTokenCount = totalTokens;
         Update();
     }
 }
