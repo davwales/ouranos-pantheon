@@ -26,22 +26,40 @@ public sealed class OptimizeStrategyConsumerTests
     private readonly ILogger<OptimizeStrategyConsumer> _logger = Substitute.For<ILogger<OptimizeStrategyConsumer>>();
     private readonly IDbContextFactory<PlutusDbContext> _dbContextFactory;
     private readonly BacktestEngine _engine;
-    private readonly BacktestDataQueryService _dataService;
+    private readonly IBacktestDataQueryService _dataService;
     private readonly IOptions<OptimizationOptions> _options;
+    private readonly IOptions<BacktestDataOptions> _backtestDataOptions;
 
     public OptimizeStrategyConsumerTests()
     {
         _fixture.Customize(new IdCustomization());
         _dbContextFactory = DbContextExtensions.MockFactory<PlutusDbContext>();
-        (_engine, _dataService) = CreateEngineAndDataService(_dbContextFactory);
+        _dataService = Substitute.For<IBacktestDataQueryService>();
+        var executors = new List<IStrategyExecutor> { new SignalWeightedExecutor() };
+        var compositeExecutor = new CompositeExecutor(executors);
+        var engineLogger = Substitute.For<ILogger<BacktestEngine>>();
+        _engine = new BacktestEngine(engineLogger, _dataService, executors, compositeExecutor, []);
         _options = Options.Create(new OptimizationOptions());
+        _backtestDataOptions = Options.Create(new BacktestDataOptions());
+    }
+
+    private BacktestData CreateBacktestData(Market market, List<Symbol> symbols)
+    {
+        return BacktestData.FromRaw(
+            market,
+            symbols,
+            [],
+            [],
+            [],
+            []
+        );
     }
 
     [Fact]
     public void Constructor_WhenNullLogger_ShouldThrow()
     {
         // Arrange & Act
-        var act = () => new OptimizeStrategyConsumer(null!, _dbContextFactory, _dataService, _engine, _options);
+        var act = () => new OptimizeStrategyConsumer(null!, _dbContextFactory, _dataService, _engine, _options, _backtestDataOptions);
 
         // Assert
         act.ShouldThrow<ArgumentNullException>();
@@ -51,7 +69,7 @@ public sealed class OptimizeStrategyConsumerTests
     public void Constructor_WhenNullDbContextFactory_ShouldThrow()
     {
         // Arrange & Act
-        var act = () => new OptimizeStrategyConsumer(_logger, null!, _dataService, _engine, _options);
+        var act = () => new OptimizeStrategyConsumer(_logger, null!, _dataService, _engine, _options, _backtestDataOptions);
 
         // Assert
         act.ShouldThrow<ArgumentNullException>();
@@ -61,7 +79,7 @@ public sealed class OptimizeStrategyConsumerTests
     public void Constructor_WhenNullDataService_ShouldThrow()
     {
         // Arrange & Act
-        var act = () => new OptimizeStrategyConsumer(_logger, _dbContextFactory, null!, _engine, _options);
+        var act = () => new OptimizeStrategyConsumer(_logger, _dbContextFactory, null!, _engine, _options, _backtestDataOptions);
 
         // Assert
         act.ShouldThrow<ArgumentNullException>();
@@ -71,7 +89,7 @@ public sealed class OptimizeStrategyConsumerTests
     public void Constructor_WhenNullEngine_ShouldThrow()
     {
         // Arrange & Act
-        var act = () => new OptimizeStrategyConsumer(_logger, _dbContextFactory, _dataService, null!, _options);
+        var act = () => new OptimizeStrategyConsumer(_logger, _dbContextFactory, _dataService, null!, _options, _backtestDataOptions);
 
         // Assert
         act.ShouldThrow<ArgumentNullException>();
@@ -81,7 +99,7 @@ public sealed class OptimizeStrategyConsumerTests
     public void Constructor_WhenNullOptions_ShouldThrow()
     {
         // Arrange & Act
-        var act = () => new OptimizeStrategyConsumer(_logger, _dbContextFactory, _dataService, _engine, null!);
+        var act = () => new OptimizeStrategyConsumer(_logger, _dbContextFactory, _dataService, _engine, null!, _backtestDataOptions);
 
         // Assert
         act.ShouldThrow<ArgumentNullException>();
@@ -91,7 +109,7 @@ public sealed class OptimizeStrategyConsumerTests
     public async Task Handle_WhenBacktestNotFound_ShouldReturnWithoutError()
     {
         // Arrange
-        var consumer = new OptimizeStrategyConsumer(_logger, _dbContextFactory, _dataService, _engine, _options);
+        var consumer = new OptimizeStrategyConsumer(_logger, _dbContextFactory, _dataService, _engine, _options, _backtestDataOptions);
         var message = new OptimizeStrategyMessage(
             _fixture.Create<Id<Backtest>>(),
             Generations: 10,
@@ -109,7 +127,7 @@ public sealed class OptimizeStrategyConsumerTests
     public async Task Handle_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange
-        var consumer = new OptimizeStrategyConsumer(_logger, _dbContextFactory, _dataService, _engine, _options);
+        var consumer = new OptimizeStrategyConsumer(_logger, _dbContextFactory, _dataService, _engine, _options, _backtestDataOptions);
         var message = new OptimizeStrategyMessage(
             _fixture.Create<Id<Backtest>>(),
             Generations: 10,
@@ -159,10 +177,10 @@ public sealed class OptimizeStrategyConsumerTests
             .ToList();
 
         var symbol = Symbol.Create(symbolId, "SYM", null, "Test Symbol", marketId, new AdditionalFields());
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
 
         await using (var dbContext = await _dbContextFactory.CreateDbContextAsync())
         {
-            var market = Market.Create(marketId, "Test Market", new Taxes(null));
             await dbContext.SeedData(market);
             await dbContext.SeedData(symbol);
             await dbContext.SeedData(strategy);
@@ -171,7 +189,18 @@ public sealed class OptimizeStrategyConsumerTests
             await dbContext.SaveChangesAsync();
         }
 
-        var consumer = new OptimizeStrategyConsumer(_logger, _dbContextFactory, _dataService, _engine, _options);
+        var backtestData = CreateBacktestData(market, [symbol]);
+
+        _dataService.LoadDataAsync(
+                marketId,
+                Arg.Any<DateTimeOffset>(),
+                Arg.Any<DateTimeOffset>(),
+                Arg.Any<CancellationToken>(),
+                Arg.Any<int>()
+            )
+            .Returns(backtestData);
+
+        var consumer = new OptimizeStrategyConsumer(_logger, _dbContextFactory, _dataService, _engine, _options, _backtestDataOptions);
         var message = new OptimizeStrategyMessage(
             backtest.Id,
             Generations: 1,
@@ -219,7 +248,16 @@ public sealed class OptimizeStrategyConsumerTests
             await dbContext.SeedData(backtest);
         }
 
-        var consumer = new OptimizeStrategyConsumer(_logger, _dbContextFactory, _dataService, _engine, _options);
+        _dataService.LoadDataAsync(
+                marketId,
+                Arg.Any<DateTimeOffset>(),
+                Arg.Any<DateTimeOffset>(),
+                Arg.Any<CancellationToken>(),
+                Arg.Any<int>()
+            )
+            .Returns(Task.FromException<BacktestData>(new InvalidOperationException("Simulated failure")));
+
+        var consumer = new OptimizeStrategyConsumer(_logger, _dbContextFactory, _dataService, _engine, _options, _backtestDataOptions);
         var message = new OptimizeStrategyMessage(
             backtest.Id,
             Generations: 1,
@@ -288,19 +326,5 @@ public sealed class OptimizeStrategyConsumerTests
         var exception = act.ShouldThrow<TargetInvocationException>();
         exception.InnerException.ShouldBeOfType<InvalidOperationException>();
         exception.InnerException!.Message.ShouldContain("StrategyConfigurationChromosome");
-    }
-
-    private static (BacktestEngine engine, BacktestDataQueryService dataService) CreateEngineAndDataService(
-        IDbContextFactory<PlutusDbContext> dbContextFactory
-    )
-    {
-        var logger = Substitute.For<ILogger<BacktestEngine>>();
-        var dataServiceLogger = Substitute.For<ILogger<BacktestDataQueryService>>();
-        var dataService = new BacktestDataQueryService(dataServiceLogger, dbContextFactory);
-        var executors = new List<IStrategyExecutor> { new SignalWeightedExecutor() };
-        var composite = new CompositeExecutor(executors);
-        var engine = new BacktestEngine(logger, dataService, executors, composite, []);
-
-        return (engine, dataService);
     }
 }

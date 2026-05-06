@@ -53,6 +53,47 @@ public sealed class BacktestEntityConfiguration : IEntityTypeConfiguration<Backt
                 );
 
                 r.Navigation(res => res.Positions);
+
+                r.OwnsOne(
+                    res => res.OptimizedConfiguration,
+                    c =>
+                    {
+                        c.Property(sc => sc.BuyThreshold).HasPrecision(18, 2);
+                        c.Property(sc => sc.SellThreshold).HasPrecision(18, 2);
+                        c.Property(sc => sc.ForecastMovementThreshold).HasPrecision(18, 2);
+                        c.Property(sc => sc.ForecastHorizonDays);
+                        c.Property(sc => sc.DeviationMultiplier).HasPrecision(18, 2);
+                        c.Property(sc => sc.MeanTimeFrameValue);
+                        c.Property(sc => sc.MinMarginPercent).HasPrecision(18, 2);
+                        c.Property(sc => sc.MaxPositions);
+                        c.Property(sc => sc.MaxPositionPercent).HasPrecision(18, 2);
+                        c.Property(sc => sc.HoldPeriodDays);
+
+                        c.OwnsMany(
+                            sc => sc.SignalWeights,
+                            sw =>
+                            {
+                                sw.ToTable("backtest_optimized_signal_weights", "plutus");
+                                sw.Property(w => w.Weight).HasPrecision(18, 2);
+                                sw.Property(w => w.Type).HasConversion<int>();
+                            }
+                        );
+
+                        c.OwnsMany(
+                            sc => sc.Components,
+                            cc =>
+                            {
+                                cc.ToTable("backtest_optimized_components", "plutus");
+                                cc.Property(comp => comp.StrategyId).HasIdConversion();
+                                cc.Property(comp => comp.Weight).HasPrecision(18, 2);
+                                cc.Property(comp => comp.Type).HasConversion<int>();
+                            }
+                        );
+
+                        c.Navigation(sc => sc.SignalWeights);
+                        c.Navigation(sc => sc.Components);
+                    }
+                );
             }
         );
 

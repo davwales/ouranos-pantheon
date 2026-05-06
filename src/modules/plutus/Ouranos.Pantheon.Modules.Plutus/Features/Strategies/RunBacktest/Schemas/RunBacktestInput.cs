@@ -9,5 +9,7 @@ public sealed record RunBacktestInput(
     Id<Market> MarketId,
     DateTimeOffset StartDate,
     DateTimeOffset EndDate,
-    decimal Budget
+    decimal Budget,
+    decimal VolumeParticipationRate = 0.25m,
+    decimal SlippageMultiplier = 0.1m
 );

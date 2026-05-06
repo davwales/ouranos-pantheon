@@ -171,4 +171,46 @@ public sealed class RestartBacktestHandlerTests
         // Assert
         await restart.ShouldThrowAsync<OperationCanceledException>();
     }
+
+    [Fact]
+    public async Task Handle_WhenFailedBacktestWithResults_ShouldClearResults()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var strategy = Strategy.Create(
+            marketId,
+            "Test Strategy",
+            null,
+            StrategyType.SignalWeighted,
+            new StrategyConfiguration()
+        );
+        var backtest = Backtest.Create(
+            strategy.Id,
+            marketId,
+            DateTimeOffset.UtcNow,
+            DateTimeOffset.UtcNow.AddDays(30),
+            10000m,
+            strategy
+        );
+        backtest.MarkRunning();
+        backtest.Fail("Simulated failure");
+
+        await _dbContext.Strategies.AddAsync(strategy);
+        await _dbContext.Backtests.AddAsync(backtest);
+        await _dbContext.SaveChangesAsync();
+
+        var command = new RestartBacktestInput(backtest.Id);
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeOfType<RestartBacktestResponse>();
+        result.Status.ShouldBe(BacktestStatus.Pending);
+
+        var saved = await _dbContext.Backtests.FindAsync(backtest.Id);
+        saved.ShouldNotBeNull();
+        saved.Status.ShouldBe(BacktestStatus.Pending);
+        saved.Results.ShouldBeNull();
+    }
 }

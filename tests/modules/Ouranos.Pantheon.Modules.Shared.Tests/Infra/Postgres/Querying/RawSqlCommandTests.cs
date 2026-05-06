@@ -175,6 +175,67 @@ public sealed class RawSqlCommandTests
     }
 
     [Fact]
+    public void WithIdList_ShouldAddUuidArrayParameter()
+    {
+        // Arrange
+        var guid1 = Guid.NewGuid();
+        var guid2 = Guid.NewGuid();
+        var ids = new List<Id<TestEntity>> { new(guid1.ToString()), new(guid2.ToString()), };
+
+        // Act
+        var command = RawSqlCommand.FromSql("SELECT 1")
+            .WithIds("@ids", ids);
+
+        // Assert
+        var parameters = command.GetParameters();
+        parameters.Length.ShouldBe(1);
+        var param = (Npgsql.NpgsqlParameter)parameters[0];
+        param.NpgsqlDbType.ShouldBe(NpgsqlDbType.Array | NpgsqlDbType.Uuid);
+        var values = (Guid[])param.Value!;
+        values.Length.ShouldBe(2);
+        values.ShouldContain(guid1);
+        values.ShouldContain(guid2);
+    }
+
+    [Fact]
+    public void WithIdList_WhenEmpty_ShouldAddEmptyArrayParameter()
+    {
+        // Arrange & Act
+        var command = RawSqlCommand.FromSql("SELECT 1")
+            .WithIds("@ids", new List<Id<TestEntity>>());
+
+        // Assert
+        var parameters = command.GetParameters();
+        parameters.Length.ShouldBe(1);
+        var param = (Npgsql.NpgsqlParameter)parameters[0];
+        param.NpgsqlDbType.ShouldBe(NpgsqlDbType.Array | NpgsqlDbType.Uuid);
+        var values = (Guid[])param.Value!;
+        values.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void WithIdList_ShouldConvertStringGuidsToUuidValues()
+    {
+        // Arrange
+        var guid1 = Guid.Parse("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
+        var guid2 = Guid.Parse("b2c3d4e5-f6a7-8901-bcde-f12345678901");
+        var ids = new List<Id<TestEntity>>
+        {
+            new("a1b2c3d4-e5f6-7890-abcd-ef1234567890"), new("b2c3d4e5-f6a7-8901-bcde-f12345678901"),
+        };
+
+        // Act
+        var command = RawSqlCommand.FromSql("SELECT 1")
+            .WithIds("@ids", ids);
+
+        // Assert
+        var param = (Npgsql.NpgsqlParameter)command.GetParameters()[0];
+        var values = (Guid[])param.Value!;
+        values.ShouldContain(guid1);
+        values.ShouldContain(guid2);
+    }
+
+    [Fact]
     public void WithParameter_ShouldAddProvidedNpgsqlParameter()
     {
         // Arrange

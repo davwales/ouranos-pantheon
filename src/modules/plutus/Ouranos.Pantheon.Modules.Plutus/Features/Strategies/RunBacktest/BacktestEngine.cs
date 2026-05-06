@@ -17,14 +17,14 @@ public sealed class BacktestEngine
 {
     private const int PriceBucketCount = 25;
 
-    private readonly BacktestDataQueryService _dataService;
+    private readonly IBacktestDataQueryService _dataService;
     private readonly IEnumerable<ISignalComputer> _signalComputers;
     private readonly Dictionary<StrategyType, IStrategyExecutor> _executors;
     private readonly ILogger<BacktestEngine> _logger;
 
     public BacktestEngine(
         ILogger<BacktestEngine> logger,
-        BacktestDataQueryService dataService,
+        IBacktestDataQueryService dataService,
         IEnumerable<IStrategyExecutor> executors,
         CompositeExecutor compositeExecutor,
         IEnumerable<ISignalComputer> signalComputers
@@ -50,21 +50,29 @@ public sealed class BacktestEngine
         CancellationToken cancellationToken,
         StrategyConfiguration? configurationOverride = null,
         BacktestData? data = null,
-        Func<int, string, Task>? onCheckpoint = null
+        Func<int, string, Task>? onCheckpoint = null,
+        decimal volumeParticipationRate = 0.25m,
+        decimal slippageMultiplier = 0.1m
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        data ??= await _dataService.LoadDataAsync(marketId, startDate, endDate, cancellationToken);
-
         var configuration = configurationOverride ?? strategy.Configuration;
         var executor = ResolveExecutor(strategy.Type);
-        var market = data.Market;
-        var symbols = data.Symbols;
-
-        var taxRate = GetTaxRate(market);
         var totalDays = (int)(endDate - startDate).TotalDays;
         var windowDays = DetermineWindowSize(totalDays);
+
+        data ??= await _dataService.LoadDataAsync(
+            marketId,
+            startDate,
+            endDate,
+            cancellationToken,
+            lookbackDays: 30
+        );
+
+        var market = data.Market;
+        var symbols = data.Symbols;
+        var taxRate = GetTaxRate(market);
 
         _logger.LogDebug(
             "Running backtest for strategy '{strategyId}' with {symbolCount} symbols, {totalDays} days, {windowDays}-day windows.",
@@ -72,6 +80,15 @@ public sealed class BacktestEngine
             symbols.Count,
             totalDays,
             windowDays
+        );
+
+        _logger.LogDebug(
+            "Backtest data loaded: {aggregateSymbolCount} symbols with aggregates, {dailyPriceCount} daily prices, " +
+            "{snapshotSymbolCount} symbols with snapshots, {forecastSymbolCount} symbols with forecasts.",
+            data.AggregatesBySymbol.Count,
+            data.DailyPricesByDate.Count,
+            data.SnapshotsBySymbol.Count,
+            data.ForecastBySymbol.Count
         );
 
         if (onCheckpoint is not null)
@@ -100,7 +117,7 @@ public sealed class BacktestEngine
                 }
             }
 
-            CloseExitingPositions(
+            await CloseExitingPositionsAsync(
                 state,
                 configuration,
                 marketId,
@@ -108,7 +125,10 @@ public sealed class BacktestEngine
                 market,
                 executor,
                 currentDate,
-                data
+                data,
+                volumeParticipationRate,
+                slippageMultiplier,
+                cancellationToken
             );
 
             var scoredSymbols = await ScoreSymbolsAsync(
@@ -118,13 +138,34 @@ public sealed class BacktestEngine
                 executor,
                 configuration,
                 currentDate,
-                windowDays,
                 data,
                 cancellationToken
             );
 
-            BuyCandidates(scoredSymbols, configuration, taxRate, state, currentDate, cancellationToken);
+            BuyCandidates(
+                scoredSymbols,
+                configuration,
+                taxRate,
+                state,
+                currentDate,
+                data,
+                volumeParticipationRate,
+                cancellationToken
+            );
             UpdatePortfolioMetrics(state, currentDate, data);
+
+            if (dayOffset == totalDays || dayOffset == 0)
+            {
+                _logger.LogDebug(
+                    "Day {currentDate}: {openPositionCount} open positions, {balance:F2} balance, " +
+                    "{buyThreshold} buy threshold, {candidateCount} buy candidates.",
+                    currentDate,
+                    state.OpenPositions.Count,
+                    state.Balance,
+                    configuration.BuyThreshold ?? 0m,
+                    scoredSymbols.Count(s => s.Score > (configuration.BuyThreshold ?? 0m))
+                );
+            }
         }
 
         if (onCheckpoint is not null)
@@ -132,7 +173,7 @@ public sealed class BacktestEngine
             await onCheckpoint(95, "Closing remaining positions...");
         }
 
-        CloseRemainingPositions(state, endDate, taxRate, market, data);
+        CloseRemainingPositions(state, endDate, taxRate, market, data, volumeParticipationRate, slippageMultiplier);
 
         if (onCheckpoint is not null)
         {
@@ -142,7 +183,7 @@ public sealed class BacktestEngine
         return ComputeResults(budget, state);
     }
 
-    private void CloseExitingPositions(
+    private async Task CloseExitingPositionsAsync(
         BacktestLoopState state,
         StrategyConfiguration configuration,
         Id<Market> marketId,
@@ -150,7 +191,10 @@ public sealed class BacktestEngine
         Market market,
         IStrategyExecutor executor,
         DateTimeOffset currentDate,
-        BacktestData data
+        BacktestData data,
+        decimal volumeParticipationRate,
+        decimal slippageMultiplier,
+        CancellationToken cancellationToken
     )
     {
         var holdLimit = configuration.HoldPeriodDays ?? int.MaxValue;
@@ -175,7 +219,7 @@ public sealed class BacktestEngine
                     continue;
                 }
 
-                var shouldSell = EvaluateSellSignal(
+                var shouldSell = await EvaluateSellSignalAsync(
                     kvp.Value.SymbolId,
                     kvp.Value.SymbolName,
                     kvp.Value.SymbolSubcode,
@@ -185,7 +229,8 @@ public sealed class BacktestEngine
                     executor,
                     configuration,
                     currentDate,
-                    data
+                    data,
+                    cancellationToken
                 );
 
                 if (shouldSell)
@@ -197,17 +242,40 @@ public sealed class BacktestEngine
 
         foreach (var kvp in toClose)
         {
-            var exitPrice = data.GetClosePrice(kvp.Key, currentDate);
+            var exitPrice = data.GetLatestPrice(kvp.Key, currentDate);
 
             if (exitPrice == 0)
             {
                 continue;
             }
 
-            var (netProceeds, exitVolume, netPnl) = ComputeExit(kvp.Value, exitPrice, taxRate, market);
+            var dailyVolume = data.GetDailyVolume(kvp.Key, currentDate);
+            var (netProceeds, exitVolume, netPnl) = ComputeExit(
+                kvp.Value,
+                exitPrice,
+                taxRate,
+                market,
+                dailyVolume,
+                volumeParticipationRate,
+                slippageMultiplier
+            );
+
+            if (exitVolume <= 0)
+            {
+                continue;
+            }
+
             state.Balance += netProceeds;
             state.ClosedPositions.Add(CreateClosedPosition(kvp.Value, exitPrice, exitVolume, netPnl, currentDate));
-            state.OpenPositions.Remove(kvp.Key);
+
+            if (exitVolume >= kvp.Value.Volume)
+            {
+                state.OpenPositions.Remove(kvp.Key);
+            }
+            else
+            {
+                state.OpenPositions[kvp.Key] = kvp.Value with { Volume = kvp.Value.Volume - exitVolume };
+            }
         }
     }
 
@@ -218,36 +286,38 @@ public sealed class BacktestEngine
         IStrategyExecutor executor,
         StrategyConfiguration configuration,
         DateTimeOffset currentDate,
-        int windowDays,
         BacktestData data,
         CancellationToken cancellationToken
     )
     {
-        // Exclude current day to avoid look-ahead bias
-        var windowStart = currentDate.AddDays(-windowDays);
-
         var scored = new List<(Symbol Symbol, decimal Score, decimal Price)>();
+
+        var skippedNoAggregates = 0;
+        var skippedZeroPrice = 0;
+        var scoredNull = 0;
 
         foreach (var symbol in symbols)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var windowAggregates = data.GetWindowAggregates(symbol.Id, windowStart, currentDate);
+            var allAggregates = data.GetWindowAggregates(symbol.Id, DateTimeOffset.MinValue, currentDate);
 
-            if (windowAggregates.Count == 0)
+            if (allAggregates.Count == 0)
             {
+                skippedNoAggregates++;
                 continue;
             }
 
-            var currentPrice = windowAggregates.MaxBy(a => a.Date)?.AveragePrice ?? 0;
+            var currentPrice = allAggregates.MaxBy(a => a.Date)?.AveragePrice ?? 0;
             if (currentPrice == 0)
             {
+                skippedZeroPrice++;
                 continue;
             }
 
             var limit = data.Market.Taxes.Flat?.Maximum ?? decimal.MaxValue;
             var snapshots = data.GetSnapshotsForSymbol(symbol.Id);
-            var priceBuckets = BuildPriceBucketsFromAggregates(windowAggregates);
+            var priceBuckets = BuildPriceBucketsFromAggregates(allAggregates);
             var forecast = data.GetForecastForSymbol(symbol.Id);
             var (forecastedPrice, forecastedChange) = GetForecastData(forecast, currentPrice);
 
@@ -282,7 +352,22 @@ public sealed class BacktestEngine
             {
                 scored.Add((symbol, score.Value, currentPrice));
             }
+            else
+            {
+                scoredNull++;
+            }
         }
+
+        _logger.LogDebug(
+            "Day {currentDate}: scored {scoredCount}/{symbolCount} symbols. " +
+            "Skipped: {skippedNoAggregates} no aggregates, {skippedZeroPrice} zero price, {scoredNull} null score.",
+            currentDate,
+            scored.Count,
+            symbols.Count,
+            skippedNoAggregates,
+            skippedZeroPrice,
+            scoredNull
+        );
 
         return scored;
     }
@@ -293,12 +378,14 @@ public sealed class BacktestEngine
         decimal taxRate,
         BacktestLoopState state,
         DateTimeOffset currentDate,
+        BacktestData data,
+        decimal volumeParticipationRate,
         CancellationToken cancellationToken
     )
     {
         var maxPositions = configuration.MaxPositions ?? int.MaxValue;
         var maxPositionPercent = configuration.MaxPositionPercent ?? 1m;
-        var buyThreshold = configuration.BuyThreshold ?? 0.1m;
+        var buyThreshold = configuration.BuyThreshold ?? 0m;
 
         var buyCandidates = scoredSymbols
             .Where(s => s.Score > buyThreshold && !state.OpenPositions.ContainsKey(s.Symbol.Id))
@@ -315,6 +402,24 @@ public sealed class BacktestEngine
             var volume = Math.Floor(buyingPower);
 
             if (volume < 1 || costPerUnit == 0)
+            {
+                continue;
+            }
+
+            var symbolLimit = candidate.Symbol.AdditionalFields.Limit;
+            if (volume > symbolLimit)
+            {
+                volume = symbolLimit.Value;
+            }
+
+            var dailyVolume = data.GetDailyVolume(candidate.Symbol.Id, currentDate);
+            if (dailyVolume > 0)
+            {
+                var maxBuyableVolume = Math.Floor(dailyVolume * volumeParticipationRate);
+                volume = Math.Min(volume, maxBuyableVolume);
+            }
+
+            if (volume < 1)
             {
                 continue;
             }
@@ -344,7 +449,7 @@ public sealed class BacktestEngine
     )
     {
         var openPositionValue = state.OpenPositions.Values
-            .Sum(p => data.GetClosePrice(p.SymbolId, currentDate) * p.Volume);
+            .Sum(p => data.GetLatestPrice(p.SymbolId, currentDate) * p.Volume);
         var currentPortfolioValue = state.Balance + openPositionValue;
         state.PeakPortfolioValue = Math.Max(state.PeakPortfolioValue, currentPortfolioValue);
 
@@ -360,20 +465,76 @@ public sealed class BacktestEngine
         DateTimeOffset endDate,
         decimal taxRate,
         Market market,
-        BacktestData data
+        BacktestData data,
+        decimal volumeParticipationRate,
+        decimal slippageMultiplier
     )
     {
         foreach (var pos in state.OpenPositions.Values.ToList())
         {
-            var exitPrice = data.GetClosePrice(pos.SymbolId, endDate);
+            var exitPrice = data.GetLatestPrice(pos.SymbolId, endDate);
             if (exitPrice == 0)
             {
                 exitPrice = pos.EntryPrice;
             }
 
-            var (netProceeds, exitVolume, netPnl) = ComputeExit(pos, exitPrice, taxRate, market);
+            var dailyVolume = data.GetDailyVolume(pos.SymbolId, endDate);
+            var (netProceeds, exitVolume, netPnl) = ComputeExit(
+                pos,
+                exitPrice,
+                taxRate,
+                market,
+                dailyVolume,
+                volumeParticipationRate,
+                slippageMultiplier
+            );
+
+            if (exitVolume <= 0)
+            {
+                var forcedExitPrice = pos.EntryPrice * 0.5m;
+                var forcedGrossValue = forcedExitPrice * pos.Volume;
+                var forcedTax = forcedGrossValue * taxRate;
+                var forcedTaxCap = market.Taxes.Flat?.Maximum ?? decimal.MaxValue;
+                var forcedCappedTax = Math.Min(forcedTax, forcedTaxCap);
+                var forcedNetProceeds = forcedGrossValue - forcedCappedTax;
+
+                state.Balance += forcedNetProceeds;
+                state.ClosedPositions.Add(
+                    CreateClosedPosition(
+                        pos,
+                        forcedExitPrice,
+                        pos.Volume,
+                        forcedNetProceeds - pos.EntryPrice * pos.Volume,
+                        endDate
+                    )
+                );
+                continue;
+            }
+
             state.Balance += netProceeds;
             state.ClosedPositions.Add(CreateClosedPosition(pos, exitPrice, exitVolume, netPnl, endDate));
+
+            if (exitVolume < pos.Volume)
+            {
+                var remainingVolume = pos.Volume - exitVolume;
+                var remainingCostBasis = pos.EntryPrice * remainingVolume;
+                var forcedExitPrice2 = pos.EntryPrice * 0.5m;
+                var forcedGrossValue2 = forcedExitPrice2 * remainingVolume;
+                var forcedTax2 = forcedGrossValue2 * taxRate;
+                var forcedTaxCap2 = market.Taxes.Flat?.Maximum ?? decimal.MaxValue;
+                var forcedNetProceeds2 = forcedGrossValue2 - Math.Min(forcedTax2, forcedTaxCap2);
+
+                state.Balance += forcedNetProceeds2;
+                state.ClosedPositions.Add(
+                    CreateClosedPosition(
+                        pos with { Volume = remainingVolume },
+                        forcedExitPrice2,
+                        remainingVolume,
+                        forcedNetProceeds2 - remainingCostBasis,
+                        endDate
+                    )
+                );
+            }
         }
     }
 
@@ -387,7 +548,13 @@ public sealed class BacktestEngine
         return executor;
     }
 
-    private bool EvaluateSellSignal(
+    /// <summary>
+    ///     Evaluates the sell signal for an open position by reconstructing signals
+    ///     from the window data, ensuring consistency with the buy path.
+    ///     This fixes Bug 3: previously the sell path used stale live signals from the DB,
+    ///     while the buy path reconstructed from window data — producing different scores.
+    /// </summary>
+    private async Task<bool> EvaluateSellSignalAsync(
         Id<Symbol> symbolId,
         string symbolName,
         string? symbolSubcode,
@@ -397,22 +564,33 @@ public sealed class BacktestEngine
         IStrategyExecutor executor,
         StrategyConfiguration configuration,
         DateTimeOffset currentDate,
-        BacktestData data
+        BacktestData data,
+        CancellationToken cancellationToken
     )
     {
         var sellThreshold = configuration.SellThreshold!.Value;
         var snapshots = data.GetSnapshotsForSymbol(symbolId);
-        var symbolSignals = data.GetSignalsForSymbol(symbolId);
-        var forecast = data.GetForecastForSymbol(symbolId);
-
-        var currentPrice = data.GetClosePrice(symbolId, currentDate);
+        var currentPrice = data.GetLatestPrice(symbolId, currentDate);
         if (currentPrice == 0)
         {
             return false;
         }
 
         var limit = market.Taxes.Flat?.Maximum ?? decimal.MaxValue;
+        var forecast = data.GetForecastForSymbol(symbolId);
         var (forecastedPrice, forecastedChange) = GetForecastData(forecast, currentPrice);
+
+        var allAggregates = data.GetWindowAggregates(symbolId, DateTimeOffset.MinValue, currentDate);
+        var priceBuckets = BuildPriceBucketsFromAggregates(allAggregates);
+
+        var signals = await ReconstructSignalsAsync(
+            symbolId,
+            taxRate,
+            limit,
+            snapshots,
+            priceBuckets,
+            cancellationToken
+        );
 
         var context = new StrategyScoreContext(
             symbolId,
@@ -425,8 +603,8 @@ public sealed class BacktestEngine
             snapshots.Short,
             snapshots.Medium,
             snapshots.Long,
-            [],
-            symbolSignals,
+            priceBuckets,
+            signals,
             forecastedPrice,
             forecastedChange
         );
@@ -464,11 +642,30 @@ public sealed class BacktestEngine
         OpenPosition pos,
         decimal exitPrice,
         decimal taxRate,
-        Market market
+        Market market,
+        decimal dailyVolume,
+        decimal volumeParticipationRate,
+        decimal slippageMultiplier
     )
     {
-        var exitVolume = pos.Volume;
-        var grossExitValue = exitPrice * exitVolume;
+        var maxSellableVolume = dailyVolume > 0
+            ? Math.Floor(dailyVolume * volumeParticipationRate)
+            : pos.Volume;
+
+        var exitVolume = Math.Min(pos.Volume, maxSellableVolume);
+
+        if (exitVolume <= 0)
+        {
+            return (0m, 0m, 0m);
+        }
+
+        var volumeImpact = dailyVolume > 0
+            ? pos.Volume / dailyVolume
+            : 0m;
+        var slippage = volumeImpact * slippageMultiplier;
+        var adjustedExitPrice = exitPrice * (1 - slippage);
+
+        var grossExitValue = adjustedExitPrice * exitVolume;
         var taxAmount = grossExitValue * taxRate;
         var taxCap = market.Taxes.Flat?.Maximum ?? decimal.MaxValue;
         var cappedTax = Math.Min(taxAmount, taxCap);
@@ -498,7 +695,8 @@ public sealed class BacktestEngine
 
     /// <summary>
     ///     Builds PriceBuckets from pre-aggregated daily trade data,
-    ///     avoiding the need to load and sort raw trades in memory.
+    ///     used by MeanReversionExecutor and similar executors that need
+    ///     price distribution in their scoring context.
     /// </summary>
     internal static IReadOnlyList<PriceBucket> BuildPriceBucketsFromAggregates(
         List<DailyTradeAggregate> aggregates

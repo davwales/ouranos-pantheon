@@ -66,6 +66,219 @@ public sealed class BacktestEngineTests
     }
 
     [Fact]
+    public void ComputeExit_WhenVolumeExceedsDailyParticipation_CapsSellVolume()
+    {
+        // Arrange
+        var pos = new OpenPosition(
+            _fixture.Create<Id<Symbol>>(),
+            "SYM",
+            null,
+            EntryPrice: 100m,
+            Volume: 100m,
+            EntryTime: DateTimeOffset.UtcNow
+        );
+        var market = Market.Create(
+            _fixture.Create<Id<Market>>(),
+            "Test Market",
+            new Taxes(null)
+        );
+
+        // Act
+        var (_, exitVolume, _) = BacktestEngine.ComputeExit(pos, 150m, 0m, market, 100m, 0.25m, 0m);
+
+        // Assert
+        exitVolume.ShouldBe(25m);
+    }
+
+    [Fact]
+    public void ComputeExit_WhenSlippageApplied_ReducesExitPrice()
+    {
+        // Arrange
+        var pos = new OpenPosition(
+            _fixture.Create<Id<Symbol>>(),
+            "SYM",
+            null,
+            EntryPrice: 100m,
+            Volume: 100m,
+            EntryTime: DateTimeOffset.UtcNow
+        );
+        var market = Market.Create(
+            _fixture.Create<Id<Market>>(),
+            "Test Market",
+            new Taxes(null)
+        );
+
+        // Act
+        var (netProceeds, exitVolume, _) = BacktestEngine.ComputeExit(pos, 100m, 0m, market, 100m, 0.25m, 0.1m);
+
+        // Assert
+        exitVolume.ShouldBe(25m);
+        netProceeds.ShouldBe(2250m);
+    }
+
+    [Fact]
+    public void ComputeExit_WhenParticipationRateZero_ReturnsZero()
+    {
+        // Arrange
+        var pos = new OpenPosition(
+            _fixture.Create<Id<Symbol>>(),
+            "SYM",
+            null,
+            EntryPrice: 100m,
+            Volume: 100m,
+            EntryTime: DateTimeOffset.UtcNow
+        );
+        var market = Market.Create(
+            _fixture.Create<Id<Market>>(),
+            "Test Market",
+            new Taxes(null)
+        );
+
+        // Act
+        var (netProceeds, exitVolume, netPnl) = BacktestEngine.ComputeExit(pos, 150m, 0m, market, 100m, 0m, 0m);
+
+        // Assert
+        exitVolume.ShouldBe(0m);
+        netProceeds.ShouldBe(0m);
+        netPnl.ShouldBe(0m);
+    }
+
+    [Fact]
+    public void BuyCandidates_WhenDailyVolumeLimitsVolume_RespectsVolumeCap()
+    {
+        // Arrange
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var marketId = _fixture.Create<Id<Market>>();
+        var symbol = Symbol.Create(
+            symbolId,
+            "SYM",
+            null,
+            "Test Symbol",
+            marketId,
+            new AdditionalFields()
+        );
+        var scoredSymbols = new List<(Symbol Symbol, decimal Score, decimal Price)> { (symbol, 0.5m, 100m) };
+        var config = new StrategyConfiguration { BuyThreshold = 0.1m, MaxPositions = 5, MaxPositionPercent = 1m, };
+        var state = new BacktestLoopState(10000m);
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var currentDate = DateTimeOffset.UtcNow;
+        var dateOnly = DateOnly.FromDateTime(currentDate.UtcDateTime);
+        var dailyAggregates = new List<DailyTradeAggregate> { new(symbolId, dateOnly, 100m, 100m, 100m, 50m) };
+        var data = BacktestData.FromRaw(market, [symbol], [], [], [], dailyAggregates);
+
+        // Act
+        BacktestEngine.BuyCandidates(
+            scoredSymbols,
+            config,
+            0m,
+            state,
+            currentDate,
+            data,
+            0.25m,
+            CancellationToken.None
+        );
+
+        // Assert
+        state.OpenPositions.Count.ShouldBe(1);
+        state.OpenPositions[symbolId].Volume.ShouldBe(12m);
+    }
+
+    [Fact]
+    public void BuyCandidates_WhenNoDailyVolumeData_SkipsVolumeConstraint()
+    {
+        // Arrange
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var marketId = _fixture.Create<Id<Market>>();
+        var symbol = Symbol.Create(
+            symbolId,
+            "SYM",
+            null,
+            "Test Symbol",
+            marketId,
+            new AdditionalFields()
+        );
+        var scoredSymbols = new List<(Symbol Symbol, decimal Score, decimal Price)> { (symbol, 0.5m, 100m) };
+        var config = new StrategyConfiguration { BuyThreshold = 0.1m, MaxPositions = 5, MaxPositionPercent = 1m };
+        var state = new BacktestLoopState(10000m);
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var data = BacktestData.FromRaw(market, [symbol], [], [], [], []);
+
+        // Act
+        BacktestEngine.BuyCandidates(
+            scoredSymbols,
+            config,
+            0m,
+            state,
+            DateTimeOffset.UtcNow,
+            data,
+            0.25m,
+            CancellationToken.None
+        );
+
+        // Assert
+        state.OpenPositions.Count.ShouldBe(1);
+        state.OpenPositions[symbolId].Volume.ShouldBe(100m);
+    }
+
+    [Fact]
+    public void GetDailyVolume_WhenAggregateExists_ReturnsTotalVolume()
+    {
+        // Arrange
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var marketId = _fixture.Create<Id<Market>>();
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var currentDate = DateTimeOffset.UtcNow;
+        var dateOnly = DateOnly.FromDateTime(currentDate.UtcDateTime);
+        var dailyAggregates = new List<DailyTradeAggregate> { new(symbolId, dateOnly, 100m, 100m, 100m, 500m) };
+        var data = BacktestData.FromRaw(market, [], [], [], [], dailyAggregates);
+
+        // Act
+        var result = data.GetDailyVolume(symbolId, currentDate);
+
+        // Assert
+        result.ShouldBe(500m);
+    }
+
+    [Fact]
+    public void GetDailyVolume_WhenNoDataForDate_ReturnsZero()
+    {
+        // Arrange
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var marketId = _fixture.Create<Id<Market>>();
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var currentDate = new DateTimeOffset(2025, 1, 15, 12, 0, 0, TimeSpan.Zero);
+        var otherDate = new DateOnly(2025, 1, 10);
+        var dailyAggregates = new List<DailyTradeAggregate> { new(symbolId, otherDate, 100m, 100m, 100m, 500m) };
+        var data = BacktestData.FromRaw(market, [], [], [], [], dailyAggregates);
+
+        // Act
+        var result = data.GetDailyVolume(symbolId, currentDate);
+
+        // Assert
+        result.ShouldBe(0m);
+    }
+
+    [Fact]
+    public void GetDailyVolume_WhenNoDataForSymbol_ReturnsZero()
+    {
+        // Arrange
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var otherSymbolId = _fixture.Create<Id<Symbol>>();
+        var marketId = _fixture.Create<Id<Market>>();
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var currentDate = DateTimeOffset.UtcNow;
+        var dateOnly = DateOnly.FromDateTime(currentDate.UtcDateTime);
+        var dailyAggregates = new List<DailyTradeAggregate> { new(otherSymbolId, dateOnly, 100m, 100m, 100m, 500m) };
+        var data = BacktestData.FromRaw(market, [], [], [], [], dailyAggregates);
+
+        // Act
+        var result = data.GetDailyVolume(symbolId, currentDate);
+
+        // Assert
+        result.ShouldBe(0m);
+    }
+
+    [Fact]
     public void GetTaxRate_WhenMarketHasFlatTax_ReturnsRate()
     {
         // Arrange
@@ -118,7 +331,7 @@ public sealed class BacktestEngineTests
         );
 
         // Act
-        var (netProceeds, exitVolume, netPnl) = BacktestEngine.ComputeExit(pos, 150m, 0.05m, market);
+        var (netProceeds, exitVolume, netPnl) = BacktestEngine.ComputeExit(pos, 150m, 0.05m, market, 0m, 0.25m, 0m);
 
         // Assert
         exitVolume.ShouldBe(10m);
@@ -145,7 +358,7 @@ public sealed class BacktestEngineTests
         );
 
         // Act
-        var (netProceeds, _, netPnl) = BacktestEngine.ComputeExit(pos, 200m, 0.10m, market);
+        var (netProceeds, _, netPnl) = BacktestEngine.ComputeExit(pos, 200m, 0.10m, market, 0m, 0.25m, 0m);
 
         // Assert
         netProceeds.ShouldBe(19950m);
@@ -171,7 +384,7 @@ public sealed class BacktestEngineTests
         );
 
         // Act
-        var (_, _, netPnl) = BacktestEngine.ComputeExit(pos, 50m, 0.05m, market);
+        var (_, _, netPnl) = BacktestEngine.ComputeExit(pos, 50m, 0.05m, market, 0m, 0.25m, 0m);
 
         // Assert
         netPnl.ShouldBe(-525m);
@@ -196,7 +409,7 @@ public sealed class BacktestEngineTests
         );
 
         // Act
-        var (netProceeds, _, netPnl) = BacktestEngine.ComputeExit(pos, 60m, 0m, market);
+        var (netProceeds, _, netPnl) = BacktestEngine.ComputeExit(pos, 60m, 0m, market, 0m, 0.25m, 0m);
 
         // Assert
         netProceeds.ShouldBe(1200m);
@@ -254,7 +467,6 @@ public sealed class BacktestEngineTests
             allSnapshots,
             [],
             [],
-            [],
             []
         );
 
@@ -298,7 +510,6 @@ public sealed class BacktestEngineTests
             allSnapshots,
             [],
             [],
-            [],
             []
         );
 
@@ -326,7 +537,6 @@ public sealed class BacktestEngineTests
             allSnapshots,
             [],
             [],
-            [],
             []
         );
 
@@ -337,64 +547,6 @@ public sealed class BacktestEngineTests
         shortResult.ShouldBeNull();
         mediumResult.ShouldBeNull();
         longResult.ShouldBeNull();
-    }
-
-    [Fact]
-    public void GetSignalsForSymbol_WhenSignalsExist_ReturnsMatchingSignals()
-    {
-        // Arrange
-        var symbolId = _fixture.Create<Id<Symbol>>();
-        var marketId = _fixture.Create<Id<Market>>();
-        var market = Market.Create(marketId, "Test Market", new Taxes(null));
-        var signal1 = Signal.Create(marketId, symbolId, SignalType.TaxAdjustedRoi, 0.8m);
-        var signal2 = Signal.Create(marketId, symbolId, SignalType.TrendMomentum, 0.5m);
-        var otherSymbolId = _fixture.Create<Id<Symbol>>();
-        var signal3 = Signal.Create(marketId, otherSymbolId, SignalType.Rsi, 0.3m);
-        var allSignals = new List<Signal> { signal1, signal2, signal3 };
-
-        var data = BacktestData.FromRaw(
-            market,
-            [],
-            [],
-            [],
-            allSignals,
-            [],
-            []
-        );
-
-        // Act
-        var result = data.GetSignalsForSymbol(symbolId);
-
-        // Assert
-        result.Count.ShouldBe(2);
-        result.ShouldContain(s => s.Type == SignalType.TaxAdjustedRoi);
-        result.ShouldContain(s => s.Type == SignalType.TrendMomentum);
-    }
-
-    [Fact]
-    public void GetSignalsForSymbol_WhenNoSignalsMatch_ReturnsEmptyList()
-    {
-        // Arrange
-        var symbolId = _fixture.Create<Id<Symbol>>();
-        var marketId = _fixture.Create<Id<Market>>();
-        var market = Market.Create(marketId, "Test Market", new Taxes(null));
-        var allSignals = new List<Signal>();
-
-        var data = BacktestData.FromRaw(
-            market,
-            [],
-            [],
-            [],
-            allSignals,
-            [],
-            []
-        );
-
-        // Act
-        var result = data.GetSignalsForSymbol(symbolId);
-
-        // Assert
-        result.ShouldBeEmpty();
     }
 
     [Fact]
@@ -513,7 +665,7 @@ public sealed class BacktestEngineTests
         var symbolId = _fixture.Create<Id<Symbol>>();
         var aggregates = new List<DailyTradeAggregate>
         {
-            new DailyTradeAggregate(
+            new(
                 symbolId,
                 new DateOnly(2025, 1, 15),
                 100m,
@@ -621,21 +773,33 @@ public sealed class BacktestEngineTests
     {
         // Arrange
         var symbolId = _fixture.Create<Id<Symbol>>();
+        var marketId = _fixture.Create<Id<Market>>();
         var symbol = Symbol.Create(
             symbolId,
             "SYM",
             null,
             "Test Symbol",
-            _fixture.Create<Id<Market>>(),
+            marketId,
             new AdditionalFields()
         );
 
         var scoredSymbols = new List<(Symbol Symbol, decimal Score, decimal Price)> { (symbol, 0.5m, 100m) };
         var config = new StrategyConfiguration { BuyThreshold = 0.1m, MaxPositions = 5, MaxPositionPercent = 1m };
         var state = new BacktestLoopState(10000m);
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var data = BacktestData.FromRaw(market, [symbol], [], [], [], []);
 
         // Act
-        BacktestEngine.BuyCandidates(scoredSymbols, config, 0m, state, DateTimeOffset.UtcNow, CancellationToken.None);
+        BacktestEngine.BuyCandidates(
+            scoredSymbols,
+            config,
+            0m,
+            state,
+            DateTimeOffset.UtcNow,
+            data,
+            0.25m,
+            CancellationToken.None
+        );
 
         // Assert
         state.OpenPositions.Count.ShouldBe(1);
@@ -648,20 +812,32 @@ public sealed class BacktestEngineTests
     {
         // Arrange
         var symbolId = _fixture.Create<Id<Symbol>>();
+        var marketId = _fixture.Create<Id<Market>>();
         var symbol = Symbol.Create(
             symbolId,
             "SYM",
             null,
             "Test Symbol",
-            _fixture.Create<Id<Market>>(),
+            marketId,
             new AdditionalFields()
         );
         var scoredSymbols = new List<(Symbol Symbol, decimal Score, decimal Price)> { (symbol, 0.5m, 100m) };
         var config = new StrategyConfiguration { BuyThreshold = 0.1m, MaxPositions = 5, MaxPositionPercent = 0.5m };
         var state = new BacktestLoopState(10000m);
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var data = BacktestData.FromRaw(market, [symbol], [], [], [], []);
 
         // Act
-        BacktestEngine.BuyCandidates(scoredSymbols, config, 0m, state, DateTimeOffset.UtcNow, CancellationToken.None);
+        BacktestEngine.BuyCandidates(
+            scoredSymbols,
+            config,
+            0m,
+            state,
+            DateTimeOffset.UtcNow,
+            data,
+            0.25m,
+            CancellationToken.None
+        );
 
         // Assert
         state.OpenPositions.Count.ShouldBe(1);
@@ -674,20 +850,32 @@ public sealed class BacktestEngineTests
     {
         // Arrange
         var symbolId = _fixture.Create<Id<Symbol>>();
+        var marketId = _fixture.Create<Id<Market>>();
         var symbol = Symbol.Create(
             symbolId,
             "SYM",
             null,
             "Test Symbol",
-            _fixture.Create<Id<Market>>(),
+            marketId,
             new AdditionalFields()
         );
         var scoredSymbols = new List<(Symbol Symbol, decimal Score, decimal Price)> { (symbol, 0.5m, 100m) };
         var config = new StrategyConfiguration { BuyThreshold = 0.1m, MaxPositions = 5, MaxPositionPercent = 1m };
         var state = new BacktestLoopState(10000m);
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var data = BacktestData.FromRaw(market, [symbol], [], [], [], []);
 
         // Act
-        BacktestEngine.BuyCandidates(scoredSymbols, config, 0m, state, DateTimeOffset.UtcNow, CancellationToken.None);
+        BacktestEngine.BuyCandidates(
+            scoredSymbols,
+            config,
+            0m,
+            state,
+            DateTimeOffset.UtcNow,
+            data,
+            0.25m,
+            CancellationToken.None
+        );
 
         // Assert
         state.OpenPositions.Count.ShouldBe(1);
@@ -699,20 +887,32 @@ public sealed class BacktestEngineTests
     {
         // Arrange
         var symbolId = _fixture.Create<Id<Symbol>>();
+        var marketId = _fixture.Create<Id<Market>>();
         var symbol = Symbol.Create(
             symbolId,
             "SYM",
             null,
             "Test Symbol",
-            _fixture.Create<Id<Market>>(),
+            marketId,
             new AdditionalFields()
         );
         var scoredSymbols = new List<(Symbol Symbol, decimal Score, decimal Price)> { (symbol, 0.05m, 100m) };
         var config = new StrategyConfiguration { BuyThreshold = 0.1m, MaxPositions = 5, MaxPositionPercent = 1m };
         var state = new BacktestLoopState(10000m);
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var data = BacktestData.FromRaw(market, [symbol], [], [], [], []);
 
         // Act
-        BacktestEngine.BuyCandidates(scoredSymbols, config, 0m, state, DateTimeOffset.UtcNow, CancellationToken.None);
+        BacktestEngine.BuyCandidates(
+            scoredSymbols,
+            config,
+            0m,
+            state,
+            DateTimeOffset.UtcNow,
+            data,
+            0.25m,
+            CancellationToken.None
+        );
 
         // Assert
         state.OpenPositions.Count.ShouldBe(0);
@@ -724,12 +924,13 @@ public sealed class BacktestEngineTests
     {
         // Arrange
         var symbolId = _fixture.Create<Id<Symbol>>();
+        var marketId = _fixture.Create<Id<Market>>();
         var symbol = Symbol.Create(
             symbolId,
             "SYM",
             null,
             "Test Symbol",
-            _fixture.Create<Id<Market>>(),
+            marketId,
             new AdditionalFields()
         );
         var scoredSymbols = new List<(Symbol Symbol, decimal Score, decimal Price)> { (symbol, 0.5m, 100m) };
@@ -741,9 +942,20 @@ public sealed class BacktestEngineTests
                 [symbolId] = new OpenPosition(symbolId, "SYM", null, 100m, 5m, DateTimeOffset.UtcNow)
             }
         };
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var data = BacktestData.FromRaw(market, [symbol], [], [], [], []);
 
         // Act
-        BacktestEngine.BuyCandidates(scoredSymbols, config, 0m, state, DateTimeOffset.UtcNow, CancellationToken.None);
+        BacktestEngine.BuyCandidates(
+            scoredSymbols,
+            config,
+            0m,
+            state,
+            DateTimeOffset.UtcNow,
+            data,
+            0.25m,
+            CancellationToken.None
+        );
 
         // Assert
         state.OpenPositions.Count.ShouldBe(1);
@@ -755,12 +967,13 @@ public sealed class BacktestEngineTests
     {
         // Arrange
         var symbolId = _fixture.Create<Id<Symbol>>();
+        var marketId = _fixture.Create<Id<Market>>();
         var symbol = Symbol.Create(
             symbolId,
             "SYM",
             null,
             "Test Symbol",
-            _fixture.Create<Id<Market>>(),
+            marketId,
             new AdditionalFields()
         );
         var scoredSymbols = new List<(Symbol Symbol, decimal Score, decimal Price)> { (symbol, 0.5m, 100m) };
@@ -775,9 +988,20 @@ public sealed class BacktestEngineTests
             10m,
             DateTimeOffset.UtcNow
         );
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var data = BacktestData.FromRaw(market, [symbol], [], [], [], []);
 
         // Act
-        BacktestEngine.BuyCandidates(scoredSymbols, config, 0m, state, DateTimeOffset.UtcNow, CancellationToken.None);
+        BacktestEngine.BuyCandidates(
+            scoredSymbols,
+            config,
+            0m,
+            state,
+            DateTimeOffset.UtcNow,
+            data,
+            0.25m,
+            CancellationToken.None
+        );
 
         // Assert
         state.OpenPositions.Count.ShouldBe(1);
@@ -789,17 +1013,20 @@ public sealed class BacktestEngineTests
     {
         // Arrange
         var symbolId = _fixture.Create<Id<Symbol>>();
+        var marketId = _fixture.Create<Id<Market>>();
         var symbol = Symbol.Create(
             symbolId,
             "SYM",
             null,
             "Test Symbol",
-            _fixture.Create<Id<Market>>(),
+            marketId,
             new AdditionalFields()
         );
         var scoredSymbols = new List<(Symbol Symbol, decimal Score, decimal Price)> { (symbol, 0.5m, 1000m) };
         var config = new StrategyConfiguration { BuyThreshold = 0.1m, MaxPositions = 5, MaxPositionPercent = 1m };
         var state = new BacktestLoopState(5m); // Not enough to buy even one share at 1000m + tax
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var data = BacktestData.FromRaw(market, [symbol], [], [], [], []);
 
         // Act
         BacktestEngine.BuyCandidates(
@@ -808,6 +1035,8 @@ public sealed class BacktestEngineTests
             0.10m,
             state,
             DateTimeOffset.UtcNow,
+            data,
+            0.25m,
             CancellationToken.None
         );
 
@@ -820,18 +1049,21 @@ public sealed class BacktestEngineTests
     {
         // Arrange
         var symbolId = _fixture.Create<Id<Symbol>>();
+        var marketId = _fixture.Create<Id<Market>>();
         var symbol = Symbol.Create(
             symbolId,
             "SYM",
             null,
             "Test Symbol",
-            _fixture.Create<Id<Market>>(),
+            marketId,
             new AdditionalFields()
         );
         var scoredSymbols = new List<(Symbol Symbol, decimal Score, decimal Price)> { (symbol, 0.5m, 100m) };
         var config = new StrategyConfiguration { BuyThreshold = 0.1m, MaxPositions = 5, MaxPositionPercent = 1m };
         var state = new BacktestLoopState(1000m);
         const decimal taxRate = 0.10m;
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var data = BacktestData.FromRaw(market, [symbol], [], [], [], []);
 
         // Act
         BacktestEngine.BuyCandidates(
@@ -840,6 +1072,8 @@ public sealed class BacktestEngineTests
             taxRate,
             state,
             DateTimeOffset.UtcNow,
+            data,
+            0.25m,
             CancellationToken.None
         );
 
@@ -855,12 +1089,13 @@ public sealed class BacktestEngineTests
         // Arrange
         var symbolId1 = _fixture.Create<Id<Symbol>>();
         var symbolId2 = _fixture.Create<Id<Symbol>>();
+        var marketId = _fixture.Create<Id<Market>>();
         var symbol1 = Symbol.Create(
             symbolId1,
             "LOW",
             null,
             "Low Scorer",
-            _fixture.Create<Id<Market>>(),
+            marketId,
             new AdditionalFields()
         );
         var symbol2 = Symbol.Create(
@@ -868,7 +1103,7 @@ public sealed class BacktestEngineTests
             "HIGH",
             null,
             "High Scorer",
-            _fixture.Create<Id<Market>>(),
+            marketId,
             new AdditionalFields()
         );
         var scoredSymbols = new List<(Symbol Symbol, decimal Score, decimal Price)>
@@ -877,13 +1112,137 @@ public sealed class BacktestEngineTests
         };
         var config = new StrategyConfiguration { BuyThreshold = 0.1m, MaxPositions = 1, MaxPositionPercent = 1m };
         var state = new BacktestLoopState(1000m);
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var data = BacktestData.FromRaw(market, [symbol1, symbol2], [], [], [], []);
 
         // Act
-        BacktestEngine.BuyCandidates(scoredSymbols, config, 0m, state, DateTimeOffset.UtcNow, CancellationToken.None);
+        BacktestEngine.BuyCandidates(
+            scoredSymbols,
+            config,
+            0m,
+            state,
+            DateTimeOffset.UtcNow,
+            data,
+            0.25m,
+            CancellationToken.None
+        );
 
         // Assert
         state.OpenPositions.Count.ShouldBe(1);
         state.OpenPositions.ShouldContainKey(symbolId2);
+    }
+
+    [Fact]
+    public void BuyCandidates_WhenSymbolLimitCapsVolume_RespectsLimit()
+    {
+        // Arrange
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var marketId = _fixture.Create<Id<Market>>();
+        var symbol = Symbol.Create(
+            symbolId,
+            "SYM",
+            null,
+            "Test Symbol",
+            marketId,
+            new AdditionalFields(Limit: 10)
+        );
+
+        var scoredSymbols = new List<(Symbol Symbol, decimal Score, decimal Price)> { (symbol, 0.5m, 100m) };
+        var config = new StrategyConfiguration { BuyThreshold = 0.1m, MaxPositions = 5, MaxPositionPercent = 1m };
+        var state = new BacktestLoopState(10000m);
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var data = BacktestData.FromRaw(market, [symbol], [], [], [], []);
+
+        // Act
+        BacktestEngine.BuyCandidates(
+            scoredSymbols,
+            config,
+            0m,
+            state,
+            DateTimeOffset.UtcNow,
+            data,
+            0.25m,
+            CancellationToken.None
+        );
+
+        // Assert
+        state.OpenPositions.Count.ShouldBe(1);
+        state.OpenPositions[symbolId].Volume.ShouldBe(10);
+        state.Balance.ShouldBe(10000m - 100m * 10);
+    }
+
+    [Fact]
+    public void BuyCandidates_WhenSymbolLimitExceedsCalculatedVolume_UsesCalculatedVolume()
+    {
+        // Arrange
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var marketId = _fixture.Create<Id<Market>>();
+        var symbol = Symbol.Create(
+            symbolId,
+            "SYM",
+            null,
+            "Test Symbol",
+            marketId,
+            new AdditionalFields(Limit: 5000)
+        );
+
+        var scoredSymbols = new List<(Symbol Symbol, decimal Score, decimal Price)> { (symbol, 0.5m, 100m) };
+        var config = new StrategyConfiguration { BuyThreshold = 0.1m, MaxPositions = 5, MaxPositionPercent = 1m };
+        var state = new BacktestLoopState(10000m);
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var data = BacktestData.FromRaw(market, [symbol], [], [], [], []);
+
+        // Act
+        BacktestEngine.BuyCandidates(
+            scoredSymbols,
+            config,
+            0m,
+            state,
+            DateTimeOffset.UtcNow,
+            data,
+            0.25m,
+            CancellationToken.None
+        );
+
+        // Assert
+        state.OpenPositions.Count.ShouldBe(1);
+        state.OpenPositions[symbolId].Volume.ShouldBe(100);
+    }
+
+    [Fact]
+    public void BuyCandidates_WhenSymbolLimitZero_DoesNotBuy()
+    {
+        // Arrange
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var marketId = _fixture.Create<Id<Market>>();
+        var symbol = Symbol.Create(
+            symbolId,
+            "SYM",
+            null,
+            "Test Symbol",
+            marketId,
+            new AdditionalFields(Limit: 0)
+        );
+        var scoredSymbols = new List<(Symbol Symbol, decimal Score, decimal Price)> { (symbol, 0.5m, 100m) };
+        var config = new StrategyConfiguration { BuyThreshold = 0.1m, MaxPositions = 5, MaxPositionPercent = 1m };
+        var state = new BacktestLoopState(10000m);
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var data = BacktestData.FromRaw(market, [symbol], [], [], [], []);
+
+        // Act
+        BacktestEngine.BuyCandidates(
+            scoredSymbols,
+            config,
+            0m,
+            state,
+            DateTimeOffset.UtcNow,
+            data,
+            0.25m,
+            CancellationToken.None
+        );
+
+        // Assert
+        state.OpenPositions.Count.ShouldBe(0);
     }
 
     [Fact]
@@ -894,7 +1253,7 @@ public sealed class BacktestEngineTests
         var currentDate = new DateTimeOffset(2025, 1, 15, 12, 0, 0, TimeSpan.Zero);
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
-        var data = BacktestData.FromRaw(market, [], [], [], [], [], []);
+        var data = BacktestData.FromRaw(market, [], [], [], [], []);
 
         // Act
         BacktestEngine.UpdatePortfolioMetrics(state, currentDate, data);
@@ -913,7 +1272,7 @@ public sealed class BacktestEngineTests
         var currentDate = new DateTimeOffset(2025, 1, 15, 12, 0, 0, TimeSpan.Zero);
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
-        var data = BacktestData.FromRaw(market, [], [], [], [], [], []);
+        var data = BacktestData.FromRaw(market, [], [], [], [], []);
 
         // Act
         BacktestEngine.UpdatePortfolioMetrics(state, currentDate, data);
@@ -931,7 +1290,7 @@ public sealed class BacktestEngineTests
         var currentDate = new DateTimeOffset(2025, 1, 15, 12, 0, 0, TimeSpan.Zero);
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
-        var data = BacktestData.FromRaw(market, [], [], [], [], [], []);
+        var data = BacktestData.FromRaw(market, [], [], [], [], []);
 
         // Act
         BacktestEngine.UpdatePortfolioMetrics(state, currentDate, data);
@@ -951,8 +1310,12 @@ public sealed class BacktestEngineTests
 
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
-        var dailyPrices = new List<DailyPrice> { new DailyPrice(symbolId, new DateOnly(2025, 1, 15), 100m) };
-        var data = BacktestData.FromRaw(market, [], [], [], [], dailyPrices, []);
+        var dailyPrices = new List<DailyPrice> { new(symbolId, new DateOnly(2025, 1, 15), 100m) };
+        var dailyAggregates = new List<DailyTradeAggregate>
+        {
+            new(symbolId, new DateOnly(2025, 1, 15), 100m, 90m, 110m, 1000m)
+        };
+        var data = BacktestData.FromRaw(market, [], [], [], dailyPrices, dailyAggregates);
 
         // Act
         BacktestEngine.UpdatePortfolioMetrics(state, currentDate, data);
@@ -1306,7 +1669,7 @@ public sealed class BacktestEngineTests
         );
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
 
-        var data = BacktestData.FromRaw(market, [symbol], [], [], [], [], []);
+        var data = BacktestData.FromRaw(market, [symbol], [], [], [], []);
 
         var engine = CreateEngine();
 
@@ -1350,7 +1713,7 @@ public sealed class BacktestEngineTests
         );
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
 
-        var data = BacktestData.FromRaw(market, [symbol], [], [], [], [], []);
+        var data = BacktestData.FromRaw(market, [symbol], [], [], [], []);
 
         var engine = CreateEngine();
         var cts = new CancellationTokenSource();
@@ -1411,15 +1774,11 @@ public sealed class BacktestEngineTests
             )
             .ToList();
 
-        // Provide a signal so SignalWeightedExecutor produces a positive score
-        var signal = Signal.Create(marketId, symbolId, SignalType.TaxAdjustedRoi, 0.8m);
-
         var data = BacktestData.FromRaw(
             market,
             [symbol],
             [],
             [],
-            [signal],
             dailyPrices,
             aggregates
         );
@@ -1467,7 +1826,7 @@ public sealed class BacktestEngineTests
         );
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
 
-        var data = BacktestData.FromRaw(market, [symbol], [], [], [], [], []);
+        var data = BacktestData.FromRaw(market, [symbol], [], [], [], []);
 
         // No executor registered for RecipeArbitrage
         var engine = CreateEngine(executors: []);

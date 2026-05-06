@@ -14,7 +14,8 @@ public sealed record BacktestResults(
     decimal BestTrade,
     decimal WorstTrade,
     decimal FinalBalance,
-    List<BacktestPosition> Positions
+    List<BacktestPosition> Positions,
+    StrategyConfiguration? OptimizedConfiguration = null
 )
 {
     public BacktestResults() : this(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, [])

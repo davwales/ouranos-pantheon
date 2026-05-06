@@ -10,9 +10,11 @@ public sealed record OptimizeStrategyInput(
     DateTimeOffset StartDate,
     DateTimeOffset EndDate,
     decimal Budget,
-    int Generations = 100,
-    int PopulationSize = 50,
+    int Generations = 20,
+    int PopulationSize = 20,
     double SharpeRatioWeight = 0.5,
     double TotalReturnWeight = 0.3,
-    double MaxDrawdownWeight = -0.2
+    double MaxDrawdownWeight = -0.2,
+    decimal VolumeParticipationRate = 0.25m,
+    decimal SlippageMultiplier = 0.1m
 );

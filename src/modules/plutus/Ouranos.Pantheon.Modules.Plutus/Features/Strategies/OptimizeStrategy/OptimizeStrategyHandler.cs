@@ -75,7 +75,9 @@ public sealed class OptimizeStrategyHandler : IPantheonHandler<OptimizeStrategyI
                 (uint)command.PopulationSize,
                 command.SharpeRatioWeight,
                 command.TotalReturnWeight,
-                command.MaxDrawdownWeight
+                command.MaxDrawdownWeight,
+                command.VolumeParticipationRate,
+                command.SlippageMultiplier
             )
         );
 

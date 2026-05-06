@@ -3,6 +3,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
@@ -12,9 +13,11 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 namespace Ouranos.Pantheon.Modules.Plutus.Migrations
 {
     [DbContext(typeof(PlutusDbContext))]
-    partial class PlutusDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260506150150_AddOptimizedConfigurationToBacktestResults")]
+    partial class AddOptimizedConfigurationToBacktestResults
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1370,8 +1373,8 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                                                 .HasColumnName("type");
 
                                             b3.Property<decimal>("Weight")
-                                                .HasPrecision(18, 2)
-                                                .HasColumnType("numeric(18,2)")
+                                                .HasPrecision(18, 4)
+                                                .HasColumnType("numeric(18,4)")
                                                 .HasColumnName("weight");
 
                                             b3.HasKey("StrategyConfigurationBacktestResultsBacktestId", "Id")
@@ -1410,8 +1413,8 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                                                 .HasColumnName("type");
 
                                             b3.Property<decimal>("Weight")
-                                                .HasPrecision(18, 2)
-                                                .HasColumnType("numeric(18,2)")
+                                                .HasPrecision(18, 4)
+                                                .HasColumnType("numeric(18,4)")
                                                 .HasColumnName("weight");
 
                                             b3.HasKey("StrategyConfigurationBacktestResultsBacktestId", "Id")

@@ -7,5 +7,7 @@ public sealed record RunBacktestBody(
     Id<Market> MarketId,
     DateTimeOffset StartDate,
     DateTimeOffset EndDate,
-    decimal Budget
+    decimal Budget,
+    decimal? VolumeParticipationRate = null,
+    decimal? SlippageMultiplier = null
 );
