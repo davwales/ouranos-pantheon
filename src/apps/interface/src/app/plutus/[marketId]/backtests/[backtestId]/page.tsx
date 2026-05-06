@@ -6,7 +6,7 @@ import useInterval from "@/hooks/use_interval";
 import { BacktestDetail, StrategyDetail, plutusApi } from "@/lib/api/plutus";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { RunBacktestDialog } from "../../strategies/components/run-backtest-dialog";
 import { BacktestMetricsGrid } from "../components/backtest-metrics-grid";
@@ -16,12 +16,14 @@ import { BacktestStatisticsGrid } from "../components/backtest-statistics-grid";
 import { CancelledBacktestView } from "../components/cancelled-backtest-view";
 import { FailedBacktestView } from "../components/failed-backtest-view";
 import { InProgressBacktestView } from "../components/in-progress-backtest-view";
+import { OptimizedConfigurationCard } from "../components/optimized-configuration-card";
 
 export default function BacktestDetailPage() {
   const { marketId, backtestId } = useParams<{
     marketId: string;
     backtestId: string;
   }>();
+  const router = useRouter();
 
   const [backtestState, reexecute] = useApi<BacktestDetail>(
     () => plutusApi.getBacktest(backtestId),
@@ -51,6 +53,7 @@ export default function BacktestDetailPage() {
 
   const [isCancelling, setIsCancelling] = useState(false);
   const [isRestarting, setIsRestarting] = useState(false);
+  const [isApplyingConfig, setIsApplyingConfig] = useState(false);
   const [runAgainOpen, setRunAgainOpen] = useState(false);
 
   const handleCancel = useCallback(async () => {
@@ -72,6 +75,33 @@ export default function BacktestDetailPage() {
       setIsRestarting(false);
     }
   }, [backtestId, reexecute]);
+
+  const handleApplyToStrategy = useCallback(async () => {
+    if (
+      !backtest?.strategyId ||
+      !backtest.results?.optimizedConfiguration ||
+      !strategy
+    ) {
+      return;
+    }
+    setIsApplyingConfig(true);
+    try {
+      await plutusApi.updateStrategy(backtest.strategyId, {
+        name: strategy.name,
+        description: strategy.description ?? null,
+        configuration: backtest.results.optimizedConfiguration,
+      });
+      router.push(`/plutus/${marketId}/strategies/${backtest.strategyId}`);
+    } finally {
+      setIsApplyingConfig(false);
+    }
+  }, [
+    backtest?.strategyId,
+    backtest?.results?.optimizedConfiguration,
+    strategy,
+    marketId,
+    router,
+  ]);
 
   if (backtestState.status === "error") {
     return (
@@ -159,6 +189,14 @@ export default function BacktestDetailPage() {
           <BacktestMetricsGrid results={results} />
 
           <BacktestStatisticsGrid results={results} />
+
+          {results.optimizedConfiguration && (
+            <OptimizedConfigurationCard
+              configuration={results.optimizedConfiguration}
+              isApplying={isApplyingConfig}
+              onApplyToStrategy={strategy ? handleApplyToStrategy : undefined}
+            />
+          )}
 
           {results.positions && results.positions.length > 0 && (
             <BacktestPositionsTable positions={results.positions} />

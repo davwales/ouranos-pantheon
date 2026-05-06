@@ -40,6 +40,17 @@ public sealed class RawSqlCommand
     }
 
     /// <summary>
+    ///     Adds a list of <see cref="Id{T}" /> as a PostgreSQL UUID array parameter
+    ///     for use with <c>= ANY(@param)</c> clauses.
+    /// </summary>
+    public RawSqlCommand WithIds<T>(string name, IEnumerable<Id<T>> ids)
+    {
+        var uuids = ids.Select(id => Guid.Parse(id.Value)).ToArray();
+        _parameters.Add(new NpgsqlParameter(name, NpgsqlDbType.Array | NpgsqlDbType.Uuid) { Value = uuids });
+        return this;
+    }
+
+    /// <summary>
     ///     Adds a nullable <see cref="DateTimeOffset" /> parameter.
     /// </summary>
     public RawSqlCommand WithDateTimeOffset(string name, DateTimeOffset? value)

@@ -8,7 +8,9 @@ public sealed record OptimizeStrategyMessage(
     uint PopulationSize,
     double SharpeRatioWeight = 0.5,
     double TotalReturnWeight = 0.3,
-    double MaxDrawdownWeight = -0.2
+    double MaxDrawdownWeight = -0.2,
+    decimal VolumeParticipationRate = 0.25m,
+    decimal SlippageMultiplier = 0.1m
 )
 {
     public const string Exchange = "plutus.backtest";

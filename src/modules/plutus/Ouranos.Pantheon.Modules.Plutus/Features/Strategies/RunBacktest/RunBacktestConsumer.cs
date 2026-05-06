@@ -1,6 +1,7 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
@@ -15,25 +16,29 @@ public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
 
     private readonly ILogger<RunBacktestConsumer> _logger;
     private readonly IDbContextFactory<PlutusDbContext> _dbContextFactory;
-    private readonly BacktestDataQueryService _dataService;
+    private readonly IBacktestDataQueryService _dataService;
     private readonly BacktestEngine _engine;
+    private readonly IOptions<BacktestDataOptions> _backtestDataOptions;
 
     public RunBacktestConsumer(
         ILogger<RunBacktestConsumer> logger,
         IDbContextFactory<PlutusDbContext> dbContextFactory,
-        BacktestDataQueryService dataService,
-        BacktestEngine engine
+        IBacktestDataQueryService dataService,
+        BacktestEngine engine,
+        IOptions<BacktestDataOptions> backtestDataOptions
     )
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(dbContextFactory);
         Guard.Against.Null(dataService);
         Guard.Against.Null(engine);
+        Guard.Against.Null(backtestDataOptions);
 
         _logger = logger;
         _dbContextFactory = dbContextFactory;
         _dataService = dataService;
         _engine = engine;
+        _backtestDataOptions = backtestDataOptions;
     }
 
     [MessageTimeout(3600)]
@@ -71,12 +76,19 @@ public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
 
         try
         {
+            backtest.UpdateProgress(1, "Loading market data...");
+            await dbContext.SaveChangesAsync(cancellationToken);
+
             var data = await _dataService.LoadDataAsync(
                 backtest.MarketId,
                 backtest.StartDate,
                 backtest.EndDate,
-                cancellationToken
+                cancellationToken,
+                lookbackDays: _backtestDataOptions.Value.LookbackDays
             );
+
+            backtest.UpdateProgress(5, "Market data loaded, starting simulation...");
+            await dbContext.SaveChangesAsync(cancellationToken);
 
             var results = await _engine.RunAsync(
                 backtest.Strategy,
@@ -86,6 +98,8 @@ public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
                 backtest.Budget,
                 cancellationToken,
                 data: data,
+                volumeParticipationRate: message.VolumeParticipationRate,
+                slippageMultiplier: message.SlippageMultiplier,
                 onCheckpoint: async (percent, progressMessage) =>
                 {
                     if (percent - lastSavedPercent < MinimumProgressUpdate)

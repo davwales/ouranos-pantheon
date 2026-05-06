@@ -15,8 +15,8 @@ public sealed class SignalWeightedExecutorTests
     private readonly SignalWeightedExecutor _executor = new();
 
     private StrategyScoreContext CreateContext(
-        IReadOnlyList<Signal> signals,
-        StrategyConfiguration? config = null)
+        IReadOnlyList<Signal> signals
+    )
     {
         return new StrategyScoreContext(
             new Id<Symbol>(Guid.NewGuid().ToString()),
@@ -26,10 +26,13 @@ public sealed class SignalWeightedExecutorTests
             100m,
             0.1m,
             1000m,
-            null, null, null,
+            null,
+            null,
+            null,
             [],
             signals,
-            null, null
+            null,
+            null
         );
     }
 
@@ -52,7 +55,7 @@ public sealed class SignalWeightedExecutorTests
             Signal.Create(default, default, SignalType.TaxAdjustedRoi, 0.6m),
             Signal.Create(default, default, SignalType.TrendMomentum, 0.4m)
         };
-        var context = CreateContext(signals, new StrategyConfiguration());
+        var context = CreateContext(signals);
 
         var result = _executor.Score(context, new StrategyConfiguration());
 
@@ -72,7 +75,7 @@ public sealed class SignalWeightedExecutorTests
         {
             SignalWeights = [new SignalWeight(SignalType.Rsi, 2m), new SignalWeight(SignalType.TrendMomentum, 1m)]
         };
-        var context = CreateContext(signals, config);
+        var context = CreateContext(signals);
 
         var result = _executor.Score(context, config);
 
@@ -83,15 +86,9 @@ public sealed class SignalWeightedExecutorTests
     [Fact]
     public void Score_WhenAllWeightsAreZero_ReturnsNull()
     {
-        var signals = new List<Signal>
-        {
-            Signal.Create(default, default, SignalType.TaxAdjustedRoi, 0.5m)
-        };
-        var config = new StrategyConfiguration
-        {
-            SignalWeights = [new SignalWeight(SignalType.TaxAdjustedRoi, 0m)]
-        };
-        var context = CreateContext(signals, config);
+        var signals = new List<Signal> { Signal.Create(default, default, SignalType.TaxAdjustedRoi, 0.5m) };
+        var config = new StrategyConfiguration { SignalWeights = [new SignalWeight(SignalType.TaxAdjustedRoi, 0m)] };
+        var context = CreateContext(signals);
 
         var result = _executor.Score(context, config);
 
@@ -106,11 +103,8 @@ public sealed class SignalWeightedExecutorTests
             Signal.Create(default, default, SignalType.TaxAdjustedRoi, 0.8m),
             Signal.Create(default, default, SignalType.VolumeAnomaly, 0.6m)
         };
-        var config = new StrategyConfiguration
-        {
-            SignalWeights = [new SignalWeight(SignalType.TaxAdjustedRoi, 1m)]
-        };
-        var context = CreateContext(signals, config);
+        var config = new StrategyConfiguration { SignalWeights = [new SignalWeight(SignalType.TaxAdjustedRoi, 1m)] };
+        var context = CreateContext(signals);
 
         var result = _executor.Score(context, config);
 
@@ -129,10 +123,18 @@ public sealed class ForecastMomentumExecutorTests
         var context = new StrategyScoreContext(
             new Id<Symbol>(Guid.NewGuid().ToString()),
             new Id<Market>(Guid.NewGuid().ToString()),
-            "Test", null,
-            100m, 0.1m, 1000m,
-            null, null, null,
-            [], [], null, null
+            "Test",
+            null,
+            100m,
+            0.1m,
+            1000m,
+            null,
+            null,
+            null,
+            [],
+            [],
+            null,
+            null
         );
 
         var result = _executor.Score(context, new StrategyConfiguration());
@@ -146,10 +148,18 @@ public sealed class ForecastMomentumExecutorTests
         var context = new StrategyScoreContext(
             new Id<Symbol>(Guid.NewGuid().ToString()),
             new Id<Market>(Guid.NewGuid().ToString()),
-            "Test", null,
-            0m, 0.1m, 1000m,
-            null, null, null,
-            [], [], null, 0.05m
+            "Test",
+            null,
+            0m,
+            0.1m,
+            1000m,
+            null,
+            null,
+            null,
+            [],
+            [],
+            null,
+            0.05m
         );
 
         var result = _executor.Score(context, new StrategyConfiguration());
@@ -163,10 +173,18 @@ public sealed class ForecastMomentumExecutorTests
         var context = new StrategyScoreContext(
             new Id<Symbol>(Guid.NewGuid().ToString()),
             new Id<Market>(Guid.NewGuid().ToString()),
-            "Test", null,
-            100m, 0.1m, 1000m,
-            null, null, null,
-            [], [], null, 0.05m
+            "Test",
+            null,
+            100m,
+            0.1m,
+            1000m,
+            null,
+            null,
+            null,
+            [],
+            [],
+            null,
+            0.05m
         );
 
         var result = _executor.Score(context, new StrategyConfiguration { ForecastMovementThreshold = 0.05m });
@@ -181,26 +199,58 @@ public sealed class MeanReversionExecutorTests
     private readonly MeanReversionExecutor _executor = new();
 
     [Fact]
-    public void Score_WhenFewerThanFiveBuckets_ReturnsNull()
+    public void Score_WhenFewerThanTwoBuckets_ReturnsNull()
     {
-        var buckets = new List<PriceBucket>
-        {
-            new(DateTimeOffset.UtcNow, 100m, 99m, 101m, 10m),
-            new(DateTimeOffset.UtcNow, 100m, 99m, 101m, 10m),
-            new(DateTimeOffset.UtcNow, 100m, 99m, 101m, 10m)
-        };
+        var buckets = new List<PriceBucket> { new(DateTimeOffset.UtcNow, 100m, 99m, 101m, 10m) };
         var context = new StrategyScoreContext(
             new Id<Symbol>(Guid.NewGuid().ToString()),
             new Id<Market>(Guid.NewGuid().ToString()),
-            "Test", null,
-            100m, 0.1m, 1000m,
-            null, null, null,
-            buckets, [], null, null
+            "Test",
+            null,
+            100m,
+            0.1m,
+            1000m,
+            null,
+            null,
+            null,
+            buckets,
+            [],
+            null,
+            null
         );
 
         var result = _executor.Score(context, new StrategyConfiguration());
 
         result.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Score_WhenTwoBuckets_ReturnsScore()
+    {
+        var buckets = new List<PriceBucket>
+        {
+            new(DateTimeOffset.UtcNow, 100m, 99m, 101m, 10m), new(DateTimeOffset.UtcNow, 102m, 101m, 103m, 10m)
+        };
+        var context = new StrategyScoreContext(
+            new Id<Symbol>(Guid.NewGuid().ToString()),
+            new Id<Market>(Guid.NewGuid().ToString()),
+            "Test",
+            null,
+            90m,
+            0.1m,
+            1000m,
+            null,
+            null,
+            null,
+            buckets,
+            [],
+            null,
+            null
+        );
+
+        var result = _executor.Score(context, new StrategyConfiguration());
+
+        result.ShouldNotBeNull();
     }
 
     [Fact]
@@ -212,10 +262,18 @@ public sealed class MeanReversionExecutorTests
         var context = new StrategyScoreContext(
             new Id<Symbol>(Guid.NewGuid().ToString()),
             new Id<Market>(Guid.NewGuid().ToString()),
-            "Test", null,
-            0m, 0.1m, 1000m,
-            null, null, null,
-            buckets, [], null, null
+            "Test",
+            null,
+            0m,
+            0.1m,
+            1000m,
+            null,
+            null,
+            null,
+            buckets,
+            [],
+            null,
+            null
         );
 
         var result = _executor.Score(context, new StrategyConfiguration());
@@ -232,10 +290,18 @@ public sealed class MeanReversionExecutorTests
         var context = new StrategyScoreContext(
             new Id<Symbol>(Guid.NewGuid().ToString()),
             new Id<Market>(Guid.NewGuid().ToString()),
-            "Test", null,
-            90m, 0.1m, 1000m,
-            null, null, null,
-            buckets, [], null, null
+            "Test",
+            null,
+            90m,
+            0.1m,
+            1000m,
+            null,
+            null,
+            null,
+            buckets,
+            [],
+            null,
+            null
         );
 
         var result = _executor.Score(context, new StrategyConfiguration { DeviationMultiplier = 2m });
@@ -253,16 +319,66 @@ public sealed class MeanReversionExecutorTests
         var context = new StrategyScoreContext(
             new Id<Symbol>(Guid.NewGuid().ToString()),
             new Id<Market>(Guid.NewGuid().ToString()),
-            "Test", null,
-            110m, 0.1m, 1000m,
-            null, null, null,
-            buckets, [], null, null
+            "Test",
+            null,
+            110m,
+            0.1m,
+            1000m,
+            null,
+            null,
+            null,
+            buckets,
+            [],
+            null,
+            null
         );
 
         var result = _executor.Score(context, new StrategyConfiguration { DeviationMultiplier = 2m });
 
         result.ShouldNotBeNull();
         result.Value.ShouldBeLessThan(0);
+    }
+
+    [Fact]
+    public void Score_WhenMeanTimeFrameValueSet_UsesOnlyRecentBuckets()
+    {
+        var earlyBuckets = Enumerable.Range(0, 5)
+            .Select(i => new PriceBucket(DateTimeOffset.UtcNow, 200m + i, 195m + i, 205m + i, 10m))
+            .ToList();
+        var recentBuckets = Enumerable.Range(0, 5)
+            .Select(i => new PriceBucket(DateTimeOffset.UtcNow, 100m + i, 95m + i, 105m + i, 10m))
+            .ToList();
+        var allBuckets = earlyBuckets.Concat(recentBuckets).ToList();
+
+        var contextAll = new StrategyScoreContext(
+            new Id<Symbol>(Guid.NewGuid().ToString()),
+            new Id<Market>(Guid.NewGuid().ToString()),
+            "Test",
+            null,
+            90m,
+            0.1m,
+            1000m,
+            null,
+            null,
+            null,
+            allBuckets,
+            [],
+            null,
+            null
+        );
+
+        var resultAllBuckets = _executor.Score(
+            contextAll,
+            new StrategyConfiguration { DeviationMultiplier = 2m, MeanTimeFrameValue = 10 }
+        );
+        var resultRecentOnly = _executor.Score(
+            contextAll,
+            new StrategyConfiguration { DeviationMultiplier = 2m, MeanTimeFrameValue = 5 }
+        );
+
+        resultAllBuckets.ShouldNotBeNull();
+        resultRecentOnly.ShouldNotBeNull();
+        resultAllBuckets.Value.ShouldNotBe(resultRecentOnly.Value);
     }
 }
 
@@ -276,10 +392,18 @@ public sealed class RecipeArbitrageExecutorTests
         var context = new StrategyScoreContext(
             new Id<Symbol>(Guid.NewGuid().ToString()),
             new Id<Market>(Guid.NewGuid().ToString()),
-            "Test", null,
-            100m, 0.1m, 1000m,
-            null, null, null,
-            [], [], null, null
+            "Test",
+            null,
+            100m,
+            0.1m,
+            1000m,
+            null,
+            null,
+            null,
+            [],
+            [],
+            null,
+            null
         );
 
         var result = _executor.Score(context, new StrategyConfiguration());
@@ -294,15 +418,29 @@ public sealed class RecipeArbitrageExecutorTests
             new Id<Market>(Guid.NewGuid().ToString()),
             new Id<Symbol>(Guid.NewGuid().ToString()),
             TimeFrame.OneHour,
-            10000m, 90m, 100m, 1000m, 500, 1000m, 0.05m
+            10000m,
+            90m,
+            100m,
+            1000m,
+            500,
+            1000m,
+            0.05m
         );
         var context = new StrategyScoreContext(
             new Id<Symbol>(Guid.NewGuid().ToString()),
             new Id<Market>(Guid.NewGuid().ToString()),
-            "Test", null,
-            100m, 0.1m, 1000m,
-            snap, null, null,
-            [], [], null, null
+            "Test",
+            null,
+            100m,
+            0.1m,
+            1000m,
+            snap,
+            null,
+            null,
+            [],
+            [],
+            null,
+            null
         );
 
         var result = _executor.Score(context, new StrategyConfiguration { MinMarginPercent = 0.01m });
@@ -321,10 +459,18 @@ public sealed class CompositeExecutorTests
         var context = new StrategyScoreContext(
             new Id<Symbol>(Guid.NewGuid().ToString()),
             new Id<Market>(Guid.NewGuid().ToString()),
-            "Test", null,
-            100m, 0.1m, 1000m,
-            null, null, null,
-            [], [], null, null
+            "Test",
+            null,
+            100m,
+            0.1m,
+            1000m,
+            null,
+            null,
+            null,
+            [],
+            [],
+            null,
+            null
         );
 
         var result = executor.Score(context, new StrategyConfiguration { Components = null });
@@ -339,14 +485,29 @@ public sealed class CompositeExecutorTests
         var context = new StrategyScoreContext(
             new Id<Symbol>(Guid.NewGuid().ToString()),
             new Id<Market>(Guid.NewGuid().ToString()),
-            "Test", null,
-            100m, 0.1m, 1000m,
-            null, null, null,
-            [], [], null, null
+            "Test",
+            null,
+            100m,
+            0.1m,
+            1000m,
+            null,
+            null,
+            null,
+            [],
+            [],
+            null,
+            null
         );
         var config = new StrategyConfiguration
         {
-            Components = [new CompositeComponent(new Id<Strategy>(Guid.NewGuid().ToString()), StrategyType.ForecastMomentum, 1m)]
+            Components =
+            [
+                new CompositeComponent(
+                    new Id<Strategy>(Guid.NewGuid().ToString()),
+                    StrategyType.ForecastMomentum,
+                    1m
+                )
+            ]
         };
 
         var result = executor.Score(context, config);
@@ -364,15 +525,30 @@ public sealed class CompositeExecutorTests
         var context = new StrategyScoreContext(
             new Id<Symbol>(Guid.NewGuid().ToString()),
             new Id<Market>(Guid.NewGuid().ToString()),
-            "Test", null,
-            50m, 0.1m, 1000m,
-            null, null, null,
-            buckets, [], null, null
+            "Test",
+            null,
+            50m,
+            0.1m,
+            1000m,
+            null,
+            null,
+            null,
+            buckets,
+            [],
+            null,
+            null
         );
         var config = new StrategyConfiguration
         {
             DeviationMultiplier = 0.01m,
-            Components = [new CompositeComponent(new Id<Strategy>(Guid.NewGuid().ToString()), StrategyType.MeanReversion, 100m)]
+            Components =
+            [
+                new CompositeComponent(
+                    new Id<Strategy>(Guid.NewGuid().ToString()),
+                    StrategyType.MeanReversion,
+                    100m
+                )
+            ]
         };
 
         var result = executor.Score(context, config);

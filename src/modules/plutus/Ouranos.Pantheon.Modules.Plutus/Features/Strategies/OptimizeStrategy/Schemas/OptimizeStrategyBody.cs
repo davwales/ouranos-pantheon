@@ -12,5 +12,7 @@ public sealed record OptimizeStrategyBody(
     int PopulationSize = 50,
     double SharpeRatioWeight = 0.5,
     double TotalReturnWeight = 0.3,
-    double MaxDrawdownWeight = -0.2
+    double MaxDrawdownWeight = -0.2,
+    decimal? VolumeParticipationRate = null,
+    decimal? SlippageMultiplier = null
 );

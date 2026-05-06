@@ -165,7 +165,7 @@ public sealed class StrategyConfigurationChromosomeTests
         config.DeviationMultiplier.Value.ShouldBeInRange(0.5m, 3.5m);
 
         config.MeanTimeFrameValue.ShouldNotBeNull();
-        config.MeanTimeFrameValue.Value.ShouldBeInRange(1, 3);
+        config.MeanTimeFrameValue.Value.ShouldBeInRange(5, 25);
 
         config.BuyThreshold.ShouldBeNull();
         config.SellThreshold.ShouldBeNull();
@@ -520,7 +520,7 @@ public sealed class StrategyConfigurationChromosomeTests
 
         if (config.MeanTimeFrameValue.HasValue)
         {
-            config.MeanTimeFrameValue.Value.ShouldBeInRange(1, 4);
+            config.MeanTimeFrameValue.Value.ShouldBeInRange(5, 30);
         }
     }
 

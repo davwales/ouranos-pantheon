@@ -193,9 +193,9 @@ public sealed class StrategyConfigurationChromosome(StrategyType strategyType, S
             Configuration = Configuration with
             {
                 MeanTimeFrameValue = Math.Clamp(
-                    Configuration.MeanTimeFrameValue.Value + random.Next(-1, 2),
-                    1,
-                    4
+                    Configuration.MeanTimeFrameValue.Value + random.Next(-5, 6),
+                    5,
+                    30
                 )
             };
         }
@@ -403,7 +403,7 @@ public sealed class StrategyConfigurationChromosome(StrategyType strategyType, S
             StrategyType.MeanReversion => new StrategyConfiguration
             {
                 DeviationMultiplier = 0.5m + (decimal)random.NextDouble() * 3m,
-                MeanTimeFrameValue = random.Next(1, 4),
+                MeanTimeFrameValue = random.Next(5, 26),
                 MaxPositions = random.Next(1, 20),
                 MaxPositionPercent = 0.05m + (decimal)random.NextDouble() * 0.45m,
                 HoldPeriodDays = random.Next(1, 30)

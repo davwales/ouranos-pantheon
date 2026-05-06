@@ -22,7 +22,15 @@ public static class RunBacktestEndpoint
         CancellationToken ct
     )
     {
-        var input = new RunBacktestInput(strategyId, body.MarketId, body.StartDate, body.EndDate, body.Budget);
+        var input = new RunBacktestInput(
+            strategyId,
+            body.MarketId,
+            body.StartDate,
+            body.EndDate,
+            body.Budget,
+            body.VolumeParticipationRate ?? 0.25m,
+            body.SlippageMultiplier ?? 0.1m
+        );
         var result = await bus.InvokeAsync<RunBacktestResponse>(input, ct);
         return Results.Accepted($"/api/plutus/backtests/{result.BacktestId}", result);
     }

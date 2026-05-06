@@ -6,12 +6,19 @@ public sealed class MeanReversionExecutor : IStrategyExecutor
 
     public decimal? Score(StrategyScoreContext context, StrategyConfiguration configuration)
     {
-        if (context.PriceBuckets.Count < 5 || context.CurrentPrice == 0)
+        if (context.PriceBuckets.Count < 2 || context.CurrentPrice == 0)
         {
             return null;
         }
 
-        var prices = context.PriceBuckets.Select(b => b.AveragePrice).ToList();
+        var timeFrame = configuration.MeanTimeFrameValue ?? context.PriceBuckets.Count;
+        var effectiveBuckets = Math.Min(timeFrame, context.PriceBuckets.Count);
+
+        var prices = context.PriceBuckets
+            .Skip(context.PriceBuckets.Count - effectiveBuckets)
+            .Select(b => b.AveragePrice)
+            .ToList();
+
         var mean = prices.Average();
         var stdDev = (decimal)Math.Sqrt((double)prices.Average(p => (p - mean) * (p - mean)));
 

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
@@ -19,22 +20,35 @@ public sealed class RunBacktestConsumerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly IDbContextFactory<PlutusDbContext> _dbContextFactory;
+    private readonly IBacktestDataQueryService _dataService;
     private readonly RunBacktestConsumer _consumer;
     private readonly ILogger<RunBacktestConsumer> _logger = Substitute.For<ILogger<RunBacktestConsumer>>();
+    private readonly IOptions<BacktestDataOptions> _backtestDataOptions = Options.Create(new BacktestDataOptions());
 
     public RunBacktestConsumerTests()
     {
         _fixture.Customize(new IdCustomization());
         _dbContextFactory = DbContextExtensions.MockFactory<PlutusDbContext>();
+        _dataService = Substitute.For<IBacktestDataQueryService>();
 
         var engineLogger = Substitute.For<ILogger<BacktestEngine>>();
-        var dataServiceLogger = Substitute.For<ILogger<BacktestDataQueryService>>();
-        var dataService = new BacktestDataQueryService(dataServiceLogger, _dbContextFactory);
         var executors = new List<IStrategyExecutor> { new SignalWeightedExecutor() };
         var compositeExecutor = new CompositeExecutor(executors);
-        var engine = new BacktestEngine(engineLogger, dataService, executors, compositeExecutor, []);
+        var engine = new BacktestEngine(engineLogger, _dataService, executors, compositeExecutor, []);
 
-        _consumer = new RunBacktestConsumer(_logger, _dbContextFactory, dataService, engine);
+        _consumer = new RunBacktestConsumer(_logger, _dbContextFactory, _dataService, engine, _backtestDataOptions);
+    }
+
+    private BacktestData CreateBacktestData(Market market, List<Symbol> symbols)
+    {
+        return BacktestData.FromRaw(
+            market,
+            symbols,
+            [],
+            [],
+            [],
+            []
+        );
     }
 
     [Fact]
@@ -109,6 +123,17 @@ public sealed class RunBacktestConsumerTests
             await dbContext.Trades.AddRangeAsync(trades);
             await dbContext.SaveChangesAsync();
         }
+
+        var backtestData = CreateBacktestData(market, [symbol]);
+
+        _dataService.LoadDataAsync(
+                marketId,
+                Arg.Any<DateTimeOffset>(),
+                Arg.Any<DateTimeOffset>(),
+                Arg.Any<CancellationToken>(),
+                Arg.Any<int>()
+            )
+            .Returns(backtestData);
 
         var message = new RunBacktestMessage(backtest.Id);
 
@@ -204,6 +229,17 @@ public sealed class RunBacktestConsumerTests
             await dbContext.SeedData(backtest);
             await dbContext.SaveChangesAsync();
         }
+
+        var backtestData = CreateBacktestData(market, []);
+
+        _dataService.LoadDataAsync(
+                marketId,
+                Arg.Any<DateTimeOffset>(),
+                Arg.Any<DateTimeOffset>(),
+                Arg.Any<CancellationToken>(),
+                Arg.Any<int>()
+            )
+            .Returns(backtestData);
 
         await _consumer.Handle(new RunBacktestMessage(backtest.Id), CancellationToken.None);
 

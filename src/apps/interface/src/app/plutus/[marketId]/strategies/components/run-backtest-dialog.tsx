@@ -38,6 +38,9 @@ export function RunBacktestDialog({
     return d.toISOString().split("T")[0];
   });
   const [budget, setBudget] = useState(defaultBudget ?? 10000);
+  const [volumeParticipationRate, setVolumeParticipationRate] = useState(0.25);
+  const [slippageMultiplier, setSlippageMultiplier] = useState(0.1);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dateInvalid = startDate > endDate;
@@ -59,6 +62,8 @@ export function RunBacktestDialog({
         startDate,
         endDate,
         budget,
+        volumeParticipationRate,
+        slippageMultiplier,
       });
       onOpenChange(false);
       router.push(`/plutus/${marketId}/strategies/${strategyId}/backtests`);
@@ -111,6 +116,37 @@ export function RunBacktestDialog({
           onChange={(v) => setBudget(v ?? 0)}
           min={1}
         />
+        <div className="pt-1">
+          <button
+            type="button"
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="text-sm text-muted-foreground hover:text-foreground underline"
+          >
+            {showAdvanced ? "Hide" : "Show"} Advanced Options
+          </button>
+        </div>
+        {showAdvanced && (
+          <div className="space-y-4 border rounded-lg p-3 bg-muted/30">
+            <NumberInput
+              label="Volume Participation Rate"
+              hint="Max fraction of daily volume per trade (0-1)"
+              value={volumeParticipationRate}
+              onChange={(v) => setVolumeParticipationRate(v ?? 0.25)}
+              min={0.01}
+              max={1}
+              step={0.01}
+            />
+            <NumberInput
+              label="Slippage Multiplier"
+              hint="Price impact per unit of volume ratio (0 = none)"
+              value={slippageMultiplier}
+              onChange={(v) => setSlippageMultiplier(v ?? 0.1)}
+              min={0}
+              max={1}
+              step={0.01}
+            />
+          </div>
+        )}
         <Button
           className="w-full"
           onClick={handleSubmit}

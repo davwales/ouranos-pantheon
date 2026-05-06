@@ -19,16 +19,18 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
 {
     private readonly ILogger<OptimizeStrategyConsumer> _logger;
     private readonly IDbContextFactory<PlutusDbContext> _dbContextFactory;
-    private readonly BacktestDataQueryService _dataService;
+    private readonly IBacktestDataQueryService _dataService;
     private readonly BacktestEngine _engine;
     private readonly IOptions<OptimizationOptions> _options;
+    private readonly IOptions<BacktestDataOptions> _backtestDataOptions;
 
     public OptimizeStrategyConsumer(
         ILogger<OptimizeStrategyConsumer> logger,
         IDbContextFactory<PlutusDbContext> dbContextFactory,
-        BacktestDataQueryService dataService,
+        IBacktestDataQueryService dataService,
         BacktestEngine engine,
-        IOptions<OptimizationOptions> options
+        IOptions<OptimizationOptions> options,
+        IOptions<BacktestDataOptions> backtestDataOptions
     )
     {
         Guard.Against.Null(logger);
@@ -36,12 +38,14 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
         Guard.Against.Null(dataService);
         Guard.Against.Null(engine);
         Guard.Against.Null(options);
+        Guard.Against.Null(backtestDataOptions);
 
         _logger = logger;
         _dbContextFactory = dbContextFactory;
         _dataService = dataService;
         _engine = engine;
         _options = options;
+        _backtestDataOptions = backtestDataOptions;
     }
 
     [MessageTimeout(3600)]
@@ -64,7 +68,11 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
 
         if (backtest.Status != BacktestStatus.Pending)
         {
-            _logger.LogWarning("Backtest '{backtestId}' is already in {status} state. Skipping as duplicate delivery.", message.BacktestId, backtest.Status);
+            _logger.LogWarning(
+                "Backtest '{backtestId}' is already in {status} state. Skipping as duplicate delivery.",
+                message.BacktestId,
+                backtest.Status
+            );
             return;
         }
 
@@ -77,23 +85,23 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
                 backtest.MarketId,
                 backtest.StartDate,
                 backtest.EndDate,
+                cancellationToken,
+                lookbackDays: _backtestDataOptions.Value.LookbackDays
+            );
+
+            backtest.UpdateProgress(2, "Market data loaded, starting optimization...");
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            var bestConfig = await RunOptimizationAsync(
+                backtest,
+                message,
+                data,
+                dbContext,
                 cancellationToken
             );
 
-            var bestConfig = await RunOptimizationAsync(
-                backtest.Strategy,
-                backtest.MarketId,
-                backtest.StartDate,
-                backtest.EndDate,
-                backtest.Budget,
-                message.Generations,
-                message.PopulationSize,
-                message.SharpeRatioWeight,
-                message.TotalReturnWeight,
-                message.MaxDrawdownWeight,
-                data,
-                cancellationToken
-            );
+            backtest.UpdateProgress(92, "Running final backtest with optimized configuration...");
+            await dbContext.SaveChangesAsync(cancellationToken);
 
             var results = await _engine.RunAsync(
                 backtest.Strategy,
@@ -103,10 +111,14 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
                 backtest.Budget,
                 cancellationToken,
                 bestConfig,
-                data
+                data,
+                volumeParticipationRate: message.VolumeParticipationRate,
+                slippageMultiplier: message.SlippageMultiplier
             );
 
-            backtest.Complete(results);
+            var finalResults = results with { OptimizedConfiguration = bestConfig };
+
+            backtest.Complete(finalResults);
             await dbContext.SaveChangesAsync(cancellationToken);
 
             _logger.LogDebug("Optimization for backtest '{backtestId}' completed successfully.", message.BacktestId);
@@ -124,40 +136,35 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
     }
 
     private async Task<StrategyConfiguration> RunOptimizationAsync(
-        Strategy strategy,
-        Id<Market> marketId,
-        DateTimeOffset startDate,
-        DateTimeOffset endDate,
-        decimal budget,
-        uint generations,
-        uint populationSize,
-        double sharpeRatioWeight,
-        double totalReturnWeight,
-        double maxDrawdownWeight,
+        Backtest backtest,
+        OptimizeStrategyMessage message,
         BacktestData data,
+        PlutusDbContext dbContext,
         CancellationToken cancellationToken
     )
     {
         var population = Enumerable
-            .Range(0, (int)populationSize)
-            .Select(_ => new StrategyConfigurationChromosome(strategy.Type))
+            .Range(0, (int)message.PopulationSize)
+            .Select(_ => new StrategyConfigurationChromosome(backtest.Strategy.Type))
             .ToList();
 
         var engine = new GeneticAlgorithmBuilder<double>()
             .SetElitismRate(_options.Value.ElitismRate)
             .SetMutationRate(_options.Value.MutationRate)
-            .SetPopulationSize(populationSize)
+            .SetPopulationSize(message.PopulationSize)
             .AddFitnessComponent(async chromosome =>
                 {
                     var config = ExtractConfiguration(chromosome);
                     var results = await RunBacktestSafelyAsync(
-                        strategy,
-                        marketId,
-                        startDate,
-                        endDate,
-                        budget,
+                        backtest.Strategy,
+                        backtest.MarketId,
+                        backtest.StartDate,
+                        backtest.EndDate,
+                        backtest.Budget,
                         config,
                         data,
+                        message.VolumeParticipationRate,
+                        message.SlippageMultiplier,
                         cancellationToken
                     );
 
@@ -166,24 +173,21 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
                         return double.MinValue;
                     }
 
-                    return sharpeRatioWeight * (double)results.SharpeRatio
-                           + totalReturnWeight * (double)results.TotalReturnPercent
-                           + maxDrawdownWeight * (double)results.MaxDrawdownPercent;
+                    return message.SharpeRatioWeight * (double)results.SharpeRatio
+                           + message.TotalReturnWeight * (double)results.TotalReturnPercent
+                           + message.MaxDrawdownWeight * (double)results.MaxDrawdownPercent;
                 }
             )
             .Build();
 
         var bestChromosome = await engine.EvolveAsync(
             population,
-            generations,
-            onGenerationCompletedAsync: (generation, _) =>
+            message.Generations,
+            onGenerationCompletedAsync: async (generation, _) =>
             {
-                if (generation % 10 == 0)
-                {
-                    _logger.LogDebug("Optimization progress: generation {generation}.", generation);
-                }
-
-                return Task.CompletedTask;
+                var percent = 5 + (int)(85.0 * generation / message.Generations);
+                backtest.UpdateProgress(percent, $"Optimizing: generation {generation + 1}/{message.Generations}...");
+                await dbContext.SaveChangesAsync(CancellationToken.None);
             },
             cancellationToken: cancellationToken
         );
@@ -196,8 +200,14 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
             _logger.LogWarning(
                 "Optimization found no viable configuration. Falling back to original strategy configuration."
             );
-            return strategy.Configuration;
+            return backtest.Strategy.Configuration;
         }
+
+        _logger.LogDebug(
+            "Optimization completed for backtest '{backtestId}'. Best fitness: {bestFitness}.",
+            message.BacktestId,
+            bestFitness
+        );
 
         return bestConfig;
     }
@@ -210,6 +220,8 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
         decimal budget,
         StrategyConfiguration configuration,
         BacktestData data,
+        decimal volumeParticipationRate,
+        decimal slippageMultiplier,
         CancellationToken cancellationToken
     )
     {
@@ -223,7 +235,9 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
                 budget,
                 cancellationToken,
                 configuration,
-                data
+                data,
+                volumeParticipationRate: volumeParticipationRate,
+                slippageMultiplier: slippageMultiplier
             );
         }
         catch (Exception ex) when (ex is not OperationCanceledException)

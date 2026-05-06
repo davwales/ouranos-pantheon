@@ -2,7 +2,6 @@ using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
@@ -20,11 +19,11 @@ public sealed class BacktestData
     public List<Symbol> Symbols { get; }
     public List<MarketTradeSnapshot> Snapshots { get; }
     public List<Forecast> Forecasts { get; }
-    public List<Signal> Signals { get; }
 
     /// <summary>
     ///     Daily closing prices indexed by (SymbolId, Date).
-    ///     Replaces GetClosePrice's linear scan over all trades.
+    ///     Available for diagnostics; price resolution in the engine
+    ///     uses GetLatestPrice (average price) to avoid outlier trades.
     /// </summary>
     public Dictionary<(Id<Symbol> SymbolId, DateOnly Date), decimal> DailyPricesByDate { get; }
 
@@ -45,17 +44,11 @@ public sealed class BacktestData
     /// </summary>
     public Dictionary<Id<Symbol>, Forecast> ForecastBySymbol { get; }
 
-    /// <summary>
-    ///     Signals indexed by SymbolId for O(1) lookup.
-    /// </summary>
-    public Dictionary<Id<Symbol>, List<Signal>> SignalsBySymbol { get; }
-
     private BacktestData(
         Market market,
         List<Symbol> symbols,
         Dictionary<Id<Symbol>, List<MarketTradeSnapshot>> snapshotsBySymbol,
         Dictionary<Id<Symbol>, Forecast> forecastBySymbol,
-        Dictionary<Id<Symbol>, List<Signal>> signalsBySymbol,
         Dictionary<(Id<Symbol> SymbolId, DateOnly Date), decimal> dailyPricesByDate,
         Dictionary<Id<Symbol>, List<DailyTradeAggregate>> aggregatesBySymbol
     )
@@ -64,14 +57,12 @@ public sealed class BacktestData
         Symbols = symbols;
         SnapshotsBySymbol = snapshotsBySymbol;
         ForecastBySymbol = forecastBySymbol;
-        SignalsBySymbol = signalsBySymbol;
         DailyPricesByDate = dailyPricesByDate;
         AggregatesBySymbol = aggregatesBySymbol;
 
         // Keep flat lists for backward compatibility with methods that iterate all items
         Snapshots = snapshotsBySymbol.SelectMany(kvp => kvp.Value).ToList();
         Forecasts = forecastBySymbol.Values.ToList();
-        Signals = signalsBySymbol.SelectMany(kvp => kvp.Value).ToList();
     }
 
     /// <summary>
@@ -83,7 +74,6 @@ public sealed class BacktestData
         List<Symbol> symbols,
         List<MarketTradeSnapshot> snapshots,
         List<Forecast> forecasts,
-        List<Signal> signals,
         List<DailyPrice> dailyPrices,
         List<DailyTradeAggregate> dailyAggregates
     )
@@ -95,10 +85,6 @@ public sealed class BacktestData
         var forecastBySymbol = forecasts
             .GroupBy(f => f.SymbolId)
             .ToDictionary(g => g.Key, g => g.First());
-
-        var signalsBySymbol = signals
-            .GroupBy(s => s.SymbolId)
-            .ToDictionary(g => g.Key, g => g.ToList());
 
         var dailyPricesByDate = dailyPrices
             .ToDictionary(dp => (dp.SymbolId, dp.Date), dp => dp.ClosePrice);
@@ -112,43 +98,16 @@ public sealed class BacktestData
             symbols,
             snapshotsBySymbol,
             forecastBySymbol,
-            signalsBySymbol,
             dailyPricesByDate,
             aggregatesBySymbol
         );
     }
 
     /// <summary>
-    ///     Gets the closing price for a symbol on or before a given date.
-    ///     Uses the pre-built daily price index for O(1) lookup instead of
-    ///     scanning all trades.
-    /// </summary>
-    public decimal GetClosePrice(Id<Symbol> symbolId, DateTimeOffset date)
-    {
-        var dateOnly = DateOnly.FromDateTime(date.UtcDateTime);
-
-        // Try exact date match first (most common case)
-        if (DailyPricesByDate.TryGetValue((symbolId, dateOnly), out var price))
-        {
-            return price;
-        }
-
-        // Search backwards up to 7 days for a price on a nearby date
-        // (handles weekends, holidays, days with no trades)
-        for (var i = 1; i <= 7; i++)
-        {
-            if (DailyPricesByDate.TryGetValue((symbolId, dateOnly.AddDays(-i)), out var nearbyPrice))
-            {
-                return nearbyPrice;
-            }
-        }
-
-        return 0m;
-    }
-
-    /// <summary>
-    ///     Gets the most recent closing price for a symbol before or on a given date.
+    ///     Gets the most recent average price for a symbol before or on a given date.
     ///     Uses binary search on the sorted daily aggregate list.
+    ///     Preferred over raw close price to avoid outlier trade prices
+    ///     skewing backtest results.
     /// </summary>
     public decimal GetLatestPrice(Id<Symbol> symbolId, DateTimeOffset date)
     {
@@ -210,18 +169,27 @@ public sealed class BacktestData
     }
 
     /// <summary>
-    ///     Gets signals for a symbol. Uses the pre-built index for O(1) lookup.
-    /// </summary>
-    public List<Signal> GetSignalsForSymbol(Id<Symbol> symbolId)
-    {
-        return SignalsBySymbol.TryGetValue(symbolId, out var symbolSignals) ? symbolSignals : [];
-    }
-
-    /// <summary>
     ///     Gets the forecast for a symbol. Uses the pre-built index for O(1) lookup.
     /// </summary>
     public Forecast? GetForecastForSymbol(Id<Symbol> symbolId)
     {
         return ForecastBySymbol.TryGetValue(symbolId, out var forecast) ? forecast : null;
+    }
+
+    /// <summary>
+    ///     Gets the total daily trade volume for a symbol on a given date.
+    ///     Returns 0 if no aggregate data is available for that date.
+    /// </summary>
+    public decimal GetDailyVolume(Id<Symbol> symbolId, DateTimeOffset date)
+    {
+        var dateOnly = DateOnly.FromDateTime(date.UtcDateTime);
+
+        if (!AggregatesBySymbol.TryGetValue(symbolId, out var aggregates))
+        {
+            return 0m;
+        }
+
+        var aggregate = aggregates.Find(a => a.Date == dateOnly);
+        return aggregate?.TotalVolume ?? 0m;
     }
 }

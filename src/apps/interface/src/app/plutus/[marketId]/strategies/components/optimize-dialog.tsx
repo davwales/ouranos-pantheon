@@ -30,11 +30,13 @@ export function OptimizeDialog({
     return d.toISOString().split("T")[0];
   });
   const [budget, setBudget] = useState(10000);
-  const [generations, setGenerations] = useState(100);
-  const [populationSize, setPopulationSize] = useState(50);
+  const [generations, setGenerations] = useState(20);
+  const [populationSize, setPopulationSize] = useState(20);
   const [sharpeRatioWeight, setSharpeRatioWeight] = useState(0.5);
   const [totalReturnWeight, setTotalReturnWeight] = useState(0.3);
   const [maxDrawdownWeight, setMaxDrawdownWeight] = useState(-0.2);
+  const [volumeParticipationRate, setVolumeParticipationRate] = useState(0.25);
+  const [slippageMultiplier, setSlippageMultiplier] = useState(0.1);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +56,8 @@ export function OptimizeDialog({
         sharpeRatioWeight,
         totalReturnWeight,
         maxDrawdownWeight,
+        volumeParticipationRate,
+        slippageMultiplier,
       });
       onOpenChange(false);
       router.push(`/plutus/${marketId}/strategies/${strategyId}/backtests`);
@@ -163,6 +167,24 @@ export function OptimizeDialog({
               step={0.1}
               min={-10}
               max={10}
+            />
+            <NumberInput
+              label="Volume Participation Rate"
+              hint="Max fraction of daily volume per trade (0-1)"
+              value={volumeParticipationRate}
+              onChange={(v) => setVolumeParticipationRate(v ?? 0.25)}
+              min={0.01}
+              max={1}
+              step={0.01}
+            />
+            <NumberInput
+              label="Slippage Multiplier"
+              hint="Price impact per unit of volume ratio (0 = none)"
+              value={slippageMultiplier}
+              onChange={(v) => setSlippageMultiplier(v ?? 0.1)}
+              min={0}
+              max={1}
+              step={0.01}
             />
           </div>
         )}

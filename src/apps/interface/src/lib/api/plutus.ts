@@ -344,6 +344,7 @@ export interface BacktestResults {
   worstTrade: number;
   finalBalance: number;
   positions: BacktestPosition[];
+  optimizedConfiguration?: StrategyConfiguration | null;
 }
 
 export interface BacktestDetail {
@@ -599,6 +600,8 @@ export const plutusApi = {
       startDate: string;
       endDate: string;
       budget: number;
+      volumeParticipationRate?: number;
+      slippageMultiplier?: number;
     },
   ) =>
     api.post<RunBacktestResponse>(
@@ -653,6 +656,8 @@ export const plutusApi = {
       sharpeRatioWeight?: number;
       totalReturnWeight?: number;
       maxDrawdownWeight?: number;
+      volumeParticipationRate?: number;
+      slippageMultiplier?: number;
     },
   ) =>
     api.post<RunBacktestResponse>(

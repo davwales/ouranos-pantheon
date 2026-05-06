@@ -32,7 +32,9 @@ public static class OptimizeStrategyEndpoint
             body.PopulationSize,
             body.SharpeRatioWeight,
             body.TotalReturnWeight,
-            body.MaxDrawdownWeight
+            body.MaxDrawdownWeight,
+            body.VolumeParticipationRate ?? 0.25m,
+            body.SlippageMultiplier ?? 0.1m
         );
         var result = await bus.InvokeAsync<OptimizeStrategyResponse>(input, ct);
         return Results.Accepted($"/api/plutus/backtests/{result.BacktestId}", result);
