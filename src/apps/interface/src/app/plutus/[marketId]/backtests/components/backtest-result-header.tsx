@@ -1,3 +1,4 @@
+import { abbreviateNumber } from "@/app/components/pretty-number";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { BacktestDetail, StrategyDetail } from "@/lib/api/plutus";
@@ -26,7 +27,9 @@ export function BacktestResultHeader({
             <div className="flex items-center gap-3">
               <div className="min-w-0">
                 <h2 className="text-2xl font-semibold tracking-tight">
-                  Backtest Results
+                  {backtest.kind === "Optimization"
+                    ? "Optimization Results"
+                    : "Backtest Results"}
                 </h2>
                 <p className="text-sm text-muted-foreground">
                   {strategy ? (
@@ -46,7 +49,7 @@ export function BacktestResultHeader({
             <div className="flex flex-wrap gap-2">
               <span className="inline-flex items-center gap-1 rounded-full border bg-muted/50 px-2.5 py-1 text-xs font-medium">
                 <span className="text-muted-foreground">Budget:</span>
-                {backtest.budget.toLocaleString()}
+                {abbreviateNumber(backtest.budget)}
               </span>
               <span className="inline-flex items-center gap-1 rounded-full border bg-muted/50 px-2.5 py-1 text-xs font-medium">
                 <span className="text-muted-foreground">Range:</span>
@@ -54,6 +57,15 @@ export function BacktestResultHeader({
                 {new Date(backtest.endDate).toLocaleDateString()}
               </span>
               <StatusChip status={backtest.status} />
+              <span
+                className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                  backtest.kind === "Optimization"
+                    ? "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400"
+                    : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400"
+                }`}
+              >
+                {backtest.kind}
+              </span>
             </div>
           </div>
 

@@ -13,7 +13,21 @@ export function BacktestMetricsGrid({ results }: { results: BacktestResults }) {
             : "text-red-600 dark:text-red-400"
         }
       />
+      <ResultCard
+        label="CAGR"
+        value={
+          results.cagr != null ? `${(results.cagr * 100).toFixed(2)}%` : "-"
+        }
+      />
       <ResultCard label="Sharpe Ratio" value={results.sharpeRatio.toFixed(2)} />
+      <ResultCard
+        label="Sortino Ratio"
+        value={results.sortinoRatio?.toFixed(2) ?? "-"}
+      />
+      <ResultCard
+        label="Calmar Ratio"
+        value={results.calmarRatio?.toFixed(2) ?? "-"}
+      />
       <ResultCard
         label="Win Rate"
         value={`${(results.winRate * 100).toFixed(1)}%`}
@@ -22,6 +36,10 @@ export function BacktestMetricsGrid({ results }: { results: BacktestResults }) {
         label="Max Drawdown %"
         value={`${(results.maxDrawdownPercent * 100).toFixed(2)}%`}
         color="text-red-600 dark:text-red-400"
+      />
+      <ResultCard
+        label="Profit Factor"
+        value={results.profitFactor?.toFixed(2) ?? "-"}
       />
     </div>
   );

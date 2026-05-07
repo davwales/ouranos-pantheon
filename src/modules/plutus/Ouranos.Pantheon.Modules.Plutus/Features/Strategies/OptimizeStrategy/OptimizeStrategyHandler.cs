@@ -62,7 +62,8 @@ public sealed class OptimizeStrategyHandler : IPantheonHandler<OptimizeStrategyI
             command.StartDate,
             command.EndDate,
             command.Budget,
-            strategy
+            strategy,
+            BacktestKind.Optimization
         );
 
         await dbContext.Backtests.AddAsync(backtest, cancellationToken);

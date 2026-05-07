@@ -11,6 +11,7 @@ public sealed record GetBacktestResponse(
     DateTimeOffset StartDate,
     DateTimeOffset EndDate,
     decimal Budget,
+    BacktestKind Kind,
     BacktestStatus Status,
     int ProgressPercent,
     string? ProgressMessage,

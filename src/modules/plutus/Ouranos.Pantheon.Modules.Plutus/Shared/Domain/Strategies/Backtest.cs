@@ -21,6 +21,8 @@ public class Backtest : BaseEntity<Id<Backtest>>
 
     public decimal Budget { get; init; }
 
+    public BacktestKind Kind { get; init; }
+
     public BacktestStatus Status { get; private set; } = BacktestStatus.Pending;
 
     public int ProgressPercent { get; private set; }
@@ -40,7 +42,8 @@ public class Backtest : BaseEntity<Id<Backtest>>
         DateTimeOffset startDate,
         DateTimeOffset endDate,
         decimal budget,
-        Strategy? strategy = null
+        Strategy? strategy = null,
+        BacktestKind kind = BacktestKind.Backtest
     )
     {
         Guard.Against.NegativeOrZero(budget);
@@ -58,6 +61,7 @@ public class Backtest : BaseEntity<Id<Backtest>>
             StartDate = startDate.ToUniversalTime(),
             EndDate = endDate.ToUniversalTime(),
             Budget = budget,
+            Kind = kind,
             _strategy = strategy
         };
     }

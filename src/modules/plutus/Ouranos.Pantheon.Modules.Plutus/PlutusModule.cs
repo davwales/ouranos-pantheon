@@ -70,6 +70,8 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetBacktest;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetRecommendations;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.OptimizeStrategy;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Steps;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.CancelBacktest;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RestartBacktest;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
@@ -77,6 +79,7 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Executors;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
+using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
 
 namespace Ouranos.Pantheon.Modules.Plutus;
 
@@ -226,7 +229,15 @@ public sealed class PlutusModule : IPantheonModule
             .AddSingleton<IStrategyExecutor, RecipeArbitrageExecutor>()
             .AddSingleton<CompositeExecutor>()
             .AddSingleton<IBacktestDataQueryService, BacktestDataQueryService>()
-            .AddSingleton<BacktestEngine>();
+            .AddScoped<IStep<BacktestPayload>, InitializeStep>()
+            .AddScoped<IStep<BacktestPayload>, CloseExitsStep>()
+            .AddScoped<IStep<BacktestPayload>, ScoreSymbolsStep>()
+            .AddScoped<IStep<BacktestPayload>, BuyCandidatesStep>()
+            .AddScoped<IStep<BacktestPayload>, TrackMetricsStep>()
+            .AddScoped<IStep<BacktestPayload>, LiquidateStep>()
+            .AddScoped<IStep<BacktestPayload>, ComputeResultsStep>()
+            .AddScoped<IStep<BacktestPayload>, IterationSetupStep>()
+            .AddScoped<IStepRegistry<BacktestPayload>, StepRegistry<BacktestPayload>>();
     }
 
     private static void ConfigureDataLoaders(IHostApplicationBuilder builder)

@@ -1,3 +1,4 @@
+import { abbreviateNumber } from "@/app/components/pretty-number";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BacktestResults } from "@/lib/api/plutus";
 import { StatCard } from "./stat-card";
@@ -22,27 +23,35 @@ export function BacktestStatisticsGrid({
           <StatCard label="Losing" value={results.losingTrades.toString()} />
           <StatCard
             label="Best Trade"
-            value={results.bestTrade.toLocaleString()}
+            value={`${(results.bestTrade * 100).toFixed(1)}%`}
           />
           <StatCard
             label="Worst Trade"
-            value={results.worstTrade.toLocaleString()}
+            value={`${(results.worstTrade * 100).toFixed(1)}%`}
           />
           <StatCard
             label="Avg Return"
             value={`${(results.averageTradeReturn * 100).toFixed(2)}%`}
           />
           <StatCard
+            label="Expectancy"
+            value={
+              results.expectancy != null
+                ? abbreviateNumber(results.expectancy)
+                : "-"
+            }
+          />
+          <StatCard
             label="Final Balance"
-            value={results.finalBalance.toLocaleString()}
+            value={abbreviateNumber(results.finalBalance)}
           />
           <StatCard
             label="Total Return"
-            value={results.totalReturn.toLocaleString()}
+            value={abbreviateNumber(results.totalReturn)}
           />
           <StatCard
             label="Max Drawdown"
-            value={results.maxDrawdown.toLocaleString()}
+            value={abbreviateNumber(results.maxDrawdown)}
           />
         </div>
       </CardContent>

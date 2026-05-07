@@ -252,6 +252,8 @@ export type BacktestStatus =
   | "Failed"
   | "Cancelled";
 
+export type BacktestKind = "Backtest" | "Optimization";
+
 export interface SignalWeight {
   type: string;
   weight: number;
@@ -309,6 +311,7 @@ export interface BacktestSummary {
   startDate: string;
   endDate: string;
   budget: number;
+  kind: BacktestKind;
   status: BacktestStatus;
   totalReturnPercent?: number | null;
   winRate?: number | null;
@@ -339,6 +342,11 @@ export interface BacktestResults {
   winningTrades: number;
   losingTrades: number;
   sharpeRatio: number;
+  sortinoRatio: number | null;
+  calmarRatio: number | null;
+  cagr: number | null;
+  profitFactor: number | null;
+  expectancy: number | null;
   averageTradeReturn: number;
   bestTrade: number;
   worstTrade: number;
@@ -354,6 +362,7 @@ export interface BacktestDetail {
   startDate: string;
   endDate: string;
   budget: number;
+  kind: BacktestKind;
   status: BacktestStatus;
   progressPercent: number;
   progressMessage: string | null;

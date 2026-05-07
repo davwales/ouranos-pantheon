@@ -60,6 +60,7 @@ public sealed class GetBacktestHandlerTests
         result.StrategyId.ShouldBe(strategy.Id);
         result.MarketId.ShouldBe(marketId);
         result.Status.ShouldBe(BacktestStatus.Pending);
+        result.Kind.ShouldBe(BacktestKind.Backtest);
         result.Budget.ShouldBe(10000m);
         result.ProgressPercent.ShouldBe(0);
         result.ProgressMessage.ShouldBeNull();

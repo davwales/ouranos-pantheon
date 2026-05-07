@@ -2,7 +2,10 @@ using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Steps;
 using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
@@ -12,33 +15,31 @@ namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest;
 
 public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
 {
-    private const int MinimumProgressUpdate = 1;
-
     private readonly ILogger<RunBacktestConsumer> _logger;
     private readonly IDbContextFactory<PlutusDbContext> _dbContextFactory;
     private readonly IBacktestDataQueryService _dataService;
-    private readonly BacktestEngine _engine;
     private readonly IOptions<BacktestDataOptions> _backtestDataOptions;
+    private readonly IStepRegistry<BacktestPayload> _stepRegistry;
 
     public RunBacktestConsumer(
         ILogger<RunBacktestConsumer> logger,
         IDbContextFactory<PlutusDbContext> dbContextFactory,
         IBacktestDataQueryService dataService,
-        BacktestEngine engine,
-        IOptions<BacktestDataOptions> backtestDataOptions
+        IOptions<BacktestDataOptions> backtestDataOptions,
+        IStepRegistry<BacktestPayload> stepRegistry
     )
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(dbContextFactory);
         Guard.Against.Null(dataService);
-        Guard.Against.Null(engine);
         Guard.Against.Null(backtestDataOptions);
+        Guard.Against.Null(stepRegistry);
 
         _logger = logger;
         _dbContextFactory = dbContextFactory;
         _dataService = dataService;
-        _engine = engine;
         _backtestDataOptions = backtestDataOptions;
+        _stepRegistry = stepRegistry;
     }
 
     [MessageTimeout(3600)]
@@ -72,8 +73,6 @@ public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
         backtest.MarkRunning();
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        var lastSavedPercent = 0;
-
         try
         {
             backtest.UpdateProgress(1, "Loading market data...");
@@ -90,54 +89,45 @@ public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
             backtest.UpdateProgress(5, "Market data loaded, starting simulation...");
             await dbContext.SaveChangesAsync(cancellationToken);
 
-            var results = await _engine.RunAsync(
-                backtest.Strategy,
-                backtest.MarketId,
-                backtest.StartDate,
-                backtest.EndDate,
-                backtest.Budget,
-                cancellationToken,
-                data: data,
-                volumeParticipationRate: message.VolumeParticipationRate,
-                slippageMultiplier: message.SlippageMultiplier,
-                onCheckpoint: async (percent, progressMessage) =>
-                {
-                    if (percent - lastSavedPercent < MinimumProgressUpdate)
-                    {
-                        return;
-                    }
+            var totalDays = (int)(backtest.EndDate - backtest.StartDate).TotalDays;
 
-                    lastSavedPercent = percent;
+            var payload = new BacktestPayload(
+                new BacktestParameters(
+                    backtest.MarketId,
+                    backtest.Strategy,
+                    backtest.StartDate,
+                    backtest.EndDate,
+                    backtest.Budget,
+                    message.VolumeParticipationRate,
+                    message.SlippageMultiplier
+                )
+            )
+            { Data = data, Entity = backtest, ProgressInterval = Math.Max(1, totalDays / 20) };
 
-                    var currentStatus = await dbContext.Backtests
-                        .AsNoTracking()
-                        .Where(b => b.Id == backtest.Id)
-                        .Select(b => b.Status)
-                        .FirstOrDefaultAsync(CancellationToken.None);
+            var backtestPipeline = new PipelineBuilder<BacktestPayload>(_stepRegistry)
+                .AddStep<InitializeStep>()
+                .AddNestedPipeline(builder => builder
+                    .AddStep<IterationSetupStep>()
+                    .AddStep<CloseExitsStep>()
+                    .AddStep<ScoreSymbolsStep>()
+                    .AddStep<BuyCandidatesStep>()
+                    .AddStep<TrackMetricsStep>()
+                    .WithIterations(totalDays + 1)
+                    .Build()
+                )
+                .AddStep<LiquidateStep>()
+                .AddStep<ComputeResultsStep>()
+                .Build();
 
-                    if (currentStatus == BacktestStatus.Cancelled)
-                    {
-                        throw new OperationCanceledException($"Backtest '{backtest.Id}' was cancelled.");
-                    }
+            var rootContext = new PipelineContext(cancellationToken);
+            await backtestPipeline.ExecuteAsync(rootContext, payload);
 
-                    backtest.UpdateProgress(percent, progressMessage);
+            if (payload.Results is null)
+            {
+                throw new InvalidOperationException("Backtest pipeline completed without producing results.");
+            }
 
-                    try
-                    {
-                        await dbContext.SaveChangesAsync(CancellationToken.None);
-                    }
-                    catch (Exception ex) when (ex is not OperationCanceledException)
-                    {
-                        _logger.LogWarning(
-                            ex,
-                            "Failed to save progress for backtest '{backtestId}'.",
-                            message.BacktestId
-                        );
-                    }
-                }
-            );
-
-            backtest.Complete(results);
+            backtest.Complete(payload.Results);
             await dbContext.SaveChangesAsync(cancellationToken);
 
             _logger.LogDebug("Backtest '{backtestId}' completed successfully.", message.BacktestId);

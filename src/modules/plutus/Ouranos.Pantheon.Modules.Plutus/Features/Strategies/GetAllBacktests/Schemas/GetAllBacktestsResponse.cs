@@ -10,6 +10,7 @@ public sealed record GetAllBacktestsResponse(
     DateTimeOffset StartDate,
     DateTimeOffset EndDate,
     decimal Budget,
+    BacktestKind Kind,
     BacktestStatus Status,
     decimal? TotalReturnPercent,
     decimal? WinRate,

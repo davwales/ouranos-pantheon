@@ -16,10 +16,11 @@ public sealed class GetAllBacktestsHandler
     private static readonly SortBuilder<GetAllBacktestsResponse> SortBuilder =
         new SortBuilder<GetAllBacktestsResponse>()
             .On(nameof(GetAllBacktestsResponse.CreatedAt), x => x.CreatedAt)
+            .On(nameof(GetAllBacktestsResponse.Kind), x => x.Kind)
             .On(nameof(GetAllBacktestsResponse.TotalReturnPercent), x => x.TotalReturnPercent ?? 0)
             .On(nameof(GetAllBacktestsResponse.WinRate), x => x.WinRate ?? 0)
             .On(nameof(GetAllBacktestsResponse.SharpeRatio), x => x.SharpeRatio ?? 0)
-            .Default(x => x.CreatedAt, SortDirection.Desc);
+            .Default(x => x.CreatedAt);
 
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<GetAllBacktestsHandler> _logger;
@@ -57,18 +58,20 @@ public sealed class GetAllBacktestsHandler
             .Where(b => b.StrategyId == input.StrategyId)
             .OrderByDescending(b => b.CreatedAt)
             .Select(b => new GetAllBacktestsResponse(
-                b.Id,
-                b.MarketId,
-                b.StartDate,
-                b.EndDate,
-                b.Budget,
-                b.Status,
-                b.Results != null ? b.Results.TotalReturnPercent : null,
-                b.Results != null ? b.Results.WinRate : null,
-                b.Results != null ? b.Results.SharpeRatio : null,
-                b.Results != null ? (int?)b.Results.TotalTrades : null,
-                b.CreatedAt
-            ))
+                    b.Id,
+                    b.MarketId,
+                    b.StartDate,
+                    b.EndDate,
+                    b.Budget,
+                    b.Kind,
+                    b.Status,
+                    b.Results != null ? b.Results.TotalReturnPercent : null,
+                    b.Results != null ? b.Results.WinRate : null,
+                    b.Results != null ? b.Results.SharpeRatio : null,
+                    b.Results != null ? b.Results.TotalTrades : null,
+                    b.CreatedAt
+                )
+            )
             .ToListAsync(cancellationToken);
 
         var totalCount = backtests.Count;

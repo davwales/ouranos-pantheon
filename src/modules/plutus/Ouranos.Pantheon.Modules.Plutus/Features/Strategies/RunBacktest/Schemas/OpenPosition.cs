@@ -3,7 +3,7 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 
-internal sealed record OpenPosition(
+public sealed record OpenPosition(
     Id<Symbol> SymbolId,
     string SymbolName,
     string? SymbolSubcode,

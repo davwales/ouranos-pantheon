@@ -1,5 +1,7 @@
 "use client";
 
+import { abbreviateNumber } from "@/app/components/pretty-number";
+import { PrettyNumber } from "@/app/components/pretty-number/pretty-number";
 import { type ExtendedColumnDef } from "@/app/components/responsive-data-table";
 import ResponsiveDataTable from "@/app/components/responsive-data-table/responsive-data-table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,19 +24,19 @@ export function BacktestPositionsTable({
         id: "entryPrice",
         header: "Entry Price",
         accessorFn: (row) => row.entryPrice,
-        cell: ({ getValue }) => (getValue() as number).toLocaleString(),
+        cell: ({ getValue }) => <PrettyNumber number={getValue() as number} />,
       },
       {
         id: "exitPrice",
         header: "Exit Price",
         accessorFn: (row) => row.exitPrice,
-        cell: ({ getValue }) => (getValue() as number).toLocaleString(),
+        cell: ({ getValue }) => <PrettyNumber number={getValue() as number} />,
       },
       {
         id: "volume",
         header: "Volume",
         accessorFn: (row) => row.volume,
-        cell: ({ getValue }) => (getValue() as number).toLocaleString(),
+        cell: ({ getValue }) => <PrettyNumber number={getValue() as number} />,
       },
       {
         id: "profitLoss",
@@ -46,7 +48,7 @@ export function BacktestPositionsTable({
             val >= 0
               ? "text-green-600 dark:text-green-400"
               : "text-red-600 dark:text-red-400";
-          return <span className={color}>{val.toLocaleString()}</span>;
+          return <span className={color}>{abbreviateNumber(val)}</span>;
         },
       },
       {

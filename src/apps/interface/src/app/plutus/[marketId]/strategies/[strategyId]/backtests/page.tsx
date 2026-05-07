@@ -1,5 +1,6 @@
 "use client";
 
+import { PrettyNumber } from "@/app/components/pretty-number";
 import { ExtendedColumnDef } from "@/app/components/responsive-data-table";
 import ResponsiveDataTable from "@/app/components/responsive-data-table/responsive-data-table";
 import {
@@ -11,6 +12,7 @@ import { PlutusState, usePlutusStore } from "@/app/plutus/plutus_store";
 import { Button } from "@/components/ui/button";
 import { useApi } from "@/hooks/use-api";
 import {
+  BacktestKind,
   BacktestStatus,
   BacktestSummary,
   StrategyDetail,
@@ -156,6 +158,30 @@ export default function BacktestsPage() {
         ),
       },
       {
+        id: "kind",
+        header: "Kind",
+        accessorFn: (row) => row.kind,
+        cell: ({ row, getValue }) => {
+          const kind = getValue<BacktestKind>();
+          return (
+            <Link
+              href={`/plutus/${marketId}/backtests/${row.original.id}`}
+              className="hover:underline"
+            >
+              <span
+                className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                  kind === "Optimization"
+                    ? "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400"
+                    : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400"
+                }`}
+              >
+                {kind}
+              </span>
+            </Link>
+          );
+        },
+      },
+      {
         id: "startDate",
         header: "Start Date",
         accessorFn: (row) => row.startDate,
@@ -173,7 +199,7 @@ export default function BacktestsPage() {
         id: "budget",
         header: "Budget",
         accessorFn: (row) => row.budget,
-        cell: ({ getValue }) => getValue<number>().toLocaleString(),
+        cell: ({ getValue }) => <PrettyNumber number={getValue<number>()} />,
       },
       {
         id: "totalReturnPercent",
