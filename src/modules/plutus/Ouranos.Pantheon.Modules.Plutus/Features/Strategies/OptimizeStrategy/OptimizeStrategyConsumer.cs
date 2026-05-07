@@ -4,9 +4,12 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Shared.Algorithms.Genetic;
 using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Steps;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization;
@@ -20,32 +23,32 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
     private readonly ILogger<OptimizeStrategyConsumer> _logger;
     private readonly IDbContextFactory<PlutusDbContext> _dbContextFactory;
     private readonly IBacktestDataQueryService _dataService;
-    private readonly BacktestEngine _engine;
     private readonly IOptions<OptimizationOptions> _options;
     private readonly IOptions<BacktestDataOptions> _backtestDataOptions;
+    private readonly IStepRegistry<BacktestPayload> _stepRegistry;
 
     public OptimizeStrategyConsumer(
         ILogger<OptimizeStrategyConsumer> logger,
         IDbContextFactory<PlutusDbContext> dbContextFactory,
         IBacktestDataQueryService dataService,
-        BacktestEngine engine,
         IOptions<OptimizationOptions> options,
-        IOptions<BacktestDataOptions> backtestDataOptions
+        IOptions<BacktestDataOptions> backtestDataOptions,
+        IStepRegistry<BacktestPayload> stepRegistry
     )
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(dbContextFactory);
         Guard.Against.Null(dataService);
-        Guard.Against.Null(engine);
         Guard.Against.Null(options);
         Guard.Against.Null(backtestDataOptions);
+        Guard.Against.Null(stepRegistry);
 
         _logger = logger;
         _dbContextFactory = dbContextFactory;
         _dataService = dataService;
-        _engine = engine;
         _options = options;
         _backtestDataOptions = backtestDataOptions;
+        _stepRegistry = stepRegistry;
     }
 
     [MessageTimeout(3600)]
@@ -103,7 +106,7 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
             backtest.UpdateProgress(92, "Running final backtest with optimized configuration...");
             await dbContext.SaveChangesAsync(cancellationToken);
 
-            var results = await _engine.RunAsync(
+            var results = await RunPipelineAsync(
                 backtest.Strategy,
                 backtest.MarketId,
                 backtest.StartDate,
@@ -112,8 +115,8 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
                 cancellationToken,
                 bestConfig,
                 data,
-                volumeParticipationRate: message.VolumeParticipationRate,
-                slippageMultiplier: message.SlippageMultiplier
+                message.VolumeParticipationRate,
+                message.SlippageMultiplier
             );
 
             var finalResults = results with { OptimizedConfiguration = bestConfig };
@@ -125,13 +128,21 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
         }
         catch (OperationCanceledException)
         {
+            _logger.LogInformation("Optimization for backtest '{backtestId}' was cancelled.", message.BacktestId);
+
+            if (backtest.Status is BacktestStatus.Pending or BacktestStatus.Running)
+            {
+                backtest.Cancel("Cancelled by user.");
+                await dbContext.SaveChangesAsync(CancellationToken.None);
+            }
+
             throw;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Optimization for backtest '{backtestId}' failed.", message.BacktestId);
             backtest.Fail(ex.Message);
-            await dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.SaveChangesAsync(CancellationToken.None);
         }
     }
 
@@ -185,9 +196,22 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
             message.Generations,
             onGenerationCompletedAsync: async (generation, _) =>
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var currentStatus = await dbContext.Backtests
+                    .AsNoTracking()
+                    .Where(b => b.Id == message.BacktestId)
+                    .Select(b => b.Status)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                if (currentStatus == BacktestStatus.Cancelled)
+                {
+                    throw new OperationCanceledException($"Backtest '{message.BacktestId}' was cancelled.");
+                }
+
                 var percent = 5 + (int)(85.0 * generation / message.Generations);
                 backtest.UpdateProgress(percent, $"Optimizing: generation {generation + 1}/{message.Generations}...");
-                await dbContext.SaveChangesAsync(CancellationToken.None);
+                await dbContext.SaveChangesAsync(cancellationToken);
             },
             cancellationToken: cancellationToken
         );
@@ -212,6 +236,58 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
         return bestConfig;
     }
 
+    private async Task<BacktestResults> RunPipelineAsync(
+        Strategy strategy,
+        Id<Market> marketId,
+        DateTimeOffset startDate,
+        DateTimeOffset endDate,
+        decimal budget,
+        CancellationToken cancellationToken,
+        StrategyConfiguration configurationOverride,
+        BacktestData data,
+        decimal volumeParticipationRate,
+        decimal slippageMultiplier
+    )
+    {
+        var payload = new BacktestPayload(
+            new BacktestParameters(
+                marketId,
+                strategy,
+                startDate,
+                endDate,
+                budget,
+                volumeParticipationRate,
+                slippageMultiplier,
+                configurationOverride
+            )
+        )
+        { Data = data };
+
+        var backtestPipeline = new PipelineBuilder<BacktestPayload>(_stepRegistry)
+            .AddStep<InitializeStep>()
+            .AddNestedPipeline(builder => builder
+                .AddStep<CloseExitsStep>()
+                .AddStep<ScoreSymbolsStep>()
+                .AddStep<BuyCandidatesStep>()
+                .AddStep<TrackMetricsStep>()
+                .WithIterations((int)(endDate - startDate).TotalDays + 1)
+                .Build()
+            )
+            .AddStep<LiquidateStep>()
+            .AddStep<ComputeResultsStep>()
+            .Build();
+
+        var rootContext = new PipelineContext(cancellationToken);
+        await backtestPipeline.ExecuteAsync(rootContext, payload);
+
+        if (payload.Results is null)
+        {
+            throw new InvalidOperationException("Backtest pipeline completed without producing results.");
+        }
+
+        return payload.Results;
+    }
+
     private async Task<BacktestResults?> RunBacktestSafelyAsync(
         Strategy strategy,
         Id<Market> marketId,
@@ -227,7 +303,7 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
     {
         try
         {
-            return await _engine.RunAsync(
+            return await RunPipelineAsync(
                 strategy,
                 marketId,
                 startDate,

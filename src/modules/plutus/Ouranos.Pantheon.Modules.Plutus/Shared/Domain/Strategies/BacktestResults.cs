@@ -10,6 +10,11 @@ public sealed record BacktestResults(
     int WinningTrades,
     int LosingTrades,
     decimal SharpeRatio,
+    decimal? SortinoRatio,
+    decimal? CalmarRatio,
+    decimal? Cagr,
+    decimal? ProfitFactor,
+    decimal? Expectancy,
     decimal AverageTradeReturn,
     decimal BestTrade,
     decimal WorstTrade,
@@ -18,7 +23,7 @@ public sealed record BacktestResults(
     StrategyConfiguration? OptimizedConfiguration = null
 )
 {
-    public BacktestResults() : this(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, [])
+    public BacktestResults() : this(0, 0, 0, 0, 0, 0, 0, 0, 0, null, null, null, null, null, 0, 0, 0, 0, [])
     {
     }
 }

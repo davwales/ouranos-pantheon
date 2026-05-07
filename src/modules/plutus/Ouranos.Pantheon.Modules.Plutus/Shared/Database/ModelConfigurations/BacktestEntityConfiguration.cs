@@ -14,6 +14,7 @@ public sealed class BacktestEntityConfiguration : IEntityTypeConfiguration<Backt
         builder.Property(b => b.StrategyId).HasIdConversion();
         builder.Property(b => b.MarketId).HasIdConversion();
         builder.Property(b => b.Status).HasConversion<int>();
+        builder.Property(b => b.Kind).HasConversion<string>().HasDefaultValue(BacktestKind.Backtest);
         builder.Property(b => b.ProgressPercent).HasDefaultValue(0);
         builder.Property(b => b.ProgressMessage).HasMaxLength(256);
         builder.Property(b => b.Budget).HasPrecision(18, 2);
@@ -35,6 +36,11 @@ public sealed class BacktestEntityConfiguration : IEntityTypeConfiguration<Backt
                 r.Property(res => res.WinningTrades);
                 r.Property(res => res.LosingTrades);
                 r.Property(res => res.SharpeRatio).HasPrecision(18, 2);
+                r.Property(res => res.SortinoRatio).HasPrecision(18, 2);
+                r.Property(res => res.CalmarRatio).HasPrecision(18, 2);
+                r.Property(res => res.Cagr).HasPrecision(18, 2);
+                r.Property(res => res.ProfitFactor).HasPrecision(18, 2);
+                r.Property(res => res.Expectancy).HasPrecision(18, 2);
                 r.Property(res => res.AverageTradeReturn).HasPrecision(18, 2);
                 r.Property(res => res.BestTrade).HasPrecision(18, 2);
                 r.Property(res => res.WorstTrade).HasPrecision(18, 2);

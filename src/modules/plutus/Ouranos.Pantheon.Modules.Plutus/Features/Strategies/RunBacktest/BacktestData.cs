@@ -150,30 +150,38 @@ public sealed class BacktestData
     }
 
     /// <summary>
-    ///     Gets snapshots for a symbol, returning short/medium/long timeframes.
-    ///     Uses the pre-built index for O(1) lookup.
+    ///     Gets snapshots for a symbol that were available on or before the given date,
+    ///     preventing lookahead bias. Uses each snapshot's CreatedAt to filter.
     /// </summary>
     public (MarketTradeSnapshot? Short, MarketTradeSnapshot? Medium, MarketTradeSnapshot? Long)
-        GetSnapshotsForSymbol(Id<Symbol> symbolId)
+        GetSnapshotsForSymbol(Id<Symbol> symbolId, DateTimeOffset asOfDate)
     {
         if (!SnapshotsBySymbol.TryGetValue(symbolId, out var symbolSnaps))
         {
             return (null, null, null);
         }
 
+        var availableSnaps = symbolSnaps.Where(s => s.CreatedAt <= asOfDate).ToList();
+
         return (
-            symbolSnaps.FirstOrDefault(s => s.TimeFrame == TimeFrame.OneHour),
-            symbolSnaps.FirstOrDefault(s => s.TimeFrame == TimeFrame.OneWeek),
-            symbolSnaps.FirstOrDefault(s => s.TimeFrame == TimeFrame.OneMonth)
+            availableSnaps.LastOrDefault(s => s.TimeFrame == TimeFrame.OneHour),
+            availableSnaps.LastOrDefault(s => s.TimeFrame == TimeFrame.OneWeek),
+            availableSnaps.LastOrDefault(s => s.TimeFrame == TimeFrame.OneMonth)
         );
     }
 
     /// <summary>
-    ///     Gets the forecast for a symbol. Uses the pre-built index for O(1) lookup.
+    ///     Gets the forecast for a symbol that was available on or before the given date,
+    ///     preventing lookahead bias. Uses the forecast's CreatedAt to filter.
     /// </summary>
-    public Forecast? GetForecastForSymbol(Id<Symbol> symbolId)
+    public Forecast? GetForecastForSymbol(Id<Symbol> symbolId, DateTimeOffset asOfDate)
     {
-        return ForecastBySymbol.TryGetValue(symbolId, out var forecast) ? forecast : null;
+        if (!ForecastBySymbol.TryGetValue(symbolId, out var forecast))
+        {
+            return null;
+        }
+
+        return forecast.CreatedAt <= asOfDate ? forecast : null;
     }
 
     /// <summary>

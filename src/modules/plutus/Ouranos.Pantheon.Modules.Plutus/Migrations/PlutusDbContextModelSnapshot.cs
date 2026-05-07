@@ -335,6 +335,13 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                         .HasColumnType("text")
                         .HasColumnName("error_message");
 
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("Backtest")
+                        .HasColumnName("kind");
+
                     b.Property<Guid>("MarketId")
                         .HasColumnType("uuid")
                         .HasColumnName("market_id");
@@ -1148,6 +1155,21 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                                 .HasColumnType("numeric(18,2)")
                                 .HasColumnName("results_best_trade");
 
+                            b1.Property<decimal?>("Cagr")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("results_cagr");
+
+                            b1.Property<decimal?>("CalmarRatio")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("results_calmar_ratio");
+
+                            b1.Property<decimal?>("Expectancy")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("results_expectancy");
+
                             b1.Property<decimal>("FinalBalance")
                                 .HasPrecision(18, 2)
                                 .HasColumnType("numeric(18,2)")
@@ -1167,10 +1189,20 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                                 .HasColumnType("numeric(18,2)")
                                 .HasColumnName("results_max_drawdown_percent");
 
+                            b1.Property<decimal?>("ProfitFactor")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("results_profit_factor");
+
                             b1.Property<decimal>("SharpeRatio")
                                 .HasPrecision(18, 2)
                                 .HasColumnType("numeric(18,2)")
                                 .HasColumnName("results_sharpe_ratio");
+
+                            b1.Property<decimal?>("SortinoRatio")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("results_sortino_ratio");
 
                             b1.Property<decimal>("TotalReturn")
                                 .HasPrecision(18, 2)

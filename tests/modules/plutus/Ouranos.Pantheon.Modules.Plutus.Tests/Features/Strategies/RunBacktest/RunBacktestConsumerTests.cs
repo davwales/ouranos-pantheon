@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Steps;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
@@ -10,6 +12,7 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Execu
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
+using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
@@ -31,12 +34,32 @@ public sealed class RunBacktestConsumerTests
         _dbContextFactory = DbContextExtensions.MockFactory<PlutusDbContext>();
         _dataService = Substitute.For<IBacktestDataQueryService>();
 
-        var engineLogger = Substitute.For<ILogger<BacktestEngine>>();
         var executors = new List<IStrategyExecutor> { new SignalWeightedExecutor() };
         var compositeExecutor = new CompositeExecutor(executors);
-        var engine = new BacktestEngine(engineLogger, _dataService, executors, compositeExecutor, []);
 
-        _consumer = new RunBacktestConsumer(_logger, _dbContextFactory, _dataService, engine, _backtestDataOptions);
+        var initLogger = Substitute.For<ILogger<InitializeStep>>();
+        var scoreLogger = Substitute.For<ILogger<ScoreSymbolsStep>>();
+
+        var stepRegistry = new StepRegistry<BacktestPayload>(
+            [
+                new InitializeStep(initLogger, _dataService, executors, compositeExecutor),
+                new ScoreSymbolsStep(scoreLogger, []),
+                new CloseExitsStep([]),
+                new IterationSetupStep(_dbContextFactory),
+                new BuyCandidatesStep(),
+                new TrackMetricsStep(),
+                new LiquidateStep(),
+                new ComputeResultsStep(),
+            ]
+        );
+
+        _consumer = new RunBacktestConsumer(
+            _logger,
+            _dbContextFactory,
+            _dataService,
+            _backtestDataOptions,
+            stepRegistry
+        );
     }
 
     private BacktestData CreateBacktestData(Market market, List<Symbol> symbols)
@@ -304,7 +327,7 @@ public sealed class RunBacktestConsumerTests
             .AsNoTracking()
             .FirstAsync(b => b.Id == backtest.Id);
 
-        // Should NOT be Running — the catch block transitions to Failed
+        // Should NOT be Running - the catch block transitions to Failed
         saved.Status.ShouldNotBe(BacktestStatus.Running);
         saved.Status.ShouldBe(BacktestStatus.Failed);
     }
