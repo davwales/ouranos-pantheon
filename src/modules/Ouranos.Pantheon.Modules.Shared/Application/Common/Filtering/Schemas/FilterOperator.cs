@@ -3,7 +3,7 @@ namespace Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering.Schemas;
 public enum FilterOperator
 {
     Eq,
-    Ne,
+    Neq,
     Lt,
     Lte,
     Gt,

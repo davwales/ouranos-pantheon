@@ -8,6 +8,7 @@ import PriceChart from "@/app/plutus/components/price-chart";
 import TimeFrameSelection from "@/app/plutus/components/time_frame_selection";
 import PercentChange from "./components/percent-change";
 import { SignalsSection } from "./components/signals-section";
+import { SymbolPositionsView } from "./components/symbol-positions-view";
 
 import { PlutusState, usePlutusStore } from "@/app/plutus/plutus_store";
 import { useApi } from "@/hooks/use-api";
@@ -39,9 +40,9 @@ function StatDisplay({
   children: ReactNode;
 }): ReactNode {
   return (
-    <div className="flex justify-between items-end">
+    <div className="flex justify-between items-end gap-2">
       <Typography variant="h4">{label}</Typography>
-      {children}
+      <span className="whitespace-nowrap">{children}</span>
     </div>
   );
 }
@@ -193,6 +194,7 @@ export default function SymbolDetail() {
         className="mt-4 max-h-96 w-full"
       />
       <SignalsSection symbolId={symbolId} />
+      <SymbolPositionsView marketId={marketId} symbol={data?.symbol} />
     </div>
   );
 }

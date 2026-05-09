@@ -80,6 +80,12 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Execu
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
 using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
+using Ouranos.Pantheon.Modules.Plutus.Features.Positions.CreatePosition;
+using Ouranos.Pantheon.Modules.Plutus.Features.Positions.GetAllPositions;
+using Ouranos.Pantheon.Modules.Plutus.Features.Positions.GetPosition;
+using Ouranos.Pantheon.Modules.Plutus.Features.Positions.UpdatePosition;
+using Ouranos.Pantheon.Modules.Plutus.Features.Positions.ClosePosition;
+using Ouranos.Pantheon.Modules.Plutus.Features.Positions.LinkPosition;
 
 namespace Ouranos.Pantheon.Modules.Plutus;
 
@@ -161,6 +167,13 @@ public sealed class PlutusModule : IPantheonModule
         GetRecommendationsEndpoint.Map(app);
         RunBacktestEndpoint.Map(app);
         OptimizeStrategyEndpoint.Map(app);
+
+        CreatePositionEndpoint.Map(app);
+        GetAllPositionsEndpoint.Map(app);
+        GetPositionEndpoint.Map(app);
+        UpdatePositionEndpoint.Map(app);
+        ClosePositionEndpoint.Map(app);
+        LinkPositionEndpoint.Map(app);
     }
 
     public void ConfigureWolverine(WolverineOptions opts, IConfiguration configuration)

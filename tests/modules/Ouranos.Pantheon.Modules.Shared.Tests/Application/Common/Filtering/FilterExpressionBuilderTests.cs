@@ -164,4 +164,78 @@ public sealed class FilterExpressionBuilderTests
         // Assert
         result.ShouldNotBeNull();
     }
+
+    private enum TestStatus
+    {
+        Active,
+        Inactive,
+        Pending,
+    }
+
+    private sealed record EnumItem(string Name, TestStatus Status);
+
+    [Fact]
+    public void FilterBy_WhenEnumEqFilter_ShouldReturnMatchingItems()
+    {
+        // Arrange
+        var items = new EnumItem[]
+        {
+            new("Alpha", TestStatus.Active),
+            new("Beta", TestStatus.Inactive),
+            new("Gamma", TestStatus.Pending),
+        }.AsQueryable();
+
+        var builder = new FilterBuilder<EnumItem>()
+            .On(nameof(EnumItem.Status), x => x.Status);
+
+        // Act
+        var result = items.FilterBy(["Status:eq:Active"], builder).ToList();
+
+        // Assert
+        result.Count.ShouldBe(1);
+        result[0].Name.ShouldBe("Alpha");
+    }
+
+    [Fact]
+    public void FilterBy_WhenEnumNeFilter_ShouldReturnNonMatchingItems()
+    {
+        // Arrange
+        var items = new EnumItem[]
+        {
+            new("Alpha", TestStatus.Active),
+            new("Beta", TestStatus.Inactive),
+            new("Gamma", TestStatus.Pending),
+        }.AsQueryable();
+
+        var builder = new FilterBuilder<EnumItem>()
+            .On(nameof(EnumItem.Status), x => x.Status);
+
+        // Act
+        var result = items.FilterBy(["Status:neq:Active"], builder).ToList();
+
+        // Assert
+        result.Count.ShouldBe(2);
+        result.ShouldAllBe(i => i.Status != TestStatus.Active);
+    }
+
+    [Fact]
+    public void FilterBy_WhenEnumFilterCaseInsensitive_ShouldReturnMatchingItems()
+    {
+        // Arrange
+        var items = new EnumItem[]
+        {
+            new("Alpha", TestStatus.Active),
+            new("Beta", TestStatus.Inactive),
+        }.AsQueryable();
+
+        var builder = new FilterBuilder<EnumItem>()
+            .On(nameof(EnumItem.Status), x => x.Status);
+
+        // Act
+        var result = items.FilterBy(["Status:eq:active"], builder).ToList();
+
+        // Assert
+        result.Count.ShouldBe(1);
+        result[0].Name.ShouldBe("Alpha");
+    }
 }

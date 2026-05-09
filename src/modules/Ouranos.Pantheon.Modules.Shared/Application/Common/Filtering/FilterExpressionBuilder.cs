@@ -166,7 +166,7 @@ internal static class FilterExpressionBuilder
         var converted = ConvertValue(value, underlyingType);
         var isNullableValueType = Nullable.GetUnderlyingType(propType) != null;
 
-        if (op is FilterOperator.Eq or FilterOperator.Ne)
+        if (op is FilterOperator.Eq or FilterOperator.Neq)
         {
             Expression constant = isNullableValueType
                 ? Expression.Convert(Expression.Constant(converted, underlyingType), propType)
@@ -201,6 +201,11 @@ internal static class FilterExpressionBuilder
             {
                 return ctor.Invoke([value]);
             }
+        }
+
+        if (targetType.IsEnum)
+        {
+            return Enum.Parse(targetType, value, ignoreCase: true);
         }
 
         return TypeMap.TryGetValue(targetType, out var convert)

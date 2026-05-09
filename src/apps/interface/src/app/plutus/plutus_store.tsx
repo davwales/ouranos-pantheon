@@ -21,6 +21,10 @@ export interface PlutusState {
   setStrategiesTableState: (state: DataTableState) => void;
   backtestsTableState: DataTableState;
   setBacktestsTableState: (state: DataTableState) => void;
+  openPositionsTableState: DataTableState;
+  setOpenPositionsTableState: (state: DataTableState) => void;
+  closedPositionsTableState: DataTableState;
+  setClosedPositionsTableState: (state: DataTableState) => void;
 }
 
 export const usePlutusStore = create<PlutusState>((set) => ({
@@ -75,4 +79,17 @@ export const usePlutusStore = create<PlutusState>((set) => ({
     sort: { createdAt: "DESC" },
   },
   setBacktestsTableState: (state) => set({ backtestsTableState: state }),
+  openPositionsTableState: {
+    pagination: { pageSize: 10, skip: 0, take: 10 },
+    filter: {},
+    sort: { createdAt: "DESC" },
+  },
+  setOpenPositionsTableState: (state) => set({ openPositionsTableState: state }),
+  closedPositionsTableState: {
+    pagination: { pageSize: 10, skip: 0, take: 10 },
+    filter: {},
+    sort: { createdAt: "DESC" },
+  },
+  setClosedPositionsTableState: (state) =>
+    set({ closedPositionsTableState: state }),
 }));
