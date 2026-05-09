@@ -221,6 +221,80 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
             );
 
             modelBuilder.Entity(
+                "Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Positions.Position",
+                b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("Cost")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("cost");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("LinkedBuyPositionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("linked_buy_position_id");
+
+                    b.Property<Guid>("MarketId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("market_id");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("notes");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("quantity");
+
+                    b.Property<int>("Side")
+                        .HasColumnType("integer")
+                        .HasColumnName("side");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.Property<Guid?>("StrategyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("strategy_id");
+
+                    b.Property<Guid>("SymbolId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("symbol_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_positions");
+
+                    b.HasIndex("LinkedBuyPositionId")
+                        .HasDatabaseName("ix_positions_linked_buy_position_id");
+
+                    b.HasIndex("MarketId")
+                        .HasDatabaseName("ix_positions_market_id");
+
+                    b.HasIndex("SymbolId")
+                        .HasDatabaseName("ix_positions_symbol_id");
+
+                    b.HasIndex("MarketId", "Status")
+                        .HasDatabaseName("ix_positions_market_id_status");
+
+                    b.ToTable("positions", "plutus");
+                }
+            );
+
+            modelBuilder.Entity(
                 "Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Recipes.Recipe",
                 b =>
                 {
@@ -999,6 +1073,29 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
 
                     b.Navigation("Taxes")
                         .IsRequired();
+                }
+            );
+
+            modelBuilder.Entity(
+                "Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Positions.Position",
+                b =>
+                {
+                    b.HasOne("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Positions.Position", "LinkedBuyPosition")
+                        .WithMany()
+                        .HasForeignKey("LinkedBuyPositionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_positions_positions_linked_buy_position_id");
+
+                    b.HasOne("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols.Symbol", "Symbol")
+                        .WithMany()
+                        .HasForeignKey("SymbolId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_positions_symbols_symbol_id");
+
+                    b.Navigation("LinkedBuyPosition");
+
+                    b.Navigation("Symbol");
                 }
             );
 

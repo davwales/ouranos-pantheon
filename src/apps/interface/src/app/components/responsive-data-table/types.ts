@@ -84,7 +84,7 @@ export interface DataTableState {
 /** Maps frontend FilterOperator values to the backend filter operator strings */
 const BACKEND_OPERATOR: Record<FilterOperator, string> = {
   eq: "eq",
-  neq: "ne",
+  neq: "neq",
   gt: "gt",
   gte: "gte",
   lt: "lt",

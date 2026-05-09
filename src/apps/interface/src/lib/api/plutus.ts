@@ -401,6 +401,36 @@ export interface GetRecommendationsResponse {
   recommendations: StrategyRecommendation[];
 }
 
+export type PositionSide = "Buy" | "Sell";
+
+export type PositionStatus =
+  | "Pending"
+  | "DidNotBuy"
+  | "Bought"
+  | "DidNotSell"
+  | "Sold";
+
+export interface Position {
+  id: string;
+  side: PositionSide;
+  status: PositionStatus;
+  marketId: string;
+  symbolId: string;
+  symbolName: string;
+  cost: number;
+  quantity: number;
+  linkedBuyPositionId: string | null;
+  strategyId: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ClosePositionResponse {
+  positionId: string;
+  status: PositionStatus;
+}
+
 export interface PageParams {
   skip?: number;
   take?: number;
@@ -673,4 +703,43 @@ export const plutusApi = {
       `/api/plutus/strategies/${strategyId}/optimize`,
       input,
     ),
+
+  getAllPositions: (marketId: string, page?: PageParams) =>
+    api.get<PagedResponse<Position>>("/api/plutus/positions", {
+      marketId,
+      ...page,
+    }),
+
+  getPosition: (positionId: string) =>
+    api.get<Position>(`/api/plutus/positions/${positionId}`),
+
+  createPosition: (input: {
+    side: PositionSide;
+    marketId: string;
+    symbolId: string;
+    cost: number;
+    quantity: number;
+    strategyId?: string | null;
+    notes?: string | null;
+  }) => api.post<IdResponse>("/api/plutus/positions", input),
+
+  updatePosition: (
+    positionId: string,
+    input: {
+      cost: number;
+      quantity: number;
+      notes?: string | null;
+    },
+  ) => api.put<IdResponse>(`/api/plutus/positions/${positionId}`, input),
+
+  closePosition: (positionId: string, closeStatus: PositionStatus) =>
+    api.post<ClosePositionResponse>(
+      `/api/plutus/positions/${positionId}/close`,
+      { closeStatus },
+    ),
+
+  linkPosition: (positionId: string, targetPositionId: string) =>
+    api.post<IdResponse>(`/api/plutus/positions/${positionId}/link`, {
+      targetPositionId,
+    }),
 };

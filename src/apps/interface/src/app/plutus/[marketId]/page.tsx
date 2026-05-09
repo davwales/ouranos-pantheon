@@ -48,6 +48,12 @@ const features: {
       "Define and manage trading strategies. Configure parameters, toggle active status, and review past performance.",
     segment: "strategies",
   },
+  {
+    name: "Portfolio",
+    description:
+      "Track and manage your positions. Create, edit, close, and link buy and sell positions.",
+    segment: "portfolio",
+  },
 ];
 
 export default async function MarketLanding({

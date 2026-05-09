@@ -56,7 +56,7 @@ public sealed class FilterOperatorExtensionsTests
             .On(nameof(Product.Category), p => p.Category);
 
         // Act
-        var result = Items.FilterBy(["Category:ne:Weapon"], builder).ToList();
+        var result = Items.FilterBy(["Category:neq:Weapon"], builder).ToList();
 
         // Assert
         result.ShouldAllBe(p => p.Category != "Weapon");

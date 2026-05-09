@@ -5,6 +5,7 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Recipes;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Positions;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.SymbolGroups;
@@ -40,6 +41,8 @@ public class PlutusDbContext(DbContextOptions<PlutusDbContext> options) : Ourano
 
     public DbSet<SymbolGroupMember> SymbolGroupMembers { get; set; }
 
+    public DbSet<Position> Positions { get; set; }
+
     public DbSet<Strategy> Strategies { get; set; }
 
     public DbSet<Backtest> Backtests { get; set; }
@@ -61,6 +64,7 @@ public class PlutusDbContext(DbContextOptions<PlutusDbContext> options) : Ourano
         modelBuilder.Entity<Signal>();
         modelBuilder.Entity<SymbolGroup>();
         modelBuilder.Entity<SymbolGroupMember>();
+        modelBuilder.Entity<Position>();
         modelBuilder.Entity<Strategy>();
         modelBuilder.Entity<Backtest>();
     }

@@ -205,7 +205,7 @@ public sealed class FilterExtensionsTests
             .On(nameof(NullableProduct.Score), p => p.Score);
 
         // Act
-        var result = items.FilterBy(["Score:ne:1.5"], builder).ToList();
+        var result = items.FilterBy(["Score:neq:1.5"], builder).ToList();
 
         // Assert
         result.Count.ShouldBe(1);

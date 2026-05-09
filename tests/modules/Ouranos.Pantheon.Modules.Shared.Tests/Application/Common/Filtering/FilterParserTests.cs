@@ -45,7 +45,7 @@ public sealed class FilterParserTests
 
     [Theory]
     [InlineData("eq", FilterOperator.Eq)]
-    [InlineData("ne", FilterOperator.Ne)]
+    [InlineData("neq", FilterOperator.Neq)]
     [InlineData("lt", FilterOperator.Lt)]
     [InlineData("lte", FilterOperator.Lte)]
     [InlineData("gt", FilterOperator.Gt)]
