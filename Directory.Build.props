@@ -17,6 +17,6 @@
       <_CustomFiles Include="$(SolutionDir)/automation/pre-commit" />
       <_CustomFiles Include="$(SolutionDir)/automation/pre-push" />
     </ItemGroup>
-    <Copy SourceFiles="@(_CustomFiles)" DestinationFolder="./.git/hooks" />
+    <Copy SourceFiles="@(_CustomFiles)" DestinationFolder="$(SolutionDir).git/hooks" />
   </Target>
 </Project>
