@@ -20,6 +20,8 @@ public static class GetSignalRankingsEndpoint
         CancellationToken ct = default
     )
     {
-        return Results.Ok(await bus.InvokeAsync<PagedResponse<GetSignalRankingsResponse>>(input, ct));
+        return Results.Ok(
+            await bus.InvokeAsync<PagedResponse<GetSignalRankingsResponse>>(input, ct)
+        );
     }
 }

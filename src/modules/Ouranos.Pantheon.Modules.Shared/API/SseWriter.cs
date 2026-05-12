@@ -5,7 +5,9 @@ namespace Ouranos.Pantheon.Modules.Shared.API;
 
 public static class SseWriter
 {
-    private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions SerializerOptions = new(
+        JsonSerializerDefaults.Web
+    );
 
     /// <summary>
     /// Writes a Server-Sent Event to the HTTP response stream with the given data object

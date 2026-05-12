@@ -151,7 +151,7 @@ public sealed class BacktestTests
             BestTrade = 0.5m,
             WorstTrade = -0.2m,
             FinalBalance = 11000m,
-            Positions = []
+            Positions = [],
         };
 
         // Act
@@ -190,7 +190,10 @@ public sealed class BacktestTests
         backtest.MarkRunning();
 
         // Act
-        var complete = () => { backtest.Complete(null!); };
+        var complete = () =>
+        {
+            backtest.Complete(null!);
+        };
 
         // Assert
         complete.ShouldThrow<ArgumentNullException>();
@@ -222,11 +225,14 @@ public sealed class BacktestTests
             BestTrade = 0.5m,
             WorstTrade = -0.2m,
             FinalBalance = 11000m,
-            Positions = []
+            Positions = [],
         };
 
         // Act
-        var complete = () => { backtest.Complete(results); };
+        var complete = () =>
+        {
+            backtest.Complete(results);
+        };
 
         // Assert
         complete.ShouldThrow<InvalidOperationException>();
@@ -270,7 +276,10 @@ public sealed class BacktestTests
         backtest.Complete(new BacktestResults());
 
         // Act
-        var fail = () => { backtest.Fail("Something went wrong"); };
+        var fail = () =>
+        {
+            backtest.Fail("Something went wrong");
+        };
 
         // Assert
         fail.ShouldThrow<InvalidOperationException>();
@@ -332,7 +341,10 @@ public sealed class BacktestTests
         backtest.Complete(new BacktestResults());
 
         // Act
-        var markRunning = () => { backtest.MarkRunning(); };
+        var markRunning = () =>
+        {
+            backtest.MarkRunning();
+        };
 
         // Assert
         markRunning.ShouldThrow<InvalidOperationException>();
@@ -348,7 +360,10 @@ public sealed class BacktestTests
         var backtest = CreateValidBacktest();
 
         // Act
-        var fail = () => { backtest.Fail(message!); };
+        var fail = () =>
+        {
+            backtest.Fail(message!);
+        };
 
         // Assert
         fail.ShouldThrow<ArgumentException>();
@@ -503,7 +518,9 @@ public sealed class BacktestTests
     [Theory]
     [InlineData(BacktestStatus.Completed)]
     [InlineData(BacktestStatus.Failed)]
-    public void Cancel_WhenInvalidState_ShouldThrowInvalidOperationException(BacktestStatus targetStatus)
+    public void Cancel_WhenInvalidState_ShouldThrowInvalidOperationException(
+        BacktestStatus targetStatus
+    )
     {
         // Arrange
         var backtest = CreateValidBacktest();
@@ -519,7 +536,10 @@ public sealed class BacktestTests
         }
 
         // Act
-        var cancel = () => { backtest.Cancel(); };
+        var cancel = () =>
+        {
+            backtest.Cancel();
+        };
 
         // Assert
         cancel.ShouldThrow<InvalidOperationException>();
@@ -569,7 +589,9 @@ public sealed class BacktestTests
     [InlineData(BacktestStatus.Pending)]
     [InlineData(BacktestStatus.Running)]
     [InlineData(BacktestStatus.Completed)]
-    public void Restart_WhenInvalidState_ShouldThrowInvalidOperationException(BacktestStatus targetStatus)
+    public void Restart_WhenInvalidState_ShouldThrowInvalidOperationException(
+        BacktestStatus targetStatus
+    )
     {
         // Arrange
         var backtest = CreateValidBacktest();
@@ -586,7 +608,10 @@ public sealed class BacktestTests
         }
 
         // Act
-        var restart = () => { backtest.Restart(); };
+        var restart = () =>
+        {
+            backtest.Restart();
+        };
 
         // Assert
         restart.ShouldThrow<InvalidOperationException>();

@@ -13,11 +13,15 @@ public sealed class FlagsmithModuleTests
     {
         // Arrange
         var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                [$"{FlagsmithOptions.SectionName}:{nameof(FlagsmithOptions.ApiUrl)}"] = "https://edge.api.flagsmith.com/api/v1/",
-                [$"{FlagsmithOptions.SectionName}:{nameof(FlagsmithOptions.EnvironmentKey)}"] = "test-key",
-            })
+            .AddInMemoryCollection(
+                new Dictionary<string, string?>
+                {
+                    [$"{FlagsmithOptions.SectionName}:{nameof(FlagsmithOptions.ApiUrl)}"] =
+                        "https://edge.api.flagsmith.com/api/v1/",
+                    [$"{FlagsmithOptions.SectionName}:{nameof(FlagsmithOptions.EnvironmentKey)}"] =
+                        "test-key",
+                }
+            )
             .Build();
 
         var services = new ServiceCollection();
@@ -34,11 +38,15 @@ public sealed class FlagsmithModuleTests
     {
         // Arrange
         var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                [$"{FlagsmithOptions.SectionName}:{nameof(FlagsmithOptions.ApiUrl)}"] = "https://edge.api.flagsmith.com/api/v1/",
-                [$"{FlagsmithOptions.SectionName}:{nameof(FlagsmithOptions.EnvironmentKey)}"] = "test-key",
-            })
+            .AddInMemoryCollection(
+                new Dictionary<string, string?>
+                {
+                    [$"{FlagsmithOptions.SectionName}:{nameof(FlagsmithOptions.ApiUrl)}"] =
+                        "https://edge.api.flagsmith.com/api/v1/",
+                    [$"{FlagsmithOptions.SectionName}:{nameof(FlagsmithOptions.EnvironmentKey)}"] =
+                        "test-key",
+                }
+            )
             .Build();
 
         var services = new ServiceCollection();

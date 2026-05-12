@@ -7,7 +7,10 @@ public sealed class IdSpecimenBuilder : ISpecimenBuilder
 {
     public object Create(object request, ISpecimenContext context)
     {
-        if (request is not Type { IsGenericType: true } type || type.GetGenericTypeDefinition() != typeof(Id<>))
+        if (
+            request is not Type { IsGenericType: true } type
+            || type.GetGenericTypeDefinition() != typeof(Id<>)
+        )
         {
             return new NoSpecimen();
         }

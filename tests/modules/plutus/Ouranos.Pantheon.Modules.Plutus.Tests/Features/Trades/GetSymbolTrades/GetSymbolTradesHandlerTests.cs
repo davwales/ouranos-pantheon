@@ -17,7 +17,9 @@ public sealed class GetSymbolTradesHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly GetSymbolTradesHandler _handler;
-    private readonly ILogger<GetSymbolTradesHandler> _logger = Substitute.For<ILogger<GetSymbolTradesHandler>>();
+    private readonly ILogger<GetSymbolTradesHandler> _logger = Substitute.For<
+        ILogger<GetSymbolTradesHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
 
     public GetSymbolTradesHandlerTests()
@@ -48,8 +50,20 @@ public sealed class GetSymbolTradesHandlerTests
         );
 
         var timestamp = DateTimeOffset.UtcNow;
-        var trade1 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 90m, 5m, timestamp);
-        var trade2 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 110m, 3m, timestamp);
+        var trade1 = Trade.Create(
+            new Id<Trade>(Guid.NewGuid().ToString()),
+            symbol.Id,
+            90m,
+            5m,
+            timestamp
+        );
+        var trade2 = Trade.Create(
+            new Id<Trade>(Guid.NewGuid().ToString()),
+            symbol.Id,
+            110m,
+            3m,
+            timestamp
+        );
 
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(symbol);
@@ -88,9 +102,27 @@ public sealed class GetSymbolTradesHandlerTests
         );
 
         var now = DateTimeOffset.UtcNow;
-        var trade1 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 90m, 5m, now.AddHours(-2));
-        var trade2 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 100m, 3m, now.AddHours(-1));
-        var trade3 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 110m, 4m, now);
+        var trade1 = Trade.Create(
+            new Id<Trade>(Guid.NewGuid().ToString()),
+            symbol.Id,
+            90m,
+            5m,
+            now.AddHours(-2)
+        );
+        var trade2 = Trade.Create(
+            new Id<Trade>(Guid.NewGuid().ToString()),
+            symbol.Id,
+            100m,
+            3m,
+            now.AddHours(-1)
+        );
+        var trade3 = Trade.Create(
+            new Id<Trade>(Guid.NewGuid().ToString()),
+            symbol.Id,
+            110m,
+            4m,
+            now
+        );
 
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(symbol);
@@ -171,8 +203,20 @@ public sealed class GetSymbolTradesHandlerTests
         );
 
         var now = DateTimeOffset.UtcNow;
-        var trade1 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 75m, 2m, now.AddHours(-2));
-        var trade2 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 125m, 3m, now);
+        var trade1 = Trade.Create(
+            new Id<Trade>(Guid.NewGuid().ToString()),
+            symbol.Id,
+            75m,
+            2m,
+            now.AddHours(-2)
+        );
+        var trade2 = Trade.Create(
+            new Id<Trade>(Guid.NewGuid().ToString()),
+            symbol.Id,
+            125m,
+            3m,
+            now
+        );
 
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(symbol);
@@ -210,9 +254,27 @@ public sealed class GetSymbolTradesHandlerTests
         );
 
         var now = DateTimeOffset.UtcNow;
-        var trade1 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 90m, 5m, now.AddHours(-2));
-        var trade2 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 100m, 3m, now.AddHours(-1));
-        var trade3 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 110m, 4m, now);
+        var trade1 = Trade.Create(
+            new Id<Trade>(Guid.NewGuid().ToString()),
+            symbol.Id,
+            90m,
+            5m,
+            now.AddHours(-2)
+        );
+        var trade2 = Trade.Create(
+            new Id<Trade>(Guid.NewGuid().ToString()),
+            symbol.Id,
+            100m,
+            3m,
+            now.AddHours(-1)
+        );
+        var trade3 = Trade.Create(
+            new Id<Trade>(Guid.NewGuid().ToString()),
+            symbol.Id,
+            110m,
+            4m,
+            now
+        );
 
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(symbol);
@@ -250,8 +312,20 @@ public sealed class GetSymbolTradesHandlerTests
         );
 
         var now = DateTimeOffset.UtcNow;
-        var trade1 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 90m, 5m, now.AddHours(-2));
-        var trade2 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 110m, 3m, now);
+        var trade1 = Trade.Create(
+            new Id<Trade>(Guid.NewGuid().ToString()),
+            symbol.Id,
+            90m,
+            5m,
+            now.AddHours(-2)
+        );
+        var trade2 = Trade.Create(
+            new Id<Trade>(Guid.NewGuid().ToString()),
+            symbol.Id,
+            110m,
+            3m,
+            now
+        );
 
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(symbol);
@@ -275,7 +349,19 @@ public sealed class GetSymbolTradesHandlerTests
         // Arrange
         var symbolId = new Id<Symbol>(Guid.NewGuid().ToString());
         var bucketStart = DateTimeOffset.UtcNow;
-        var bucket = new BucketDto(symbolId, bucketStart, 1000m, 10m, 90m, 110m, 5, 100m, 20m, 91m, 109m);
+        var bucket = new BucketDto(
+            symbolId,
+            bucketStart,
+            1000m,
+            10m,
+            90m,
+            110m,
+            5,
+            100m,
+            20m,
+            91m,
+            109m
+        );
 
         // Assert
         bucket.SymbolId.ShouldBe(symbolId);

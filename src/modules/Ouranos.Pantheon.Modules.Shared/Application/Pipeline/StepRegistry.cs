@@ -12,7 +12,8 @@ public sealed class StepRegistry<TPayload> : IStepRegistry<TPayload>
         }
     }
 
-    public IStep<TPayload> Resolve<TStep>() where TStep : IStep<TPayload>
+    public IStep<TPayload> Resolve<TStep>()
+        where TStep : IStep<TPayload>
     {
         if (_steps.TryGetValue(typeof(TStep), out var step))
         {

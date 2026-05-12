@@ -18,7 +18,10 @@ public sealed class GetAllSymbolsEndpointTests
         var input = new GetAllSymbolsInput(Take: 10);
         var expected = new PagedResponse<GetAllSymbolsResponse>([], 0, 0, 10);
 
-        _bus.InvokeAsync<PagedResponse<GetAllSymbolsResponse>>(Arg.Any<object>(), Arg.Any<CancellationToken>())
+        _bus.InvokeAsync<PagedResponse<GetAllSymbolsResponse>>(
+                Arg.Any<object>(),
+                Arg.Any<CancellationToken>()
+            )
             .Returns(Task.FromResult(expected));
 
         // Act

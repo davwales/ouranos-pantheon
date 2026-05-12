@@ -29,11 +29,7 @@ public sealed class BacktestMathTests
             Volume: 100m,
             EntryTime: DateTimeOffset.UtcNow
         );
-        var market = Market.Create(
-            _fixture.Create<Id<Market>>(),
-            "Test Market",
-            new Taxes(null)
-        );
+        var market = Market.Create(_fixture.Create<Id<Market>>(), "Test Market", new Taxes(null));
 
         // Act
         var (_, exitVolume, _) = BacktestMath.ComputeExit(pos, 150m, 0m, market, 100m, 0.25m, 0m);
@@ -54,14 +50,18 @@ public sealed class BacktestMathTests
             Volume: 100m,
             EntryTime: DateTimeOffset.UtcNow
         );
-        var market = Market.Create(
-            _fixture.Create<Id<Market>>(),
-            "Test Market",
-            new Taxes(null)
-        );
+        var market = Market.Create(_fixture.Create<Id<Market>>(), "Test Market", new Taxes(null));
 
         // Act
-        var (netProceeds, exitVolume, _) = BacktestMath.ComputeExit(pos, 100m, 0m, market, 100m, 0.25m, 0.1m);
+        var (netProceeds, exitVolume, _) = BacktestMath.ComputeExit(
+            pos,
+            100m,
+            0m,
+            market,
+            100m,
+            0.25m,
+            0.1m
+        );
 
         // Assert
         exitVolume.ShouldBe(25m);
@@ -80,14 +80,18 @@ public sealed class BacktestMathTests
             Volume: 100m,
             EntryTime: DateTimeOffset.UtcNow
         );
-        var market = Market.Create(
-            _fixture.Create<Id<Market>>(),
-            "Test Market",
-            new Taxes(null)
-        );
+        var market = Market.Create(_fixture.Create<Id<Market>>(), "Test Market", new Taxes(null));
 
         // Act
-        var (netProceeds, exitVolume, netPnl) = BacktestMath.ComputeExit(pos, 150m, 0m, market, 100m, 0m, 0m);
+        var (netProceeds, exitVolume, netPnl) = BacktestMath.ComputeExit(
+            pos,
+            150m,
+            0m,
+            market,
+            100m,
+            0m,
+            0m
+        );
 
         // Assert
         exitVolume.ShouldBe(0m);
@@ -114,7 +118,15 @@ public sealed class BacktestMathTests
         );
 
         // Act
-        var (netProceeds, exitVolume, netPnl) = BacktestMath.ComputeExit(pos, 150m, 0.05m, market, 0m, 0.25m, 0m);
+        var (netProceeds, exitVolume, netPnl) = BacktestMath.ComputeExit(
+            pos,
+            150m,
+            0.05m,
+            market,
+            0m,
+            0.25m,
+            0m
+        );
 
         // Assert
         exitVolume.ShouldBe(10m);
@@ -141,7 +153,15 @@ public sealed class BacktestMathTests
         );
 
         // Act
-        var (netProceeds, _, netPnl) = BacktestMath.ComputeExit(pos, 200m, 0.10m, market, 0m, 0.25m, 0m);
+        var (netProceeds, _, netPnl) = BacktestMath.ComputeExit(
+            pos,
+            200m,
+            0.10m,
+            market,
+            0m,
+            0.25m,
+            0m
+        );
 
         // Assert
         netProceeds.ShouldBe(19950m);
@@ -185,14 +205,18 @@ public sealed class BacktestMathTests
             Volume: 20m,
             EntryTime: DateTimeOffset.UtcNow
         );
-        var market = Market.Create(
-            _fixture.Create<Id<Market>>(),
-            "Test Market",
-            new Taxes(null)
-        );
+        var market = Market.Create(_fixture.Create<Id<Market>>(), "Test Market", new Taxes(null));
 
         // Act
-        var (netProceeds, _, netPnl) = BacktestMath.ComputeExit(pos, 60m, 0m, market, 0m, 0.25m, 0m);
+        var (netProceeds, _, netPnl) = BacktestMath.ComputeExit(
+            pos,
+            60m,
+            0m,
+            market,
+            0m,
+            0.25m,
+            0m
+        );
 
         // Assert
         netProceeds.ShouldBe(1200m);
@@ -315,14 +339,7 @@ public sealed class BacktestMathTests
         var symbolId = _fixture.Create<Id<Symbol>>();
         var aggregates = new List<DailyTradeAggregate>
         {
-            new(
-                symbolId,
-                new DateOnly(2025, 1, 15),
-                100m,
-                100m,
-                100m,
-                50m
-            )
+            new(symbolId, new DateOnly(2025, 1, 15), 100m, 100m, 100m, 50m),
         };
 
         // Act
@@ -341,16 +358,16 @@ public sealed class BacktestMathTests
     {
         // Arrange
         var symbolId = _fixture.Create<Id<Symbol>>();
-        var aggregates = Enumerable.Range(0, 50)
+        var aggregates = Enumerable
+            .Range(0, 50)
             .Select(i => new DailyTradeAggregate(
-                    symbolId,
-                    new DateOnly(2025, 1, 1).AddDays(i),
-                    100m + i,
-                    100m + i,
-                    100m + i,
-                    10m + i
-                )
-            )
+                symbolId,
+                new DateOnly(2025, 1, 1).AddDays(i),
+                100m + i,
+                100m + i,
+                100m + i,
+                10m + i
+            ))
             .ToList();
 
         // Act
@@ -371,16 +388,16 @@ public sealed class BacktestMathTests
     {
         // Arrange
         var symbolId = _fixture.Create<Id<Symbol>>();
-        var aggregates = Enumerable.Range(0, 10)
+        var aggregates = Enumerable
+            .Range(0, 10)
             .Select(i => new DailyTradeAggregate(
-                    symbolId,
-                    new DateOnly(2025, 1, 1).AddDays(i),
-                    100m + i,
-                    100m + i,
-                    100m + i,
-                    10m
-                )
-            )
+                symbolId,
+                new DateOnly(2025, 1, 1).AddDays(i),
+                100m + i,
+                100m + i,
+                100m + i,
+                10m
+            ))
             .ToList();
 
         // Act
@@ -395,16 +412,16 @@ public sealed class BacktestMathTests
     {
         // Arrange
         var symbolId = _fixture.Create<Id<Symbol>>();
-        var aggregates = Enumerable.Range(0, 25)
+        var aggregates = Enumerable
+            .Range(0, 25)
             .Select(i => new DailyTradeAggregate(
-                    symbolId,
-                    new DateOnly(2025, 1, 1).AddDays(i),
-                    100m + i,
-                    100m + i,
-                    100m + i,
-                    10m
-                )
-            )
+                symbolId,
+                new DateOnly(2025, 1, 1).AddDays(i),
+                100m + i,
+                100m + i,
+                100m + i,
+                10m
+            ))
             .ToList();
 
         // Act

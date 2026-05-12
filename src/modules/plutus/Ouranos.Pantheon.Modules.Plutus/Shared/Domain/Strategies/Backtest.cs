@@ -1,15 +1,14 @@
 using Ardalis.GuardClauses;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Shared.Extensions;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 
 public class Backtest : BaseEntity<Id<Backtest>>
 {
-    protected Backtest(Id<Backtest> id) : base(id)
-    {
-    }
+    protected Backtest(Id<Backtest> id)
+        : base(id) { }
 
     public Id<Strategy> StrategyId { get; init; }
 
@@ -37,7 +36,8 @@ public class Backtest : BaseEntity<Id<Backtest>>
     public string? ErrorMessage { get; private set; }
 
     private Strategy? _strategy;
-    public Strategy Strategy => _strategy ?? throw new NavigationPropertyNotLoadedException<Backtest>();
+    public Strategy Strategy =>
+        _strategy ?? throw new NavigationPropertyNotLoadedException<Backtest>();
 
     public static Backtest Create(
         Id<Strategy> strategyId,
@@ -65,7 +65,7 @@ public class Backtest : BaseEntity<Id<Backtest>>
             EndDate = endDate.ToUniversalTime(),
             Budget = budget,
             Kind = kind,
-            _strategy = strategy
+            _strategy = strategy,
         };
     }
 
@@ -158,7 +158,9 @@ public class Backtest : BaseEntity<Id<Backtest>>
 
         if (Status != BacktestStatus.Pending && Status != BacktestStatus.Running)
         {
-            throw new InvalidOperationException($"Cannot cancel backtest '{Id}' from {Status} state.");
+            throw new InvalidOperationException(
+                $"Cannot cancel backtest '{Id}' from {Status} state."
+            );
         }
 
         ErrorMessage = reason ?? "Cancelled by user.";

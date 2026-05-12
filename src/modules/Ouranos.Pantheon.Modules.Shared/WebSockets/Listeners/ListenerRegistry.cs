@@ -15,11 +15,8 @@ public sealed class ListenerRegistry : IListenerRegistry
         _serializer = serializer;
     }
 
-    public IReadOnlyDictionary<Type, IReadOnlyList<IListenerDispatcher>> Listeners
-        => _listeners.ToDictionary(
-            x => x.Key,
-            IReadOnlyList<IListenerDispatcher> (x) => x.Value
-        );
+    public IReadOnlyDictionary<Type, IReadOnlyList<IListenerDispatcher>> Listeners =>
+        _listeners.ToDictionary(x => x.Key, IReadOnlyList<IListenerDispatcher> (x) => x.Value);
 
     public void RegisterListener<T>(IListener<T> listener)
     {

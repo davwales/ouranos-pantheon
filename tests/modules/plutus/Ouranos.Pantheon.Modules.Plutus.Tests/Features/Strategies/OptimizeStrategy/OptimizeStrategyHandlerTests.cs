@@ -16,7 +16,9 @@ public sealed class OptimizeStrategyHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly OptimizeStrategyHandler _handler;
-    private readonly ILogger<OptimizeStrategyHandler> _logger = Substitute.For<ILogger<OptimizeStrategyHandler>>();
+    private readonly ILogger<OptimizeStrategyHandler> _logger = Substitute.For<
+        ILogger<OptimizeStrategyHandler>
+    >();
     private readonly IDbContextFactory<PlutusDbContext> _dbContextFactory;
     private readonly IMessageBus _bus = Substitute.For<IMessageBus>();
 
@@ -59,9 +61,10 @@ public sealed class OptimizeStrategyHandlerTests
         // Assert
         result.ShouldBeOfType<OptimizeStrategyResponse>();
         result.BacktestId.ShouldNotBe(default);
-        await _bus.Received(1).PublishAsync(
-            Arg.Any<Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events.OptimizeStrategyMessage>()
-        );
+        await _bus.Received(1)
+            .PublishAsync(
+                Arg.Any<Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events.OptimizeStrategyMessage>()
+            );
     }
 
     [Fact]

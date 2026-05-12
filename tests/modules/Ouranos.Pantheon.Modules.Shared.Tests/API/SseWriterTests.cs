@@ -94,14 +94,10 @@ public sealed class SseWriterTests
 
         // Act & Assert
         await Should.ThrowAsync<OperationCanceledException>(async () =>
-            {
-                await SseWriter.WriteEventAsync(response, data, cancellationToken);
-            }
-        );
+        {
+            await SseWriter.WriteEventAsync(response, data, cancellationToken);
+        });
     }
 
-    private sealed record TestPerson(
-        int Age,
-        string FirstName = ""
-    );
+    private sealed record TestPerson(int Age, string FirstName = "");
 }

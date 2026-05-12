@@ -19,14 +19,16 @@ public sealed class CompactConversationHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
 
-    private readonly ILogger<CompactConversationHandler> _logger =
-        Substitute.For<ILogger<CompactConversationHandler>>();
+    private readonly ILogger<CompactConversationHandler> _logger = Substitute.For<
+        ILogger<CompactConversationHandler>
+    >();
 
     private readonly IOuranosMachineLearningClient _mlClient =
         Substitute.For<IOuranosMachineLearningClient>();
 
-    private readonly IDbContextFactory<HermesDbContext> _dbContextFactory =
-        Substitute.For<IDbContextFactory<HermesDbContext>>();
+    private readonly IDbContextFactory<HermesDbContext> _dbContextFactory = Substitute.For<
+        IDbContextFactory<HermesDbContext>
+    >();
 
     private readonly CompactConversationHandler _handler;
 
@@ -86,11 +88,11 @@ public sealed class CompactConversationHandlerTests
     {
         var systemContent = msgs[0].Content;
         return systemContent.Contains("What about X?")
-               && systemContent.Contains("Here is info about X.")
-               && systemContent.Contains("And more.")
-               && !systemContent.Contains("EARLY SUMMARY")
-               && !systemContent.Contains("Hello")
-               && !systemContent.Contains("Hi!");
+            && systemContent.Contains("Here is info about X.")
+            && systemContent.Contains("And more.")
+            && !systemContent.Contains("EARLY SUMMARY")
+            && !systemContent.Contains("Hello")
+            && !systemContent.Contains("Hi!");
     }
 
     private static Conversation CreateConversationWithMessages(
@@ -119,9 +121,9 @@ public sealed class CompactConversationHandlerTests
         // Arrange
         var dbName = Guid.NewGuid().ToString();
 
-        _dbContextFactory.CreateDbContextAsync(Arg.Any<CancellationToken>()).Returns(_ =>
-            Task.FromResult(DbContextExtensions.Mock<HermesDbContext>(dbName))
-        );
+        _dbContextFactory
+            .CreateDbContextAsync(Arg.Any<CancellationToken>())
+            .Returns(_ => Task.FromResult(DbContextExtensions.Mock<HermesDbContext>(dbName)));
 
         var conversationId = new Id<Conversation>(Guid.NewGuid().ToString());
 
@@ -132,7 +134,8 @@ public sealed class CompactConversationHandlerTests
 
         var messages = new List<CompactConversationMessageInput>
         {
-            new("Hello", Role.User), new("Hi there!", Role.Assistant),
+            new("Hello", Role.User),
+            new("Hi there!", Role.Assistant),
         };
 
         var command = CreateCommand(conversationId: conversationId, messages: messages);
@@ -167,8 +170,8 @@ public sealed class CompactConversationHandlerTests
         complete.SummaryMessageId.ShouldNotBeNull();
 
         var checkContext = DbContextExtensions.Mock<HermesDbContext>(dbName);
-        var savedSummary = await checkContext.Messages
-            .Where(m => m.ConversationId == conversationId && m.Role == Role.Summary)
+        var savedSummary = await checkContext
+            .Messages.Where(m => m.ConversationId == conversationId && m.Role == Role.Summary)
             .FirstOrDefaultAsync();
 
         savedSummary.ShouldNotBeNull();
@@ -183,7 +186,8 @@ public sealed class CompactConversationHandlerTests
         // Arrange
         var messages = new List<CompactConversationMessageInput>
         {
-            new("Hello", Role.User), new("How can I help?", Role.Assistant),
+            new("Hello", Role.User),
+            new("How can I help?", Role.Assistant),
         };
 
         var command = CreateCommand(messages: messages);
@@ -223,21 +227,24 @@ public sealed class CompactConversationHandlerTests
     public async Task Handle_WhenNoUserOrAssistantMessages_ShouldThrowInvalidOperationException()
     {
         // Arrange
-        var messages = new List<CompactConversationMessageInput> { new("System instruction", Role.System), };
+        var messages = new List<CompactConversationMessageInput>
+        {
+            new("System instruction", Role.System),
+        };
 
         var command = CreateCommand(messages: messages);
 
         // Act
         var handle = async () =>
         {
-            await foreach (var _ in _handler.Handle(command, CancellationToken.None))
-            {
-            }
+            await foreach (var _ in _handler.Handle(command, CancellationToken.None)) { }
         };
 
         // Assert
         var exception = await handle.ShouldThrowAsync<InvalidOperationException>();
-        exception.Message.ShouldBe("Cannot compact a conversation with no user or assistant messages to summarize.");
+        exception.Message.ShouldBe(
+            "Cannot compact a conversation with no user or assistant messages to summarize."
+        );
     }
 
     [Fact]
@@ -276,14 +283,16 @@ public sealed class CompactConversationHandlerTests
         }
 
         // Assert
-        _mlClient.Received(1).StreamChatCompletionAsync(
-            Arg.Any<string>(),
-            Arg.Is<List<MessageDto>>(msgs => ContainsAfterLastSummaryOnly(msgs)),
-            Arg.Any<float?>(),
-            Arg.Any<int?>(),
-            Arg.Any<float?>(),
-            Arg.Any<CancellationToken>()
-        );
+        _mlClient
+            .Received(1)
+            .StreamChatCompletionAsync(
+                Arg.Any<string>(),
+                Arg.Is<List<MessageDto>>(msgs => ContainsAfterLastSummaryOnly(msgs)),
+                Arg.Any<float?>(),
+                Arg.Any<int?>(),
+                Arg.Any<float?>(),
+                Arg.Any<CancellationToken>()
+            );
 
         var complete = results.OfType<CompactCompleteResponse>().SingleOrDefault();
         complete.ShouldNotBeNull();
@@ -294,16 +303,16 @@ public sealed class CompactConversationHandlerTests
     public async Task Handle_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange
-        var command = CreateCommand(messages: [new("Hello", Role.User), new("Hi!", Role.Assistant),]);
+        var command = CreateCommand(
+            messages: [new("Hello", Role.User), new("Hi!", Role.Assistant)]
+        );
 
         var cancellationToken = new CancellationToken(true);
 
         // Act
         var handle = async () =>
         {
-            await foreach (var _ in _handler.Handle(command, cancellationToken))
-            {
-            }
+            await foreach (var _ in _handler.Handle(command, cancellationToken)) { }
         };
 
         // Assert
@@ -327,7 +336,9 @@ public sealed class CompactConversationHandlerTests
             )
             .Returns(CreateStream(chunks));
 
-        var command = CreateCommand(messages: [new("Hello", Role.User), new("Hi!", Role.Assistant),]);
+        var command = CreateCommand(
+            messages: [new("Hello", Role.User), new("Hi!", Role.Assistant)]
+        );
 
         // Act
         var results = new List<CompactConversationResponse>();
@@ -361,7 +372,7 @@ public sealed class CompactConversationHandlerTests
             )
             .Returns(CreateStreamWithUsage(["Hello"], usage));
 
-        var command = CreateCommand(messages: [new("Hi", Role.User),]);
+        var command = CreateCommand(messages: [new("Hi", Role.User)]);
 
         // Act
         var results = new List<CompactConversationResponse>();
@@ -393,7 +404,7 @@ public sealed class CompactConversationHandlerTests
             )
             .Returns(CreateStream(["Hello"]));
 
-        var command = CreateCommand(messages: [new("Hi", Role.User),]);
+        var command = CreateCommand(messages: [new("Hi", Role.User)]);
 
         // Act
         var results = new List<CompactConversationResponse>();
@@ -421,7 +432,9 @@ public sealed class CompactConversationHandlerTests
 
         var messages = new List<CompactConversationMessageInput>
         {
-            new("Hello!", Role.User), new("How can I help?", Role.Assistant), new("Tell me about X.", Role.User),
+            new("Hello!", Role.User),
+            new("How can I help?", Role.Assistant),
+            new("Tell me about X.", Role.User),
         };
 
         // Act

@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Extensions;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Database.ModelConfigurations;
 
@@ -14,7 +14,6 @@ public sealed class ForecastConfiguration : IEntityTypeConfiguration<Forecast>
         builder.Property(p => p.Id).HasIdConversion();
         builder.Property(p => p.MarketId).HasIdConversion();
         builder.Property(p => p.SymbolId).HasIdConversion();
-
 
         builder.OwnsOne(
             p => p.Latest,

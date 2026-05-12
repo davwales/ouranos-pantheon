@@ -15,7 +15,9 @@ public sealed class DeleteMarketHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly DeleteMarketHandler _handler;
-    private readonly ILogger<DeleteMarketHandler> _logger = Substitute.For<ILogger<DeleteMarketHandler>>();
+    private readonly ILogger<DeleteMarketHandler> _logger = Substitute.For<
+        ILogger<DeleteMarketHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
 
     public DeleteMarketHandlerTests()

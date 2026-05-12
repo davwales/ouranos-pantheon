@@ -4,5 +4,5 @@ public enum RoleDto
 {
     System,
     User,
-    Assistant
+    Assistant,
 }

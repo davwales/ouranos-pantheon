@@ -89,11 +89,7 @@ public sealed class SignalTests
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
         var symbolId = _fixture.Create<Id<Symbol>>();
-        var market = Market.Create(
-            marketId,
-            _fixture.Create<string>(),
-            _fixture.Create<Taxes>()
-        );
+        var market = Market.Create(marketId, _fixture.Create<string>(), _fixture.Create<Taxes>());
         var wrongSymbol = Symbol.Create(
             new Id<Symbol>(_fixture.Create<string>()),
             _fixture.Create<string>(),
@@ -104,7 +100,8 @@ public sealed class SignalTests
         );
 
         // Act
-        var create = () => Signal.Create(marketId, symbolId, SignalType.Rsi, 0m, market, wrongSymbol);
+        var create = () =>
+            Signal.Create(marketId, symbolId, SignalType.Rsi, 0m, market, wrongSymbol);
 
         // Assert
         create.ShouldThrow<ArgumentException>();
@@ -114,7 +111,12 @@ public sealed class SignalTests
     public void Market_WhenNotLoaded_ShouldThrowNavigationPropertyNotLoadedException()
     {
         // Arrange
-        var signal = Signal.Create(_fixture.Create<Id<Market>>(), _fixture.Create<Id<Symbol>>(), SignalType.Rsi, 0.5m);
+        var signal = Signal.Create(
+            _fixture.Create<Id<Market>>(),
+            _fixture.Create<Id<Symbol>>(),
+            SignalType.Rsi,
+            0.5m
+        );
 
         // Act
         var access = () => _ = signal.Market;
@@ -127,7 +129,12 @@ public sealed class SignalTests
     public void Symbol_WhenNotLoaded_ShouldThrowNavigationPropertyNotLoadedException()
     {
         // Arrange
-        var signal = Signal.Create(_fixture.Create<Id<Market>>(), _fixture.Create<Id<Symbol>>(), SignalType.Rsi, 0.5m);
+        var signal = Signal.Create(
+            _fixture.Create<Id<Market>>(),
+            _fixture.Create<Id<Symbol>>(),
+            SignalType.Rsi,
+            0.5m
+        );
 
         // Act
         var access = () => _ = signal.Symbol;

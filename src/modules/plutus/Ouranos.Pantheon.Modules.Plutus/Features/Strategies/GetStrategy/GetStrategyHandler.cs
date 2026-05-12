@@ -1,9 +1,9 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetStrategy.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Shared.Application;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetStrategy;
 
@@ -12,10 +12,7 @@ public sealed class GetStrategyHandler : IPantheonHandler<GetStrategyInput, GetS
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<GetStrategyHandler> _logger;
 
-    public GetStrategyHandler(
-        ILogger<GetStrategyHandler> logger,
-        PlutusDbContext dbContext
-    )
+    public GetStrategyHandler(ILogger<GetStrategyHandler> logger, PlutusDbContext dbContext)
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(dbContext);
@@ -32,8 +29,8 @@ public sealed class GetStrategyHandler : IPantheonHandler<GetStrategyInput, GetS
         _logger.LogTrace("Attempting to handle get strategy query '{@query}'.", query);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var strategy = await _dbContext.Strategies
-            .AsNoTracking()
+        var strategy = await _dbContext
+            .Strategies.AsNoTracking()
             .FirstOrDefaultAsync(s => s.Id == query.StrategyId, cancellationToken);
 
         Guard.Against.NotFound(query.StrategyId, strategy);

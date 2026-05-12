@@ -1,19 +1,20 @@
 using Microsoft.EntityFrameworkCore;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.DataLoaders;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Positions;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Recipes;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Positions;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.SymbolGroups;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 
-public class PlutusDbContext(DbContextOptions<PlutusDbContext> options) : OuranosDbContext(options, "plutus")
+public class PlutusDbContext(DbContextOptions<PlutusDbContext> options)
+    : OuranosDbContext(options, "plutus")
 {
     public DbSet<OsrsDataLoaderState> OsrsDataLoaderStates { get; set; }
 

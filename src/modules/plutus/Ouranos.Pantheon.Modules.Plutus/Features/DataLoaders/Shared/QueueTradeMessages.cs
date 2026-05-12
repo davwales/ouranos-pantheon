@@ -9,7 +9,10 @@ public sealed class QueueTradeMessages : IQueueTradeMessages
     private readonly ILogger<QueueTradeMessages> _logger;
     private readonly IWolverineRuntime _wolverineRuntime;
 
-    public QueueTradeMessages(ILogger<QueueTradeMessages> logger, IWolverineRuntime wolverineRuntime)
+    public QueueTradeMessages(
+        ILogger<QueueTradeMessages> logger,
+        IWolverineRuntime wolverineRuntime
+    )
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(wolverineRuntime);

@@ -1,8 +1,8 @@
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization.Chromosomes;
 using Ouranos.Pantheon.Modules.Shared.Extensions;
-using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Tests.Shared.Domain.Strategies.Optimization.Chromosomes;
 
@@ -12,7 +12,8 @@ public sealed class RecipeArbitrageChromosomeTests
     public void CreateRandom_WhenRecipeArbitrage_ShouldSetCommonFieldsOnly()
     {
         // Arrange & Act
-        var chromosome = (RecipeArbitrageChromosome)StrategyChromosome.CreateRandom(StrategyType.RecipeArbitrage);
+        var chromosome = (RecipeArbitrageChromosome)
+            StrategyChromosome.CreateRandom(StrategyType.RecipeArbitrage);
 
         // Assert
         chromosome.Configuration.MaxPositions.ShouldNotBeNull();
@@ -28,7 +29,12 @@ public sealed class RecipeArbitrageChromosomeTests
     {
         // Arrange
         var chromosome = new RecipeArbitrageChromosome(
-            new TradingConfiguration { MaxPositions = 5, MaxPositionPercent = 0.1m, HoldPeriodDays = 10 },
+            new TradingConfiguration
+            {
+                MaxPositions = 5,
+                MaxPositionPercent = 0.1m,
+                HoldPeriodDays = 10,
+            },
             new RecipeArbitrageConfig(0.05m)
         );
 
@@ -44,7 +50,12 @@ public sealed class RecipeArbitrageChromosomeTests
     {
         // Arrange
         var chromosome = new RecipeArbitrageChromosome(
-            new TradingConfiguration { MaxPositions = 10, MaxPositionPercent = 0.2m, HoldPeriodDays = 15 }
+            new TradingConfiguration
+            {
+                MaxPositions = 10,
+                MaxPositionPercent = 0.2m,
+                HoldPeriodDays = 15,
+            }
         );
 
         // Act & Assert
@@ -55,9 +66,19 @@ public sealed class RecipeArbitrageChromosomeTests
     public void Crossover_WhenRecipeArbitrage_ChildShouldInheritRecipeArbitrageFields()
     {
         // Arrange
-        var config1 = new TradingConfiguration { MaxPositions = 5, MaxPositionPercent = 0.2m, HoldPeriodDays = 10 };
+        var config1 = new TradingConfiguration
+        {
+            MaxPositions = 5,
+            MaxPositionPercent = 0.2m,
+            HoldPeriodDays = 10,
+        };
         var recipe1 = new RecipeArbitrageConfig(0.05m);
-        var config2 = new TradingConfiguration { MaxPositions = 15, MaxPositionPercent = 0.4m, HoldPeriodDays = 20 };
+        var config2 = new TradingConfiguration
+        {
+            MaxPositions = 15,
+            MaxPositionPercent = 0.4m,
+            HoldPeriodDays = 20,
+        };
         var recipe2 = new RecipeArbitrageConfig(0.15m);
         var parent1 = new RecipeArbitrageChromosome(config1, recipe1);
         var parent2 = new RecipeArbitrageChromosome(config2, recipe2);

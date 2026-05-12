@@ -17,7 +17,9 @@ public sealed class GetAllSymbolsHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly GetAllSymbolsHandler _handler;
-    private readonly ILogger<GetAllSymbolsHandler> _logger = Substitute.For<ILogger<GetAllSymbolsHandler>>();
+    private readonly ILogger<GetAllSymbolsHandler> _logger = Substitute.For<
+        ILogger<GetAllSymbolsHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
 
     public GetAllSymbolsHandlerTests()
@@ -25,7 +27,11 @@ public sealed class GetAllSymbolsHandlerTests
         _fixture.Customize(new IdCustomization());
 
         _dbContext = DbContextExtensions.Mock<PlutusDbContext>();
-        _handler = new GetAllSymbolsHandler(_logger, _dbContext, Options.Create(new QueryOptions()));
+        _handler = new GetAllSymbolsHandler(
+            _logger,
+            _dbContext,
+            Options.Create(new QueryOptions())
+        );
     }
 
     [Fact]
@@ -38,15 +44,19 @@ public sealed class GetAllSymbolsHandlerTests
             _fixture.Create<Taxes>()
         );
 
-        var symbols = Enumerable.Range(0, 3).Select(_ => Symbol.Create(
-                new Id<Symbol>(Guid.NewGuid().ToString()),
-                _fixture.Create<string>(),
-                null,
-                _fixture.Create<string>(),
-                market.Id,
-                new AdditionalFields()
+        var symbols = Enumerable
+            .Range(0, 3)
+            .Select(_ =>
+                Symbol.Create(
+                    new Id<Symbol>(Guid.NewGuid().ToString()),
+                    _fixture.Create<string>(),
+                    null,
+                    _fixture.Create<string>(),
+                    market.Id,
+                    new AdditionalFields()
+                )
             )
-        ).ToArray();
+            .ToArray();
 
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(symbols);

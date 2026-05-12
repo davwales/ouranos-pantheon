@@ -145,8 +145,18 @@ public sealed class StrategyChromosomeTests
     public void Crossover_WhenBothSameType_ChildShouldInheritFieldsFromParents(StrategyType type)
     {
         // Arrange
-        var config1 = new TradingConfiguration { MaxPositions = 3, MaxPositionPercent = 0.10m, HoldPeriodDays = 7 };
-        var config2 = new TradingConfiguration { MaxPositions = 15, MaxPositionPercent = 0.40m, HoldPeriodDays = 25 };
+        var config1 = new TradingConfiguration
+        {
+            MaxPositions = 3,
+            MaxPositionPercent = 0.10m,
+            HoldPeriodDays = 7,
+        };
+        var config2 = new TradingConfiguration
+        {
+            MaxPositions = 15,
+            MaxPositionPercent = 0.40m,
+            HoldPeriodDays = 25,
+        };
         var parent1 = StrategyChromosome.Create(type, config1);
         var parent2 = StrategyChromosome.Create(type, config2);
 
@@ -159,7 +169,11 @@ public sealed class StrategyChromosomeTests
         int?[] validMaxPositions = [config1.MaxPositions, config2.MaxPositions];
         validMaxPositions.ShouldContain(childConfig.MaxPositions);
 
-        var validMaxPositionPercents = new[] { config1.MaxPositionPercent, config2.MaxPositionPercent };
+        var validMaxPositionPercents = new[]
+        {
+            config1.MaxPositionPercent,
+            config2.MaxPositionPercent,
+        };
         validMaxPositionPercents.ShouldContain(childConfig.MaxPositionPercent);
 
         int?[] validHoldPeriodDays = [config1.HoldPeriodDays, config2.HoldPeriodDays];

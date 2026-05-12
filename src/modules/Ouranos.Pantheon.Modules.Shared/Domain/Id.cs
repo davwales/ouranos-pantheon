@@ -24,11 +24,7 @@ public readonly record struct Id<T>(string Value) : IParsable<Id<T>>
         return new Id<T>(s);
     }
 
-    public static bool TryParse(
-        [NotNullWhen(true)] string? s,
-        IFormatProvider? _,
-        out Id<T> result
-    )
+    public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? _, out Id<T> result)
     {
         if (string.IsNullOrWhiteSpace(s))
         {

@@ -10,18 +10,24 @@ namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.DataLoaders.Ffxiv;
 
 public sealed class FfxivSubscriptionInitializerTests
 {
-    private readonly ILogger<FfxivSubscriptionInitializer> _logger =
-        Substitute.For<ILogger<FfxivSubscriptionInitializer>>();
+    private readonly ILogger<FfxivSubscriptionInitializer> _logger = Substitute.For<
+        ILogger<FfxivSubscriptionInitializer>
+    >();
 
     private readonly IWebSocketClient _client = Substitute.For<IWebSocketClient>();
 
     private FfxivSubscriptionInitializer CreateInitializer(IReadOnlyCollection<int> worlds) =>
-        new(_logger, Options.Create(new FfxivDataLoaderOptions(
-            IsEnabled: true,
-            WebSocket: new WebSocketOptions(),
-            XivApi: new XivApiOptions(),
-            Worlds: worlds
-        )));
+        new(
+            _logger,
+            Options.Create(
+                new FfxivDataLoaderOptions(
+                    IsEnabled: true,
+                    WebSocket: new WebSocketOptions(),
+                    XivApi: new XivApiOptions(),
+                    Worlds: worlds
+                )
+            )
+        );
 
     [Fact]
     public async Task OnConnectedAsync_WhenNoWorldsConfigured_ShouldSubscribeGlobally()
@@ -33,10 +39,12 @@ public sealed class FfxivSubscriptionInitializerTests
         await initializer.OnConnectedAsync(_client, CancellationToken.None);
 
         // Assert
-        await _client.Received(1).SendAsync(
-            Arg.Is<SubscribeMessage>(m => m.Channel == "sales/add"),
-            Arg.Any<CancellationToken>()
-        );
+        await _client
+            .Received(1)
+            .SendAsync(
+                Arg.Is<SubscribeMessage>(m => m.Channel == "sales/add"),
+                Arg.Any<CancellationToken>()
+            );
     }
 
     [Fact]
@@ -49,10 +57,12 @@ public sealed class FfxivSubscriptionInitializerTests
         await initializer.OnConnectedAsync(_client, CancellationToken.None);
 
         // Assert
-        await _client.Received(2).SendAsync(
-            Arg.Is<SubscribeMessage>(m => m.Channel.StartsWith("sales/add{world=")),
-            Arg.Any<CancellationToken>()
-        );
+        await _client
+            .Received(2)
+            .SendAsync(
+                Arg.Is<SubscribeMessage>(m => m.Channel.StartsWith("sales/add{world=")),
+                Arg.Any<CancellationToken>()
+            );
     }
 
     [Fact]

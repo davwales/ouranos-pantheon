@@ -18,10 +18,17 @@ public sealed class GetMarketTradesEndpointTests
     {
         // Arrange
         var ct = CancellationToken.None;
-        var input = new GetMarketTradesInput(new Id<Market>(Guid.NewGuid().ToString()), TimeFrame.AllTime, Take: 10);
+        var input = new GetMarketTradesInput(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            TimeFrame.AllTime,
+            Take: 10
+        );
         var expected = new PagedResponse<GetMarketTradesResponse>([], 0, 0, 10);
 
-        _bus.InvokeAsync<PagedResponse<GetMarketTradesResponse>>(Arg.Any<object>(), Arg.Any<CancellationToken>())
+        _bus.InvokeAsync<PagedResponse<GetMarketTradesResponse>>(
+                Arg.Any<object>(),
+                Arg.Any<CancellationToken>()
+            )
             .Returns(Task.FromResult(expected));
 
         // Act

@@ -2,16 +2,12 @@
 
 public interface IGeneticAlgorithmEngine<T>
 {
-    public double EvaluateFitness(
-        IChromosome<T> chromosome
-    );
+    public double EvaluateFitness(IChromosome<T> chromosome);
 
     /// <summary>
     /// Evaluates fitness for a chromosome using both sync and async fitness components.
     /// </summary>
-    public Task<double> EvaluateFitnessAsync(
-        IChromosome<T> chromosome
-    );
+    public Task<double> EvaluateFitnessAsync(IChromosome<T> chromosome);
 
     public IChromosome<T> Evolve(
         IReadOnlyCollection<IChromosome<T>> population,

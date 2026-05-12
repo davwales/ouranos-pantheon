@@ -6,7 +6,6 @@ public sealed record TradingConfiguration(
     int? HoldPeriodDays = null
 )
 {
-    public TradingConfiguration() : this(null, null)
-    {
-    }
+    public TradingConfiguration()
+        : this(null, null) { }
 }

@@ -11,8 +11,8 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Executors;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization.Chromosomes;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization.Chromosomes;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 using Ouranos.Pantheon.Modules.Shared.Algorithms.Genetic;
@@ -26,7 +26,9 @@ namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Strategies.OptimizeStra
 public sealed class OptimizeStrategyConsumerTests
 {
     private readonly IFixture _fixture = new Fixture();
-    private readonly ILogger<OptimizeStrategyConsumer> _logger = Substitute.For<ILogger<OptimizeStrategyConsumer>>();
+    private readonly ILogger<OptimizeStrategyConsumer> _logger = Substitute.For<
+        ILogger<OptimizeStrategyConsumer>
+    >();
     private readonly IDbContextFactory<PlutusDbContext> _dbContextFactory;
     private readonly IBacktestDataQueryService _dataService;
     private readonly IOptions<OptimizationOptions> _options;
@@ -45,56 +47,49 @@ public sealed class OptimizeStrategyConsumerTests
         var initLogger = Substitute.For<ILogger<InitializeStep>>();
         var scoreLogger = Substitute.For<ILogger<ScoreSymbolsStep>>();
 
-        _stepRegistry = new StepRegistry<BacktestPayload>(
-            [
-                new InitializeStep(initLogger, _dataService, executors, compositeExecutor),
-                new ScoreSymbolsStep(scoreLogger, []),
-                new CloseExitsStep([]),
-                new IterationSetupStep(_dbContextFactory),
-                new BuyCandidatesStep(),
-                new TrackMetricsStep(),
-                new LiquidateStep(),
-                new ComputeResultsStep(),
-            ]
-        );
+        _stepRegistry = new StepRegistry<BacktestPayload>([
+            new InitializeStep(initLogger, _dataService, executors, compositeExecutor),
+            new ScoreSymbolsStep(scoreLogger, []),
+            new CloseExitsStep([]),
+            new IterationSetupStep(_dbContextFactory),
+            new BuyCandidatesStep(),
+            new TrackMetricsStep(),
+            new LiquidateStep(),
+            new ComputeResultsStep(),
+        ]);
 
         _options = Options.Create(new OptimizationOptions());
         _backtestDataOptions = Options.Create(new BacktestDataOptions());
     }
 
-    private OptimizeStrategyConsumer CreateConsumer() => new(
-        _logger,
-        _dbContextFactory,
-        _dataService,
-        _options,
-        _backtestDataOptions,
-        _stepRegistry
-    );
-
-    private BacktestData CreateBacktestData(Market market, List<Symbol> symbols)
-    {
-        return BacktestData.FromRaw(
-            market,
-            symbols,
-            [],
-            [],
-            [],
-            []
-        );
-    }
-
-    [Fact]
-    public void Constructor_WhenNullLogger_ShouldThrow()
-    {
-        // Arrange & Act
-        var act = () => new OptimizeStrategyConsumer(
-            null!,
+    private OptimizeStrategyConsumer CreateConsumer() =>
+        new(
+            _logger,
             _dbContextFactory,
             _dataService,
             _options,
             _backtestDataOptions,
             _stepRegistry
         );
+
+    private BacktestData CreateBacktestData(Market market, List<Symbol> symbols)
+    {
+        return BacktestData.FromRaw(market, symbols, [], [], [], []);
+    }
+
+    [Fact]
+    public void Constructor_WhenNullLogger_ShouldThrow()
+    {
+        // Arrange & Act
+        var act = () =>
+            new OptimizeStrategyConsumer(
+                null!,
+                _dbContextFactory,
+                _dataService,
+                _options,
+                _backtestDataOptions,
+                _stepRegistry
+            );
 
         // Assert
         act.ShouldThrow<ArgumentNullException>();
@@ -104,14 +99,15 @@ public sealed class OptimizeStrategyConsumerTests
     public void Constructor_WhenNullDbContextFactory_ShouldThrow()
     {
         // Arrange & Act
-        var act = () => new OptimizeStrategyConsumer(
-            _logger,
-            null!,
-            _dataService,
-            _options,
-            _backtestDataOptions,
-            _stepRegistry
-        );
+        var act = () =>
+            new OptimizeStrategyConsumer(
+                _logger,
+                null!,
+                _dataService,
+                _options,
+                _backtestDataOptions,
+                _stepRegistry
+            );
 
         // Assert
         act.ShouldThrow<ArgumentNullException>();
@@ -121,14 +117,15 @@ public sealed class OptimizeStrategyConsumerTests
     public void Constructor_WhenNullDataService_ShouldThrow()
     {
         // Arrange & Act
-        var act = () => new OptimizeStrategyConsumer(
-            _logger,
-            _dbContextFactory,
-            null!,
-            _options,
-            _backtestDataOptions,
-            _stepRegistry
-        );
+        var act = () =>
+            new OptimizeStrategyConsumer(
+                _logger,
+                _dbContextFactory,
+                null!,
+                _options,
+                _backtestDataOptions,
+                _stepRegistry
+            );
 
         // Assert
         act.ShouldThrow<ArgumentNullException>();
@@ -138,14 +135,15 @@ public sealed class OptimizeStrategyConsumerTests
     public void Constructor_WhenNullOptions_ShouldThrow()
     {
         // Arrange & Act
-        var act = () => new OptimizeStrategyConsumer(
-            _logger,
-            _dbContextFactory,
-            _dataService,
-            null!,
-            _backtestDataOptions,
-            _stepRegistry
-        );
+        var act = () =>
+            new OptimizeStrategyConsumer(
+                _logger,
+                _dbContextFactory,
+                _dataService,
+                null!,
+                _backtestDataOptions,
+                _stepRegistry
+            );
 
         // Assert
         act.ShouldThrow<ArgumentNullException>();
@@ -155,14 +153,15 @@ public sealed class OptimizeStrategyConsumerTests
     public void Constructor_WhenNullBacktestDataOptions_ShouldThrow()
     {
         // Arrange & Act
-        var act = () => new OptimizeStrategyConsumer(
-            _logger,
-            _dbContextFactory,
-            _dataService,
-            _options,
-            null!,
-            _stepRegistry
-        );
+        var act = () =>
+            new OptimizeStrategyConsumer(
+                _logger,
+                _dbContextFactory,
+                _dataService,
+                _options,
+                null!,
+                _stepRegistry
+            );
 
         // Assert
         act.ShouldThrow<ArgumentNullException>();
@@ -229,18 +228,21 @@ public sealed class OptimizeStrategyConsumerTests
         );
 
         var baseTime = DateTimeOffset.UtcNow.AddDays(-5);
-        var trades = Enumerable.Range(0, 4)
-            .Select(i => Trade.Create(
-                    _fixture.Create<Id<Trade>>(),
-                    symbolId,
-                    100m,
-                    10m,
-                    baseTime.AddDays(i)
-                )
+        var trades = Enumerable
+            .Range(0, 4)
+            .Select(i =>
+                Trade.Create(_fixture.Create<Id<Trade>>(), symbolId, 100m, 10m, baseTime.AddDays(i))
             )
             .ToList();
 
-        var symbol = Symbol.Create(symbolId, "SYM", null, "Test Symbol", marketId, new AdditionalFields());
+        var symbol = Symbol.Create(
+            symbolId,
+            "SYM",
+            null,
+            "Test Symbol",
+            marketId,
+            new AdditionalFields()
+        );
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
 
         await using (var dbContext = await _dbContextFactory.CreateDbContextAsync())
@@ -255,7 +257,8 @@ public sealed class OptimizeStrategyConsumerTests
 
         var backtestData = CreateBacktestData(market, [symbol]);
 
-        _dataService.LoadDataAsync(
+        _dataService
+            .LoadDataAsync(
                 marketId,
                 Arg.Any<DateTimeOffset>(),
                 Arg.Any<DateTimeOffset>(),
@@ -265,11 +268,7 @@ public sealed class OptimizeStrategyConsumerTests
             .Returns(backtestData);
 
         var consumer = CreateConsumer();
-        var message = new OptimizeStrategyMessage(
-            backtest.Id,
-            Generations: 1,
-            PopulationSize: 2
-        );
+        var message = new OptimizeStrategyMessage(backtest.Id, Generations: 1, PopulationSize: 2);
 
         // Act
         await consumer.Handle(message, CancellationToken.None);
@@ -313,21 +312,20 @@ public sealed class OptimizeStrategyConsumerTests
             await dbContext.SeedData(backtest);
         }
 
-        _dataService.LoadDataAsync(
+        _dataService
+            .LoadDataAsync(
                 marketId,
                 Arg.Any<DateTimeOffset>(),
                 Arg.Any<DateTimeOffset>(),
                 Arg.Any<CancellationToken>(),
                 Arg.Any<int>()
             )
-            .Returns(Task.FromException<BacktestData>(new InvalidOperationException("Simulated failure")));
+            .Returns(
+                Task.FromException<BacktestData>(new InvalidOperationException("Simulated failure"))
+            );
 
         var consumer = CreateConsumer();
-        var message = new OptimizeStrategyMessage(
-            backtest.Id,
-            Generations: 1,
-            PopulationSize: 2
-        );
+        var message = new OptimizeStrategyMessage(backtest.Id, Generations: 1, PopulationSize: 2);
 
         // Act
         await consumer.Handle(message, CancellationToken.None);
@@ -346,7 +344,12 @@ public sealed class OptimizeStrategyConsumerTests
     public void ExtractStrategyChromosome_WhenValidChromosome_ShouldReturnChromosome()
     {
         // Arrange
-        var config = new TradingConfiguration { MaxPositions = 5, MaxPositionPercent = 0.2m, HoldPeriodDays = 10 };
+        var config = new TradingConfiguration
+        {
+            MaxPositions = 5,
+            MaxPositionPercent = 0.2m,
+            HoldPeriodDays = 10,
+        };
         var weights = new SignalWeightedConfig(
             BuyThreshold: 50m,
             SellThreshold: 50m,

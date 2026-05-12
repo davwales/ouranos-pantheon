@@ -2,16 +2,16 @@ using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Application;
-using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetRecipeTrades.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
+using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Pagination;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
+using Ouranos.Pantheon.Modules.Shared.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetRecipeTrades;
 
@@ -20,7 +20,11 @@ public sealed class GetRecipeTradesHandler
 {
     private static readonly FilterBuilder<GetRecipeTradesResponse> FilterBuilder =
         new FilterBuilder<GetRecipeTradesResponse>()
-            .On(nameof(GetRecipeTradesResponse.RecipeName), x => x.RecipeName, caseInsensitive: true)
+            .On(
+                nameof(GetRecipeTradesResponse.RecipeName),
+                x => x.RecipeName,
+                caseInsensitive: true
+            )
             .On(nameof(GetRecipeTradesResponse.LatestBuyPrice), x => x.LatestBuyPrice)
             .On(nameof(GetRecipeTradesResponse.LatestSellPrice), x => x.LatestSellPrice)
             .On(nameof(GetRecipeTradesResponse.LatestMargin), x => x.LatestMargin)
@@ -68,10 +72,15 @@ public sealed class GetRecipeTradesHandler
 
         var limits = _queryOptions.Value;
         Guard.Against.OutOfRange(input.Skip, nameof(input.Skip), 0, limits.MaxSkip);
-        Guard.Against.OutOfRange(input.Take, nameof(input.Take), limits.MinPageSize, limits.MaxPageSize);
+        Guard.Against.OutOfRange(
+            input.Take,
+            nameof(input.Take),
+            limits.MinPageSize,
+            limits.MaxPageSize
+        );
 
-        var recipes = await _dbContext.Recipes
-            .AsNoTracking()
+        var recipes = await _dbContext
+            .Recipes.AsNoTracking()
             .Include(r => r.Inputs)
             .Include(r => r.Outputs)
             .Where(r => r.MarketId == input.MarketId)
@@ -80,12 +89,7 @@ public sealed class GetRecipeTradesHandler
         if (recipes.Count == 0)
         {
             _logger.LogDebug("No recipes found for market '{marketId}'.", input.MarketId);
-            return new PagedResponse<GetRecipeTradesResponse>(
-                [],
-                0,
-                input.Skip,
-                input.Take
-            );
+            return new PagedResponse<GetRecipeTradesResponse>([], 0, input.Skip, input.Take);
         }
 
         var symbolIds = recipes
@@ -102,8 +106,8 @@ public sealed class GetRecipeTradesHandler
 
         var validRecipes = recipes
             .Where(r =>
-                r.Inputs.All(x => prices.ContainsKey(x.SymbolId)) &&
-                r.Outputs.All(x => prices.ContainsKey(x.SymbolId))
+                r.Inputs.All(x => prices.ContainsKey(x.SymbolId))
+                && r.Outputs.All(x => prices.ContainsKey(x.SymbolId))
             )
             .ToList();
 
@@ -112,46 +116,43 @@ public sealed class GetRecipeTradesHandler
             {
                 r.Id,
                 r.Name,
-                LatestBuyPrice = r.Inputs.Sum(i => prices[i.SymbolId].LatestPrice * i.Quantity) + r.Cost,
+                LatestBuyPrice = r.Inputs.Sum(i => prices[i.SymbolId].LatestPrice * i.Quantity)
+                    + r.Cost,
                 LatestSellPrice = r.Outputs.Sum(i => prices[i.SymbolId].LatestPrice * i.Quantity),
-                AverageBuyPrice = r.Inputs.Sum(i => prices[i.SymbolId].AveragePrice * i.Quantity) + r.Cost,
-                AverageSellPrice = r.Outputs.Sum(i => prices[i.SymbolId].AveragePrice * i.Quantity)
-            }
-            )
+                AverageBuyPrice = r.Inputs.Sum(i => prices[i.SymbolId].AveragePrice * i.Quantity)
+                    + r.Cost,
+                AverageSellPrice = r.Outputs.Sum(i => prices[i.SymbolId].AveragePrice * i.Quantity),
+            })
             .Union(
-                recipes.Except(validRecipes).Select(r => new
-                {
-                    r.Id,
-                    r.Name,
-                    LatestBuyPrice = (decimal)0,
-                    LatestSellPrice = (decimal)0,
-                    AverageBuyPrice = (decimal)0,
-                    AverageSellPrice = (decimal)0
-                }
-                )
+                recipes
+                    .Except(validRecipes)
+                    .Select(r => new
+                    {
+                        r.Id,
+                        r.Name,
+                        LatestBuyPrice = (decimal)0,
+                        LatestSellPrice = (decimal)0,
+                        AverageBuyPrice = (decimal)0,
+                        AverageSellPrice = (decimal)0,
+                    })
             )
             .Select(x => new GetRecipeTradesResponse(
-                    x.Id,
-                    x.Name,
-                    x.LatestBuyPrice,
-                    x.LatestSellPrice,
-                    x.LatestSellPrice - x.LatestBuyPrice,
-                    x.AverageBuyPrice,
-                    x.AverageSellPrice,
-                    x.AverageSellPrice - x.AverageBuyPrice
-                )
-            )
+                x.Id,
+                x.Name,
+                x.LatestBuyPrice,
+                x.LatestSellPrice,
+                x.LatestSellPrice - x.LatestBuyPrice,
+                x.AverageBuyPrice,
+                x.AverageSellPrice,
+                x.AverageSellPrice - x.AverageBuyPrice
+            ))
             .ToList();
 
         var filtered = results.AsQueryable().FilterBy(input.Filter, FilterBuilder);
         var totalCount = filtered.Count();
 
         var page = filtered
-            .SortBy(
-                input.SortField,
-                input.SortDirection,
-                SortBuilder
-            )
+            .SortBy(input.SortField, input.SortDirection, SortBuilder)
             .Paginate(input.Skip, input.Take)
             .ToList();
 
@@ -165,12 +166,9 @@ public sealed class GetRecipeTradesHandler
         CancellationToken cancellationToken
     )
     {
-        var priceQuery = _dbContext.Trades
-            .AsNoTracking()
-            .Where(x =>
-                (since == null || x.Timestamp >= since) &&
-                symbolIds.Contains(x.SymbolId)
-            )
+        var priceQuery = _dbContext
+            .Trades.AsNoTracking()
+            .Where(x => (since == null || x.Timestamp >= since) && symbolIds.Contains(x.SymbolId))
             .OrderByDescending(x => x.Timestamp)
             .GroupBy(x => x.SymbolId)
             .Select(g => new
@@ -178,35 +176,19 @@ public sealed class GetRecipeTradesHandler
                 SymbolId = g.Key,
                 TotalSpent = g.Sum(x => x.Price * x.Volume),
                 Volume = g.Sum(x => x.Volume),
-                LatestPrice = g.First().Price
-            }
-            )
-            .Select(x => new SymbolPrice(
-                    x.SymbolId,
-                    x.TotalSpent / x.Volume,
-                    x.LatestPrice
-                )
-            );
+                LatestPrice = g.First().Price,
+            })
+            .Select(x => new SymbolPrice(x.SymbolId, x.TotalSpent / x.Volume, x.LatestPrice));
 
         var prices = await priceQuery.ToListAsync(cancellationToken);
 
         return prices.ToDictionary(
             x => x.Id,
-            x => new IntermediatePrice(
-                x.AveragePrice,
-                x.LatestPrice
-            )
+            x => new IntermediatePrice(x.AveragePrice, x.LatestPrice)
         );
     }
 
-    private record SymbolPrice(
-        Id<Symbol> Id,
-        decimal AveragePrice,
-        decimal LatestPrice
-    );
+    private record SymbolPrice(Id<Symbol> Id, decimal AveragePrice, decimal LatestPrice);
 
-    private record IntermediatePrice(
-        decimal AveragePrice,
-        decimal LatestPrice
-    );
+    private record IntermediatePrice(decimal AveragePrice, decimal LatestPrice);
 }

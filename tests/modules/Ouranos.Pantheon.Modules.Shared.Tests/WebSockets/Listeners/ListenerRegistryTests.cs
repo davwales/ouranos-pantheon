@@ -1,7 +1,7 @@
 ﻿using Ouranos.Pantheon.Modules.Shared.WebSockets.Listeners;
+using Ouranos.Pantheon.Modules.Shared.WebSockets.Serializers;
 using Ouranos.Pantheon.Modules.Shared.WebSockets.WebSocketClients;
 using Ouranos.Pantheon.Tests.Utils;
-using Ouranos.Pantheon.Modules.Shared.WebSockets.Serializers;
 
 namespace Ouranos.Pantheon.Modules.Shared.Tests.WebSockets.Listeners;
 

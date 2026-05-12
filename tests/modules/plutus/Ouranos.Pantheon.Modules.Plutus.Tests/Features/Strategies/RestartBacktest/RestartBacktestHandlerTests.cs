@@ -8,8 +8,8 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
-using Strategy = Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Strategy;
 using Wolverine;
+using Strategy = Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Strategy;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Strategies.RestartBacktest;
 
@@ -17,7 +17,9 @@ public sealed class RestartBacktestHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly RestartBacktestHandler _handler;
-    private readonly ILogger<RestartBacktestHandler> _logger = Substitute.For<ILogger<RestartBacktestHandler>>();
+    private readonly ILogger<RestartBacktestHandler> _logger = Substitute.For<
+        ILogger<RestartBacktestHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
     private readonly IMessageBus _bus = Substitute.For<IMessageBus>();
 
@@ -73,7 +75,8 @@ public sealed class RestartBacktestHandlerTests
         saved.ProgressPercent.ShouldBe(0);
         saved.Results.ShouldBeNull();
 
-        await _bus.Received(1).PublishAsync(Arg.Is<RunBacktestMessage>(m => m.BacktestId == backtest.Id));
+        await _bus.Received(1)
+            .PublishAsync(Arg.Is<RunBacktestMessage>(m => m.BacktestId == backtest.Id));
     }
 
     [Fact]

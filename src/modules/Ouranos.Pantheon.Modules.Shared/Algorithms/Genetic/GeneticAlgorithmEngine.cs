@@ -11,7 +11,9 @@ public sealed class GeneticAlgorithmEngine<T>(
 
     public double EvaluateFitness(IChromosome<T> chromosome)
     {
-        return fitnessComponents.Sum(component => component.Weight * component.FitnessFunction(chromosome));
+        return fitnessComponents.Sum(component =>
+            component.Weight * component.FitnessFunction(chromosome)
+        );
     }
 
     public async Task<double> EvaluateFitnessAsync(IChromosome<T> chromosome)
@@ -48,7 +50,10 @@ public sealed class GeneticAlgorithmEngine<T>(
 
             // Evaluate fitness for all chromosomes
             var evaluatedChromosomes = currentPopulation
-                .Select(chromosome => new EvaluatedChromosome(EvaluateFitness(chromosome), chromosome))
+                .Select(chromosome => new EvaluatedChromosome(
+                    EvaluateFitness(chromosome),
+                    chromosome
+                ))
                 .OrderByDescending(evaluatedChromosome => evaluatedChromosome.Fitness)
                 .ToList();
 
@@ -78,9 +83,7 @@ public sealed class GeneticAlgorithmEngine<T>(
             onGenerationCompleted?.Invoke(generation, currentPopulation.ToList().AsReadOnly());
         }
 
-        return currentPopulation
-            .OrderByDescending(EvaluateFitness)
-            .First();
+        return currentPopulation.OrderByDescending(EvaluateFitness).First();
     }
 
     public async Task<IChromosome<T>> EvolveAsync(
@@ -101,7 +104,8 @@ public sealed class GeneticAlgorithmEngine<T>(
             var fitnessTasks = currentPopulation
                 .Select(async chromosome => new EvaluatedChromosome(
                     await EvaluateFitnessAsync(chromosome),
-                    chromosome))
+                    chromosome
+                ))
                 .ToList();
 
             var evaluatedChromosomes = (await Task.WhenAll(fitnessTasks))
@@ -134,7 +138,10 @@ public sealed class GeneticAlgorithmEngine<T>(
 
             if (onGenerationCompletedAsync is not null)
             {
-                await onGenerationCompletedAsync(generation, currentPopulation.ToList().AsReadOnly());
+                await onGenerationCompletedAsync(
+                    generation,
+                    currentPopulation.ToList().AsReadOnly()
+                );
             }
         }
 
@@ -142,15 +149,13 @@ public sealed class GeneticAlgorithmEngine<T>(
         var finalFitnessTasks = currentPopulation
             .Select(async chromosome => new EvaluatedChromosome(
                 await EvaluateFitnessAsync(chromosome),
-                chromosome))
+                chromosome
+            ))
             .ToList();
 
         var finalEvaluated = await Task.WhenAll(finalFitnessTasks);
 
-        return finalEvaluated
-            .OrderByDescending(e => e.Fitness)
-            .First()
-            .Chromosome;
+        return finalEvaluated.OrderByDescending(e => e.Fitness).First().Chromosome;
     }
 
     private IChromosome<T> SelectParent(IReadOnlyList<EvaluatedChromosome> evaluatedChromosomes)
@@ -167,5 +172,5 @@ public sealed class GeneticAlgorithmEngine<T>(
         return tournament[0].Chromosome;
     }
 
-    private record EvaluatedChromosome(double Fitness, IChromosome<T> Chromosome);
+    private sealed record EvaluatedChromosome(double Fitness, IChromosome<T> Chromosome);
 }

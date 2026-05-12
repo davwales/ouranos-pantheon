@@ -66,8 +66,30 @@ public sealed class MarketTradeSnapshotTests
         var symbolId = _fixture.Create<Id<Symbol>>();
 
         // Act
-        var snapshot1 = MarketTradeSnapshot.Create(marketId, symbolId, TimeFrame.OneDay, 0, 0, 0, 0, 0, 0, 0);
-        var snapshot2 = MarketTradeSnapshot.Create(marketId, symbolId, TimeFrame.OneDay, 0, 0, 0, 0, 0, 0, 0);
+        var snapshot1 = MarketTradeSnapshot.Create(
+            marketId,
+            symbolId,
+            TimeFrame.OneDay,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+        );
+        var snapshot2 = MarketTradeSnapshot.Create(
+            marketId,
+            symbolId,
+            TimeFrame.OneDay,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+        );
 
         // Assert
         snapshot1.Id.ShouldNotBe(snapshot2.Id);
@@ -86,19 +108,20 @@ public sealed class MarketTradeSnapshotTests
         );
 
         // Act
-        var act = () => MarketTradeSnapshot.Create(
-            marketId,
-            symbolId,
-            TimeFrame.OneDay,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            market: wrongMarket
-        );
+        var act = () =>
+            MarketTradeSnapshot.Create(
+                marketId,
+                symbolId,
+                TimeFrame.OneDay,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                market: wrongMarket
+            );
 
         // Assert
         act.ShouldThrow<ArgumentException>();
@@ -120,19 +143,20 @@ public sealed class MarketTradeSnapshotTests
         );
 
         // Act
-        var act = () => MarketTradeSnapshot.Create(
-            marketId,
-            symbolId,
-            TimeFrame.OneDay,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            symbol: wrongSymbol
-        );
+        var act = () =>
+            MarketTradeSnapshot.Create(
+                marketId,
+                symbolId,
+                TimeFrame.OneDay,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                symbol: wrongSymbol
+            );
 
         // Assert
         act.ShouldThrow<ArgumentException>();

@@ -26,7 +26,16 @@ public sealed class BollingerBandsSignalComputerTests
     public async Task ComputeAsync_WhenOnlyOneBucket_ReturnsNull()
     {
         // Arrange
-        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, null, null, null, [Bucket(100m)]);
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            0m,
+            1000m,
+            null,
+            null,
+            null,
+            [Bucket(100m)]
+        );
 
         // Act
         var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
@@ -40,7 +49,16 @@ public sealed class BollingerBandsSignalComputerTests
     {
         // Arrange
         var buckets = Enumerable.Range(0, 10).Select(_ => Bucket(100m)).ToList();
-        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, null, null, null, buckets);
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            0m,
+            1000m,
+            null,
+            null,
+            null,
+            buckets
+        );
 
         // Act
         var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
@@ -67,10 +85,20 @@ public sealed class BollingerBandsSignalComputerTests
             Bucket(100m),
         };
 
-        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, null, null, null, buckets);
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            0m,
+            1000m,
+            null,
+            null,
+            null,
+            buckets
+        );
 
         // Act
-        var result = await BuildComputer(multiplier: 2).ComputeAsync(context, CancellationToken.None);
+        var result = await BuildComputer(multiplier: 2)
+            .ComputeAsync(context, CancellationToken.None);
 
         // Assert
         result.ShouldNotBeNull();
@@ -82,10 +110,20 @@ public sealed class BollingerBandsSignalComputerTests
     {
         // Arrange
         var buckets = Enumerable.Range(0, 9).Select(_ => Bucket(100m)).Append(Bucket(60m)).ToList();
-        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, null, null, null, buckets);
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            0m,
+            1000m,
+            null,
+            null,
+            null,
+            buckets
+        );
 
         // Act
-        var result = await BuildComputer(multiplier: 2).ComputeAsync(context, CancellationToken.None);
+        var result = await BuildComputer(multiplier: 2)
+            .ComputeAsync(context, CancellationToken.None);
 
         // Assert
         result.ShouldNotBeNull();
@@ -96,11 +134,25 @@ public sealed class BollingerBandsSignalComputerTests
     public async Task ComputeAsync_WhenCurrentPriceRisesAboveUpperBand_ReturnsBearish()
     {
         // Arrange
-        var buckets = Enumerable.Range(0, 9).Select(_ => Bucket(100m)).Append(Bucket(150m)).ToList();
-        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, null, null, null, buckets);
+        var buckets = Enumerable
+            .Range(0, 9)
+            .Select(_ => Bucket(100m))
+            .Append(Bucket(150m))
+            .ToList();
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            0m,
+            1000m,
+            null,
+            null,
+            null,
+            buckets
+        );
 
         // Act
-        var result = await BuildComputer(multiplier: 2).ComputeAsync(context, CancellationToken.None);
+        var result = await BuildComputer(multiplier: 2)
+            .ComputeAsync(context, CancellationToken.None);
 
         // Assert
         result.ShouldNotBeNull();
@@ -111,11 +163,25 @@ public sealed class BollingerBandsSignalComputerTests
     public async Task ComputeAsync_WhenMultiplierIsZero_ReturnsNull()
     {
         // Arrange
-        var buckets = Enumerable.Range(0, 9).Select(_ => Bucket(100m)).Append(Bucket(105m)).ToList();
-        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, null, null, null, buckets);
+        var buckets = Enumerable
+            .Range(0, 9)
+            .Select(_ => Bucket(100m))
+            .Append(Bucket(105m))
+            .ToList();
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            0m,
+            1000m,
+            null,
+            null,
+            null,
+            buckets
+        );
 
         // Act
-        var result = await BuildComputer(multiplier: 0).ComputeAsync(context, CancellationToken.None);
+        var result = await BuildComputer(multiplier: 0)
+            .ComputeAsync(context, CancellationToken.None);
 
         // Assert
         result.ShouldBeNull();

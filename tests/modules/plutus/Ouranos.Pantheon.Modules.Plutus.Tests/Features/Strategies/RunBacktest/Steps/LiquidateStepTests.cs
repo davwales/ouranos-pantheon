@@ -38,17 +38,14 @@ public sealed class LiquidateStepTests
         );
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var endDate = DateTimeOffset.UtcNow;
-        var parameters = new BacktestParameters(
-            marketId,
-            strategy,
-            startDate,
-            endDate,
-            10000m
-        );
+        var parameters = new BacktestParameters(marketId, strategy, startDate, endDate, 10000m);
         var payload = new BacktestPayload(parameters);
         var dateOnly = DateOnly.FromDateTime(endDate.UtcDateTime);
 
-        var dailyAggregates = new List<DailyTradeAggregate> { new(symbolId, dateOnly, 150m, 150m, 150m, 1000m) };
+        var dailyAggregates = new List<DailyTradeAggregate>
+        {
+            new(symbolId, dateOnly, 150m, 150m, 150m, 1000m),
+        };
         var data = BacktestData.FromRaw(market, [], [], [], [], dailyAggregates);
         payload.Context = new BacktestContext(data, executor, 0m, 7, startDate);
 
@@ -95,13 +92,7 @@ public sealed class LiquidateStepTests
         );
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var endDate = DateTimeOffset.UtcNow;
-        var parameters = new BacktestParameters(
-            marketId,
-            strategy,
-            startDate,
-            endDate,
-            10000m
-        );
+        var parameters = new BacktestParameters(marketId, strategy, startDate, endDate, 10000m);
         var payload = new BacktestPayload(parameters);
 
         var data = BacktestData.FromRaw(market, [], [], [], [], []);
@@ -146,17 +137,14 @@ public sealed class LiquidateStepTests
         );
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var endDate = DateTimeOffset.UtcNow;
-        var parameters = new BacktestParameters(
-            marketId,
-            strategy,
-            startDate,
-            endDate,
-            10000m
-        );
+        var parameters = new BacktestParameters(marketId, strategy, startDate, endDate, 10000m);
         var payload = new BacktestPayload(parameters);
         var dateOnly = DateOnly.FromDateTime(endDate.UtcDateTime);
 
-        var dailyAggregates = new List<DailyTradeAggregate> { new(symbolId, dateOnly, 150m, 150m, 150m, 1m) };
+        var dailyAggregates = new List<DailyTradeAggregate>
+        {
+            new(symbolId, dateOnly, 150m, 150m, 150m, 1m),
+        };
         var data = BacktestData.FromRaw(market, [], [], [], [], dailyAggregates);
         payload.Context = new BacktestContext(data, executor, 0m, 7, startDate);
 
@@ -189,7 +177,11 @@ public sealed class LiquidateStepTests
         // Arrange
         var symbolId = _fixture.Create<Id<Symbol>>();
         var marketId = _fixture.Create<Id<Market>>();
-        var market = Market.Create(marketId, "Test Market", new Taxes(new FlatTax(0m, 100m, 0.10m)));
+        var market = Market.Create(
+            marketId,
+            "Test Market",
+            new Taxes(new FlatTax(0m, 100m, 0.10m))
+        );
         var executor = Substitute.For<IStrategyExecutor>();
         var strategy = Strategy.Create(
             marketId,
@@ -201,17 +193,14 @@ public sealed class LiquidateStepTests
         );
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var endDate = DateTimeOffset.UtcNow;
-        var parameters = new BacktestParameters(
-            marketId,
-            strategy,
-            startDate,
-            endDate,
-            10000m
-        );
+        var parameters = new BacktestParameters(marketId, strategy, startDate, endDate, 10000m);
         var payload = new BacktestPayload(parameters);
         var dateOnly = DateOnly.FromDateTime(endDate.UtcDateTime);
 
-        var dailyAggregates = new List<DailyTradeAggregate> { new(symbolId, dateOnly, 150m, 150m, 150m, 1m) };
+        var dailyAggregates = new List<DailyTradeAggregate>
+        {
+            new(symbolId, dateOnly, 150m, 150m, 150m, 1m),
+        };
         var data = BacktestData.FromRaw(market, [], [], [], [], dailyAggregates);
         payload.Context = new BacktestContext(data, executor, 0.10m, 7, startDate);
 
@@ -252,17 +241,14 @@ public sealed class LiquidateStepTests
         );
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var endDate = DateTimeOffset.UtcNow;
-        var parameters = new BacktestParameters(
-            marketId,
-            strategy,
-            startDate,
-            endDate,
-            10000m
-        );
+        var parameters = new BacktestParameters(marketId, strategy, startDate, endDate, 10000m);
         var payload = new BacktestPayload(parameters);
         var dateOnly = DateOnly.FromDateTime(endDate.UtcDateTime);
 
-        var dailyAggregates = new List<DailyTradeAggregate> { new(symbolId, dateOnly, 150m, 150m, 150m, 20m) };
+        var dailyAggregates = new List<DailyTradeAggregate>
+        {
+            new(symbolId, dateOnly, 150m, 150m, 150m, 20m),
+        };
         var data = BacktestData.FromRaw(market, [], [], [], [], dailyAggregates);
         payload.Context = new BacktestContext(data, executor, 0m, 7, startDate);
 
@@ -310,13 +296,7 @@ public sealed class LiquidateStepTests
         );
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var endDate = DateTimeOffset.UtcNow;
-        var parameters = new BacktestParameters(
-            marketId,
-            strategy,
-            startDate,
-            endDate,
-            10000m
-        );
+        var parameters = new BacktestParameters(marketId, strategy, startDate, endDate, 10000m);
         var payload = new BacktestPayload(parameters)
         {
             Context = new BacktestContext(
@@ -325,7 +305,7 @@ public sealed class LiquidateStepTests
                 0m,
                 7,
                 startDate
-            )
+            ),
         };
 
         var context = new PipelineContext(CancellationToken.None);
@@ -370,7 +350,7 @@ public sealed class LiquidateStepTests
                 0m,
                 7,
                 parameters.StartDate
-            )
+            ),
         };
 
         var cancelledCts = new CancellationTokenSource();
@@ -379,7 +359,9 @@ public sealed class LiquidateStepTests
         var step = new LiquidateStep();
 
         // Act & Assert
-        await Should.ThrowAsync<OperationCanceledException>(() => step.ExecuteAsync(context, payload));
+        await Should.ThrowAsync<OperationCanceledException>(() =>
+            step.ExecuteAsync(context, payload)
+        );
     }
 
     [Fact]

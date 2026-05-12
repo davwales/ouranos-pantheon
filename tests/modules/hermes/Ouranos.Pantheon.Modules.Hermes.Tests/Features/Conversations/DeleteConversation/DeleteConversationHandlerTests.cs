@@ -18,7 +18,9 @@ public sealed class DeleteConversationHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly DeleteConversationHandler _handler;
-    private readonly ILogger<DeleteConversationHandler> _logger = Substitute.For<ILogger<DeleteConversationHandler>>();
+    private readonly ILogger<DeleteConversationHandler> _logger = Substitute.For<
+        ILogger<DeleteConversationHandler>
+    >();
     private readonly HermesDbContext _dbContext;
 
     public DeleteConversationHandlerTests()
@@ -36,7 +38,8 @@ public sealed class DeleteConversationHandlerTests
             new Id<Conversation>(Guid.NewGuid().ToString()),
             new Id<Persona>(Guid.NewGuid().ToString()),
             new Id<ModelConfig>(Guid.NewGuid().ToString()),
-            [], [],
+            [],
+            [],
             _fixture.Create<string>()
         );
 

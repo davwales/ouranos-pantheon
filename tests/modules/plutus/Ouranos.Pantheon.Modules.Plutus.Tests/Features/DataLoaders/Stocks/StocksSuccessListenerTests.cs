@@ -9,7 +9,9 @@ namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.DataLoaders.Stocks;
 
 public sealed class StocksSuccessListenerTests
 {
-    private readonly ILogger<StocksSuccessListener> _logger = Substitute.For<ILogger<StocksSuccessListener>>();
+    private readonly ILogger<StocksSuccessListener> _logger = Substitute.For<
+        ILogger<StocksSuccessListener>
+    >();
     private readonly IWebSocketClient _client = Substitute.For<IWebSocketClient>();
     private readonly StocksDataLoaderOptions _options;
     private readonly StocksSuccessListener _listener;
@@ -36,10 +38,12 @@ public sealed class StocksSuccessListenerTests
         await _listener.HandleMessageAsync(message, _client, CancellationToken.None);
 
         // Assert
-        await _client.Received(1).SendAsync(
-            Arg.Is<AuthMessage>(m => m.Key == "test-key" && m.Secret == "test-secret"),
-            Arg.Any<CancellationToken>()
-        );
+        await _client
+            .Received(1)
+            .SendAsync(
+                Arg.Is<AuthMessage>(m => m.Key == "test-key" && m.Secret == "test-secret"),
+                Arg.Any<CancellationToken>()
+            );
     }
 
     [Fact]
@@ -52,10 +56,14 @@ public sealed class StocksSuccessListenerTests
         await _listener.HandleMessageAsync(message, _client, CancellationToken.None);
 
         // Assert
-        await _client.Received(1).SendAsync(
-            Arg.Is<SubscribeMessage>(m => m.Trades.Contains("AAPL") && m.Trades.Contains("MSFT")),
-            Arg.Any<CancellationToken>()
-        );
+        await _client
+            .Received(1)
+            .SendAsync(
+                Arg.Is<SubscribeMessage>(m =>
+                    m.Trades.Contains("AAPL") && m.Trades.Contains("MSFT")
+                ),
+                Arg.Any<CancellationToken>()
+            );
     }
 
     [Fact]

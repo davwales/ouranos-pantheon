@@ -10,8 +10,7 @@ public partial class InitialCommit : Migration
     /// <inheritdoc />
     protected override void Up(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.EnsureSchema(
-            name: "hermes");
+        migrationBuilder.EnsureSchema(name: "hermes");
 
         migrationBuilder.CreateTable(
             name: "assistants",
@@ -26,20 +25,25 @@ public partial class InitialCommit : Migration
                 temperature = table.Column<float>(type: "real", nullable: true),
                 max_tokens = table.Column<int>(type: "integer", nullable: true),
                 repeat_penalty = table.Column<float>(type: "real", nullable: true),
-                created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                created_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
+                updated_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
             },
             constraints: table =>
             {
                 table.PrimaryKey("pk_assistants", x => x.id);
-            });
+            }
+        );
     }
 
     /// <inheritdoc />
     protected override void Down(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.DropTable(
-            name: "assistants",
-            schema: "hermes");
+        migrationBuilder.DropTable(name: "assistants", schema: "hermes");
     }
 }

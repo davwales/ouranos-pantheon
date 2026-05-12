@@ -11,8 +11,7 @@ public static class GetPersonaEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapGet("/api/hermes/personas/{personaId}", Handle)
-            .WithTags("Hermes.Personas");
+        app.MapGet("/api/hermes/personas/{personaId}", Handle).WithTags("Hermes.Personas");
     }
 
     internal static async Task<IResult> Handle(

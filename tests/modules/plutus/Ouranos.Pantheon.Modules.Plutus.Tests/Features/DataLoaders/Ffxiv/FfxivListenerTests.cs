@@ -41,26 +41,32 @@ public sealed class FfxivListenerTests
 
         var message = new SaleMessage("sales/add", itemCode, 34, [sale]);
 
-        _getItems.GetItemsAsync(Arg.Any<CancellationToken>()).Returns(
-            Task.FromResult(new List<ItemDto>
-            {
-                new(itemCode.ToString(), false, "Some Item", new AdditionalFields()),
-                new(itemCode.ToString(), true, "Some Item HQ", new AdditionalFields()),
-            })
-        );
+        _getItems
+            .GetItemsAsync(Arg.Any<CancellationToken>())
+            .Returns(
+                Task.FromResult(
+                    new List<ItemDto>
+                    {
+                        new(itemCode.ToString(), false, "Some Item", new AdditionalFields()),
+                        new(itemCode.ToString(), true, "Some Item HQ", new AdditionalFields()),
+                    }
+                )
+            );
 
         // Act
         await _listener.HandleMessageAsync(message, _client, CancellationToken.None);
 
         // Assert
-        await _queue.Received(1).QueueMessages(
-            Arg.Is<IReadOnlyCollection<TradeMessage>>(msgs =>
-                msgs.Count == 1 &&
-                msgs.First().Producer == Producer.Ffxiv &&
-                msgs.First().SymbolCode == itemCode.ToString()
-            ),
-            Arg.Any<CancellationToken>()
-        );
+        await _queue
+            .Received(1)
+            .QueueMessages(
+                Arg.Is<IReadOnlyCollection<TradeMessage>>(msgs =>
+                    msgs.Count == 1
+                    && msgs.First().Producer == Producer.Ffxiv
+                    && msgs.First().SymbolCode == itemCode.ToString()
+                ),
+                Arg.Any<CancellationToken>()
+            );
     }
 
     [Fact]
@@ -73,7 +79,12 @@ public sealed class FfxivListenerTests
         await _listener.HandleMessageAsync(message, _client, CancellationToken.None);
 
         // Assert
-        await _queue.DidNotReceive().QueueMessages(Arg.Any<IReadOnlyCollection<TradeMessage>>(), Arg.Any<CancellationToken>());
+        await _queue
+            .DidNotReceive()
+            .QueueMessages(
+                Arg.Any<IReadOnlyCollection<TradeMessage>>(),
+                Arg.Any<CancellationToken>()
+            );
         await _getItems.DidNotReceive().GetItemsAsync(Arg.Any<CancellationToken>());
     }
 
@@ -82,31 +93,57 @@ public sealed class FfxivListenerTests
     {
         // Arrange
         var itemCode = 9999;
-        var sale = new SaleDetail(false, 100, 5, (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds(), false, null, null, "Buyer", 500);
+        var sale = new SaleDetail(
+            false,
+            100,
+            5,
+            (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+            false,
+            null,
+            null,
+            "Buyer",
+            500
+        );
         var message = new SaleMessage("sales/add", itemCode, 34, [sale]);
 
-        _getItems.GetItemsAsync(Arg.Any<CancellationToken>()).Returns(
-            Task.FromResult(new List<ItemDto>
-            {
-                new("1111", false, "Different Item", new AdditionalFields()),
-            })
-        );
+        _getItems
+            .GetItemsAsync(Arg.Any<CancellationToken>())
+            .Returns(
+                Task.FromResult(
+                    new List<ItemDto>
+                    {
+                        new("1111", false, "Different Item", new AdditionalFields()),
+                    }
+                )
+            );
 
         // Act
         await _listener.HandleMessageAsync(message, _client, CancellationToken.None);
 
         // Assert
-        await _queue.Received(1).QueueMessages(
-            Arg.Is<IReadOnlyCollection<TradeMessage>>(msgs => msgs.Count == 0),
-            Arg.Any<CancellationToken>()
-        );
+        await _queue
+            .Received(1)
+            .QueueMessages(
+                Arg.Is<IReadOnlyCollection<TradeMessage>>(msgs => msgs.Count == 0),
+                Arg.Any<CancellationToken>()
+            );
     }
 
     [Fact]
     public async Task HandleMessageAsync_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange
-        var sale = new SaleDetail(false, 100, 5, (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds(), false, null, null, "Buyer", 500);
+        var sale = new SaleDetail(
+            false,
+            100,
+            5,
+            (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+            false,
+            null,
+            null,
+            "Buyer",
+            500
+        );
         var message = new SaleMessage("sales/add", 1234, 34, [sale]);
         var ct = new CancellationToken(true);
 

@@ -17,7 +17,9 @@ public sealed class GetPersonaHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly GetPersonaHandler _handler;
-    private readonly ILogger<GetPersonaHandler> _logger = Substitute.For<ILogger<GetPersonaHandler>>();
+    private readonly ILogger<GetPersonaHandler> _logger = Substitute.For<
+        ILogger<GetPersonaHandler>
+    >();
     private readonly HermesDbContext _dbContext;
     private readonly IFlagsmithClient _flagsmith = Substitute.For<IFlagsmithClient>();
 

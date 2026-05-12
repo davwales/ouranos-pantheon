@@ -109,7 +109,10 @@ public sealed class WebSocketWorker : BackgroundService
         }
     }
 
-    private async Task<bool> TryWaitForReconnectAsync(TimeSpan delay, CancellationToken cancellationToken)
+    private async Task<bool> TryWaitForReconnectAsync(
+        TimeSpan delay,
+        CancellationToken cancellationToken
+    )
     {
         try
         {

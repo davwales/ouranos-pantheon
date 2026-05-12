@@ -9,8 +9,7 @@ public static class UpdateTraitEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapPut("/api/hermes/traits/{traitId}", Handle)
-            .WithTags("Hermes.Traits");
+        app.MapPut("/api/hermes/traits/{traitId}", Handle).WithTags("Hermes.Traits");
     }
 
     internal static async Task<IResult> Handle(

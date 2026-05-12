@@ -8,7 +8,9 @@ namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.DataLoaders.Stocks;
 
 public sealed class StocksTradeListenerTests
 {
-    private readonly ILogger<StocksTradeListener> _logger = Substitute.For<ILogger<StocksTradeListener>>();
+    private readonly ILogger<StocksTradeListener> _logger = Substitute.For<
+        ILogger<StocksTradeListener>
+    >();
     private readonly IQueueTradeMessages _queue = Substitute.For<IQueueTradeMessages>();
     private readonly IWebSocketClient _client = Substitute.For<IWebSocketClient>();
     private readonly StocksTradeListener _listener;
@@ -38,22 +40,34 @@ public sealed class StocksTradeListenerTests
         await _listener.HandleMessageAsync(message, _client, CancellationToken.None);
 
         // Assert
-        await _queue.Received(1).QueueMessages(
-            Arg.Is<IReadOnlyCollection<TradeMessage>>(msgs =>
-                msgs.Count == 1 &&
-                msgs.First().SymbolCode == "AAPL" &&
-                msgs.First().Price == 150.25m &&
-                msgs.First().Producer == Producer.Stocks
-            ),
-            Arg.Any<CancellationToken>()
-        );
+        await _queue
+            .Received(1)
+            .QueueMessages(
+                Arg.Is<IReadOnlyCollection<TradeMessage>>(msgs =>
+                    msgs.Count == 1
+                    && msgs.First().SymbolCode == "AAPL"
+                    && msgs.First().Price == 150.25m
+                    && msgs.First().Producer == Producer.Stocks
+                ),
+                Arg.Any<CancellationToken>()
+            );
     }
 
     [Fact]
     public async Task HandleMessageAsync_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange
-        var message = new AlpacaTradeMessage("AAPL", 1, "NYSE", 100m, 10, [], DateTimeOffset.UtcNow, "C", null);
+        var message = new AlpacaTradeMessage(
+            "AAPL",
+            1,
+            "NYSE",
+            100m,
+            10,
+            [],
+            DateTimeOffset.UtcNow,
+            "C",
+            null
+        );
         var ct = new CancellationToken(true);
 
         // Act

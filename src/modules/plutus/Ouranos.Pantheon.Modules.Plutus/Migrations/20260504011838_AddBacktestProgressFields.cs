@@ -32,16 +32,8 @@ public partial class AddBacktestProgressFields : Migration
     /// <inheritdoc />
     protected override void Down(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.DropColumn(
-            name: "progress_message",
-            schema: "plutus",
-            table: "backtests"
-        );
+        migrationBuilder.DropColumn(name: "progress_message", schema: "plutus", table: "backtests");
 
-        migrationBuilder.DropColumn(
-            name: "progress_percent",
-            schema: "plutus",
-            table: "backtests"
-        );
+        migrationBuilder.DropColumn(name: "progress_percent", schema: "plutus", table: "backtests");
     }
 }

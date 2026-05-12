@@ -1,8 +1,8 @@
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
+using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Stocks.Messages;
 using Ouranos.Pantheon.Modules.Shared.WebSockets.Listeners;
 using Ouranos.Pantheon.Modules.Shared.WebSockets.WebSocketClients;
-using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Stocks.Messages;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Stocks;
 
@@ -22,7 +22,10 @@ public sealed class StocksSubscriptionListener : IListener<SubscriptionAckMessag
         CancellationToken cancellationToken = default
     )
     {
-        _logger.LogTrace("Attempting to handle subscription acknowledgement message '{@message}'.", message);
+        _logger.LogTrace(
+            "Attempting to handle subscription acknowledgement message '{@message}'.",
+            message
+        );
         cancellationToken.ThrowIfCancellationRequested();
 
         await Task.CompletedTask;

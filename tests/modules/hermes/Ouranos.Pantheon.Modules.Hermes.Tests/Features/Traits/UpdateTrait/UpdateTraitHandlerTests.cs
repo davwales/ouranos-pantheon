@@ -15,7 +15,9 @@ public sealed class UpdateTraitHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly UpdateTraitHandler _handler;
-    private readonly ILogger<UpdateTraitHandler> _logger = Substitute.For<ILogger<UpdateTraitHandler>>();
+    private readonly ILogger<UpdateTraitHandler> _logger = Substitute.For<
+        ILogger<UpdateTraitHandler>
+    >();
     private readonly HermesDbContext _dbContext;
 
     public UpdateTraitHandlerTests()

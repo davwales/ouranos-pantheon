@@ -17,7 +17,10 @@ public sealed class GetAllPersonasEndpointTests
         var input = new GetAllPersonasInput();
         var expected = new List<GetAllPersonasResponse>();
 
-        _bus.InvokeAsync<List<GetAllPersonasResponse>>(Arg.Any<object>(), Arg.Any<CancellationToken>())
+        _bus.InvokeAsync<List<GetAllPersonasResponse>>(
+                Arg.Any<object>(),
+                Arg.Any<CancellationToken>()
+            )
             .Returns(Task.FromResult(expected));
 
         // Act

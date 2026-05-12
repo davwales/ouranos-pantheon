@@ -9,10 +9,6 @@ public sealed record ConsumerDataLoaderOptions(
 {
     public const string SectionName = "Consumer";
 
-    public ConsumerDataLoaderOptions() : this(
-        IsEnabled: true,
-        MarketMap: new Dictionary<Producer, string>()
-    )
-    {
-    }
+    public ConsumerDataLoaderOptions()
+        : this(IsEnabled: true, MarketMap: new Dictionary<Producer, string>()) { }
 }

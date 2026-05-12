@@ -16,7 +16,9 @@ namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Forecasts.ForecastEvalu
 
 public sealed class ForecastEvaluatorJobTests
 {
-    private readonly ILogger<ForecastEvaluatorJob> _logger = Substitute.For<ILogger<ForecastEvaluatorJob>>();
+    private readonly ILogger<ForecastEvaluatorJob> _logger = Substitute.For<
+        ILogger<ForecastEvaluatorJob>
+    >();
     private readonly PlutusDbContext _dbContext;
     private readonly TickerFunctionContext _tickerFunctionContext;
     private readonly ForecastEvaluatorJob _job;
@@ -40,7 +42,7 @@ public sealed class ForecastEvaluatorJobTests
                         BatchSize: 500,
                         ModelName: "plutus-forecasting-v1",
                         MaxEvaluationAgeDays: 90
-                    )
+                    ),
                 }
             )
         );
@@ -53,7 +55,12 @@ public sealed class ForecastEvaluatorJobTests
         var job = new ForecastEvaluatorJob(
             _logger,
             _dbContext,
-            Options.Create(new PlutusOptions { Forecasting = new ForecastingOptions() with { IsEnabled = false } })
+            Options.Create(
+                new PlutusOptions
+                {
+                    Forecasting = new ForecastingOptions() with { IsEnabled = false },
+                }
+            )
         );
         var record = CreatePendingRecord(DateTimeOffset.UtcNow.AddDays(-1));
         await _dbContext.SeedData(record);
@@ -84,7 +91,10 @@ public sealed class ForecastEvaluatorJobTests
     public async Task Execute_WhenPendingRecordHasMatchingTrades_ShouldRecordActual()
     {
         // Arrange
-        var targetDay = new DateTimeOffset(DateTimeOffset.UtcNow.UtcDateTime.Date, TimeSpan.Zero).AddDays(-1);
+        var targetDay = new DateTimeOffset(
+            DateTimeOffset.UtcNow.UtcDateTime.Date,
+            TimeSpan.Zero
+        ).AddDays(-1);
         var market = CreateMarket();
         var symbol = CreateSymbol(market.Id);
         var record = CreatePendingRecord(targetDay, symbol.Id);
@@ -115,7 +125,10 @@ public sealed class ForecastEvaluatorJobTests
     public async Task Execute_WhenPendingRecordHasNoMatchingTrades_ShouldNotRecordActual()
     {
         // Arrange
-        var targetDay = new DateTimeOffset(DateTimeOffset.UtcNow.UtcDateTime.Date, TimeSpan.Zero).AddDays(-1);
+        var targetDay = new DateTimeOffset(
+            DateTimeOffset.UtcNow.UtcDateTime.Date,
+            TimeSpan.Zero
+        ).AddDays(-1);
         var market = CreateMarket();
         var symbol = CreateSymbol(market.Id);
         var record = CreatePendingRecord(targetDay, symbol.Id);
@@ -135,8 +148,10 @@ public sealed class ForecastEvaluatorJobTests
     public async Task Execute_WhenPendingRecordIsOlderThanMaxAge_ShouldNotEvaluate()
     {
         // Arrange
-        var tooOldTargetDay = new DateTimeOffset(DateTimeOffset.UtcNow.UtcDateTime.Date, TimeSpan.Zero)
-            .AddDays(-(90 + 1));
+        var tooOldTargetDay = new DateTimeOffset(
+            DateTimeOffset.UtcNow.UtcDateTime.Date,
+            TimeSpan.Zero
+        ).AddDays(-(90 + 1));
         var market = CreateMarket();
         var symbol = CreateSymbol(market.Id);
         var record = CreatePendingRecord(tooOldTargetDay, symbol.Id);
@@ -164,7 +179,10 @@ public sealed class ForecastEvaluatorJobTests
     public async Task Execute_WithMultipleSymbols_ShouldEvaluateEachIndependently()
     {
         // Arrange
-        var targetDay = new DateTimeOffset(DateTimeOffset.UtcNow.UtcDateTime.Date, TimeSpan.Zero).AddDays(-1);
+        var targetDay = new DateTimeOffset(
+            DateTimeOffset.UtcNow.UtcDateTime.Date,
+            TimeSpan.Zero
+        ).AddDays(-1);
         var market = CreateMarket();
         var symbolA = CreateSymbol(market.Id);
         var symbolB = CreateSymbol(market.Id);
@@ -188,16 +206,14 @@ public sealed class ForecastEvaluatorJobTests
         await _job.Execute(_tickerFunctionContext, CancellationToken.None);
 
         // Assert
-        _dbContext.ForecastRecords.Single(r => r.SymbolId == symbolA.Id).EvaluatedAt.ShouldNotBeNull();
+        _dbContext
+            .ForecastRecords.Single(r => r.SymbolId == symbolA.Id)
+            .EvaluatedAt.ShouldNotBeNull();
         _dbContext.ForecastRecords.Single(r => r.SymbolId == symbolB.Id).EvaluatedAt.ShouldBeNull();
     }
 
     private static Market CreateMarket() =>
-        Market.Create(
-            new Id<Market>(Guid.NewGuid().ToString()),
-            "Test Market",
-            new Taxes(null)
-        );
+        Market.Create(new Id<Market>(Guid.NewGuid().ToString()), "Test Market", new Taxes(null));
 
     private static Symbol CreateSymbol(Id<Market> marketId) =>
         Symbol.Create(
@@ -209,7 +225,10 @@ public sealed class ForecastEvaluatorJobTests
             new AdditionalFields()
         );
 
-    private static ForecastRecord CreatePendingRecord(DateTimeOffset targetAt, Id<Symbol>? symbolId = null) =>
+    private static ForecastRecord CreatePendingRecord(
+        DateTimeOffset targetAt,
+        Id<Symbol>? symbolId = null
+    ) =>
         ForecastRecord.Create(
             new Id<ForecastRecord>(Guid.NewGuid().ToString()),
             new Id<ForecastRun>(Guid.NewGuid().ToString()),

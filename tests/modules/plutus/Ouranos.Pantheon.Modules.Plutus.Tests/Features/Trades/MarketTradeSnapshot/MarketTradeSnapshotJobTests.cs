@@ -9,8 +9,9 @@ namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Trades.MarketTradeSnaps
 
 public sealed class MarketTradeSnapshotJobTests
 {
-    private readonly ILogger<MarketTradeSnapshotJob> _logger =
-        Substitute.For<ILogger<MarketTradeSnapshotJob>>();
+    private readonly ILogger<MarketTradeSnapshotJob> _logger = Substitute.For<
+        ILogger<MarketTradeSnapshotJob>
+    >();
 
     private readonly PlutusDbContext _dbContext = DbContextExtensions.Mock<PlutusDbContext>();
     private readonly TickerFunctionContext _context = new();

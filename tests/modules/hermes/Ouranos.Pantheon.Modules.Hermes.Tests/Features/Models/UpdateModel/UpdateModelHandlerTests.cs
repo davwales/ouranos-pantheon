@@ -15,7 +15,9 @@ public sealed class UpdateModelHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly UpdateModelHandler _handler;
-    private readonly ILogger<UpdateModelHandler> _logger = Substitute.For<ILogger<UpdateModelHandler>>();
+    private readonly ILogger<UpdateModelHandler> _logger = Substitute.For<
+        ILogger<UpdateModelHandler>
+    >();
     private readonly HermesDbContext _dbContext;
 
     public UpdateModelHandlerTests()

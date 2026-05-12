@@ -19,7 +19,8 @@ public sealed record BacktestParameters(
     RecipeArbitrageConfig? RecipeArbitrageConfigOverride = null
 )
 {
-    public TradingConfiguration Configuration => ConfigurationOverride ?? Strategy.TradingConfiguration;
+    public TradingConfiguration Configuration =>
+        ConfigurationOverride ?? Strategy.TradingConfiguration;
 
     public SignalWeightedConfig? SignalWeightedConfig =>
         SignalWeightedConfigOverride ?? Strategy.SignalWeightedConfig;

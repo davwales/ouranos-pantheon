@@ -1,14 +1,13 @@
 using Ardalis.GuardClauses;
-using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
+using Ouranos.Pantheon.Modules.Shared.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 
 public class Trade : BaseEntity<Id<Trade>>
 {
-    protected Trade(Id<Trade> id) : base(id)
-    {
-    }
+    protected Trade(Id<Trade> id)
+        : base(id) { }
 
     public Id<Symbol> SymbolId { get; init; }
 
@@ -41,7 +40,7 @@ public class Trade : BaseEntity<Id<Trade>>
             Volume = volume,
             SymbolId = symbolId,
             Timestamp = timestamp,
-            _symbol = symbol
+            _symbol = symbol,
         };
     }
 }

@@ -1,15 +1,15 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Domain;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Extensions;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Querying;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
-using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
+using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Extensions;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Querying;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest;
 
@@ -45,24 +45,33 @@ public sealed class BacktestDataQueryService : IBacktestDataQueryService
     {
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        var market = await dbContext.Markets.AsNoTracking()
+        var market = await dbContext
+            .Markets.AsNoTracking()
             .FirstAsync(m => m.Id == marketId, cancellationToken);
 
-        var symbols = await dbContext.Symbols
-            .AsNoTracking()
+        var symbols = await dbContext
+            .Symbols.AsNoTracking()
             .Where(s => s.MarketId == marketId)
             .ToListAsync(cancellationToken);
 
         var symbolIds = symbols.Select(s => s.Id).ToList();
 
-        var effectiveStart = lookbackDays > 0
-            ? startDate.AddDays(-lookbackDays)
-            : startDate;
+        var effectiveStart = lookbackDays > 0 ? startDate.AddDays(-lookbackDays) : startDate;
 
         var snapshotsTask = LoadSnapshotsAsync(symbolIds, marketId, cancellationToken);
         var forecastsTask = LoadForecastsAsync(symbolIds, marketId, cancellationToken);
-        var dailyPricesTask = LoadDailyPricesAsync(symbolIds, effectiveStart, endDate, cancellationToken);
-        var dailyAggregatesTask = LoadDailyAggregatesAsync(symbolIds, effectiveStart, endDate, cancellationToken);
+        var dailyPricesTask = LoadDailyPricesAsync(
+            symbolIds,
+            effectiveStart,
+            endDate,
+            cancellationToken
+        );
+        var dailyAggregatesTask = LoadDailyAggregatesAsync(
+            symbolIds,
+            effectiveStart,
+            endDate,
+            cancellationToken
+        );
 
         await Task.WhenAll(snapshotsTask, forecastsTask, dailyPricesTask, dailyAggregatesTask);
 
@@ -72,9 +81,9 @@ public sealed class BacktestDataQueryService : IBacktestDataQueryService
         var dailyAggregates = await dailyAggregatesTask;
 
         _logger.LogDebug(
-            "Loaded backtest data: {symbolCount} symbols, {snapshotCount} snapshots, " +
-            "{forecastCount} forecasts, {dailyPriceCount} daily prices, " +
-            "{dailyAggregateCount} daily aggregates.",
+            "Loaded backtest data: {symbolCount} symbols, {snapshotCount} snapshots, "
+                + "{forecastCount} forecasts, {dailyPriceCount} daily prices, "
+                + "{dailyAggregateCount} daily aggregates.",
             symbols.Count,
             snapshots.Count,
             forecasts.Count,
@@ -100,8 +109,8 @@ public sealed class BacktestDataQueryService : IBacktestDataQueryService
     {
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        return await dbContext.MarketTradeSnapshots
-            .AsNoTracking()
+        return await dbContext
+            .MarketTradeSnapshots.AsNoTracking()
             .Where(s => symbolIds.Contains(s.SymbolId) && s.MarketId == marketId)
             .ToListAsync(cancellationToken);
     }
@@ -114,8 +123,8 @@ public sealed class BacktestDataQueryService : IBacktestDataQueryService
     {
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        return await dbContext.Forecasts
-            .AsNoTracking()
+        return await dbContext
+            .Forecasts.AsNoTracking()
             .Include(f => f.Predictions)
             .Where(f => symbolIds.Contains(f.SymbolId) && f.MarketId == marketId)
             .ToListAsync(cancellationToken);
@@ -135,7 +144,8 @@ public sealed class BacktestDataQueryService : IBacktestDataQueryService
     {
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        var command = RawSqlCommand.FromSql(
+        var command = RawSqlCommand
+            .FromSql(
                 """
                 SELECT symbol_id,
                        time_bucket('1 day', "timestamp") AS date,
@@ -151,16 +161,18 @@ public sealed class BacktestDataQueryService : IBacktestDataQueryService
             .WithDateTimeOffset("@startDate", startDate)
             .WithDateTimeOffset("@endDate", endDate);
 
-        var rows = await dbContext.Database.ExecuteQueryAsync<DailyPriceRow>(command, cancellationToken);
+        var rows = await dbContext.Database.ExecuteQueryAsync<DailyPriceRow>(
+            command,
+            cancellationToken
+        );
 
         return
         [
             .. rows.Select(d => new DailyPrice(
-                    new Id<Symbol>(d.SymbolId.ToString()),
-                    DateOnly.FromDateTime(d.Date.UtcDateTime),
-                    d.ClosePrice
-                )
-            )
+                new Id<Symbol>(d.SymbolId.ToString()),
+                DateOnly.FromDateTime(d.Date.UtcDateTime),
+                d.ClosePrice
+            )),
         ];
     }
 
@@ -177,7 +189,8 @@ public sealed class BacktestDataQueryService : IBacktestDataQueryService
     {
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        var command = RawSqlCommand.FromSql(
+        var command = RawSqlCommand
+            .FromSql(
                 """
                 SELECT symbol_id,
                        time_bucket('1 day', "timestamp") AS date,
@@ -196,19 +209,21 @@ public sealed class BacktestDataQueryService : IBacktestDataQueryService
             .WithDateTimeOffset("@startDate", startDate)
             .WithDateTimeOffset("@endDate", endDate);
 
-        var rows = await dbContext.Database.ExecuteQueryAsync<DailyTradeAggregateRow>(command, cancellationToken);
+        var rows = await dbContext.Database.ExecuteQueryAsync<DailyTradeAggregateRow>(
+            command,
+            cancellationToken
+        );
 
         return
         [
             .. rows.Select(d => new DailyTradeAggregate(
-                    new Id<Symbol>(d.SymbolId.ToString()),
-                    DateOnly.FromDateTime(d.Date.UtcDateTime),
-                    d.AveragePrice,
-                    d.MinPrice,
-                    d.MaxPrice,
-                    d.TotalVolume
-                )
-            )
+                new Id<Symbol>(d.SymbolId.ToString()),
+                DateOnly.FromDateTime(d.Date.UtcDateTime),
+                d.AveragePrice,
+                d.MinPrice,
+                d.MaxPrice,
+                d.TotalVolume
+            )),
         ];
     }
 }

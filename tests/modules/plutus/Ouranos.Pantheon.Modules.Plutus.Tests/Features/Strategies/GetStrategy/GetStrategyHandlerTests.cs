@@ -14,7 +14,9 @@ public sealed class GetStrategyHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly GetStrategyHandler _handler;
-    private readonly ILogger<GetStrategyHandler> _logger = Substitute.For<ILogger<GetStrategyHandler>>();
+    private readonly ILogger<GetStrategyHandler> _logger = Substitute.For<
+        ILogger<GetStrategyHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
 
     public GetStrategyHandlerTests()

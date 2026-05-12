@@ -15,13 +15,19 @@ namespace Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
 /// </summary>
 public sealed class FilterBuilder<T>
 {
-    private readonly Dictionary<string, IFilterField> _fields = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, IFilterField> _fields = new(
+        StringComparer.OrdinalIgnoreCase
+    );
 
     /// <summary>
     /// Registers a filterable field by name, backed by the given property selector.
     /// No reflection is used at query time.
     /// </summary>
-    public FilterBuilder<T> On<TValue>(string key, Expression<Func<T, TValue>> selector, bool caseInsensitive = false)
+    public FilterBuilder<T> On<TValue>(
+        string key,
+        Expression<Func<T, TValue>> selector,
+        bool caseInsensitive = false
+    )
     {
         _fields[key] = new TypedFilterField<T, TValue>(selector, caseInsensitive);
         return this;
@@ -40,11 +46,15 @@ public sealed class FilterBuilder<T>
             var propAccess = Expression.Property(param, prop);
             var lambdaType = typeof(Func<,>).MakeGenericType(typeof(T), prop.PropertyType);
             var lambda = Expression.Lambda(lambdaType, propAccess, param);
-            var fieldType = typeof(TypedFilterField<,>).MakeGenericType(typeof(T), prop.PropertyType);
-            _fields[prop.Name] = Activator.CreateInstance(fieldType, lambda, false) as IFilterField
-                                 ?? throw new InvalidOperationException(
-                                     $"Failed to create filter field for property '{prop.Name}' on '{typeof(T).Name}'."
-                                 );
+            var fieldType = typeof(TypedFilterField<,>).MakeGenericType(
+                typeof(T),
+                prop.PropertyType
+            );
+            _fields[prop.Name] =
+                Activator.CreateInstance(fieldType, lambda, false) as IFilterField
+                ?? throw new InvalidOperationException(
+                    $"Failed to create filter field for property '{prop.Name}' on '{typeof(T).Name}'."
+                );
         }
 
         return this;
@@ -61,14 +71,18 @@ public sealed class FilterBuilder<T>
         {
             FieldFilterNode field => BuildFieldBody(field, param),
             CompositeFilterNode composite => BuildCompositeBody(composite, param),
-            _ => throw new NotSupportedException($"Unknown filter node type '{node.GetType().Name}'."),
+            _ => throw new NotSupportedException(
+                $"Unknown filter node type '{node.GetType().Name}'."
+            ),
         };
 
     private Expression BuildCompositeBody(CompositeFilterNode node, ParameterExpression param)
     {
         if (node.Children.Count == 0)
         {
-            throw new InvalidOperationException("Composite filter node must have at least one child.");
+            throw new InvalidOperationException(
+                "Composite filter node must have at least one child."
+            );
         }
 
         var parts = node.Children.Select(c => BuildBody(c, param)).ToList();
@@ -88,7 +102,7 @@ public sealed class FilterBuilder<T>
         var registered = string.Join(", ", _fields.Keys);
         throw new InvalidOperationException(
             $"Field '{node.Field}' is not registered as filterable on '{typeof(T).Name}'. "
-            + $"Registered fields: {registered}."
+                + $"Registered fields: {registered}."
         );
     }
 }

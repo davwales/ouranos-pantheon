@@ -11,8 +11,7 @@ public static class GetDailySymbolSummaryEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapGet("/api/plutus/symbols/{symbolId}/summary", Handle)
-            .WithTags("Plutus.Symbols");
+        app.MapGet("/api/plutus/symbols/{symbolId}/summary", Handle).WithTags("Plutus.Symbols");
     }
 
     internal static async Task<IResult> Handle(
@@ -21,7 +20,10 @@ public static class GetDailySymbolSummaryEndpoint
         CancellationToken ct
     )
     {
-        var result = await bus.InvokeAsync<GetDailySymbolSummaryResponse>(new GetDailySymbolSummaryInput(symbolId), ct);
+        var result = await bus.InvokeAsync<GetDailySymbolSummaryResponse>(
+            new GetDailySymbolSummaryInput(symbolId),
+            ct
+        );
         return Results.Ok(result);
     }
 }

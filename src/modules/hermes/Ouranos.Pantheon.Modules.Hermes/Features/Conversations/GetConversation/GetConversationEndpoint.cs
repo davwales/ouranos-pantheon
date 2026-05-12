@@ -21,6 +21,11 @@ public static class GetConversationEndpoint
         CancellationToken ct
     )
     {
-        return Results.Ok(await bus.InvokeAsync<GetConversationResponse>(new GetConversationInput(conversationId), ct));
+        return Results.Ok(
+            await bus.InvokeAsync<GetConversationResponse>(
+                new GetConversationInput(conversationId),
+                ct
+            )
+        );
     }
 }

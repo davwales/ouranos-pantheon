@@ -18,7 +18,11 @@ public sealed class CreateSymbolGroupEndpointTests
     {
         // Arrange
         var ct = CancellationToken.None;
-        var input = new CreateSymbolGroupInput(new Id<Market>(Guid.NewGuid().ToString()), "My Group", null);
+        var input = new CreateSymbolGroupInput(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            "My Group",
+            null
+        );
         var expected = new IdResponse<SymbolGroup>(new Id<SymbolGroup>(Guid.NewGuid().ToString()));
 
         _bus.InvokeAsync<IdResponse<SymbolGroup>>(Arg.Any<object>(), Arg.Any<CancellationToken>())

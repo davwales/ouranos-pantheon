@@ -13,7 +13,8 @@ public static class ServiceCollectionValidations
     )
     {
         var type = typeof(T);
-        customMessage ??= $"services should contain type '{type}' with lifetime '{lifetime}' but does not";
+        customMessage ??=
+            $"services should contain type '{type}' with lifetime '{lifetime}' but does not";
         services.ShouldContain(s => s.ServiceType == type && s.Lifetime == lifetime, customMessage);
     }
 
@@ -30,7 +31,11 @@ public static class ServiceCollectionValidations
             $"services should contain service '{serviceType}' with implementation '{implementationType}' with lifetime '{lifetime}' but does not";
 
         services.ShouldContain(
-            s => s.ServiceType == serviceType && s.ImplementationType == implementationType && s.Lifetime == lifetime,
-            customMessage);
+            s =>
+                s.ServiceType == serviceType
+                && s.ImplementationType == implementationType
+                && s.Lifetime == lifetime,
+            customMessage
+        );
     }
 }

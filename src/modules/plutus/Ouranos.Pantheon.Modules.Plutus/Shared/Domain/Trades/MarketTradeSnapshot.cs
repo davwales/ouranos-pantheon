@@ -1,16 +1,15 @@
 using Ardalis.GuardClauses;
-using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
+using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Shared.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 
 public class MarketTradeSnapshot : BaseEntity<Id<MarketTradeSnapshot>>
 {
-    private MarketTradeSnapshot(Id<MarketTradeSnapshot> id) : base(id)
-    {
-    }
+    private MarketTradeSnapshot(Id<MarketTradeSnapshot> id)
+        : base(id) { }
 
     public Id<Market> MarketId { get; private set; }
 
@@ -34,11 +33,13 @@ public class MarketTradeSnapshot : BaseEntity<Id<MarketTradeSnapshot>>
 
     private Market? _market;
 
-    public Market Market => _market ?? throw new NavigationPropertyNotLoadedException<MarketTradeSnapshot>();
+    public Market Market =>
+        _market ?? throw new NavigationPropertyNotLoadedException<MarketTradeSnapshot>();
 
     private Symbol? _symbol;
 
-    public Symbol Symbol => _symbol ?? throw new NavigationPropertyNotLoadedException<MarketTradeSnapshot>();
+    public Symbol Symbol =>
+        _symbol ?? throw new NavigationPropertyNotLoadedException<MarketTradeSnapshot>();
 
     public static MarketTradeSnapshot Create(
         Id<Market> marketId,
@@ -78,7 +79,7 @@ public class MarketTradeSnapshot : BaseEntity<Id<MarketTradeSnapshot>>
             Limit = limit,
             Tax = tax,
             _market = market,
-            _symbol = symbol
+            _symbol = symbol,
         };
     }
 }

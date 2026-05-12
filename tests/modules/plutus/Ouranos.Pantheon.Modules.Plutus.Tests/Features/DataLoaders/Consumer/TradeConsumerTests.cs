@@ -32,10 +32,7 @@ public sealed class TradeConsumerTests
 
         _options = new ConsumerDataLoaderOptions(
             IsEnabled: true,
-            MarketMap: new Dictionary<Producer, string>
-            {
-                [Producer.Osrs] = _market.Id.Value
-            }
+            MarketMap: new Dictionary<Producer, string> { [Producer.Osrs] = _market.Id.Value }
         );
     }
 
@@ -107,7 +104,12 @@ public sealed class TradeConsumerTests
             IsEnabled: true,
             MarketMap: new Dictionary<Producer, string>()
         );
-        var consumer = new TradeConsumer(_logger, Options.Create(optionsWithNoMap), _dbContext, _cache);
+        var consumer = new TradeConsumer(
+            _logger,
+            Options.Create(optionsWithNoMap),
+            _dbContext,
+            _cache
+        );
 
         var message = CreateMessage("1234");
 

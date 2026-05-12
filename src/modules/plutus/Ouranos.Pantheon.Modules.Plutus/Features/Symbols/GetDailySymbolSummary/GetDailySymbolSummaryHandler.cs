@@ -1,9 +1,9 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetDailySymbolSummary.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Shared.Application;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetDailySymbolSummary;
 
@@ -35,19 +35,15 @@ public sealed class GetDailySymbolSummaryHandler
 
         var today = new DateTimeOffset(DateTimeOffset.UtcNow.Date, TimeSpan.Zero);
 
-        var summary = await _dbContext.Trades
-            .Where(t =>
-                t.SymbolId == query.SymbolId &&
-                t.Timestamp >= today
-            )
+        var summary = await _dbContext
+            .Trades.Where(t => t.SymbolId == query.SymbolId && t.Timestamp >= today)
             .GroupBy(_ => true)
             .Select(g => new GetDailySymbolSummaryResponse(
-                    g.Sum(x => x.Price * x.Volume) / g.Sum(x => x.Volume),
-                    g.Min(x => x.Price),
-                    g.Max(x => x.Price),
-                    g.Sum(x => x.Volume)
-                )
-            )
+                g.Sum(x => x.Price * x.Volume) / g.Sum(x => x.Volume),
+                g.Min(x => x.Price),
+                g.Max(x => x.Price),
+                g.Sum(x => x.Volume)
+            ))
             .FirstOrDefaultAsync(cancellationToken);
 
         var response = summary ?? new GetDailySymbolSummaryResponse(0, 0, 0, 0);

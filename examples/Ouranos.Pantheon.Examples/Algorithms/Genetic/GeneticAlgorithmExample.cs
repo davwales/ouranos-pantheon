@@ -46,7 +46,9 @@ public sealed class GeneticAlgorithmExample
                     return;
                 }
 
-                var bestFitness = generationPopulation.Select(c => engine.EvaluateFitness(c)).OrderByDescending(x => x)
+                var bestFitness = generationPopulation
+                    .Select(c => engine.EvaluateFitness(c))
+                    .OrderByDescending(x => x)
                     .First();
                 Console.WriteLine($"Generation {generation}, Fitness {bestFitness}");
             }

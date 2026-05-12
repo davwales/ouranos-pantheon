@@ -17,7 +17,10 @@ public sealed class GetAllConversationsEndpointTests
         var input = new GetAllConversationsInput();
         var expected = new List<GetAllConversationsResponse>();
 
-        _bus.InvokeAsync<List<GetAllConversationsResponse>>(Arg.Any<object>(), Arg.Any<CancellationToken>())
+        _bus.InvokeAsync<List<GetAllConversationsResponse>>(
+                Arg.Any<object>(),
+                Arg.Any<CancellationToken>()
+            )
             .Returns(Task.FromResult(expected));
 
         // Act

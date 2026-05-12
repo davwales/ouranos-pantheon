@@ -15,7 +15,9 @@ public sealed class GetSymbolHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly GetSymbolHandler _handler;
-    private readonly ILogger<GetSymbolHandler> _logger = Substitute.For<ILogger<GetSymbolHandler>>();
+    private readonly ILogger<GetSymbolHandler> _logger = Substitute.For<
+        ILogger<GetSymbolHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
 
     public GetSymbolHandlerTests()

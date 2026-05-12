@@ -22,7 +22,9 @@ public sealed class GeneticAlgorithmBuilderTests
     [Theory]
     [InlineData(-0.1)]
     [InlineData(1.01)]
-    public void SetElitismRate_WhenOutOfRange_ShouldThrowArgumentOutOfRangeException(double elitismRate)
+    public void SetElitismRate_WhenOutOfRange_ShouldThrowArgumentOutOfRangeException(
+        double elitismRate
+    )
     {
         // Act
         var set = () => _builder.SetElitismRate(elitismRate);
@@ -47,7 +49,9 @@ public sealed class GeneticAlgorithmBuilderTests
     [Theory]
     [InlineData(-0.1)]
     [InlineData(1.01)]
-    public void SetMutationRate_WhenOutOfRange_ShouldThrowArgumentOutOfRangeException(double mutationRate)
+    public void SetMutationRate_WhenOutOfRange_ShouldThrowArgumentOutOfRangeException(
+        double mutationRate
+    )
     {
         // Act
         var set = () => _builder.SetMutationRate(mutationRate);

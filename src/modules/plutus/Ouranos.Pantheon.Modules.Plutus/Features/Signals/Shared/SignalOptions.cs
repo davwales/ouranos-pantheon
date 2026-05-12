@@ -17,18 +17,17 @@ public sealed record SignalOptions(
 {
     public const string SectionName = "Signals";
 
-    public SignalOptions() : this(
-        ShortTimeFrame: TimeFrame.OneHour,
-        MediumTimeFrame: TimeFrame.OneWeek,
-        LongTimeFrame: TimeFrame.OneMonth,
-        BucketCount: 25,
-        RoiThreshold: 0.1m,
-        VolumeAnomalyThreshold: 3.0m,
-        MomentumThreshold: 0.05m,
-        MaCrossoverThreshold: 0.02m,
-        PriceVelocityThreshold: 0.03m,
-        BollingerMultiplier: 2
-    )
-    {
-    }
+    public SignalOptions()
+        : this(
+            ShortTimeFrame: TimeFrame.OneHour,
+            MediumTimeFrame: TimeFrame.OneWeek,
+            LongTimeFrame: TimeFrame.OneMonth,
+            BucketCount: 25,
+            RoiThreshold: 0.1m,
+            VolumeAnomalyThreshold: 3.0m,
+            MomentumThreshold: 0.05m,
+            MaCrossoverThreshold: 0.02m,
+            PriceVelocityThreshold: 0.03m,
+            BollingerMultiplier: 2
+        ) { }
 }

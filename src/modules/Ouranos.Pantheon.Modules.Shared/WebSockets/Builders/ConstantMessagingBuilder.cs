@@ -18,7 +18,8 @@ public sealed class ConstantMessagingBuilder<TMessage> : IConstantMessagingBuild
         _services = services;
     }
 
-    public IConstantMessagingBuilder<TMessage> UseListener<TListener>() where TListener : class, IListener<TMessage>
+    public IConstantMessagingBuilder<TMessage> UseListener<TListener>()
+        where TListener : class, IListener<TMessage>
     {
         _services.TryAddTransient<TListener>();
         _getListeners.Add(sp => sp.GetRequiredService<TListener>());

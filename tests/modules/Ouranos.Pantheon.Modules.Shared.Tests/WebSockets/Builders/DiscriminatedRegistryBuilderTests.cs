@@ -52,7 +52,9 @@ public sealed class DiscriminatedRegistryBuilderTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData(" ")]
-    public void UseDiscriminatorPath_WhenInvalid_ShouldThrowArgumentException(string? discriminatorPath)
+    public void UseDiscriminatorPath_WhenInvalid_ShouldThrowArgumentException(
+        string? discriminatorPath
+    )
     {
         // Arrange
         var builder = GivenBuilder();
@@ -85,10 +87,7 @@ public sealed class DiscriminatedRegistryBuilderTests
         var builder = GivenBuilder();
 
         // Act
-        var actualResult = builder.UseMessage<TestEntity>(
-            "test",
-            _ => { }
-        );
+        var actualResult = builder.UseMessage<TestEntity>("test", _ => { });
 
         // Assert
         actualResult.ShouldBe(builder);
@@ -142,10 +141,7 @@ public sealed class DiscriminatedRegistryBuilderTests
         var builder = GivenBuilder();
         var serializer = Substitute.For<IMessageSerializer>();
 
-        builder.UseMessage<TestEntity>(
-            "type",
-            x => x.UseListener<TestListener>()
-        );
+        builder.UseMessage<TestEntity>("type", x => x.UseListener<TestListener>());
 
         builder.UseDiscriminatorPath("myDiscriminatorPath");
         _services.AddScoped<IMessageSerializer>(_ => serializer);

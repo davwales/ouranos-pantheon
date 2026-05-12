@@ -16,7 +16,9 @@ public sealed class GetMarketOverviewHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly GetMarketOverviewHandler _handler;
-    private readonly ILogger<GetMarketOverviewHandler> _logger = Substitute.For<ILogger<GetMarketOverviewHandler>>();
+    private readonly ILogger<GetMarketOverviewHandler> _logger = Substitute.For<
+        ILogger<GetMarketOverviewHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
 
     public GetMarketOverviewHandlerTests()
@@ -34,10 +36,42 @@ public sealed class GetMarketOverviewHandlerTests
         var otherMarketId = new Id<Market>(Guid.NewGuid().ToString());
         var now = DateTimeOffset.UtcNow;
 
-        var bucket1 = Bucket.Create(marketId, TimeFrame.OneHour, now.AddHours(-2), 100m, 5m, 500m, 10);
-        var bucket2 = Bucket.Create(marketId, TimeFrame.OneHour, now.AddHours(-1), 120m, 8m, 960m, 15);
-        var wrongFrame = Bucket.Create(marketId, TimeFrame.OneDay, now.AddDays(-1), 50m, 3m, 150m, 5);
-        var wrongMarket = Bucket.Create(otherMarketId, TimeFrame.OneHour, now.AddHours(-1), 999m, 1m, 999m, 1);
+        var bucket1 = Bucket.Create(
+            marketId,
+            TimeFrame.OneHour,
+            now.AddHours(-2),
+            100m,
+            5m,
+            500m,
+            10
+        );
+        var bucket2 = Bucket.Create(
+            marketId,
+            TimeFrame.OneHour,
+            now.AddHours(-1),
+            120m,
+            8m,
+            960m,
+            15
+        );
+        var wrongFrame = Bucket.Create(
+            marketId,
+            TimeFrame.OneDay,
+            now.AddDays(-1),
+            50m,
+            3m,
+            150m,
+            5
+        );
+        var wrongMarket = Bucket.Create(
+            otherMarketId,
+            TimeFrame.OneHour,
+            now.AddHours(-1),
+            999m,
+            1m,
+            999m,
+            1
+        );
 
         await _dbContext.SeedData(bucket1, bucket2, wrongFrame, wrongMarket);
 
@@ -58,8 +92,24 @@ public sealed class GetMarketOverviewHandlerTests
         // Arrange
         var marketId = new Id<Market>(Guid.NewGuid().ToString());
         var now = DateTimeOffset.UtcNow;
-        var bucket1 = Bucket.Create(marketId, TimeFrame.AllTime, now.AddDays(-2), 100m, 4m, 400m, 8);
-        var bucket2 = Bucket.Create(marketId, TimeFrame.AllTime, now.AddDays(-1), 200m, 1m, 200m, 2);
+        var bucket1 = Bucket.Create(
+            marketId,
+            TimeFrame.AllTime,
+            now.AddDays(-2),
+            100m,
+            4m,
+            400m,
+            8
+        );
+        var bucket2 = Bucket.Create(
+            marketId,
+            TimeFrame.AllTime,
+            now.AddDays(-1),
+            200m,
+            1m,
+            200m,
+            2
+        );
 
         await _dbContext.SeedData(bucket1, bucket2);
 

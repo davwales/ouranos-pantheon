@@ -17,11 +17,23 @@ public partial class AddForecastRecords : Migration
             {
                 id = table.Column<Guid>(type: "uuid", nullable: false),
                 model_name = table.Column<string>(type: "text", nullable: false),
-                generated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                generated_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
+                created_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
+                updated_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
             },
-            constraints: table => { table.PrimaryKey("pk_forecast_runs", x => x.id); }
+            constraints: table =>
+            {
+                table.PrimaryKey("pk_forecast_runs", x => x.id);
+            }
         );
 
         migrationBuilder.CreateTable(
@@ -34,28 +46,75 @@ public partial class AddForecastRecords : Migration
                 market_id = table.Column<Guid>(type: "uuid", nullable: false),
                 symbol_id = table.Column<Guid>(type: "uuid", nullable: false),
                 model_name = table.Column<string>(type: "text", nullable: false),
-                generated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                target_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                generated_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
+                target_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
                 horizon_days = table.Column<int>(type: "integer", nullable: false),
-                predicted_average_price =
-                    table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                predicted_min_price =
-                    table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                predicted_max_price =
-                    table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                predicted_volume =
-                    table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                actual_average_price =
-                    table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true),
-                actual_min_price =
-                    table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true),
-                actual_max_price =
-                    table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true),
-                actual_volume =
-                    table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true),
-                evaluated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                predicted_average_price = table.Column<decimal>(
+                    type: "numeric(18,2)",
+                    precision: 18,
+                    scale: 2,
+                    nullable: false
+                ),
+                predicted_min_price = table.Column<decimal>(
+                    type: "numeric(18,2)",
+                    precision: 18,
+                    scale: 2,
+                    nullable: false
+                ),
+                predicted_max_price = table.Column<decimal>(
+                    type: "numeric(18,2)",
+                    precision: 18,
+                    scale: 2,
+                    nullable: false
+                ),
+                predicted_volume = table.Column<decimal>(
+                    type: "numeric(18,2)",
+                    precision: 18,
+                    scale: 2,
+                    nullable: false
+                ),
+                actual_average_price = table.Column<decimal>(
+                    type: "numeric(18,2)",
+                    precision: 18,
+                    scale: 2,
+                    nullable: true
+                ),
+                actual_min_price = table.Column<decimal>(
+                    type: "numeric(18,2)",
+                    precision: 18,
+                    scale: 2,
+                    nullable: true
+                ),
+                actual_max_price = table.Column<decimal>(
+                    type: "numeric(18,2)",
+                    precision: 18,
+                    scale: 2,
+                    nullable: true
+                ),
+                actual_volume = table.Column<decimal>(
+                    type: "numeric(18,2)",
+                    precision: 18,
+                    scale: 2,
+                    nullable: true
+                ),
+                evaluated_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: true
+                ),
+                created_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
+                updated_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
             },
             constraints: table =>
             {
@@ -111,14 +170,8 @@ public partial class AddForecastRecords : Migration
     /// <inheritdoc />
     protected override void Down(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.DropTable(
-            name: "forecast_records",
-            schema: "plutus"
-        );
+        migrationBuilder.DropTable(name: "forecast_records", schema: "plutus");
 
-        migrationBuilder.DropTable(
-            name: "forecast_runs",
-            schema: "plutus"
-        );
+        migrationBuilder.DropTable(name: "forecast_runs", schema: "plutus");
     }
 }

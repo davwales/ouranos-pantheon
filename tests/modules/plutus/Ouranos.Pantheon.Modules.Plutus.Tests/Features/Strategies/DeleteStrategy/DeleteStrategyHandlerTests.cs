@@ -15,7 +15,9 @@ public sealed class DeleteStrategyHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly DeleteStrategyHandler _handler;
-    private readonly ILogger<DeleteStrategyHandler> _logger = Substitute.For<ILogger<DeleteStrategyHandler>>();
+    private readonly ILogger<DeleteStrategyHandler> _logger = Substitute.For<
+        ILogger<DeleteStrategyHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
 
     public DeleteStrategyHandlerTests()

@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Converters;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Extensions;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Positions;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Converters;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Database.ModelConfigurations;
 
@@ -29,12 +29,14 @@ public sealed class PositionEntityConfiguration : IEntityTypeConfiguration<Posit
         builder.HasIndex(p => new { p.MarketId, p.Status });
         builder.HasIndex(p => p.SymbolId);
 
-        builder.HasOne(p => p.Symbol)
+        builder
+            .HasOne(p => p.Symbol)
             .WithMany()
             .HasForeignKey(p => p.SymbolId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(p => p.LinkedBuyPosition)
+        builder
+            .HasOne(p => p.LinkedBuyPosition)
             .WithMany()
             .HasForeignKey(p => p.LinkedBuyPositionId)
             .OnDelete(DeleteBehavior.Restrict);

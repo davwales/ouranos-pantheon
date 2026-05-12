@@ -11,8 +11,7 @@ public static class GetModelEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapGet("/api/hermes/models/{modelId}", Handle)
-            .WithTags("Hermes.Models");
+        app.MapGet("/api/hermes/models/{modelId}", Handle).WithTags("Hermes.Models");
     }
 
     internal static async Task<IResult> Handle(

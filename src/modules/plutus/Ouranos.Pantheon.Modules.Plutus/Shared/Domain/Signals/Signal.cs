@@ -1,16 +1,15 @@
-using Ouranos.Pantheon.Modules.Shared.Domain;
-using Ouranos.Pantheon.Modules.Shared.Extensions;
+using Ardalis.GuardClauses;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
-using Ardalis.GuardClauses;
+using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 
 public class Signal : BaseEntity<Id<Signal>>
 {
-    private Signal(Id<Signal> id) : base(id)
-    {
-    }
+    private Signal(Id<Signal> id)
+        : base(id) { }
 
     public Id<Market> MarketId { get; private set; }
 
@@ -57,7 +56,7 @@ public class Signal : BaseEntity<Id<Signal>>
             Value = value,
             ComputedAt = DateTimeOffset.UtcNow,
             _market = market,
-            _symbol = symbol
+            _symbol = symbol,
         };
     }
 }

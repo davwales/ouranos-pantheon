@@ -1,8 +1,8 @@
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization.Chromosomes;
 using Ouranos.Pantheon.Modules.Shared.Extensions;
-using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Tests.Shared.Domain.Strategies.Optimization.Chromosomes;
 
@@ -12,7 +12,8 @@ public sealed class SignalWeightedChromosomeTests
     public void CreateRandom_WhenSignalWeighted_ShouldSetSignalWeightedFields()
     {
         // Arrange & Act
-        var chromosome = (SignalWeightedChromosome)StrategyChromosome.CreateRandom(StrategyType.SignalWeighted);
+        var chromosome = (SignalWeightedChromosome)
+            StrategyChromosome.CreateRandom(StrategyType.SignalWeighted);
 
         // Assert
         chromosome.SignalWeightedConfig.TaxAdjustedRoiWeight.ShouldNotBeNull();
@@ -47,7 +48,12 @@ public sealed class SignalWeightedChromosomeTests
     public void Genes_WhenSignalWeightedAndSignalWeightedConfigHasNoWeightsSet_ShouldNotThrow()
     {
         // Arrange
-        var config = new TradingConfiguration { MaxPositions = 5, MaxPositionPercent = 0.1m, HoldPeriodDays = 10 };
+        var config = new TradingConfiguration
+        {
+            MaxPositions = 5,
+            MaxPositionPercent = 0.1m,
+            HoldPeriodDays = 10,
+        };
 
         // Act
         var chromosome = new SignalWeightedChromosome(config);
@@ -62,7 +68,8 @@ public sealed class SignalWeightedChromosomeTests
     public void Mutate_WhenSignalWeightedType_ShouldMutateSignalWeightedConfig()
     {
         // Arrange
-        var chromosome = (SignalWeightedChromosome)StrategyChromosome.CreateRandom(StrategyType.SignalWeighted);
+        var chromosome = (SignalWeightedChromosome)
+            StrategyChromosome.CreateRandom(StrategyType.SignalWeighted);
 
         // Act
         for (var i = 0; i < 200; i++)
@@ -81,7 +88,8 @@ public sealed class SignalWeightedChromosomeTests
     public void Mutate_WhenSignalWeighted_ShouldNotThrow()
     {
         // Arrange
-        var chromosome = (SignalWeightedChromosome)StrategyChromosome.CreateRandom(StrategyType.SignalWeighted);
+        var chromosome = (SignalWeightedChromosome)
+            StrategyChromosome.CreateRandom(StrategyType.SignalWeighted);
 
         // Act & Assert
         Should.NotThrow(() => chromosome.Mutate(0.5));
@@ -91,7 +99,12 @@ public sealed class SignalWeightedChromosomeTests
     public void Crossover_WhenSignalWeighted_ChildShouldInheritSignalWeightedFields()
     {
         // Arrange
-        var config1 = new TradingConfiguration { MaxPositions = 5, MaxPositionPercent = 0.2m, HoldPeriodDays = 10, };
+        var config1 = new TradingConfiguration
+        {
+            MaxPositions = 5,
+            MaxPositionPercent = 0.2m,
+            HoldPeriodDays = 10,
+        };
         var weights1 = new SignalWeightedConfig(
             TaxAdjustedRoiWeight: 1.0m,
             VolumeAnomalyWeight: 2.0m,
@@ -101,7 +114,12 @@ public sealed class SignalWeightedChromosomeTests
             MovingAverageCrossoverWeight: 2.0m,
             PriceVelocityWeight: 0.8m
         );
-        var config2 = new TradingConfiguration { MaxPositions = 15, MaxPositionPercent = 0.4m, HoldPeriodDays = 20, };
+        var config2 = new TradingConfiguration
+        {
+            MaxPositions = 15,
+            MaxPositionPercent = 0.4m,
+            HoldPeriodDays = 20,
+        };
         var weights2 = new SignalWeightedConfig(
             TaxAdjustedRoiWeight: 0.5m,
             VolumeAnomalyWeight: 1.5m,
@@ -122,13 +140,25 @@ public sealed class SignalWeightedChromosomeTests
         var validMaxPositions = new[] { config1.MaxPositions, config2.MaxPositions };
         validMaxPositions.ShouldContain(childConfig.MaxPositions);
 
-        var validMaxPositionPercents = new[] { config1.MaxPositionPercent, config2.MaxPositionPercent };
+        var validMaxPositionPercents = new[]
+        {
+            config1.MaxPositionPercent,
+            config2.MaxPositionPercent,
+        };
         validMaxPositionPercents.ShouldContain(childConfig.MaxPositionPercent);
 
-        var validTaxAdjustedRoi = new[] { weights1.TaxAdjustedRoiWeight, weights2.TaxAdjustedRoiWeight };
+        var validTaxAdjustedRoi = new[]
+        {
+            weights1.TaxAdjustedRoiWeight,
+            weights2.TaxAdjustedRoiWeight,
+        };
         validTaxAdjustedRoi.ShouldContain(child.SignalWeightedConfig.TaxAdjustedRoiWeight);
 
-        var validVolumeAnomaly = new[] { weights1.VolumeAnomalyWeight, weights2.VolumeAnomalyWeight };
+        var validVolumeAnomaly = new[]
+        {
+            weights1.VolumeAnomalyWeight,
+            weights2.VolumeAnomalyWeight,
+        };
         validVolumeAnomaly.ShouldContain(child.SignalWeightedConfig.VolumeAnomalyWeight);
 
         var validRsi = new[] { weights1.RsiWeight, weights2.RsiWeight };
@@ -139,9 +169,19 @@ public sealed class SignalWeightedChromosomeTests
     public void Crossover_WhenBothParents_ShouldProduceDeterministicStructure()
     {
         // Arrange
-        var config1 = new TradingConfiguration { MaxPositions = 5, MaxPositionPercent = 0.2m, HoldPeriodDays = 10, };
+        var config1 = new TradingConfiguration
+        {
+            MaxPositions = 5,
+            MaxPositionPercent = 0.2m,
+            HoldPeriodDays = 10,
+        };
         var weights1 = new SignalWeightedConfig(RsiWeight: 1.0m, TrendMomentumWeight: 2.0m);
-        var config2 = new TradingConfiguration { MaxPositions = 15, MaxPositionPercent = 0.4m, HoldPeriodDays = 20, };
+        var config2 = new TradingConfiguration
+        {
+            MaxPositions = 15,
+            MaxPositionPercent = 0.4m,
+            HoldPeriodDays = 20,
+        };
         var weights2 = new SignalWeightedConfig(RsiWeight: 0.5m, TrendMomentumWeight: 1.5m);
         var parent1 = new SignalWeightedChromosome(config1, weights1);
         var parent2 = new SignalWeightedChromosome(config2, weights2);

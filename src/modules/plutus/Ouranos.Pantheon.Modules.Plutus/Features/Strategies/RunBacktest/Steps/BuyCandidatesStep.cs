@@ -1,6 +1,6 @@
 using Ardalis.GuardClauses;
-using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
+using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Steps;
 
@@ -21,7 +21,9 @@ public sealed class BuyCandidatesStep : IStep<BacktestPayload>
         var scoredSymbols = payload.Portfolio.ScoredSymbols ?? [];
 
         var candidates = scoredSymbols
-            .Where(s => s.Score > buyThreshold && !payload.Portfolio.OpenPositions.ContainsKey(s.Symbol.Id))
+            .Where(s =>
+                s.Score > buyThreshold && !payload.Portfolio.OpenPositions.ContainsKey(s.Symbol.Id)
+            )
             .OrderByDescending(s => s.Score)
             .Take(Math.Max(0, maxPositions - payload.Portfolio.OpenPositions.Count))
             .ToList();
@@ -34,9 +36,10 @@ public sealed class BuyCandidatesStep : IStep<BacktestPayload>
             var maxPositionBudget = payload.Portfolio.Balance * maxPositionPercent;
 
             var dailyVolume = ctx.Data.GetDailyVolume(candidate.Symbol.Id, currentDate);
-            var volumeImpact = dailyVolume > 0
-                ? Math.Max(1m, maxPositionBudget / candidate.Price) / dailyVolume
-                : 0m;
+            var volumeImpact =
+                dailyVolume > 0
+                    ? Math.Max(1m, maxPositionBudget / candidate.Price) / dailyVolume
+                    : 0m;
             var slippage = volumeImpact * payload.Parameters.SlippageMultiplier;
             var adjustedBuyPrice = candidate.Price * (1 + slippage);
 
@@ -56,7 +59,9 @@ public sealed class BuyCandidatesStep : IStep<BacktestPayload>
 
             if (dailyVolume > 0)
             {
-                var maxBuyableVolume = Math.Floor(dailyVolume * payload.Parameters.VolumeParticipationRate);
+                var maxBuyableVolume = Math.Floor(
+                    dailyVolume * payload.Parameters.VolumeParticipationRate
+                );
                 volume = Math.Min(volume, maxBuyableVolume);
             }
 

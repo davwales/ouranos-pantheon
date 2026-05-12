@@ -18,8 +18,9 @@ public sealed class LinkPositionHandlerTests
     private readonly IFixture _fixture = new Fixture();
     private readonly LinkPositionHandler _handler;
 
-    private readonly ILogger<LinkPositionHandler> _logger =
-        Substitute.For<ILogger<LinkPositionHandler>>();
+    private readonly ILogger<LinkPositionHandler> _logger = Substitute.For<
+        ILogger<LinkPositionHandler>
+    >();
 
     private readonly PlutusDbContext _dbContext;
 
@@ -36,22 +37,10 @@ public sealed class LinkPositionHandlerTests
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
         var symbolId = _fixture.Create<Id<Symbol>>();
-        var buyPosition = Position.Create(
-            PositionSide.Buy,
-            marketId,
-            symbolId,
-            150.50m,
-            10m
-        );
+        var buyPosition = Position.Create(PositionSide.Buy, marketId, symbolId, 150.50m, 10m);
         buyPosition.Close(PositionStatus.Bought);
 
-        var sellPosition = Position.Create(
-            PositionSide.Sell,
-            marketId,
-            symbolId,
-            155.00m,
-            10m
-        );
+        var sellPosition = Position.Create(PositionSide.Sell, marketId, symbolId, 155.00m, 10m);
 
         await _dbContext.Positions.AddAsync(buyPosition);
         await _dbContext.Positions.AddAsync(sellPosition);
@@ -93,20 +82,11 @@ public sealed class LinkPositionHandlerTests
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
         var symbolId = _fixture.Create<Id<Symbol>>();
-        var sellPosition = Position.Create(
-            PositionSide.Sell,
-            marketId,
-            symbolId,
-            155.00m,
-            10m
-        );
+        var sellPosition = Position.Create(PositionSide.Sell, marketId, symbolId, 155.00m, 10m);
         await _dbContext.Positions.AddAsync(sellPosition);
         await _dbContext.SaveChangesAsync();
 
-        var command = new LinkPositionInput(
-            sellPosition.Id,
-            _fixture.Create<Id<Position>>()
-        );
+        var command = new LinkPositionInput(sellPosition.Id, _fixture.Create<Id<Position>>());
 
         // Act
         var link = async () => await _handler.Handle(command, CancellationToken.None);
@@ -122,20 +102,8 @@ public sealed class LinkPositionHandlerTests
         var marketId = _fixture.Create<Id<Market>>();
         var symbolId1 = _fixture.Create<Id<Symbol>>();
         var symbolId2 = _fixture.Create<Id<Symbol>>();
-        var buyPosition1 = Position.Create(
-            PositionSide.Buy,
-            marketId,
-            symbolId1,
-            150.50m,
-            10m
-        );
-        var buyPosition2 = Position.Create(
-            PositionSide.Buy,
-            marketId,
-            symbolId2,
-            200.00m,
-            5m
-        );
+        var buyPosition1 = Position.Create(PositionSide.Buy, marketId, symbolId1, 150.50m, 10m);
+        var buyPosition2 = Position.Create(PositionSide.Buy, marketId, symbolId2, 200.00m, 5m);
         await _dbContext.Positions.AddAsync(buyPosition1);
         await _dbContext.Positions.AddAsync(buyPosition2);
         await _dbContext.SaveChangesAsync();
@@ -156,20 +124,8 @@ public sealed class LinkPositionHandlerTests
         var marketId = _fixture.Create<Id<Market>>();
         var symbolId1 = _fixture.Create<Id<Symbol>>();
         var symbolId2 = _fixture.Create<Id<Symbol>>();
-        var sellPosition1 = Position.Create(
-            PositionSide.Sell,
-            marketId,
-            symbolId1,
-            155.00m,
-            10m
-        );
-        var sellPosition2 = Position.Create(
-            PositionSide.Sell,
-            marketId,
-            symbolId2,
-            200.00m,
-            5m
-        );
+        var sellPosition1 = Position.Create(PositionSide.Sell, marketId, symbolId1, 155.00m, 10m);
+        var sellPosition2 = Position.Create(PositionSide.Sell, marketId, symbolId2, 200.00m, 5m);
         await _dbContext.Positions.AddAsync(sellPosition1);
         await _dbContext.Positions.AddAsync(sellPosition2);
         await _dbContext.SaveChangesAsync();

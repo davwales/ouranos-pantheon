@@ -1,15 +1,16 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.DeleteConversation.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
+using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.DeleteConversation;
 
-public sealed class DeleteConversationHandler : IPantheonHandler<DeleteConversationInput, IdResponse<Conversation>>
+public sealed class DeleteConversationHandler
+    : IPantheonHandler<DeleteConversationInput, IdResponse<Conversation>>
 {
     private readonly HermesDbContext _dbContext;
     private readonly ILogger<DeleteConversationHandler> _logger;
@@ -34,8 +35,10 @@ public sealed class DeleteConversationHandler : IPantheonHandler<DeleteConversat
         _logger.LogTrace("Attempting to handle delete conversation command '{@command}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var conversation = await _dbContext.Conversations
-            .FirstOrDefaultAsync(c => c.Id == command.ConversationId, cancellationToken);
+        var conversation = await _dbContext.Conversations.FirstOrDefaultAsync(
+            c => c.Id == command.ConversationId,
+            cancellationToken
+        );
 
         Guard.Against.NotFound(command.ConversationId, conversation);
 

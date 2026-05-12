@@ -28,12 +28,21 @@ public sealed class GetItemsTests
         // Arrange
         var serverItems = new List<ItemResponse>
         {
-            new() { Key = 1, Name = "Sword", CanBeHq = true },
-            new() { Key = 2, Name = "Iron Ore", CanBeHq = false },
+            new()
+            {
+                Key = 1,
+                Name = "Sword",
+                CanBeHq = true,
+            },
+            new()
+            {
+                Key = 2,
+                Name = "Iron Ore",
+                CanBeHq = false,
+            },
         };
 
-        _githubClient.GetItems(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(serverItems));
+        _githubClient.GetItems(Arg.Any<CancellationToken>()).Returns(Task.FromResult(serverItems));
 
         // Act
         var result = await _getItems.GetItemsAsync(CancellationToken.None);
@@ -53,11 +62,15 @@ public sealed class GetItemsTests
         // Arrange
         var serverItems = new List<ItemResponse>
         {
-            new() { Key = 1, Name = "Potion", CanBeHq = false },
+            new()
+            {
+                Key = 1,
+                Name = "Potion",
+                CanBeHq = false,
+            },
         };
 
-        _githubClient.GetItems(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(serverItems));
+        _githubClient.GetItems(Arg.Any<CancellationToken>()).Returns(Task.FromResult(serverItems));
 
         // Act
         await _getItems.GetItemsAsync(CancellationToken.None);
@@ -71,7 +84,8 @@ public sealed class GetItemsTests
     public async Task GetItemsAsync_WhenGithubReturnsEmpty_ShouldReturnEmptyList()
     {
         // Arrange
-        _githubClient.GetItems(Arg.Any<CancellationToken>())
+        _githubClient
+            .GetItems(Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new List<ItemResponse>()));
 
         // Act

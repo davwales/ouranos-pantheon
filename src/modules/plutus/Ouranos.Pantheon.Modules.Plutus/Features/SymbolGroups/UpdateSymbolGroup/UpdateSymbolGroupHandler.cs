@@ -1,15 +1,16 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.UpdateSymbolGroup.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.SymbolGroups;
+using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.UpdateSymbolGroup;
 
-public sealed class UpdateSymbolGroupHandler : IPantheonHandler<UpdateSymbolGroupInput, IdResponse<SymbolGroup>>
+public sealed class UpdateSymbolGroupHandler
+    : IPantheonHandler<UpdateSymbolGroupInput, IdResponse<SymbolGroup>>
 {
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<UpdateSymbolGroupHandler> _logger;
@@ -34,15 +35,17 @@ public sealed class UpdateSymbolGroupHandler : IPantheonHandler<UpdateSymbolGrou
         _logger.LogTrace("Attempting to handle update symbol group command '{@command}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var group = await _dbContext.SymbolGroups
-            .FirstOrDefaultAsync(sg => sg.Id == command.SymbolGroupId, cancellationToken);
+        var group = await _dbContext.SymbolGroups.FirstOrDefaultAsync(
+            sg => sg.Id == command.SymbolGroupId,
+            cancellationToken
+        );
 
         Guard.Against.NotFound(command.SymbolGroupId, group);
 
         group.Update(command.Name, command.Description);
 
-        var existingMembers = await _dbContext.SymbolGroupMembers
-            .Where(m => m.SymbolGroupId == command.SymbolGroupId)
+        var existingMembers = await _dbContext
+            .SymbolGroupMembers.Where(m => m.SymbolGroupId == command.SymbolGroupId)
             .ToListAsync(cancellationToken);
 
         var existingIds = existingMembers.Select(m => m.SymbolId).ToHashSet();

@@ -1,24 +1,25 @@
 using Ardalis.GuardClauses;
+using Flagsmith;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
-using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
-using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.GetAllModels.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
-using Flagsmith;
+using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
+using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Models.GetAllModels;
 
 public sealed class GetAllModelsHandler
     : IPantheonHandler<GetAllModelsInput, List<GetAllModelsResponse>>
 {
-    private static readonly FilterBuilder<ModelConfig> FilterBuilder = new FilterBuilder<ModelConfig>()
-        .On(nameof(ModelConfig.Name), m => m.Name, caseInsensitive: true)
-        .On(nameof(ModelConfig.ModelIdentifier), m => m.ModelIdentifier, caseInsensitive: true)
-        .On(nameof(ModelConfig.IsPublic), m => m.IsPublic);
+    private static readonly FilterBuilder<ModelConfig> FilterBuilder =
+        new FilterBuilder<ModelConfig>()
+            .On(nameof(ModelConfig.Name), m => m.Name, caseInsensitive: true)
+            .On(nameof(ModelConfig.ModelIdentifier), m => m.ModelIdentifier, caseInsensitive: true)
+            .On(nameof(ModelConfig.IsPublic), m => m.IsPublic);
 
     private static readonly SortBuilder<ModelConfig> SortBuilder = new SortBuilder<ModelConfig>()
         .On(nameof(ModelConfig.Name), m => m.Name)
@@ -58,9 +59,7 @@ public sealed class GetAllModelsHandler
         var flags = await _flagsmith.GetEnvironmentFlags();
         var isPublicMode = await flags.IsFeatureEnabled(HermesFeatureFlags.PublicMode);
 
-        var dbQuery = _dbContext.ModelConfigs
-            .AsQueryable()
-            .AsNoTracking();
+        var dbQuery = _dbContext.ModelConfigs.AsQueryable().AsNoTracking();
 
         if (isPublicMode)
         {
@@ -71,18 +70,17 @@ public sealed class GetAllModelsHandler
             .FilterBy(query.Filter, FilterBuilder)
             .SortBy(query.SortField, query.SortDirection, SortBuilder)
             .Select(m => new GetAllModelsResponse(
-                    m.Id,
-                    m.Name,
-                    m.ModelIdentifier,
-                    m.SystemPrompt,
-                    m.Temperature,
-                    m.MaxTokens,
-                    m.RepeatPenalty,
-                    m.ContextWindow,
-                    m.IsDefault,
-                    m.IsPublic
-                )
-            )
+                m.Id,
+                m.Name,
+                m.ModelIdentifier,
+                m.SystemPrompt,
+                m.Temperature,
+                m.MaxTokens,
+                m.RepeatPenalty,
+                m.ContextWindow,
+                m.IsDefault,
+                m.IsPublic
+            ))
             .ToListAsync(cancellationToken);
 
         _logger.LogDebug("Successfully handled get all models request.");

@@ -28,9 +28,7 @@ public sealed class DeleteSymbolGroupEndpointTests
 
         // Assert
         result.ShouldBeOfType<Ok<IdResponse<SymbolGroup>>>();
-        await _bus.Received(1).InvokeAsync<IdResponse<SymbolGroup>>(
-            Arg.Any<DeleteSymbolGroupInput>(),
-            ct
-        );
+        await _bus.Received(1)
+            .InvokeAsync<IdResponse<SymbolGroup>>(Arg.Any<DeleteSymbolGroupInput>(), ct);
     }
 }

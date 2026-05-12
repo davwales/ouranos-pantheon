@@ -15,7 +15,9 @@ public sealed class DeleteModelHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly DeleteModelHandler _handler;
-    private readonly ILogger<DeleteModelHandler> _logger = Substitute.For<ILogger<DeleteModelHandler>>();
+    private readonly ILogger<DeleteModelHandler> _logger = Substitute.For<
+        ILogger<DeleteModelHandler>
+    >();
     private readonly HermesDbContext _dbContext;
 
     public DeleteModelHandlerTests()
@@ -29,7 +31,12 @@ public sealed class DeleteModelHandlerTests
     public async Task Handle_WhenHappyPath_ShouldDeleteModelAndReturnId()
     {
         // Arrange
-        var existingModel = ModelConfig.Create(new Id<ModelConfig>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>(), _fixture.Create<string>());
+        var existingModel = ModelConfig.Create(
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
         await _dbContext.SeedData(existingModel);
 
         var command = new DeleteModelInput(existingModel.Id);

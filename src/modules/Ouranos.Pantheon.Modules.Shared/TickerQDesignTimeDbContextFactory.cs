@@ -15,14 +15,18 @@ public class TickerQDesignTimeDbContextFactory : IDesignTimeDbContextFactory<Tic
             .AddJsonFile("appsettings.Development.json", optional: true)
             .Build();
 
-        var postgresOptions = configuration.GetSection(PostgresOptions.SectionName).Get<PostgresOptions>()
-                              ?? throw new InvalidOperationException("Postgres options not found.");
+        var postgresOptions =
+            configuration.GetSection(PostgresOptions.SectionName).Get<PostgresOptions>()
+            ?? throw new InvalidOperationException("Postgres options not found.");
 
         var optionsBuilder = new DbContextOptionsBuilder<TickerQDbContext>();
         optionsBuilder
             .UseNpgsql(
                 postgresOptions.GetConnectionString(),
-                o => o.MigrationsAssembly(typeof(TickerQDesignTimeDbContextFactory).Assembly.FullName)
+                o =>
+                    o.MigrationsAssembly(
+                        typeof(TickerQDesignTimeDbContextFactory).Assembly.FullName
+                    )
             )
             .UseSnakeCaseNamingConvention();
 

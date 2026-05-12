@@ -1,23 +1,21 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.UpdateStrategy.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
+using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.UpdateStrategy;
 
-public sealed class UpdateStrategyHandler : IPantheonHandler<UpdateStrategyInput, IdResponse<Strategy>>
+public sealed class UpdateStrategyHandler
+    : IPantheonHandler<UpdateStrategyInput, IdResponse<Strategy>>
 {
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<UpdateStrategyHandler> _logger;
 
-    public UpdateStrategyHandler(
-        ILogger<UpdateStrategyHandler> logger,
-        PlutusDbContext dbContext
-    )
+    public UpdateStrategyHandler(ILogger<UpdateStrategyHandler> logger, PlutusDbContext dbContext)
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(dbContext);
@@ -34,8 +32,10 @@ public sealed class UpdateStrategyHandler : IPantheonHandler<UpdateStrategyInput
         _logger.LogTrace("Attempting to handle update strategy command '{@command}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var strategy = await _dbContext.Strategies
-            .FirstOrDefaultAsync(s => s.Id == command.StrategyId, cancellationToken);
+        var strategy = await _dbContext.Strategies.FirstOrDefaultAsync(
+            s => s.Id == command.StrategyId,
+            cancellationToken
+        );
 
         Guard.Against.NotFound(command.StrategyId, strategy);
 

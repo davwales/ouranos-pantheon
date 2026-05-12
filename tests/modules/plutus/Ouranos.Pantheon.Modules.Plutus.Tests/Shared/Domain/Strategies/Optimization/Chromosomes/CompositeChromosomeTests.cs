@@ -1,8 +1,8 @@
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization.Chromosomes;
 using Ouranos.Pantheon.Modules.Shared.Extensions;
-using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Tests.Shared.Domain.Strategies.Optimization.Chromosomes;
 
@@ -12,7 +12,8 @@ public sealed class CompositeChromosomeTests
     public void CreateRandom_WhenComposite_ShouldOnlySetCommonFields()
     {
         // Arrange & Act
-        var chromosome = (CompositeChromosome)StrategyChromosome.CreateRandom(StrategyType.Composite);
+        var chromosome = (CompositeChromosome)
+            StrategyChromosome.CreateRandom(StrategyType.Composite);
 
         // Assert
         chromosome.Configuration.MaxPositions.ShouldNotBeNull();
@@ -27,10 +28,16 @@ public sealed class CompositeChromosomeTests
     public void Genes_WhenComposite_ShouldReturnCommonOnly()
     {
         // Arrange
-        var chromosome = (CompositeChromosome)StrategyChromosome.Create(
-            StrategyType.Composite,
-            new TradingConfiguration { MaxPositions = 5, MaxPositionPercent = 0.1m, HoldPeriodDays = 10, }
-        );
+        var chromosome = (CompositeChromosome)
+            StrategyChromosome.Create(
+                StrategyType.Composite,
+                new TradingConfiguration
+                {
+                    MaxPositions = 5,
+                    MaxPositionPercent = 0.1m,
+                    HoldPeriodDays = 10,
+                }
+            );
 
         // Act
         var genes = chromosome.Genes;
@@ -43,7 +50,12 @@ public sealed class CompositeChromosomeTests
     public void Mutate_WhenHoldPeriodDaysHasValue_CanChangeIt()
     {
         // Arrange
-        var config = new TradingConfiguration { MaxPositions = 10, MaxPositionPercent = 0.2m, HoldPeriodDays = 15 };
+        var config = new TradingConfiguration
+        {
+            MaxPositions = 10,
+            MaxPositionPercent = 0.2m,
+            HoldPeriodDays = 15,
+        };
         var chromosome = StrategyChromosome.Create(StrategyType.Composite, config);
 
         // Act
@@ -61,8 +73,14 @@ public sealed class CompositeChromosomeTests
     public void Mutate_WhenCompositeType_ShouldOnlyMutateCommonFields()
     {
         // Arrange
-        var config = new TradingConfiguration { MaxPositions = 10, MaxPositionPercent = 0.2m, HoldPeriodDays = 15 };
-        var chromosome = (CompositeChromosome)StrategyChromosome.Create(StrategyType.Composite, config);
+        var config = new TradingConfiguration
+        {
+            MaxPositions = 10,
+            MaxPositionPercent = 0.2m,
+            HoldPeriodDays = 15,
+        };
+        var chromosome = (CompositeChromosome)
+            StrategyChromosome.Create(StrategyType.Composite, config);
 
         // Act
         chromosome.Mutate(1.0);
@@ -77,7 +95,12 @@ public sealed class CompositeChromosomeTests
     {
         // Arrange
         var chromosome = new CompositeChromosome(
-            new TradingConfiguration { MaxPositions = 10, MaxPositionPercent = 0.2m, HoldPeriodDays = 15 }
+            new TradingConfiguration
+            {
+                MaxPositions = 10,
+                MaxPositionPercent = 0.2m,
+                HoldPeriodDays = 15,
+            }
         );
 
         // Act & Assert
@@ -88,8 +111,18 @@ public sealed class CompositeChromosomeTests
     public void Crossover_WhenCompositeType_ShouldOnlyCrossoverCommonFields()
     {
         // Arrange
-        var config1 = new TradingConfiguration { MaxPositions = 3, MaxPositionPercent = 0.10m, HoldPeriodDays = 7 };
-        var config2 = new TradingConfiguration { MaxPositions = 15, MaxPositionPercent = 0.40m, HoldPeriodDays = 25 };
+        var config1 = new TradingConfiguration
+        {
+            MaxPositions = 3,
+            MaxPositionPercent = 0.10m,
+            HoldPeriodDays = 7,
+        };
+        var config2 = new TradingConfiguration
+        {
+            MaxPositions = 15,
+            MaxPositionPercent = 0.40m,
+            HoldPeriodDays = 25,
+        };
         var parent1 = new CompositeChromosome(config1);
         var parent2 = new CompositeChromosome(config2);
 

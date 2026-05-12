@@ -44,8 +44,10 @@ public sealed class ForecastEvaluatorJob
         var cutoff = new DateTimeOffset(DateTimeOffset.UtcNow.UtcDateTime.Date, TimeSpan.Zero);
         var oldestTarget = cutoff.AddDays(-_options.Value.Forecasting.MaxEvaluationAgeDays);
 
-        var pending = await _dbContext.ForecastRecords
-            .Where(r => r.TargetAt < cutoff && r.TargetAt >= oldestTarget && r.EvaluatedAt == null)
+        var pending = await _dbContext
+            .ForecastRecords.Where(r =>
+                r.TargetAt < cutoff && r.TargetAt >= oldestTarget && r.EvaluatedAt == null
+            )
             .ToListAsync(ct);
 
         if (pending.Count == 0)
@@ -65,16 +67,17 @@ public sealed class ForecastEvaluatorJob
             var minTarget = batchList.Min(r => r.TargetAt);
             var maxTarget = batchList.Max(r => r.TargetAt);
 
-            var actuals = await _dbContext.Trades.AsNoTracking()
+            var actuals = await _dbContext
+                .Trades.AsNoTracking()
                 .Where(t =>
-                    symbolIds.Contains(t.SymbolId) &&
-                    t.Timestamp >= minTarget &&
-                    t.Timestamp < maxTarget.AddDays(1)
+                    symbolIds.Contains(t.SymbolId)
+                    && t.Timestamp >= minTarget
+                    && t.Timestamp < maxTarget.AddDays(1)
                 )
                 .GroupBy(t => new
                 {
                     t.SymbolId,
-                    Bucket = TimescaleDbFunctions.TimeBucket(TimeSpan.FromDays(1), t.Timestamp)
+                    Bucket = TimescaleDbFunctions.TimeBucket(TimeSpan.FromDays(1), t.Timestamp),
                 })
                 .Select(g => new
                 {
@@ -83,7 +86,7 @@ public sealed class ForecastEvaluatorJob
                     AveragePrice = g.Sum(t => t.Price * t.Volume) / g.Sum(t => t.Volume),
                     MinPrice = g.Min(t => t.Price),
                     MaxPrice = g.Max(t => t.Price),
-                    Volume = g.Sum(t => t.Volume)
+                    Volume = g.Sum(t => t.Volume),
                 })
                 .ToListAsync(ct);
 

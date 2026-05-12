@@ -16,7 +16,9 @@ public sealed class RunBacktestHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly RunBacktestHandler _handler;
-    private readonly ILogger<RunBacktestHandler> _logger = Substitute.For<ILogger<RunBacktestHandler>>();
+    private readonly ILogger<RunBacktestHandler> _logger = Substitute.For<
+        ILogger<RunBacktestHandler>
+    >();
     private readonly IDbContextFactory<PlutusDbContext> _dbContextFactory;
     private readonly IMessageBus _bus = Substitute.For<IMessageBus>();
 

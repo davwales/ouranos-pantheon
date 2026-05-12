@@ -8,11 +8,7 @@ public sealed class SubscribeMessageTests
     public void SubscribeMessage_AllProperties_ShouldBeAccessible()
     {
         // Arrange & Act
-        var message = new SubscribeMessage(
-            Trades: ["AAPL"],
-            Quotes: ["MSFT"],
-            Bars: ["GOOG"]
-        );
+        var message = new SubscribeMessage(Trades: ["AAPL"], Quotes: ["MSFT"], Bars: ["GOOG"]);
 
         // Assert
         message.Trades.ShouldContain("AAPL");

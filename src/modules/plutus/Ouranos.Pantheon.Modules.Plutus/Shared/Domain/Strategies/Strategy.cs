@@ -1,13 +1,14 @@
 using Ardalis.GuardClauses;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Shared.Extensions;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 
 public class Strategy : BaseEntity<Id<Strategy>>
 {
-    protected Strategy(Id<Strategy> id) : base(id)
+    protected Strategy(Id<Strategy> id)
+        : base(id)
     {
         Name = string.Empty;
         TradingConfiguration = new TradingConfiguration();
@@ -70,7 +71,7 @@ public class Strategy : BaseEntity<Id<Strategy>>
             MeanReversionConfig = meanReversionConfig,
             RecipeArbitrageConfig = recipeArbitrageConfig,
             _market = market,
-            _components = components
+            _components = components,
         };
     }
 

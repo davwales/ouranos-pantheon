@@ -65,6 +65,9 @@ project.lock.json
 project.fragment.lock.json
 artifacts/
 
+# Local tool manifest at repo root (the real one is .config/dotnet-tools.json)
+dotnet-tools.json
+
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
 
@@ -379,12 +382,8 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-# VS Code files for those working on multiple tools
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+# VS Code
+.vscode/
 *.code-workspace
 
 # Local History for Visual Studio Code

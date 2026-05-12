@@ -1,8 +1,8 @@
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Ouranos.Pantheon.Modules.Shared.WebSockets.WebSocketClients;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Ffxiv.Messages;
+using Ouranos.Pantheon.Modules.Shared.WebSockets.WebSocketClients;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Ffxiv;
 

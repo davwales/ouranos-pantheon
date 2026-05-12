@@ -1,14 +1,14 @@
 using Ardalis.GuardClauses;
+using Flagsmith;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
-using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
-using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Hermes.Features.Personas.GetAllPersonas.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
-using Flagsmith;
+using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
+using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Personas.GetAllPersonas;
 
@@ -54,9 +54,7 @@ public sealed class GetAllPersonasHandler
         var flags = await _flagsmith.GetEnvironmentFlags();
         var isPublicMode = await flags.IsFeatureEnabled(HermesFeatureFlags.PublicMode);
 
-        var dbQuery = _dbContext.Personas
-            .AsQueryable()
-            .AsNoTracking();
+        var dbQuery = _dbContext.Personas.AsQueryable().AsNoTracking();
 
         if (isPublicMode)
         {
@@ -67,15 +65,14 @@ public sealed class GetAllPersonasHandler
             .FilterBy(query.Filter, FilterBuilder)
             .SortBy(query.SortField, query.SortDirection, SortBuilder)
             .Select(p => new GetAllPersonasResponse(
-                    p.Id,
-                    p.Name,
-                    p.Description,
-                    p.Personality,
-                    p.Scenario,
-                    p.IsDefault,
-                    p.IsPublic
-                )
-            )
+                p.Id,
+                p.Name,
+                p.Description,
+                p.Personality,
+                p.Scenario,
+                p.IsDefault,
+                p.IsPublic
+            ))
             .ToListAsync(cancellationToken);
 
         _logger.LogDebug("Successfully handled get all personas request.");

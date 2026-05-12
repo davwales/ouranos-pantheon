@@ -14,8 +14,10 @@ namespace Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Osrs;
 
 public sealed class OsrsDataLoaderJob
 {
-    private static readonly IEnumerable<TimeSpan> StaleDataRetryDelays =
-        Enumerable.Repeat(TimeSpan.FromSeconds(5), 6);
+    private static readonly IEnumerable<TimeSpan> StaleDataRetryDelays = Enumerable.Repeat(
+        TimeSpan.FromSeconds(5),
+        6
+    );
 
     private const string PayToPlaySubcode = "p2p";
     private const string FreeToPlaySubcode = "f2p";
@@ -90,7 +92,9 @@ public sealed class OsrsDataLoaderJob
         await db.SaveChangesAsync(ct);
     }
 
-    private async Task<(DateTimeOffset timestamp, PriceResponse prices)> FetchPrices(CancellationToken ct)
+    private async Task<(DateTimeOffset timestamp, PriceResponse prices)> FetchPrices(
+        CancellationToken ct
+    )
     {
         var prices = await _wikiClient.GetPrices(ct);
         var timestamp = DateTimeOffset.FromUnixTimeSeconds(prices.Timestamp);
@@ -107,12 +111,20 @@ public sealed class OsrsDataLoaderJob
         return MapTrades(timestamp, mappings, prices.Data);
     }
 
-    private async Task PublishTrades(List<TradeMessage> messages, DateTimeOffset timestamp, CancellationToken ct)
+    private async Task PublishTrades(
+        List<TradeMessage> messages,
+        DateTimeOffset timestamp,
+        CancellationToken ct
+    )
     {
         if (messages.Count > 0)
         {
             await _queueTradeMessages.QueueMessages(messages, ct);
-            _logger.LogInformation("Processed {Count} OSRS trades for {Timestamp}.", messages.Count, timestamp);
+            _logger.LogInformation(
+                "Processed {Count} OSRS trades for {Timestamp}.",
+                messages.Count,
+                timestamp
+            );
         }
     }
 
@@ -134,7 +146,11 @@ public sealed class OsrsDataLoaderJob
             }
 
             var subcode = mapping.IsMembers ? PayToPlaySubcode : FreeToPlaySubcode;
-            var additionalFields = new AdditionalFields(mapping.Limit, mapping.HighAlch, mapping.LowAlch);
+            var additionalFields = new AdditionalFields(
+                mapping.Limit,
+                mapping.HighAlch,
+                mapping.LowAlch
+            );
 
             if (price is { LowPriceVolume: > 0, AvgLowPrice: not null })
             {

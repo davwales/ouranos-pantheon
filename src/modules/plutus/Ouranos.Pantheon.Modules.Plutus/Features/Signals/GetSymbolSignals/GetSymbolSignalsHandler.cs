@@ -1,10 +1,10 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSymbolSignals.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
+using Ouranos.Pantheon.Modules.Shared.Application;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSymbolSignals;
 
@@ -37,18 +37,20 @@ public sealed class GetSymbolSignalsHandler
         _logger.LogTrace("Attempting to handle get symbol signals query '{@query}'.", input);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var symbol = await _dbContext.Symbols.AsNoTracking()
+        var symbol = await _dbContext
+            .Symbols.AsNoTracking()
             .FirstOrDefaultAsync(s => s.Id == input.SymbolId, cancellationToken);
 
         Guard.Against.NotFound(input.SymbolId, symbol);
 
-        var signalsQuery = _dbContext.Signals.AsNoTracking()
+        var signalsQuery = _dbContext
+            .Signals.AsNoTracking()
             .Where(s => s.SymbolId == input.SymbolId);
 
         if (input.Intent is { } intent)
         {
-            var matchingTypes = _computers.Values
-                .Where(c => c.Intents.Any(i => (i & intent) != 0))
+            var matchingTypes = _computers
+                .Values.Where(c => c.Intents.Any(i => (i & intent) != 0))
                 .Select(c => c.Type)
                 .ToHashSet();
 
@@ -102,18 +104,32 @@ public sealed class GetSymbolSignalsHandler
         var flipSignals = signals.Where(s => s.Intents.Contains(InvestmentIntent.Flip)).ToList();
         var isFlipFavourable = flipSignals.Count > 0 && flipSignals.All(s => s.Value > 0);
 
-        var merchSignalTypes = new[] { nameof(SignalType.TrendMomentum), nameof(SignalType.MovingAverageCrossover) };
-        var isMerchFavourable = signals.Where(s => merchSignalTypes.Contains(s.Type)).Any(s => s.Value > 0);
+        var merchSignalTypes = new[]
+        {
+            nameof(SignalType.TrendMomentum),
+            nameof(SignalType.MovingAverageCrossover),
+        };
+        var isMerchFavourable = signals
+            .Where(s => merchSignalTypes.Contains(s.Type))
+            .Any(s => s.Value > 0);
 
-        return new SignalSummary(avgScore, bullish, bearish, neutral, isFlipFavourable, isMerchFavourable);
+        return new SignalSummary(
+            avgScore,
+            bullish,
+            bearish,
+            neutral,
+            isFlipFavourable,
+            isMerchFavourable
+        );
     }
 
-    private static SignalDirection DeriveDirection(decimal value) => value switch
-    {
-        > 0 => SignalDirection.Bullish,
-        < 0 => SignalDirection.Bearish,
-        _ => SignalDirection.Neutral,
-    };
+    private static SignalDirection DeriveDirection(decimal value) =>
+        value switch
+        {
+            > 0 => SignalDirection.Bullish,
+            < 0 => SignalDirection.Bearish,
+            _ => SignalDirection.Neutral,
+        };
 
     private static SignalStrength DeriveStrength(decimal value)
     {

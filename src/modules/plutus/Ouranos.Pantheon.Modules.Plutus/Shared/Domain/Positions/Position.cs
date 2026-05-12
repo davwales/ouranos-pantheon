@@ -1,15 +1,16 @@
 using Ardalis.GuardClauses;
-using Ouranos.Pantheon.Modules.Shared.Domain;
-using Ouranos.Pantheon.Modules.Shared.Extensions;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
+using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Positions;
 
 public class Position : BaseEntity<Id<Position>>
 {
-    protected Position(Id<Position> id) : base(id)
+    protected Position(Id<Position> id)
+        : base(id)
     {
         Status = PositionStatus.Pending;
     }
@@ -33,9 +34,10 @@ public class Position : BaseEntity<Id<Position>>
 
     private Position? _linkedBuyPosition;
 
-    public Position? LinkedBuyPosition => LinkedBuyPositionId is null
-        ? null
-        : _linkedBuyPosition ?? throw new NavigationPropertyNotLoadedException<Position>();
+    public Position? LinkedBuyPosition =>
+        LinkedBuyPositionId is null
+            ? null
+            : _linkedBuyPosition ?? throw new NavigationPropertyNotLoadedException<Position>();
 
     public Id<Strategy>? StrategyId { get; init; }
 
@@ -90,7 +92,9 @@ public class Position : BaseEntity<Id<Position>>
     {
         if (Status != PositionStatus.Pending)
         {
-            throw new InvalidOperationException($"Cannot modify a position with status '{Status}'.");
+            throw new InvalidOperationException(
+                $"Cannot modify a position with status '{Status}'."
+            );
         }
 
         Guard.Against.NegativeOrZero(cost);
@@ -107,7 +111,9 @@ public class Position : BaseEntity<Id<Position>>
     {
         if (!CanCloseWith(closeStatus))
         {
-            throw new InvalidOperationException($"Cannot close a {Side} position with status '{closeStatus}'.");
+            throw new InvalidOperationException(
+                $"Cannot close a {Side} position with status '{closeStatus}'."
+            );
         }
 
         if (Status != PositionStatus.Pending)
@@ -138,7 +144,9 @@ public class Position : BaseEntity<Id<Position>>
     {
         if (Side != PositionSide.Sell)
         {
-            throw new InvalidOperationException($"Cannot link a '{Side}' position to a buy position.");
+            throw new InvalidOperationException(
+                $"Cannot link a '{Side}' position to a buy position."
+            );
         }
 
         Guard.Against.NullOrWhiteSpace(buyPositionId.Value, nameof(buyPositionId));

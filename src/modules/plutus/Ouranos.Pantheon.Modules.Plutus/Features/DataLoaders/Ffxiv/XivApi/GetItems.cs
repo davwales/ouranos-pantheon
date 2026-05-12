@@ -32,29 +32,26 @@ public sealed class GetItems : IGetItems
         _options = options;
     }
 
-    public async Task<List<ItemDto>> GetItemsAsync(
-        CancellationToken cancellationToken = default
-    )
+    public async Task<List<ItemDto>> GetItemsAsync(CancellationToken cancellationToken = default)
     {
         _logger.LogTrace("Attempting to get items from XivApi.");
 
-        var xivItems = await _cache.GetOrCreateAsync(
-            CacheKey,
-            async entry =>
-            {
-                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(_options.Value.ItemCacheMinutes);
-                return await _githubClient.GetItems(cancellationToken);
-            }
-        ) ?? [];
+        var xivItems =
+            await _cache.GetOrCreateAsync(
+                CacheKey,
+                async entry =>
+                {
+                    entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(
+                        _options.Value.ItemCacheMinutes
+                    );
+                    return await _githubClient.GetItems(cancellationToken);
+                }
+            ) ?? [];
 
         // We must add items for both lq and hq (if possible).
         var items = xivItems
             .Select(x => ConvertItem(x, false))
-            .Union(
-                xivItems
-                    .Where(x => x.CanBeHq)
-                    .Select(x => ConvertItem(x, true))
-            )
+            .Union(xivItems.Where(x => x.CanBeHq).Select(x => ConvertItem(x, true)))
             .ToList();
 
         _logger.LogDebug("Successfully retrieved items from XivApi.");

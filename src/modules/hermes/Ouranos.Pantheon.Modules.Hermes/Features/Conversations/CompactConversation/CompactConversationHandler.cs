@@ -21,8 +21,7 @@ public sealed class CompactConversationHandler
     private readonly IOuranosMachineLearningClient _mlClient;
     private readonly IDbContextFactory<HermesDbContext> _dbContextFactory;
 
-    private const string SummaryPromptTemplate =
-        """
+    private const string SummaryPromptTemplate = """
         You are summarizing a conversation for context compaction.
 
         The conversation is with {PersonaName}: {PersonaDescription}
@@ -56,16 +55,18 @@ public sealed class CompactConversationHandler
         [EnumeratorCancellation] CancellationToken cancellationToken = default
     )
     {
-        _logger.LogTrace("Attempting to handle compact conversation command '{@command}'.", command);
+        _logger.LogTrace(
+            "Attempting to handle compact conversation command '{@command}'.",
+            command
+        );
         cancellationToken.ThrowIfCancellationRequested();
 
         Guard.Against.Null(command.Messages, nameof(command.Messages));
 
         var lastSummaryIndex = command.Messages.FindLastIndex(m => m.Role == Role.Summary);
 
-        var messagesToSummarize = lastSummaryIndex >= 0
-            ? command.Messages.Skip(lastSummaryIndex + 1)
-            : command.Messages;
+        var messagesToSummarize =
+            lastSummaryIndex >= 0 ? command.Messages.Skip(lastSummaryIndex + 1) : command.Messages;
 
         var userAndAssistantMessages = messagesToSummarize
             .Where(m => m.Role is Role.User or Role.Assistant)
@@ -87,7 +88,7 @@ public sealed class CompactConversationHandler
                 command.ModelIdentifier,
                 [
                     new MessageDto(summaryPrompt, RoleDto.System),
-                    new MessageDto("Provide the summary now.", RoleDto.User)
+                    new MessageDto("Provide the summary now.", RoleDto.User),
                 ],
                 temperature: 0.3f,
                 maxTokens: 1024,
@@ -108,7 +109,12 @@ public sealed class CompactConversationHandler
         }
 
         var summary = buffer.ToString().Trim();
-        var summaryMessageId = await PersistSummary(command, summary, tokenUsage, cancellationToken);
+        var summaryMessageId = await PersistSummary(
+            command,
+            summary,
+            tokenUsage,
+            cancellationToken
+        );
 
         if (tokenUsage is not null)
         {
@@ -138,13 +144,17 @@ public sealed class CompactConversationHandler
 
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        var conversation = await dbContext.Conversations
-            .FirstOrDefaultAsync(c => c.Id == command.ConversationId, cancellationToken);
+        var conversation = await dbContext.Conversations.FirstOrDefaultAsync(
+            c => c.Id == command.ConversationId,
+            cancellationToken
+        );
 
         Guard.Against.NotFound(command.ConversationId.Value, conversation);
 
-        var existingCount = await dbContext.Messages
-            .CountAsync(m => m.ConversationId == command.ConversationId, cancellationToken);
+        var existingCount = await dbContext.Messages.CountAsync(
+            m => m.ConversationId == command.ConversationId,
+            cancellationToken
+        );
 
         var summaryMessage = Message.Create(
             DatabaseExtensions.CreateId<Message>(),
@@ -158,11 +168,7 @@ public sealed class CompactConversationHandler
 
         if (tokenUsage is not null)
         {
-            conversation.RecordTokenUsage(
-                0,
-                tokenUsage.OutputTokens,
-                tokenUsage.OutputTokens
-            );
+            conversation.RecordTokenUsage(0, tokenUsage.OutputTokens, tokenUsage.OutputTokens);
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -187,7 +193,7 @@ public sealed class CompactConversationHandler
             var roleLabel = message.Role switch
             {
                 Role.Assistant => command.PersonaName,
-                _ => message.Role.ToString()
+                _ => message.Role.ToString(),
             };
             builder.AppendLine($"{roleLabel}: {message.Content}");
         }

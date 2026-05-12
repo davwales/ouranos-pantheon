@@ -17,7 +17,15 @@ public sealed class GetPersonaEndpointTests
         // Arrange
         var ct = CancellationToken.None;
         var personaId = new Id<Persona>(Guid.NewGuid().ToString());
-        var expected = new GetPersonaResponse(personaId, "Assistant", "A helpful assistant", null, null, false, true);
+        var expected = new GetPersonaResponse(
+            personaId,
+            "Assistant",
+            "A helpful assistant",
+            null,
+            null,
+            false,
+            true
+        );
 
         _bus.InvokeAsync<GetPersonaResponse>(Arg.Any<object>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expected));

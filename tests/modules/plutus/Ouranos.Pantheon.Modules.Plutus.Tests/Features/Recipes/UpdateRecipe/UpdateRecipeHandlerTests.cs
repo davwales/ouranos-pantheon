@@ -16,7 +16,9 @@ public sealed class UpdateRecipeHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly UpdateRecipeHandler _handler;
-    private readonly ILogger<UpdateRecipeHandler> _logger = Substitute.For<ILogger<UpdateRecipeHandler>>();
+    private readonly ILogger<UpdateRecipeHandler> _logger = Substitute.For<
+        ILogger<UpdateRecipeHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
 
     public UpdateRecipeHandlerTests()

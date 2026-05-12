@@ -5,7 +5,8 @@ namespace Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits;
 
 public class Trait : BaseEntity<Id<Trait>>
 {
-    protected Trait(Id<Trait> id) : base(id)
+    protected Trait(Id<Trait> id)
+        : base(id)
     {
         Name = string.Empty;
         Content = string.Empty;
@@ -17,12 +18,7 @@ public class Trait : BaseEntity<Id<Trait>>
 
     public bool IsPublic { get; private set; }
 
-    public static Trait Create(
-        Id<Trait> id,
-        string name,
-        string content,
-        bool isPublic = true
-    )
+    public static Trait Create(Id<Trait> id, string name, string content, bool isPublic = true)
     {
         Guard.Against.NullOrWhiteSpace(name);
         Guard.Against.NullOrWhiteSpace(content);
@@ -31,15 +27,11 @@ public class Trait : BaseEntity<Id<Trait>>
         {
             Name = name,
             Content = content,
-            IsPublic = isPublic
+            IsPublic = isPublic,
         };
     }
 
-    public void Update(
-        string name,
-        string content,
-        bool isPublic = true
-    )
+    public void Update(string name, string content, bool isPublic = true)
     {
         Guard.Against.NullOrWhiteSpace(name);
         Guard.Against.NullOrWhiteSpace(content);

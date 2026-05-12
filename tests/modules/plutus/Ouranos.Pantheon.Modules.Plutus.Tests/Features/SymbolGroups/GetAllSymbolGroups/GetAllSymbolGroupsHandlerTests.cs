@@ -3,12 +3,12 @@ using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetAllSymbolGroups;
 using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetAllSymbolGroups.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.SymbolGroups;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.SymbolGroups;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
@@ -21,7 +21,9 @@ public sealed class GetAllSymbolGroupsHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly GetAllSymbolGroupsHandler _handler;
-    private readonly ILogger<GetAllSymbolGroupsHandler> _logger = Substitute.For<ILogger<GetAllSymbolGroupsHandler>>();
+    private readonly ILogger<GetAllSymbolGroupsHandler> _logger = Substitute.For<
+        ILogger<GetAllSymbolGroupsHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
 
     public GetAllSymbolGroupsHandlerTests()
@@ -29,7 +31,11 @@ public sealed class GetAllSymbolGroupsHandlerTests
         _fixture.Customize(new IdCustomization());
 
         _dbContext = DbContextExtensions.Mock<PlutusDbContext>();
-        _handler = new GetAllSymbolGroupsHandler(_logger, _dbContext, Options.Create(new QueryOptions()));
+        _handler = new GetAllSymbolGroupsHandler(
+            _logger,
+            _dbContext,
+            Options.Create(new QueryOptions())
+        );
     }
 
     [Fact]
@@ -42,13 +48,17 @@ public sealed class GetAllSymbolGroupsHandlerTests
             _fixture.Create<Taxes>()
         );
 
-        var groups = Enumerable.Range(0, 2).Select(_ => SymbolGroup.Create(
-                new Id<SymbolGroup>(Guid.NewGuid().ToString()),
-                _fixture.Create<string>(),
-                null,
-                market.Id
+        var groups = Enumerable
+            .Range(0, 2)
+            .Select(_ =>
+                SymbolGroup.Create(
+                    new Id<SymbolGroup>(Guid.NewGuid().ToString()),
+                    _fixture.Create<string>(),
+                    null,
+                    market.Id
+                )
             )
-        ).ToArray();
+            .ToArray();
 
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(groups);
@@ -167,7 +177,10 @@ public sealed class GetAllSymbolGroupsHandlerTests
             new AdditionalFields()
         );
 
-        var member = SymbolGroupMember.Create(new Id<SymbolGroup>(Guid.NewGuid().ToString()), symbol.Id);
+        var member = SymbolGroupMember.Create(
+            new Id<SymbolGroup>(Guid.NewGuid().ToString()),
+            symbol.Id
+        );
         var group = SymbolGroup.Create(
             member.SymbolGroupId,
             _fixture.Create<string>(),

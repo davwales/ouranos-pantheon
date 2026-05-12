@@ -20,13 +20,33 @@ public partial class AddPositions : Migration
                 status = table.Column<int>(type: "integer", nullable: false),
                 market_id = table.Column<Guid>(type: "uuid", nullable: false),
                 symbol_id = table.Column<Guid>(type: "uuid", nullable: false),
-                cost = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                quantity = table.Column<decimal>(type: "numeric(18,4)", precision: 18, scale: 4, nullable: false),
+                cost = table.Column<decimal>(
+                    type: "numeric(18,2)",
+                    precision: 18,
+                    scale: 2,
+                    nullable: false
+                ),
+                quantity = table.Column<decimal>(
+                    type: "numeric(18,4)",
+                    precision: 18,
+                    scale: 4,
+                    nullable: false
+                ),
                 linked_buy_position_id = table.Column<Guid>(type: "uuid", nullable: true),
                 strategy_id = table.Column<Guid>(type: "uuid", nullable: true),
-                notes = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
-                created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                notes = table.Column<string>(
+                    type: "character varying(2000)",
+                    maxLength: 2000,
+                    nullable: true
+                ),
+                created_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
+                updated_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
             },
             constraints: table =>
             {
@@ -82,9 +102,6 @@ public partial class AddPositions : Migration
     /// <inheritdoc />
     protected override void Down(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.DropTable(
-            name: "positions",
-            schema: "plutus"
-        );
+        migrationBuilder.DropTable(name: "positions", schema: "plutus");
     }
 }

@@ -5,7 +5,8 @@ namespace Ouranos.Pantheon.Modules.Shared.WebSockets.Builders;
 
 public interface IConstantMessagingBuilder<out TMessage>
 {
-    IConstantMessagingBuilder<TMessage> UseListener<TListener>() where TListener : class, IListener<TMessage>;
+    IConstantMessagingBuilder<TMessage> UseListener<TListener>()
+        where TListener : class, IListener<TMessage>;
 
     IServiceCollection Build();
 }

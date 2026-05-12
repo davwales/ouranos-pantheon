@@ -50,7 +50,9 @@ public static class FilterParser
         var firstColon = s.IndexOf(ComponentSeparator);
         if (firstColon < 0)
         {
-            throw new FormatException($"Invalid filter expression '{s}'. Expected format: field:op[:value].");
+            throw new FormatException(
+                $"Invalid filter expression '{s}'. Expected format: field:op[:value]."
+            );
         }
 
         var field = s[..firstColon];
@@ -79,7 +81,9 @@ public static class FilterParser
         }
         else if (value is null)
         {
-            throw new FormatException($"Operator '{opStr}' requires a value in filter expression '{s}'.");
+            throw new FormatException(
+                $"Operator '{opStr}' requires a value in filter expression '{s}'."
+            );
         }
 
         return new FieldFilterNode(field, op, value);

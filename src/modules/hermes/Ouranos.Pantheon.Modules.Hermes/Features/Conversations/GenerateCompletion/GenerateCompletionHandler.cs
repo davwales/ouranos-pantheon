@@ -3,13 +3,13 @@ using System.Text;
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion.Schemas;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Shared.Extensions;
 using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning.Dtos;
-using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion.Schemas;
-using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
-using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using ChatCompletionUsage = Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning.Dtos.ChatCompletionUsage;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion;
@@ -47,7 +47,9 @@ public sealed class GenerateCompletionHandler
         var buffer = new StringBuilder();
         ChatCompletionUsage? tokenUsage = null;
 
-        await foreach (var chunk in GenerateCompletionStream(command.Conversation, cancellationToken))
+        await foreach (
+            var chunk in GenerateCompletionStream(command.Conversation, cancellationToken)
+        )
         {
             if (chunk.Text is not null)
             {
@@ -71,15 +73,21 @@ public sealed class GenerateCompletionHandler
 
         if (command.ConversationId is not null)
         {
-            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(
+                cancellationToken
+            );
 
-            var conversation = await dbContext.Conversations
-                .FirstOrDefaultAsync(c => c.Id == command.ConversationId, cancellationToken);
+            var conversation = await dbContext.Conversations.FirstOrDefaultAsync(
+                c => c.Id == command.ConversationId,
+                cancellationToken
+            );
 
             Guard.Against.NotFound(command.ConversationId.Value, conversation);
 
-            var existingCount = await dbContext.Messages
-                .CountAsync(m => m.ConversationId == command.ConversationId, cancellationToken);
+            var existingCount = await dbContext.Messages.CountAsync(
+                m => m.ConversationId == command.ConversationId,
+                cancellationToken
+            );
 
             var userInput = command.Conversation.Messages.LastOrDefault(m => m.Role == Role.User);
             if (userInput is not null)
@@ -131,7 +139,10 @@ public sealed class GenerateCompletionHandler
         [EnumeratorCancellation] CancellationToken cancellationToken = default
     )
     {
-        _logger.LogTrace("Attempting to generate a chat completion for conversation '{@conversation}'.", conversation);
+        _logger.LogTrace(
+            "Attempting to generate a chat completion for conversation '{@conversation}'.",
+            conversation
+        );
         cancellationToken.ThrowIfCancellationRequested();
 
         var systemPrompt = ComposeSystemPrompt(
@@ -143,17 +154,19 @@ public sealed class GenerateCompletionHandler
         List<MessageDto> messages =
         [
             new(systemPrompt, RoleDto.System),
-            .. conversation.Messages.Select(m => new MessageDto(m.Content, MapRole(m.Role)))
+            .. conversation.Messages.Select(m => new MessageDto(m.Content, MapRole(m.Role))),
         ];
 
-        await foreach (var chunk in _ouranosMachineLearningClient.StreamChatCompletionAsync(
-                           conversation.Model.ModelIdentifier,
-                           messages,
-                           conversation.Model.Temperature,
-                           conversation.Model.MaxTokens,
-                           conversation.Model.RepeatPenalty,
-                           cancellationToken
-                       ))
+        await foreach (
+            var chunk in _ouranosMachineLearningClient.StreamChatCompletionAsync(
+                conversation.Model.ModelIdentifier,
+                messages,
+                conversation.Model.Temperature,
+                conversation.Model.MaxTokens,
+                conversation.Model.RepeatPenalty,
+                cancellationToken
+            )
+        )
         {
             yield return chunk;
             cancellationToken.ThrowIfCancellationRequested();
@@ -162,7 +175,11 @@ public sealed class GenerateCompletionHandler
         _logger.LogDebug("Successfully generated a chat completion.");
     }
 
-    internal static string ComposeSystemPrompt(PersonaInput persona, string systemPrompt, List<TraitInput>? traits)
+    internal static string ComposeSystemPrompt(
+        PersonaInput persona,
+        string systemPrompt,
+        List<TraitInput>? traits
+    )
     {
         var builder = new StringBuilder();
 
@@ -195,12 +212,13 @@ public sealed class GenerateCompletionHandler
         return builder.ToString();
     }
 
-    private static RoleDto MapRole(Role role) => role switch
-    {
-        Role.System => RoleDto.System,
-        Role.User => RoleDto.User,
-        Role.Assistant => RoleDto.Assistant,
-        Role.Summary => RoleDto.Assistant,
-        _ => throw new InvalidOperationException($"Unknown role: {role}")
-    };
+    private static RoleDto MapRole(Role role) =>
+        role switch
+        {
+            Role.System => RoleDto.System,
+            Role.User => RoleDto.User,
+            Role.Assistant => RoleDto.Assistant,
+            Role.Summary => RoleDto.Assistant,
+            _ => throw new InvalidOperationException($"Unknown role: {role}"),
+        };
 }

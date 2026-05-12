@@ -27,7 +27,14 @@ public sealed class BuyCandidatesStepTests
         var symbolId = _fixture.Create<Id<Symbol>>();
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
-        var symbol = Symbol.Create(symbolId, "SYM", null, "Test Symbol", marketId, new AdditionalFields());
+        var symbol = Symbol.Create(
+            symbolId,
+            "SYM",
+            null,
+            "Test Symbol",
+            marketId,
+            new AdditionalFields()
+        );
         var executor = Substitute.For<IStrategyExecutor>();
         var strategy = Strategy.Create(
             marketId,
@@ -67,7 +74,14 @@ public sealed class BuyCandidatesStepTests
         var symbolId = _fixture.Create<Id<Symbol>>();
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
-        var symbol = Symbol.Create(symbolId, "SYM", null, "Test Symbol", marketId, new AdditionalFields());
+        var symbol = Symbol.Create(
+            symbolId,
+            "SYM",
+            null,
+            "Test Symbol",
+            marketId,
+            new AdditionalFields()
+        );
         var executor = Substitute.For<IStrategyExecutor>();
         var strategy = Strategy.Create(
             marketId,
@@ -106,7 +120,14 @@ public sealed class BuyCandidatesStepTests
         var symbolId = _fixture.Create<Id<Symbol>>();
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
-        var symbol = Symbol.Create(symbolId, "SYM", null, "Test Symbol", marketId, new AdditionalFields(Limit: 1000m));
+        var symbol = Symbol.Create(
+            symbolId,
+            "SYM",
+            null,
+            "Test Symbol",
+            marketId,
+            new AdditionalFields(Limit: 1000m)
+        );
         var executor = Substitute.For<IStrategyExecutor>();
         var strategy = Strategy.Create(
             marketId,
@@ -127,7 +148,10 @@ public sealed class BuyCandidatesStepTests
         var payload = new BacktestPayload(parameters);
         var currentDate = startDate.AddDays(0);
         var dateOnly = DateOnly.FromDateTime(currentDate.UtcDateTime);
-        var dailyAggregates = new List<DailyTradeAggregate> { new(symbolId, dateOnly, 100m, 100m, 100m, 100000m) };
+        var dailyAggregates = new List<DailyTradeAggregate>
+        {
+            new(symbolId, dateOnly, 100m, 100m, 100m, 100000m),
+        };
         var data = BacktestData.FromRaw(market, [symbol], [], [], [], dailyAggregates);
         payload.Context = new BacktestContext(data, executor, 0m, 7, startDate);
         payload.Portfolio.ScoredSymbols = [new ScoredSymbol(symbol, 50m, 100m)];
@@ -151,7 +175,14 @@ public sealed class BuyCandidatesStepTests
         var symbolId = _fixture.Create<Id<Symbol>>();
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
-        var symbol = Symbol.Create(symbolId, "SYM", null, "Test Symbol", marketId, new AdditionalFields(Limit: 1000m));
+        var symbol = Symbol.Create(
+            symbolId,
+            "SYM",
+            null,
+            "Test Symbol",
+            marketId,
+            new AdditionalFields(Limit: 1000m)
+        );
         var executor = Substitute.For<IStrategyExecutor>();
         var strategy = Strategy.Create(
             marketId,
@@ -198,7 +229,14 @@ public sealed class BuyCandidatesStepTests
         var symbolId = _fixture.Create<Id<Symbol>>();
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
-        var symbol = Symbol.Create(symbolId, "SYM", null, "Test Symbol", marketId, new AdditionalFields(Limit: 1000m));
+        var symbol = Symbol.Create(
+            symbolId,
+            "SYM",
+            null,
+            "Test Symbol",
+            marketId,
+            new AdditionalFields(Limit: 1000m)
+        );
         var executor = Substitute.For<IStrategyExecutor>();
         var strategy = Strategy.Create(
             marketId,
@@ -238,7 +276,14 @@ public sealed class BuyCandidatesStepTests
         var symbolId = _fixture.Create<Id<Symbol>>();
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
-        var symbol = Symbol.Create(symbolId, "SYM", null, "Test Symbol", marketId, new AdditionalFields(Limit: 10000m));
+        var symbol = Symbol.Create(
+            symbolId,
+            "SYM",
+            null,
+            "Test Symbol",
+            marketId,
+            new AdditionalFields(Limit: 10000m)
+        );
         var executor = Substitute.For<IStrategyExecutor>();
         var strategy = Strategy.Create(
             marketId,
@@ -259,7 +304,10 @@ public sealed class BuyCandidatesStepTests
         var payload = new BacktestPayload(parameters);
         var currentDate = startDate.AddDays(0);
         var dateOnly = DateOnly.FromDateTime(currentDate.UtcDateTime);
-        var dailyAggregates = new List<DailyTradeAggregate> { new(symbolId, dateOnly, 100m, 100m, 100m, 100000m) };
+        var dailyAggregates = new List<DailyTradeAggregate>
+        {
+            new(symbolId, dateOnly, 100m, 100m, 100m, 100000m),
+        };
         var data = BacktestData.FromRaw(market, [symbol], [], [], [], dailyAggregates);
         payload.Context = new BacktestContext(data, executor, 0.10m, 7, startDate);
         payload.Portfolio.ScoredSymbols = [new ScoredSymbol(symbol, 50m, 100m)];
@@ -283,7 +331,14 @@ public sealed class BuyCandidatesStepTests
         var symbolId = _fixture.Create<Id<Symbol>>();
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
-        var symbol = Symbol.Create(symbolId, "SYM", null, "Test Symbol", marketId, new AdditionalFields(Limit: 10000m));
+        var symbol = Symbol.Create(
+            symbolId,
+            "SYM",
+            null,
+            "Test Symbol",
+            marketId,
+            new AdditionalFields(Limit: 10000m)
+        );
         var executor = Substitute.For<IStrategyExecutor>();
         var strategy = Strategy.Create(
             marketId,
@@ -306,7 +361,10 @@ public sealed class BuyCandidatesStepTests
         var currentDate = startDate.AddDays(0);
         var dateOnly = DateOnly.FromDateTime(currentDate.UtcDateTime);
         // Low daily volume so participation rate caps the buy volume
-        var dailyAggregates = new List<DailyTradeAggregate> { new(symbolId, dateOnly, 100m, 100m, 100m, 50m) };
+        var dailyAggregates = new List<DailyTradeAggregate>
+        {
+            new(symbolId, dateOnly, 100m, 100m, 100m, 50m),
+        };
         var data = BacktestData.FromRaw(market, [symbol], [], [], [], dailyAggregates);
         payload.Context = new BacktestContext(data, executor, 0m, 7, startDate);
         payload.Portfolio.ScoredSymbols = [new ScoredSymbol(symbol, 50m, 100m)];

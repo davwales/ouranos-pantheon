@@ -18,9 +18,8 @@ public static class BacktestMath
         decimal slippageMultiplier
     )
     {
-        var maxSellableVolume = dailyVolume > 0
-            ? Math.Floor(dailyVolume * volumeParticipationRate)
-            : pos.Volume;
+        var maxSellableVolume =
+            dailyVolume > 0 ? Math.Floor(dailyVolume * volumeParticipationRate) : pos.Volume;
 
         var exitVolume = Math.Min(pos.Volume, maxSellableVolume);
 
@@ -29,9 +28,7 @@ public static class BacktestMath
             return (0m, 0m, 0m);
         }
 
-        var volumeImpact = dailyVolume > 0
-            ? exitVolume / dailyVolume
-            : 0m;
+        var volumeImpact = dailyVolume > 0 ? exitVolume / dailyVolume : 0m;
         var slippage = volumeImpact * slippageMultiplier;
         var adjustedExitPrice = exitPrice * (1 - slippage);
 
@@ -47,7 +44,10 @@ public static class BacktestMath
         return (netProceeds, exitVolume, netPnl);
     }
 
-    public static (decimal? Price, decimal? Change) GetForecastData(Forecast? forecast, decimal currentPrice)
+    public static (decimal? Price, decimal? Change) GetForecastData(
+        Forecast? forecast,
+        decimal currentPrice
+    )
     {
         if (forecast is null || currentPrice == 0)
         {
@@ -82,9 +82,10 @@ public static class BacktestMath
             var chunk = aggregates.GetRange(i, remaining);
 
             var totalVolume = chunk.Sum(a => a.TotalVolume);
-            var weightedAvgPrice = totalVolume > 0
-                ? chunk.Sum(a => a.AveragePrice * a.TotalVolume) / totalVolume
-                : chunk.Average(a => a.AveragePrice);
+            var weightedAvgPrice =
+                totalVolume > 0
+                    ? chunk.Sum(a => a.AveragePrice * a.TotalVolume) / totalVolume
+                    : chunk.Average(a => a.AveragePrice);
 
             buckets.Add(
                 new PriceBucket(
@@ -120,7 +121,7 @@ public static class BacktestMath
             ProfitLoss = profitLoss,
             ReturnPercent = returnPercent,
             EntryTime = pos.EntryTime,
-            ExitTime = exitTime
+            ExitTime = exitTime,
         };
     }
 }

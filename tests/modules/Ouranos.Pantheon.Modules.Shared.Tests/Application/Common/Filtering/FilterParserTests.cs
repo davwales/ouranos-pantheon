@@ -54,7 +54,10 @@ public sealed class FilterParserTests
     [InlineData("startswith", FilterOperator.StartsWith)]
     [InlineData("endswith", FilterOperator.EndsWith)]
     [InlineData("in", FilterOperator.In)]
-    public void Parse_WhenValueOperator_ShouldParseCorrectOperator(string opStr, FilterOperator expectedOp)
+    public void Parse_WhenValueOperator_ShouldParseCorrectOperator(
+        string opStr,
+        FilterOperator expectedOp
+    )
     {
         // Arrange & Act
         var result = FilterParser.Parse($"field:{opStr}:value");

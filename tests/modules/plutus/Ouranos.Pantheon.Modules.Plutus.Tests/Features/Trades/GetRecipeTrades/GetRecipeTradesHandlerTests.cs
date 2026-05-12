@@ -20,7 +20,9 @@ public sealed class GetRecipeTradesHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly GetRecipeTradesHandler _handler;
-    private readonly ILogger<GetRecipeTradesHandler> _logger = Substitute.For<ILogger<GetRecipeTradesHandler>>();
+    private readonly ILogger<GetRecipeTradesHandler> _logger = Substitute.For<
+        ILogger<GetRecipeTradesHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
 
     public GetRecipeTradesHandlerTests()
@@ -28,17 +30,18 @@ public sealed class GetRecipeTradesHandlerTests
         _fixture.Customize(new IdCustomization());
 
         _dbContext = DbContextExtensions.Mock<PlutusDbContext>();
-        _handler = new GetRecipeTradesHandler(_logger, _dbContext, Options.Create(new QueryOptions()));
+        _handler = new GetRecipeTradesHandler(
+            _logger,
+            _dbContext,
+            Options.Create(new QueryOptions())
+        );
     }
 
     [Fact]
     public async Task Handle_WhenNoRecipes_ShouldReturnEmptyPagedResponse()
     {
         // Arrange
-        var query = new GetRecipeTradesInput(
-            new Id<Market>(_fixture.Create<string>()),
-            Take: 10
-        );
+        var query = new GetRecipeTradesInput(new Id<Market>(_fixture.Create<string>()), Take: 10);
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
@@ -145,10 +148,7 @@ public sealed class GetRecipeTradesHandlerTests
     public async Task Handle_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange
-        var query = new GetRecipeTradesInput(
-            new Id<Market>(_fixture.Create<string>()),
-            Take: 10
-        );
+        var query = new GetRecipeTradesInput(new Id<Market>(_fixture.Create<string>()), Take: 10);
         var cancellationToken = new CancellationToken(true);
 
         // Act

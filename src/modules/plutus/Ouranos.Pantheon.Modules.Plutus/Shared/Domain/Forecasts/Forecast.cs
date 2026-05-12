@@ -1,13 +1,14 @@
 using Ardalis.GuardClauses;
-using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
+using Ouranos.Pantheon.Modules.Shared.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
 
 public class Forecast : BaseEntity<Id<Forecast>>
 {
-    protected Forecast(Id<Forecast> id) : base(id)
+    protected Forecast(Id<Forecast> id)
+        : base(id)
     {
         Latest = new ForecastPoint(0, 0, 0, 0);
     }
@@ -49,7 +50,7 @@ public class Forecast : BaseEntity<Id<Forecast>>
             SymbolId = symbolId,
             Latest = latest,
             _predictions = predictions,
-            _symbol = symbol
+            _symbol = symbol,
         };
     }
 }

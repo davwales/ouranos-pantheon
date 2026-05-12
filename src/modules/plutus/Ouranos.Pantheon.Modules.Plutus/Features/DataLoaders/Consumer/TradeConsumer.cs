@@ -3,13 +3,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Ouranos.Pantheon.Modules.Shared.Application;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
-using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Shared;
+using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Consumer;
 
@@ -40,7 +40,10 @@ public sealed class TradeConsumer : IPantheonHandler<TradeMessage>
 
     public async Task Handle(TradeMessage message, CancellationToken cancellationToken = default)
     {
-        _logger.LogTrace("Attempting to consume trade message for symbol '{symbolCode}'.", message.SymbolCode);
+        _logger.LogTrace(
+            "Attempting to consume trade message for symbol '{symbolCode}'.",
+            message.SymbolCode
+        );
 
         var symbol = await UpsertSymbol(message, cancellationToken);
 
@@ -55,7 +58,10 @@ public sealed class TradeConsumer : IPantheonHandler<TradeMessage>
         await _dbContext.Trades.AddAsync(trade, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("Successfully consumed trade message for symbol '{symbolCode}'.", message.SymbolCode);
+        _logger.LogInformation(
+            "Successfully consumed trade message for symbol '{symbolCode}'.",
+            message.SymbolCode
+        );
     }
 
     private async Task<Symbol> UpsertSymbol(
@@ -63,19 +69,21 @@ public sealed class TradeConsumer : IPantheonHandler<TradeMessage>
         CancellationToken cancellationToken
     )
     {
-        var marketIdStr = _consumerDataLoaderOptions.Value.MarketMap.GetValueOrDefault(message.Producer);
+        var marketIdStr = _consumerDataLoaderOptions.Value.MarketMap.GetValueOrDefault(
+            message.Producer
+        );
         Guard.Against.NotFound(message.Producer, marketIdStr);
 
         var marketId = new Id<Market>(marketIdStr);
         var market = await GetMarket(marketId, cancellationToken);
 
-        var existingSymbol = await _dbContext.Symbols
-            .FirstOrDefaultAsync(
-                s => s.MarketId == marketId &&
-                     s.Code == message.SymbolCode &&
-                     s.Subcode == message.SymbolSubcode,
-                cancellationToken
-            );
+        var existingSymbol = await _dbContext.Symbols.FirstOrDefaultAsync(
+            s =>
+                s.MarketId == marketId
+                && s.Code == message.SymbolCode
+                && s.Subcode == message.SymbolSubcode,
+            cancellationToken
+        );
 
         if (existingSymbol is not null)
         {
@@ -99,10 +107,7 @@ public sealed class TradeConsumer : IPantheonHandler<TradeMessage>
         return newSymbol;
     }
 
-    private async Task<Market> GetMarket(
-        Id<Market> marketId,
-        CancellationToken cancellationToken
-    )
+    private async Task<Market> GetMarket(Id<Market> marketId, CancellationToken cancellationToken)
     {
         if (_memoryCache.TryGetValue(marketId, out Market? cached) && cached is not null)
         {
@@ -110,8 +115,8 @@ public sealed class TradeConsumer : IPantheonHandler<TradeMessage>
             return cached;
         }
 
-        var market = await _dbContext.Markets
-            .AsNoTracking()
+        var market = await _dbContext
+            .Markets.AsNoTracking()
             .FirstOrDefaultAsync(m => m.Id == marketId, cancellationToken);
 
         Guard.Against.NotFound(marketId, market);

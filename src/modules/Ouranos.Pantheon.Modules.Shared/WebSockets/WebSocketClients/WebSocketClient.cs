@@ -132,7 +132,10 @@ public class WebSocketClient : IDisposable, IWebSocketClient
 
         try
         {
-            while (_webSocket.State == WebSocketState.Open && !cancellationToken.IsCancellationRequested)
+            while (
+                _webSocket.State == WebSocketState.Open
+                && !cancellationToken.IsCancellationRequested
+            )
             {
                 using var memoryStream = new MemoryStream();
                 WebSocketReceiveResult receiveResult;

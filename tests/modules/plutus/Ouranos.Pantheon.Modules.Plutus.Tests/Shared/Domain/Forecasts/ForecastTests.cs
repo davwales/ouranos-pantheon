@@ -33,13 +33,7 @@ public sealed class ForecastTests
         var predictions = _fixture.CreateMany<ForecastPoint>().ToList();
 
         // Act
-        var forecast = Forecast.Create(
-            id,
-            market.Id,
-            symbol.Id,
-            latest,
-            predictions
-        );
+        var forecast = Forecast.Create(id, market.Id, symbol.Id, latest, predictions);
 
         // Assert
         forecast.Id.ShouldBe(id);
@@ -59,13 +53,7 @@ public sealed class ForecastTests
         var predictions = _fixture.CreateMany<ForecastPoint>().ToList();
 
         // Act
-        var action = () => Forecast.Create(
-            id,
-            market.Id,
-            symbol.Id,
-            null!,
-            predictions
-        );
+        var action = () => Forecast.Create(id, market.Id, symbol.Id, null!, predictions);
 
         // Assert
         action.ShouldThrow<ArgumentException>();
@@ -81,13 +69,7 @@ public sealed class ForecastTests
         var latest = _fixture.Create<ForecastPoint>();
 
         // Act
-        var action = () => Forecast.Create(
-            id,
-            market.Id,
-            symbol.Id,
-            latest,
-            null!
-        );
+        var action = () => Forecast.Create(id, market.Id, symbol.Id, latest, null!);
 
         // Assert
         action.ShouldThrow<ArgumentException>();
@@ -103,13 +85,7 @@ public sealed class ForecastTests
         var latest = _fixture.Create<ForecastPoint>();
 
         // Act
-        var action = () => Forecast.Create(
-            id,
-            market.Id,
-            symbol.Id,
-            latest,
-            []
-        );
+        var action = () => Forecast.Create(id, market.Id, symbol.Id, latest, []);
 
         // Assert
         action.ShouldThrow<ArgumentException>();

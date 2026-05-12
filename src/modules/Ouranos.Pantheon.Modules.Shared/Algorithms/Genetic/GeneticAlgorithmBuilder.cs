@@ -28,7 +28,9 @@ public sealed class GeneticAlgorithmBuilder<T> : IGeneticAlgorithmEngineBuilder<
         return this;
     }
 
-    public IGeneticAlgorithmEngineBuilder<T> AddFitnessComponent(Func<IChromosome<T>, double> fitnessFunction)
+    public IGeneticAlgorithmEngineBuilder<T> AddFitnessComponent(
+        Func<IChromosome<T>, double> fitnessFunction
+    )
     {
         _fitnessComponents.Add(new FitnessComponent<T>(1, fitnessFunction));
         return this;
@@ -43,7 +45,9 @@ public sealed class GeneticAlgorithmBuilder<T> : IGeneticAlgorithmEngineBuilder<
         return this;
     }
 
-    public IGeneticAlgorithmEngineBuilder<T> AddFitnessComponent(Func<IChromosome<T>, Task<double>> asyncFitnessFunction)
+    public IGeneticAlgorithmEngineBuilder<T> AddFitnessComponent(
+        Func<IChromosome<T>, Task<double>> asyncFitnessFunction
+    )
     {
         _asyncFitnessComponents.Add(new FitnessComponent<T>(1, _ => 0, asyncFitnessFunction));
         return this;

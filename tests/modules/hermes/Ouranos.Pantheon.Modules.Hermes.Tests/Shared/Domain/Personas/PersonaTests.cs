@@ -26,7 +26,15 @@ public sealed class PersonaTests
         var isPublic = _fixture.Create<bool>();
 
         // Act
-        var persona = Persona.Create(id, name, description, personality, scenario, isDefault, isPublic);
+        var persona = Persona.Create(
+            id,
+            name,
+            description,
+            personality,
+            scenario,
+            isDefault,
+            isPublic
+        );
 
         // Assert
         persona.Id.ShouldBe(id);
@@ -100,7 +108,11 @@ public sealed class PersonaTests
     public void Update_WhenInvalidName_ShouldThrowArgumentException(string? newName)
     {
         // Arrange
-        var persona = Persona.Create(new Id<Persona>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>());
+        var persona = Persona.Create(
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
 
         // Act
         var update = () => persona.Update(newName!, _fixture.Create<string>());
@@ -116,7 +128,11 @@ public sealed class PersonaTests
     public void Update_WhenInvalidDescription_ShouldThrowArgumentException(string? newDescription)
     {
         // Arrange
-        var persona = Persona.Create(new Id<Persona>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>());
+        var persona = Persona.Create(
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
 
         // Act
         var update = () => persona.Update(_fixture.Create<string>(), newDescription!);

@@ -1,21 +1,19 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.CancelBacktest.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Shared.Application;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.CancelBacktest;
 
-public sealed class CancelBacktestHandler : IPantheonHandler<CancelBacktestInput, CancelBacktestResponse>
+public sealed class CancelBacktestHandler
+    : IPantheonHandler<CancelBacktestInput, CancelBacktestResponse>
 {
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<CancelBacktestHandler> _logger;
 
-    public CancelBacktestHandler(
-        ILogger<CancelBacktestHandler> logger,
-        PlutusDbContext dbContext
-    )
+    public CancelBacktestHandler(ILogger<CancelBacktestHandler> logger, PlutusDbContext dbContext)
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(dbContext);
@@ -32,8 +30,10 @@ public sealed class CancelBacktestHandler : IPantheonHandler<CancelBacktestInput
         _logger.LogTrace("Attempting to handle cancel backtest command '{@command}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var backtest = await _dbContext.Backtests
-            .FirstOrDefaultAsync(b => b.Id == command.BacktestId, cancellationToken);
+        var backtest = await _dbContext.Backtests.FirstOrDefaultAsync(
+            b => b.Id == command.BacktestId,
+            cancellationToken
+        );
 
         Guard.Against.NotFound(command.BacktestId, backtest);
 

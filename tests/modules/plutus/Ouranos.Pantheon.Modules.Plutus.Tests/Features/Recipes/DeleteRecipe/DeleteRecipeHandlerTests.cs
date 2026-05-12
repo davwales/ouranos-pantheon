@@ -16,7 +16,9 @@ public sealed class DeleteRecipeHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly DeleteRecipeHandler _handler;
-    private readonly ILogger<DeleteRecipeHandler> _logger = Substitute.For<ILogger<DeleteRecipeHandler>>();
+    private readonly ILogger<DeleteRecipeHandler> _logger = Substitute.For<
+        ILogger<DeleteRecipeHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
 
     public DeleteRecipeHandlerTests()

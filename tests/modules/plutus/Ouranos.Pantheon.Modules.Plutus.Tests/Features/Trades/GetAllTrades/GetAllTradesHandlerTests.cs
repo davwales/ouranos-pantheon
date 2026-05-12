@@ -17,7 +17,9 @@ public sealed class GetAllTradesHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly GetAllTradesHandler _handler;
-    private readonly ILogger<GetAllTradesHandler> _logger = Substitute.For<ILogger<GetAllTradesHandler>>();
+    private readonly ILogger<GetAllTradesHandler> _logger = Substitute.For<
+        ILogger<GetAllTradesHandler>
+    >();
 
     public GetAllTradesHandlerTests()
     {

@@ -17,14 +17,20 @@ public sealed class GetAllPositionsHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly GetAllPositionsHandler _handler;
-    private readonly ILogger<GetAllPositionsHandler> _logger = Substitute.For<ILogger<GetAllPositionsHandler>>();
+    private readonly ILogger<GetAllPositionsHandler> _logger = Substitute.For<
+        ILogger<GetAllPositionsHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
 
     public GetAllPositionsHandlerTests()
     {
         _fixture.Customize(new IdCustomization());
         _dbContext = DbContextExtensions.Mock<PlutusDbContext>();
-        _handler = new GetAllPositionsHandler(_logger, _dbContext, Options.Create(new QueryOptions()));
+        _handler = new GetAllPositionsHandler(
+            _logger,
+            _dbContext,
+            Options.Create(new QueryOptions())
+        );
     }
 
     [Fact]

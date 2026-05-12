@@ -137,15 +137,16 @@ public sealed class RecipeTests
         var differentMarketId = _fixture.Create<Id<Market>>();
 
         // Act
-        var create = () => Recipe.Create(
-            _fixture.Create<Id<Recipe>>(),
-            differentMarketId,
-            "Test Recipe",
-            100m,
-            _fixture.CreateMany<RecipeComponent>().ToList(),
-            _fixture.CreateMany<RecipeComponent>().ToList(),
-            market
-        );
+        var create = () =>
+            Recipe.Create(
+                _fixture.Create<Id<Recipe>>(),
+                differentMarketId,
+                "Test Recipe",
+                100m,
+                _fixture.CreateMany<RecipeComponent>().ToList(),
+                _fixture.CreateMany<RecipeComponent>().ToList(),
+                market
+            );
 
         // Assert
         create.ShouldThrow<ArgumentException>();

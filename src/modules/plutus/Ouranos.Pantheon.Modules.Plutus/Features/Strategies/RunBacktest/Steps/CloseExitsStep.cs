@@ -1,15 +1,16 @@
 using Ardalis.GuardClauses;
-using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
-using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
+using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
+using Ouranos.Pantheon.Modules.Shared.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Steps;
 
-public sealed class CloseExitsStep(IEnumerable<ISignalComputer> signalComputers) : IStep<BacktestPayload>
+public sealed class CloseExitsStep(IEnumerable<ISignalComputer> signalComputers)
+    : IStep<BacktestPayload>
 {
     public async Task ExecuteAsync(PipelineContext context, BacktestPayload payload)
     {
@@ -85,7 +86,13 @@ public sealed class CloseExitsStep(IEnumerable<ISignalComputer> signalComputers)
 
             payload.Portfolio.Balance += netProceeds;
             payload.Portfolio.ClosedPositions.Add(
-                BacktestMath.CreateClosedPosition(kvp.Value, exitPrice, exitVolume, netPnl, currentDate)
+                BacktestMath.CreateClosedPosition(
+                    kvp.Value,
+                    exitPrice,
+                    exitVolume,
+                    netPnl,
+                    currentDate
+                )
             );
 
             if (exitVolume >= kvp.Value.Volume)
@@ -94,7 +101,10 @@ public sealed class CloseExitsStep(IEnumerable<ISignalComputer> signalComputers)
             }
             else
             {
-                payload.Portfolio.OpenPositions[kvp.Key] = kvp.Value with { Volume = kvp.Value.Volume - exitVolume };
+                payload.Portfolio.OpenPositions[kvp.Key] = kvp.Value with
+                {
+                    Volume = kvp.Value.Volume - exitVolume,
+                };
             }
         }
     }
@@ -120,9 +130,16 @@ public sealed class CloseExitsStep(IEnumerable<ISignalComputer> signalComputers)
 
         var limit = ctx.Data.Market.Taxes.Flat?.Maximum ?? decimal.MaxValue;
         var forecast = ctx.Data.GetForecastForSymbol(symbolId, currentDate);
-        var (forecastedPrice, forecastedChange) = BacktestMath.GetForecastData(forecast, currentPrice);
+        var (forecastedPrice, forecastedChange) = BacktestMath.GetForecastData(
+            forecast,
+            currentPrice
+        );
 
-        var allAggregates = ctx.Data.GetWindowAggregates(symbolId, DateTimeOffset.MinValue, currentDate);
+        var allAggregates = ctx.Data.GetWindowAggregates(
+            symbolId,
+            DateTimeOffset.MinValue,
+            currentDate
+        );
         var priceBuckets = BacktestMath.BuildPriceBucketsFromAggregates(allAggregates);
 
         var signals = await ReconstructSignalsAsync(
@@ -164,7 +181,11 @@ public sealed class CloseExitsStep(IEnumerable<ISignalComputer> signalComputers)
         Id<Symbol> symbolId,
         decimal taxRate,
         decimal limit,
-        (MarketTradeSnapshot? Short, MarketTradeSnapshot? Medium, MarketTradeSnapshot? Long) snapshots,
+        (
+            MarketTradeSnapshot? Short,
+            MarketTradeSnapshot? Medium,
+            MarketTradeSnapshot? Long
+        ) snapshots,
         IReadOnlyList<PriceBucket> priceBuckets,
         PipelineContext context
     )

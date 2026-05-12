@@ -7,7 +7,8 @@ public sealed class PipelineBuilder<TPayload>(IStepRegistry<TPayload> registry)
     private readonly List<IStep<TPayload>> _steps = [];
     private int _iterations = 1;
 
-    public PipelineBuilder<TPayload> AddStep<TStep>() where TStep : IStep<TPayload>
+    public PipelineBuilder<TPayload> AddStep<TStep>()
+        where TStep : IStep<TPayload>
     {
         _steps.Add(registry.Resolve<TStep>());
         return this;
@@ -27,7 +28,9 @@ public sealed class PipelineBuilder<TPayload>(IStepRegistry<TPayload> registry)
         return this;
     }
 
-    public PipelineBuilder<TPayload> AddNestedPipeline(Func<PipelineBuilder<TPayload>, Pipeline<TPayload>> builder)
+    public PipelineBuilder<TPayload> AddNestedPipeline(
+        Func<PipelineBuilder<TPayload>, Pipeline<TPayload>> builder
+    )
     {
         Guard.Against.Null(builder);
         var nestedPipeline = builder(new PipelineBuilder<TPayload>(registry));

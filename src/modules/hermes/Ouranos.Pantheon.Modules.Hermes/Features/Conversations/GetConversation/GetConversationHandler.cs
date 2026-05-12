@@ -2,15 +2,16 @@ using Ardalis.GuardClauses;
 using Flagsmith;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GetConversation.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
+using Ouranos.Pantheon.Modules.Shared.Application;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GetConversation;
 
-public sealed class GetConversationHandler : IPantheonHandler<GetConversationInput, GetConversationResponse>
+public sealed class GetConversationHandler
+    : IPantheonHandler<GetConversationInput, GetConversationResponse>
 {
     private readonly HermesDbContext _dbContext;
     private readonly IFlagsmithClient _flagsmith;
@@ -39,8 +40,8 @@ public sealed class GetConversationHandler : IPantheonHandler<GetConversationInp
         _logger.LogTrace("Attempting to handle get conversation query '{@query}'.", query);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var conversation = await _dbContext.Conversations
-            .Include(c => c.Persona)
+        var conversation = await _dbContext
+            .Conversations.Include(c => c.Persona)
             .Include(c => c.ModelConfig)
             .Include(c => c.Traits)
             .Include(c => c.Messages.OrderBy(m => m.SortOrder))
@@ -60,8 +61,11 @@ public sealed class GetConversationHandler : IPantheonHandler<GetConversationInp
         _logger.LogDebug("Successfully handled get conversation request.");
 
         GetConversationTokenUsageResponse? tokenUsage = null;
-        if (conversation.InputTokenCount.HasValue && conversation.OutputTokenCount.HasValue &&
-            conversation.TotalTokenCount.HasValue)
+        if (
+            conversation.InputTokenCount.HasValue
+            && conversation.OutputTokenCount.HasValue
+            && conversation.TotalTokenCount.HasValue
+        )
         {
             tokenUsage = new GetConversationTokenUsageResponse(
                 conversation.InputTokenCount.Value,
@@ -91,11 +95,20 @@ public sealed class GetConversationHandler : IPantheonHandler<GetConversationInp
                 conversation.ModelConfig.RepeatPenalty,
                 conversation.ModelConfig.ContextWindow
             ),
-            [.. conversation.Traits.Select(t => new GetConversationTraitResponse(t.Id, t.Name, t.Content))],
             [
-                .. conversation.Messages.Select(m =>
-                    new GetConversationMessageResponse(m.Id, m.Content, m.Role, m.SortOrder)
-                )
+                .. conversation.Traits.Select(t => new GetConversationTraitResponse(
+                    t.Id,
+                    t.Name,
+                    t.Content
+                )),
+            ],
+            [
+                .. conversation.Messages.Select(m => new GetConversationMessageResponse(
+                    m.Id,
+                    m.Content,
+                    m.Role,
+                    m.SortOrder
+                )),
             ],
             tokenUsage,
             conversation.CreatedAt,

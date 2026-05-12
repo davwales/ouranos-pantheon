@@ -2,16 +2,16 @@ using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetAllSymbolGroups.Schemas;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.SymbolGroups;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Pagination;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
 using Ouranos.Pantheon.Modules.Shared.Domain;
-using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetAllSymbolGroups.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.SymbolGroups;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetAllSymbolGroups;
 
@@ -68,10 +68,15 @@ public sealed class GetAllSymbolGroupsHandler
 
         var limits = _queryOptions.Value;
         Guard.Against.OutOfRange(input.Skip, nameof(input.Skip), 0, limits.MaxSkip);
-        Guard.Against.OutOfRange(input.Take, nameof(input.Take), limits.MinPageSize, limits.MaxPageSize);
+        Guard.Against.OutOfRange(
+            input.Take,
+            nameof(input.Take),
+            limits.MinPageSize,
+            limits.MaxPageSize
+        );
 
-        var groups = await _dbContext.SymbolGroups
-            .AsNoTracking()
+        var groups = await _dbContext
+            .SymbolGroups.AsNoTracking()
             .Include(sg => sg.Members)
             .Where(sg => sg.MarketId == input.MarketId)
             .ToListAsync(cancellationToken);
@@ -81,7 +86,11 @@ public sealed class GetAllSymbolGroupsHandler
             .Distinct()
             .ToList();
 
-        var (snapshotLookup, signalLookup) = await LoadLookupsAsync(allSymbolIds, input, cancellationToken);
+        var (snapshotLookup, signalLookup) = await LoadLookupsAsync(
+            allSymbolIds,
+            input,
+            cancellationToken
+        );
 
         var projected = groups
             .Select(sg => ProjectGroup(sg, snapshotLookup, signalLookup))
@@ -96,10 +105,18 @@ public sealed class GetAllSymbolGroupsHandler
             .ToList();
 
         _logger.LogDebug("Successfully handled get all symbol groups request.");
-        return new PagedResponse<GetAllSymbolGroupsResponse>(items, totalCount, input.Skip, input.Take);
+        return new PagedResponse<GetAllSymbolGroupsResponse>(
+            items,
+            totalCount,
+            input.Skip,
+            input.Take
+        );
     }
 
-    private async Task<(Dictionary<Id<Symbol>, SnapshotData>, Dictionary<Id<Symbol>, decimal>)> LoadLookupsAsync(
+    private async Task<(
+        Dictionary<Id<Symbol>, SnapshotData>,
+        Dictionary<Id<Symbol>, decimal>
+    )> LoadLookupsAsync(
         List<Id<Symbol>> symbolIds,
         GetAllSymbolGroupsInput input,
         CancellationToken cancellationToken
@@ -110,14 +127,21 @@ public sealed class GetAllSymbolGroupsHandler
             return ([], []);
         }
 
-        var snapshots = await _dbContext.MarketTradeSnapshots
-            .AsNoTracking()
+        var snapshots = await _dbContext
+            .MarketTradeSnapshots.AsNoTracking()
             .Where(s => symbolIds.Contains(s.SymbolId) && s.TimeFrame == input.TimeFrame)
-            .Select(s => new SnapshotData(s.SymbolId, s.MinPrice, s.MaxPrice, s.TotalVolume, s.Limit, s.Tax))
+            .Select(s => new SnapshotData(
+                s.SymbolId,
+                s.MinPrice,
+                s.MaxPrice,
+                s.TotalVolume,
+                s.Limit,
+                s.Tax
+            ))
             .ToListAsync(cancellationToken);
 
-        var signalData = await _dbContext.Signals
-            .AsNoTracking()
+        var signalData = await _dbContext
+            .Signals.AsNoTracking()
             .Where(s => symbolIds.Contains(s.SymbolId))
             .GroupBy(s => s.SymbolId)
             .Select(g => new { SymbolId = g.Key, AverageScore = g.Average(s => s.Value) })
@@ -156,11 +180,13 @@ public sealed class GetAllSymbolGroupsHandler
             TotalVolume: groupSnapshots.Count > 0 ? groupSnapshots.Sum(s => s!.TotalVolume) : null,
             TotalGain: groupSnapshots.Count > 0
                 ? groupSnapshots.Sum(s =>
-                    (s!.MaxPrice - s.MinPrice - s.Tax) * (s.TotalVolume > s.Limit ? s.Limit : s.TotalVolume)
+                    (s!.MaxPrice - s.MinPrice - s.Tax)
+                    * (s.TotalVolume > s.Limit ? s.Limit : s.TotalVolume)
                 )
                 : null,
             AverageRoi: groupSnapshots.Count > 0 && groupSnapshots.Any(s => s!.MinPrice > 0)
-                ? groupSnapshots.Where(s => s!.MinPrice > 0)
+                ? groupSnapshots
+                    .Where(s => s!.MinPrice > 0)
                     .Average(s => (s!.MaxPrice - s.MinPrice - s.Tax) / s.MinPrice)
                 : null,
             AverageOverallScore: groupSignalScores.Count > 0 ? groupSignalScores.Average() : null,

@@ -1,8 +1,8 @@
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization.Chromosomes;
 using Ouranos.Pantheon.Modules.Shared.Extensions;
-using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Tests.Shared.Domain.Strategies.Optimization.Chromosomes;
 
@@ -12,7 +12,8 @@ public sealed class MeanReversionChromosomeTests
     public void CreateRandom_WhenMeanReversion_ShouldSetCommonFieldsOnly()
     {
         // Arrange & Act
-        var chromosome = (MeanReversionChromosome)StrategyChromosome.CreateRandom(StrategyType.MeanReversion);
+        var chromosome = (MeanReversionChromosome)
+            StrategyChromosome.CreateRandom(StrategyType.MeanReversion);
 
         // Assert
         chromosome.Configuration.MaxPositions.ShouldNotBeNull();
@@ -28,7 +29,12 @@ public sealed class MeanReversionChromosomeTests
     {
         // Arrange
         var chromosome = new MeanReversionChromosome(
-            new TradingConfiguration { MaxPositions = 5, MaxPositionPercent = 0.1m, HoldPeriodDays = 10 },
+            new TradingConfiguration
+            {
+                MaxPositions = 5,
+                MaxPositionPercent = 0.1m,
+                HoldPeriodDays = 10,
+            },
             new MeanReversionConfig(2.0m, 20)
         );
 
@@ -44,7 +50,12 @@ public sealed class MeanReversionChromosomeTests
     {
         // Arrange
         var chromosome = new MeanReversionChromosome(
-            new TradingConfiguration { MaxPositions = 10, MaxPositionPercent = 0.2m, HoldPeriodDays = 15 }
+            new TradingConfiguration
+            {
+                MaxPositions = 10,
+                MaxPositionPercent = 0.2m,
+                HoldPeriodDays = 15,
+            }
         );
 
         // Act & Assert
@@ -55,9 +66,19 @@ public sealed class MeanReversionChromosomeTests
     public void Crossover_WhenMeanReversion_ChildShouldInheritMeanReversionFields()
     {
         // Arrange
-        var config1 = new TradingConfiguration { MaxPositions = 5, MaxPositionPercent = 0.2m, HoldPeriodDays = 10 };
+        var config1 = new TradingConfiguration
+        {
+            MaxPositions = 5,
+            MaxPositionPercent = 0.2m,
+            HoldPeriodDays = 10,
+        };
         var mrConfig1 = new MeanReversionConfig(2.0m, 20);
-        var config2 = new TradingConfiguration { MaxPositions = 15, MaxPositionPercent = 0.4m, HoldPeriodDays = 20 };
+        var config2 = new TradingConfiguration
+        {
+            MaxPositions = 15,
+            MaxPositionPercent = 0.4m,
+            HoldPeriodDays = 20,
+        };
         var mrConfig2 = new MeanReversionConfig(1.0m, 10);
         var parent1 = new MeanReversionChromosome(config1, mrConfig1);
         var parent2 = new MeanReversionChromosome(config2, mrConfig2);
@@ -66,7 +87,11 @@ public sealed class MeanReversionChromosomeTests
         var child = (MeanReversionChromosome)parent1.Crossover(parent2);
 
         // Assert
-        var validMultipliers = new[] { mrConfig1.DeviationMultiplier, mrConfig2.DeviationMultiplier };
+        var validMultipliers = new[]
+        {
+            mrConfig1.DeviationMultiplier,
+            mrConfig2.DeviationMultiplier,
+        };
         validMultipliers.ShouldContain(child.MeanReversionConfig.DeviationMultiplier);
 
         var validTimeFrames = new[] { mrConfig1.MeanTimeFrameValue, mrConfig2.MeanTimeFrameValue };
@@ -78,7 +103,10 @@ public sealed class MeanReversionChromosomeTests
     {
         // Arrange
         var config = new TradingConfiguration();
-        var meanReversionConfig = new MeanReversionConfig(DeviationMultiplier: 2.0m, MeanTimeFrameValue: 20);
+        var meanReversionConfig = new MeanReversionConfig(
+            DeviationMultiplier: 2.0m,
+            MeanTimeFrameValue: 20
+        );
         var chromosome = new MeanReversionChromosome(config, meanReversionConfig);
         var strategy = Strategy.Create(
             DatabaseExtensions.CreateId<Market>(),

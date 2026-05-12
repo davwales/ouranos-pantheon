@@ -18,7 +18,10 @@ public sealed class DiscriminatedMessagingBuilderTests
         const string expectedDiscriminator = "myDiscriminator";
 
         // Act
-        var builder = new DiscriminatedMessagingBuilder<TestEntity>(expectedDiscriminator, _services);
+        var builder = new DiscriminatedMessagingBuilder<TestEntity>(
+            expectedDiscriminator,
+            _services
+        );
 
         // Assert
         builder.Discriminator.ShouldBe(expectedDiscriminator);
@@ -28,11 +31,12 @@ public sealed class DiscriminatedMessagingBuilderTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData(" ")]
-    public void Constructor_WhenInvalidDiscriminator_ShouldThrowArgumentException(string? discriminator)
+    public void Constructor_WhenInvalidDiscriminator_ShouldThrowArgumentException(
+        string? discriminator
+    )
     {
         // Act
-        var create = () =>
-            new DiscriminatedMessagingBuilder<TestEntity>(discriminator!, _services);
+        var create = () => new DiscriminatedMessagingBuilder<TestEntity>(discriminator!, _services);
 
         // Assert
         create.ShouldThrow<ArgumentException>();
@@ -42,8 +46,7 @@ public sealed class DiscriminatedMessagingBuilderTests
     public void Constructor_WhenNullServices_ShouldThrowArgumentException()
     {
         // Act
-        var create = () =>
-            new DiscriminatedMessagingBuilder<TestEntity>("myDiscriminator", null!);
+        var create = () => new DiscriminatedMessagingBuilder<TestEntity>("myDiscriminator", null!);
 
         // Assert
         create.ShouldThrow<ArgumentException>();
@@ -88,7 +91,9 @@ public sealed class DiscriminatedMessagingBuilderTests
         builder.RegisterListeners(registry, provider);
 
         // Assert
-        registry.Received(1).RegisterListener(Arg.Is<IListener<TestEntity>>(x => x is TestListener));
+        registry
+            .Received(1)
+            .RegisterListener(Arg.Is<IListener<TestEntity>>(x => x is TestListener));
     }
 
     private DiscriminatedMessagingBuilder<TestEntity> GivenBuilder()

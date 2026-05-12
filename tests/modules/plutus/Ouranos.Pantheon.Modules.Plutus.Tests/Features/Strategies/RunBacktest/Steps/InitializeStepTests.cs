@@ -74,11 +74,7 @@ public sealed class InitializeStepTests
     public void GetTaxRate_WhenMarketHasNoFlatTax_ReturnsZero()
     {
         // Arrange
-        var market = Market.Create(
-            _fixture.Create<Id<Market>>(),
-            "Test Market",
-            new Taxes(null)
-        );
+        var market = Market.Create(_fixture.Create<Id<Market>>(), "Test Market", new Taxes(null));
 
         // Act
         var result = InitializeStep.GetTaxRate(market);

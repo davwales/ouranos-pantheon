@@ -19,9 +19,12 @@ namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Forecasts.ForecastGener
 
 public sealed class ForecastGeneratorJobTests
 {
-    private readonly ILogger<ForecastGeneratorJob> _logger = Substitute.For<ILogger<ForecastGeneratorJob>>();
+    private readonly ILogger<ForecastGeneratorJob> _logger = Substitute.For<
+        ILogger<ForecastGeneratorJob>
+    >();
     private readonly PlutusDbContext _dbContext;
-    private readonly IOuranosMachineLearningClient _mlClient = Substitute.For<IOuranosMachineLearningClient>();
+    private readonly IOuranosMachineLearningClient _mlClient =
+        Substitute.For<IOuranosMachineLearningClient>();
     private readonly TickerFunctionContext _tickerFunctionContext;
     private readonly ForecastGeneratorJob _job;
 
@@ -45,7 +48,7 @@ public sealed class ForecastGeneratorJobTests
                         BatchSize: 500,
                         ModelName: "plutus-forecasting-v1",
                         MaxEvaluationAgeDays: 90
-                    )
+                    ),
                 }
             )
         );
@@ -62,10 +65,9 @@ public sealed class ForecastGeneratorJobTests
         await _job.Execute(_tickerFunctionContext, CancellationToken.None);
 
         // Assert
-        await _mlClient.DidNotReceive().GetPlutusForecasts(
-            Arg.Any<GetPlutusForecastsRequest>(),
-            Arg.Any<CancellationToken>()
-        );
+        await _mlClient
+            .DidNotReceive()
+            .GetPlutusForecasts(Arg.Any<GetPlutusForecastsRequest>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -81,10 +83,9 @@ public sealed class ForecastGeneratorJobTests
         await _job.Execute(_tickerFunctionContext, CancellationToken.None);
 
         // Assert
-        await _mlClient.DidNotReceive().GetPlutusForecasts(
-            Arg.Any<GetPlutusForecastsRequest>(),
-            Arg.Any<CancellationToken>()
-        );
+        await _mlClient
+            .DidNotReceive()
+            .GetPlutusForecasts(Arg.Any<GetPlutusForecastsRequest>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -100,17 +101,17 @@ public sealed class ForecastGeneratorJobTests
         await _dbContext.SeedData(trades);
 
         var mlPredictions = CreateMlPredictions(count: 7);
-        _mlClient.GetPlutusForecasts(Arg.Any<GetPlutusForecastsRequest>(), Arg.Any<CancellationToken>())
+        _mlClient
+            .GetPlutusForecasts(Arg.Any<GetPlutusForecastsRequest>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new List<List<MlForecastPoint>> { mlPredictions }));
 
         // Act
         await _job.Execute(_tickerFunctionContext, CancellationToken.None);
 
         // Assert
-        await _mlClient.Received(1).GetPlutusForecasts(
-            Arg.Any<GetPlutusForecastsRequest>(),
-            Arg.Any<CancellationToken>()
-        );
+        await _mlClient
+            .Received(1)
+            .GetPlutusForecasts(Arg.Any<GetPlutusForecastsRequest>(), Arg.Any<CancellationToken>());
 
         _dbContext.Forecasts.Count().ShouldBe(1);
 
@@ -147,17 +148,24 @@ public sealed class ForecastGeneratorJobTests
         await _dbContext.SeedData([.. tradesA, .. tradesB]);
 
         var mlPredictions = CreateMlPredictions(count: 7);
-        _mlClient.GetPlutusForecasts(Arg.Any<GetPlutusForecastsRequest>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(new List<List<MlForecastPoint>> { mlPredictions, mlPredictions }));
+        _mlClient
+            .GetPlutusForecasts(Arg.Any<GetPlutusForecastsRequest>(), Arg.Any<CancellationToken>())
+            .Returns(
+                Task.FromResult(new List<List<MlForecastPoint>> { mlPredictions, mlPredictions })
+            );
 
         // Act
         await _job.Execute(_tickerFunctionContext, CancellationToken.None);
 
         // Assert
-        await _mlClient.Received(1).GetPlutusForecasts(
-            Arg.Is<GetPlutusForecastsRequest>(r => r.Points.Count == 2 && r.NumPredictions == 7),
-            Arg.Any<CancellationToken>()
-        );
+        await _mlClient
+            .Received(1)
+            .GetPlutusForecasts(
+                Arg.Is<GetPlutusForecastsRequest>(r =>
+                    r.Points.Count == 2 && r.NumPredictions == 7
+                ),
+                Arg.Any<CancellationToken>()
+            );
 
         _dbContext.Forecasts.Count().ShouldBe(2);
     }
@@ -176,17 +184,20 @@ public sealed class ForecastGeneratorJobTests
         await _dbContext.SeedData(trades);
 
         var mlPredictions = CreateMlPredictions(count: 7);
-        _mlClient.GetPlutusForecasts(Arg.Any<GetPlutusForecastsRequest>(), Arg.Any<CancellationToken>())
+        _mlClient
+            .GetPlutusForecasts(Arg.Any<GetPlutusForecastsRequest>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new List<List<MlForecastPoint>> { mlPredictions }));
 
         // Act
         await _job.Execute(_tickerFunctionContext, CancellationToken.None);
 
         // Assert
-        await _mlClient.Received(1).GetPlutusForecasts(
-            Arg.Is<GetPlutusForecastsRequest>(r => r.Points.Count == 1),
-            Arg.Any<CancellationToken>()
-        );
+        await _mlClient
+            .Received(1)
+            .GetPlutusForecasts(
+                Arg.Is<GetPlutusForecastsRequest>(r => r.Points.Count == 1),
+                Arg.Any<CancellationToken>()
+            );
 
         _dbContext.Forecasts.Count().ShouldBe(1);
         _dbContext.Forecasts.Single().SymbolId.ShouldBe(symbolWithTrades.Id);
@@ -214,7 +225,8 @@ public sealed class ForecastGeneratorJobTests
         await _dbContext.SeedData(existingForecast);
 
         var mlPredictions = CreateMlPredictions(count: 7);
-        _mlClient.GetPlutusForecasts(Arg.Any<GetPlutusForecastsRequest>(), Arg.Any<CancellationToken>())
+        _mlClient
+            .GetPlutusForecasts(Arg.Any<GetPlutusForecastsRequest>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new List<List<MlForecastPoint>> { mlPredictions }));
 
         // Act
@@ -244,26 +256,23 @@ public sealed class ForecastGeneratorJobTests
         );
 
     private static Trade[] CreateTrades(Id<Symbol> symbolId) =>
-    [
-        .. Enumerable
-            .Range(0, 30)
-            .Select(i => Trade.Create(
-                    new Id<Trade>(Guid.NewGuid().ToString()),
-                    symbolId,
-                    100m + i,
-                    10m,
-                    DateTimeOffset.UtcNow.AddDays(-(29 - i))
-                )
-            )
-    ];
+        [
+            .. Enumerable
+                .Range(0, 30)
+                .Select(i =>
+                    Trade.Create(
+                        new Id<Trade>(Guid.NewGuid().ToString()),
+                        symbolId,
+                        100m + i,
+                        10m,
+                        DateTimeOffset.UtcNow.AddDays(-(29 - i))
+                    )
+                ),
+        ];
 
     private static List<MlForecastPoint> CreateMlPredictions(int count) =>
-    [
-        .. Enumerable.Range(0, count).Select(_ => new MlForecastPoint(100m, 90m, 110m, 50m))
-    ];
+        [.. Enumerable.Range(0, count).Select(_ => new MlForecastPoint(100m, 90m, 110m, 50m))];
 
     private static List<ForecastPoint> CreateDomainPredictions(int count) =>
-    [
-        .. Enumerable.Range(0, count).Select(_ => new ForecastPoint(100m, 90m, 110m, 50m))
-    ];
+        [.. Enumerable.Range(0, count).Select(_ => new ForecastPoint(100m, 90m, 110m, 50m))];
 }

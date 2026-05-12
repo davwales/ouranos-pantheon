@@ -28,6 +28,7 @@ public sealed class DeleteConversationEndpointTests
 
         // Assert
         result.ShouldBeOfType<Ok<IdResponse<Conversation>>>();
-        await _bus.Received(1).InvokeAsync<IdResponse<Conversation>>(Arg.Any<DeleteConversationInput>(), ct);
+        await _bus.Received(1)
+            .InvokeAsync<IdResponse<Conversation>>(Arg.Any<DeleteConversationInput>(), ct);
     }
 }

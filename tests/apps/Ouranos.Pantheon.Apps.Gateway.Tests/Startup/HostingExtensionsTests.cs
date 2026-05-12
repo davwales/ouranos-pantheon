@@ -12,7 +12,10 @@ namespace Ouranos.Pantheon.Apps.Gateway.Tests.Startup;
 
 public sealed class HostingExtensionsTests
 {
-    private static void InvokeConfigureCors(IServiceCollection services, IConfiguration configuration)
+    private static void InvokeConfigureCors(
+        IServiceCollection services,
+        IConfiguration configuration
+    )
     {
         var method = typeof(HostingExtensions).GetMethod(
             "ConfigureCors",
@@ -32,14 +35,15 @@ public sealed class HostingExtensionsTests
                 new Dictionary<string, string?>
                 {
                     { "CorsAllowedHosts:0", "http://localhost:3000" },
-                    { "CorsAllowedHosts:1", "http://talos.local" }
+                    { "CorsAllowedHosts:1", "http://talos.local" },
                 }
             )
             .Build();
 
         // Act
         InvokeConfigureCors(services, configuration);
-        var corsOptions = services.BuildServiceProvider()
+        var corsOptions = services
+            .BuildServiceProvider()
             .GetRequiredService<IOptions<CorsOptions>>()
             .Value;
 
@@ -59,7 +63,8 @@ public sealed class HostingExtensionsTests
 
         // Act
         InvokeConfigureCors(services, configuration);
-        var corsOptions = services.BuildServiceProvider()
+        var corsOptions = services
+            .BuildServiceProvider()
             .GetRequiredService<IOptions<CorsOptions>>()
             .Value;
 

@@ -14,7 +14,9 @@ public sealed class CreatePersonaHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly CreatePersonaHandler _handler;
-    private readonly ILogger<CreatePersonaHandler> _logger = Substitute.For<ILogger<CreatePersonaHandler>>();
+    private readonly ILogger<CreatePersonaHandler> _logger = Substitute.For<
+        ILogger<CreatePersonaHandler>
+    >();
     private readonly HermesDbContext _dbContext;
 
     public CreatePersonaHandlerTests()
@@ -46,10 +48,19 @@ public sealed class CreatePersonaHandlerTests
     public async Task Handle_WhenIsDefaultTrue_ShouldClearOtherDefaults()
     {
         // Arrange
-        var existingDefault = Persona.Create(new Id<Persona>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>(), isDefault: true);
+        var existingDefault = Persona.Create(
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            isDefault: true
+        );
         await _dbContext.SeedData(existingDefault);
 
-        var command = new CreatePersonaInput(_fixture.Create<string>(), _fixture.Create<string>(), IsDefault: true);
+        var command = new CreatePersonaInput(
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            IsDefault: true
+        );
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);

@@ -19,7 +19,8 @@ public sealed class SignalWeightedExecutor : IStrategyExecutor
             return values.Count > 0 ? values.Average() : null;
         }
 
-        var weightMap = signalWeightedConfig.GetSignalWeights()
+        var weightMap = signalWeightedConfig
+            .GetSignalWeights()
             .Where(w => w.Weight != 0)
             .ToDictionary(w => w.Type, w => w.Weight);
 

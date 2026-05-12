@@ -4,11 +4,11 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Steps;
-using Ouranos.Pantheon.Modules.Shared.Application;
-using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
+using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
 using Wolverine.Attributes;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest;
@@ -43,15 +43,18 @@ public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
     }
 
     [MessageTimeout(3600)]
-    public async Task Handle(RunBacktestMessage message, CancellationToken cancellationToken = default)
+    public async Task Handle(
+        RunBacktestMessage message,
+        CancellationToken cancellationToken = default
+    )
     {
         _logger.LogTrace("Processing backtest '{backtestId}'.", message.BacktestId);
         cancellationToken.ThrowIfCancellationRequested();
 
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        var backtest = await dbContext.Backtests
-            .Include(b => b.Strategy)
+        var backtest = await dbContext
+            .Backtests.Include(b => b.Strategy)
             .FirstOrDefaultAsync(b => b.Id == message.BacktestId, cancellationToken);
 
         if (backtest is null)
@@ -102,18 +105,23 @@ public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
                     message.SlippageMultiplier
                 )
             )
-            { Data = data, Entity = backtest, ProgressInterval = Math.Max(1, totalDays / 20) };
+            {
+                Data = data,
+                Entity = backtest,
+                ProgressInterval = Math.Max(1, totalDays / 20),
+            };
 
             var backtestPipeline = new PipelineBuilder<BacktestPayload>(_stepRegistry)
                 .AddStep<InitializeStep>()
-                .AddNestedPipeline(builder => builder
-                    .AddStep<IterationSetupStep>()
-                    .AddStep<CloseExitsStep>()
-                    .AddStep<ScoreSymbolsStep>()
-                    .AddStep<BuyCandidatesStep>()
-                    .AddStep<TrackMetricsStep>()
-                    .WithIterations(totalDays + 1)
-                    .Build()
+                .AddNestedPipeline(builder =>
+                    builder
+                        .AddStep<IterationSetupStep>()
+                        .AddStep<CloseExitsStep>()
+                        .AddStep<ScoreSymbolsStep>()
+                        .AddStep<BuyCandidatesStep>()
+                        .AddStep<TrackMetricsStep>()
+                        .WithIterations(totalDays + 1)
+                        .Build()
                 )
                 .AddStep<LiquidateStep>()
                 .AddStep<ComputeResultsStep>()
@@ -124,7 +132,9 @@ public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
 
             if (payload.Results is null)
             {
-                throw new InvalidOperationException("Backtest pipeline completed without producing results.");
+                throw new InvalidOperationException(
+                    "Backtest pipeline completed without producing results."
+                );
             }
 
             backtest.Complete(payload.Results);

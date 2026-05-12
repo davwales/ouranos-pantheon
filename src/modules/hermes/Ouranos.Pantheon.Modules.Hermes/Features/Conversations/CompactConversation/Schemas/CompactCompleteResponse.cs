@@ -3,6 +3,5 @@ using Ouranos.Pantheon.Modules.Shared.Domain;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.CompactConversation.Schemas;
 
-public sealed record CompactCompleteResponse(
-    Id<Message>? SummaryMessageId
-) : CompactConversationResponse;
+public sealed record CompactCompleteResponse(Id<Message>? SummaryMessageId)
+    : CompactConversationResponse;

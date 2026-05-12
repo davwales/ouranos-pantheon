@@ -11,11 +11,7 @@ public interface IPantheonModule
 
     Task<IHost> Configure(IHost host);
 
-    void MapEndpoints(WebApplication app)
-    {
-    }
+    void MapEndpoints(WebApplication app) { }
 
-    void ConfigureWolverine(WolverineOptions opts, IConfiguration configuration)
-    {
-    }
+    void ConfigureWolverine(WolverineOptions opts, IConfiguration configuration) { }
 }

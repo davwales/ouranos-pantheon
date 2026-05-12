@@ -1,8 +1,8 @@
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
+using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Stocks.Messages;
 using Ouranos.Pantheon.Modules.Shared.WebSockets.Listeners;
 using Ouranos.Pantheon.Modules.Shared.WebSockets.WebSocketClients;
-using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Stocks.Messages;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Stocks;
 
@@ -22,7 +22,11 @@ public sealed class StocksErrorListener : IListener<ErrorMessage>
         CancellationToken cancellationToken = default
     )
     {
-        _logger.LogError("Received error message with code '{code}', msg '{msg}'.", message.Code, message.Msg);
+        _logger.LogError(
+            "Received error message with code '{code}', msg '{msg}'.",
+            message.Code,
+            message.Msg
+        );
         await Task.CompletedTask;
     }
 }

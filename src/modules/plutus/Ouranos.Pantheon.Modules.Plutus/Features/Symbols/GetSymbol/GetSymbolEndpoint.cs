@@ -11,8 +11,7 @@ public static class GetSymbolEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapGet("/api/plutus/symbols/{symbolId}", Handle)
-            .WithTags("Plutus.Symbols");
+        app.MapGet("/api/plutus/symbols/{symbolId}", Handle).WithTags("Plutus.Symbols");
     }
 
     internal static async Task<IResult> Handle(

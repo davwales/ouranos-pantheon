@@ -1,12 +1,13 @@
 using Ardalis.GuardClauses;
-using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
+using Ouranos.Pantheon.Modules.Shared.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Recipes;
 
 public class Recipe : BaseEntity<Id<Recipe>>
 {
-    protected Recipe(Id<Recipe> id) : base(id)
+    protected Recipe(Id<Recipe> id)
+        : base(id)
     {
         Name = string.Empty;
     }
@@ -19,11 +20,13 @@ public class Recipe : BaseEntity<Id<Recipe>>
 
     private ICollection<RecipeComponent>? _inputs;
 
-    public ICollection<RecipeComponent> Inputs => _inputs ?? throw new NavigationPropertyNotLoadedException<Recipe>();
+    public ICollection<RecipeComponent> Inputs =>
+        _inputs ?? throw new NavigationPropertyNotLoadedException<Recipe>();
 
     private ICollection<RecipeComponent>? _outputs;
 
-    public ICollection<RecipeComponent> Outputs => _outputs ?? throw new NavigationPropertyNotLoadedException<Recipe>();
+    public ICollection<RecipeComponent> Outputs =>
+        _outputs ?? throw new NavigationPropertyNotLoadedException<Recipe>();
 
     private Market? _market;
     public Market Market => _market ?? throw new NavigationPropertyNotLoadedException<Recipe>();
@@ -54,7 +57,7 @@ public class Recipe : BaseEntity<Id<Recipe>>
             Cost = cost,
             _inputs = inputs,
             _outputs = outputs,
-            _market = market
+            _market = market,
         };
     }
 }

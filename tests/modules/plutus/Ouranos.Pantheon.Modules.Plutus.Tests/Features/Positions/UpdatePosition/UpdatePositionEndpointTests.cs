@@ -29,6 +29,7 @@ public sealed class UpdatePositionEndpointTests
 
         // Assert
         result.ShouldBeOfType<Ok<IdResponse<Position>>>();
-        await _bus.Received(1).InvokeAsync<IdResponse<Position>>(Arg.Any<UpdatePositionInput>(), ct);
+        await _bus.Received(1)
+            .InvokeAsync<IdResponse<Position>>(Arg.Any<UpdatePositionInput>(), ct);
     }
 }

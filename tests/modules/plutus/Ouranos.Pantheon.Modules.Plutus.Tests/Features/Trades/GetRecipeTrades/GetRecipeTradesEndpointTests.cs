@@ -20,7 +20,10 @@ public sealed class GetRecipeTradesEndpointTests
         var input = new GetRecipeTradesInput(new Id<Market>(Guid.NewGuid().ToString()), Take: 10);
         var expected = new PagedResponse<GetRecipeTradesResponse>([], 0, 0, 10);
 
-        _bus.InvokeAsync<PagedResponse<GetRecipeTradesResponse>>(Arg.Any<object>(), Arg.Any<CancellationToken>())
+        _bus.InvokeAsync<PagedResponse<GetRecipeTradesResponse>>(
+                Arg.Any<object>(),
+                Arg.Any<CancellationToken>()
+            )
             .Returns(Task.FromResult(expected));
 
         // Act

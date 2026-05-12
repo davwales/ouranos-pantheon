@@ -12,16 +12,6 @@ public sealed record BacktestPosition(
     DateTimeOffset ExitTime
 )
 {
-    public BacktestPosition() : this(
-        string.Empty,
-        string.Empty,
-        0,
-        0,
-        0,
-        0,
-        0,
-        default,
-        default
-    )
-    { }
+    public BacktestPosition()
+        : this(string.Empty, string.Empty, 0, 0, 0, 0, 0, default, default) { }
 }

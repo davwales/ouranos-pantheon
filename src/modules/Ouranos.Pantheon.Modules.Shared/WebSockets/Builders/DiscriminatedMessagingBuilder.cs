@@ -29,7 +29,8 @@ public sealed class DiscriminatedMessagingBuilder<TMessage> : IDiscriminatedMess
         }
     }
 
-    public DiscriminatedMessagingBuilder<TMessage> UseListener<TListener>() where TListener : class, IListener<TMessage>
+    public DiscriminatedMessagingBuilder<TMessage> UseListener<TListener>()
+        where TListener : class, IListener<TMessage>
     {
         _services.TryAddTransient<TListener>();
         _getListeners.Add(sp => sp.GetRequiredService<TListener>());

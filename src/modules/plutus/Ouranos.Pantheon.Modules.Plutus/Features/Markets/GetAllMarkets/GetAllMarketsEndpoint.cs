@@ -9,8 +9,7 @@ public static class GetAllMarketsEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapGet("/api/plutus/markets", Handle)
-            .WithTags("Plutus.Markets");
+        app.MapGet("/api/plutus/markets", Handle).WithTags("Plutus.Markets");
     }
 
     internal static async Task<IResult> Handle(

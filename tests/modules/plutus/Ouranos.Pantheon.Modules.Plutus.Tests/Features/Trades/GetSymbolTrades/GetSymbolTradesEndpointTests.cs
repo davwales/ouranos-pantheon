@@ -24,10 +24,17 @@ public sealed class GetSymbolTradesEndpointTests
             .Returns(Task.FromResult(expected));
 
         // Act
-        var result = await GetSymbolTradesEndpoint.Handle(symbolId, _bus, TimeFrame.AllTime, 100, ct);
+        var result = await GetSymbolTradesEndpoint.Handle(
+            symbolId,
+            _bus,
+            TimeFrame.AllTime,
+            100,
+            ct
+        );
 
         // Assert
         result.ShouldBeOfType<Ok<GetSymbolTradesResponse>>();
-        await _bus.Received(1).InvokeAsync<GetSymbolTradesResponse>(Arg.Any<GetSymbolTradesInput>(), ct);
+        await _bus.Received(1)
+            .InvokeAsync<GetSymbolTradesResponse>(Arg.Any<GetSymbolTradesInput>(), ct);
     }
 }

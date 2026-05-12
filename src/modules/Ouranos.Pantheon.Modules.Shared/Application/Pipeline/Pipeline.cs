@@ -13,7 +13,10 @@ public sealed class Pipeline<TPayload> : IStep<TPayload>
 
     public async Task ExecuteAsync(PipelineContext context, TPayload payload)
     {
-        var scopedContext = new PipelineContext(context.CancellationToken) { TotalIterations = Iterations };
+        var scopedContext = new PipelineContext(context.CancellationToken)
+        {
+            TotalIterations = Iterations,
+        };
 
         for (var i = 0; i < Iterations; i++)
         {

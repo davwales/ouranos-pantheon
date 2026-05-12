@@ -19,7 +19,9 @@ public sealed class GetMarketForecastHandlerTests
     private readonly IFixture _fixture = new Fixture();
     private readonly GetMarketForecastHandler _handler;
     private readonly PlutusDbContext _dbContext;
-    private readonly ILogger<GetMarketForecastHandler> _logger = Substitute.For<ILogger<GetMarketForecastHandler>>();
+    private readonly ILogger<GetMarketForecastHandler> _logger = Substitute.For<
+        ILogger<GetMarketForecastHandler>
+    >();
 
     public GetMarketForecastHandlerTests()
     {
@@ -77,10 +79,7 @@ public sealed class GetMarketForecastHandlerTests
     public async Task Handle_WhenMarketNotFound_ShouldThrowNotFoundException()
     {
         // Arrange
-        var query = new GetMarketForecastInput(
-            new Id<Market>(_fixture.Create<string>()),
-            Take: 10
-        );
+        var query = new GetMarketForecastInput(new Id<Market>(_fixture.Create<string>()), Take: 10);
 
         // Act
         var get = async () => await _handler.Handle(query, CancellationToken.None);
@@ -93,10 +92,7 @@ public sealed class GetMarketForecastHandlerTests
     public async Task Handle_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange
-        var query = new GetMarketForecastInput(
-            new Id<Market>(_fixture.Create<string>()),
-            Take: 10
-        );
+        var query = new GetMarketForecastInput(new Id<Market>(_fixture.Create<string>()), Take: 10);
         var cancellationToken = new CancellationToken(true);
 
         // Act

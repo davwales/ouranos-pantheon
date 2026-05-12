@@ -15,7 +15,9 @@ public sealed class UpdatePersonaHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly UpdatePersonaHandler _handler;
-    private readonly ILogger<UpdatePersonaHandler> _logger = Substitute.For<ILogger<UpdatePersonaHandler>>();
+    private readonly ILogger<UpdatePersonaHandler> _logger = Substitute.For<
+        ILogger<UpdatePersonaHandler>
+    >();
     private readonly HermesDbContext _dbContext;
 
     public UpdatePersonaHandlerTests()
@@ -29,11 +31,19 @@ public sealed class UpdatePersonaHandlerTests
     public async Task Handle_WhenHappyPath_ShouldUpdatePersonaAndReturnId()
     {
         // Arrange
-        var existingPersona = Persona.Create(new Id<Persona>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>());
+        var existingPersona = Persona.Create(
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
         await _dbContext.SeedData(existingPersona);
 
         var newName = _fixture.Create<string>();
-        var command = new UpdatePersonaInput(existingPersona.Id, newName, _fixture.Create<string>());
+        var command = new UpdatePersonaInput(
+            existingPersona.Id,
+            newName,
+            _fixture.Create<string>()
+        );
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -51,11 +61,26 @@ public sealed class UpdatePersonaHandlerTests
     public async Task Handle_WhenIsDefaultTrue_ShouldClearOtherDefaults()
     {
         // Arrange
-        var otherDefault = Persona.Create(new Id<Persona>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>(), isDefault: true);
-        var targetPersona = Persona.Create(new Id<Persona>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>(), isDefault: false);
+        var otherDefault = Persona.Create(
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            isDefault: true
+        );
+        var targetPersona = Persona.Create(
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            isDefault: false
+        );
         await _dbContext.SeedData(otherDefault, targetPersona);
 
-        var command = new UpdatePersonaInput(targetPersona.Id, _fixture.Create<string>(), _fixture.Create<string>(), IsDefault: true);
+        var command = new UpdatePersonaInput(
+            targetPersona.Id,
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            IsDefault: true
+        );
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -74,7 +99,11 @@ public sealed class UpdatePersonaHandlerTests
     public async Task Handle_WhenPersonaNotFound_ShouldThrowNotFoundException()
     {
         // Arrange
-        var command = new UpdatePersonaInput(new Id<Persona>(_fixture.Create<string>()), _fixture.Create<string>(), _fixture.Create<string>());
+        var command = new UpdatePersonaInput(
+            new Id<Persona>(_fixture.Create<string>()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
 
         // Act
         var handle = async () => await _handler.Handle(command, CancellationToken.None);
@@ -87,7 +116,11 @@ public sealed class UpdatePersonaHandlerTests
     public async Task Handle_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange
-        var command = new UpdatePersonaInput(new Id<Persona>(_fixture.Create<string>()), _fixture.Create<string>(), _fixture.Create<string>());
+        var command = new UpdatePersonaInput(
+            new Id<Persona>(_fixture.Create<string>()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
         var cancellationToken = new CancellationToken(true);
 
         // Act

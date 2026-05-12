@@ -21,7 +21,8 @@ public sealed class MovingAverageCrossoverSignalComputer : ISignalComputer
     public SignalType Type => SignalType.MovingAverageCrossover;
     public string Label => "Moving Average Crossover";
     public string Description => "SMA5 vs SMA20 divergence normalised to [-1, 1].";
-    public IReadOnlyList<InvestmentIntent> Intents => [InvestmentIntent.Sell, InvestmentIntent.Merch];
+    public IReadOnlyList<InvestmentIntent> Intents =>
+        [InvestmentIntent.Sell, InvestmentIntent.Merch];
 
     public Task<decimal?> ComputeAsync(SignalComputeContext context, CancellationToken ct)
     {

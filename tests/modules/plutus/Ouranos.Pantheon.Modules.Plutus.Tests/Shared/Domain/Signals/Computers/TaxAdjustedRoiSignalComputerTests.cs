@@ -21,7 +21,11 @@ public sealed class TaxAdjustedRoiSignalComputerTests
         return new TaxAdjustedRoiSignalComputer(options);
     }
 
-    private static SignalComputeContext BuildContext(decimal minPrice, decimal maxPrice, decimal taxRate = 0m)
+    private static SignalComputeContext BuildContext(
+        decimal minPrice,
+        decimal maxPrice,
+        decimal taxRate = 0m
+    )
     {
         var snapshot = MarketTradeSnapshot.Create(
             MarketId,
@@ -36,7 +40,16 @@ public sealed class TaxAdjustedRoiSignalComputerTests
             maxPrice * taxRate
         );
 
-        return new SignalComputeContext(SymbolId, MarketId, taxRate, 1000m, null, snapshot, null, []);
+        return new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            taxRate,
+            1000m,
+            null,
+            snapshot,
+            null,
+            []
+        );
     }
 
     [Fact]
@@ -46,7 +59,8 @@ public sealed class TaxAdjustedRoiSignalComputerTests
         var context = BuildContext(minPrice: 1000m, maxPrice: 1100m, taxRate: 0m);
 
         // Act
-        var result = await BuildComputer(roiThreshold: 0.1m).ComputeAsync(context, CancellationToken.None);
+        var result = await BuildComputer(roiThreshold: 0.1m)
+            .ComputeAsync(context, CancellationToken.None);
 
         // Assert
         result.ShouldBe(1m);
@@ -59,7 +73,8 @@ public sealed class TaxAdjustedRoiSignalComputerTests
         var context = BuildContext(minPrice: 1000m, maxPrice: 1000m, taxRate: 0.1m);
 
         // Act
-        var result = await BuildComputer(roiThreshold: 0.1m).ComputeAsync(context, CancellationToken.None);
+        var result = await BuildComputer(roiThreshold: 0.1m)
+            .ComputeAsync(context, CancellationToken.None);
 
         // Assert
         result.ShouldBe(-1m);
@@ -98,7 +113,8 @@ public sealed class TaxAdjustedRoiSignalComputerTests
         var context = BuildContext(minPrice: 1000m, maxPrice: 1100m);
 
         // Act
-        var result = await BuildComputer(roiThreshold: 0m).ComputeAsync(context, CancellationToken.None);
+        var result = await BuildComputer(roiThreshold: 0m)
+            .ComputeAsync(context, CancellationToken.None);
 
         // Assert
         result.ShouldBeNull();

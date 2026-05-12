@@ -10,8 +10,7 @@ public static class GetMarketForecastEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapGet("/api/plutus/markets/{marketId}/forecasts", Handle)
-            .WithTags("Plutus.Forecasts");
+        app.MapGet("/api/plutus/markets/{marketId}/forecasts", Handle).WithTags("Plutus.Forecasts");
     }
 
     internal static async Task<IResult> Handle(
@@ -20,6 +19,8 @@ public static class GetMarketForecastEndpoint
         CancellationToken ct = default
     )
     {
-        return Results.Ok(await bus.InvokeAsync<PagedResponse<GetMarketForecastResponse>>(input, ct));
+        return Results.Ok(
+            await bus.InvokeAsync<PagedResponse<GetMarketForecastResponse>>(input, ct)
+        );
     }
 }

@@ -64,11 +64,7 @@ public partial class AddBacktestMetricsToBacktestResults : Migration
     /// <inheritdoc />
     protected override void Down(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.DropColumn(
-            name: "results_cagr",
-            schema: "plutus",
-            table: "backtests"
-        );
+        migrationBuilder.DropColumn(name: "results_cagr", schema: "plutus", table: "backtests");
 
         migrationBuilder.DropColumn(
             name: "results_calmar_ratio",

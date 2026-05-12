@@ -17,8 +17,10 @@ public sealed class BollingerBandsSignalComputer : ISignalComputer
 
     public SignalType Type => SignalType.BollingerBands;
     public string Label => "Bollinger Bands";
-    public string Description => "%B position mapped to bullish (below lower band) or bearish (above upper band).";
-    public IReadOnlyList<InvestmentIntent> Intents => [InvestmentIntent.Buy, InvestmentIntent.Sell, InvestmentIntent.Merch];
+    public string Description =>
+        "%B position mapped to bullish (below lower band) or bearish (above upper band).";
+    public IReadOnlyList<InvestmentIntent> Intents =>
+        [InvestmentIntent.Buy, InvestmentIntent.Sell, InvestmentIntent.Merch];
 
     public Task<decimal?> ComputeAsync(SignalComputeContext context, CancellationToken ct)
     {

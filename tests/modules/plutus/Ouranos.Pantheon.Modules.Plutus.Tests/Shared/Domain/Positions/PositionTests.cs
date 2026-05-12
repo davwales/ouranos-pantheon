@@ -162,17 +162,24 @@ public sealed class PositionTests
         var cost = _fixture.Create<decimal>();
         var quantity = _fixture.Create<decimal>();
 
-        var pendingBuyPosition = Position.Create(PositionSide.Buy, marketId, symbolId, cost, quantity);
-
-        // Act
-        var create = () => Position.Create(
-            PositionSide.Sell,
+        var pendingBuyPosition = Position.Create(
+            PositionSide.Buy,
             marketId,
             symbolId,
             cost,
-            quantity,
-            linkedBuyPosition: pendingBuyPosition
+            quantity
         );
+
+        // Act
+        var create = () =>
+            Position.Create(
+                PositionSide.Sell,
+                marketId,
+                symbolId,
+                cost,
+                quantity,
+                linkedBuyPosition: pendingBuyPosition
+            );
 
         // Assert
         create.ShouldThrow<ArgumentException>();
@@ -198,14 +205,8 @@ public sealed class PositionTests
         );
 
         // Act
-        var create = () => Position.Create(
-            PositionSide.Buy,
-            marketId,
-            symbolId,
-            cost,
-            quantity,
-            symbol: symbol
-        );
+        var create = () =>
+            Position.Create(PositionSide.Buy, marketId, symbolId, cost, quantity, symbol: symbol);
 
         // Assert
         create.ShouldThrow<ArgumentException>();

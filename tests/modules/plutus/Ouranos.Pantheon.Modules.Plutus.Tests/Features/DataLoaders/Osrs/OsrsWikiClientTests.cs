@@ -13,16 +13,28 @@ public sealed class OsrsWikiClientTests
     private static HttpClient CreateHttpClient(HttpStatusCode statusCode, string content)
     {
         var handler = new FakeHttpMessageHandler(statusCode, content);
-        var client = new HttpClient(handler) { BaseAddress = new Uri("https://prices.runescape.wiki/api/v1/osrs/") };
+        var client = new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://prices.runescape.wiki/api/v1/osrs/"),
+        };
         return client;
     }
 
     private OsrsWikiClient CreateClient(HttpClient httpClient) =>
-        new(httpClient, _logger, Options.Create(new OsrsDataLoaderOptions(
-            IsEnabled: true,
-            RefreshIntervalMinutes: 5,
-            Wiki: new OsrsWikiOptions("https://prices.runescape.wiki/api/v1/osrs/", "TestAgent/1.0")
-        )));
+        new(
+            httpClient,
+            _logger,
+            Options.Create(
+                new OsrsDataLoaderOptions(
+                    IsEnabled: true,
+                    RefreshIntervalMinutes: 5,
+                    Wiki: new OsrsWikiOptions(
+                        "https://prices.runescape.wiki/api/v1/osrs/",
+                        "TestAgent/1.0"
+                    )
+                )
+            )
+        );
 
     [Fact]
     public async Task GetMappings_WhenSuccessful_ShouldReturnMappings()
@@ -30,9 +42,23 @@ public sealed class OsrsWikiClientTests
         // Arrange
         var mappings = new[]
         {
-            new { id = 1234, name = "Sword", icon = "sword.png", examine = "A sword", members = true, lowalch = 100, highalch = 200, limit = 50, value = 500 }
+            new
+            {
+                id = 1234,
+                name = "Sword",
+                icon = "sword.png",
+                examine = "A sword",
+                members = true,
+                lowalch = 100,
+                highalch = 200,
+                limit = 50,
+                value = 500,
+            },
         };
-        var json = JsonSerializer.Serialize(mappings, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+        var json = JsonSerializer.Serialize(
+            mappings,
+            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }
+        );
         var client = CreateClient(CreateHttpClient(HttpStatusCode.OK, json));
 
         // Act
@@ -53,11 +79,20 @@ public sealed class OsrsWikiClientTests
         {
             data = new Dictionary<string, object>
             {
-                ["1234"] = new { avgHighPrice = 500, highPriceVolume = 10, avgLowPrice = 450, lowPriceVolume = 8 }
+                ["1234"] = new
+                {
+                    avgHighPrice = 500,
+                    highPriceVolume = 10,
+                    avgLowPrice = 450,
+                    lowPriceVolume = 8,
+                },
             },
-            timestamp = 1700000000
+            timestamp = 1700000000,
         };
-        var json = JsonSerializer.Serialize(priceResponse, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+        var json = JsonSerializer.Serialize(
+            priceResponse,
+            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }
+        );
         var client = CreateClient(CreateHttpClient(HttpStatusCode.OK, json));
 
         // Act
@@ -101,12 +136,13 @@ public sealed class OsrsWikiClientTests
     {
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken
+        )
         {
             cancellationToken.ThrowIfCancellationRequested();
             var response = new HttpResponseMessage(statusCode)
             {
-                Content = new StringContent(content, System.Text.Encoding.UTF8, "application/json")
+                Content = new StringContent(content, System.Text.Encoding.UTF8, "application/json"),
             };
             return Task.FromResult(response);
         }

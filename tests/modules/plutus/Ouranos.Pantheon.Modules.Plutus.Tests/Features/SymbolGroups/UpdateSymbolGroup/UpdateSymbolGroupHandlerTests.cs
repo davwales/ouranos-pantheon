@@ -3,8 +3,8 @@ using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.UpdateSymbolGroup;
 using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.UpdateSymbolGroup.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.SymbolGroups;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
@@ -17,7 +17,9 @@ public sealed class UpdateSymbolGroupHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly UpdateSymbolGroupHandler _handler;
-    private readonly ILogger<UpdateSymbolGroupHandler> _logger = Substitute.For<ILogger<UpdateSymbolGroupHandler>>();
+    private readonly ILogger<UpdateSymbolGroupHandler> _logger = Substitute.For<
+        ILogger<UpdateSymbolGroupHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
 
     public UpdateSymbolGroupHandlerTests()
@@ -71,9 +73,30 @@ public sealed class UpdateSymbolGroupHandlerTests
             _fixture.Create<Taxes>()
         );
 
-        var symbol1 = Symbol.Create(new Id<Symbol>(Guid.NewGuid().ToString()), "SYM1", null, "Symbol 1", market.Id, new AdditionalFields());
-        var symbol2 = Symbol.Create(new Id<Symbol>(Guid.NewGuid().ToString()), "SYM2", null, "Symbol 2", market.Id, new AdditionalFields());
-        var symbol3 = Symbol.Create(new Id<Symbol>(Guid.NewGuid().ToString()), "SYM3", null, "Symbol 3", market.Id, new AdditionalFields());
+        var symbol1 = Symbol.Create(
+            new Id<Symbol>(Guid.NewGuid().ToString()),
+            "SYM1",
+            null,
+            "Symbol 1",
+            market.Id,
+            new AdditionalFields()
+        );
+        var symbol2 = Symbol.Create(
+            new Id<Symbol>(Guid.NewGuid().ToString()),
+            "SYM2",
+            null,
+            "Symbol 2",
+            market.Id,
+            new AdditionalFields()
+        );
+        var symbol3 = Symbol.Create(
+            new Id<Symbol>(Guid.NewGuid().ToString()),
+            "SYM3",
+            null,
+            "Symbol 3",
+            market.Id,
+            new AdditionalFields()
+        );
 
         var group = SymbolGroup.Create(
             new Id<SymbolGroup>(Guid.NewGuid().ToString()),
@@ -100,8 +123,8 @@ public sealed class UpdateSymbolGroupHandlerTests
         await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        var members = _dbContext.SymbolGroupMembers
-            .Where(m => m.SymbolGroupId == group.Id)
+        var members = _dbContext
+            .SymbolGroupMembers.Where(m => m.SymbolGroupId == group.Id)
             .Select(m => m.SymbolId)
             .ToList();
 

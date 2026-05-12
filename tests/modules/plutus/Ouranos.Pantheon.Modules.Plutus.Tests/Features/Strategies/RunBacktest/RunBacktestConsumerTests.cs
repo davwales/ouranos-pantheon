@@ -25,8 +25,12 @@ public sealed class RunBacktestConsumerTests
     private readonly IDbContextFactory<PlutusDbContext> _dbContextFactory;
     private readonly IBacktestDataQueryService _dataService;
     private readonly RunBacktestConsumer _consumer;
-    private readonly ILogger<RunBacktestConsumer> _logger = Substitute.For<ILogger<RunBacktestConsumer>>();
-    private readonly IOptions<BacktestDataOptions> _backtestDataOptions = Options.Create(new BacktestDataOptions());
+    private readonly ILogger<RunBacktestConsumer> _logger = Substitute.For<
+        ILogger<RunBacktestConsumer>
+    >();
+    private readonly IOptions<BacktestDataOptions> _backtestDataOptions = Options.Create(
+        new BacktestDataOptions()
+    );
 
     public RunBacktestConsumerTests()
     {
@@ -40,18 +44,16 @@ public sealed class RunBacktestConsumerTests
         var initLogger = Substitute.For<ILogger<InitializeStep>>();
         var scoreLogger = Substitute.For<ILogger<ScoreSymbolsStep>>();
 
-        var stepRegistry = new StepRegistry<BacktestPayload>(
-            [
-                new InitializeStep(initLogger, _dataService, executors, compositeExecutor),
-                new ScoreSymbolsStep(scoreLogger, []),
-                new CloseExitsStep([]),
-                new IterationSetupStep(_dbContextFactory),
-                new BuyCandidatesStep(),
-                new TrackMetricsStep(),
-                new LiquidateStep(),
-                new ComputeResultsStep(),
-            ]
-        );
+        var stepRegistry = new StepRegistry<BacktestPayload>([
+            new InitializeStep(initLogger, _dataService, executors, compositeExecutor),
+            new ScoreSymbolsStep(scoreLogger, []),
+            new CloseExitsStep([]),
+            new IterationSetupStep(_dbContextFactory),
+            new BuyCandidatesStep(),
+            new TrackMetricsStep(),
+            new LiquidateStep(),
+            new ComputeResultsStep(),
+        ]);
 
         _consumer = new RunBacktestConsumer(
             _logger,
@@ -64,14 +66,7 @@ public sealed class RunBacktestConsumerTests
 
     private BacktestData CreateBacktestData(Market market, List<Symbol> symbols)
     {
-        return BacktestData.FromRaw(
-            market,
-            symbols,
-            [],
-            [],
-            [],
-            []
-        );
+        return BacktestData.FromRaw(market, symbols, [], [], [], []);
     }
 
     [Fact]
@@ -127,8 +122,10 @@ public sealed class RunBacktestConsumerTests
             10000m,
             strategy
         );
-        var trades = Enumerable.Range(0, 5)
-            .Select(i => Trade.Create(
+        var trades = Enumerable
+            .Range(0, 5)
+            .Select(i =>
+                Trade.Create(
                     _fixture.Create<Id<Trade>>(),
                     symbolId,
                     100m,
@@ -150,7 +147,8 @@ public sealed class RunBacktestConsumerTests
 
         var backtestData = CreateBacktestData(market, [symbol]);
 
-        _dataService.LoadDataAsync(
+        _dataService
+            .LoadDataAsync(
                 marketId,
                 Arg.Any<DateTimeOffset>(),
                 Arg.Any<DateTimeOffset>(),
@@ -166,8 +164,8 @@ public sealed class RunBacktestConsumerTests
 
         // Assert
         await using var verifyContext = await _dbContextFactory.CreateDbContextAsync();
-        var saved = await verifyContext.Backtests
-            .AsNoTracking()
+        var saved = await verifyContext
+            .Backtests.AsNoTracking()
             .FirstAsync(b => b.Id == backtest.Id);
 
         saved.Status.ShouldBe(BacktestStatus.Completed);
@@ -215,8 +213,8 @@ public sealed class RunBacktestConsumerTests
 
         // Assert
         await using var verifyContext = await _dbContextFactory.CreateDbContextAsync();
-        var saved = await verifyContext.Backtests
-            .AsNoTracking()
+        var saved = await verifyContext
+            .Backtests.AsNoTracking()
             .FirstAsync(b => b.Id == backtest.Id);
 
         saved.Status.ShouldBe(BacktestStatus.Failed);
@@ -258,7 +256,8 @@ public sealed class RunBacktestConsumerTests
 
         var backtestData = CreateBacktestData(market, []);
 
-        _dataService.LoadDataAsync(
+        _dataService
+            .LoadDataAsync(
                 marketId,
                 Arg.Any<DateTimeOffset>(),
                 Arg.Any<DateTimeOffset>(),
@@ -270,20 +269,22 @@ public sealed class RunBacktestConsumerTests
         await _consumer.Handle(new RunBacktestMessage(backtest.Id), CancellationToken.None);
 
         await using var verifyContext1 = await _dbContextFactory.CreateDbContextAsync();
-        var saved1 = await verifyContext1.Backtests.AsNoTracking().FirstAsync(b => b.Id == backtest.Id);
+        var saved1 = await verifyContext1
+            .Backtests.AsNoTracking()
+            .FirstAsync(b => b.Id == backtest.Id);
         saved1.Status.ShouldBe(BacktestStatus.Completed);
 
         // Act
-        var secondDelivery = async () => await _consumer.Handle(
-            new RunBacktestMessage(backtest.Id),
-            CancellationToken.None
-        );
+        var secondDelivery = async () =>
+            await _consumer.Handle(new RunBacktestMessage(backtest.Id), CancellationToken.None);
 
         // Assert
         await secondDelivery.ShouldNotThrowAsync();
 
         await using var verifyContext2 = await _dbContextFactory.CreateDbContextAsync();
-        var saved2 = await verifyContext2.Backtests.AsNoTracking().FirstAsync(b => b.Id == backtest.Id);
+        var saved2 = await verifyContext2
+            .Backtests.AsNoTracking()
+            .FirstAsync(b => b.Id == backtest.Id);
         saved2.Status.ShouldBe(BacktestStatus.Completed);
     }
 
@@ -327,8 +328,8 @@ public sealed class RunBacktestConsumerTests
 
         // Assert
         await using var verifyContext = await _dbContextFactory.CreateDbContextAsync();
-        var saved = await verifyContext.Backtests
-            .AsNoTracking()
+        var saved = await verifyContext
+            .Backtests.AsNoTracking()
             .FirstAsync(b => b.Id == backtest.Id);
 
         // Should NOT be Running - the catch block transitions to Failed

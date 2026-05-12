@@ -16,9 +16,15 @@ public partial class AddOsrsDataLoaderState : Migration
             columns: table => new
             {
                 id = table.Column<Guid>(type: "uuid", nullable: false),
-                last_processed = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
+                last_processed = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: true
+                ),
             },
-            constraints: table => { table.PrimaryKey("pk_osrs_data_loader_states", x => x.id); }
+            constraints: table =>
+            {
+                table.PrimaryKey("pk_osrs_data_loader_states", x => x.id);
+            }
         );
 
         migrationBuilder.InsertData(
@@ -32,9 +38,6 @@ public partial class AddOsrsDataLoaderState : Migration
     /// <inheritdoc />
     protected override void Down(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.DropTable(
-            name: "osrs_data_loader_states",
-            schema: "plutus"
-        );
+        migrationBuilder.DropTable(name: "osrs_data_loader_states", schema: "plutus");
     }
 }

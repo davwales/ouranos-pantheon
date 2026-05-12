@@ -19,8 +19,14 @@ public partial class AddSymbolGroups : Migration
                 name = table.Column<string>(type: "text", nullable: false),
                 description = table.Column<string>(type: "text", nullable: true),
                 market_id = table.Column<Guid>(type: "uuid", nullable: false),
-                created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                created_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
+                updated_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
             },
             constraints: table =>
             {
@@ -43,11 +49,17 @@ public partial class AddSymbolGroups : Migration
             {
                 symbol_group_id = table.Column<Guid>(type: "uuid", nullable: false),
                 symbol_id = table.Column<Guid>(type: "uuid", nullable: false),
-                added_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                added_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
             },
             constraints: table =>
             {
-                table.PrimaryKey("pk_symbol_group_members", x => new { x.symbol_group_id, x.symbol_id });
+                table.PrimaryKey(
+                    "pk_symbol_group_members",
+                    x => new { x.symbol_group_id, x.symbol_id }
+                );
                 table.ForeignKey(
                     name: "fk_symbol_group_members_symbol_groups_symbol_group_id",
                     column: x => x.symbol_group_id,
@@ -85,14 +97,8 @@ public partial class AddSymbolGroups : Migration
     /// <inheritdoc />
     protected override void Down(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.DropTable(
-            name: "symbol_group_members",
-            schema: "plutus"
-        );
+        migrationBuilder.DropTable(name: "symbol_group_members", schema: "plutus");
 
-        migrationBuilder.DropTable(
-            name: "symbol_groups",
-            schema: "plutus"
-        );
+        migrationBuilder.DropTable(name: "symbol_groups", schema: "plutus");
     }
 }

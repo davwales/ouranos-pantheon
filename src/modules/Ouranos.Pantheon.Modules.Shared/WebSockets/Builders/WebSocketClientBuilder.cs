@@ -14,10 +14,7 @@ public sealed class WebSocketClientBuilder : IWebSocketClientBuilder
 {
     private readonly IServiceCollection _services;
 
-    public WebSocketClientBuilder(
-        IServiceCollection services,
-        WebSocketOptions? options = null
-    )
+    public WebSocketClientBuilder(IServiceCollection services, WebSocketOptions? options = null)
     {
         Guard.Against.Null(services);
         _services = services;
@@ -51,7 +48,8 @@ public sealed class WebSocketClientBuilder : IWebSocketClientBuilder
     }
 
     public IWebSocketClientBuilder UseConstantMessage<TMessage>(
-        Action<IConstantMessagingBuilder<TMessage>> configuration)
+        Action<IConstantMessagingBuilder<TMessage>> configuration
+    )
     {
         ConfigureMessaging = () =>
         {
@@ -63,7 +61,9 @@ public sealed class WebSocketClientBuilder : IWebSocketClientBuilder
         return this;
     }
 
-    public IWebSocketClientBuilder UseDiscriminatedMessages(Action<IDiscriminatedRegistryBuilder> configuration)
+    public IWebSocketClientBuilder UseDiscriminatedMessages(
+        Action<IDiscriminatedRegistryBuilder> configuration
+    )
     {
         ConfigureMessaging = () =>
         {
@@ -75,13 +75,15 @@ public sealed class WebSocketClientBuilder : IWebSocketClientBuilder
         return this;
     }
 
-    public IWebSocketClientBuilder UseSerializer<T>() where T : class, IMessageSerializer
+    public IWebSocketClientBuilder UseSerializer<T>()
+        where T : class, IMessageSerializer
     {
         _services.TryAddSingleton<IMessageSerializer, T>();
         return this;
     }
 
-    public IWebSocketClientBuilder UseInitializer<T>() where T : class, IWebSocketInitializer
+    public IWebSocketClientBuilder UseInitializer<T>()
+        where T : class, IWebSocketInitializer
     {
         _services.AddTransient<IWebSocketInitializer, T>();
         return this;
@@ -95,26 +97,25 @@ public sealed class WebSocketClientBuilder : IWebSocketClientBuilder
         UseConverter<JsonMessageConverter>();
         UseSerializer<MessageSerializer>();
 
-        return _services
-            .AddSingleton<IWebSocketClient>(sp =>
-                new WebSocketClient(
-                    sp.GetRequiredService<ILogger<WebSocketClient>>(),
-                    Host,
-                    BufferSize,
-                    sp.GetRequiredService<IMessageSerializer>(),
-                    sp.GetServices<IWebSocketInitializer>().ToList(),
-                    sp.GetRequiredService<IListenerRegistry>()
-                )
-            );
+        return _services.AddSingleton<IWebSocketClient>(sp => new WebSocketClient(
+            sp.GetRequiredService<ILogger<WebSocketClient>>(),
+            Host,
+            BufferSize,
+            sp.GetRequiredService<IMessageSerializer>(),
+            sp.GetServices<IWebSocketInitializer>().ToList(),
+            sp.GetRequiredService<IListenerRegistry>()
+        ));
     }
 
-    public IWebSocketClientBuilder UseConverter<T>() where T : class, IMessageConverter
+    public IWebSocketClientBuilder UseConverter<T>()
+        where T : class, IMessageConverter
     {
         _services.TryAddSingleton<IMessageConverter, T>();
         return this;
     }
 
-    public IWebSocketClientBuilder UseTypeResolver<T>() where T : class, ITypeResolver
+    public IWebSocketClientBuilder UseTypeResolver<T>()
+        where T : class, ITypeResolver
     {
         _services.TryAddSingleton<ITypeResolver, T>();
         return this;

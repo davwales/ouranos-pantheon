@@ -27,7 +27,16 @@ public sealed class MovingAverageCrossoverSignalComputerTests
     {
         // Arrange
         var buckets = Enumerable.Range(0, 10).Select(_ => Bucket(100m)).ToList();
-        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, null, null, null, buckets);
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            0m,
+            1000m,
+            null,
+            null,
+            null,
+            buckets
+        );
 
         // Act
         var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
@@ -41,7 +50,16 @@ public sealed class MovingAverageCrossoverSignalComputerTests
     {
         // Arrange
         var buckets = Enumerable.Range(0, 25).Select(_ => Bucket(100m)).ToList();
-        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, null, null, null, buckets);
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            0m,
+            1000m,
+            null,
+            null,
+            null,
+            buckets
+        );
 
         // Act
         var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
@@ -54,13 +72,25 @@ public sealed class MovingAverageCrossoverSignalComputerTests
     public async Task ComputeAsync_WhenShortMaIsAboveLongMa_ReturnsBullish()
     {
         // Arrange
-        var buckets = Enumerable.Range(0, 15).Select(_ => Bucket(100m))
+        var buckets = Enumerable
+            .Range(0, 15)
+            .Select(_ => Bucket(100m))
             .Concat(Enumerable.Range(0, 5).Select(_ => Bucket(102m)))
             .ToList();
-        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, null, null, null, buckets);
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            0m,
+            1000m,
+            null,
+            null,
+            null,
+            buckets
+        );
 
         // Act
-        var result = await BuildComputer(threshold: 0.02m).ComputeAsync(context, CancellationToken.None);
+        var result = await BuildComputer(threshold: 0.02m)
+            .ComputeAsync(context, CancellationToken.None);
 
         // Assert
         result.ShouldNotBeNull();
@@ -71,13 +101,25 @@ public sealed class MovingAverageCrossoverSignalComputerTests
     public async Task ComputeAsync_WhenShortMaIsBelowLongMa_ReturnsBearish()
     {
         // Arrange
-        var buckets = Enumerable.Range(0, 15).Select(_ => Bucket(100m))
+        var buckets = Enumerable
+            .Range(0, 15)
+            .Select(_ => Bucket(100m))
             .Concat(Enumerable.Range(0, 5).Select(_ => Bucket(98m)))
             .ToList();
-        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, null, null, null, buckets);
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            0m,
+            1000m,
+            null,
+            null,
+            null,
+            buckets
+        );
 
         // Act
-        var result = await BuildComputer(threshold: 0.02m).ComputeAsync(context, CancellationToken.None);
+        var result = await BuildComputer(threshold: 0.02m)
+            .ComputeAsync(context, CancellationToken.None);
 
         // Assert
         result.ShouldNotBeNull();
@@ -89,10 +131,20 @@ public sealed class MovingAverageCrossoverSignalComputerTests
     {
         // Arrange
         var buckets = Enumerable.Range(0, 25).Select(_ => Bucket(100m)).ToList();
-        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, null, null, null, buckets);
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            0m,
+            1000m,
+            null,
+            null,
+            null,
+            buckets
+        );
 
         // Act
-        var result = await BuildComputer(threshold: 0m).ComputeAsync(context, CancellationToken.None);
+        var result = await BuildComputer(threshold: 0m)
+            .ComputeAsync(context, CancellationToken.None);
 
         // Assert
         result.ShouldBeNull();
@@ -103,7 +155,16 @@ public sealed class MovingAverageCrossoverSignalComputerTests
     {
         // Arrange
         var buckets = Enumerable.Range(0, 25).Select(_ => Bucket(0m)).ToList();
-        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, null, null, null, buckets);
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            0m,
+            1000m,
+            null,
+            null,
+            null,
+            buckets
+        );
 
         // Act
         var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);

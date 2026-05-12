@@ -3,15 +3,15 @@ using Ouranos.Pantheon.Modules.Shared.Algorithms.Genetic;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization.Chromosomes;
 
-public sealed class MeanReversionChromosome(TradingConfiguration configuration, MeanReversionConfig meanReversionConfig)
-    : StrategyChromosome(configuration)
+public sealed class MeanReversionChromosome(
+    TradingConfiguration configuration,
+    MeanReversionConfig meanReversionConfig
+) : StrategyChromosome(configuration)
 {
     public MeanReversionConfig MeanReversionConfig { get; private set; } = meanReversionConfig;
 
     public MeanReversionChromosome(TradingConfiguration configuration)
-        : this(configuration, new MeanReversionConfig())
-    {
-    }
+        : this(configuration, new MeanReversionConfig()) { }
 
     public override BacktestParameters ApplyConfigOverrides(BacktestParameters parameters)
     {
@@ -33,11 +33,17 @@ public sealed class MeanReversionChromosome(TradingConfiguration configuration, 
     {
         if (other is not MeanReversionChromosome otherChromosome)
         {
-            throw new InvalidOperationException($"Crossover partner must be a {nameof(MeanReversionChromosome)}.");
+            throw new InvalidOperationException(
+                $"Crossover partner must be a {nameof(MeanReversionChromosome)}."
+            );
         }
 
         var random = Random.Shared;
-        var childConfig = CrossoverCommonFields(Configuration, otherChromosome.Configuration, random);
+        var childConfig = CrossoverCommonFields(
+            Configuration,
+            otherChromosome.Configuration,
+            random
+        );
 
         var childMeanReversion = new MeanReversionConfig(
             random.NextDouble() < 0.5

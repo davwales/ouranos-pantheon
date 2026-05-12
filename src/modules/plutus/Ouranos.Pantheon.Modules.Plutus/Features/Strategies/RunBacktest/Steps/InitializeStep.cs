@@ -1,11 +1,11 @@
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Executors;
+using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Steps;
 
@@ -25,7 +25,10 @@ public sealed class InitializeStep : IStep<BacktestPayload>
         _logger = Guard.Against.Null(logger);
         _dataService = Guard.Against.Null(dataService);
 
-        _executors = new Dictionary<StrategyType, IStrategyExecutor> { [StrategyType.Composite] = compositeExecutor };
+        _executors = new Dictionary<StrategyType, IStrategyExecutor>
+        {
+            [StrategyType.Composite] = compositeExecutor,
+        };
 
         foreach (var executor in executors)
         {
@@ -37,13 +40,15 @@ public sealed class InitializeStep : IStep<BacktestPayload>
     {
         context.CancellationToken.ThrowIfCancellationRequested();
 
-        var data = payload.Data ?? await _dataService.LoadDataAsync(
-            payload.Parameters.MarketId,
-            payload.Parameters.StartDate,
-            payload.Parameters.EndDate,
-            context.CancellationToken,
-            lookbackDays: 30
-        );
+        var data =
+            payload.Data
+            ?? await _dataService.LoadDataAsync(
+                payload.Parameters.MarketId,
+                payload.Parameters.StartDate,
+                payload.Parameters.EndDate,
+                context.CancellationToken,
+                lookbackDays: 30
+            );
 
         var taxRate = GetTaxRate(data.Market);
         var executor = ResolveExecutor(payload.Parameters.Strategy.Type);
@@ -74,7 +79,9 @@ public sealed class InitializeStep : IStep<BacktestPayload>
     {
         if (!_executors.TryGetValue(type, out var executor))
         {
-            throw new InvalidOperationException($"No executor registered for strategy type '{type}'.");
+            throw new InvalidOperationException(
+                $"No executor registered for strategy type '{type}'."
+            );
         }
 
         return executor;

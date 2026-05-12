@@ -39,8 +39,7 @@ public sealed class RawSqlCommandTests
         var id = new Id<TestEntity>(guid.ToString());
 
         // Act
-        var command = RawSqlCommand.FromSql("SELECT 1")
-            .WithId("@id", id);
+        var command = RawSqlCommand.FromSql("SELECT 1").WithId("@id", id);
 
         // Assert
         var parameters = command.GetParameters();
@@ -60,8 +59,7 @@ public sealed class RawSqlCommandTests
         var id = new Id<TestEntity>("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
 
         // Act
-        var command = RawSqlCommand.FromSql("SELECT 1")
-            .WithId("@id", id);
+        var command = RawSqlCommand.FromSql("SELECT 1").WithId("@id", id);
 
         // Assert
         var param = (Npgsql.NpgsqlParameter)command.GetParameters()[0];
@@ -75,8 +73,7 @@ public sealed class RawSqlCommandTests
         var value = DateTimeOffset.UtcNow;
 
         // Act
-        var command = RawSqlCommand.FromSql("SELECT 1")
-            .WithDateTimeOffset("@ts", value);
+        var command = RawSqlCommand.FromSql("SELECT 1").WithDateTimeOffset("@ts", value);
 
         // Assert
         var parameters = command.GetParameters();
@@ -93,8 +90,7 @@ public sealed class RawSqlCommandTests
         DateTimeOffset? value = DateTimeOffset.UtcNow;
 
         // Act
-        var command = RawSqlCommand.FromSql("SELECT 1")
-            .WithDateTimeOffset("@ts", value);
+        var command = RawSqlCommand.FromSql("SELECT 1").WithDateTimeOffset("@ts", value);
 
         // Assert
         var parameters = command.GetParameters();
@@ -110,8 +106,7 @@ public sealed class RawSqlCommandTests
         DateTimeOffset? value = null;
 
         // Act
-        var command = RawSqlCommand.FromSql("SELECT 1")
-            .WithDateTimeOffset("@ts", value);
+        var command = RawSqlCommand.FromSql("SELECT 1").WithDateTimeOffset("@ts", value);
 
         // Assert
         var parameters = command.GetParameters();
@@ -127,8 +122,7 @@ public sealed class RawSqlCommandTests
         const string value = "test";
 
         // Act
-        var command = RawSqlCommand.FromSql("SELECT 1")
-            .WithString("@name", value);
+        var command = RawSqlCommand.FromSql("SELECT 1").WithString("@name", value);
 
         // Assert
         var parameters = command.GetParameters();
@@ -145,8 +139,7 @@ public sealed class RawSqlCommandTests
         const decimal value = 123.45m;
 
         // Act
-        var command = RawSqlCommand.FromSql("SELECT 1")
-            .WithDecimal("@price", value);
+        var command = RawSqlCommand.FromSql("SELECT 1").WithDecimal("@price", value);
 
         // Assert
         var parameters = command.GetParameters();
@@ -163,8 +156,7 @@ public sealed class RawSqlCommandTests
         const int value = 42;
 
         // Act
-        var command = RawSqlCommand.FromSql("SELECT 1")
-            .WithInt("@count", value);
+        var command = RawSqlCommand.FromSql("SELECT 1").WithInt("@count", value);
 
         // Assert
         var parameters = command.GetParameters();
@@ -180,11 +172,10 @@ public sealed class RawSqlCommandTests
         // Arrange
         var guid1 = Guid.NewGuid();
         var guid2 = Guid.NewGuid();
-        var ids = new List<Id<TestEntity>> { new(guid1.ToString()), new(guid2.ToString()), };
+        var ids = new List<Id<TestEntity>> { new(guid1.ToString()), new(guid2.ToString()) };
 
         // Act
-        var command = RawSqlCommand.FromSql("SELECT 1")
-            .WithIds("@ids", ids);
+        var command = RawSqlCommand.FromSql("SELECT 1").WithIds("@ids", ids);
 
         // Assert
         var parameters = command.GetParameters();
@@ -201,8 +192,7 @@ public sealed class RawSqlCommandTests
     public void WithIdList_WhenEmpty_ShouldAddEmptyArrayParameter()
     {
         // Arrange & Act
-        var command = RawSqlCommand.FromSql("SELECT 1")
-            .WithIds("@ids", new List<Id<TestEntity>>());
+        var command = RawSqlCommand.FromSql("SELECT 1").WithIds("@ids", new List<Id<TestEntity>>());
 
         // Assert
         var parameters = command.GetParameters();
@@ -221,12 +211,12 @@ public sealed class RawSqlCommandTests
         var guid2 = Guid.Parse("b2c3d4e5-f6a7-8901-bcde-f12345678901");
         var ids = new List<Id<TestEntity>>
         {
-            new("a1b2c3d4-e5f6-7890-abcd-ef1234567890"), new("b2c3d4e5-f6a7-8901-bcde-f12345678901"),
+            new("a1b2c3d4-e5f6-7890-abcd-ef1234567890"),
+            new("b2c3d4e5-f6a7-8901-bcde-f12345678901"),
         };
 
         // Act
-        var command = RawSqlCommand.FromSql("SELECT 1")
-            .WithIds("@ids", ids);
+        var command = RawSqlCommand.FromSql("SELECT 1").WithIds("@ids", ids);
 
         // Assert
         var param = (Npgsql.NpgsqlParameter)command.GetParameters()[0];
@@ -239,11 +229,13 @@ public sealed class RawSqlCommandTests
     public void WithParameter_ShouldAddProvidedNpgsqlParameter()
     {
         // Arrange
-        var parameter = new Npgsql.NpgsqlParameter("@custom", NpgsqlDbType.Text) { Value = "hello" };
+        var parameter = new Npgsql.NpgsqlParameter("@custom", NpgsqlDbType.Text)
+        {
+            Value = "hello",
+        };
 
         // Act
-        var command = RawSqlCommand.FromSql("SELECT 1")
-            .WithParameter(parameter);
+        var command = RawSqlCommand.FromSql("SELECT 1").WithParameter(parameter);
 
         // Assert
         var parameters = command.GetParameters();
@@ -259,7 +251,8 @@ public sealed class RawSqlCommandTests
         var timestamp = DateTimeOffset.UtcNow;
 
         // Act
-        var command = RawSqlCommand.FromSql("SELECT 1")
+        var command = RawSqlCommand
+            .FromSql("SELECT 1")
             .WithId("@symbolId", id)
             .WithDateTimeOffset("@since", timestamp)
             .WithDecimal("@price", 99.9m)
@@ -277,7 +270,8 @@ public sealed class RawSqlCommandTests
         var id = new Id<TestEntity>(Guid.NewGuid().ToString());
 
         // Act
-        var command = RawSqlCommand.FromSql("SELECT 1")
+        var command = RawSqlCommand
+            .FromSql("SELECT 1")
             .WithId("@id", id)
             .WithString("@name", "test")
             .WithInt("@count", 10);

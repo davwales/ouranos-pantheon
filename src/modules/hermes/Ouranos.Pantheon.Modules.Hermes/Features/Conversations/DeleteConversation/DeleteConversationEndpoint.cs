@@ -22,6 +22,11 @@ public static class DeleteConversationEndpoint
         CancellationToken ct
     )
     {
-        return Results.Ok(await bus.InvokeAsync<IdResponse<Conversation>>(new DeleteConversationInput(conversationId), ct));
+        return Results.Ok(
+            await bus.InvokeAsync<IdResponse<Conversation>>(
+                new DeleteConversationInput(conversationId),
+                ct
+            )
+        );
     }
 }

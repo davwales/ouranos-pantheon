@@ -8,15 +8,16 @@ public sealed class FilterBuilderTests
 
     private readonly IQueryable<Item> _items = new Item[]
     {
-        new("Sword", 100, true), new("Shield", 50, false), new("Bow", 75, true),
+        new("Sword", 100, true),
+        new("Shield", 50, false),
+        new("Bow", 75, true),
     }.AsQueryable();
 
     [Fact]
     public void On_WhenFieldRegistered_ShouldApplyFilter()
     {
         // Arrange
-        var builder = new FilterBuilder<Item>()
-            .On(nameof(Item.Name), x => x.Name);
+        var builder = new FilterBuilder<Item>().On(nameof(Item.Name), x => x.Name);
 
         // Act
         var result = _items.FilterBy(["Name:eq:Sword"], builder).ToList();
@@ -30,8 +31,7 @@ public sealed class FilterBuilderTests
     public void On_WhenUnregisteredField_ShouldThrowInvalidOperationException()
     {
         // Arrange
-        var builder = new FilterBuilder<Item>()
-            .On(nameof(Item.Name), x => x.Name);
+        var builder = new FilterBuilder<Item>().On(nameof(Item.Name), x => x.Name);
 
         // Act
         var filter = () => _items.FilterBy(["Price:eq:100"], builder).ToList();
@@ -64,8 +64,7 @@ public sealed class FilterBuilderTests
     public void On_WhenFieldLookupIsCaseInsensitive_ShouldApplyFilter()
     {
         // Arrange
-        var builder = new FilterBuilder<Item>()
-            .On(nameof(Item.Name), x => x.Name);
+        var builder = new FilterBuilder<Item>().On(nameof(Item.Name), x => x.Name);
 
         // Act
         var result = _items.FilterBy(["name:eq:Sword"], builder).ToList();
@@ -110,8 +109,7 @@ public sealed class FilterBuilderTests
     public void FilterBy_WhenOrComposite_ShouldReturnEitherMatch()
     {
         // Arrange
-        var builder = new FilterBuilder<Item>()
-            .On(nameof(Item.Name), x => x.Name);
+        var builder = new FilterBuilder<Item>().On(nameof(Item.Name), x => x.Name);
 
         // Act
         var result = _items.FilterBy(["or(Name:eq:Sword|Name:eq:Bow)"], builder).ToList();
@@ -138,8 +136,11 @@ public sealed class FilterBuilderTests
     public void On_WhenCaseInsensitiveEq_ShouldMatchRegardlessOfCasing()
     {
         // Arrange
-        var builder = new FilterBuilder<Item>()
-            .On(nameof(Item.Name), x => x.Name, caseInsensitive: true);
+        var builder = new FilterBuilder<Item>().On(
+            nameof(Item.Name),
+            x => x.Name,
+            caseInsensitive: true
+        );
 
         // Act
         var result = _items.FilterBy(["Name:eq:sword"], builder).ToList();
@@ -152,8 +153,11 @@ public sealed class FilterBuilderTests
     public void On_WhenCaseInsensitiveLike_ShouldMatchRegardlessOfCasing()
     {
         // Arrange
-        var builder = new FilterBuilder<Item>()
-            .On(nameof(Item.Name), x => x.Name, caseInsensitive: true);
+        var builder = new FilterBuilder<Item>().On(
+            nameof(Item.Name),
+            x => x.Name,
+            caseInsensitive: true
+        );
 
         // Act
         var result = _items.FilterBy(["Name:like:IELD"], builder).ToList();
@@ -166,8 +170,11 @@ public sealed class FilterBuilderTests
     public void On_WhenCaseInsensitiveStartsWith_ShouldMatchRegardlessOfCasing()
     {
         // Arrange
-        var builder = new FilterBuilder<Item>()
-            .On(nameof(Item.Name), x => x.Name, caseInsensitive: true);
+        var builder = new FilterBuilder<Item>().On(
+            nameof(Item.Name),
+            x => x.Name,
+            caseInsensitive: true
+        );
 
         // Act
         var result = _items.FilterBy(["Name:startswith:SHI"], builder).ToList();
@@ -180,8 +187,11 @@ public sealed class FilterBuilderTests
     public void On_WhenCaseInsensitiveEndsWith_ShouldMatchRegardlessOfCasing()
     {
         // Arrange
-        var builder = new FilterBuilder<Item>()
-            .On(nameof(Item.Name), x => x.Name, caseInsensitive: true);
+        var builder = new FilterBuilder<Item>().On(
+            nameof(Item.Name),
+            x => x.Name,
+            caseInsensitive: true
+        );
 
         // Act
         var result = _items.FilterBy(["Name:endswith:OW"], builder).ToList();
@@ -194,8 +204,7 @@ public sealed class FilterBuilderTests
     public void On_WhenCaseSensitiveEq_ShouldNotMatchWrongCase()
     {
         // Arrange
-        var builder = new FilterBuilder<Item>()
-            .On(nameof(Item.Name), x => x.Name);
+        var builder = new FilterBuilder<Item>().On(nameof(Item.Name), x => x.Name);
 
         // Act
         var result = _items.FilterBy(["Name:eq:sword"], builder).ToList();

@@ -10,8 +10,7 @@ public static class GetAllForecastsEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapGet("/api/plutus/forecasts", Handle)
-            .WithTags("Plutus.Forecasts");
+        app.MapGet("/api/plutus/forecasts", Handle).WithTags("Plutus.Forecasts");
     }
 
     internal static async Task<IResult> Handle(

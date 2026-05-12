@@ -14,12 +14,11 @@ public sealed record PlutusOptions(
 {
     public const string SectionName = "Ouranos:Plutus";
 
-    public PlutusOptions() : this(
-        DataLoaders: new DataLoadersOptions(),
-        MarketTradeSnapshot: new MarketTradeSnapshotOptions(),
-        Forecasting: new ForecastingOptions(),
-        Optimization: new OptimizationOptions()
-    )
-    {
-    }
+    public PlutusOptions()
+        : this(
+            DataLoaders: new DataLoadersOptions(),
+            MarketTradeSnapshot: new MarketTradeSnapshotOptions(),
+            Forecasting: new ForecastingOptions(),
+            Optimization: new OptimizationOptions()
+        ) { }
 }

@@ -1,11 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Extensions;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Database.ModelConfigurations;
 
-public sealed class MarketOverviewBucketConfiguration : IEntityTypeConfiguration<MarketOverviewBucket>
+public sealed class MarketOverviewBucketConfiguration
+    : IEntityTypeConfiguration<MarketOverviewBucket>
 {
     public void Configure(EntityTypeBuilder<MarketOverviewBucket> builder)
     {

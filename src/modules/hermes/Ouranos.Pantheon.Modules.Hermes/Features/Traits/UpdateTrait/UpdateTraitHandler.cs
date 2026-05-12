@@ -1,9 +1,9 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Hermes.Features.Traits.UpdateTrait.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
+using Ouranos.Pantheon.Modules.Shared.Application;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Traits.UpdateTrait;
 
@@ -12,10 +12,7 @@ public sealed class UpdateTraitHandler : IPantheonHandler<UpdateTraitInput, Upda
     private readonly HermesDbContext _dbContext;
     private readonly ILogger<UpdateTraitHandler> _logger;
 
-    public UpdateTraitHandler(
-        ILogger<UpdateTraitHandler> logger,
-        HermesDbContext dbContext
-    )
+    public UpdateTraitHandler(ILogger<UpdateTraitHandler> logger, HermesDbContext dbContext)
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(dbContext);
@@ -32,16 +29,14 @@ public sealed class UpdateTraitHandler : IPantheonHandler<UpdateTraitInput, Upda
         _logger.LogTrace("Attempting to handle update trait command '{@command}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var trait = await _dbContext.Traits
-            .FirstOrDefaultAsync(t => t.Id == command.TraitId, cancellationToken);
+        var trait = await _dbContext.Traits.FirstOrDefaultAsync(
+            t => t.Id == command.TraitId,
+            cancellationToken
+        );
 
         Guard.Against.NotFound(command.TraitId, trait);
 
-        trait.Update(
-            command.Name,
-            command.Content,
-            command.IsPublic
-        );
+        trait.Update(command.Name, command.Content, command.IsPublic);
 
         _dbContext.Traits.Update(trait);
         await _dbContext.SaveChangesAsync(cancellationToken);

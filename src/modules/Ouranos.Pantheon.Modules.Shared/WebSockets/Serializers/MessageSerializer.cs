@@ -7,10 +7,7 @@ public sealed class MessageSerializer : IMessageSerializer
     private readonly IMessageConverter _messageConverter;
     private readonly ITypeResolver _typeResolver;
 
-    public MessageSerializer(
-        ITypeResolver typeResolver,
-        IMessageConverter messageConverter
-    )
+    public MessageSerializer(ITypeResolver typeResolver, IMessageConverter messageConverter)
     {
         Guard.Against.Null(messageConverter);
         Guard.Against.Null(typeResolver);
@@ -29,7 +26,9 @@ public sealed class MessageSerializer : IMessageSerializer
         var targetType = _typeResolver.ResolveType(data);
         if (!typeof(T).IsAssignableFrom(targetType))
         {
-            throw new InvalidOperationException($"Resolved type '{targetType}' is not assignable to '{typeof(T)}'.");
+            throw new InvalidOperationException(
+                $"Resolved type '{targetType}' is not assignable to '{typeof(T)}'."
+            );
         }
 
         var instance = _messageConverter.Deserialize(data, targetType);
@@ -38,8 +37,7 @@ public sealed class MessageSerializer : IMessageSerializer
             return (T)instance;
         }
 
-        object resolvedList = list
-            .Select(item => _messageConverter.Serialize(item))
+        object resolvedList = list.Select(item => _messageConverter.Serialize(item))
             .Select(Deserialize<object>)
             .ToList();
 

@@ -1,10 +1,10 @@
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
+using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Ffxiv.Messages;
+using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Ffxiv.XivApi;
+using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Shared;
 using Ouranos.Pantheon.Modules.Shared.WebSockets.Listeners;
 using Ouranos.Pantheon.Modules.Shared.WebSockets.WebSocketClients;
-using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Ffxiv.Messages;
-using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Shared;
-using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Ffxiv.XivApi;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Ffxiv;
 
@@ -38,14 +38,13 @@ public sealed class FfxivListener : IListener<SaleMessage>
         _logger.LogTrace("Handling message '{message}'.", message);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var sales = message.Sales
-            .Select(s => new ProcessTradeSaleInput(
-                    s.Hq,
-                    s.PricePerUnit,
-                    s.Quantity,
-                    DateTimeOffset.FromUnixTimeSeconds(s.Timestamp)
-                )
-            )
+        var sales = message
+            .Sales.Select(s => new ProcessTradeSaleInput(
+                s.Hq,
+                s.PricePerUnit,
+                s.Quantity,
+                DateTimeOffset.FromUnixTimeSeconds(s.Timestamp)
+            ))
             .ToList();
 
         if (sales.Count == 0)
@@ -65,30 +64,29 @@ public sealed class FfxivListener : IListener<SaleMessage>
 
         var messages = sales
             .Select(sale =>
+            {
+                var item = sale.IsHighQuality ? hqItem : nqItem;
+                if (item is not null)
                 {
-                    var item = sale.IsHighQuality ? hqItem : nqItem;
-                    if (item is not null)
-                    {
-                        return new TradeMessage(
-                            Producer.Ffxiv,
-                            itemCode,
-                            sale.IsHighQuality ? hqCode : nqCode,
-                            item.SymbolName,
-                            sale.Price,
-                            sale.Volume,
-                            sale.Timestamp,
-                            item.AdditionalFields
-                        );
-                    }
-
-                    _logger.LogWarning(
-                        "Trade item '{itemCode}' '{isHighQuality}' is missing.",
+                    return new TradeMessage(
+                        Producer.Ffxiv,
                         itemCode,
-                        sale.IsHighQuality
+                        sale.IsHighQuality ? hqCode : nqCode,
+                        item.SymbolName,
+                        sale.Price,
+                        sale.Volume,
+                        sale.Timestamp,
+                        item.AdditionalFields
                     );
-                    return null;
                 }
-            )
+
+                _logger.LogWarning(
+                    "Trade item '{itemCode}' '{isHighQuality}' is missing.",
+                    itemCode,
+                    sale.IsHighQuality
+                );
+                return null;
+            })
             .Where(x => x is not null)
             .OfType<TradeMessage>()
             .ToList();

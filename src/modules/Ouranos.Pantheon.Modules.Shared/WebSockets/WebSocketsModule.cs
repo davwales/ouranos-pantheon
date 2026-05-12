@@ -12,7 +12,9 @@ public static class WebSocketsModule
         Action<IWebSocketClientBuilder> configureWebSocketClient
     )
     {
-        var options = configuration.GetSection(WebSocketOptions.SectionName).Get<WebSocketOptions?>();
+        var options = configuration
+            .GetSection(WebSocketOptions.SectionName)
+            .Get<WebSocketOptions?>();
         var builder = new WebSocketClientBuilder(services, options);
         configureWebSocketClient(builder);
         builder.Build();

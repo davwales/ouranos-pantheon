@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Extensions;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Database.ModelConfigurations;
 
@@ -14,7 +14,10 @@ public sealed class BacktestEntityConfiguration : IEntityTypeConfiguration<Backt
         builder.Property(b => b.StrategyId).HasIdConversion();
         builder.Property(b => b.MarketId).HasIdConversion();
         builder.Property(b => b.Status).HasConversion<int>();
-        builder.Property(b => b.Kind).HasConversion<string>().HasDefaultValue(BacktestKind.Backtest);
+        builder
+            .Property(b => b.Kind)
+            .HasConversion<string>()
+            .HasDefaultValue(BacktestKind.Backtest);
         builder.Property(b => b.ProgressPercent).HasDefaultValue(0);
         builder.Property(b => b.ProgressMessage).HasMaxLength(256);
         builder.Property(b => b.Budget).HasPrecision(18, 2);
@@ -75,7 +78,10 @@ public sealed class BacktestEntityConfiguration : IEntityTypeConfiguration<Backt
 
                 results.OwnsOne(
                     r => r.OptimizedRecipeArbitrageConfig,
-                    config => { config.Property(c => c.MinMarginPercent).HasPrecision(18, 2); }
+                    config =>
+                    {
+                        config.Property(c => c.MinMarginPercent).HasPrecision(18, 2);
+                    }
                 );
 
                 results.OwnsOne(
@@ -92,7 +98,11 @@ public sealed class BacktestEntityConfiguration : IEntityTypeConfiguration<Backt
             }
         );
 
-        builder.HasOne(b => b.Strategy).WithMany().HasForeignKey(b => b.StrategyId).OnDelete(DeleteBehavior.Cascade);
+        builder
+            .HasOne(b => b.Strategy)
+            .WithMany()
+            .HasForeignKey(b => b.StrategyId)
+            .OnDelete(DeleteBehavior.Cascade);
         builder.HasIndex(b => b.StrategyId);
         builder.HasIndex(b => b.Status);
 

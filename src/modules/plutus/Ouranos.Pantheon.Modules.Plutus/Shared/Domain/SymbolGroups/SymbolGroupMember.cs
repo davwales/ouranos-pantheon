@@ -1,6 +1,6 @@
-using Ouranos.Pantheon.Modules.Shared.Domain;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ardalis.GuardClauses;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
+using Ouranos.Pantheon.Modules.Shared.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.SymbolGroups;
 
@@ -15,7 +15,8 @@ public class SymbolGroupMember
     public DateTimeOffset AddedAt { get; private set; }
 
     private Symbol? _symbol;
-    public Symbol Symbol => _symbol ?? throw new NavigationPropertyNotLoadedException<SymbolGroupMember>();
+    public Symbol Symbol =>
+        _symbol ?? throw new NavigationPropertyNotLoadedException<SymbolGroupMember>();
 
     public static SymbolGroupMember Create(
         Id<SymbolGroup> symbolGroupId,
@@ -33,7 +34,7 @@ public class SymbolGroupMember
             SymbolGroupId = symbolGroupId,
             SymbolId = symbolId,
             AddedAt = DateTimeOffset.UtcNow,
-            _symbol = symbol
+            _symbol = symbol,
         };
     }
 }

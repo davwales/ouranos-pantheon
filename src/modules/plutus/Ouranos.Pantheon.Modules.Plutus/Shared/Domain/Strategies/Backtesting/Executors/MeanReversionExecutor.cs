@@ -15,8 +15,8 @@ public sealed class MeanReversionExecutor : IStrategyExecutor
         var timeFrame = meanReversionConfig?.MeanTimeFrameValue ?? context.PriceBuckets.Count;
         var effectiveBuckets = Math.Min(timeFrame, context.PriceBuckets.Count);
 
-        var prices = context.PriceBuckets
-            .Skip(context.PriceBuckets.Count - effectiveBuckets)
+        var prices = context
+            .PriceBuckets.Skip(context.PriceBuckets.Count - effectiveBuckets)
             .Select(b => b.AveragePrice)
             .ToList();
 

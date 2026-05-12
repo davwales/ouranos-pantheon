@@ -6,9 +6,7 @@ namespace Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Extensions;
 
 public static class PropertyBuilderExtensions
 {
-    public static PropertyBuilder<Id<T>> HasIdConversion<T>(
-        this PropertyBuilder<Id<T>> builder
-    )
+    public static PropertyBuilder<Id<T>> HasIdConversion<T>(this PropertyBuilder<Id<T>> builder)
     {
         return builder.HasConversion<IdConverter<T>>();
     }

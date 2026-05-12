@@ -18,6 +18,12 @@ internal sealed class TypedFilterField<T, TValue>(
             outerParam
         );
 
-        return FilterExpressionBuilder.BuildPredicateBody(op, value, propAccess, typeof(TValue), caseInsensitive);
+        return FilterExpressionBuilder.BuildPredicateBody(
+            op,
+            value,
+            propAccess,
+            typeof(TValue),
+            caseInsensitive
+        );
     }
 }

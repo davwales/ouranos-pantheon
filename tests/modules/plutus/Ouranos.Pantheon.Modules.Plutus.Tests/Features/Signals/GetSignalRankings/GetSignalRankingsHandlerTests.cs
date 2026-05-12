@@ -6,10 +6,10 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
-using Ouranos.Pantheon.Tests.Utils.Extensions;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
+using Ouranos.Pantheon.Tests.Utils.Extensions;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Signals.GetSignalRankings;
@@ -17,7 +17,9 @@ namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Signals.GetSignalRankin
 public sealed class GetSignalRankingsHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
-    private readonly ILogger<GetSignalRankingsHandler> _logger = Substitute.For<ILogger<GetSignalRankingsHandler>>();
+    private readonly ILogger<GetSignalRankingsHandler> _logger = Substitute.For<
+        ILogger<GetSignalRankingsHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
 
     public GetSignalRankingsHandlerTests()
@@ -34,10 +36,7 @@ public sealed class GetSignalRankingsHandlerTests
     {
         // Arrange
         var handler = BuildHandler();
-        var query = new GetSignalRankingsInput(
-            new Id<Market>(_fixture.Create<string>()),
-            Take: 10
-        );
+        var query = new GetSignalRankingsInput(new Id<Market>(_fixture.Create<string>()), Take: 10);
 
         // Act
         var result = await handler.Handle(query, CancellationToken.None);
@@ -104,10 +103,7 @@ public sealed class GetSignalRankingsHandlerTests
     {
         // Arrange
         var handler = BuildHandler();
-        var query = new GetSignalRankingsInput(
-            new Id<Market>(_fixture.Create<string>()),
-            Take: 10
-        );
+        var query = new GetSignalRankingsInput(new Id<Market>(_fixture.Create<string>()), Take: 10);
         var cancellationToken = new CancellationToken(true);
 
         // Act
@@ -126,10 +122,7 @@ public sealed class GetSignalRankingsHandlerTests
         computer.Type.Returns(SignalType.Rsi);
 
         var handler = BuildHandler([computer]);
-        var query = new GetSignalRankingsInput(
-            new Id<Market>(_fixture.Create<string>()),
-            Take: 10
-        );
+        var query = new GetSignalRankingsInput(new Id<Market>(_fixture.Create<string>()), Take: 10);
 
         // Act
         var result = await handler.Handle(query, CancellationToken.None);

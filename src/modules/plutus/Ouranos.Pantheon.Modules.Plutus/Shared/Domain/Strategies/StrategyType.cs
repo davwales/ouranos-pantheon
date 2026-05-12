@@ -6,5 +6,5 @@ public enum StrategyType
     ForecastMomentum = 2,
     MeanReversion = 3,
     RecipeArbitrage = 4,
-    Composite = 5
+    Composite = 5,
 }

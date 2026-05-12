@@ -10,7 +10,9 @@ public sealed class PlutusModuleTests
     public void MapEndpoints_ShouldRegisterAllEndpointsWithoutThrowing()
     {
         // Arrange
-        var app = WebApplication.CreateBuilder(new WebApplicationOptions { EnvironmentName = "Testing" }).Build();
+        var app = WebApplication
+            .CreateBuilder(new WebApplicationOptions { EnvironmentName = "Testing" })
+            .Build();
 
         // Act
         var act = () => new PlutusModule().MapEndpoints(app);
@@ -23,7 +25,9 @@ public sealed class PlutusModuleTests
     public void Build_ShouldRegisterServicesWithoutThrowing()
     {
         // Arrange
-        var builder = WebApplication.CreateBuilder(new WebApplicationOptions { EnvironmentName = "Testing" });
+        var builder = WebApplication.CreateBuilder(
+            new WebApplicationOptions { EnvironmentName = "Testing" }
+        );
 
         // Act
         var act = () => new PlutusModule().Build(builder);

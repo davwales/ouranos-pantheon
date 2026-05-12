@@ -1,13 +1,13 @@
 using Ardalis.GuardClauses;
+using Flagsmith;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
-using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
-using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Hermes.Features.Traits.GetAllTraits.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
-using Flagsmith;
+using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
+using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
 using Trait = Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits.Trait;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Traits.GetAllTraits;
@@ -54,9 +54,7 @@ public sealed class GetAllTraitsHandler
         var flags = await _flagsmith.GetEnvironmentFlags();
         var isPublicMode = await flags.IsFeatureEnabled(HermesFeatureFlags.PublicMode);
 
-        var dbQuery = _dbContext.Traits
-            .AsQueryable()
-            .AsNoTracking();
+        var dbQuery = _dbContext.Traits.AsQueryable().AsNoTracking();
 
         if (isPublicMode)
         {
@@ -66,13 +64,7 @@ public sealed class GetAllTraitsHandler
         var traits = await dbQuery
             .FilterBy(query.Filter, FilterBuilder)
             .SortBy(query.SortField, query.SortDirection, SortBuilder)
-            .Select(t => new GetAllTraitsResponse(
-                    t.Id,
-                    t.Name,
-                    t.Content,
-                    t.IsPublic
-                )
-            )
+            .Select(t => new GetAllTraitsResponse(t.Id, t.Name, t.Content, t.IsPublic))
             .ToListAsync(cancellationToken);
 
         _logger.LogDebug("Successfully handled get all traits request.");
