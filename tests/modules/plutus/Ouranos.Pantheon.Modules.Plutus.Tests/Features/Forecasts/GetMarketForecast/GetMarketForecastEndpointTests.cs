@@ -20,7 +20,10 @@ public sealed class GetMarketForecastEndpointTests
         var input = new GetMarketForecastInput(new Id<Market>(Guid.NewGuid().ToString()), Take: 10);
         var expected = new PagedResponse<GetMarketForecastResponse>([], 0, 0, 10);
 
-        _bus.InvokeAsync<PagedResponse<GetMarketForecastResponse>>(Arg.Any<object>(), Arg.Any<CancellationToken>())
+        _bus.InvokeAsync<PagedResponse<GetMarketForecastResponse>>(
+                Arg.Any<object>(),
+                Arg.Any<CancellationToken>()
+            )
             .Returns(Task.FromResult(expected));
 
         // Act

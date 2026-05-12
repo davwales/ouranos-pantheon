@@ -7,7 +7,9 @@ namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.DataLoaders.Stocks;
 
 public sealed class StocksErrorListenerTests
 {
-    private readonly ILogger<StocksErrorListener> _logger = Substitute.For<ILogger<StocksErrorListener>>();
+    private readonly ILogger<StocksErrorListener> _logger = Substitute.For<
+        ILogger<StocksErrorListener>
+    >();
     private readonly IWebSocketClient _client = Substitute.For<IWebSocketClient>();
     private readonly StocksErrorListener _listener;
 
@@ -23,7 +25,8 @@ public sealed class StocksErrorListenerTests
         var message = new ErrorMessage(401, "Unauthorized");
 
         // Act
-        var act = async () => await _listener.HandleMessageAsync(message, _client, CancellationToken.None);
+        var act = async () =>
+            await _listener.HandleMessageAsync(message, _client, CancellationToken.None);
 
         // Assert
         await act.ShouldNotThrowAsync();

@@ -11,10 +11,10 @@ using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning.Dtos;
-using MessageDto = Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning.Dtos.MessageDto;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
+using MessageDto = Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning.Dtos.MessageDto;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.Conversations.CreateConversation;
 
@@ -22,9 +22,12 @@ public sealed class CreateConversationHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly CreateConversationHandler _handler;
-    private readonly ILogger<CreateConversationHandler> _logger = Substitute.For<ILogger<CreateConversationHandler>>();
+    private readonly ILogger<CreateConversationHandler> _logger = Substitute.For<
+        ILogger<CreateConversationHandler>
+    >();
     private readonly HermesDbContext _dbContext;
-    private readonly IOuranosMachineLearningClient _mlClient = Substitute.For<IOuranosMachineLearningClient>();
+    private readonly IOuranosMachineLearningClient _mlClient =
+        Substitute.For<IOuranosMachineLearningClient>();
 
     public CreateConversationHandlerTests()
     {
@@ -79,7 +82,8 @@ public sealed class CreateConversationHandlerTests
         var modelConfigId = new Id<ModelConfig>(Guid.NewGuid().ToString());
         var generatedName = _fixture.Create<string>();
 
-        _mlClient.GenerateChatCompletionAsync(
+        _mlClient
+            .GenerateChatCompletionAsync(
                 Arg.Any<string>(),
                 Arg.Any<List<MessageDto>>(),
                 Arg.Any<float?>(),
@@ -102,15 +106,19 @@ public sealed class CreateConversationHandlerTests
         var result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await _mlClient.Received(1).GenerateChatCompletionAsync(
-            Arg.Any<string>(),
-            Arg.Any<List<MessageDto>>(),
-            Arg.Any<float?>(),
-            Arg.Any<int?>(),
-            Arg.Any<float?>(),
-            Arg.Any<CancellationToken>()
+        await _mlClient
+            .Received(1)
+            .GenerateChatCompletionAsync(
+                Arg.Any<string>(),
+                Arg.Any<List<MessageDto>>(),
+                Arg.Any<float?>(),
+                Arg.Any<int?>(),
+                Arg.Any<float?>(),
+                Arg.Any<CancellationToken>()
+            );
+        result.Name.ShouldBe(
+            generatedName.Trim().Length > 60 ? generatedName.Trim()[..60] : generatedName.Trim()
         );
-        result.Name.ShouldBe(generatedName.Trim().Length > 60 ? generatedName.Trim()[..60] : generatedName.Trim());
     }
 
     [Fact]
@@ -121,7 +129,8 @@ public sealed class CreateConversationHandlerTests
         var modelConfigId = new Id<ModelConfig>(Guid.NewGuid().ToString());
         var longName = new string('a', 80);
 
-        _mlClient.GenerateChatCompletionAsync(
+        _mlClient
+            .GenerateChatCompletionAsync(
                 Arg.Any<string>(),
                 Arg.Any<List<MessageDto>>(),
                 Arg.Any<float?>(),
@@ -154,7 +163,8 @@ public sealed class CreateConversationHandlerTests
         var personaId = new Id<Persona>(Guid.NewGuid().ToString());
         var modelConfigId = new Id<ModelConfig>(Guid.NewGuid().ToString());
 
-        _mlClient.GenerateChatCompletionAsync(
+        _mlClient
+            .GenerateChatCompletionAsync(
                 Arg.Any<string>(),
                 Arg.Any<List<MessageDto>>(),
                 Arg.Any<float?>(),
@@ -229,7 +239,7 @@ public sealed class CreateConversationHandlerTests
             [
                 new CreateConversationMessageInput("First", Role.User),
                 new CreateConversationMessageInput("Second", Role.Assistant),
-                new CreateConversationMessageInput("Third", Role.User)
+                new CreateConversationMessageInput("Third", Role.User),
             ],
             _fixture.Create<string>()
         );
@@ -241,7 +251,10 @@ public sealed class CreateConversationHandlerTests
         var savedConversation = await _dbContext.Conversations.FindAsync(result.Id);
         savedConversation.ShouldNotBeNull();
         savedConversation.Messages.Count.ShouldBe(3);
-        savedConversation.Messages.OrderBy(m => m.SortOrder).Select(m => m.SortOrder).ShouldBe([0, 1, 2]);
+        savedConversation
+            .Messages.OrderBy(m => m.SortOrder)
+            .Select(m => m.SortOrder)
+            .ShouldBe([0, 1, 2]);
     }
 
     [Fact]
@@ -251,7 +264,8 @@ public sealed class CreateConversationHandlerTests
         var personaId = new Id<Persona>(Guid.NewGuid().ToString());
         var modelConfigId = new Id<ModelConfig>(Guid.NewGuid().ToString());
 
-        _mlClient.GenerateChatCompletionAsync(
+        _mlClient
+            .GenerateChatCompletionAsync(
                 Arg.Any<string>(),
                 Arg.Any<List<MessageDto>>(),
                 Arg.Any<float?>(),

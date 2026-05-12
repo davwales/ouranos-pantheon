@@ -16,7 +16,9 @@ public sealed class CreatePositionHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly CreatePositionHandler _handler;
-    private readonly ILogger<CreatePositionHandler> _logger = Substitute.For<ILogger<CreatePositionHandler>>();
+    private readonly ILogger<CreatePositionHandler> _logger = Substitute.For<
+        ILogger<CreatePositionHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
 
     public CreatePositionHandlerTests()
@@ -35,13 +37,7 @@ public sealed class CreatePositionHandlerTests
         await _dbContext.SaveChangesAsync();
 
         var symbolId = _fixture.Create<Id<Symbol>>();
-        var command = new CreatePositionInput(
-            PositionSide.Buy,
-            market.Id,
-            symbolId,
-            150.50m,
-            10m
-        );
+        var command = new CreatePositionInput(PositionSide.Buy, market.Id, symbolId, 150.50m, 10m);
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -69,13 +65,7 @@ public sealed class CreatePositionHandlerTests
         await _dbContext.SaveChangesAsync();
 
         var symbolId = _fixture.Create<Id<Symbol>>();
-        var command = new CreatePositionInput(
-            PositionSide.Sell,
-            market.Id,
-            symbolId,
-            155.00m,
-            10m
-        );
+        var command = new CreatePositionInput(PositionSide.Sell, market.Id, symbolId, 155.00m, 10m);
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);

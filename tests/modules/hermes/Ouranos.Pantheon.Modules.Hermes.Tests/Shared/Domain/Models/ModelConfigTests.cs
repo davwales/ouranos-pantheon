@@ -63,7 +63,8 @@ public sealed class ModelConfigTests
         var id = new Id<ModelConfig>(Guid.NewGuid().ToString());
 
         // Act
-        var create = () => ModelConfig.Create(id, name!, _fixture.Create<string>(), _fixture.Create<string>());
+        var create = () =>
+            ModelConfig.Create(id, name!, _fixture.Create<string>(), _fixture.Create<string>());
 
         // Assert
         create.ShouldThrow<ArgumentException>();
@@ -73,18 +74,21 @@ public sealed class ModelConfigTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData(" ")]
-    public void Create_WhenInvalidModelIdentifier_ShouldThrowArgumentException(string? modelIdentifier)
+    public void Create_WhenInvalidModelIdentifier_ShouldThrowArgumentException(
+        string? modelIdentifier
+    )
     {
         // Arrange
         var id = new Id<ModelConfig>(Guid.NewGuid().ToString());
 
         // Act
-        var create = () => ModelConfig.Create(
-            id,
-            _fixture.Create<string>(),
-            modelIdentifier!,
-            _fixture.Create<string>()
-        );
+        var create = () =>
+            ModelConfig.Create(
+                id,
+                _fixture.Create<string>(),
+                modelIdentifier!,
+                _fixture.Create<string>()
+            );
 
         // Assert
         create.ShouldThrow<ArgumentException>();
@@ -100,7 +104,13 @@ public sealed class ModelConfigTests
         var id = new Id<ModelConfig>(Guid.NewGuid().ToString());
 
         // Act
-        var create = () => ModelConfig.Create(id, _fixture.Create<string>(), _fixture.Create<string>(), systemPrompt!);
+        var create = () =>
+            ModelConfig.Create(
+                id,
+                _fixture.Create<string>(),
+                _fixture.Create<string>(),
+                systemPrompt!
+            );
 
         // Assert
         create.ShouldThrow<ArgumentException>();
@@ -122,7 +132,17 @@ public sealed class ModelConfigTests
         var newSystemPrompt = _fixture.Create<string>();
 
         // Act
-        model.Update(newName, newModelIdentifier, newSystemPrompt, 0.5f, 1024, 1.1f, null, true, false);
+        model.Update(
+            newName,
+            newModelIdentifier,
+            newSystemPrompt,
+            0.5f,
+            1024,
+            1.1f,
+            null,
+            true,
+            false
+        );
 
         // Assert
         model.Name.ShouldBe(newName);
@@ -150,7 +170,8 @@ public sealed class ModelConfigTests
         );
 
         // Act
-        var update = () => model.Update(newName!, _fixture.Create<string>(), _fixture.Create<string>());
+        var update = () =>
+            model.Update(newName!, _fixture.Create<string>(), _fixture.Create<string>());
 
         // Assert
         update.ShouldThrow<ArgumentException>();
@@ -160,7 +181,9 @@ public sealed class ModelConfigTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData(" ")]
-    public void Update_WhenInvalidModelIdentifier_ShouldThrowArgumentException(string? newModelIdentifier)
+    public void Update_WhenInvalidModelIdentifier_ShouldThrowArgumentException(
+        string? newModelIdentifier
+    )
     {
         // Arrange
         var model = ModelConfig.Create(
@@ -171,7 +194,8 @@ public sealed class ModelConfigTests
         );
 
         // Act
-        var update = () => model.Update(_fixture.Create<string>(), newModelIdentifier!, _fixture.Create<string>());
+        var update = () =>
+            model.Update(_fixture.Create<string>(), newModelIdentifier!, _fixture.Create<string>());
 
         // Assert
         update.ShouldThrow<ArgumentException>();
@@ -192,7 +216,8 @@ public sealed class ModelConfigTests
         );
 
         // Act
-        var update = () => model.Update(_fixture.Create<string>(), _fixture.Create<string>(), newSystemPrompt!);
+        var update = () =>
+            model.Update(_fixture.Create<string>(), _fixture.Create<string>(), newSystemPrompt!);
 
         // Assert
         update.ShouldThrow<ArgumentException>();

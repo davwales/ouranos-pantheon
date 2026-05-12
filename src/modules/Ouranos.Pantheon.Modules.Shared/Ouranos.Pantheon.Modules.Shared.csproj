@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
@@ -13,11 +12,11 @@
     <PackageReference Include="TickerQ.Dashboard" />
     <PackageReference Include="WolverineFx" />
     <PackageReference Include="WolverineFx.RabbitMq" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" >
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-<PackageReference Include="Microsoft.Extensions.Configuration" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.Extensions.Hosting" />
@@ -30,5 +29,4 @@
   <ItemGroup>
     <Folder Include="Algorithms\" />
   </ItemGroup>
-
 </Project>

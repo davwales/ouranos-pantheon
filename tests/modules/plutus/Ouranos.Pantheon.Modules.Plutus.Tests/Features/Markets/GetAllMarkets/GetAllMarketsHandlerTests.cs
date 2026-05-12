@@ -13,7 +13,9 @@ public sealed class GetAllMarketsHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly GetAllMarketsHandler _handler;
-    private readonly ILogger<GetAllMarketsHandler> _logger = Substitute.For<ILogger<GetAllMarketsHandler>>();
+    private readonly ILogger<GetAllMarketsHandler> _logger = Substitute.For<
+        ILogger<GetAllMarketsHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
 
     public GetAllMarketsHandlerTests()

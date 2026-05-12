@@ -6,5 +6,5 @@ public enum PositionStatus
     DidNotBuy = 1,
     Bought = 2,
     DidNotSell = 3,
-    Sold = 4
+    Sold = 4,
 }

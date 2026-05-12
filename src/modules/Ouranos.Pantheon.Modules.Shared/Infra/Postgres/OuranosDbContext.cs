@@ -8,7 +8,8 @@ public abstract class OuranosDbContext : DbContext
 {
     private readonly string _schema;
 
-    protected OuranosDbContext(DbContextOptions options, string schema) : base(options)
+    protected OuranosDbContext(DbContextOptions options, string schema)
+        : base(options)
     {
         Guard.Against.NullOrWhiteSpace(schema);
         _schema = schema;
@@ -27,8 +28,6 @@ public abstract class OuranosDbContext : DbContext
     {
         base.ConfigureConventions(configurationBuilder);
 
-        configurationBuilder
-            .Properties<decimal>()
-            .HavePrecision(18, 2);
+        configurationBuilder.Properties<decimal>().HavePrecision(18, 2);
     }
 }

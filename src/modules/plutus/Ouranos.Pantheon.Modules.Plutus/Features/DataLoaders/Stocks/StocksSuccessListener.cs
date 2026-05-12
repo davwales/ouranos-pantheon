@@ -1,9 +1,9 @@
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Stocks.Messages;
 using Ouranos.Pantheon.Modules.Shared.WebSockets.Listeners;
 using Ouranos.Pantheon.Modules.Shared.WebSockets.WebSocketClients;
-using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Stocks.Messages;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Stocks;
 
@@ -43,11 +43,7 @@ public sealed class StocksSuccessListener : IListener<SuccessMessage>
         const string authenticatedFlag = "authenticated";
         if (message.Msg == authenticatedFlag)
         {
-            var subscribeMessage = new SubscribeMessage(
-                [.. _options.Value.Symbols],
-                [],
-                []
-            );
+            var subscribeMessage = new SubscribeMessage([.. _options.Value.Symbols], [], []);
             await client.SendAsync(subscribeMessage, cancellationToken);
         }
 

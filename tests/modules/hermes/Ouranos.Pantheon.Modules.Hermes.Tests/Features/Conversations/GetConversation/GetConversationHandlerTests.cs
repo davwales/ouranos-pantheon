@@ -8,13 +8,12 @@ using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
-using HermesTrait = Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits.Trait;
-using HermesTraitId =
-    Ouranos.Pantheon.Modules.Shared.Domain.Id<Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits.Trait>;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
+using HermesTrait = Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits.Trait;
+using HermesTraitId = Ouranos.Pantheon.Modules.Shared.Domain.Id<Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits.Trait>;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.Conversations.GetConversation;
 
@@ -22,7 +21,9 @@ public sealed class GetConversationHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly GetConversationHandler _handler;
-    private readonly ILogger<GetConversationHandler> _logger = Substitute.For<ILogger<GetConversationHandler>>();
+    private readonly ILogger<GetConversationHandler> _logger = Substitute.For<
+        ILogger<GetConversationHandler>
+    >();
     private readonly HermesDbContext _dbContext;
     private readonly IFlagsmithClient _flagsmith = Substitute.For<IFlagsmithClient>();
 
@@ -153,7 +154,13 @@ public sealed class GetConversationHandlerTests
             _fixture.Create<string>()
         );
         var conversationId = new Id<Conversation>(Guid.NewGuid().ToString());
-        var message = Message.Create(new Id<Message>(Guid.NewGuid().ToString()), conversationId, "Hello", Role.User, 0);
+        var message = Message.Create(
+            new Id<Message>(Guid.NewGuid().ToString()),
+            conversationId,
+            "Hello",
+            Role.User,
+            0
+        );
         var conversation = Conversation.Create(
             conversationId,
             persona.Id,

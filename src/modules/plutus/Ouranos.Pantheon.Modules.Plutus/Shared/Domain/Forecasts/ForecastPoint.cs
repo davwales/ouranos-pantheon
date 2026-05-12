@@ -7,7 +7,6 @@ public record ForecastPoint(
     decimal Volume
 )
 {
-    protected ForecastPoint() : this(0, 0, 0, 0)
-    {
-    }
+    protected ForecastPoint()
+        : this(0, 0, 0, 0) { }
 }

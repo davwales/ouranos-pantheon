@@ -14,10 +14,12 @@ public sealed class WebSocketsModuleTests
         services.AddLogging();
 
         var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                [$"{WebSocketOptions.SectionName}:Host"] = "wss://test.example.com",
-            })
+            .AddInMemoryCollection(
+                new Dictionary<string, string?>
+                {
+                    [$"{WebSocketOptions.SectionName}:Host"] = "wss://test.example.com",
+                }
+            )
             .Build();
 
         // Act
@@ -25,8 +27,8 @@ public sealed class WebSocketsModuleTests
 
         // Assert
         services.ShouldContain(sd =>
-            sd.ServiceType == typeof(Microsoft.Extensions.Hosting.IHostedService) &&
-            sd.ImplementationType == typeof(WebSocketWorker)
+            sd.ServiceType == typeof(Microsoft.Extensions.Hosting.IHostedService)
+            && sd.ImplementationType == typeof(WebSocketWorker)
         );
     }
 }

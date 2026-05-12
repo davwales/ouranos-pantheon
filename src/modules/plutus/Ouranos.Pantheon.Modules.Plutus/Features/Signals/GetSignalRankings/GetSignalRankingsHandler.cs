@@ -2,15 +2,15 @@ using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSignalRankings.Schemas;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Pagination;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
-using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSignalRankings.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSignalRankings;
 
@@ -19,7 +19,11 @@ public sealed class GetSignalRankingsHandler
 {
     private static readonly FilterBuilder<GetSignalRankingsResponse> FilterBuilder =
         new FilterBuilder<GetSignalRankingsResponse>()
-            .On(nameof(GetSignalRankingsResponse.SymbolName), x => x.SymbolName, caseInsensitive: true)
+            .On(
+                nameof(GetSignalRankingsResponse.SymbolName),
+                x => x.SymbolName,
+                caseInsensitive: true
+            )
             .On(nameof(GetSignalRankingsResponse.DailyAveragePrice), x => x.DailyAveragePrice)
             .On(nameof(GetSignalRankingsResponse.DailyVolume), x => x.DailyVolume)
             .On(nameof(GetSignalRankingsResponse.OverallScore), x => x.OverallScore)
@@ -82,12 +86,22 @@ public sealed class GetSignalRankingsHandler
 
         var limits = _queryOptions.Value;
         Guard.Against.OutOfRange(input.Skip, nameof(input.Skip), 0, limits.MaxSkip);
-        Guard.Against.OutOfRange(input.Take, nameof(input.Take), limits.MinPageSize, limits.MaxPageSize);
+        Guard.Against.OutOfRange(
+            input.Take,
+            nameof(input.Take),
+            limits.MinPageSize,
+            limits.MaxPageSize
+        );
 
-        var signalRankings = await _dbContext.Signals
-            .AsNoTracking()
+        var signalRankings = await _dbContext
+            .Signals.AsNoTracking()
             .Where(s => s.MarketId == input.MarketId)
-            .GroupBy(s => new { s.SymbolId, s.Symbol.Name, s.Symbol.Subcode })
+            .GroupBy(s => new
+            {
+                s.SymbolId,
+                s.Symbol.Name,
+                s.Symbol.Subcode,
+            })
             .Select(g => new
             {
                 g.Key.SymbolId,
@@ -95,51 +109,54 @@ public sealed class GetSignalRankingsHandler
                 g.Key.Subcode,
                 OverallScore = g.Average(x => x.Value),
                 BuyScore = _buyTypes.Count > 0
-                        ? g.Average(x => _buyTypes.Contains(x.Type) ? x.Value : null)
-                        : null,
+                    ? g.Average(x => _buyTypes.Contains(x.Type) ? x.Value : null)
+                    : null,
                 SellScore = _sellTypes.Count > 0
-                        ? g.Average(x => _sellTypes.Contains(x.Type) ? x.Value : null)
-                        : null,
+                    ? g.Average(x => _sellTypes.Contains(x.Type) ? x.Value : null)
+                    : null,
                 FlipScore = _flipTypes.Count > 0
-                        ? g.Average(x => _flipTypes.Contains(x.Type) ? x.Value : null)
-                        : null,
+                    ? g.Average(x => _flipTypes.Contains(x.Type) ? x.Value : null)
+                    : null,
                 MerchScore = _merchTypes.Count > 0
-                        ? g.Average(x => _merchTypes.Contains(x.Type) ? x.Value : null)
-                        : null,
+                    ? g.Average(x => _merchTypes.Contains(x.Type) ? x.Value : null)
+                    : null,
                 SignalCount = g.Count(),
                 BullishCount = g.Count(x => x.Value > 0),
                 BearishCount = g.Count(x => x.Value < 0),
-            }
-            )
+            })
             .ToListAsync(cancellationToken);
 
-        var snapshotLookup = await _dbContext.MarketTradeSnapshots
-            .AsNoTracking()
+        var snapshotLookup = await _dbContext
+            .MarketTradeSnapshots.AsNoTracking()
             .Where(s => s.MarketId == input.MarketId && s.TimeFrame == TimeFrame.OneDay)
-            .Select(s => new { s.SymbolId, s.TotalSpent, s.TotalVolume })
+            .Select(s => new
+            {
+                s.SymbolId,
+                s.TotalSpent,
+                s.TotalVolume,
+            })
             .ToDictionaryAsync(s => s.SymbolId, cancellationToken);
 
         var rankings = signalRankings
             .Select(r =>
-                {
-                    snapshotLookup.TryGetValue(r.SymbolId, out var snap);
-                    return new GetSignalRankingsResponse(
-                        r.SymbolId,
-                        r.Name,
-                        r.Subcode,
-                        snap is { TotalVolume: > 0 } ? snap.TotalSpent / snap.TotalVolume : null,
-                        snap?.TotalVolume,
-                        r.OverallScore,
-                        r.BuyScore,
-                        r.SellScore,
-                        r.FlipScore,
-                        r.MerchScore,
-                        r.SignalCount,
-                        r.BullishCount,
-                        r.BearishCount
-                    );
-                }
-            )
+            {
+                snapshotLookup.TryGetValue(r.SymbolId, out var snap);
+                return new GetSignalRankingsResponse(
+                    r.SymbolId,
+                    r.Name,
+                    r.Subcode,
+                    snap is { TotalVolume: > 0 } ? snap.TotalSpent / snap.TotalVolume : null,
+                    snap?.TotalVolume,
+                    r.OverallScore,
+                    r.BuyScore,
+                    r.SellScore,
+                    r.FlipScore,
+                    r.MerchScore,
+                    r.SignalCount,
+                    r.BullishCount,
+                    r.BearishCount
+                );
+            })
             .ToList();
 
         var filtered = rankings.AsQueryable().FilterBy(input.Filter, FilterBuilder);
@@ -151,7 +168,12 @@ public sealed class GetSignalRankingsHandler
             .ToList();
 
         _logger.LogDebug("Successfully handled get signal rankings request.");
-        return new PagedResponse<GetSignalRankingsResponse>(items, totalCount, input.Skip, input.Take);
+        return new PagedResponse<GetSignalRankingsResponse>(
+            items,
+            totalCount,
+            input.Skip,
+            input.Take
+        );
     }
 
     private static Dictionary<InvestmentIntent, HashSet<SignalType>> BuildIntentMap(

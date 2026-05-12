@@ -17,11 +17,15 @@ namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.Conversations.GenerateC
 
 public sealed class GenerateCompletionHandlerTests
 {
-    private readonly ILogger<GenerateCompletionHandler> _logger = Substitute.For<ILogger<GenerateCompletionHandler>>();
-    private readonly IOuranosMachineLearningClient _mlClient = Substitute.For<IOuranosMachineLearningClient>();
+    private readonly ILogger<GenerateCompletionHandler> _logger = Substitute.For<
+        ILogger<GenerateCompletionHandler>
+    >();
+    private readonly IOuranosMachineLearningClient _mlClient =
+        Substitute.For<IOuranosMachineLearningClient>();
 
-    private readonly IDbContextFactory<HermesDbContext> _dbContextFactory =
-        Substitute.For<IDbContextFactory<HermesDbContext>>();
+    private readonly IDbContextFactory<HermesDbContext> _dbContextFactory = Substitute.For<
+        IDbContextFactory<HermesDbContext>
+    >();
 
     private readonly GenerateCompletionHandler _handler;
 
@@ -59,11 +63,12 @@ public sealed class GenerateCompletionHandlerTests
         yield return new ChatCompletionChunk(null, usage);
     }
 
-    private static ConversationInput CreateConversation(params CompletionMessageInput[] messages) => new(
-        new ModelInput("test-model", "You are a helpful assistant."),
-        new PersonaInput("TestBot", "A test persona"),
-        messages.ToList()
-    );
+    private static ConversationInput CreateConversation(params CompletionMessageInput[] messages) =>
+        new(
+            new ModelInput("test-model", "You are a helpful assistant."),
+            new PersonaInput("TestBot", "A test persona"),
+            messages.ToList()
+        );
 
     [Fact]
     public async Task Handle_WhenHappyPath_ShouldStreamChunks()
@@ -82,7 +87,9 @@ public sealed class GenerateCompletionHandlerTests
             )
             .Returns(CreateStream(chunks));
 
-        var command = new GenerateCompletionInput(CreateConversation(new CompletionMessageInput("Hi", Role.User)));
+        var command = new GenerateCompletionInput(
+            CreateConversation(new CompletionMessageInput("Hi", Role.User))
+        );
         var expected = chunks.Select(c => new ContentChunkResponse(c)).ToList();
 
         // Act + Assert
@@ -95,7 +102,9 @@ public sealed class GenerateCompletionHandlerTests
         // Arrange
         var dbName = Guid.NewGuid().ToString();
         var dbContext = DbContextExtensions.Mock<HermesDbContext>(dbName);
-        _dbContextFactory.CreateDbContextAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(dbContext));
+        _dbContextFactory
+            .CreateDbContextAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(dbContext));
 
         _mlClient
             .StreamChatCompletionAsync(
@@ -128,9 +137,7 @@ public sealed class GenerateCompletionHandlerTests
         );
 
         // Act
-        await foreach (var _ in _handler.Handle(command, CancellationToken.None))
-        {
-        }
+        await foreach (var _ in _handler.Handle(command, CancellationToken.None)) { }
 
         // Assert
         var checkContext = DbContextExtensions.Mock<HermesDbContext>(dbName);
@@ -144,21 +151,23 @@ public sealed class GenerateCompletionHandlerTests
     public async Task Handle_WhenConversationIdNull_ShouldNotPersist()
     {
         // Arrange
-        _mlClient.StreamChatCompletionAsync(
-            Arg.Any<string>(),
-            Arg.Any<List<MessageDto>>(),
-            Arg.Any<float?>(),
-            Arg.Any<int?>(),
-            Arg.Any<float?>(),
-            Arg.Any<CancellationToken>()
-        ).Returns(CreateStream(["Hi"]));
+        _mlClient
+            .StreamChatCompletionAsync(
+                Arg.Any<string>(),
+                Arg.Any<List<MessageDto>>(),
+                Arg.Any<float?>(),
+                Arg.Any<int?>(),
+                Arg.Any<float?>(),
+                Arg.Any<CancellationToken>()
+            )
+            .Returns(CreateStream(["Hi"]));
 
-        var command = new GenerateCompletionInput(CreateConversation(new CompletionMessageInput("Hello", Role.User)));
+        var command = new GenerateCompletionInput(
+            CreateConversation(new CompletionMessageInput("Hello", Role.User))
+        );
 
         // Act
-        await foreach (var _ in _handler.Handle(command, CancellationToken.None))
-        {
-        }
+        await foreach (var _ in _handler.Handle(command, CancellationToken.None)) { }
 
         // Assert
         await _dbContextFactory.DidNotReceive().CreateDbContextAsync(Arg.Any<CancellationToken>());
@@ -226,9 +235,7 @@ public sealed class GenerateCompletionHandlerTests
         // Act
         var handle = async () =>
         {
-            await foreach (var _ in _handler.Handle(command, cancellationToken))
-            {
-            }
+            await foreach (var _ in _handler.Handle(command, cancellationToken)) { }
         };
 
         // Assert
@@ -252,7 +259,9 @@ public sealed class GenerateCompletionHandlerTests
             )
             .Returns(CreateStreamWithUsage(["Hello"], usage));
 
-        var command = new GenerateCompletionInput(CreateConversation(new CompletionMessageInput("Hi", Role.User)));
+        var command = new GenerateCompletionInput(
+            CreateConversation(new CompletionMessageInput("Hi", Role.User))
+        );
 
         // Act
         var responses = new List<GenerateCompletionResponse>();
@@ -284,7 +293,9 @@ public sealed class GenerateCompletionHandlerTests
             )
             .Returns(CreateStream(["Hello"]));
 
-        var command = new GenerateCompletionInput(CreateConversation(new CompletionMessageInput("Hi", Role.User)));
+        var command = new GenerateCompletionInput(
+            CreateConversation(new CompletionMessageInput("Hi", Role.User))
+        );
 
         // Act
         var responses = new List<GenerateCompletionResponse>();

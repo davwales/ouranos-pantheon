@@ -17,7 +17,10 @@ public sealed class GetAllTradesEndpointTests
         var input = new GetAllTradesInput(Take: 10);
         var expected = new List<GetAllTradesResponse>();
 
-        _bus.InvokeAsync<List<GetAllTradesResponse>>(Arg.Any<object>(), Arg.Any<CancellationToken>())
+        _bus.InvokeAsync<List<GetAllTradesResponse>>(
+                Arg.Any<object>(),
+                Arg.Any<CancellationToken>()
+            )
             .Returns(Task.FromResult(expected));
 
         // Act

@@ -1,9 +1,9 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.UpdateModel.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
+using Ouranos.Pantheon.Modules.Shared.Application;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Models.UpdateModel;
 
@@ -12,10 +12,7 @@ public sealed class UpdateModelHandler : IPantheonHandler<UpdateModelInput, Upda
     private readonly HermesDbContext _dbContext;
     private readonly ILogger<UpdateModelHandler> _logger;
 
-    public UpdateModelHandler(
-        ILogger<UpdateModelHandler> logger,
-        HermesDbContext dbContext
-    )
+    public UpdateModelHandler(ILogger<UpdateModelHandler> logger, HermesDbContext dbContext)
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(dbContext);
@@ -32,15 +29,17 @@ public sealed class UpdateModelHandler : IPantheonHandler<UpdateModelInput, Upda
         _logger.LogTrace("Attempting to handle update model command '{@command}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var model = await _dbContext.ModelConfigs
-            .FirstOrDefaultAsync(m => m.Id == command.ModelId, cancellationToken);
+        var model = await _dbContext.ModelConfigs.FirstOrDefaultAsync(
+            m => m.Id == command.ModelId,
+            cancellationToken
+        );
 
         Guard.Against.NotFound(command.ModelId, model);
 
         if (command.IsDefault)
         {
-            var existingDefaults = await _dbContext.ModelConfigs
-                .Where(m => m.IsDefault && m.Id != command.ModelId)
+            var existingDefaults = await _dbContext
+                .ModelConfigs.Where(m => m.IsDefault && m.Id != command.ModelId)
                 .ToListAsync(cancellationToken);
 
             foreach (var existing in existingDefaults)

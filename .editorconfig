@@ -1,3 +1,11 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
 [*.cs]
 
 # CS1591: Missing XML comment for publicly visible type or member
@@ -6,8 +14,17 @@ dotnet_diagnostic.CS1591.severity = silent
 # IDE0161: Convert to file-scoped namespace
 csharp_style_namespace_declarations = file_scoped:warning
 
-csharp_style_expression_bodied_methods = false
+csharp_style_expression_bodied_methods = false:warning
 csharp_prefer_braces = true:error
 
-# IDE0005: Using directive is unnecessary.
+# IDE0005: Using directive is unnecessary
 dotnet_diagnostic.IDE0005.severity = warning
+
+# IDE0040: Add accessibility modifiers (enforce explicit access keywords)
+dotnet_style_require_accessibility_keywords = always:warning
+
+# CA1852: Prefer sealed types when no derived types exist
+dotnet_diagnostic.CA1852.severity = warning
+
+# CA1873: Avoid potentially expensive logging
+dotnet_diagnostic.CA1873.severity = silent

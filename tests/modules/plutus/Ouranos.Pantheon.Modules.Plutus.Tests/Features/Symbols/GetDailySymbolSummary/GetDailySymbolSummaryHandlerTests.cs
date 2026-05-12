@@ -13,8 +13,9 @@ namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Symbols.GetDailySymbolS
 
 public sealed class GetDailySymbolSummaryHandlerTests
 {
-    private readonly ILogger<GetDailySymbolSummaryHandler> _logger =
-        Substitute.For<ILogger<GetDailySymbolSummaryHandler>>();
+    private readonly ILogger<GetDailySymbolSummaryHandler> _logger = Substitute.For<
+        ILogger<GetDailySymbolSummaryHandler>
+    >();
 
     private readonly PlutusDbContext _dbContext;
     private readonly GetDailySymbolSummaryHandler _handler;
@@ -29,7 +30,11 @@ public sealed class GetDailySymbolSummaryHandlerTests
     public async Task Handle_WhenTradesExistToday_ShouldReturnAggregatedSummary()
     {
         // Arrange
-        var market = Market.Create(new Id<Market>(Guid.NewGuid().ToString()), "Test Market", new Taxes(null));
+        var market = Market.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            "Test Market",
+            new Taxes(null)
+        );
         var symbol = Symbol.Create(
             new Id<Symbol>(Guid.NewGuid().ToString()),
             "ITEM1",
@@ -67,7 +72,11 @@ public sealed class GetDailySymbolSummaryHandlerTests
     public async Task Handle_WhenNoTradesToday_ShouldReturnZeroedSummary()
     {
         // Arrange
-        var market = Market.Create(new Id<Market>(Guid.NewGuid().ToString()), "Test Market", new Taxes(null));
+        var market = Market.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            "Test Market",
+            new Taxes(null)
+        );
         var symbol = Symbol.Create(
             new Id<Symbol>(Guid.NewGuid().ToString()),
             "ITEM1",
@@ -78,7 +87,13 @@ public sealed class GetDailySymbolSummaryHandlerTests
         );
 
         var yesterday = DateTimeOffset.UtcNow.AddDays(-2);
-        var trade = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 100m, 10m, yesterday);
+        var trade = Trade.Create(
+            new Id<Trade>(Guid.NewGuid().ToString()),
+            symbol.Id,
+            100m,
+            10m,
+            yesterday
+        );
 
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(symbol);

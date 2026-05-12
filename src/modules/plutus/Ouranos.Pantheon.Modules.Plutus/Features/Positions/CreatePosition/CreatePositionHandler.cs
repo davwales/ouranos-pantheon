@@ -1,22 +1,20 @@
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Plutus.Features.Positions.CreatePosition.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Positions;
+using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Positions.CreatePosition;
 
-public sealed class CreatePositionHandler : IPantheonHandler<CreatePositionInput, IdResponse<Position>>
+public sealed class CreatePositionHandler
+    : IPantheonHandler<CreatePositionInput, IdResponse<Position>>
 {
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<CreatePositionHandler> _logger;
 
-    public CreatePositionHandler(
-        ILogger<CreatePositionHandler> logger,
-        PlutusDbContext dbContext
-    )
+    public CreatePositionHandler(ILogger<CreatePositionHandler> logger, PlutusDbContext dbContext)
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(dbContext);

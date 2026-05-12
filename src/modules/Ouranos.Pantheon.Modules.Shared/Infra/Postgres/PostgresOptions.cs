@@ -16,25 +16,25 @@ public sealed record PostgresOptions(
 {
     public const string SectionName = "Ouranos:Postgres";
 
-    public PostgresOptions() : this(
-        string.Empty,
-        5432,
-        string.Empty,
-        string.Empty,
-        string.Empty,
-        null,
-        false,
-        30,
-        3,
-        5,
-        false
-    )
-    {
-    }
+    public PostgresOptions()
+        : this(
+            string.Empty,
+            5432,
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            null,
+            false,
+            30,
+            3,
+            5,
+            false
+        ) { }
 
     public string GetConnectionString()
     {
-        var connectionString = $"Host={Host};Port={Port};Database={Database};Username={Username};Password={Password};";
+        var connectionString =
+            $"Host={Host};Port={Port};Database={Database};Username={Username};Password={Password};";
 
         if (!string.IsNullOrWhiteSpace(SearchPath))
         {

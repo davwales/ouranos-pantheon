@@ -7,8 +7,9 @@ namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.DataLoaders.Stocks;
 
 public sealed class StocksSubscriptionListenerTests
 {
-    private readonly ILogger<StocksSubscriptionListener> _logger =
-        Substitute.For<ILogger<StocksSubscriptionListener>>();
+    private readonly ILogger<StocksSubscriptionListener> _logger = Substitute.For<
+        ILogger<StocksSubscriptionListener>
+    >();
 
     private readonly IWebSocketClient _client = Substitute.For<IWebSocketClient>();
     private readonly StocksSubscriptionListener _listener;
@@ -35,7 +36,8 @@ public sealed class StocksSubscriptionListenerTests
         );
 
         // Act
-        var act = async () => await _listener.HandleMessageAsync(message, _client, CancellationToken.None);
+        var act = async () =>
+            await _listener.HandleMessageAsync(message, _client, CancellationToken.None);
 
         // Assert
         await act.ShouldNotThrowAsync();

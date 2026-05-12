@@ -8,11 +8,6 @@ public sealed record OsrsDataLoaderOptions(
 {
     public const string SectionName = "Osrs";
 
-    public OsrsDataLoaderOptions() : this(
-        IsEnabled: true,
-        RefreshIntervalMinutes: 5,
-        Wiki: new OsrsWikiOptions()
-    )
-    {
-    }
+    public OsrsDataLoaderOptions()
+        : this(IsEnabled: true, RefreshIntervalMinutes: 5, Wiki: new OsrsWikiOptions()) { }
 }

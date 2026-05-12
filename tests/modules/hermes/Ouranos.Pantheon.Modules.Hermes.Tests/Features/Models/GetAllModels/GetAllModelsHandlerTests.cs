@@ -16,7 +16,9 @@ public sealed class GetAllModelsHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly GetAllModelsHandler _handler;
-    private readonly ILogger<GetAllModelsHandler> _logger = Substitute.For<ILogger<GetAllModelsHandler>>();
+    private readonly ILogger<GetAllModelsHandler> _logger = Substitute.For<
+        ILogger<GetAllModelsHandler>
+    >();
     private readonly HermesDbContext _dbContext;
     private readonly IFlagsmithClient _flagsmith = Substitute.For<IFlagsmithClient>();
 

@@ -17,8 +17,7 @@ public sealed class SortExtensionsTests
     public void SortBy_WithBuilder_ShouldSortAscending()
     {
         // Arrange
-        var builder = new SortBuilder<Product>()
-            .On(nameof(Product.Price), p => p.Price);
+        var builder = new SortBuilder<Product>().On(nameof(Product.Price), p => p.Price);
 
         // Act
         var result = Items.SortBy("Price", "asc", builder).ToList();
@@ -33,8 +32,7 @@ public sealed class SortExtensionsTests
     public void SortBy_WithBuilder_ShouldSortDescending()
     {
         // Arrange
-        var builder = new SortBuilder<Product>()
-            .On(nameof(Product.Price), p => p.Price);
+        var builder = new SortBuilder<Product>().On(nameof(Product.Price), p => p.Price);
 
         // Act
         var result = Items.SortBy("Price", "desc", builder).ToList();
@@ -49,11 +47,9 @@ public sealed class SortExtensionsTests
     public void SortBy_WithConfigureAction_ShouldApplySort()
     {
         // Act
-        var result = Items.SortBy(
-            "Name",
-            "asc",
-            b => b.On(nameof(Product.Name), p => p.Name)
-        ).ToList();
+        var result = Items
+            .SortBy("Name", "asc", b => b.On(nameof(Product.Name), p => p.Name))
+            .ToList();
 
         // Assert
         result[0].Name.ShouldBe("Bow");
@@ -65,8 +61,7 @@ public sealed class SortExtensionsTests
     public void SortBy_WithNullSortField_ShouldReturnOriginalOrder()
     {
         // Arrange
-        var builder = new SortBuilder<Product>()
-            .On(nameof(Product.Price), p => p.Price);
+        var builder = new SortBuilder<Product>().On(nameof(Product.Price), p => p.Price);
 
         // Act
         var result = Items.SortBy(null, null, builder).ToList();

@@ -20,7 +20,10 @@ public sealed class GetSignalRankingsEndpointTests
         var input = new GetSignalRankingsInput(new Id<Market>(Guid.NewGuid().ToString()), Take: 10);
         var expected = new PagedResponse<GetSignalRankingsResponse>([], 0, 0, 10);
 
-        _bus.InvokeAsync<PagedResponse<GetSignalRankingsResponse>>(Arg.Any<object>(), Arg.Any<CancellationToken>())
+        _bus.InvokeAsync<PagedResponse<GetSignalRankingsResponse>>(
+                Arg.Any<object>(),
+                Arg.Any<CancellationToken>()
+            )
             .Returns(Task.FromResult(expected));
 
         // Act

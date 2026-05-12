@@ -16,7 +16,9 @@ public sealed class UpdateStrategyHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly UpdateStrategyHandler _handler;
-    private readonly ILogger<UpdateStrategyHandler> _logger = Substitute.For<ILogger<UpdateStrategyHandler>>();
+    private readonly ILogger<UpdateStrategyHandler> _logger = Substitute.For<
+        ILogger<UpdateStrategyHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
 
     public UpdateStrategyHandlerTests()
@@ -94,8 +96,7 @@ public sealed class UpdateStrategyHandlerTests
         result.ShouldBeOfType<IdResponse<Strategy>>();
         result.Id.ShouldBe(strategy.Id);
 
-        var updated = await _dbContext.Strategies
-            .FirstOrDefaultAsync(s => s.Id == strategy.Id);
+        var updated = await _dbContext.Strategies.FirstOrDefaultAsync(s => s.Id == strategy.Id);
         updated.ShouldNotBeNull();
         updated.SignalWeightedConfig.ShouldNotBeNull();
         updated.SignalWeightedConfig.TaxAdjustedRoiWeight.ShouldBe(2.5m);

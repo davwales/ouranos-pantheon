@@ -15,7 +15,9 @@ namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Signals.GetSymbolSignal
 public sealed class GetSymbolSignalsHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
-    private readonly ILogger<GetSymbolSignalsHandler> _logger = Substitute.For<ILogger<GetSymbolSignalsHandler>>();
+    private readonly ILogger<GetSymbolSignalsHandler> _logger = Substitute.For<
+        ILogger<GetSymbolSignalsHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
     private readonly ISignalComputer[] _computers;
 
@@ -26,13 +28,37 @@ public sealed class GetSymbolSignalsHandlerTests
 
         _computers =
         [
-            new StubSignalComputer(SignalType.Rsi, "RSI", [InvestmentIntent.Buy, InvestmentIntent.Flip]),
-            new StubSignalComputer(SignalType.BollingerBands, "Bollinger Bands", [InvestmentIntent.Flip]),
-            new StubSignalComputer(SignalType.PriceVelocity, "Price Velocity", [InvestmentIntent.Sell]),
-            new StubSignalComputer(SignalType.MovingAverageCrossover, "MA Crossover", [InvestmentIntent.Merch]),
-            new StubSignalComputer(SignalType.TrendMomentum, "Trend Momentum", [InvestmentIntent.Merch]),
+            new StubSignalComputer(
+                SignalType.Rsi,
+                "RSI",
+                [InvestmentIntent.Buy, InvestmentIntent.Flip]
+            ),
+            new StubSignalComputer(
+                SignalType.BollingerBands,
+                "Bollinger Bands",
+                [InvestmentIntent.Flip]
+            ),
+            new StubSignalComputer(
+                SignalType.PriceVelocity,
+                "Price Velocity",
+                [InvestmentIntent.Sell]
+            ),
+            new StubSignalComputer(
+                SignalType.MovingAverageCrossover,
+                "MA Crossover",
+                [InvestmentIntent.Merch]
+            ),
+            new StubSignalComputer(
+                SignalType.TrendMomentum,
+                "Trend Momentum",
+                [InvestmentIntent.Merch]
+            ),
             new StubSignalComputer(SignalType.TaxAdjustedRoi, "Tax ROI", [InvestmentIntent.Flip]),
-            new StubSignalComputer(SignalType.VolumeAnomaly, "Volume Anomaly", [InvestmentIntent.Buy]),
+            new StubSignalComputer(
+                SignalType.VolumeAnomaly,
+                "Volume Anomaly",
+                [InvestmentIntent.Buy]
+            ),
         ];
     }
 

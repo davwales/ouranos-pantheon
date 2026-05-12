@@ -1,23 +1,22 @@
 <Project>
-    <PropertyGroup>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <TargetFramework>net10.0</TargetFramework>
-        <Version>1.0.0</Version>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    </PropertyGroup>
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <TargetFramework>net10.0</TargetFramework>
+    <Version>1.0.0</Version>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Ardalis.GuardClauses" />
+  </ItemGroup>
+
+  <Target Name="CopyGitHooks" AfterTargets="AfterBuild">
     <ItemGroup>
-        <PackageReference Include="Ardalis.GuardClauses" />
+      <_CustomFiles Include="$(SolutionDir)/automation/pre-commit" />
+      <_CustomFiles Include="$(SolutionDir)/automation/pre-push" />
     </ItemGroup>
-
-    <Target Name="CopyGitHooks" AfterTargets="AfterBuild">
-        <ItemGroup>
-            <_CustomFiles Include="$(SolutionDir)/automation/pre-commit"/>
-            <_CustomFiles Include="$(SolutionDir)/automation/pre-push"/>
-        </ItemGroup>
-        <Copy SourceFiles="@(_CustomFiles)" DestinationFolder="./.git/hooks"/>
-    </Target>
-
+    <Copy SourceFiles="@(_CustomFiles)" DestinationFolder="./.git/hooks" />
+  </Target>
 </Project>

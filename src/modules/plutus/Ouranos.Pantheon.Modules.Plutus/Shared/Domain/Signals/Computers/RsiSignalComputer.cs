@@ -6,7 +6,8 @@ public sealed class RsiSignalComputer : ISignalComputer
 
     public SignalType Type => SignalType.Rsi;
     public string Label => "RSI";
-    public string Description => "RSI below 30 indicates oversold (bullish), above 70 indicates overbought (bearish).";
+    public string Description =>
+        "RSI below 30 indicates oversold (bullish), above 70 indicates overbought (bearish).";
     public IReadOnlyList<InvestmentIntent> Intents => [InvestmentIntent.Buy, InvestmentIntent.Sell];
 
     public Task<decimal?> ComputeAsync(SignalComputeContext context, CancellationToken ct)

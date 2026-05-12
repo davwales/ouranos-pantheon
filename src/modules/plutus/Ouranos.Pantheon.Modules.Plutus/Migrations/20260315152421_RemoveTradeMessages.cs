@@ -10,10 +10,7 @@ public partial class RemoveTradeMessages : Migration
     /// <inheritdoc />
     protected override void Up(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.DropTable(
-            name: "trade_message",
-            schema: "plutus"
-        );
+        migrationBuilder.DropTable(name: "trade_message", schema: "plutus");
     }
 
     /// <inheritdoc />
@@ -25,12 +22,21 @@ public partial class RemoveTradeMessages : Migration
             columns: table => new
             {
                 id = table.Column<Guid>(type: "uuid", nullable: false),
-                created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                created_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
                 message_id = table.Column<Guid>(type: "uuid", nullable: false),
                 trade_id = table.Column<Guid>(type: "uuid", nullable: false),
-                updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                updated_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
             },
-            constraints: table => { table.PrimaryKey("pk_trade_message", x => x.id); }
+            constraints: table =>
+            {
+                table.PrimaryKey("pk_trade_message", x => x.id);
+            }
         );
 
         migrationBuilder.CreateIndex(

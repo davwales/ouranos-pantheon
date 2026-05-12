@@ -15,16 +15,15 @@ public static class FlagsmithModule
         return services
             .Configure<FlagsmithOptions>(configuration.GetSection(FlagsmithOptions.SectionName))
             .AddSingleton<IFlagsmithClient>(sp =>
-                {
-                    var opts = sp.GetRequiredService<IOptions<FlagsmithOptions>>().Value;
-                    return new FlagsmithClient(
-                        new FlagsmithConfiguration
-                        {
-                            ApiUri = new Uri(opts.ApiUrl),
-                            EnvironmentKey = opts.EnvironmentKey
-                        }
-                    );
-                }
-            );
+            {
+                var opts = sp.GetRequiredService<IOptions<FlagsmithOptions>>().Value;
+                return new FlagsmithClient(
+                    new FlagsmithConfiguration
+                    {
+                        ApiUri = new Uri(opts.ApiUrl),
+                        EnvironmentKey = opts.EnvironmentKey,
+                    }
+                );
+            });
     }
 }

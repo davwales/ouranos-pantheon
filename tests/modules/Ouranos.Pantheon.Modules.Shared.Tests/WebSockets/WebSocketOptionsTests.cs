@@ -48,10 +48,7 @@ public sealed class WebSocketOptionsTests
         var expectedBufferSize = fixture.Create<uint>();
 
         // Act
-        var options = new WebSocketOptions(
-            expectedHost,
-            expectedBufferSize
-        );
+        var options = new WebSocketOptions(expectedHost, expectedBufferSize);
 
         // Assert
         options.Host.ShouldBe(expectedHost);

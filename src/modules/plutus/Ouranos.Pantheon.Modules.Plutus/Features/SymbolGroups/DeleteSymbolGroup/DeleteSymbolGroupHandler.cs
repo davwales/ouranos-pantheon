@@ -1,15 +1,16 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.DeleteSymbolGroup.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.SymbolGroups;
+using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.DeleteSymbolGroup;
 
-public sealed class DeleteSymbolGroupHandler : IPantheonHandler<DeleteSymbolGroupInput, IdResponse<SymbolGroup>>
+public sealed class DeleteSymbolGroupHandler
+    : IPantheonHandler<DeleteSymbolGroupInput, IdResponse<SymbolGroup>>
 {
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<DeleteSymbolGroupHandler> _logger;
@@ -34,8 +35,10 @@ public sealed class DeleteSymbolGroupHandler : IPantheonHandler<DeleteSymbolGrou
         _logger.LogTrace("Attempting to handle delete symbol group command '{@command}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var group = await _dbContext.SymbolGroups
-            .FirstOrDefaultAsync(sg => sg.Id == command.SymbolGroupId, cancellationToken);
+        var group = await _dbContext.SymbolGroups.FirstOrDefaultAsync(
+            sg => sg.Id == command.SymbolGroupId,
+            cancellationToken
+        );
 
         if (group is not null)
         {

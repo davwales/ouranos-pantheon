@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.UpdateStrategy.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Domain;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.UpdateStrategy;
@@ -12,8 +12,7 @@ public static class UpdateStrategyEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapPut("/api/plutus/strategies/{strategyId}", Handle)
-            .WithTags("Plutus.Strategies");
+        app.MapPut("/api/plutus/strategies/{strategyId}", Handle).WithTags("Plutus.Strategies");
     }
 
     internal static async Task<IResult> Handle(

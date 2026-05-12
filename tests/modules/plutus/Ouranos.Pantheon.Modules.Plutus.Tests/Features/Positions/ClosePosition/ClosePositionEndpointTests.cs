@@ -28,6 +28,7 @@ public sealed class ClosePositionEndpointTests
 
         // Assert
         result.ShouldBeOfType<Ok<ClosePositionResponse>>();
-        await _bus.Received(1).InvokeAsync<ClosePositionResponse>(Arg.Any<ClosePositionInput>(), ct);
+        await _bus.Received(1)
+            .InvokeAsync<ClosePositionResponse>(Arg.Any<ClosePositionInput>(), ct);
     }
 }

@@ -10,15 +10,14 @@ public sealed record ForecastingOptions(
     int MaxEvaluationAgeDays
 )
 {
-    public ForecastingOptions() : this(
-        IsEnabled: true,
-        RemoveOutdatedForecasts: true,
-        NumPredictions: 7,
-        HistoryDays: 30,
-        BatchSize: 500,
-        ModelName: "plutus-forecasting-v1",
-        MaxEvaluationAgeDays: 90
-    )
-    {
-    }
+    public ForecastingOptions()
+        : this(
+            IsEnabled: true,
+            RemoveOutdatedForecasts: true,
+            NumPredictions: 7,
+            HistoryDays: 30,
+            BatchSize: 500,
+            ModelName: "plutus-forecasting-v1",
+            MaxEvaluationAgeDays: 90
+        ) { }
 }

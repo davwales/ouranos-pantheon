@@ -40,7 +40,10 @@ public sealed class PipelineTests
         return builder.Build();
     }
 
-    private static Pipeline<TestPayload> CreatePipeline(IReadOnlyList<IStep<TestPayload>> steps, int iterations = 1)
+    private static Pipeline<TestPayload> CreatePipeline(
+        IReadOnlyList<IStep<TestPayload>> steps,
+        int iterations = 1
+    )
     {
         var builder = new PipelineBuilder<TestPayload>(new StepRegistry<TestPayload>([]));
         foreach (var step in steps)
@@ -114,7 +117,9 @@ public sealed class PipelineTests
         var context = new PipelineContext(cts.Token);
 
         // Act & Assert
-        Should.Throw<OperationCanceledException>(() => pipeline.ExecuteAsync(context, new TestPayload(0)));
+        Should.Throw<OperationCanceledException>(() =>
+            pipeline.ExecuteAsync(context, new TestPayload(0))
+        );
         step.ExecuteCount.ShouldBe(0);
     }
 

@@ -5,7 +5,8 @@ namespace Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 
 public sealed class Message : BaseEntity<Id<Message>>
 {
-    private Message(Id<Message> id) : base(id)
+    private Message(Id<Message> id)
+        : base(id)
     {
         Content = string.Empty;
     }
@@ -34,7 +35,7 @@ public sealed class Message : BaseEntity<Id<Message>>
             ConversationId = conversationId,
             Content = content,
             Role = role,
-            SortOrder = sortOrder
+            SortOrder = sortOrder,
         };
     }
 }

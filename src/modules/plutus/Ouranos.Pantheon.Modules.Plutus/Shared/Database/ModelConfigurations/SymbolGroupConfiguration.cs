@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Extensions;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.SymbolGroups;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Database.ModelConfigurations;
 
@@ -15,7 +15,8 @@ public sealed class SymbolGroupConfiguration : IEntityTypeConfiguration<SymbolGr
 
         builder.HasOne(sg => sg.Market).WithMany().HasForeignKey(sg => sg.MarketId);
 
-        builder.HasMany(sg => sg.Members)
+        builder
+            .HasMany(sg => sg.Members)
             .WithOne()
             .HasForeignKey(m => m.SymbolGroupId)
             .OnDelete(DeleteBehavior.Cascade);

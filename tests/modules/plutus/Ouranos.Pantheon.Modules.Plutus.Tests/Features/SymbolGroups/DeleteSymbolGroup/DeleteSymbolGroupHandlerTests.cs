@@ -16,7 +16,9 @@ public sealed class DeleteSymbolGroupHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly DeleteSymbolGroupHandler _handler;
-    private readonly ILogger<DeleteSymbolGroupHandler> _logger = Substitute.For<ILogger<DeleteSymbolGroupHandler>>();
+    private readonly ILogger<DeleteSymbolGroupHandler> _logger = Substitute.For<
+        ILogger<DeleteSymbolGroupHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
 
     public DeleteSymbolGroupHandlerTests()

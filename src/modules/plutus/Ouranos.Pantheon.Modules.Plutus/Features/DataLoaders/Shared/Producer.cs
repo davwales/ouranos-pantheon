@@ -4,5 +4,5 @@ public enum Producer
 {
     Osrs = 0,
     Ffxiv = 1,
-    Stocks = 2
+    Stocks = 2,
 }

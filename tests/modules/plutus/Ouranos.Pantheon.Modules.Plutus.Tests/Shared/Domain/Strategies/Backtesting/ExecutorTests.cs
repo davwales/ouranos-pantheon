@@ -1,12 +1,12 @@
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Executors;
-using Ouranos.Pantheon.Modules.Shared.Domain;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
+using Ouranos.Pantheon.Modules.Shared.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Tests.Shared.Domain.Strategies.Backtesting;
 
@@ -55,7 +55,7 @@ public sealed class SignalWeightedExecutorTests
         var signals = new List<Signal>
         {
             Signal.Create(default, default, SignalType.TaxAdjustedRoi, 0.6m),
-            Signal.Create(default, default, SignalType.TrendMomentum, 0.4m)
+            Signal.Create(default, default, SignalType.TrendMomentum, 0.4m),
         };
         var context = CreateContext(signals, new SignalWeightedConfig());
 
@@ -71,11 +71,13 @@ public sealed class SignalWeightedExecutorTests
         var signals = new List<Signal>
         {
             Signal.Create(default, default, SignalType.Rsi, 1.0m),
-            Signal.Create(default, default, SignalType.TrendMomentum, -1.0m)
+            Signal.Create(default, default, SignalType.TrendMomentum, -1.0m),
         };
-        var config =
-            new TradingConfiguration();
-        var context = CreateContext(signals, new SignalWeightedConfig(RsiWeight: 2m, TrendMomentumWeight: 1m));
+        var config = new TradingConfiguration();
+        var context = CreateContext(
+            signals,
+            new SignalWeightedConfig(RsiWeight: 2m, TrendMomentumWeight: 1m)
+        );
 
         var result = _executor.Score(context, config);
 
@@ -86,7 +88,10 @@ public sealed class SignalWeightedExecutorTests
     [Fact]
     public void Score_WhenAllWeightsAreZero_ReturnsNull()
     {
-        var signals = new List<Signal> { Signal.Create(default, default, SignalType.TaxAdjustedRoi, 0.5m) };
+        var signals = new List<Signal>
+        {
+            Signal.Create(default, default, SignalType.TaxAdjustedRoi, 0.5m),
+        };
         var config = new TradingConfiguration();
         var context = CreateContext(signals, new SignalWeightedConfig(TaxAdjustedRoiWeight: 0m));
 
@@ -101,7 +106,7 @@ public sealed class SignalWeightedExecutorTests
         var signals = new List<Signal>
         {
             Signal.Create(default, default, SignalType.TaxAdjustedRoi, 0.8m),
-            Signal.Create(default, default, SignalType.VolumeAnomaly, 0.6m)
+            Signal.Create(default, default, SignalType.VolumeAnomaly, 0.6m),
         };
         var config = new TradingConfiguration();
         var context = CreateContext(signals, new SignalWeightedConfig(TaxAdjustedRoiWeight: 1m));
@@ -243,7 +248,8 @@ public sealed class MeanReversionExecutorTests
         // Arrange
         var buckets = new List<PriceBucket>
         {
-            new(DateTimeOffset.UtcNow, 100m, 99m, 101m, 10m), new(DateTimeOffset.UtcNow, 102m, 101m, 103m, 10m)
+            new(DateTimeOffset.UtcNow, 100m, 99m, 101m, 10m),
+            new(DateTimeOffset.UtcNow, 102m, 101m, 103m, 10m),
         };
         var context = new StrategyScoreContext(
             new Id<Symbol>(Guid.NewGuid().ToString()),
@@ -273,7 +279,8 @@ public sealed class MeanReversionExecutorTests
     public void Score_WhenCurrentPriceIsZero_ReturnsNull()
     {
         // Arrange
-        var buckets = Enumerable.Range(0, 6)
+        var buckets = Enumerable
+            .Range(0, 6)
             .Select(_ => new PriceBucket(DateTimeOffset.UtcNow, 100m, 99m, 101m, 10m))
             .ToList();
         var context = new StrategyScoreContext(
@@ -304,7 +311,8 @@ public sealed class MeanReversionExecutorTests
     public void Score_WhenCurrentPriceIsWellBelowMean_ReturnsPositive()
     {
         // Arrange
-        var buckets = Enumerable.Range(0, 10)
+        var buckets = Enumerable
+            .Range(0, 10)
             .Select(i => new PriceBucket(DateTimeOffset.UtcNow, 100m + i, 95m + i, 105m + i, 10m))
             .ToList();
         var context = new StrategyScoreContext(
@@ -337,7 +345,8 @@ public sealed class MeanReversionExecutorTests
     public void Score_WhenCurrentPriceIsWellAboveMean_ReturnsNegative()
     {
         // Arrange
-        var buckets = Enumerable.Range(0, 10)
+        var buckets = Enumerable
+            .Range(0, 10)
             .Select(i => new PriceBucket(DateTimeOffset.UtcNow, 100m + i, 95m + i, 105m + i, 10m))
             .ToList();
         var context = new StrategyScoreContext(
@@ -370,10 +379,12 @@ public sealed class MeanReversionExecutorTests
     public void Score_WhenMeanTimeFrameValueSet_UsesOnlyRecentBuckets()
     {
         // Arrange
-        var earlyBuckets = Enumerable.Range(0, 5)
+        var earlyBuckets = Enumerable
+            .Range(0, 5)
             .Select(i => new PriceBucket(DateTimeOffset.UtcNow, 200m + i, 195m + i, 205m + i, 10m))
             .ToList();
-        var recentBuckets = Enumerable.Range(0, 5)
+        var recentBuckets = Enumerable
+            .Range(0, 5)
             .Select(i => new PriceBucket(DateTimeOffset.UtcNow, 100m + i, 95m + i, 105m + i, 10m))
             .ToList();
         var allBuckets = earlyBuckets.Concat(recentBuckets).ToList();
@@ -396,14 +407,14 @@ public sealed class MeanReversionExecutorTests
         );
 
         // Act
-        var resultAllBuckets = _executor.Score(
-            contextAll,
-            new TradingConfiguration()
-        );
+        var resultAllBuckets = _executor.Score(contextAll, new TradingConfiguration());
         var resultRecentOnly = _executor.Score(
             contextAll with
             {
-                MeanReversionConfig = new MeanReversionConfig(DeviationMultiplier: 2m, MeanTimeFrameValue: 5)
+                MeanReversionConfig = new MeanReversionConfig(
+                    DeviationMultiplier: 2m,
+                    MeanTimeFrameValue: 5
+                ),
             },
             new TradingConfiguration()
         );
@@ -548,7 +559,7 @@ public sealed class CompositeExecutorTests
                     new Id<Strategy>(Guid.NewGuid().ToString()),
                     StrategyType.ForecastMomentum,
                     1m
-                )
+                ),
             ]
         );
 
@@ -564,7 +575,8 @@ public sealed class CompositeExecutorTests
     {
         // Arrange
         var executor = new CompositeExecutor([new MeanReversionExecutor()]);
-        var buckets = Enumerable.Range(0, 10)
+        var buckets = Enumerable
+            .Range(0, 10)
             .Select(_ => new PriceBucket(DateTimeOffset.UtcNow, 100m, 95m, 105m, 10m))
             .ToList();
         var context = new StrategyScoreContext(
@@ -589,7 +601,7 @@ public sealed class CompositeExecutorTests
                     new Id<Strategy>(Guid.NewGuid().ToString()),
                     StrategyType.MeanReversion,
                     100m
-                )
+                ),
             ]
         );
 

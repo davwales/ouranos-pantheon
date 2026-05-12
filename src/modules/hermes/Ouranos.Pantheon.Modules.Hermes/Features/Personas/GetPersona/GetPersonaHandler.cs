@@ -1,12 +1,12 @@
 using Ardalis.GuardClauses;
+using Flagsmith;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Hermes.Features.Personas.GetPersona.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
-using Flagsmith;
+using Ouranos.Pantheon.Modules.Shared.Application;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Personas.GetPersona;
 
@@ -39,8 +39,10 @@ public sealed class GetPersonaHandler : IPantheonHandler<GetPersonaInput, GetPer
         _logger.LogTrace("Attempting to handle get persona query '{@query}'.", query);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var persona = await _dbContext.Personas
-            .FirstOrDefaultAsync(p => p.Id == query.PersonaId, cancellationToken);
+        var persona = await _dbContext.Personas.FirstOrDefaultAsync(
+            p => p.Id == query.PersonaId,
+            cancellationToken
+        );
 
         Guard.Against.NotFound(query.PersonaId, persona);
 

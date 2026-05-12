@@ -20,7 +20,8 @@ public sealed class DiscriminatedRegistryBuilder : IDiscriminatedRegistryBuilder
 
     public string? DiscriminatorPath { get; private set; }
 
-    public IReadOnlyDictionary<Type, IDiscriminatedMessagingBuilder> MessagingBuilders => _messagingBuilders;
+    public IReadOnlyDictionary<Type, IDiscriminatedMessagingBuilder> MessagingBuilders =>
+        _messagingBuilders;
 
     public IDiscriminatedRegistryBuilder UseDiscriminatorPath(string discriminatorPath)
     {
@@ -33,15 +34,10 @@ public sealed class DiscriminatedRegistryBuilder : IDiscriminatedRegistryBuilder
     {
         Guard.Against.Null(DiscriminatorPath);
 
-        _services.TryAddTransient<ITypeResolver>(_ =>
-            new JsonTypeResolver(
-                DiscriminatorPath,
-                _messagingBuilders.ToDictionary(
-                    x => x.Value.Discriminator,
-                    x => x.Key
-                )
-            )
-        );
+        _services.TryAddTransient<ITypeResolver>(_ => new JsonTypeResolver(
+            DiscriminatorPath,
+            _messagingBuilders.ToDictionary(x => x.Value.Discriminator, x => x.Key)
+        ));
 
         _services.TryAddSingleton<IListenerRegistry>(sp =>
         {

@@ -14,7 +14,9 @@ public sealed class GetBacktestHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly GetBacktestHandler _handler;
-    private readonly ILogger<GetBacktestHandler> _logger = Substitute.For<ILogger<GetBacktestHandler>>();
+    private readonly ILogger<GetBacktestHandler> _logger = Substitute.For<
+        ILogger<GetBacktestHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
 
     public GetBacktestHandlerTests()

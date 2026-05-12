@@ -1,26 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
 
-    <PropertyGroup>
-        <TargetFramework>net10.0</TargetFramework>
-    </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Sinks.Grafana.Loki" />
+    <PackageReference Include="Serilog.Sinks.Async" />
+    <PackageReference Include="Serilog.Sinks.Console" />
+  </ItemGroup>
 
-    <ItemGroup>
-        <PackageReference Include="Serilog.AspNetCore" />
-        <PackageReference Include="Serilog.Sinks.Grafana.Loki"
-                          />
-        <PackageReference Include="Serilog.Sinks.Async" />
-        <PackageReference Include="Serilog.Sinks.Console" />
-    </ItemGroup>
+  <ItemGroup>
+    <None Update="Gateway.fgp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 
-    <ItemGroup>
-        <None Update="Gateway.fgp">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </None>
-    </ItemGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="..\..\..\modules\hermes\Ouranos.Pantheon.Modules.Hermes\Ouranos.Pantheon.Modules.Hermes.csproj" />
-        <ProjectReference Include="..\..\..\modules\plutus\Ouranos.Pantheon.Modules.Plutus\Ouranos.Pantheon.Modules.Plutus.csproj" />
-    </ItemGroup>
-
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\modules\hermes\Ouranos.Pantheon.Modules.Hermes\Ouranos.Pantheon.Modules.Hermes.csproj" />
+    <ProjectReference Include="..\..\..\modules\plutus\Ouranos.Pantheon.Modules.Plutus\Ouranos.Pantheon.Modules.Plutus.csproj" />
+  </ItemGroup>
 </Project>

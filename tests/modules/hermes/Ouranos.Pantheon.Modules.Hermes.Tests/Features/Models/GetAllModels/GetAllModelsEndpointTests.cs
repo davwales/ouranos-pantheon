@@ -17,7 +17,10 @@ public sealed class GetAllModelsEndpointTests
         var input = new GetAllModelsInput();
         var expected = new List<GetAllModelsResponse>();
 
-        _bus.InvokeAsync<List<GetAllModelsResponse>>(Arg.Any<object>(), Arg.Any<CancellationToken>())
+        _bus.InvokeAsync<List<GetAllModelsResponse>>(
+                Arg.Any<object>(),
+                Arg.Any<CancellationToken>()
+            )
             .Returns(Task.FromResult(expected));
 
         // Act

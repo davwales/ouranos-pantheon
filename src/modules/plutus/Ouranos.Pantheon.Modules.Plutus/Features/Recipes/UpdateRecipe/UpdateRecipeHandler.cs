@@ -1,11 +1,11 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.UpdateRecipe.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Recipes;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Recipes;
+using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Recipes.UpdateRecipe;
 
@@ -14,10 +14,7 @@ public sealed class UpdateRecipeHandler : IPantheonHandler<UpdateRecipeInput, Id
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<UpdateRecipeHandler> _logger;
 
-    public UpdateRecipeHandler(
-        ILogger<UpdateRecipeHandler> logger,
-        PlutusDbContext dbContext
-    )
+    public UpdateRecipeHandler(ILogger<UpdateRecipeHandler> logger, PlutusDbContext dbContext)
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(dbContext);
@@ -34,8 +31,10 @@ public sealed class UpdateRecipeHandler : IPantheonHandler<UpdateRecipeInput, Id
         _logger.LogTrace("Attempting to handle update recipe command '{@command}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var recipe = await _dbContext.Recipes
-            .FirstOrDefaultAsync(r => r.Id == command.RecipeId, cancellationToken);
+        var recipe = await _dbContext.Recipes.FirstOrDefaultAsync(
+            r => r.Id == command.RecipeId,
+            cancellationToken
+        );
 
         Guard.Against.NotFound(command.RecipeId, recipe);
 

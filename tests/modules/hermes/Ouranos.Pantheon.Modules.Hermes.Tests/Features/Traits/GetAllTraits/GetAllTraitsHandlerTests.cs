@@ -5,10 +5,10 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Traits.GetAllTraits.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Shared.Domain;
-using Trait = Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits.Trait;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
+using Trait = Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits.Trait;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.Traits.GetAllTraits;
 
@@ -16,7 +16,9 @@ public sealed class GetAllTraitsHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly GetAllTraitsHandler _handler;
-    private readonly ILogger<GetAllTraitsHandler> _logger = Substitute.For<ILogger<GetAllTraitsHandler>>();
+    private readonly ILogger<GetAllTraitsHandler> _logger = Substitute.For<
+        ILogger<GetAllTraitsHandler>
+    >();
     private readonly HermesDbContext _dbContext;
     private readonly IFlagsmithClient _flagsmith = Substitute.For<IFlagsmithClient>();
 

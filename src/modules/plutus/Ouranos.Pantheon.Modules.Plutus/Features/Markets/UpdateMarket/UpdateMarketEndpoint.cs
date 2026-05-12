@@ -11,8 +11,7 @@ public static class UpdateMarketEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapPut("/api/plutus/markets/{marketId}", Handle)
-            .WithTags("Plutus.Markets");
+        app.MapPut("/api/plutus/markets/{marketId}", Handle).WithTags("Plutus.Markets");
     }
 
     internal static async Task<IResult> Handle(

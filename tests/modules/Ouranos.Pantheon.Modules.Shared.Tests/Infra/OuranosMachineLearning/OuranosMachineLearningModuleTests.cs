@@ -32,7 +32,8 @@ public sealed class OuranosMachineLearningModuleTests
             .AddInMemoryCollection(
                 new Dictionary<string, string?>
                 {
-                    [$"{OuranosMachineLearningOptions.SectionName}:ConnectionString"] = "http://localhost:5000/",
+                    [$"{OuranosMachineLearningOptions.SectionName}:ConnectionString"] =
+                        "http://localhost:5000/",
                     [$"{OuranosMachineLearningOptions.SectionName}:ApiKey"] = "test-api-key",
                 }
             )

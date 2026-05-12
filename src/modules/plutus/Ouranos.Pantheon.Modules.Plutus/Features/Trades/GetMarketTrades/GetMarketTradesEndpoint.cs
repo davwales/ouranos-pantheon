@@ -10,8 +10,7 @@ public static class GetMarketTradesEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapGet("/api/plutus/markets/{marketId}/trades", Handle)
-            .WithTags("Plutus.Trades");
+        app.MapGet("/api/plutus/markets/{marketId}/trades", Handle).WithTags("Plutus.Trades");
     }
 
     internal static async Task<IResult> Handle(

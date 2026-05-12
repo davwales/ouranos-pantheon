@@ -10,8 +10,7 @@ public static class GetAllSymbolsEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapGet("/api/plutus/symbols", Handle)
-            .WithTags("Plutus.Symbols");
+        app.MapGet("/api/plutus/symbols", Handle).WithTags("Plutus.Symbols");
     }
 
     internal static async Task<IResult> Handle(

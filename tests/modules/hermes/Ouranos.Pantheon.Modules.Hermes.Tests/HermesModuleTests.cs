@@ -8,7 +8,9 @@ public sealed class HermesModuleTests
     public void MapEndpoints_ShouldRegisterAllEndpointsWithoutThrowing()
     {
         // Arrange
-        var app = WebApplication.CreateBuilder(new WebApplicationOptions { EnvironmentName = "Testing" }).Build();
+        var app = WebApplication
+            .CreateBuilder(new WebApplicationOptions { EnvironmentName = "Testing" })
+            .Build();
 
         // Act
         var act = () => new HermesModule().MapEndpoints(app);
@@ -21,7 +23,9 @@ public sealed class HermesModuleTests
     public void Build_ShouldRegisterServicesWithoutThrowing()
     {
         // Arrange
-        var builder = WebApplication.CreateBuilder(new WebApplicationOptions { EnvironmentName = "Testing" });
+        var builder = WebApplication.CreateBuilder(
+            new WebApplicationOptions { EnvironmentName = "Testing" }
+        );
 
         // Act
         var act = () => new HermesModule().Build(builder);

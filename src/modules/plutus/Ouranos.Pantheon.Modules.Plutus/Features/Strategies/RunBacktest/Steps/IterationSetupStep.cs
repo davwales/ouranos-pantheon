@@ -1,19 +1,20 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
-using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
+using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Steps;
 
-public sealed class IterationSetupStep(
-    IDbContextFactory<PlutusDbContext> dbContextFactory
-) : IStep<BacktestPayload>
+public sealed class IterationSetupStep(IDbContextFactory<PlutusDbContext> dbContextFactory)
+    : IStep<BacktestPayload>
 {
     private const int MinimumProgressUpdate = 1;
 
-    private readonly IDbContextFactory<PlutusDbContext> _dbContextFactory = Guard.Against.Null(dbContextFactory);
+    private readonly IDbContextFactory<PlutusDbContext> _dbContextFactory = Guard.Against.Null(
+        dbContextFactory
+    );
     private int _lastSavedPercent;
 
     public async Task ExecuteAsync(PipelineContext context, BacktestPayload payload)
@@ -23,8 +24,10 @@ public sealed class IterationSetupStep(
             return;
         }
 
-        if (context.CurrentIteration % payload.ProgressInterval != 0
-            && context.CurrentIteration != context.TotalIterations - 1)
+        if (
+            context.CurrentIteration % payload.ProgressInterval != 0
+            && context.CurrentIteration != context.TotalIterations - 1
+        )
         {
             return;
         }
@@ -38,10 +41,12 @@ public sealed class IterationSetupStep(
 
         _lastSavedPercent = percent;
 
-        await using var dbContext = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync(
+            CancellationToken.None
+        );
 
-        var currentStatus = await dbContext.Backtests
-            .AsNoTracking()
+        var currentStatus = await dbContext
+            .Backtests.AsNoTracking()
             .Where(b => b.Id == payload.Entity.Id)
             .Select(b => b.Status)
             .FirstOrDefaultAsync(CancellationToken.None);

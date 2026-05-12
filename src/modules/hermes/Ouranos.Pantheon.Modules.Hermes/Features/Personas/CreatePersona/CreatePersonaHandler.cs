@@ -1,23 +1,21 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Hermes.Features.Personas.CreatePersona.Schemas;
-using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
+using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Shared.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Personas.CreatePersona;
 
-public sealed class CreatePersonaHandler : IPantheonHandler<CreatePersonaInput, CreatePersonaResponse>
+public sealed class CreatePersonaHandler
+    : IPantheonHandler<CreatePersonaInput, CreatePersonaResponse>
 {
     private readonly ILogger<CreatePersonaHandler> _logger;
     private readonly HermesDbContext _dbContext;
 
-    public CreatePersonaHandler(
-        ILogger<CreatePersonaHandler> logger,
-        HermesDbContext dbContext
-    )
+    public CreatePersonaHandler(ILogger<CreatePersonaHandler> logger, HermesDbContext dbContext)
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(dbContext);
@@ -36,8 +34,8 @@ public sealed class CreatePersonaHandler : IPantheonHandler<CreatePersonaInput, 
 
         if (command.IsDefault)
         {
-            var existingDefaults = await _dbContext.Personas
-                .Where(p => p.IsDefault)
+            var existingDefaults = await _dbContext
+                .Personas.Where(p => p.IsDefault)
                 .ToListAsync(cancellationToken);
 
             foreach (var existing in existingDefaults)
@@ -66,7 +64,10 @@ public sealed class CreatePersonaHandler : IPantheonHandler<CreatePersonaInput, 
         await _dbContext.Personas.AddAsync(persona, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        _logger.LogDebug("Successfully handled create persona request for persona '{personaId}'.", persona.Id);
+        _logger.LogDebug(
+            "Successfully handled create persona request for persona '{personaId}'.",
+            persona.Id
+        );
         return new CreatePersonaResponse(persona.Id);
     }
 }

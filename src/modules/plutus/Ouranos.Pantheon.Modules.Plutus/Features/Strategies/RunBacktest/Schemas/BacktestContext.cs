@@ -1,6 +1,6 @@
-using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting;
+using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 
@@ -16,5 +16,6 @@ public sealed record BacktestContext(
     RecipeArbitrageConfig? RecipeArbitrageConfig = null
 )
 {
-    public DateTimeOffset CurrentDate(PipelineContext ctx) => StartDate.AddDays(ctx.CurrentIteration);
+    public DateTimeOffset CurrentDate(PipelineContext ctx) =>
+        StartDate.AddDays(ctx.CurrentIteration);
 }

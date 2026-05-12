@@ -18,7 +18,10 @@ public sealed class GetAllRecipesEndpointTests
         var input = new GetAllRecipesInput();
         var expected = new PagedResponse<GetAllRecipesResponse>([], 0, 0, 10);
 
-        _bus.InvokeAsync<PagedResponse<GetAllRecipesResponse>>(Arg.Any<object>(), Arg.Any<CancellationToken>())
+        _bus.InvokeAsync<PagedResponse<GetAllRecipesResponse>>(
+                Arg.Any<object>(),
+                Arg.Any<CancellationToken>()
+            )
             .Returns(Task.FromResult(expected));
 
         // Act

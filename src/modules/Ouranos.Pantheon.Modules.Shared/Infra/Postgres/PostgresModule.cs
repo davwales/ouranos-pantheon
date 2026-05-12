@@ -12,13 +12,15 @@ public static class PostgresModule
         this IServiceCollection services,
         IConfiguration configuration,
         Assembly? migrationAssembly = null
-    ) where TContext : OuranosDbContext
+    )
+        where TContext : OuranosDbContext
     {
         migrationAssembly ??= Assembly.GetCallingAssembly();
 
         return services
             .Configure<PostgresOptions>(configuration.GetSection(PostgresOptions.SectionName))
-            .AddDbContextFactory<TContext>((sp, options) =>
+            .AddDbContextFactory<TContext>(
+                (sp, options) =>
                 {
                     var postgresOptions = sp.GetRequiredService<IOptions<PostgresOptions>>().Value;
                     options.EnableSensitiveDataLogging(postgresOptions.EnableSensitiveDataLogging);
@@ -45,7 +47,8 @@ public static class PostgresModule
 
     public static async Task<IServiceProvider> ApplyCorePostgresMigrations<TContext>(
         this IServiceProvider provider
-    ) where TContext : OuranosDbContext
+    )
+        where TContext : OuranosDbContext
     {
         using var scope = provider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<TContext>();

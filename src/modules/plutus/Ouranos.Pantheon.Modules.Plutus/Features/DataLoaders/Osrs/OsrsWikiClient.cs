@@ -35,10 +35,14 @@ public sealed class OsrsWikiClient : IWikiClient
         using var response = await _httpClient.GetAsync("mapping", cancellationToken);
         response.EnsureSuccessStatusCode();
 
-        var mappings = await response.Content.ReadFromJsonAsync<List<Mapping>>(cancellationToken)
-                       ?? throw new InvalidOperationException("Failed to read runescape mappings.");
+        var mappings =
+            await response.Content.ReadFromJsonAsync<List<Mapping>>(cancellationToken)
+            ?? throw new InvalidOperationException("Failed to read runescape mappings.");
 
-        _logger.LogDebug("Successfully retrieved {mappingCount} runescape mappings.", mappings.Count);
+        _logger.LogDebug(
+            "Successfully retrieved {mappingCount} runescape mappings.",
+            mappings.Count
+        );
         return mappings;
     }
 
@@ -50,8 +54,9 @@ public sealed class OsrsWikiClient : IWikiClient
         using var response = await _httpClient.GetAsync("5m", cancellationToken);
         response.EnsureSuccessStatusCode();
 
-        var prices = await response.Content.ReadFromJsonAsync<PriceResponse>(cancellationToken)
-                     ?? throw new InvalidOperationException("Failed to read runescape prices.");
+        var prices =
+            await response.Content.ReadFromJsonAsync<PriceResponse>(cancellationToken)
+            ?? throw new InvalidOperationException("Failed to read runescape prices.");
 
         _logger.LogDebug(
             "Successfully retrieved {mappingCount} runescape prices with timestamp {timestamp}.",

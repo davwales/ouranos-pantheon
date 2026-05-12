@@ -15,7 +15,9 @@ public sealed class DeleteTraitHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly DeleteTraitHandler _handler;
-    private readonly ILogger<DeleteTraitHandler> _logger = Substitute.For<ILogger<DeleteTraitHandler>>();
+    private readonly ILogger<DeleteTraitHandler> _logger = Substitute.For<
+        ILogger<DeleteTraitHandler>
+    >();
     private readonly HermesDbContext _dbContext;
 
     public DeleteTraitHandlerTests()
@@ -29,7 +31,11 @@ public sealed class DeleteTraitHandlerTests
     public async Task Handle_WhenHappyPath_ShouldDeleteTraitAndReturnId()
     {
         // Arrange
-        var existingTrait = Trait.Create(new Id<Trait>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>());
+        var existingTrait = Trait.Create(
+            new Id<Trait>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
         await _dbContext.SeedData(existingTrait);
 
         var command = new DeleteTraitInput(existingTrait.Id);

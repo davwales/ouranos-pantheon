@@ -1,6 +1,6 @@
 using Ardalis.GuardClauses;
-using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
+using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Steps;
 
@@ -77,7 +77,10 @@ public sealed class LiquidateStep : IStep<BacktestPayload>
             payload.Portfolio.Balance += forcedNetProceeds2;
             payload.Portfolio.ClosedPositions.Add(
                 BacktestMath.CreateClosedPosition(
-                    pos with { Volume = remainingVolume },
+                    pos with
+                    {
+                        Volume = remainingVolume,
+                    },
                     forcedExitPrice2,
                     remainingVolume,
                     forcedNetProceeds2 - remainingCostBasis,

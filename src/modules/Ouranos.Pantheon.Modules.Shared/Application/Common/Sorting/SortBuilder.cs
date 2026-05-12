@@ -49,7 +49,7 @@ public sealed class SortBuilder<T>
         {
             SortDirection.Asc => query.OrderBy(keySelector),
             SortDirection.Desc => query.OrderByDescending(keySelector),
-            _ => throw new ArgumentException("Invalid sort direction", nameof(sortDirection))
+            _ => throw new ArgumentException("Invalid sort direction", nameof(sortDirection)),
         };
     }
 }

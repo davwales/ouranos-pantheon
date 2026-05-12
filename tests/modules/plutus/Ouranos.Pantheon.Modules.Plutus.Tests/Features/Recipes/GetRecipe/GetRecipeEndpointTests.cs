@@ -18,7 +18,9 @@ public sealed class GetRecipeEndpointTests
         // Arrange
         var ct = CancellationToken.None;
         var recipeId = new Id<Recipe>(Guid.NewGuid().ToString());
-        var marketId = new Id<Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets.Market>(Guid.NewGuid().ToString());
+        var marketId = new Id<Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets.Market>(
+            Guid.NewGuid().ToString()
+        );
         var expected = new GetRecipeResponse(recipeId, marketId, "Test Recipe", 10.0m, [], []);
 
         _bus.InvokeAsync<GetRecipeResponse>(Arg.Any<object>(), Arg.Any<CancellationToken>())

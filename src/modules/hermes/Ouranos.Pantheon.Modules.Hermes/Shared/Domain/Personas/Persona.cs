@@ -5,7 +5,8 @@ namespace Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 
 public class Persona : BaseEntity<Id<Persona>>
 {
-    protected Persona(Id<Persona> id) : base(id)
+    protected Persona(Id<Persona> id)
+        : base(id)
     {
         Name = string.Empty;
         Description = string.Empty;
@@ -43,7 +44,7 @@ public class Persona : BaseEntity<Id<Persona>>
             Personality = personality,
             Scenario = scenario,
             IsDefault = isDefault,
-            IsPublic = isPublic
+            IsPublic = isPublic,
         };
     }
 

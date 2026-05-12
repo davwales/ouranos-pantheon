@@ -1,10 +1,10 @@
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.CreateRecipe.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Recipes;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Recipes;
+using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Recipes.CreateRecipe;
@@ -14,10 +14,7 @@ public sealed class CreateRecipeHandler : IPantheonHandler<CreateRecipeInput, Id
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<CreateRecipeHandler> _logger;
 
-    public CreateRecipeHandler(
-        ILogger<CreateRecipeHandler> logger,
-        PlutusDbContext dbContext
-    )
+    public CreateRecipeHandler(ILogger<CreateRecipeHandler> logger, PlutusDbContext dbContext)
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(dbContext);

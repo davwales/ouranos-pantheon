@@ -9,15 +9,16 @@ public sealed class SortBuilderTests
 
     private static readonly IQueryable<Entry> Items = new Entry[]
     {
-        new("Banana", 30), new("Apple", 10), new("Cherry", 20),
+        new("Banana", 30),
+        new("Apple", 10),
+        new("Cherry", 20),
     }.AsQueryable();
 
     [Fact]
     public void SortBy_WhenFieldMatchesAscending_ShouldReturnAscendingOrder()
     {
         // Arrange
-        var builder = new SortBuilder<Entry>()
-            .On(nameof(Entry.Name), e => e.Name);
+        var builder = new SortBuilder<Entry>().On(nameof(Entry.Name), e => e.Name);
 
         // Act
         var result = Items.SortBy("Name", "asc", builder).ToList();
@@ -30,8 +31,7 @@ public sealed class SortBuilderTests
     public void SortBy_WhenFieldMatchesDescending_ShouldReturnDescendingOrder()
     {
         // Arrange
-        var builder = new SortBuilder<Entry>()
-            .On(nameof(Entry.Name), e => e.Name);
+        var builder = new SortBuilder<Entry>().On(nameof(Entry.Name), e => e.Name);
 
         // Act
         var result = Items.SortBy("Name", "desc", builder).ToList();
@@ -44,8 +44,7 @@ public sealed class SortBuilderTests
     public void SortBy_WhenFieldMatchesAndDirectionIsAscCaseInsensitive_ShouldSortAscending()
     {
         // Arrange
-        var builder = new SortBuilder<Entry>()
-            .On(nameof(Entry.Score), e => e.Score);
+        var builder = new SortBuilder<Entry>().On(nameof(Entry.Score), e => e.Score);
 
         // Act
         var result = Items.SortBy("Score", "ASC", builder).ToList();
@@ -73,8 +72,7 @@ public sealed class SortBuilderTests
     public void SortBy_WhenFieldIsNull_ShouldFallBackToDefault()
     {
         // Arrange
-        var builder = new SortBuilder<Entry>()
-            .Default(e => e.Score);
+        var builder = new SortBuilder<Entry>().Default(e => e.Score);
 
         // Act
         var result = Items.SortBy(null, null, builder).ToList();
@@ -87,8 +85,7 @@ public sealed class SortBuilderTests
     public void SortBy_WhenNoDefaultAndFieldIsUnknown_ShouldReturnUnsortedQuery()
     {
         // Arrange
-        var builder = new SortBuilder<Entry>()
-            .On(nameof(Entry.Name), e => e.Name);
+        var builder = new SortBuilder<Entry>().On(nameof(Entry.Name), e => e.Name);
 
         var expected = Items.ToList();
 
@@ -103,8 +100,7 @@ public sealed class SortBuilderTests
     public void SortBy_WhenFieldLookupIsCaseInsensitive_ShouldSortCorrectly()
     {
         // Arrange
-        var builder = new SortBuilder<Entry>()
-            .On(nameof(Entry.Name), e => e.Name);
+        var builder = new SortBuilder<Entry>().On(nameof(Entry.Name), e => e.Name);
 
         // Act
         var result = Items.SortBy("name", "asc", builder).ToList();
@@ -117,11 +113,9 @@ public sealed class SortBuilderTests
     public void SortBy_WhenUsingConfigureActionOverload_ShouldSortCorrectly()
     {
         // Arrange & Act
-        var result = Items.SortBy(
-            nameof(Entry.Score),
-            "asc",
-            b => b.On(nameof(Entry.Score), e => e.Score)
-        ).ToList();
+        var result = Items
+            .SortBy(nameof(Entry.Score), "asc", b => b.On(nameof(Entry.Score), e => e.Score))
+            .ToList();
 
         // Assert
         result.Select(e => e.Score).ShouldBe([10, 20, 30]);
@@ -131,8 +125,10 @@ public sealed class SortBuilderTests
     public void Default_WhenDesc_ShouldSortDescending()
     {
         // Arrange
-        var builder = new SortBuilder<Entry>()
-            .Default(e => e.Score, sortDirection: SortDirection.Desc);
+        var builder = new SortBuilder<Entry>().Default(
+            e => e.Score,
+            sortDirection: SortDirection.Desc
+        );
 
         // Act
         var result = Items.SortBy(null, null, builder).ToList();
@@ -145,8 +141,7 @@ public sealed class SortBuilderTests
     public void Default_WhenAsc_ShouldSortAscending()
     {
         // Arrange
-        var builder = new SortBuilder<Entry>()
-            .Default(e => e.Score, SortDirection.Asc);
+        var builder = new SortBuilder<Entry>().Default(e => e.Score, SortDirection.Asc);
 
         // Act
         var result = Items.SortBy(null, null, builder).ToList();
@@ -159,8 +154,7 @@ public sealed class SortBuilderTests
     public void SortBy_WhenNoDefaultAndFieldUnknown_ShouldReturnUnsortedQuery()
     {
         // Arrange
-        var builder = new SortBuilder<Entry>()
-            .On(nameof(Entry.Name), e => e.Name);
+        var builder = new SortBuilder<Entry>().On(nameof(Entry.Name), e => e.Name);
 
         // Act
         var result = Items.SortBy("Unknown", "asc", builder).ToList();
@@ -173,8 +167,7 @@ public sealed class SortBuilderTests
     public void SortBy_WhenInvalidDirection_ShouldThrowArgumentException()
     {
         // Arrange
-        var builder = new SortBuilder<Entry>()
-            .On(nameof(Entry.Name), e => e.Name);
+        var builder = new SortBuilder<Entry>().On(nameof(Entry.Name), e => e.Name);
 
         // Act
         var act = () => Items.SortBy("Name", "invalid", builder).ToList();

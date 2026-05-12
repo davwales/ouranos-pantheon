@@ -21,8 +21,12 @@ public sealed class TrendMomentumSignalComputerTests
         return new TrendMomentumSignalComputer(options);
     }
 
-    private static MarketTradeSnapshot MakeSnapshot(TimeFrame frame, decimal avgPrice, decimal volume = 1000m)
-        => MarketTradeSnapshot.Create(
+    private static MarketTradeSnapshot MakeSnapshot(
+        TimeFrame frame,
+        decimal avgPrice,
+        decimal volume = 1000m
+    ) =>
+        MarketTradeSnapshot.Create(
             MarketId,
             SymbolId,
             frame,
@@ -41,10 +45,20 @@ public sealed class TrendMomentumSignalComputerTests
         // Arrange
         var shortSnap = MakeSnapshot(TimeFrame.OneHour, avgPrice: 105m);
         var longSnap = MakeSnapshot(TimeFrame.OneMonth, avgPrice: 100m);
-        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, shortSnap, null, longSnap, []);
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            0m,
+            1000m,
+            shortSnap,
+            null,
+            longSnap,
+            []
+        );
 
         // Act
-        var result = await BuildComputer(threshold: 0.05m).ComputeAsync(context, CancellationToken.None);
+        var result = await BuildComputer(threshold: 0.05m)
+            .ComputeAsync(context, CancellationToken.None);
 
         // Assert
         result.ShouldBe(1m);
@@ -56,10 +70,20 @@ public sealed class TrendMomentumSignalComputerTests
         // Arrange
         var shortSnap = MakeSnapshot(TimeFrame.OneHour, avgPrice: 95m);
         var longSnap = MakeSnapshot(TimeFrame.OneMonth, avgPrice: 100m);
-        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, shortSnap, null, longSnap, []);
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            0m,
+            1000m,
+            shortSnap,
+            null,
+            longSnap,
+            []
+        );
 
         // Act
-        var result = await BuildComputer(threshold: 0.05m).ComputeAsync(context, CancellationToken.None);
+        var result = await BuildComputer(threshold: 0.05m)
+            .ComputeAsync(context, CancellationToken.None);
 
         // Assert
         result.ShouldBe(-1m);
@@ -71,7 +95,16 @@ public sealed class TrendMomentumSignalComputerTests
         // Arrange
         var shortSnap = MakeSnapshot(TimeFrame.OneHour, avgPrice: 100m);
         var longSnap = MakeSnapshot(TimeFrame.OneMonth, avgPrice: 100m);
-        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, shortSnap, null, longSnap, []);
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            0m,
+            1000m,
+            shortSnap,
+            null,
+            longSnap,
+            []
+        );
 
         // Act
         var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
@@ -99,10 +132,20 @@ public sealed class TrendMomentumSignalComputerTests
         // Arrange
         var shortSnap = MakeSnapshot(TimeFrame.OneHour, avgPrice: 105m);
         var longSnap = MakeSnapshot(TimeFrame.OneMonth, avgPrice: 100m);
-        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, shortSnap, null, longSnap, []);
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            0m,
+            1000m,
+            shortSnap,
+            null,
+            longSnap,
+            []
+        );
 
         // Act
-        var result = await BuildComputer(threshold: 0m).ComputeAsync(context, CancellationToken.None);
+        var result = await BuildComputer(threshold: 0m)
+            .ComputeAsync(context, CancellationToken.None);
 
         // Assert
         result.ShouldBeNull();
@@ -114,7 +157,16 @@ public sealed class TrendMomentumSignalComputerTests
         // Arrange
         var shortSnap = MakeSnapshot(TimeFrame.OneHour, avgPrice: 105m, volume: 1000m);
         var longSnap = MakeSnapshot(TimeFrame.OneMonth, avgPrice: 100m, volume: 0m);
-        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, shortSnap, null, longSnap, []);
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            0m,
+            1000m,
+            shortSnap,
+            null,
+            longSnap,
+            []
+        );
 
         // Act
         var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);

@@ -15,8 +15,9 @@ namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Forecasts.GetForecastEf
 
 public sealed class GetForecastEfficacyHandlerTests
 {
-    private readonly ILogger<GetForecastEfficacyHandler> _logger =
-        Substitute.For<ILogger<GetForecastEfficacyHandler>>();
+    private readonly ILogger<GetForecastEfficacyHandler> _logger = Substitute.For<
+        ILogger<GetForecastEfficacyHandler>
+    >();
 
     private readonly PlutusDbContext _dbContext;
     private readonly GetForecastEfficacyHandler _handler;
@@ -24,7 +25,11 @@ public sealed class GetForecastEfficacyHandlerTests
     public GetForecastEfficacyHandlerTests()
     {
         _dbContext = DbContextExtensions.Mock<PlutusDbContext>();
-        _handler = new GetForecastEfficacyHandler(_logger, _dbContext, Options.Create(new QueryOptions()));
+        _handler = new GetForecastEfficacyHandler(
+            _logger,
+            _dbContext,
+            Options.Create(new QueryOptions())
+        );
     }
 
     [Fact]
@@ -43,7 +48,13 @@ public sealed class GetForecastEfficacyHandlerTests
     {
         // Arrange
         var (market, symbol, run) = await SeedBaseEntitiesAsync();
-        var record = CreateEvaluatedRecord(run.Id, market.Id, symbol.Id, predicted: 110m, actual: 100m);
+        var record = CreateEvaluatedRecord(
+            run.Id,
+            market.Id,
+            symbol.Id,
+            predicted: 110m,
+            actual: 100m
+        );
         await _dbContext.SeedData(record);
 
         // Act
@@ -68,8 +79,22 @@ public sealed class GetForecastEfficacyHandlerTests
     {
         // Arrange
         var (market, symbol, run) = await SeedBaseEntitiesAsync();
-        var record1 = CreateEvaluatedRecord(run.Id, market.Id, symbol.Id, predicted: 110m, actual: 100m, horizonDays: 1);
-        var record2 = CreateEvaluatedRecord(run.Id, market.Id, symbol.Id, predicted: 90m, actual: 100m, horizonDays: 1);
+        var record1 = CreateEvaluatedRecord(
+            run.Id,
+            market.Id,
+            symbol.Id,
+            predicted: 110m,
+            actual: 100m,
+            horizonDays: 1
+        );
+        var record2 = CreateEvaluatedRecord(
+            run.Id,
+            market.Id,
+            symbol.Id,
+            predicted: 90m,
+            actual: 100m,
+            horizonDays: 1
+        );
         await _dbContext.SeedData(record1, record2);
 
         // Act
@@ -90,7 +115,9 @@ public sealed class GetForecastEfficacyHandlerTests
         var (market, symbol, run) = await SeedBaseEntitiesAsync();
         var unevaluated = ForecastRecord.Create(
             new Id<ForecastRecord>(Guid.NewGuid().ToString()),
-            run.Id, market.Id, symbol.Id,
+            run.Id,
+            market.Id,
+            symbol.Id,
             "plutus-forecasting-v1",
             DateTimeOffset.UtcNow.AddDays(-2),
             DateTimeOffset.UtcNow.AddDays(-1),
@@ -112,8 +139,20 @@ public sealed class GetForecastEfficacyHandlerTests
         // Arrange
         var (market, symbolA, run) = await SeedBaseEntitiesAsync();
         var symbolB = await SeedSymbolAsync(market.Id);
-        var recordA = CreateEvaluatedRecord(run.Id, market.Id, symbolA.Id, predicted: 110m, actual: 100m);
-        var recordB = CreateEvaluatedRecord(run.Id, market.Id, symbolB.Id, predicted: 110m, actual: 100m);
+        var recordA = CreateEvaluatedRecord(
+            run.Id,
+            market.Id,
+            symbolA.Id,
+            predicted: 110m,
+            actual: 100m
+        );
+        var recordB = CreateEvaluatedRecord(
+            run.Id,
+            market.Id,
+            symbolB.Id,
+            predicted: 110m,
+            actual: 100m
+        );
         await _dbContext.SeedData(recordA, recordB);
 
         var input = new GetForecastEfficacyInput(SymbolId: symbolA.Id.Value);
@@ -131,8 +170,22 @@ public sealed class GetForecastEfficacyHandlerTests
     {
         // Arrange
         var (market, symbol, run) = await SeedBaseEntitiesAsync();
-        var recordV1 = CreateEvaluatedRecord(run.Id, market.Id, symbol.Id, predicted: 110m, actual: 100m, modelName: "plutus-forecasting-v1");
-        var recordV2 = CreateEvaluatedRecord(run.Id, market.Id, symbol.Id, predicted: 105m, actual: 100m, modelName: "plutus-forecasting-v2");
+        var recordV1 = CreateEvaluatedRecord(
+            run.Id,
+            market.Id,
+            symbol.Id,
+            predicted: 110m,
+            actual: 100m,
+            modelName: "plutus-forecasting-v1"
+        );
+        var recordV2 = CreateEvaluatedRecord(
+            run.Id,
+            market.Id,
+            symbol.Id,
+            predicted: 105m,
+            actual: 100m,
+            modelName: "plutus-forecasting-v2"
+        );
         await _dbContext.SeedData(recordV1, recordV2);
 
         var input = new GetForecastEfficacyInput(ModelName: "plutus-forecasting-v2");
@@ -150,8 +203,22 @@ public sealed class GetForecastEfficacyHandlerTests
     {
         // Arrange
         var (market, symbol, run) = await SeedBaseEntitiesAsync();
-        var record1Day = CreateEvaluatedRecord(run.Id, market.Id, symbol.Id, predicted: 110m, actual: 100m, horizonDays: 1);
-        var record3Day = CreateEvaluatedRecord(run.Id, market.Id, symbol.Id, predicted: 115m, actual: 100m, horizonDays: 3);
+        var record1Day = CreateEvaluatedRecord(
+            run.Id,
+            market.Id,
+            symbol.Id,
+            predicted: 110m,
+            actual: 100m,
+            horizonDays: 1
+        );
+        var record3Day = CreateEvaluatedRecord(
+            run.Id,
+            market.Id,
+            symbol.Id,
+            predicted: 115m,
+            actual: 100m,
+            horizonDays: 3
+        );
         await _dbContext.SeedData(record1Day, record3Day);
 
         var input = new GetForecastEfficacyInput(HorizonDays: 3);
@@ -169,10 +236,22 @@ public sealed class GetForecastEfficacyHandlerTests
     {
         // Arrange
         var (market, symbol, run) = await SeedBaseEntitiesAsync();
-        var recentRecord = CreateEvaluatedRecord(run.Id, market.Id, symbol.Id, predicted: 110m, actual: 100m,
-            generatedAt: DateTimeOffset.UtcNow.AddDays(-1));
-        var oldRecord = CreateEvaluatedRecord(run.Id, market.Id, symbol.Id, predicted: 110m, actual: 100m,
-            generatedAt: DateTimeOffset.UtcNow.AddDays(-10));
+        var recentRecord = CreateEvaluatedRecord(
+            run.Id,
+            market.Id,
+            symbol.Id,
+            predicted: 110m,
+            actual: 100m,
+            generatedAt: DateTimeOffset.UtcNow.AddDays(-1)
+        );
+        var oldRecord = CreateEvaluatedRecord(
+            run.Id,
+            market.Id,
+            symbol.Id,
+            predicted: 110m,
+            actual: 100m,
+            generatedAt: DateTimeOffset.UtcNow.AddDays(-10)
+        );
         await _dbContext.SeedData(recentRecord, oldRecord);
 
         var input = new GetForecastEfficacyInput(Since: DateTimeOffset.UtcNow.AddDays(-5));
@@ -188,10 +267,8 @@ public sealed class GetForecastEfficacyHandlerTests
     public async Task Handle_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Act
-        var act = async () => await _handler.Handle(
-            new GetForecastEfficacyInput(),
-            new CancellationToken(true)
-        );
+        var act = async () =>
+            await _handler.Handle(new GetForecastEfficacyInput(), new CancellationToken(true));
 
         // Assert
         await act.ShouldThrowAsync<OperationCanceledException>();
@@ -261,7 +338,10 @@ public sealed class GetForecastEfficacyHandlerTests
             horizonDays,
             new ForecastPoint(predicted, predicted * 0.9m, predicted * 1.1m, 50m)
         );
-        record.RecordActual(new ForecastPoint(actual, actual * 0.9m, actual * 1.1m, 50m), DateTimeOffset.UtcNow);
+        record.RecordActual(
+            new ForecastPoint(actual, actual * 0.9m, actual * 1.1m, 50m),
+            DateTimeOffset.UtcNow
+        );
         return record;
     }
 }

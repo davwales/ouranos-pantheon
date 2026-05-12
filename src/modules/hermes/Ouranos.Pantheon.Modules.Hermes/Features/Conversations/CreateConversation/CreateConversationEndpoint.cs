@@ -9,8 +9,7 @@ public static class CreateConversationEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapPost("/api/hermes/conversations", Handle)
-            .WithTags("Hermes.Conversations");
+        app.MapPost("/api/hermes/conversations", Handle).WithTags("Hermes.Conversations");
     }
 
     internal static async Task<IResult> Handle(

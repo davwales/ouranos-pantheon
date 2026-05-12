@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Plutus.Features.Positions.CreatePosition.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Positions;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Positions.CreatePosition;
@@ -11,8 +11,7 @@ public static class CreatePositionEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapPost("/api/plutus/positions", Handle)
-            .WithTags("Plutus.Positions");
+        app.MapPost("/api/plutus/positions", Handle).WithTags("Plutus.Positions");
     }
 
     internal static async Task<IResult> Handle(

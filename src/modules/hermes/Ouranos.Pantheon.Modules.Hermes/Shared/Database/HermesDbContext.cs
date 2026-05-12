@@ -1,13 +1,14 @@
 using Microsoft.EntityFrameworkCore;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 
-public sealed class HermesDbContext(DbContextOptions<HermesDbContext> options) : OuranosDbContext(options, "hermes")
+public sealed class HermesDbContext(DbContextOptions<HermesDbContext> options)
+    : OuranosDbContext(options, "hermes")
 {
     public DbSet<Persona> Personas { get; set; }
 

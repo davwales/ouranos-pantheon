@@ -17,7 +17,10 @@ public sealed class GetAllMarketsEndpointTests
         var input = new GetAllMarketsInput();
         var expected = new List<GetAllMarketsResponse>();
 
-        _bus.InvokeAsync<List<GetAllMarketsResponse>>(Arg.Any<object>(), Arg.Any<CancellationToken>())
+        _bus.InvokeAsync<List<GetAllMarketsResponse>>(
+                Arg.Any<object>(),
+                Arg.Any<CancellationToken>()
+            )
             .Returns(Task.FromResult(expected));
 
         // Act

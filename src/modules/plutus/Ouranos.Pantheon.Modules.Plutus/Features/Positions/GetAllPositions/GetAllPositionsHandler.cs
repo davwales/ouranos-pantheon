@@ -2,13 +2,13 @@ using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Ouranos.Pantheon.Modules.Plutus.Features.Positions.GetAllPositions.Schemas;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Pagination;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
-using Ouranos.Pantheon.Modules.Plutus.Features.Positions.GetAllPositions.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Positions.GetAllPositions;
 
@@ -64,11 +64,14 @@ public sealed class GetAllPositionsHandler
 
         var limits = _queryOptions.Value;
         Guard.Against.OutOfRange(input.Skip, nameof(input.Skip), 0, limits.MaxSkip);
-        Guard.Against.OutOfRange(input.Take, nameof(input.Take), limits.MinPageSize, limits.MaxPageSize);
+        Guard.Against.OutOfRange(
+            input.Take,
+            nameof(input.Take),
+            limits.MinPageSize,
+            limits.MaxPageSize
+        );
 
-        var query = _dbContext.Positions
-            .AsNoTracking()
-            .Where(p => p.MarketId == input.MarketId);
+        var query = _dbContext.Positions.AsNoTracking().Where(p => p.MarketId == input.MarketId);
 
         if (input.Side is not null)
         {
@@ -82,21 +85,20 @@ public sealed class GetAllPositionsHandler
 
         var positions = await query
             .Select(p => new GetAllPositionsResponse(
-                    p.Id,
-                    p.Side,
-                    p.Status,
-                    p.MarketId,
-                    p.SymbolId,
-                    p.Symbol.Name,
-                    p.Cost,
-                    p.Quantity,
-                    p.LinkedBuyPositionId,
-                    p.StrategyId,
-                    p.Notes,
-                    p.CreatedAt,
-                    p.UpdatedAt
-                )
-            )
+                p.Id,
+                p.Side,
+                p.Status,
+                p.MarketId,
+                p.SymbolId,
+                p.Symbol.Name,
+                p.Cost,
+                p.Quantity,
+                p.LinkedBuyPositionId,
+                p.StrategyId,
+                p.Notes,
+                p.CreatedAt,
+                p.UpdatedAt
+            ))
             .ToListAsync(cancellationToken);
 
         var filtered = positions.AsQueryable().FilterBy(input.Filter, FilterBuilder);
@@ -108,6 +110,11 @@ public sealed class GetAllPositionsHandler
             .ToList();
 
         _logger.LogDebug("Successfully handled get all positions request.");
-        return new PagedResponse<GetAllPositionsResponse>(items, totalCount, input.Skip, input.Take);
+        return new PagedResponse<GetAllPositionsResponse>(
+            items,
+            totalCount,
+            input.Skip,
+            input.Take
+        );
     }
 }

@@ -17,7 +17,9 @@ namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Trades.MarketOverviewBu
 public sealed class MarketOverviewBucketJobTests
 {
     private readonly IFixture _fixture = new Fixture();
-    private readonly ILogger<MarketOverviewBucketJob> _logger = Substitute.For<ILogger<MarketOverviewBucketJob>>();
+    private readonly ILogger<MarketOverviewBucketJob> _logger = Substitute.For<
+        ILogger<MarketOverviewBucketJob>
+    >();
     private readonly PlutusDbContext _dbContext = DbContextExtensions.Mock<PlutusDbContext>();
     private readonly TickerFunctionContext _context = new();
 
@@ -30,7 +32,13 @@ public sealed class MarketOverviewBucketJobTests
         new(
             _logger,
             _dbContext,
-            Options.Create(new MarketOverviewBucketOptions(NumBuckets: numBuckets, ChunkDays: 1, ChunkThresholdDays: 7))
+            Options.Create(
+                new MarketOverviewBucketOptions(
+                    NumBuckets: numBuckets,
+                    ChunkDays: 1,
+                    ChunkThresholdDays: 7
+                )
+            )
         );
 
     [Fact]
@@ -129,10 +137,34 @@ public sealed class MarketOverviewBucketJobTests
         );
 
         var now = DateTimeOffset.UtcNow;
-        var tradeA1 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbolA.Id, 100m, 5m, now.AddHours(-2));
-        var tradeA2 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbolA.Id, 110m, 3m, now.AddHours(-1));
-        var tradeB1 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbolB.Id, 200m, 2m, now.AddHours(-2));
-        var tradeB2 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbolB.Id, 220m, 4m, now.AddHours(-1));
+        var tradeA1 = Trade.Create(
+            new Id<Trade>(Guid.NewGuid().ToString()),
+            symbolA.Id,
+            100m,
+            5m,
+            now.AddHours(-2)
+        );
+        var tradeA2 = Trade.Create(
+            new Id<Trade>(Guid.NewGuid().ToString()),
+            symbolA.Id,
+            110m,
+            3m,
+            now.AddHours(-1)
+        );
+        var tradeB1 = Trade.Create(
+            new Id<Trade>(Guid.NewGuid().ToString()),
+            symbolB.Id,
+            200m,
+            2m,
+            now.AddHours(-2)
+        );
+        var tradeB2 = Trade.Create(
+            new Id<Trade>(Guid.NewGuid().ToString()),
+            symbolB.Id,
+            220m,
+            4m,
+            now.AddHours(-1)
+        );
 
         await _dbContext.SeedData(marketA, marketB);
         await _dbContext.SeedData(symbolA, symbolB);
@@ -167,8 +199,20 @@ public sealed class MarketOverviewBucketJobTests
         );
 
         var now = DateTimeOffset.UtcNow;
-        var trade1 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 100m, 5m, now.AddHours(-2));
-        var trade2 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 110m, 3m, now.AddHours(-1));
+        var trade1 = Trade.Create(
+            new Id<Trade>(Guid.NewGuid().ToString()),
+            symbol.Id,
+            100m,
+            5m,
+            now.AddHours(-2)
+        );
+        var trade2 = Trade.Create(
+            new Id<Trade>(Guid.NewGuid().ToString()),
+            symbol.Id,
+            110m,
+            3m,
+            now.AddHours(-1)
+        );
 
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(symbol);
@@ -191,7 +235,9 @@ public sealed class MarketOverviewBucketJobTests
         var job = new MarketOverviewBucketJob(
             _logger,
             _dbContext,
-            Options.Create(new MarketOverviewBucketOptions(NumBuckets: 10, ChunkDays: 1, ChunkThresholdDays: 0))
+            Options.Create(
+                new MarketOverviewBucketOptions(NumBuckets: 10, ChunkDays: 1, ChunkThresholdDays: 0)
+            )
         );
 
         var market = Market.Create(
@@ -209,8 +255,20 @@ public sealed class MarketOverviewBucketJobTests
         );
 
         var now = DateTimeOffset.UtcNow;
-        var trade1 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 100m, 5m, now.AddHours(-2));
-        var trade2 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 110m, 3m, now.AddHours(-1));
+        var trade1 = Trade.Create(
+            new Id<Trade>(Guid.NewGuid().ToString()),
+            symbol.Id,
+            100m,
+            5m,
+            now.AddHours(-2)
+        );
+        var trade2 = Trade.Create(
+            new Id<Trade>(Guid.NewGuid().ToString()),
+            symbol.Id,
+            110m,
+            3m,
+            now.AddHours(-1)
+        );
 
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(symbol);
@@ -233,7 +291,9 @@ public sealed class MarketOverviewBucketJobTests
         var job = new MarketOverviewBucketJob(
             _logger,
             _dbContext,
-            Options.Create(new MarketOverviewBucketOptions(NumBuckets: 1, ChunkDays: 1, ChunkThresholdDays: 0))
+            Options.Create(
+                new MarketOverviewBucketOptions(NumBuckets: 1, ChunkDays: 1, ChunkThresholdDays: 0)
+            )
         );
 
         var market = Market.Create(
@@ -251,8 +311,20 @@ public sealed class MarketOverviewBucketJobTests
         );
 
         var base1 = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        var trade1 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 50m, 1m, base1);
-        var trade2 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 150m, 1m, base1.AddHours(25));
+        var trade1 = Trade.Create(
+            new Id<Trade>(Guid.NewGuid().ToString()),
+            symbol.Id,
+            50m,
+            1m,
+            base1
+        );
+        var trade2 = Trade.Create(
+            new Id<Trade>(Guid.NewGuid().ToString()),
+            symbol.Id,
+            150m,
+            1m,
+            base1.AddHours(25)
+        );
 
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(symbol);
@@ -287,8 +359,20 @@ public sealed class MarketOverviewBucketJobTests
         );
 
         var now = DateTimeOffset.UtcNow;
-        var trade1 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 100m, 5m, now.AddHours(-2));
-        var trade2 = Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 110m, 3m, now.AddHours(-1));
+        var trade1 = Trade.Create(
+            new Id<Trade>(Guid.NewGuid().ToString()),
+            symbol.Id,
+            100m,
+            5m,
+            now.AddHours(-2)
+        );
+        var trade2 = Trade.Create(
+            new Id<Trade>(Guid.NewGuid().ToString()),
+            symbol.Id,
+            110m,
+            3m,
+            now.AddHours(-1)
+        );
 
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(symbol);

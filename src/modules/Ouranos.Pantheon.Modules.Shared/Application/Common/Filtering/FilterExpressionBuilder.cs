@@ -44,7 +44,12 @@ internal static class FilterExpressionBuilder
 
         if (op is FilterOperator.Null or FilterOperator.NotNull)
         {
-            return BuildNullCheck(propAccess, propType, underlyingType, isNull: op == FilterOperator.Null);
+            return BuildNullCheck(
+                propAccess,
+                propType,
+                underlyingType,
+                isNull: op == FilterOperator.Null
+            );
         }
 
         if (value is null)
@@ -52,13 +57,13 @@ internal static class FilterExpressionBuilder
             throw new InvalidOperationException($"Operator '{op}' requires a value.");
         }
 
-        var effectivePropAccess = caseInsensitive && underlyingType == typeof(string)
-            ? Expression.Call(propAccess, ToLowerMethod)
-            : propAccess;
+        var effectivePropAccess =
+            caseInsensitive && underlyingType == typeof(string)
+                ? Expression.Call(propAccess, ToLowerMethod)
+                : propAccess;
 
-        var effectiveValue = caseInsensitive && underlyingType == typeof(string)
-            ? value.ToLower()
-            : value;
+        var effectiveValue =
+            caseInsensitive && underlyingType == typeof(string) ? value.ToLower() : value;
 
         return op switch
         {
@@ -80,8 +85,19 @@ internal static class FilterExpressionBuilder
                 effectiveValue,
                 nameof(string.EndsWith)
             ),
-            FilterOperator.In => BuildInExpression(effectivePropAccess, propType, underlyingType, effectiveValue),
-            _ => BuildComparisonExpression(op, effectivePropAccess, propType, underlyingType, effectiveValue),
+            FilterOperator.In => BuildInExpression(
+                effectivePropAccess,
+                propType,
+                underlyingType,
+                effectiveValue
+            ),
+            _ => BuildComparisonExpression(
+                op,
+                effectivePropAccess,
+                propType,
+                underlyingType,
+                effectiveValue
+            ),
         };
     }
 
@@ -117,12 +133,13 @@ internal static class FilterExpressionBuilder
         {
             throw new InvalidOperationException(
                 $"Operator '{methodName.ToLowerInvariant()}' can only be applied to string properties, "
-                + $"but the property type is '{underlyingType.Name}'."
+                    + $"but the property type is '{underlyingType.Name}'."
             );
         }
 
-        var method = typeof(string).GetMethod(methodName, [typeof(string)])
-                     ?? throw new MissingMethodException(nameof(String), methodName);
+        var method =
+            typeof(string).GetMethod(methodName, [typeof(string)])
+            ?? throw new MissingMethodException(nameof(String), methodName);
         return Expression.Call(propAccess, method, Expression.Constant(value));
     }
 
@@ -133,19 +150,26 @@ internal static class FilterExpressionBuilder
         string value
     )
     {
-        var rawValues = value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var rawValues = value.Split(
+            ',',
+            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+        );
         var convertedValues = rawValues.Select(v => ConvertValue(v, underlyingType)).ToList();
 
         var listType = typeof(List<>).MakeGenericType(underlyingType);
-        var list = Activator.CreateInstance(listType) as IList
-                   ?? throw new InvalidOperationException($"Failed to create List<{underlyingType.Name}>.");
+        var list =
+            Activator.CreateInstance(listType) as IList
+            ?? throw new InvalidOperationException(
+                $"Failed to create List<{underlyingType.Name}>."
+            );
         foreach (var v in convertedValues)
         {
             list.Add(v);
         }
 
-        var containsMethod = listType.GetMethod(nameof(List<>.Contains), [underlyingType])
-                             ?? throw new MissingMethodException(listType.Name, nameof(List<>.Contains));
+        var containsMethod =
+            listType.GetMethod(nameof(List<>.Contains), [underlyingType])
+            ?? throw new MissingMethodException(listType.Name, nameof(List<>.Contains));
 
         Expression target =
             Nullable.GetUnderlyingType(propType) != null
@@ -188,7 +212,9 @@ internal static class FilterExpressionBuilder
             FilterOperator.Lte => Expression.LessThanOrEqual(left, scalar),
             FilterOperator.Gt => Expression.GreaterThan(left, scalar),
             FilterOperator.Gte => Expression.GreaterThanOrEqual(left, scalar),
-            _ => throw new NotSupportedException($"Operator '{op}' is not supported as a comparison."),
+            _ => throw new NotSupportedException(
+                $"Operator '{op}' is not supported as a comparison."
+            ),
         };
     }
 

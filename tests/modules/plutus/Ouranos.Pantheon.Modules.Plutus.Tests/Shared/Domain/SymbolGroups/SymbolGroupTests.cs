@@ -63,7 +63,8 @@ public sealed class SymbolGroupTests
         );
 
         // Act
-        var create = () => SymbolGroup.Create(id, _fixture.Create<string>(), null, marketId, wrongMarket);
+        var create = () =>
+            SymbolGroup.Create(id, _fixture.Create<string>(), null, marketId, wrongMarket);
 
         // Assert
         create.ShouldThrow<ArgumentException>();
@@ -155,13 +156,14 @@ public sealed class SymbolGroupTests
         var differentMarketId = _fixture.Create<Id<Market>>();
 
         // Act
-        var create = () => SymbolGroup.Create(
-            _fixture.Create<Id<SymbolGroup>>(),
-            "Test Group",
-            null,
-            differentMarketId,
-            market
-        );
+        var create = () =>
+            SymbolGroup.Create(
+                _fixture.Create<Id<SymbolGroup>>(),
+                "Test Group",
+                null,
+                differentMarketId,
+                market
+            );
 
         // Assert
         create.ShouldThrow<ArgumentException>();

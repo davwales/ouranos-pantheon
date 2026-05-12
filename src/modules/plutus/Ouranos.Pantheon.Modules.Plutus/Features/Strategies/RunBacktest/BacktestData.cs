@@ -1,10 +1,10 @@
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
-using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
+using Ouranos.Pantheon.Modules.Shared.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest;
 
@@ -86,8 +86,10 @@ public sealed class BacktestData
             .GroupBy(f => f.SymbolId)
             .ToDictionary(g => g.Key, g => g.First());
 
-        var dailyPricesByDate = dailyPrices
-            .ToDictionary(dp => (dp.SymbolId, dp.Date), dp => dp.ClosePrice);
+        var dailyPricesByDate = dailyPrices.ToDictionary(
+            dp => (dp.SymbolId, dp.Date),
+            dp => dp.ClosePrice
+        );
 
         var aggregatesBySymbol = dailyAggregates
             .GroupBy(a => a.SymbolId)
@@ -153,8 +155,11 @@ public sealed class BacktestData
     ///     Gets snapshots for a symbol that were available on or before the given date,
     ///     preventing lookahead bias. Uses each snapshot's CreatedAt to filter.
     /// </summary>
-    public (MarketTradeSnapshot? Short, MarketTradeSnapshot? Medium, MarketTradeSnapshot? Long)
-        GetSnapshotsForSymbol(Id<Symbol> symbolId, DateTimeOffset asOfDate)
+    public (
+        MarketTradeSnapshot? Short,
+        MarketTradeSnapshot? Medium,
+        MarketTradeSnapshot? Long
+    ) GetSnapshotsForSymbol(Id<Symbol> symbolId, DateTimeOffset asOfDate)
     {
         if (!SnapshotsBySymbol.TryGetValue(symbolId, out var symbolSnaps))
         {

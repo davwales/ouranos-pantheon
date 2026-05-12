@@ -15,7 +15,7 @@ public sealed class ItemParser
             {
                 HasHeaderRecord = true,
                 MissingFieldFound = null,
-                HeaderValidated = null
+                HeaderValidated = null,
             }
         );
 

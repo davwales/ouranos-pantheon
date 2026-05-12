@@ -22,8 +22,7 @@ public sealed class FilterOperatorExtensionsTests
     public void FilterBy_WhenStartsWithFilter_ShouldReturnMatchingItems()
     {
         // Arrange
-        var builder = new FilterBuilder<Product>()
-            .On(nameof(Product.Name), p => p.Name);
+        var builder = new FilterBuilder<Product>().On(nameof(Product.Name), p => p.Name);
 
         // Act
         var result = Items.FilterBy(["Name:startswith:Sw"], builder).ToList();
@@ -37,8 +36,7 @@ public sealed class FilterOperatorExtensionsTests
     public void FilterBy_WhenEndsWithFilter_ShouldReturnMatchingItems()
     {
         // Arrange
-        var builder = new FilterBuilder<Product>()
-            .On(nameof(Product.Name), p => p.Name);
+        var builder = new FilterBuilder<Product>().On(nameof(Product.Name), p => p.Name);
 
         // Act
         var result = Items.FilterBy(["Name:endswith:eld"], builder).ToList();
@@ -52,8 +50,7 @@ public sealed class FilterOperatorExtensionsTests
     public void FilterBy_WhenNeFilter_ShouldReturnNonMatchingItems()
     {
         // Arrange
-        var builder = new FilterBuilder<Product>()
-            .On(nameof(Product.Category), p => p.Category);
+        var builder = new FilterBuilder<Product>().On(nameof(Product.Category), p => p.Category);
 
         // Act
         var result = Items.FilterBy(["Category:neq:Weapon"], builder).ToList();
@@ -66,8 +63,7 @@ public sealed class FilterOperatorExtensionsTests
     public void FilterBy_WhenLteFilter_ShouldReturnItemsLessThanOrEqual()
     {
         // Arrange
-        var builder = new FilterBuilder<Product>()
-            .On(nameof(Product.Price), p => p.Price);
+        var builder = new FilterBuilder<Product>().On(nameof(Product.Price), p => p.Price);
 
         // Act
         var result = Items.FilterBy(["Price:lte:50"], builder).ToList();
@@ -81,8 +77,7 @@ public sealed class FilterOperatorExtensionsTests
     public void FilterBy_WhenGteFilter_ShouldReturnItemsGreaterThanOrEqual()
     {
         // Arrange
-        var builder = new FilterBuilder<Product>()
-            .On(nameof(Product.Price), p => p.Price);
+        var builder = new FilterBuilder<Product>().On(nameof(Product.Price), p => p.Price);
 
         // Act
         var result = Items.FilterBy(["Price:gte:75"], builder).ToList();
@@ -96,8 +91,7 @@ public sealed class FilterOperatorExtensionsTests
     public void FilterBy_WhenLtFilter_ShouldReturnItemsLessThan()
     {
         // Arrange
-        var builder = new FilterBuilder<Product>()
-            .On(nameof(Product.Price), p => p.Price);
+        var builder = new FilterBuilder<Product>().On(nameof(Product.Price), p => p.Price);
 
         // Act
         var result = Items.FilterBy(["Price:lt:75"], builder).ToList();
@@ -106,5 +100,4 @@ public sealed class FilterOperatorExtensionsTests
         result.Count.ShouldBe(2);
         result.ShouldAllBe(p => p.Price < 75);
     }
-
 }

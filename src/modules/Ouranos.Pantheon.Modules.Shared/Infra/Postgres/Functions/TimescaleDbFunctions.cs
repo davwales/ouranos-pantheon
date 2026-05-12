@@ -43,26 +43,24 @@ public static class TimescaleDbFunctions
             .HasDbFunction(() => TimeBucket(TimeSpan.Zero, DateTime.UtcNow))
             .HasName("time_bucket")
             .HasTranslation(args => new SqlFunctionExpression(
-                    "time_bucket",
-                    args,
-                    true,
-                    [false, true],
-                    typeof(DateTime),
-                    null
-                )
-            );
+                "time_bucket",
+                args,
+                true,
+                [false, true],
+                typeof(DateTime),
+                null
+            ));
 
         modelBuilder
             .HasDbFunction(() => TimeBucket(TimeSpan.Zero, DateTimeOffset.UtcNow))
             .HasName("time_bucket")
             .HasTranslation(args => new SqlFunctionExpression(
-                    "time_bucket",
-                    args,
-                    true,
-                    [false, true],
-                    typeof(DateTimeOffset),
-                    null
-                )
-            );
+                "time_bucket",
+                args,
+                true,
+                [false, true],
+                typeof(DateTimeOffset),
+                null
+            ));
     }
 }

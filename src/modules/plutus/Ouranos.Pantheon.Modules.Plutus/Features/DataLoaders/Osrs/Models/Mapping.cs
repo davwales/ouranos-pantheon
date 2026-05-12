@@ -12,10 +12,11 @@ public sealed record Mapping(
     int Value
 )
 {
-    public bool IsMembers => Members switch
-    {
-        bool isMembers => isMembers,
-        string membersStr => !bool.TryParse(membersStr, out var isMembers) || isMembers,
-        _ => true
-    };
+    public bool IsMembers =>
+        Members switch
+        {
+            bool isMembers => isMembers,
+            string membersStr => !bool.TryParse(membersStr, out var isMembers) || isMembers,
+            _ => true,
+        };
 }

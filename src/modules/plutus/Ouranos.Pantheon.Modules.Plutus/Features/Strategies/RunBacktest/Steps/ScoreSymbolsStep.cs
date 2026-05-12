@@ -1,12 +1,12 @@
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
-using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
+using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
+using Ouranos.Pantheon.Modules.Shared.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Steps;
 
@@ -29,7 +29,11 @@ public sealed class ScoreSymbolsStep(
         {
             context.CancellationToken.ThrowIfCancellationRequested();
 
-            var aggregates = ctx.Data.GetWindowAggregates(symbol.Id, DateTimeOffset.MinValue, currentDate);
+            var aggregates = ctx.Data.GetWindowAggregates(
+                symbol.Id,
+                DateTimeOffset.MinValue,
+                currentDate
+            );
             if (aggregates.Count == 0)
             {
                 continue;
@@ -44,7 +48,10 @@ public sealed class ScoreSymbolsStep(
             var snapshots = ctx.Data.GetSnapshotsForSymbol(symbol.Id, currentDate);
             var priceBuckets = BacktestMath.BuildPriceBucketsFromAggregates(aggregates);
             var forecast = ctx.Data.GetForecastForSymbol(symbol.Id, currentDate);
-            var (forecastedPrice, forecastedChange) = BacktestMath.GetForecastData(forecast, currentPrice);
+            var (forecastedPrice, forecastedChange) = BacktestMath.GetForecastData(
+                forecast,
+                currentPrice
+            );
 
             var limit = ctx.Data.Market.Taxes.Flat?.Maximum ?? decimal.MaxValue;
 
@@ -98,7 +105,11 @@ public sealed class ScoreSymbolsStep(
     private async Task<IReadOnlyList<Signal>> ReconstructSignalsAsync(
         Id<Symbol> symbolId,
         decimal taxRate,
-        (MarketTradeSnapshot? Short, MarketTradeSnapshot? Medium, MarketTradeSnapshot? Long) snapshots,
+        (
+            MarketTradeSnapshot? Short,
+            MarketTradeSnapshot? Medium,
+            MarketTradeSnapshot? Long
+        ) snapshots,
         IReadOnlyList<PriceBucket> priceBuckets,
         decimal limit,
         CancellationToken cancellationToken

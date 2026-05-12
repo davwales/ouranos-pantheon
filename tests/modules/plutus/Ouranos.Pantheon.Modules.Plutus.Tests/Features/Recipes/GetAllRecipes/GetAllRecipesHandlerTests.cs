@@ -17,7 +17,9 @@ public sealed class GetAllRecipesHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly GetAllRecipesHandler _handler;
-    private readonly ILogger<GetAllRecipesHandler> _logger = Substitute.For<ILogger<GetAllRecipesHandler>>();
+    private readonly ILogger<GetAllRecipesHandler> _logger = Substitute.For<
+        ILogger<GetAllRecipesHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
 
     public GetAllRecipesHandlerTests()
@@ -25,7 +27,11 @@ public sealed class GetAllRecipesHandlerTests
         _fixture.Customize(new IdCustomization());
 
         _dbContext = DbContextExtensions.Mock<PlutusDbContext>();
-        _handler = new GetAllRecipesHandler(_logger, _dbContext, Options.Create(new QueryOptions()));
+        _handler = new GetAllRecipesHandler(
+            _logger,
+            _dbContext,
+            Options.Create(new QueryOptions())
+        );
     }
 
     [Fact]
@@ -38,15 +44,19 @@ public sealed class GetAllRecipesHandlerTests
             _fixture.Create<Taxes>()
         );
 
-        var recipes = Enumerable.Range(0, 3).Select(_ => Recipe.Create(
-                new Id<Recipe>(Guid.NewGuid().ToString()),
-                market.Id,
-                _fixture.Create<string>(),
-                _fixture.Create<decimal>(),
-                _fixture.CreateMany<RecipeComponent>().ToList(),
-                _fixture.CreateMany<RecipeComponent>().ToList()
+        var recipes = Enumerable
+            .Range(0, 3)
+            .Select(_ =>
+                Recipe.Create(
+                    new Id<Recipe>(Guid.NewGuid().ToString()),
+                    market.Id,
+                    _fixture.Create<string>(),
+                    _fixture.Create<decimal>(),
+                    _fixture.CreateMany<RecipeComponent>().ToList(),
+                    _fixture.CreateMany<RecipeComponent>().ToList()
+                )
             )
-        ).ToArray();
+            .ToArray();
 
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(recipes);

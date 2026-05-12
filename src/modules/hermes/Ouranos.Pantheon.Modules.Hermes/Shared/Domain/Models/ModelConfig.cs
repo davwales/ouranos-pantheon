@@ -5,7 +5,8 @@ namespace Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 
 public class ModelConfig : BaseEntity<Id<ModelConfig>>
 {
-    protected ModelConfig(Id<ModelConfig> id) : base(id)
+    protected ModelConfig(Id<ModelConfig> id)
+        : base(id)
     {
         Name = string.Empty;
         ModelIdentifier = string.Empty;
@@ -57,7 +58,7 @@ public class ModelConfig : BaseEntity<Id<ModelConfig>>
             RepeatPenalty = repeatPenalty,
             ContextWindow = contextWindow,
             IsDefault = isDefault,
-            IsPublic = isPublic
+            IsPublic = isPublic,
         };
     }
 

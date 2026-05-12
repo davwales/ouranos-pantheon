@@ -17,7 +17,9 @@ public sealed class UpdatePositionHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly UpdatePositionHandler _handler;
-    private readonly ILogger<UpdatePositionHandler> _logger = Substitute.For<ILogger<UpdatePositionHandler>>();
+    private readonly ILogger<UpdatePositionHandler> _logger = Substitute.For<
+        ILogger<UpdatePositionHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
 
     public UpdatePositionHandlerTests()
@@ -44,12 +46,7 @@ public sealed class UpdatePositionHandlerTests
         await _dbContext.Positions.AddAsync(position);
         await _dbContext.SaveChangesAsync();
 
-        var command = new UpdatePositionInput(
-            position.Id,
-            200.00m,
-            5m,
-            "Updated note"
-        );
+        var command = new UpdatePositionInput(position.Id, 200.00m, 5m, "Updated note");
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -69,12 +66,7 @@ public sealed class UpdatePositionHandlerTests
     public async Task Handle_WhenPositionNotFound_ShouldThrowNotFoundException()
     {
         // Arrange
-        var command = new UpdatePositionInput(
-            _fixture.Create<Id<Position>>(),
-            200.00m,
-            5m,
-            null
-        );
+        var command = new UpdatePositionInput(_fixture.Create<Id<Position>>(), 200.00m, 5m, null);
 
         // Act
         var update = async () => await _handler.Handle(command, CancellationToken.None);
@@ -89,23 +81,12 @@ public sealed class UpdatePositionHandlerTests
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
         var symbolId = _fixture.Create<Id<Symbol>>();
-        var position = Position.Create(
-            PositionSide.Buy,
-            marketId,
-            symbolId,
-            150.50m,
-            10m
-        );
+        var position = Position.Create(PositionSide.Buy, marketId, symbolId, 150.50m, 10m);
         position.Close(PositionStatus.Bought);
         await _dbContext.Positions.AddAsync(position);
         await _dbContext.SaveChangesAsync();
 
-        var command = new UpdatePositionInput(
-            position.Id,
-            200.00m,
-            5m,
-            null
-        );
+        var command = new UpdatePositionInput(position.Id, 200.00m, 5m, null);
 
         // Act
         var update = async () => await _handler.Handle(command, CancellationToken.None);
@@ -118,12 +99,7 @@ public sealed class UpdatePositionHandlerTests
     public async Task Handle_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange
-        var command = new UpdatePositionInput(
-            _fixture.Create<Id<Position>>(),
-            200.00m,
-            5m,
-            null
-        );
+        var command = new UpdatePositionInput(_fixture.Create<Id<Position>>(), 200.00m, 5m, null);
         var cancellationToken = new CancellationToken(true);
 
         // Act

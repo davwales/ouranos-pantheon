@@ -1,7 +1,6 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetRecommendations.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
@@ -11,10 +10,12 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Executors;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
+using Ouranos.Pantheon.Modules.Shared.Application;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetRecommendations;
 
-public sealed class GetRecommendationsHandler : IPantheonHandler<GetRecommendationsInput, GetRecommendationsResponse>
+public sealed class GetRecommendationsHandler
+    : IPantheonHandler<GetRecommendationsInput, GetRecommendationsResponse>
 {
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<GetRecommendationsHandler> _logger;
@@ -47,12 +48,16 @@ public sealed class GetRecommendationsHandler : IPantheonHandler<GetRecommendati
 
         Guard.Against.NegativeOrZero(query.Budget, nameof(query.Budget));
 
-        var strategy = await _dbContext.Strategies
-            .FirstOrDefaultAsync(s => s.Id == query.StrategyId, cancellationToken);
+        var strategy = await _dbContext.Strategies.FirstOrDefaultAsync(
+            s => s.Id == query.StrategyId,
+            cancellationToken
+        );
         Guard.Against.NotFound(query.StrategyId, strategy);
 
-        var market = await _dbContext.Markets
-            .FirstOrDefaultAsync(m => m.Id == query.MarketId, cancellationToken);
+        var market = await _dbContext.Markets.FirstOrDefaultAsync(
+            m => m.Id == query.MarketId,
+            cancellationToken
+        );
         Guard.Against.NotFound(query.MarketId, market);
 
         Guard.Against.InvalidInput(
@@ -62,8 +67,8 @@ public sealed class GetRecommendationsHandler : IPantheonHandler<GetRecommendati
             $"Strategy '{strategy.Id}' does not belong to market '{query.MarketId}'."
         );
 
-        var symbols = await _dbContext.Symbols
-            .AsNoTracking()
+        var symbols = await _dbContext
+            .Symbols.AsNoTracking()
             .Where(s => s.MarketId == query.MarketId)
             .ToListAsync(cancellationToken);
 
@@ -73,25 +78,27 @@ public sealed class GetRecommendationsHandler : IPantheonHandler<GetRecommendati
         }
 
         var symbolIds = symbols.Select(s => s.Id).ToList();
-        var snapshots = await _dbContext.MarketTradeSnapshots
-            .AsNoTracking()
+        var snapshots = await _dbContext
+            .MarketTradeSnapshots.AsNoTracking()
             .Where(s => symbolIds.Contains(s.SymbolId) && s.MarketId == query.MarketId)
             .ToListAsync(cancellationToken);
 
-        var signals = await _dbContext.Signals
-            .AsNoTracking()
+        var signals = await _dbContext
+            .Signals.AsNoTracking()
             .Where(s => symbolIds.Contains(s.SymbolId))
             .ToListAsync(cancellationToken);
 
-        var forecasts = await _dbContext.Forecasts
-            .AsNoTracking()
+        var forecasts = await _dbContext
+            .Forecasts.AsNoTracking()
             .Include(f => f.Predictions)
             .Where(f => symbolIds.Contains(f.SymbolId) && f.MarketId == query.MarketId)
             .ToListAsync(cancellationToken);
 
         if (!_executors.TryGetValue(strategy.Type, out var executor))
         {
-            throw new InvalidOperationException($"No executor registered for strategy type '{strategy.Type}'.");
+            throw new InvalidOperationException(
+                $"No executor registered for strategy type '{strategy.Type}'."
+            );
         }
 
         var taxRate = market.Taxes.Flat?.Rate ?? 0m;
@@ -105,15 +112,19 @@ public sealed class GetRecommendationsHandler : IPantheonHandler<GetRecommendati
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var symbolShort =
-                snapshots.FirstOrDefault(s => s.SymbolId == symbol.Id && s.TimeFrame == TimeFrame.OneHour);
-            var symbolMedium =
-                snapshots.FirstOrDefault(s => s.SymbolId == symbol.Id && s.TimeFrame == TimeFrame.OneWeek);
-            var symbolLong =
-                snapshots.FirstOrDefault(s => s.SymbolId == symbol.Id && s.TimeFrame == TimeFrame.OneMonth);
-            var currentPrice = symbolShort?.TotalSpent > 0 && symbolShort.TotalVolume > 0
-                ? symbolShort.TotalSpent / symbolShort.TotalVolume
-                : 0m;
+            var symbolShort = snapshots.FirstOrDefault(s =>
+                s.SymbolId == symbol.Id && s.TimeFrame == TimeFrame.OneHour
+            );
+            var symbolMedium = snapshots.FirstOrDefault(s =>
+                s.SymbolId == symbol.Id && s.TimeFrame == TimeFrame.OneWeek
+            );
+            var symbolLong = snapshots.FirstOrDefault(s =>
+                s.SymbolId == symbol.Id && s.TimeFrame == TimeFrame.OneMonth
+            );
+            var currentPrice =
+                symbolShort?.TotalSpent > 0 && symbolShort.TotalVolume > 0
+                    ? symbolShort.TotalSpent / symbolShort.TotalVolume
+                    : 0m;
 
             if (currentPrice == 0 || symbolShort is null)
             {
@@ -172,16 +183,19 @@ public sealed class GetRecommendationsHandler : IPantheonHandler<GetRecommendati
             );
         }
 
-        var sorted = recommendations
-            .OrderByDescending(r => r.Score)
-            .Take(maxPositions)
-            .ToList();
+        var sorted = recommendations.OrderByDescending(r => r.Score).Take(maxPositions).ToList();
 
-        _logger.LogDebug("Successfully handled get recommendations request. {count} recommendations.", sorted.Count);
+        _logger.LogDebug(
+            "Successfully handled get recommendations request. {count} recommendations.",
+            sorted.Count
+        );
         return new GetRecommendationsResponse(sorted);
     }
 
-    private static (decimal? Price, decimal? Change) GetForecastData(Forecast? forecast, decimal currentPrice)
+    private static (decimal? Price, decimal? Change) GetForecastData(
+        Forecast? forecast,
+        decimal currentPrice
+    )
     {
         if (forecast is null || currentPrice == 0)
         {
@@ -209,7 +223,9 @@ public sealed class GetRecommendationsHandler : IPantheonHandler<GetRecommendati
         if (signals.Count > 0)
         {
             var topSignals = signals.OrderByDescending(s => Math.Abs(s.Value)).Take(3);
-            parts.Add($"Top signals: {string.Join(", ", topSignals.Select(s => $"{s.Type}={s.Value:F2}"))}");
+            parts.Add(
+                $"Top signals: {string.Join(", ", topSignals.Select(s => $"{s.Type}={s.Value:F2}"))}"
+            );
         }
 
         if (snap is not null)

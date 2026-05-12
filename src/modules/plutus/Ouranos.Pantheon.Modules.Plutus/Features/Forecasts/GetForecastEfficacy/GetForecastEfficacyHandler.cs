@@ -2,13 +2,13 @@ using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Ouranos.Pantheon.Modules.Shared.Application;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetForecastEfficacy.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
+using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetForecastEfficacy;
 
@@ -44,10 +44,15 @@ public sealed class GetForecastEfficacyHandler
 
         var limits = _queryOptions.Value;
         Guard.Against.OutOfRange(input.Skip, nameof(input.Skip), 0, limits.MaxSkip);
-        Guard.Against.OutOfRange(input.Take, nameof(input.Take), limits.MinPageSize, limits.MaxPageSize);
+        Guard.Against.OutOfRange(
+            input.Take,
+            nameof(input.Take),
+            limits.MinPageSize,
+            limits.MaxPageSize
+        );
 
-        var q = _dbContext.ForecastRecords
-            .AsNoTracking()
+        var q = _dbContext
+            .ForecastRecords.AsNoTracking()
             .Where(r => r.EvaluatedAt != null && r.Actual != null && r.Actual.AveragePrice != 0);
 
         if (input.SymbolId is not null)
@@ -89,16 +94,28 @@ public sealed class GetForecastEfficacyHandler
             r.HorizonDays,
             r.GeneratedAt,
             PredictedAvg = r.Predicted.AveragePrice,
-            ActualAvg = r.Actual!.AveragePrice
+            ActualAvg = r.Actual!.AveragePrice,
         });
 
         var totalCount = await projected
-            .Select(r => new { r.SymbolId, r.ModelName, r.HorizonDays })
+            .Select(r => new
+            {
+                r.SymbolId,
+                r.ModelName,
+                r.HorizonDays,
+            })
             .Distinct()
             .CountAsync(cancellationToken);
 
         var items = await projected
-            .GroupBy(r => new { r.SymbolId, r.SymbolName, r.MarketId, r.ModelName, r.HorizonDays })
+            .GroupBy(r => new
+            {
+                r.SymbolId,
+                r.SymbolName,
+                r.MarketId,
+                r.ModelName,
+                r.HorizonDays,
+            })
             .OrderBy(g => g.Key.SymbolId)
             .ThenBy(g => g.Key.ModelName)
             .ThenBy(g => g.Key.HorizonDays)
@@ -110,7 +127,9 @@ public sealed class GetForecastEfficacyHandler
                 g.Key.HorizonDays,
                 g.Count(),
                 g.Average(r => Math.Abs(r.PredictedAvg - r.ActualAvg)),
-                g.Average(r => r.ActualAvg == 0 ? 0 : Math.Abs(r.PredictedAvg - r.ActualAvg) / r.ActualAvg),
+                g.Average(r =>
+                    r.ActualAvg == 0 ? 0 : Math.Abs(r.PredictedAvg - r.ActualAvg) / r.ActualAvg
+                ),
                 g.Average(r => r.PredictedAvg - r.ActualAvg),
                 g.Min(r => r.GeneratedAt),
                 g.Max(r => r.GeneratedAt)
@@ -120,6 +139,11 @@ public sealed class GetForecastEfficacyHandler
             .ToListAsync(cancellationToken);
 
         _logger.LogDebug("Successfully handled get forecast efficacy request.");
-        return new PagedResponse<GetForecastEfficacyResponse>(items, totalCount, input.Skip, input.Take);
+        return new PagedResponse<GetForecastEfficacyResponse>(
+            items,
+            totalCount,
+            input.Skip,
+            input.Take
+        );
     }
 }

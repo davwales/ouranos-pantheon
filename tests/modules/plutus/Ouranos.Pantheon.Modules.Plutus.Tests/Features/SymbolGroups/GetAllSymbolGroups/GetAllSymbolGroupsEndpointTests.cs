@@ -17,10 +17,16 @@ public sealed class GetAllSymbolGroupsEndpointTests
     {
         // Arrange
         var ct = CancellationToken.None;
-        var input = new GetAllSymbolGroupsInput(new Id<Market>(Guid.NewGuid().ToString()), Take: 10);
+        var input = new GetAllSymbolGroupsInput(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            Take: 10
+        );
         var expected = new PagedResponse<GetAllSymbolGroupsResponse>([], 0, 0, 10);
 
-        _bus.InvokeAsync<PagedResponse<GetAllSymbolGroupsResponse>>(Arg.Any<object>(), Arg.Any<CancellationToken>())
+        _bus.InvokeAsync<PagedResponse<GetAllSymbolGroupsResponse>>(
+                Arg.Any<object>(),
+                Arg.Any<CancellationToken>()
+            )
             .Returns(Task.FromResult(expected));
 
         // Act
@@ -28,7 +34,6 @@ public sealed class GetAllSymbolGroupsEndpointTests
 
         // Assert
         result.ShouldBeOfType<Ok<PagedResponse<GetAllSymbolGroupsResponse>>>();
-        await _bus.Received(1)
-            .InvokeAsync<PagedResponse<GetAllSymbolGroupsResponse>>(input, ct);
+        await _bus.Received(1).InvokeAsync<PagedResponse<GetAllSymbolGroupsResponse>>(input, ct);
     }
 }

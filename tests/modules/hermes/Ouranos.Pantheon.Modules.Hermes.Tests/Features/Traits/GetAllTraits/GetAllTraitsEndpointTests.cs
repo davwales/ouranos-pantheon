@@ -17,7 +17,10 @@ public sealed class GetAllTraitsEndpointTests
         var input = new GetAllTraitsInput();
         var expected = new List<GetAllTraitsResponse>();
 
-        _bus.InvokeAsync<List<GetAllTraitsResponse>>(Arg.Any<object>(), Arg.Any<CancellationToken>())
+        _bus.InvokeAsync<List<GetAllTraitsResponse>>(
+                Arg.Any<object>(),
+                Arg.Any<CancellationToken>()
+            )
             .Returns(Task.FromResult(expected));
 
         // Act

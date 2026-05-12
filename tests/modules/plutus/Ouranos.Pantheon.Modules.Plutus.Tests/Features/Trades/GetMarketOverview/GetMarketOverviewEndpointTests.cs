@@ -24,10 +24,17 @@ public sealed class GetMarketOverviewEndpointTests
             .Returns(Task.FromResult(expected));
 
         // Act
-        var result = await GetMarketOverviewEndpoint.Handle(marketId, _bus, TimeFrame.AllTime, 100, ct);
+        var result = await GetMarketOverviewEndpoint.Handle(
+            marketId,
+            _bus,
+            TimeFrame.AllTime,
+            100,
+            ct
+        );
 
         // Assert
         result.ShouldBeOfType<Ok<GetMarketOverviewResponse>>();
-        await _bus.Received(1).InvokeAsync<GetMarketOverviewResponse>(Arg.Any<GetMarketOverviewInput>(), ct);
+        await _bus.Received(1)
+            .InvokeAsync<GetMarketOverviewResponse>(Arg.Any<GetMarketOverviewInput>(), ct);
     }
 }

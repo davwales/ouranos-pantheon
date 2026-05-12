@@ -12,13 +12,12 @@ public sealed record StocksDataLoaderOptions(
 {
     public const string SectionName = "Stocks";
 
-    public StocksDataLoaderOptions() : this(
-        IsEnabled: true,
-        ApiKey: string.Empty,
-        ApiSecret: string.Empty,
-        WebSocket: new WebSocketOptions(),
-        Symbols: []
-    )
-    {
-    }
+    public StocksDataLoaderOptions()
+        : this(
+            IsEnabled: true,
+            ApiKey: string.Empty,
+            ApiSecret: string.Empty,
+            WebSocket: new WebSocketOptions(),
+            Symbols: []
+        ) { }
 }

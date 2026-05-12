@@ -27,7 +27,10 @@ public sealed class CreateConversationEndpointTests
         var conversationId = new Id<Conversation>(Guid.NewGuid().ToString());
         var expected = new CreateConversationResponse(conversationId, "New Conversation");
 
-        _bus.InvokeAsync<CreateConversationResponse>(Arg.Any<object>(), Arg.Any<CancellationToken>())
+        _bus.InvokeAsync<CreateConversationResponse>(
+                Arg.Any<object>(),
+                Arg.Any<CancellationToken>()
+            )
             .Returns(Task.FromResult(expected));
 
         // Act

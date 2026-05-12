@@ -35,9 +35,7 @@ public sealed class GetSymbolGroupEndpointTests
 
         // Assert
         result.ShouldBeOfType<Ok<GetSymbolGroupResponse>>();
-        await _bus.Received(1).InvokeAsync<GetSymbolGroupResponse>(
-            Arg.Any<GetSymbolGroupInput>(),
-            ct
-        );
+        await _bus.Received(1)
+            .InvokeAsync<GetSymbolGroupResponse>(Arg.Any<GetSymbolGroupInput>(), ct);
     }
 }

@@ -8,12 +8,11 @@ public sealed class RecipeArbitrageChromosome(
     RecipeArbitrageConfig recipeArbitrageConfig
 ) : StrategyChromosome(configuration)
 {
-    public RecipeArbitrageConfig RecipeArbitrageConfig { get; private set; } = recipeArbitrageConfig;
+    public RecipeArbitrageConfig RecipeArbitrageConfig { get; private set; } =
+        recipeArbitrageConfig;
 
     public RecipeArbitrageChromosome(TradingConfiguration configuration)
-        : this(configuration, new RecipeArbitrageConfig())
-    {
-    }
+        : this(configuration, new RecipeArbitrageConfig()) { }
 
     public override BacktestParameters ApplyConfigOverrides(BacktestParameters parameters)
     {
@@ -35,11 +34,17 @@ public sealed class RecipeArbitrageChromosome(
     {
         if (other is not RecipeArbitrageChromosome otherChromosome)
         {
-            throw new InvalidOperationException($"Crossover partner must be a {nameof(RecipeArbitrageChromosome)}.");
+            throw new InvalidOperationException(
+                $"Crossover partner must be a {nameof(RecipeArbitrageChromosome)}."
+            );
         }
 
         var random = Random.Shared;
-        var childConfig = CrossoverCommonFields(Configuration, otherChromosome.Configuration, random);
+        var childConfig = CrossoverCommonFields(
+            Configuration,
+            otherChromosome.Configuration,
+            random
+        );
 
         var childRecipe = new RecipeArbitrageConfig(
             random.NextDouble() < 0.5

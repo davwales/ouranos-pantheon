@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Extensions;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Database.ModelConfigurations;
 
@@ -13,9 +13,6 @@ public sealed class MarketConfiguration : IEntityTypeConfiguration<Market>
 
         builder.Property(x => x.Id).HasIdConversion();
 
-        builder.OwnsOne(
-            x => x.Taxes,
-            taxes => taxes.OwnsOne(t => t.Flat)
-        );
+        builder.OwnsOne(x => x.Taxes, taxes => taxes.OwnsOne(t => t.Flat));
     }
 }

@@ -2,10 +2,10 @@ using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketTrades.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Pagination;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
@@ -17,8 +17,16 @@ public sealed class GetMarketTradesHandler
 {
     private static readonly FilterBuilder<GetMarketTradesResponse> FilterBuilder =
         new FilterBuilder<GetMarketTradesResponse>()
-            .On(nameof(GetMarketTradesResponse.SymbolName), x => x.SymbolName, caseInsensitive: true)
-            .On(nameof(GetMarketTradesResponse.SymbolSubcode), x => x.SymbolSubcode, caseInsensitive: true)
+            .On(
+                nameof(GetMarketTradesResponse.SymbolName),
+                x => x.SymbolName,
+                caseInsensitive: true
+            )
+            .On(
+                nameof(GetMarketTradesResponse.SymbolSubcode),
+                x => x.SymbolSubcode,
+                caseInsensitive: true
+            )
             .On(nameof(GetMarketTradesResponse.MinPrice), x => x.MinPrice)
             .On(nameof(GetMarketTradesResponse.MaxPrice), x => x.MaxPrice)
             .On(nameof(GetMarketTradesResponse.TotalVolume), x => x.TotalVolume)
@@ -67,24 +75,28 @@ public sealed class GetMarketTradesHandler
 
         var limits = _queryOptions.Value;
         Guard.Against.OutOfRange(input.Skip, nameof(input.Skip), 0, limits.MaxSkip);
-        Guard.Against.OutOfRange(input.Take, nameof(input.Take), limits.MinPageSize, limits.MaxPageSize);
+        Guard.Against.OutOfRange(
+            input.Take,
+            nameof(input.Take),
+            limits.MinPageSize,
+            limits.MaxPageSize
+        );
 
-        var snapshots = await _dbContext.MarketTradeSnapshots
-            .AsNoTracking()
+        var snapshots = await _dbContext
+            .MarketTradeSnapshots.AsNoTracking()
             .Where(s => s.MarketId == input.MarketId && s.TimeFrame == input.TimeFrame)
             .Select(s => new GetMarketTradesResponse(
-                    s.Symbol.Id,
-                    s.Symbol.Name,
-                    s.Symbol.Subcode,
-                    s.TotalSpent,
-                    s.MinPrice,
-                    s.MaxPrice,
-                    s.TotalVolume,
-                    s.NumTransactions,
-                    s.Limit,
-                    s.Tax
-                )
-            )
+                s.Symbol.Id,
+                s.Symbol.Name,
+                s.Symbol.Subcode,
+                s.TotalSpent,
+                s.MinPrice,
+                s.MaxPrice,
+                s.TotalVolume,
+                s.NumTransactions,
+                s.Limit,
+                s.Tax
+            ))
             .ToListAsync(cancellationToken);
 
         if (snapshots.Count == 0)
@@ -101,11 +113,7 @@ public sealed class GetMarketTradesHandler
         var totalCount = filtered.Count();
 
         var page = filtered
-            .SortBy(
-                input.SortField,
-                input.SortDirection,
-                SortBuilder
-            )
+            .SortBy(input.SortField, input.SortDirection, SortBuilder)
             .Paginate(input.Skip, input.Take)
             .ToList();
 

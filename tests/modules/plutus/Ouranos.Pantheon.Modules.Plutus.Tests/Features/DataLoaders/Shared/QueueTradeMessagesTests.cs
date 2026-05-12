@@ -7,7 +7,9 @@ namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.DataLoaders.Shared;
 
 public sealed class QueueTradeMessagesTests
 {
-    private readonly ILogger<QueueTradeMessages> _logger = Substitute.For<ILogger<QueueTradeMessages>>();
+    private readonly ILogger<QueueTradeMessages> _logger = Substitute.For<
+        ILogger<QueueTradeMessages>
+    >();
     private readonly IWolverineRuntime _wolverineRuntime = Substitute.For<IWolverineRuntime>();
     private readonly QueueTradeMessages _queue;
 
@@ -33,7 +35,16 @@ public sealed class QueueTradeMessagesTests
         var ct = new CancellationToken(true);
         var messages = new List<TradeMessage>
         {
-            new(Producer.Osrs, "1234", null, "Test Item", 100m, 5m, DateTimeOffset.UtcNow, new AdditionalFields())
+            new(
+                Producer.Osrs,
+                "1234",
+                null,
+                "Test Item",
+                100m,
+                5m,
+                DateTimeOffset.UtcNow,
+                new AdditionalFields()
+            ),
         };
 
         // Act

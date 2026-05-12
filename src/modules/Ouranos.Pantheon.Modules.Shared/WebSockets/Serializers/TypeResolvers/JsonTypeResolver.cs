@@ -17,15 +17,23 @@ public sealed record JsonTypeResolver(
             return typeof(IList<object>);
         }
 
-        if (DiscriminatorPath.Split('.').Any(segment => !element.TryGetProperty(segment, out element)))
+        if (
+            DiscriminatorPath
+                .Split('.')
+                .Any(segment => !element.TryGetProperty(segment, out element))
+        )
         {
-            throw new InvalidOperationException($"Discriminator path '{DiscriminatorPath}' not found.");
+            throw new InvalidOperationException(
+                $"Discriminator path '{DiscriminatorPath}' not found."
+            );
         }
 
         var discriminator = element.GetString();
         if (discriminator is null || !TypeMap.TryGetValue(discriminator, out var type))
         {
-            throw new InvalidOperationException($"No type mapping found for discriminator: {discriminator}.");
+            throw new InvalidOperationException(
+                $"No type mapping found for discriminator: {discriminator}."
+            );
         }
 
         return type;

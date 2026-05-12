@@ -51,11 +51,7 @@ public partial class AddBacktestKindToBacktest : Migration
     /// <inheritdoc />
     protected override void Down(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.DropColumn(
-            name: "kind",
-            schema: "plutus",
-            table: "backtests"
-        );
+        migrationBuilder.DropColumn(name: "kind", schema: "plutus", table: "backtests");
 
         migrationBuilder.AlterColumn<decimal>(
             name: "weight",

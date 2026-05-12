@@ -1,11 +1,11 @@
 using Ardalis.GuardClauses;
+using Flagsmith;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Hermes.Features.Traits.GetTrait.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
-using Flagsmith;
+using Ouranos.Pantheon.Modules.Shared.Application;
 using Trait = Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits.Trait;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Traits.GetTrait;
@@ -39,8 +39,10 @@ public sealed class GetTraitHandler : IPantheonHandler<GetTraitInput, GetTraitRe
         _logger.LogTrace("Attempting to handle get trait query '{@query}'.", query);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var trait = await _dbContext.Traits
-            .FirstOrDefaultAsync(t => t.Id == query.TraitId, cancellationToken);
+        var trait = await _dbContext.Traits.FirstOrDefaultAsync(
+            t => t.Id == query.TraitId,
+            cancellationToken
+        );
 
         Guard.Against.NotFound(query.TraitId, trait);
 
@@ -54,11 +56,6 @@ public sealed class GetTraitHandler : IPantheonHandler<GetTraitInput, GetTraitRe
         }
 
         _logger.LogDebug("Successfully handled get trait request.");
-        return new GetTraitResponse(
-            trait.Id,
-            trait.Name,
-            trait.Content,
-            trait.IsPublic
-        );
+        return new GetTraitResponse(trait.Id, trait.Name, trait.Content, trait.IsPublic);
     }
 }

@@ -18,21 +18,21 @@ public static class OuranosMachineLearningModule
         );
 
         services.AddSingleton<OpenAIClient>(sp =>
+        {
+            var opts = sp.GetRequiredService<IOptions<OuranosMachineLearningOptions>>().Value;
+            if (string.IsNullOrWhiteSpace(opts.ConnectionString))
             {
-                var opts = sp.GetRequiredService<IOptions<OuranosMachineLearningOptions>>().Value;
-                if (string.IsNullOrWhiteSpace(opts.ConnectionString))
-                {
-                    throw new InvalidOperationException("Invalid Ouranos Machine Learning URL.");
-                }
-
-                return new OpenAIClient(
-                    new ApiKeyCredential(opts.ApiKey),
-                    new OpenAIClientOptions { Endpoint = new Uri(opts.ConnectionString) }
-                );
+                throw new InvalidOperationException("Invalid Ouranos Machine Learning URL.");
             }
-        );
 
-        services.AddHttpClient<IOuranosMachineLearningClient, OuranosMachineLearningClient>((sp, client) =>
+            return new OpenAIClient(
+                new ApiKeyCredential(opts.ApiKey),
+                new OpenAIClientOptions { Endpoint = new Uri(opts.ConnectionString) }
+            );
+        });
+
+        services.AddHttpClient<IOuranosMachineLearningClient, OuranosMachineLearningClient>(
+            (sp, client) =>
             {
                 var opts = sp.GetRequiredService<IOptions<OuranosMachineLearningOptions>>().Value;
                 if (string.IsNullOrWhiteSpace(opts.ConnectionString))

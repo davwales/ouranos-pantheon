@@ -1,5 +1,3 @@
-
-
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning.Dtos;
 

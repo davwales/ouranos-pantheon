@@ -36,6 +36,7 @@ public sealed class CreatePositionEndpointTests
 
         // Assert
         result.ShouldBeOfType<Created<IdResponse<Position>>>();
-        await _bus.Received(1).InvokeAsync<IdResponse<Position>>(Arg.Any<CreatePositionInput>(), ct);
+        await _bus.Received(1)
+            .InvokeAsync<IdResponse<Position>>(Arg.Any<CreatePositionInput>(), ct);
     }
 }

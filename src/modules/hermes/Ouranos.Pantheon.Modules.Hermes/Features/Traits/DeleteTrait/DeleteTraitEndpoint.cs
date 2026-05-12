@@ -11,8 +11,7 @@ public static class DeleteTraitEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapDelete("/api/hermes/traits/{traitId}", Handle)
-            .WithTags("Hermes.Traits");
+        app.MapDelete("/api/hermes/traits/{traitId}", Handle).WithTags("Hermes.Traits");
     }
 
     internal static async Task<IResult> Handle(
@@ -21,6 +20,8 @@ public static class DeleteTraitEndpoint
         CancellationToken ct
     )
     {
-        return Results.Ok(await bus.InvokeAsync<DeleteTraitResponse>(new DeleteTraitInput(traitId), ct));
+        return Results.Ok(
+            await bus.InvokeAsync<DeleteTraitResponse>(new DeleteTraitInput(traitId), ct)
+        );
     }
 }

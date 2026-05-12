@@ -2,10 +2,10 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Steps;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
@@ -56,7 +56,10 @@ public sealed class CloseExitsStepTests
         );
         var currentDate = startDate.AddDays(1);
         var dateOnly = DateOnly.FromDateTime(currentDate.UtcDateTime);
-        var dailyAggregates = new List<DailyTradeAggregate> { new(symbolId, dateOnly, 150m, 150m, 150m, 1000m) };
+        var dailyAggregates = new List<DailyTradeAggregate>
+        {
+            new(symbolId, dateOnly, 150m, 150m, 150m, 1000m),
+        };
         var data = BacktestData.FromRaw(market, [], [], [], [], dailyAggregates);
         payload.Context = new BacktestContext(data, executor, 0m, 7, startDate);
 
@@ -135,11 +138,13 @@ public sealed class CloseExitsStepTests
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
         var executor = Substitute.For<IStrategyExecutor>();
-        executor.Score(Arg.Any<StrategyScoreContext>(), Arg.Any<TradingConfiguration>())
+        executor
+            .Score(Arg.Any<StrategyScoreContext>(), Arg.Any<TradingConfiguration>())
             .Returns(3m);
         var signalComputer = Substitute.For<ISignalComputer>();
         signalComputer.Type.Returns(SignalType.TaxAdjustedRoi);
-        signalComputer.ComputeAsync(Arg.Any<SignalComputeContext>(), Arg.Any<CancellationToken>())
+        signalComputer
+            .ComputeAsync(Arg.Any<SignalComputeContext>(), Arg.Any<CancellationToken>())
             .Returns(0.5m);
         var strategy = Strategy.Create(
             marketId,
@@ -168,7 +173,10 @@ public sealed class CloseExitsStepTests
         );
         var currentDate = startDate.AddDays(1);
         var dateOnly = DateOnly.FromDateTime(currentDate.UtcDateTime);
-        var dailyAggregates = new List<DailyTradeAggregate> { new(symbolId, dateOnly, 150m, 150m, 150m, 1000m) };
+        var dailyAggregates = new List<DailyTradeAggregate>
+        {
+            new(symbolId, dateOnly, 150m, 150m, 150m, 1000m),
+        };
         var data = BacktestData.FromRaw(market, [], [], [], [], dailyAggregates);
         payload.Context = new BacktestContext(data, executor, 0m, 7, startDate);
 
@@ -192,11 +200,13 @@ public sealed class CloseExitsStepTests
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
         var executor = Substitute.For<IStrategyExecutor>();
-        executor.Score(Arg.Any<StrategyScoreContext>(), Arg.Any<TradingConfiguration>())
+        executor
+            .Score(Arg.Any<StrategyScoreContext>(), Arg.Any<TradingConfiguration>())
             .Returns(7m);
         var signalComputer = Substitute.For<ISignalComputer>();
         signalComputer.Type.Returns(SignalType.TaxAdjustedRoi);
-        signalComputer.ComputeAsync(Arg.Any<SignalComputeContext>(), Arg.Any<CancellationToken>())
+        signalComputer
+            .ComputeAsync(Arg.Any<SignalComputeContext>(), Arg.Any<CancellationToken>())
             .Returns(0.5m);
         var strategy = Strategy.Create(
             marketId,
@@ -225,7 +235,10 @@ public sealed class CloseExitsStepTests
         );
         var currentDate = startDate.AddDays(1);
         var dateOnly = DateOnly.FromDateTime(currentDate.UtcDateTime);
-        var dailyAggregates = new List<DailyTradeAggregate> { new(symbolId, dateOnly, 150m, 150m, 150m, 1000m) };
+        var dailyAggregates = new List<DailyTradeAggregate>
+        {
+            new(symbolId, dateOnly, 150m, 150m, 150m, 1000m),
+        };
         var data = BacktestData.FromRaw(market, [], [], [], [], dailyAggregates);
         payload.Context = new BacktestContext(data, executor, 0m, 7, startDate);
 
@@ -368,7 +381,10 @@ public sealed class CloseExitsStepTests
         var currentDate = startDate.AddDays(1);
         var dateOnly = DateOnly.FromDateTime(currentDate.UtcDateTime);
         // Daily volume = 500 -> maxSellable = floor(500 * 0.10) = 50
-        var dailyAggregates = new List<DailyTradeAggregate> { new(symbolId, dateOnly, 150m, 150m, 150m, 500m) };
+        var dailyAggregates = new List<DailyTradeAggregate>
+        {
+            new(symbolId, dateOnly, 150m, 150m, 150m, 500m),
+        };
         var data = BacktestData.FromRaw(market, [], [], [], [], dailyAggregates);
         payload.Context = new BacktestContext(data, executor, 0m, 7, startDate);
 
@@ -453,8 +469,6 @@ public sealed class CloseExitsStepTests
         var step = new CloseExitsStep([]);
 
         // Act & Assert
-        await Should.ThrowAsync<ArgumentNullException>(() =>
-            step.ExecuteAsync(context, payload)
-        );
+        await Should.ThrowAsync<ArgumentNullException>(() => step.ExecuteAsync(context, payload));
     }
 }

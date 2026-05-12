@@ -11,8 +11,7 @@ public static class GetMarketEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapGet("/api/plutus/markets/{marketId}", Handle)
-            .WithTags("Plutus.Markets");
+        app.MapGet("/api/plutus/markets/{marketId}", Handle).WithTags("Plutus.Markets");
     }
 
     internal static async Task<IResult> Handle(

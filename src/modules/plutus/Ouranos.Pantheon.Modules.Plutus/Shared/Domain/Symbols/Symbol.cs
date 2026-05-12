@@ -1,12 +1,13 @@
 using Ardalis.GuardClauses;
-using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
+using Ouranos.Pantheon.Modules.Shared.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 
 public class Symbol : BaseEntity<Id<Symbol>>
 {
-    protected Symbol(Id<Symbol> id) : base(id)
+    protected Symbol(Id<Symbol> id)
+        : base(id)
     {
         Code = string.Empty;
         Name = string.Empty;
@@ -52,7 +53,7 @@ public class Symbol : BaseEntity<Id<Symbol>>
             Name = name,
             MarketId = marketId,
             AdditionalFields = additionalFields,
-            _market = market
+            _market = market,
         };
     }
 

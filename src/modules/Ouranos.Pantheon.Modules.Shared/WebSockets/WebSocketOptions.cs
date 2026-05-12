@@ -10,7 +10,6 @@ public sealed record WebSocketOptions(
 {
     public const string SectionName = "Ouranos:WebSocket";
 
-    public WebSocketOptions() : this(string.Empty, 4096)
-    {
-    }
+    public WebSocketOptions()
+        : this(string.Empty, 4096) { }
 }

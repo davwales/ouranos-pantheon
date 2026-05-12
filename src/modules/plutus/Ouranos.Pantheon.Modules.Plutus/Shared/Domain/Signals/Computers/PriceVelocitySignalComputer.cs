@@ -20,9 +20,12 @@ public sealed class PriceVelocitySignalComputer : ISignalComputer
     public string Description => "Rate of price change clamped and normalised to [-1, 1].";
 
     public IReadOnlyList<InvestmentIntent> Intents =>
-    [
-        InvestmentIntent.Buy, InvestmentIntent.Sell, InvestmentIntent.Flip, InvestmentIntent.Merch
-    ];
+        [
+            InvestmentIntent.Buy,
+            InvestmentIntent.Sell,
+            InvestmentIntent.Flip,
+            InvestmentIntent.Merch,
+        ];
 
     public Task<decimal?> ComputeAsync(SignalComputeContext context, CancellationToken ct)
     {

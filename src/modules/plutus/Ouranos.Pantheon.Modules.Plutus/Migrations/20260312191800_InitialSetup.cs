@@ -20,19 +20,40 @@ public partial class InitialSetup : Migration
             {
                 id = table.Column<Guid>(type: "uuid", nullable: false),
                 name = table.Column<string>(type: "text", nullable: false),
-                taxes_flat_minimum =
-                    table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true),
-                taxes_flat_maximum =
-                    table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true),
-                taxes_flat_rate =
-                    table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true),
+                taxes_flat_minimum = table.Column<decimal>(
+                    type: "numeric(18,2)",
+                    precision: 18,
+                    scale: 2,
+                    nullable: true
+                ),
+                taxes_flat_maximum = table.Column<decimal>(
+                    type: "numeric(18,2)",
+                    precision: 18,
+                    scale: 2,
+                    nullable: true
+                ),
+                taxes_flat_rate = table.Column<decimal>(
+                    type: "numeric(18,2)",
+                    precision: 18,
+                    scale: 2,
+                    nullable: true
+                ),
                 is_forecasting_enabled = table.Column<bool>(type: "boolean", nullable: false),
                 description = table.Column<string>(type: "text", nullable: true),
                 icon = table.Column<string>(type: "text", nullable: true),
-                created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                created_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
+                updated_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
             },
-            constraints: table => { table.PrimaryKey("pk_markets", x => x.id); }
+            constraints: table =>
+            {
+                table.PrimaryKey("pk_markets", x => x.id);
+            }
         );
 
         migrationBuilder.CreateTable(
@@ -43,10 +64,19 @@ public partial class InitialSetup : Migration
                 id = table.Column<Guid>(type: "uuid", nullable: false),
                 trade_id = table.Column<Guid>(type: "uuid", nullable: false),
                 message_id = table.Column<Guid>(type: "uuid", nullable: false),
-                created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                created_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
+                updated_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
             },
-            constraints: table => { table.PrimaryKey("pk_trade_message", x => x.id); }
+            constraints: table =>
+            {
+                table.PrimaryKey("pk_trade_message", x => x.id);
+            }
         );
 
         migrationBuilder.CreateTable(
@@ -57,9 +87,20 @@ public partial class InitialSetup : Migration
                 id = table.Column<Guid>(type: "uuid", nullable: false),
                 market_id = table.Column<Guid>(type: "uuid", nullable: false),
                 name = table.Column<string>(type: "text", nullable: false),
-                cost = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                cost = table.Column<decimal>(
+                    type: "numeric(18,2)",
+                    precision: 18,
+                    scale: 2,
+                    nullable: false
+                ),
+                created_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
+                updated_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
             },
             constraints: table =>
             {
@@ -85,15 +126,28 @@ public partial class InitialSetup : Migration
                 subcode = table.Column<string>(type: "text", nullable: true),
                 name = table.Column<string>(type: "text", nullable: false),
                 market_id = table.Column<Guid>(type: "uuid", nullable: false),
-                additional_fields_limit =
-                    table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true),
+                additional_fields_limit = table.Column<decimal>(
+                    type: "numeric(18,2)",
+                    precision: 18,
+                    scale: 2,
+                    nullable: true
+                ),
                 additional_fields_high_alch = table.Column<int>(type: "integer", nullable: true),
                 additional_fields_low_alch = table.Column<int>(type: "integer", nullable: true),
                 additional_fields_exchange = table.Column<string>(type: "text", nullable: true),
                 additional_fields_tape = table.Column<string>(type: "text", nullable: true),
-                additional_fields_external_trade_id = table.Column<string>(type: "text", nullable: true),
-                created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                additional_fields_external_trade_id = table.Column<string>(
+                    type: "text",
+                    nullable: true
+                ),
+                created_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
+                updated_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
             },
             constraints: table =>
             {
@@ -115,14 +169,15 @@ public partial class InitialSetup : Migration
             columns: table => new
             {
                 recipe_id = table.Column<Guid>(type: "uuid", nullable: false),
-                id = table.Column<int>(type: "integer", nullable: false)
+                id = table
+                    .Column<int>(type: "integer", nullable: false)
                     .Annotation(
                         "Npgsql:ValueGenerationStrategy",
                         NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
                     ),
                 symbol_id = table.Column<Guid>(type: "uuid", nullable: false),
                 name = table.Column<string>(type: "text", nullable: false),
-                quantity = table.Column<int>(type: "integer", nullable: false)
+                quantity = table.Column<int>(type: "integer", nullable: false),
             },
             constraints: table =>
             {
@@ -144,14 +199,15 @@ public partial class InitialSetup : Migration
             columns: table => new
             {
                 recipe_id = table.Column<Guid>(type: "uuid", nullable: false),
-                id = table.Column<int>(type: "integer", nullable: false)
+                id = table
+                    .Column<int>(type: "integer", nullable: false)
                     .Annotation(
                         "Npgsql:ValueGenerationStrategy",
                         NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
                     ),
                 symbol_id = table.Column<Guid>(type: "uuid", nullable: false),
                 name = table.Column<string>(type: "text", nullable: false),
-                quantity = table.Column<int>(type: "integer", nullable: false)
+                quantity = table.Column<int>(type: "integer", nullable: false),
             },
             constraints: table =>
             {
@@ -175,16 +231,38 @@ public partial class InitialSetup : Migration
                 id = table.Column<Guid>(type: "uuid", nullable: false),
                 market_id = table.Column<Guid>(type: "uuid", nullable: false),
                 symbol_id = table.Column<Guid>(type: "uuid", nullable: false),
-                latest_average_price =
-                    table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                latest_min_price =
-                    table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                latest_max_price =
-                    table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                latest_volume =
-                    table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                latest_average_price = table.Column<decimal>(
+                    type: "numeric(18,2)",
+                    precision: 18,
+                    scale: 2,
+                    nullable: false
+                ),
+                latest_min_price = table.Column<decimal>(
+                    type: "numeric(18,2)",
+                    precision: 18,
+                    scale: 2,
+                    nullable: false
+                ),
+                latest_max_price = table.Column<decimal>(
+                    type: "numeric(18,2)",
+                    precision: 18,
+                    scale: 2,
+                    nullable: false
+                ),
+                latest_volume = table.Column<decimal>(
+                    type: "numeric(18,2)",
+                    precision: 18,
+                    scale: 2,
+                    nullable: false
+                ),
+                created_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
+                updated_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
             },
             constraints: table =>
             {
@@ -206,12 +284,31 @@ public partial class InitialSetup : Migration
             columns: table => new
             {
                 id = table.Column<Guid>(type: "uuid", nullable: false),
-                timestamp = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                timestamp = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
                 symbol_id = table.Column<Guid>(type: "uuid", nullable: false),
-                price = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                volume = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                price = table.Column<decimal>(
+                    type: "numeric(18,2)",
+                    precision: 18,
+                    scale: 2,
+                    nullable: false
+                ),
+                volume = table.Column<decimal>(
+                    type: "numeric(18,2)",
+                    precision: 18,
+                    scale: 2,
+                    nullable: false
+                ),
+                created_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
+                updated_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
             },
             constraints: table =>
             {
@@ -233,15 +330,36 @@ public partial class InitialSetup : Migration
             columns: table => new
             {
                 forecast_id = table.Column<Guid>(type: "uuid", nullable: false),
-                id = table.Column<int>(type: "integer", nullable: false)
+                id = table
+                    .Column<int>(type: "integer", nullable: false)
                     .Annotation(
                         "Npgsql:ValueGenerationStrategy",
                         NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
                     ),
-                average_price = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                min_price = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                max_price = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                volume = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false)
+                average_price = table.Column<decimal>(
+                    type: "numeric(18,2)",
+                    precision: 18,
+                    scale: 2,
+                    nullable: false
+                ),
+                min_price = table.Column<decimal>(
+                    type: "numeric(18,2)",
+                    precision: 18,
+                    scale: 2,
+                    nullable: false
+                ),
+                max_price = table.Column<decimal>(
+                    type: "numeric(18,2)",
+                    precision: 18,
+                    scale: 2,
+                    nullable: false
+                ),
+                volume = table.Column<decimal>(
+                    type: "numeric(18,2)",
+                    precision: 18,
+                    scale: 2,
+                    nullable: false
+                ),
             },
             constraints: table =>
             {
@@ -302,57 +420,30 @@ public partial class InitialSetup : Migration
         );
 
         migrationBuilder.Sql(
-            "SELECT create_hypertable('\"plutus\".\"trades\"', 'timestamp', migrate_data => TRUE);\n" +
-            "CREATE INDEX ix_symbol_id_timestamp ON \"plutus\".\"trades\" (\"symbol_id\", \"timestamp\" DESC);"
+            "SELECT create_hypertable('\"plutus\".\"trades\"', 'timestamp', migrate_data => TRUE);\n"
+                + "CREATE INDEX ix_symbol_id_timestamp ON \"plutus\".\"trades\" (\"symbol_id\", \"timestamp\" DESC);"
         );
     }
 
     /// <inheritdoc />
     protected override void Down(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.DropTable(
-            name: "forecasts_predictions",
-            schema: "plutus"
-        );
+        migrationBuilder.DropTable(name: "forecasts_predictions", schema: "plutus");
 
-        migrationBuilder.DropTable(
-            name: "recipes_inputs",
-            schema: "plutus"
-        );
+        migrationBuilder.DropTable(name: "recipes_inputs", schema: "plutus");
 
-        migrationBuilder.DropTable(
-            name: "recipes_outputs",
-            schema: "plutus"
-        );
+        migrationBuilder.DropTable(name: "recipes_outputs", schema: "plutus");
 
-        migrationBuilder.DropTable(
-            name: "trade_message",
-            schema: "plutus"
-        );
+        migrationBuilder.DropTable(name: "trade_message", schema: "plutus");
 
-        migrationBuilder.DropTable(
-            name: "trades",
-            schema: "plutus"
-        );
+        migrationBuilder.DropTable(name: "trades", schema: "plutus");
 
-        migrationBuilder.DropTable(
-            name: "forecasts",
-            schema: "plutus"
-        );
+        migrationBuilder.DropTable(name: "forecasts", schema: "plutus");
 
-        migrationBuilder.DropTable(
-            name: "recipes",
-            schema: "plutus"
-        );
+        migrationBuilder.DropTable(name: "recipes", schema: "plutus");
 
-        migrationBuilder.DropTable(
-            name: "symbols",
-            schema: "plutus"
-        );
+        migrationBuilder.DropTable(name: "symbols", schema: "plutus");
 
-        migrationBuilder.DropTable(
-            name: "markets",
-            schema: "plutus"
-        );
+        migrationBuilder.DropTable(name: "markets", schema: "plutus");
     }
 }

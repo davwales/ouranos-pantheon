@@ -27,6 +27,7 @@ public sealed class DeletePersonaEndpointTests
 
         // Assert
         result.ShouldBeOfType<Ok<DeletePersonaResponse>>();
-        await _bus.Received(1).InvokeAsync<DeletePersonaResponse>(Arg.Any<DeletePersonaInput>(), ct);
+        await _bus.Received(1)
+            .InvokeAsync<DeletePersonaResponse>(Arg.Any<DeletePersonaInput>(), ct);
     }
 }

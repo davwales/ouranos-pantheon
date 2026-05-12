@@ -1,8 +1,8 @@
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization.Chromosomes;
 using Ouranos.Pantheon.Modules.Shared.Extensions;
-using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Tests.Shared.Domain.Strategies.Optimization.Chromosomes;
 
@@ -12,7 +12,8 @@ public sealed class ForecastMomentumChromosomeTests
     public void CreateRandom_WhenForecastMomentum_ShouldSetCommonFieldsOnly()
     {
         // Arrange & Act
-        var chromosome = (ForecastMomentumChromosome)StrategyChromosome.CreateRandom(StrategyType.ForecastMomentum);
+        var chromosome = (ForecastMomentumChromosome)
+            StrategyChromosome.CreateRandom(StrategyType.ForecastMomentum);
 
         // Assert
         chromosome.Configuration.MaxPositions.ShouldNotBeNull();
@@ -28,7 +29,12 @@ public sealed class ForecastMomentumChromosomeTests
     {
         // Arrange
         var chromosome = new ForecastMomentumChromosome(
-            new TradingConfiguration { MaxPositions = 5, MaxPositionPercent = 0.1m, HoldPeriodDays = 10 },
+            new TradingConfiguration
+            {
+                MaxPositions = 5,
+                MaxPositionPercent = 0.1m,
+                HoldPeriodDays = 10,
+            },
             new ForecastMomentumConfig(1.5m, 14)
         );
 
@@ -44,7 +50,12 @@ public sealed class ForecastMomentumChromosomeTests
     {
         // Arrange
         var chromosome = new ForecastMomentumChromosome(
-            new TradingConfiguration { MaxPositions = 10, MaxPositionPercent = 0.2m, HoldPeriodDays = 15 }
+            new TradingConfiguration
+            {
+                MaxPositions = 10,
+                MaxPositionPercent = 0.2m,
+                HoldPeriodDays = 15,
+            }
         );
 
         // Act & Assert
@@ -55,9 +66,19 @@ public sealed class ForecastMomentumChromosomeTests
     public void Crossover_WhenForecastMomentum_ChildShouldInheritForecastMomentumFields()
     {
         // Arrange
-        var config1 = new TradingConfiguration { MaxPositions = 5, MaxPositionPercent = 0.2m, HoldPeriodDays = 10 };
+        var config1 = new TradingConfiguration
+        {
+            MaxPositions = 5,
+            MaxPositionPercent = 0.2m,
+            HoldPeriodDays = 10,
+        };
         var forecast1 = new ForecastMomentumConfig(1.5m, 14);
-        var config2 = new TradingConfiguration { MaxPositions = 15, MaxPositionPercent = 0.4m, HoldPeriodDays = 20 };
+        var config2 = new TradingConfiguration
+        {
+            MaxPositions = 15,
+            MaxPositionPercent = 0.4m,
+            HoldPeriodDays = 20,
+        };
         var forecast2 = new ForecastMomentumConfig(0.5m, 7);
         var parent1 = new ForecastMomentumChromosome(config1, forecast1);
         var parent2 = new ForecastMomentumChromosome(config2, forecast2);
@@ -66,7 +87,11 @@ public sealed class ForecastMomentumChromosomeTests
         var child = (ForecastMomentumChromosome)parent1.Crossover(parent2);
 
         // Assert
-        var validThresholds = new[] { forecast1.ForecastMovementThreshold, forecast2.ForecastMovementThreshold };
+        var validThresholds = new[]
+        {
+            forecast1.ForecastMovementThreshold,
+            forecast2.ForecastMovementThreshold,
+        };
         validThresholds.ShouldContain(child.ForecastMomentumConfig.ForecastMovementThreshold);
 
         var validHorizons = new[] { forecast1.ForecastHorizonDays, forecast2.ForecastHorizonDays };
@@ -78,7 +103,10 @@ public sealed class ForecastMomentumChromosomeTests
     {
         // Arrange
         var config = new TradingConfiguration();
-        var forecastConfig = new ForecastMomentumConfig(ForecastMovementThreshold: 1.5m, ForecastHorizonDays: 14);
+        var forecastConfig = new ForecastMomentumConfig(
+            ForecastMovementThreshold: 1.5m,
+            ForecastHorizonDays: 14
+        );
         var chromosome = new ForecastMomentumChromosome(config, forecastConfig);
         var strategy = Strategy.Create(
             DatabaseExtensions.CreateId<Market>(),

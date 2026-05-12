@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Plutus.Features.Positions.GetAllPositions.Schemas;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Positions.GetAllPositions;
@@ -10,8 +10,7 @@ public static class GetAllPositionsEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapGet("/api/plutus/positions", Handle)
-            .WithTags("Plutus.Positions");
+        app.MapGet("/api/plutus/positions", Handle).WithTags("Plutus.Positions");
     }
 
     internal static async Task<IResult> Handle(

@@ -1,11 +1,11 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
+using Ouranos.Pantheon.Modules.Shared.Application;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest;
@@ -49,8 +49,10 @@ public sealed class RunBacktestHandler : IPantheonHandler<RunBacktestInput, RunB
 
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        var strategy = await dbContext.Strategies
-            .FirstOrDefaultAsync(s => s.Id == command.StrategyId, cancellationToken);
+        var strategy = await dbContext.Strategies.FirstOrDefaultAsync(
+            s => s.Id == command.StrategyId,
+            cancellationToken
+        );
 
         Guard.Against.NotFound(command.StrategyId, strategy);
 
@@ -67,10 +69,17 @@ public sealed class RunBacktestHandler : IPantheonHandler<RunBacktestInput, RunB
         await dbContext.SaveChangesAsync(cancellationToken);
 
         await _bus.PublishAsync(
-            new RunBacktestMessage(backtest.Id, command.VolumeParticipationRate, command.SlippageMultiplier)
+            new RunBacktestMessage(
+                backtest.Id,
+                command.VolumeParticipationRate,
+                command.SlippageMultiplier
+            )
         );
 
-        _logger.LogDebug("Successfully handled run backtest command. Backtest ID: '{backtestId}'.", backtest.Id);
+        _logger.LogDebug(
+            "Successfully handled run backtest command. Backtest ID: '{backtestId}'.",
+            backtest.Id
+        );
         return new RunBacktestResponse(backtest.Id);
     }
 }

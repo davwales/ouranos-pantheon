@@ -21,7 +21,16 @@ public sealed class RsiSignalComputerTests
     {
         // Arrange
         var buckets = Enumerable.Range(0, 10).Select(_ => Bucket(100m)).ToList();
-        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, null, null, null, buckets);
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            0m,
+            1000m,
+            null,
+            null,
+            null,
+            buckets
+        );
 
         // Act
         var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
@@ -35,7 +44,16 @@ public sealed class RsiSignalComputerTests
     {
         // Arrange
         var buckets = Enumerable.Range(1, 20).Select(i => Bucket(i * 10m)).ToList();
-        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, null, null, null, buckets);
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            0m,
+            1000m,
+            null,
+            null,
+            null,
+            buckets
+        );
 
         // Act
         var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
@@ -50,7 +68,16 @@ public sealed class RsiSignalComputerTests
     {
         // Arrange
         var buckets = Enumerable.Range(1, 20).Select(i => Bucket(200m - i * 10m)).ToList();
-        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, null, null, null, buckets);
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            0m,
+            1000m,
+            null,
+            null,
+            null,
+            buckets
+        );
 
         // Act
         var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
@@ -65,7 +92,16 @@ public sealed class RsiSignalComputerTests
     {
         // Arrange
         var buckets = Enumerable.Range(1, 30).Select(i => Bucket(i * 5m)).ToList();
-        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, null, null, null, buckets);
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            0m,
+            1000m,
+            null,
+            null,
+            null,
+            buckets
+        );
 
         // Act
         var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
@@ -80,7 +116,16 @@ public sealed class RsiSignalComputerTests
     {
         // Arrange
         var buckets = Enumerable.Range(1, 20).Select(i => Bucket(i * 10m)).ToList();
-        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, null, null, null, buckets);
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            0m,
+            1000m,
+            null,
+            null,
+            null,
+            buckets
+        );
 
         // Act
         var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);

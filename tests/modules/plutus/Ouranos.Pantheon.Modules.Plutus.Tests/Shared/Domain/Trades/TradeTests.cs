@@ -57,7 +57,8 @@ public sealed class TradeTests
         );
 
         // Act
-        var create = () => Trade.Create(tradeId, symbolId, 100m, 10m, DateTimeOffset.UtcNow, wrongSymbol);
+        var create = () =>
+            Trade.Create(tradeId, symbolId, 100m, 10m, DateTimeOffset.UtcNow, wrongSymbol);
 
         // Assert
         create.ShouldThrow<ArgumentException>();
@@ -175,7 +176,16 @@ public sealed class TradeTests
         var bucket = new PriceBucket(DateTimeOffset.UtcNow, 100m, 90m, 110m, 500m);
 
         // Act
-        var context = new SignalComputeContext(symbolId, marketId, 0.05m, 500m, snapshot, snapshot, snapshot, [bucket]);
+        var context = new SignalComputeContext(
+            symbolId,
+            marketId,
+            0.05m,
+            500m,
+            snapshot,
+            snapshot,
+            snapshot,
+            [bucket]
+        );
 
         // Assert
         context.SymbolId.ShouldBe(symbolId);

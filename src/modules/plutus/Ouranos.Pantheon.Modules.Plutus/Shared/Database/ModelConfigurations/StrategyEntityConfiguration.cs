@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Extensions;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Database.ModelConfigurations;
 
@@ -63,7 +63,10 @@ public sealed class StrategyEntityConfiguration : IEntityTypeConfiguration<Strat
 
         builder.OwnsOne(
             s => s.RecipeArbitrageConfig,
-            config => { config.Property(c => c.MinMarginPercent).HasPrecision(18, 2); }
+            config =>
+            {
+                config.Property(c => c.MinMarginPercent).HasPrecision(18, 2);
+            }
         );
 
         builder.OwnsMany(

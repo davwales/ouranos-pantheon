@@ -10,8 +10,7 @@ public static class CompactConversationEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapPost("/api/hermes/conversations/compact", Handle)
-            .WithTags("Hermes.Conversations");
+        app.MapPost("/api/hermes/conversations/compact", Handle).WithTags("Hermes.Conversations");
     }
 
     internal static async Task Handle(
@@ -23,7 +22,10 @@ public static class CompactConversationEndpoint
     {
         SseWriter.SetSseHeaders(httpContext.Response);
 
-        var stream = await bus.InvokeAsync<IAsyncEnumerable<CompactConversationResponse>>(input, ct);
+        var stream = await bus.InvokeAsync<IAsyncEnumerable<CompactConversationResponse>>(
+            input,
+            ct
+        );
         await foreach (var chunk in stream.WithCancellation(ct))
         {
             await SseWriter.WriteEventAsync(httpContext.Response, chunk, ct);

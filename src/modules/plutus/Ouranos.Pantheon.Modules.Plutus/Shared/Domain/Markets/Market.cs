@@ -5,7 +5,8 @@ namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 
 public class Market : BaseEntity<Id<Market>>
 {
-    protected Market(Id<Market> id) : base(id)
+    protected Market(Id<Market> id)
+        : base(id)
     {
         Name = string.Empty;
         Taxes = new Taxes(null);
@@ -39,7 +40,7 @@ public class Market : BaseEntity<Id<Market>>
             Taxes = taxes,
             IsForecastingEnabled = isForecastingEnabled,
             Description = description,
-            Icon = icon
+            Icon = icon,
         };
     }
 

@@ -41,22 +41,10 @@ public partial class AddIsPublicToEntities : Migration
     /// <inheritdoc />
     protected override void Down(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.DropColumn(
-            name: "is_public",
-            schema: "hermes",
-            table: "traits"
-        );
+        migrationBuilder.DropColumn(name: "is_public", schema: "hermes", table: "traits");
 
-        migrationBuilder.DropColumn(
-            name: "is_public",
-            schema: "hermes",
-            table: "personas"
-        );
+        migrationBuilder.DropColumn(name: "is_public", schema: "hermes", table: "personas");
 
-        migrationBuilder.DropColumn(
-            name: "is_public",
-            schema: "hermes",
-            table: "model_configs"
-        );
+        migrationBuilder.DropColumn(name: "is_public", schema: "hermes", table: "model_configs");
     }
 }

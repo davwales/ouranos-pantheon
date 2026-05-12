@@ -22,14 +22,27 @@ public partial class Init : Migration
                 request = table.Column<byte[]>(type: "bytea", nullable: true),
                 retries = table.Column<int>(type: "integer", nullable: false),
                 retry_intervals = table.Column<int[]>(type: "integer[]", nullable: true),
-                is_enabled = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
+                is_enabled = table.Column<bool>(
+                    type: "boolean",
+                    nullable: false,
+                    defaultValue: true
+                ),
                 function = table.Column<string>(type: "text", nullable: true),
                 description = table.Column<string>(type: "text", nullable: true),
                 init_identifier = table.Column<string>(type: "text", nullable: true),
-                created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                created_at = table.Column<DateTime>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
+                updated_at = table.Column<DateTime>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
             },
-            constraints: table => { table.PrimaryKey("pk_cron_tickers", x => x.id); }
+            constraints: table =>
+            {
+                table.PrimaryKey("pk_cron_tickers", x => x.id);
+            }
         );
 
         migrationBuilder.CreateTable(
@@ -41,14 +54,29 @@ public partial class Init : Migration
                 function = table.Column<string>(type: "text", nullable: true),
                 description = table.Column<string>(type: "text", nullable: true),
                 init_identifier = table.Column<string>(type: "text", nullable: true),
-                created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                created_at = table.Column<DateTime>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
+                updated_at = table.Column<DateTime>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
                 status = table.Column<int>(type: "integer", nullable: false),
                 lock_holder = table.Column<string>(type: "text", nullable: true),
                 request = table.Column<byte[]>(type: "bytea", nullable: true),
-                execution_time = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                locked_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                executed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                execution_time = table.Column<DateTime>(
+                    type: "timestamp with time zone",
+                    nullable: true
+                ),
+                locked_at = table.Column<DateTime>(
+                    type: "timestamp with time zone",
+                    nullable: true
+                ),
+                executed_at = table.Column<DateTime>(
+                    type: "timestamp with time zone",
+                    nullable: true
+                ),
                 exception_message = table.Column<string>(type: "text", nullable: true),
                 skipped_reason = table.Column<string>(type: "text", nullable: true),
                 elapsed_time = table.Column<long>(type: "bigint", nullable: false),
@@ -56,7 +84,7 @@ public partial class Init : Migration
                 retry_count = table.Column<int>(type: "integer", nullable: false),
                 retry_intervals = table.Column<int[]>(type: "integer[]", nullable: true),
                 parent_id = table.Column<Guid>(type: "uuid", nullable: true),
-                run_condition = table.Column<int>(type: "integer", nullable: true)
+                run_condition = table.Column<int>(type: "integer", nullable: true),
             },
             constraints: table =>
             {
@@ -79,16 +107,31 @@ public partial class Init : Migration
                 id = table.Column<Guid>(type: "uuid", nullable: false),
                 status = table.Column<int>(type: "integer", nullable: false),
                 lock_holder = table.Column<string>(type: "text", nullable: true),
-                execution_time = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                execution_time = table.Column<DateTime>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
                 cron_ticker_id = table.Column<Guid>(type: "uuid", nullable: false),
-                locked_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                executed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                locked_at = table.Column<DateTime>(
+                    type: "timestamp with time zone",
+                    nullable: true
+                ),
+                executed_at = table.Column<DateTime>(
+                    type: "timestamp with time zone",
+                    nullable: true
+                ),
                 exception_message = table.Column<string>(type: "text", nullable: true),
                 skipped_reason = table.Column<string>(type: "text", nullable: true),
                 elapsed_time = table.Column<long>(type: "bigint", nullable: false),
                 retry_count = table.Column<int>(type: "integer", nullable: false),
-                created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                created_at = table.Column<DateTime>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
+                updated_at = table.Column<DateTime>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
             },
             constraints: table =>
             {
@@ -172,19 +215,10 @@ public partial class Init : Migration
     /// <inheritdoc />
     protected override void Down(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.DropTable(
-            name: "CronTickerOccurrences",
-            schema: "ticker"
-        );
+        migrationBuilder.DropTable(name: "CronTickerOccurrences", schema: "ticker");
 
-        migrationBuilder.DropTable(
-            name: "TimeTickers",
-            schema: "ticker"
-        );
+        migrationBuilder.DropTable(name: "TimeTickers", schema: "ticker");
 
-        migrationBuilder.DropTable(
-            name: "CronTickers",
-            schema: "ticker"
-        );
+        migrationBuilder.DropTable(name: "CronTickers", schema: "ticker");
     }
 }

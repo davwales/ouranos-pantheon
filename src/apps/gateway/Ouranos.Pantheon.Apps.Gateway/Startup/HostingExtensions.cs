@@ -1,24 +1,24 @@
-using Ouranos.Pantheon.Modules.Shared.API.Extensions;
 using Ouranos.Pantheon.Modules.Hermes;
 using Ouranos.Pantheon.Modules.Plutus;
 using Ouranos.Pantheon.Modules.Shared;
+using Ouranos.Pantheon.Modules.Shared.API.Extensions;
 
 namespace Ouranos.Pantheon.Apps.Gateway.Startup;
 
 public static class HostingExtensions
 {
     private const string CorsPolicy = "AllowLocalAndServer";
-    private static readonly IReadOnlyList<IPantheonModule> Modules = [new HermesModule(), new PlutusModule()];
+    private static readonly IReadOnlyList<IPantheonModule> Modules =
+    [
+        new HermesModule(),
+        new PlutusModule(),
+    ];
 
     public static WebApplication ConfigureBuilder(this WebApplicationBuilder builder)
     {
         builder
-            .AddOuranosCore(
-                builder.Configuration,
-                Modules
-            )
-            .Services
-            .ConfigureCors(builder.Configuration);
+            .AddOuranosCore(builder.Configuration, Modules)
+            .Services.ConfigureCors(builder.Configuration);
 
         return builder.Build();
     }

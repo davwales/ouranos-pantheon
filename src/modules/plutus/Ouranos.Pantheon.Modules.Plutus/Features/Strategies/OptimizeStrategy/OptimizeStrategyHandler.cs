@@ -1,16 +1,17 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.OptimizeStrategy.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
+using Ouranos.Pantheon.Modules.Shared.Application;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.OptimizeStrategy;
 
-public sealed class OptimizeStrategyHandler : IPantheonHandler<OptimizeStrategyInput, OptimizeStrategyResponse>
+public sealed class OptimizeStrategyHandler
+    : IPantheonHandler<OptimizeStrategyInput, OptimizeStrategyResponse>
 {
     private readonly IDbContextFactory<PlutusDbContext> _dbContextFactory;
     private readonly ILogger<OptimizeStrategyHandler> _logger;
@@ -51,8 +52,10 @@ public sealed class OptimizeStrategyHandler : IPantheonHandler<OptimizeStrategyI
             "End date must be after start date."
         );
 
-        var strategy = await dbContext.Strategies
-            .FirstOrDefaultAsync(s => s.Id == command.StrategyId, cancellationToken);
+        var strategy = await dbContext.Strategies.FirstOrDefaultAsync(
+            s => s.Id == command.StrategyId,
+            cancellationToken
+        );
 
         Guard.Against.NotFound(command.StrategyId, strategy);
 
@@ -82,7 +85,10 @@ public sealed class OptimizeStrategyHandler : IPantheonHandler<OptimizeStrategyI
             )
         );
 
-        _logger.LogDebug("Successfully handled optimize strategy command. Backtest ID: '{backtestId}'.", backtest.Id);
+        _logger.LogDebug(
+            "Successfully handled optimize strategy command. Backtest ID: '{backtestId}'.",
+            backtest.Id
+        );
         return new OptimizeStrategyResponse(backtest.Id);
     }
 }

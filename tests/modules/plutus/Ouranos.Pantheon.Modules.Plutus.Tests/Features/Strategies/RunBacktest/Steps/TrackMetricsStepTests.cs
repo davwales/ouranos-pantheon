@@ -167,11 +167,21 @@ public sealed class TrackMetricsStepTests
         var payload = new BacktestPayload(parameters);
         var currentDate = startDate.AddDays(5);
         var dateOnly = DateOnly.FromDateTime(currentDate.UtcDateTime);
-        var dailyAggregates = new List<DailyTradeAggregate> { new(symbolId, dateOnly, 200m, 200m, 200m, 1000m) };
+        var dailyAggregates = new List<DailyTradeAggregate>
+        {
+            new(symbolId, dateOnly, 200m, 200m, 200m, 1000m),
+        };
         var data = BacktestData.FromRaw(market, [], [], [], [], dailyAggregates);
         payload.Context = new BacktestContext(data, executor, 0m, 7, startDate);
         payload.Portfolio.Balance = 5000m;
-        payload.Portfolio.OpenPositions[symbolId] = new OpenPosition(symbolId, "SYM", null, 100m, 10m, currentDate);
+        payload.Portfolio.OpenPositions[symbolId] = new OpenPosition(
+            symbolId,
+            "SYM",
+            null,
+            100m,
+            10m,
+            currentDate
+        );
 
         var context = new PipelineContext(CancellationToken.None) { CurrentIteration = 5 };
         var step = new TrackMetricsStep();

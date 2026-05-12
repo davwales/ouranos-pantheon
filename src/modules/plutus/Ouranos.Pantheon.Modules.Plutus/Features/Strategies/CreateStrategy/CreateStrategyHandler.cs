@@ -1,22 +1,20 @@
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.CreateStrategy.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
+using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.CreateStrategy;
 
-public sealed class CreateStrategyHandler : IPantheonHandler<CreateStrategyInput, IdResponse<Strategy>>
+public sealed class CreateStrategyHandler
+    : IPantheonHandler<CreateStrategyInput, IdResponse<Strategy>>
 {
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<CreateStrategyHandler> _logger;
 
-    public CreateStrategyHandler(
-        ILogger<CreateStrategyHandler> logger,
-        PlutusDbContext dbContext
-    )
+    public CreateStrategyHandler(ILogger<CreateStrategyHandler> logger, PlutusDbContext dbContext)
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(dbContext);

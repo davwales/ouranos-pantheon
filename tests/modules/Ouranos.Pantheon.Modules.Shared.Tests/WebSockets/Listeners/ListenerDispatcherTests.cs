@@ -25,18 +25,10 @@ public sealed class ListenerDispatcherTests
         var cts = new CancellationTokenSource();
 
         // Act
-        await _dispatcher.HandleMessageAsync(
-            message,
-            webSocketClient,
-            cts.Token
-        );
+        await _dispatcher.HandleMessageAsync(message, webSocketClient, cts.Token);
 
         // Assert
-        await _listener.Received(1).HandleMessageAsync(
-            message,
-            webSocketClient,
-            cts.Token
-        );
+        await _listener.Received(1).HandleMessageAsync(message, webSocketClient, cts.Token);
     }
 
     [Fact]
@@ -47,17 +39,15 @@ public sealed class ListenerDispatcherTests
         var cts = new CancellationTokenSource();
 
         // Act
-        await _dispatcher.HandleMessageAsync(
-            1,
-            webSocketClient,
-            cts.Token
-        );
+        await _dispatcher.HandleMessageAsync(1, webSocketClient, cts.Token);
 
         // Assert
-        await _listener.Received(0).HandleMessageAsync(
-            Arg.Any<TestEntity>(),
-            Arg.Any<IWebSocketClient>(),
-            Arg.Any<CancellationToken>()
-        );
+        await _listener
+            .Received(0)
+            .HandleMessageAsync(
+                Arg.Any<TestEntity>(),
+                Arg.Any<IWebSocketClient>(),
+                Arg.Any<CancellationToken>()
+            );
     }
 }

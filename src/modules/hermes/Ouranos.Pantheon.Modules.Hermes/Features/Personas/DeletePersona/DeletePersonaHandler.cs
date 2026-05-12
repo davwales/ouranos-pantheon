@@ -1,21 +1,19 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Hermes.Features.Personas.DeletePersona.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
+using Ouranos.Pantheon.Modules.Shared.Application;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Personas.DeletePersona;
 
-public sealed class DeletePersonaHandler : IPantheonHandler<DeletePersonaInput, DeletePersonaResponse>
+public sealed class DeletePersonaHandler
+    : IPantheonHandler<DeletePersonaInput, DeletePersonaResponse>
 {
     private readonly HermesDbContext _dbContext;
     private readonly ILogger<DeletePersonaHandler> _logger;
 
-    public DeletePersonaHandler(
-        ILogger<DeletePersonaHandler> logger,
-        HermesDbContext dbContext
-    )
+    public DeletePersonaHandler(ILogger<DeletePersonaHandler> logger, HermesDbContext dbContext)
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(dbContext);
@@ -32,8 +30,10 @@ public sealed class DeletePersonaHandler : IPantheonHandler<DeletePersonaInput, 
         _logger.LogTrace("Attempting to handle delete persona command '{@command}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var persona = await _dbContext.Personas
-            .FirstOrDefaultAsync(p => p.Id == command.PersonaId, cancellationToken);
+        var persona = await _dbContext.Personas.FirstOrDefaultAsync(
+            p => p.Id == command.PersonaId,
+            cancellationToken
+        );
 
         Guard.Against.NotFound(command.PersonaId, persona);
 

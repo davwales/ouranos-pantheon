@@ -4,10 +4,6 @@ public sealed record OuranosMachineLearningOptions(string ConnectionString, stri
 {
     public const string SectionName = "Ouranos:OuranosMl";
 
-    public OuranosMachineLearningOptions() : this(
-        ConnectionString: string.Empty,
-        ApiKey: "no-key"
-    )
-    {
-    }
+    public OuranosMachineLearningOptions()
+        : this(ConnectionString: string.Empty, ApiKey: "no-key") { }
 }

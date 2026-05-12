@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Extensions;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Shared.Database.ModelConfigurations;
 

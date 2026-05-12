@@ -1,13 +1,13 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application;
-using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.GetRecipe.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Recipes;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
+using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Recipes.GetRecipe;
 
@@ -16,10 +16,7 @@ public sealed class GetRecipeHandler : IPantheonHandler<GetRecipeInput, GetRecip
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<GetRecipeHandler> _logger;
 
-    public GetRecipeHandler(
-        ILogger<GetRecipeHandler> logger,
-        PlutusDbContext dbContext
-    )
+    public GetRecipeHandler(ILogger<GetRecipeHandler> logger, PlutusDbContext dbContext)
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(dbContext);
@@ -36,14 +33,15 @@ public sealed class GetRecipeHandler : IPantheonHandler<GetRecipeInput, GetRecip
         _logger.LogTrace("Attempting to handle get recipe query '{@query}'.", query);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var recipe = await _dbContext.Recipes
-            .Include(r => r.Inputs)
+        var recipe = await _dbContext
+            .Recipes.Include(r => r.Inputs)
             .Include(r => r.Outputs)
             .FirstOrDefaultAsync(r => r.Id == query.RecipeId, cancellationToken);
 
         Guard.Against.NotFound(query.RecipeId, recipe);
 
-        var symbolIds = recipe.Inputs.Select(x => x.SymbolId)
+        var symbolIds = recipe
+            .Inputs.Select(x => x.SymbolId)
             .Union(recipe.Outputs.Select(x => x.SymbolId))
             .Distinct()
             .ToList();
@@ -100,12 +98,9 @@ public sealed class GetRecipeHandler : IPantheonHandler<GetRecipeInput, GetRecip
             ? DateTimeOffset.UtcNow - span
             : null;
 
-        var prices = await _dbContext.Trades
-            .AsNoTracking()
-            .Where(x =>
-                (since == null || x.Timestamp >= since) &&
-                symbolIds.Contains(x.SymbolId)
-            )
+        var prices = await _dbContext
+            .Trades.AsNoTracking()
+            .Where(x => (since == null || x.Timestamp >= since) && symbolIds.Contains(x.SymbolId))
             .OrderByDescending(x => x.Timestamp)
             .GroupBy(x => x.SymbolId)
             .Select(g => new
@@ -113,10 +108,15 @@ public sealed class GetRecipeHandler : IPantheonHandler<GetRecipeInput, GetRecip
                 SymbolId = g.Key,
                 TotalSpent = g.Sum(x => x.Price * x.Volume),
                 Volume = g.Sum(x => x.Volume),
-                LatestPrice = g.First().Price
-            }
-            )
-            .Select(x => new { x.SymbolId, AveragePrice = x.TotalSpent / x.Volume, x.LatestPrice, x.Volume })
+                LatestPrice = g.First().Price,
+            })
+            .Select(x => new
+            {
+                x.SymbolId,
+                AveragePrice = x.TotalSpent / x.Volume,
+                x.LatestPrice,
+                x.Volume,
+            })
             .ToListAsync(cancellationToken);
 
         return prices.ToDictionary(

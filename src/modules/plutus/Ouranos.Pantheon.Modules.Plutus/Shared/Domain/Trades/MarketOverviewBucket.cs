@@ -1,15 +1,14 @@
 using Ardalis.GuardClauses;
-using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
+using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Shared.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 
 public class MarketOverviewBucket : BaseEntity<Id<MarketOverviewBucket>>
 {
-    private MarketOverviewBucket(Id<MarketOverviewBucket> id) : base(id)
-    {
-    }
+    private MarketOverviewBucket(Id<MarketOverviewBucket> id)
+        : base(id) { }
 
     public Id<Market> MarketId { get; private set; }
 
@@ -27,7 +26,8 @@ public class MarketOverviewBucket : BaseEntity<Id<MarketOverviewBucket>>
 
     private Market? _market;
 
-    public Market Market => _market ?? throw new NavigationPropertyNotLoadedException<MarketOverviewBucket>();
+    public Market Market =>
+        _market ?? throw new NavigationPropertyNotLoadedException<MarketOverviewBucket>();
 
     public static MarketOverviewBucket Create(
         Id<Market> marketId,
@@ -54,7 +54,7 @@ public class MarketOverviewBucket : BaseEntity<Id<MarketOverviewBucket>>
             Volume = volume,
             TotalSpent = totalSpent,
             NumTransactions = numTransactions,
-            _market = market
+            _market = market,
         };
     }
 }

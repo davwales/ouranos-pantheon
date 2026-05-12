@@ -90,7 +90,11 @@ public sealed class TraitTests
     public void Update_WhenInvalidName_ShouldThrowArgumentException(string? newName)
     {
         // Arrange
-        var trait = Trait.Create(new Id<Trait>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>());
+        var trait = Trait.Create(
+            new Id<Trait>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
 
         // Act
         var update = () => trait.Update(newName!, _fixture.Create<string>());
@@ -106,7 +110,11 @@ public sealed class TraitTests
     public void Update_WhenInvalidContent_ShouldThrowArgumentException(string? newContent)
     {
         // Arrange
-        var trait = Trait.Create(new Id<Trait>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>());
+        var trait = Trait.Create(
+            new Id<Trait>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
 
         // Act
         var update = () => trait.Update(_fixture.Create<string>(), newContent!);

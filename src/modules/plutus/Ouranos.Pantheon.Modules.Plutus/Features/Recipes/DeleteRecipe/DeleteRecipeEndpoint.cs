@@ -12,8 +12,7 @@ public static class DeleteRecipeEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapDelete("/api/plutus/recipes/{recipeId}", Handle)
-            .WithTags("Plutus.Recipes");
+        app.MapDelete("/api/plutus/recipes/{recipeId}", Handle).WithTags("Plutus.Recipes");
     }
 
     internal static async Task<IResult> Handle(
@@ -22,6 +21,8 @@ public static class DeleteRecipeEndpoint
         CancellationToken ct
     )
     {
-        return Results.Ok(await bus.InvokeAsync<IdResponse<Recipe>>(new DeleteRecipeInput(recipeId), ct));
+        return Results.Ok(
+            await bus.InvokeAsync<IdResponse<Recipe>>(new DeleteRecipeInput(recipeId), ct)
+        );
     }
 }

@@ -19,8 +19,9 @@ public sealed class GetAllConversationsHandlerTests
     private readonly IFixture _fixture = new Fixture();
     private readonly GetAllConversationsHandler _handler;
 
-    private readonly ILogger<GetAllConversationsHandler>
-        _logger = Substitute.For<ILogger<GetAllConversationsHandler>>();
+    private readonly ILogger<GetAllConversationsHandler> _logger = Substitute.For<
+        ILogger<GetAllConversationsHandler>
+    >();
 
     private readonly HermesDbContext _dbContext;
     private readonly IFlagsmithClient _flagsmith = Substitute.For<IFlagsmithClient>();
@@ -36,15 +37,16 @@ public sealed class GetAllConversationsHandlerTests
         _flagsmith.GetEnvironmentFlags().Returns(Task.FromResult(flags));
     }
 
-    private static Conversation CreateConversation(bool isPublic) => Conversation.Create(
-        new Id<Conversation>(Guid.NewGuid().ToString()),
-        new Id<Persona>(Guid.NewGuid().ToString()),
-        new Id<ModelConfig>(Guid.NewGuid().ToString()),
-        [],
-        [],
-        Guid.NewGuid().ToString(),
-        isPublic
-    );
+    private static Conversation CreateConversation(bool isPublic) =>
+        Conversation.Create(
+            new Id<Conversation>(Guid.NewGuid().ToString()),
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [],
+            [],
+            Guid.NewGuid().ToString(),
+            isPublic
+        );
 
     [Fact]
     public async Task Handle_WhenConversationsExist_ShouldReturnAll()

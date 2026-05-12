@@ -5,9 +5,8 @@ namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
 
 public sealed class ForecastRun : BaseEntity<Id<ForecastRun>>
 {
-    private ForecastRun(Id<ForecastRun> id) : base(id)
-    {
-    }
+    private ForecastRun(Id<ForecastRun> id)
+        : base(id) { }
 
     public string ModelName { get; init; } = string.Empty;
 
@@ -21,10 +20,6 @@ public sealed class ForecastRun : BaseEntity<Id<ForecastRun>>
     {
         Guard.Against.NullOrWhiteSpace(modelName);
 
-        return new ForecastRun(id)
-        {
-            ModelName = modelName,
-            GeneratedAt = generatedAt
-        };
+        return new ForecastRun(id) { ModelName = modelName, GeneratedAt = generatedAt };
     }
 }

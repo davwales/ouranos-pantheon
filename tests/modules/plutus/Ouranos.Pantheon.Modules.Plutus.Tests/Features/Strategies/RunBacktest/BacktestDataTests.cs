@@ -27,7 +27,10 @@ public sealed class BacktestDataTests
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
         var currentDate = DateTimeOffset.UtcNow;
         var dateOnly = DateOnly.FromDateTime(currentDate.UtcDateTime);
-        var dailyAggregates = new List<DailyTradeAggregate> { new(symbolId, dateOnly, 100m, 100m, 100m, 500m) };
+        var dailyAggregates = new List<DailyTradeAggregate>
+        {
+            new(symbolId, dateOnly, 100m, 100m, 100m, 500m),
+        };
         var data = BacktestData.FromRaw(market, [], [], [], [], dailyAggregates);
 
         // Act
@@ -46,7 +49,10 @@ public sealed class BacktestDataTests
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
         var currentDate = new DateTimeOffset(2025, 1, 15, 12, 0, 0, TimeSpan.Zero);
         var otherDate = new DateOnly(2025, 1, 10);
-        var dailyAggregates = new List<DailyTradeAggregate> { new(symbolId, otherDate, 100m, 100m, 100m, 500m) };
+        var dailyAggregates = new List<DailyTradeAggregate>
+        {
+            new(symbolId, otherDate, 100m, 100m, 100m, 500m),
+        };
         var data = BacktestData.FromRaw(market, [], [], [], [], dailyAggregates);
 
         // Act
@@ -66,7 +72,10 @@ public sealed class BacktestDataTests
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
         var currentDate = DateTimeOffset.UtcNow;
         var dateOnly = DateOnly.FromDateTime(currentDate.UtcDateTime);
-        var dailyAggregates = new List<DailyTradeAggregate> { new(otherSymbolId, dateOnly, 100m, 100m, 100m, 500m) };
+        var dailyAggregates = new List<DailyTradeAggregate>
+        {
+            new(otherSymbolId, dateOnly, 100m, 100m, 100m, 500m),
+        };
         var data = BacktestData.FromRaw(market, [], [], [], [], dailyAggregates);
 
         // Act
@@ -121,17 +130,13 @@ public sealed class BacktestDataTests
         );
         var allSnapshots = new List<MarketTradeSnapshot> { shortSnap, mediumSnap, longSnap };
 
-        var data = BacktestData.FromRaw(
-            market,
-            [],
-            allSnapshots,
-            [],
-            [],
-            []
-        );
+        var data = BacktestData.FromRaw(market, [], allSnapshots, [], [], []);
 
         // Act
-        var (shortResult, mediumResult, longResult) = data.GetSnapshotsForSymbol(symbolId, DateTimeOffset.MaxValue);
+        var (shortResult, mediumResult, longResult) = data.GetSnapshotsForSymbol(
+            symbolId,
+            DateTimeOffset.MaxValue
+        );
 
         // Assert
         shortResult.ShouldNotBeNull();
@@ -164,18 +169,13 @@ public sealed class BacktestDataTests
         );
         var allSnapshots = new List<MarketTradeSnapshot> { snap };
 
-        var data = BacktestData.FromRaw(
-            market,
-            [],
-            allSnapshots,
-            [],
-            [],
-            []
-        );
+        var data = BacktestData.FromRaw(market, [], allSnapshots, [], [], []);
 
         // Act
-        var (shortResult, mediumResult, longResult) =
-            data.GetSnapshotsForSymbol(targetSymbolId, DateTimeOffset.MaxValue);
+        var (shortResult, mediumResult, longResult) = data.GetSnapshotsForSymbol(
+            targetSymbolId,
+            DateTimeOffset.MaxValue
+        );
 
         // Assert
         shortResult.ShouldBeNull();
@@ -192,17 +192,13 @@ public sealed class BacktestDataTests
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
         var allSnapshots = new List<MarketTradeSnapshot>();
 
-        var data = BacktestData.FromRaw(
-            market,
-            [],
-            allSnapshots,
-            [],
-            [],
-            []
-        );
+        var data = BacktestData.FromRaw(market, [], allSnapshots, [], [], []);
 
         // Act
-        var (shortResult, mediumResult, longResult) = data.GetSnapshotsForSymbol(symbolId, DateTimeOffset.MaxValue);
+        var (shortResult, mediumResult, longResult) = data.GetSnapshotsForSymbol(
+            symbolId,
+            DateTimeOffset.MaxValue
+        );
 
         // Assert
         shortResult.ShouldBeNull();

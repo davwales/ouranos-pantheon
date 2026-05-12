@@ -179,15 +179,16 @@ public sealed class SymbolTests
         var differentMarketId = _fixture.Create<Id<Market>>();
 
         // Act
-        var create = () => Symbol.Create(
-            _fixture.Create<Id<Symbol>>(),
-            _fixture.Create<string>(),
-            null,
-            "Test",
-            differentMarketId,
-            new AdditionalFields(),
-            market
-        );
+        var create = () =>
+            Symbol.Create(
+                _fixture.Create<Id<Symbol>>(),
+                _fixture.Create<string>(),
+                null,
+                "Test",
+                differentMarketId,
+                new AdditionalFields(),
+                market
+            );
 
         // Assert
         create.ShouldThrow<ArgumentException>();

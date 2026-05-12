@@ -15,7 +15,9 @@ public sealed class CancelBacktestHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly CancelBacktestHandler _handler;
-    private readonly ILogger<CancelBacktestHandler> _logger = Substitute.For<ILogger<CancelBacktestHandler>>();
+    private readonly ILogger<CancelBacktestHandler> _logger = Substitute.For<
+        ILogger<CancelBacktestHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
 
     public CancelBacktestHandlerTests()

@@ -6,11 +6,14 @@ namespace Ouranos.Pantheon.Modules.Shared.Tests.Infra.OuranosMachineLearning;
 
 public sealed class OuranosMachineLearningClientTests
 {
-    private readonly ILogger<OuranosMachineLearningClient> _logger =
-        Substitute.For<ILogger<OuranosMachineLearningClient>>();
+    private readonly ILogger<OuranosMachineLearningClient> _logger = Substitute.For<
+        ILogger<OuranosMachineLearningClient>
+    >();
 
-    private readonly HttpClient _httpClient =
-        new(Substitute.For<HttpMessageHandler>()) { BaseAddress = new Uri("http://test.com/v1/") };
+    private readonly HttpClient _httpClient = new(Substitute.For<HttpMessageHandler>())
+    {
+        BaseAddress = new Uri("http://test.com/v1/"),
+    };
 
     private readonly OpenAIClient _openAiClient = new(
         new System.ClientModel.ApiKeyCredential("test"),

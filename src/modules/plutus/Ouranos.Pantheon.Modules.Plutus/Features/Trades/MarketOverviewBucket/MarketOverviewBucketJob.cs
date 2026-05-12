@@ -37,48 +37,48 @@ public sealed class MarketOverviewBucketJob
     }
 
     [TickerFunction("MarketOverviewBucket_FifteenMinutes", "*/30 * * * * *")]
-    public Task ExecuteFifteenMinutes(TickerFunctionContext _, CancellationToken ct)
-        => RefreshAsync(TimeFrame.FifteenMinutes, ct);
+    public Task ExecuteFifteenMinutes(TickerFunctionContext _, CancellationToken ct) =>
+        RefreshAsync(TimeFrame.FifteenMinutes, ct);
 
     [TickerFunction("MarketOverviewBucket_OneHour", "0 */2 * * * *")]
-    public Task ExecuteOneHour(TickerFunctionContext _, CancellationToken ct)
-        => RefreshAsync(TimeFrame.OneHour, ct);
+    public Task ExecuteOneHour(TickerFunctionContext _, CancellationToken ct) =>
+        RefreshAsync(TimeFrame.OneHour, ct);
 
     [TickerFunction("MarketOverviewBucket_FourHours", "0 */5 * * * *")]
-    public Task ExecuteFourHours(TickerFunctionContext _, CancellationToken ct)
-        => RefreshAsync(TimeFrame.FourHours, ct);
+    public Task ExecuteFourHours(TickerFunctionContext _, CancellationToken ct) =>
+        RefreshAsync(TimeFrame.FourHours, ct);
 
     [TickerFunction("MarketOverviewBucket_OneDay", "0 */10 * * * *")]
-    public Task ExecuteOneDay(TickerFunctionContext _, CancellationToken ct)
-        => RefreshAsync(TimeFrame.OneDay, ct);
+    public Task ExecuteOneDay(TickerFunctionContext _, CancellationToken ct) =>
+        RefreshAsync(TimeFrame.OneDay, ct);
 
     [TickerFunction("MarketOverviewBucket_OneWeek", "0 */20 * * * *")]
-    public Task ExecuteOneWeek(TickerFunctionContext _, CancellationToken ct)
-        => RefreshAsync(TimeFrame.OneWeek, ct);
+    public Task ExecuteOneWeek(TickerFunctionContext _, CancellationToken ct) =>
+        RefreshAsync(TimeFrame.OneWeek, ct);
 
     [TickerFunction("MarketOverviewBucket_OneMonth", "0 */30 * * * *")]
-    public Task ExecuteOneMonth(TickerFunctionContext _, CancellationToken ct)
-        => RefreshAsync(TimeFrame.OneMonth, ct);
+    public Task ExecuteOneMonth(TickerFunctionContext _, CancellationToken ct) =>
+        RefreshAsync(TimeFrame.OneMonth, ct);
 
     [TickerFunction("MarketOverviewBucket_SixMonths", "0 */45 * * * *")]
-    public Task ExecuteSixMonths(TickerFunctionContext _, CancellationToken ct)
-        => RefreshAsync(TimeFrame.SixMonths, ct);
+    public Task ExecuteSixMonths(TickerFunctionContext _, CancellationToken ct) =>
+        RefreshAsync(TimeFrame.SixMonths, ct);
 
     [TickerFunction("MarketOverviewBucket_OneYear", "0 0 * * * *")]
-    public Task ExecuteOneYear(TickerFunctionContext _, CancellationToken ct)
-        => RefreshAsync(TimeFrame.OneYear, ct);
+    public Task ExecuteOneYear(TickerFunctionContext _, CancellationToken ct) =>
+        RefreshAsync(TimeFrame.OneYear, ct);
 
     [TickerFunction("MarketOverviewBucket_AllTime", "0 0 * * * *")]
-    public Task ExecuteAllTime(TickerFunctionContext _, CancellationToken ct)
-        => RefreshAsync(TimeFrame.AllTime, ct);
+    public Task ExecuteAllTime(TickerFunctionContext _, CancellationToken ct) =>
+        RefreshAsync(TimeFrame.AllTime, ct);
 
     private async Task RefreshAsync(TimeFrame frame, CancellationToken ct)
     {
-        DateTimeOffset? since = frame.ToTimeSpan() is { } span ? DateTimeOffset.UtcNow - span : null;
+        DateTimeOffset? since = frame.ToTimeSpan() is { } span
+            ? DateTimeOffset.UtcNow - span
+            : null;
 
-        var marketIds = await _dbContext.Markets.AsNoTracking()
-            .Select(m => m.Id)
-            .ToListAsync(ct);
+        var marketIds = await _dbContext.Markets.AsNoTracking().Select(m => m.Id).ToListAsync(ct);
 
         var totalBuckets = 0;
 
@@ -86,8 +86,8 @@ public sealed class MarketOverviewBucketJob
         {
             var buckets = await ComputeBucketsForMarketAsync(marketId, since, frame, ct);
 
-            var existing = await _dbContext.MarketOverviewBuckets
-                .Where(b => b.TimeFrame == frame && b.MarketId == marketId)
+            var existing = await _dbContext
+                .MarketOverviewBuckets.Where(b => b.TimeFrame == frame && b.MarketId == marketId)
                 .ToListAsync(ct);
 
             _dbContext.MarketOverviewBuckets.RemoveRange(existing);
@@ -113,7 +113,8 @@ public sealed class MarketOverviewBucketJob
         CancellationToken ct
     )
     {
-        var baseQuery = _dbContext.Trades.AsNoTracking()
+        var baseQuery = _dbContext
+            .Trades.AsNoTracking()
             .Where(t => t.Symbol.MarketId == marketId && (since == null || t.Timestamp >= since));
 
         var timeRange = await baseQuery
@@ -130,15 +131,17 @@ public sealed class MarketOverviewBucketJob
         var interval = SmartIntervalCalculator.Calculate(duration, _options.Value.NumBuckets);
         var chunkThreshold = TimeSpan.FromDays(_options.Value.ChunkThresholdDays);
 
-        var aggregates = duration > chunkThreshold
-            ? await AggregateInChunksAsync(marketId, timeRange.Min, timeRange.Max, interval, ct)
-            : await AggregateQuery(baseQuery, interval).ToListAsync(ct);
+        var aggregates =
+            duration > chunkThreshold
+                ? await AggregateInChunksAsync(marketId, timeRange.Min, timeRange.Max, interval, ct)
+                : await AggregateQuery(baseQuery, interval).ToListAsync(ct);
 
         return
         [
             .. aggregates
                 .OrderBy(a => a.BucketStart)
-                .Select(a => Bucket.Create(
+                .Select(a =>
+                    Bucket.Create(
                         marketId,
                         frame,
                         a.BucketStart,
@@ -147,7 +150,7 @@ public sealed class MarketOverviewBucketJob
                         a.TotalSpent,
                         a.NumTransactions
                     )
-                )
+                ),
         ];
     }
 
@@ -168,10 +171,10 @@ public sealed class MarketOverviewBucketJob
             var chunkEnd = chunkStart + chunkSize;
             var start = chunkStart;
 
-            var chunkQuery = _dbContext.Trades.AsNoTracking()
-                .Where(t => t.Symbol.MarketId == marketId
-                            && t.Timestamp >= start
-                            && t.Timestamp < chunkEnd
+            var chunkQuery = _dbContext
+                .Trades.AsNoTracking()
+                .Where(t =>
+                    t.Symbol.MarketId == marketId && t.Timestamp >= start && t.Timestamp < chunkEnd
                 );
 
             var chunkAggregates = await AggregateQuery(chunkQuery, interval).ToListAsync(ct);
@@ -209,11 +212,10 @@ public sealed class MarketOverviewBucketJob
         query
             .GroupBy(t => TimescaleDbFunctions.TimeBucket(interval, t.Timestamp))
             .Select(g => new MarketBucketAggregate(
-                    g.Key,
-                    g.Sum(t => t.Price * t.Volume),
-                    g.Sum(t => t.Volume),
-                    g.Count(),
-                    g.Sum(t => t.Price * t.Volume) / g.Sum(t => t.Volume)
-                )
-            );
+                g.Key,
+                g.Sum(t => t.Price * t.Volume),
+                g.Sum(t => t.Volume),
+                g.Count(),
+                g.Sum(t => t.Price * t.Volume) / g.Sum(t => t.Volume)
+            ));
 }

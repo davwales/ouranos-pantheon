@@ -5,7 +5,6 @@ public sealed record MeanReversionConfig(
     int? MeanTimeFrameValue = null
 )
 {
-    public MeanReversionConfig() : this(null, null)
-    {
-    }
+    public MeanReversionConfig()
+        : this(null, null) { }
 }

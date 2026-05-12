@@ -10,17 +10,25 @@ public interface IWebSocketClientBuilder
 
     IWebSocketClientBuilder UseBufferSize(uint bufferSize);
 
-    IWebSocketClientBuilder UseConstantMessage<TMessage>(Action<IConstantMessagingBuilder<TMessage>> configuration);
+    IWebSocketClientBuilder UseConstantMessage<TMessage>(
+        Action<IConstantMessagingBuilder<TMessage>> configuration
+    );
 
-    IWebSocketClientBuilder UseDiscriminatedMessages(Action<IDiscriminatedRegistryBuilder> configuration);
+    IWebSocketClientBuilder UseDiscriminatedMessages(
+        Action<IDiscriminatedRegistryBuilder> configuration
+    );
 
-    IWebSocketClientBuilder UseSerializer<T>() where T : class, IMessageSerializer;
+    IWebSocketClientBuilder UseSerializer<T>()
+        where T : class, IMessageSerializer;
 
-    IWebSocketClientBuilder UseConverter<T>() where T : class, IMessageConverter;
+    IWebSocketClientBuilder UseConverter<T>()
+        where T : class, IMessageConverter;
 
-    IWebSocketClientBuilder UseTypeResolver<T>() where T : class, ITypeResolver;
+    IWebSocketClientBuilder UseTypeResolver<T>()
+        where T : class, ITypeResolver;
 
-    IWebSocketClientBuilder UseInitializer<T>() where T : class, IWebSocketInitializer;
+    IWebSocketClientBuilder UseInitializer<T>()
+        where T : class, IWebSocketInitializer;
 
     IServiceCollection Build();
 }

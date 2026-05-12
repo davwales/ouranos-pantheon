@@ -11,8 +11,7 @@ public static class CreateRecipeEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapPost("/api/plutus/recipes", Handle)
-            .WithTags("Plutus.Recipes");
+        app.MapPost("/api/plutus/recipes", Handle).WithTags("Plutus.Recipes");
     }
 
     internal static async Task<IResult> Handle(

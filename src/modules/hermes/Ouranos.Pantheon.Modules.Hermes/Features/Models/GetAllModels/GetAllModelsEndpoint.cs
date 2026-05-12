@@ -9,8 +9,7 @@ public static class GetAllModelsEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapGet("/api/hermes/models", Handle)
-            .WithTags("Hermes.Models");
+        app.MapGet("/api/hermes/models", Handle).WithTags("Hermes.Models");
     }
 
     internal static async Task<IResult> Handle(

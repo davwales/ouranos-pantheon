@@ -20,8 +20,14 @@ public partial class AddConversations : Migration
                 persona_id = table.Column<Guid>(type: "uuid", nullable: false),
                 model_config_id = table.Column<Guid>(type: "uuid", nullable: false),
                 is_public = table.Column<bool>(type: "boolean", nullable: false),
-                created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                created_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
+                updated_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
             },
             constraints: table =>
             {
@@ -51,11 +57,14 @@ public partial class AddConversations : Migration
             columns: table => new
             {
                 conversation_id = table.Column<Guid>(type: "uuid", nullable: false),
-                traits_id = table.Column<Guid>(type: "uuid", nullable: false)
+                traits_id = table.Column<Guid>(type: "uuid", nullable: false),
             },
             constraints: table =>
             {
-                table.PrimaryKey("pk_conversation_trait", x => new { x.conversation_id, x.traits_id });
+                table.PrimaryKey(
+                    "pk_conversation_trait",
+                    x => new { x.conversation_id, x.traits_id }
+                );
                 table.ForeignKey(
                     name: "fk_conversation_trait_conversations_conversation_id",
                     column: x => x.conversation_id,
@@ -85,8 +94,14 @@ public partial class AddConversations : Migration
                 content = table.Column<string>(type: "text", nullable: false),
                 role = table.Column<string>(type: "text", nullable: false),
                 sort_order = table.Column<int>(type: "integer", nullable: false),
-                created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                created_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
+                updated_at = table.Column<DateTimeOffset>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
             },
             constraints: table =>
             {
@@ -134,19 +149,10 @@ public partial class AddConversations : Migration
     /// <inheritdoc />
     protected override void Down(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.DropTable(
-            name: "conversation_trait",
-            schema: "hermes"
-        );
+        migrationBuilder.DropTable(name: "conversation_trait", schema: "hermes");
 
-        migrationBuilder.DropTable(
-            name: "messages",
-            schema: "hermes"
-        );
+        migrationBuilder.DropTable(name: "messages", schema: "hermes");
 
-        migrationBuilder.DropTable(
-            name: "conversations",
-            schema: "hermes"
-        );
+        migrationBuilder.DropTable(name: "conversations", schema: "hermes");
     }
 }

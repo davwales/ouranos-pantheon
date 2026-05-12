@@ -13,7 +13,8 @@ using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning.Dtos;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.CreateConversation;
 
-public sealed class CreateConversationHandler : IPantheonHandler<CreateConversationInput, CreateConversationResponse>
+public sealed class CreateConversationHandler
+    : IPantheonHandler<CreateConversationInput, CreateConversationResponse>
 {
     private const int MaxGeneratedNameLength = 60;
 
@@ -50,22 +51,25 @@ public sealed class CreateConversationHandler : IPantheonHandler<CreateConversat
 
         var conversationId = DatabaseExtensions.CreateId<Conversation>();
 
-        var messages = command.Messages
-            .Select((m, index) => Message.Create(
-                    DatabaseExtensions.CreateId<Message>(),
-                    conversationId,
-                    m.Content,
-                    m.Role,
-                    index
-                )
+        var messages = command
+            .Messages.Select(
+                (m, index) =>
+                    Message.Create(
+                        DatabaseExtensions.CreateId<Message>(),
+                        conversationId,
+                        m.Content,
+                        m.Role,
+                        index
+                    )
             )
             .ToList();
 
-        var traits = command.TraitIds.Length > 0
-            ? await _dbContext.Traits
-                .Where(t => command.TraitIds.Contains(t.Id))
-                .ToListAsync(cancellationToken)
-            : [];
+        var traits =
+            command.TraitIds.Length > 0
+                ? await _dbContext
+                    .Traits.Where(t => command.TraitIds.Contains(t.Id))
+                    .ToListAsync(cancellationToken)
+                : [];
 
         var name = string.IsNullOrWhiteSpace(command.Name)
             ? await GenerateNameAsync(command, cancellationToken)
@@ -81,8 +85,11 @@ public sealed class CreateConversationHandler : IPantheonHandler<CreateConversat
             command.IsPublic
         );
 
-        if (command.InputTokenCount.HasValue && command.OutputTokenCount.HasValue &&
-            command.TotalTokenCount.HasValue)
+        if (
+            command.InputTokenCount.HasValue
+            && command.OutputTokenCount.HasValue
+            && command.TotalTokenCount.HasValue
+        )
         {
             conversation.RecordTokenUsage(
                 command.InputTokenCount.Value,
@@ -101,7 +108,10 @@ public sealed class CreateConversationHandler : IPantheonHandler<CreateConversat
         return new CreateConversationResponse(conversation.Id, conversation.Name);
     }
 
-    private async Task<string?> GenerateNameAsync(CreateConversationInput command, CancellationToken cancellationToken)
+    private async Task<string?> GenerateNameAsync(
+        CreateConversationInput command,
+        CancellationToken cancellationToken
+    )
     {
         var options = _options.Value;
         if (command.Messages.Count == 0 || !options.IsConversationNameGenerationEnabled)
@@ -113,18 +123,19 @@ public sealed class CreateConversationHandler : IPantheonHandler<CreateConversat
         {
             var messages = new List<MessageDto>
             {
-                new(
-                    _options.Value.ConversationNameSystemPrompt,
-                    RoleDto.System
-                ),
+                new(_options.Value.ConversationNameSystemPrompt, RoleDto.System),
             };
 
-            messages.AddRange(command.Messages.Select(m => new MessageDto(m.Content, MapRole(m.Role))));
+            messages.AddRange(
+                command.Messages.Select(m => new MessageDto(m.Content, MapRole(m.Role)))
+            );
 
             var lastMessage = messages.Last();
             if (lastMessage.Role != RoleDto.User)
             {
-                messages.Add(new MessageDto("Generate a name using the prior content.", RoleDto.User));
+                messages.Add(
+                    new MessageDto("Generate a name using the prior content.", RoleDto.User)
+                );
             }
 
             var result = await _mlClient.GenerateChatCompletionAsync(
@@ -145,16 +156,20 @@ public sealed class CreateConversationHandler : IPantheonHandler<CreateConversat
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to auto-generate conversation name; falling back to default.");
+            _logger.LogWarning(
+                ex,
+                "Failed to auto-generate conversation name; falling back to default."
+            );
             return null;
         }
     }
 
-    private RoleDto MapRole(Role role) => role switch
-    {
-        Role.System => RoleDto.System,
-        Role.Assistant => RoleDto.Assistant,
-        Role.User => RoleDto.User,
-        _ => throw new ArgumentException($"Unsupported role: {role}", nameof(role))
-    };
+    private RoleDto MapRole(Role role) =>
+        role switch
+        {
+            Role.System => RoleDto.System,
+            Role.Assistant => RoleDto.Assistant,
+            Role.User => RoleDto.User,
+            _ => throw new ArgumentException($"Unsupported role: {role}", nameof(role)),
+        };
 }

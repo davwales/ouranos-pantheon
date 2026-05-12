@@ -16,7 +16,9 @@ public sealed class GetRecommendationsHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly GetRecommendationsHandler _handler;
-    private readonly ILogger<GetRecommendationsHandler> _logger = Substitute.For<ILogger<GetRecommendationsHandler>>();
+    private readonly ILogger<GetRecommendationsHandler> _logger = Substitute.For<
+        ILogger<GetRecommendationsHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
 
     public GetRecommendationsHandlerTests()
@@ -64,11 +66,7 @@ public sealed class GetRecommendationsHandlerTests
         await _dbContext.Strategies.AddAsync(strategy);
         await _dbContext.SaveChangesAsync();
 
-        var query = new GetRecommendationsInput(
-            strategy.Id,
-            strategy.MarketId,
-            10000m
-        );
+        var query = new GetRecommendationsInput(strategy.Id, strategy.MarketId, 10000m);
 
         // Act
         var act = async () => await _handler.Handle(query, CancellationToken.None);
@@ -97,11 +95,7 @@ public sealed class GetRecommendationsHandlerTests
         await _dbContext.Strategies.AddAsync(strategy);
         await _dbContext.SaveChangesAsync();
 
-        var query = new GetRecommendationsInput(
-            strategy.Id,
-            marketId,
-            10000m
-        );
+        var query = new GetRecommendationsInput(strategy.Id, marketId, 10000m);
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
@@ -132,11 +126,7 @@ public sealed class GetRecommendationsHandlerTests
         await _dbContext.Strategies.AddAsync(strategy);
         await _dbContext.SaveChangesAsync();
 
-        var query = new GetRecommendationsInput(
-            strategy.Id,
-            marketId2,
-            10000m
-        );
+        var query = new GetRecommendationsInput(strategy.Id, marketId2, 10000m);
 
         // Act
         var act = async () => await _handler.Handle(query, CancellationToken.None);

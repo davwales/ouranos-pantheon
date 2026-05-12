@@ -9,8 +9,7 @@ public static class GetSymbolSignalsEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapGet("/api/plutus/symbols/{symbolId}/signals", Handle)
-            .WithTags("Plutus.Signals");
+        app.MapGet("/api/plutus/symbols/{symbolId}/signals", Handle).WithTags("Plutus.Signals");
     }
 
     internal static async Task<IResult> Handle(

@@ -117,12 +117,11 @@ public sealed class ForecastGeneratorJob
                         [
                             .. predictions[i]
                                 .Select(p => new ForecastPoint(
-                                        p.AveragePrice,
-                                        p.MinPrice,
-                                        p.MaxPrice,
-                                        p.Volume
-                                    )
-                                )
+                                    p.AveragePrice,
+                                    p.MinPrice,
+                                    p.MaxPrice,
+                                    p.Volume
+                                )),
                         ]
                     )
                 );
@@ -149,8 +148,8 @@ public sealed class ForecastGeneratorJob
             if (!_options.Value.Forecasting.RemoveOutdatedForecasts)
             {
                 var forecastSymbolIds = forecasts.Select(f => f.SymbolId).ToList();
-                var outdated = await _dbContext.Forecasts
-                    .Where(f => forecastSymbolIds.Contains(f.SymbolId))
+                var outdated = await _dbContext
+                    .Forecasts.Where(f => forecastSymbolIds.Contains(f.SymbolId))
                     .ToListAsync(ct);
                 _dbContext.Forecasts.RemoveRange(outdated);
             }
@@ -167,7 +166,8 @@ public sealed class ForecastGeneratorJob
 
     private async Task<List<Symbol>> LoadForecastableSymbolsAsync(CancellationToken ct)
     {
-        var forecastableMarketIds = await _dbContext.Markets.AsNoTracking()
+        var forecastableMarketIds = await _dbContext
+            .Markets.AsNoTracking()
             .Where(m => m.IsForecastingEnabled)
             .Select(m => m.Id)
             .ToListAsync(ct);
@@ -177,7 +177,8 @@ public sealed class ForecastGeneratorJob
             return [];
         }
 
-        return await _dbContext.Symbols.AsNoTracking()
+        return await _dbContext
+            .Symbols.AsNoTracking()
             .Where(s => forecastableMarketIds.Contains(s.MarketId))
             .ToListAsync(ct);
     }
@@ -191,14 +192,14 @@ public sealed class ForecastGeneratorJob
         var since = DateTimeOffset.UtcNow - TimeSpan.FromDays(historyDays);
         var symbolIds = symbols.Select(s => s.Id).ToHashSet();
 
-        var bucketedTrades = await _dbContext.Trades.AsNoTracking()
+        var bucketedTrades = await _dbContext
+            .Trades.AsNoTracking()
             .Where(t => symbolIds.Contains(t.SymbolId) && t.Timestamp >= since)
             .GroupBy(t => new
             {
                 t.SymbolId,
-                Bucket = TimescaleDbFunctions.TimeBucket(TimeSpan.FromDays(1), t.Timestamp)
-            }
-            )
+                Bucket = TimescaleDbFunctions.TimeBucket(TimeSpan.FromDays(1), t.Timestamp),
+            })
             .Select(g => new
             {
                 g.Key.SymbolId,
@@ -206,9 +207,8 @@ public sealed class ForecastGeneratorJob
                 Volume = g.Sum(t => t.Volume),
                 AveragePrice = g.Sum(t => t.Price * t.Volume) / g.Sum(t => t.Volume),
                 MinPrice = g.Min(t => t.Price),
-                MaxPrice = g.Max(t => t.Price)
-            }
-            )
+                MaxPrice = g.Max(t => t.Price),
+            })
             .ToListAsync(ct);
 
         var bucketsBySymbol = bucketedTrades
@@ -222,18 +222,16 @@ public sealed class ForecastGeneratorJob
             .. bucketsBySymbol
                 .Where(kvp => kvp.Value.Count == historyDays)
                 .Select(kvp => new SymbolForecastInput(
-                        symbolDict[kvp.Key],
-                        [
-                            .. kvp.Value.Select(b => new MlForecastPoint(
-                                    b.AveragePrice,
-                                    b.MinPrice,
-                                    b.MaxPrice,
-                                    b.Volume
-                                )
-                            )
-                        ]
-                    )
-                )
+                    symbolDict[kvp.Key],
+                    [
+                        .. kvp.Value.Select(b => new MlForecastPoint(
+                            b.AveragePrice,
+                            b.MinPrice,
+                            b.MaxPrice,
+                            b.Volume
+                        )),
+                    ]
+                )),
         ];
     }
 }

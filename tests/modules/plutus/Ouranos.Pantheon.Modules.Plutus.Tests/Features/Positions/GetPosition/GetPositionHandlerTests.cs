@@ -16,7 +16,9 @@ public sealed class GetPositionHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly GetPositionHandler _handler;
-    private readonly ILogger<GetPositionHandler> _logger = Substitute.For<ILogger<GetPositionHandler>>();
+    private readonly ILogger<GetPositionHandler> _logger = Substitute.For<
+        ILogger<GetPositionHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
 
     public GetPositionHandlerTests()

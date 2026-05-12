@@ -39,7 +39,15 @@ public sealed class ComputeResultsStepTests
         var closedPositions = new List<BacktestPosition> { pos1, pos2 };
 
         // Act
-        var results = ComputeResultsStep.ComputeResults(budget, balance, maxDrawdown, 12000m, closedPositions, portfolioValues, 10);
+        var results = ComputeResultsStep.ComputeResults(
+            budget,
+            balance,
+            maxDrawdown,
+            12000m,
+            closedPositions,
+            portfolioValues,
+            10
+        );
 
         // Assert
         results.TotalReturn.ShouldBe(2000m);
@@ -87,7 +95,15 @@ public sealed class ComputeResultsStepTests
         var closedPositions = new List<BacktestPosition> { winPos, lossPos };
 
         // Act
-        var results = ComputeResultsStep.ComputeResults(budget, balance, maxDrawdown, 10500m, closedPositions, portfolioValues, 10);
+        var results = ComputeResultsStep.ComputeResults(
+            budget,
+            balance,
+            maxDrawdown,
+            10500m,
+            closedPositions,
+            portfolioValues,
+            10
+        );
 
         // Assert
         results.TotalReturn.ShouldBe(500m);
@@ -108,7 +124,15 @@ public sealed class ComputeResultsStepTests
         var portfolioValues = new List<decimal>();
 
         // Act
-        var results = ComputeResultsStep.ComputeResults(budget, balance, maxDrawdown, 10000m, closedPositions, portfolioValues, 10);
+        var results = ComputeResultsStep.ComputeResults(
+            budget,
+            balance,
+            maxDrawdown,
+            10000m,
+            closedPositions,
+            portfolioValues,
+            10
+        );
 
         // Assert
         results.TotalReturn.ShouldBe(0m);
@@ -152,14 +176,7 @@ public sealed class ComputeResultsStepTests
     public void ComputeSharpeRatio_WhenIncreasingValues_ReturnsPositive()
     {
         // Arrange
-        var values = new List<decimal>
-        {
-            10000m,
-            10100m,
-            10200m,
-            10300m,
-            10400m
-        };
+        var values = new List<decimal> { 10000m, 10100m, 10200m, 10300m, 10400m };
 
         // Act
         var result = ComputeResultsStep.ComputeSharpeRatio(values);
@@ -172,14 +189,7 @@ public sealed class ComputeResultsStepTests
     public void ComputeSharpeRatio_WhenDecreasingValues_ReturnsNegative()
     {
         // Arrange
-        var values = new List<decimal>
-        {
-            10400m,
-            10300m,
-            10200m,
-            10100m,
-            10000m
-        };
+        var values = new List<decimal> { 10400m, 10300m, 10200m, 10100m, 10000m };
 
         // Act
         var result = ComputeResultsStep.ComputeSharpeRatio(values);
@@ -205,14 +215,7 @@ public sealed class ComputeResultsStepTests
     public void ComputeSharpeRatio_WhenAllZeroValues_ReturnsZero()
     {
         // Arrange
-        var values = new List<decimal>
-        {
-            0m,
-            0m,
-            0m,
-            0m,
-            0m
-        };
+        var values = new List<decimal> { 0m, 0m, 0m, 0m, 0m };
 
         // Act
         var result = ComputeResultsStep.ComputeSharpeRatio(values);

@@ -5,7 +5,6 @@ public sealed record ForecastMomentumConfig(
     int? ForecastHorizonDays = null
 )
 {
-    public ForecastMomentumConfig() : this(null, null)
-    {
-    }
+    public ForecastMomentumConfig()
+        : this(null, null) { }
 }

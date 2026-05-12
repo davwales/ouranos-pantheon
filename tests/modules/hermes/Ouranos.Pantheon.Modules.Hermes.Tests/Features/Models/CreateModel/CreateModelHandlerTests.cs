@@ -14,7 +14,9 @@ public sealed class CreateModelHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly CreateModelHandler _handler;
-    private readonly ILogger<CreateModelHandler> _logger = Substitute.For<ILogger<CreateModelHandler>>();
+    private readonly ILogger<CreateModelHandler> _logger = Substitute.For<
+        ILogger<CreateModelHandler>
+    >();
     private readonly HermesDbContext _dbContext;
 
     public CreateModelHandlerTests()

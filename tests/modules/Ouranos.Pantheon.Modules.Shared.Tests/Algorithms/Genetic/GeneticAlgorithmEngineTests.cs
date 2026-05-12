@@ -18,9 +18,7 @@ public sealed class GeneticAlgorithmEngineTests
 
         // Assert
         actualFitness.ShouldBe(
-            fitnessComponents.Sum(c =>
-                c.Weight * c.FitnessFunction(chromosome)
-            )
+            fitnessComponents.Sum(c => c.Weight * c.FitnessFunction(chromosome))
         );
     }
 
@@ -34,8 +32,15 @@ public sealed class GeneticAlgorithmEngineTests
 
         var fixture = new Fixture();
         var fitnessComponents = fixture.CreateMany<FitnessComponent<bool>>().ToList();
-        var engine = new GeneticAlgorithmEngine<bool>(populationSize, mutationRate, elitismRate, fitnessComponents);
-        var population = fixture.CreateMany<TestChromosome>(populationSize).ToArray<IChromosome<bool>>();
+        var engine = new GeneticAlgorithmEngine<bool>(
+            populationSize,
+            mutationRate,
+            elitismRate,
+            fitnessComponents
+        );
+        var population = fixture
+            .CreateMany<TestChromosome>(populationSize)
+            .ToArray<IChromosome<bool>>();
 
         // Act
         var actualChromosome = engine.Evolve(population, 2);
@@ -54,8 +59,15 @@ public sealed class GeneticAlgorithmEngineTests
 
         var fixture = new Fixture();
         var fitnessComponents = fixture.CreateMany<FitnessComponent<bool>>().ToList();
-        var engine = new GeneticAlgorithmEngine<bool>(populationSize, mutationRate, elitismRate, fitnessComponents);
-        var population = fixture.CreateMany<TestChromosome>(populationSize).ToArray<IChromosome<bool>>();
+        var engine = new GeneticAlgorithmEngine<bool>(
+            populationSize,
+            mutationRate,
+            elitismRate,
+            fitnessComponents
+        );
+        var population = fixture
+            .CreateMany<TestChromosome>(populationSize)
+            .ToArray<IChromosome<bool>>();
 
         // Act
         var actualChromosome = engine.Evolve(population, 2, 0);

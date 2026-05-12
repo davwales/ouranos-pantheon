@@ -1,13 +1,14 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketOverview.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Shared.Application;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketOverview;
 
-public sealed class GetMarketOverviewHandler : IPantheonHandler<GetMarketOverviewInput, GetMarketOverviewResponse>
+public sealed class GetMarketOverviewHandler
+    : IPantheonHandler<GetMarketOverviewInput, GetMarketOverviewResponse>
 {
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<GetMarketOverviewHandler> _logger;
@@ -32,8 +33,8 @@ public sealed class GetMarketOverviewHandler : IPantheonHandler<GetMarketOvervie
         _logger.LogTrace("Attempting to handle get market overview query '{@query}'.", query);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var buckets = await _dbContext.MarketOverviewBuckets
-            .AsNoTracking()
+        var buckets = await _dbContext
+            .MarketOverviewBuckets.AsNoTracking()
             .Where(b => b.MarketId == query.MarketId && b.TimeFrame == query.TimeFrame)
             .OrderBy(b => b.BucketStart)
             .ToListAsync(cancellationToken);
@@ -55,16 +56,21 @@ public sealed class GetMarketOverviewHandler : IPantheonHandler<GetMarketOvervie
 
         var trades = buckets
             .Select(b => new GetMarketOverviewBucketResponse(
-                    b.AveragePrice,
-                    b.Volume,
-                    b.TotalSpent,
-                    b.NumTransactions,
-                    b.BucketStart
-                )
-            )
+                b.AveragePrice,
+                b.Volume,
+                b.TotalSpent,
+                b.NumTransactions,
+                b.BucketStart
+            ))
             .ToList();
 
         _logger.LogDebug("Successfully handled get market overview request.");
-        return new GetMarketOverviewResponse(averagePrice, totalSpent, volume, numTransactions, trades);
+        return new GetMarketOverviewResponse(
+            averagePrice,
+            totalSpent,
+            volume,
+            numTransactions,
+            trades
+        );
     }
 }

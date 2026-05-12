@@ -14,7 +14,9 @@ public sealed class UpdateMarketHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly UpdateMarketHandler _handler;
-    private readonly ILogger<UpdateMarketHandler> _logger = Substitute.For<ILogger<UpdateMarketHandler>>();
+    private readonly ILogger<UpdateMarketHandler> _logger = Substitute.For<
+        ILogger<UpdateMarketHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
 
     public UpdateMarketHandlerTests()

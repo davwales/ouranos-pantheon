@@ -19,7 +19,10 @@ public sealed class GetDailySymbolSummaryEndpointTests
         var symbolId = new Id<Symbol>(Guid.NewGuid().ToString());
         var expected = new GetDailySymbolSummaryResponse(100m, 90m, 110m, 50m);
 
-        _bus.InvokeAsync<GetDailySymbolSummaryResponse>(Arg.Any<object>(), Arg.Any<CancellationToken>())
+        _bus.InvokeAsync<GetDailySymbolSummaryResponse>(
+                Arg.Any<object>(),
+                Arg.Any<CancellationToken>()
+            )
             .Returns(Task.FromResult(expected));
 
         // Act
@@ -27,6 +30,7 @@ public sealed class GetDailySymbolSummaryEndpointTests
 
         // Assert
         result.ShouldBeOfType<Ok<GetDailySymbolSummaryResponse>>();
-        await _bus.Received(1).InvokeAsync<GetDailySymbolSummaryResponse>(Arg.Any<GetDailySymbolSummaryInput>(), ct);
+        await _bus.Received(1)
+            .InvokeAsync<GetDailySymbolSummaryResponse>(Arg.Any<GetDailySymbolSummaryInput>(), ct);
     }
 }

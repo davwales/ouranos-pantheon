@@ -12,8 +12,7 @@ public static class GetRecipeEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapGet("/api/plutus/recipes/{recipeId}", Handle)
-            .WithTags("Plutus.Recipes");
+        app.MapGet("/api/plutus/recipes/{recipeId}", Handle).WithTags("Plutus.Recipes");
     }
 
     internal static async Task<IResult> Handle(
@@ -23,7 +22,10 @@ public static class GetRecipeEndpoint
         CancellationToken ct
     )
     {
-        var result = await bus.InvokeAsync<GetRecipeResponse>(new GetRecipeInput(recipeId, timeFrame), ct);
+        var result = await bus.InvokeAsync<GetRecipeResponse>(
+            new GetRecipeInput(recipeId, timeFrame),
+            ct
+        );
         return Results.Ok(result);
     }
 }

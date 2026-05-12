@@ -11,9 +11,7 @@ public sealed class SignalWeightedChromosome(
     public SignalWeightedConfig SignalWeightedConfig { get; private set; } = signalWeightedConfig;
 
     public SignalWeightedChromosome(TradingConfiguration configuration)
-        : this(configuration, new SignalWeightedConfig())
-    {
-    }
+        : this(configuration, new SignalWeightedConfig()) { }
 
     public override BacktestParameters ApplyConfigOverrides(BacktestParameters parameters)
     {
@@ -31,11 +29,17 @@ public sealed class SignalWeightedChromosome(
     {
         if (other is not SignalWeightedChromosome otherChromosome)
         {
-            throw new InvalidOperationException($"Crossover partner must be a {nameof(SignalWeightedChromosome)}.");
+            throw new InvalidOperationException(
+                $"Crossover partner must be a {nameof(SignalWeightedChromosome)}."
+            );
         }
 
         var random = Random.Shared;
-        var childConfig = CrossoverCommonFields(Configuration, otherChromosome.Configuration, random);
+        var childConfig = CrossoverCommonFields(
+            Configuration,
+            otherChromosome.Configuration,
+            random
+        );
         var childWeights = CrossoverSignalWeightFields(
             SignalWeightedConfig,
             otherChromosome.SignalWeightedConfig,
@@ -100,7 +104,9 @@ public sealed class SignalWeightedChromosome(
             random.NextDouble() < 0.5 ? parent1.TrendMomentumWeight : parent2.TrendMomentumWeight,
             random.NextDouble() < 0.5 ? parent1.BollingerBandsWeight : parent2.BollingerBandsWeight,
             random.NextDouble() < 0.5 ? parent1.RsiWeight : parent2.RsiWeight,
-            random.NextDouble() < 0.5 ? parent1.MovingAverageCrossoverWeight : parent2.MovingAverageCrossoverWeight,
+            random.NextDouble() < 0.5
+                ? parent1.MovingAverageCrossoverWeight
+                : parent2.MovingAverageCrossoverWeight,
             random.NextDouble() < 0.5 ? parent1.PriceVelocityWeight : parent2.PriceVelocityWeight
         );
     }

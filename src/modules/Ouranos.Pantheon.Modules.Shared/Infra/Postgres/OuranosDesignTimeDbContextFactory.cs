@@ -8,9 +8,10 @@ public abstract class OuranosDesignTimeDbContextFactory<TContext>(params string[
     : IDesignTimeDbContextFactory<TContext>
     where TContext : OuranosDbContext
 {
-    private readonly string[] _configFiles = configFiles.Length == 0
-        ? ["appsettings.json", "appsettings.Development.json"]
-        : configFiles;
+    private readonly string[] _configFiles =
+        configFiles.Length == 0
+            ? ["appsettings.json", "appsettings.Development.json"]
+            : configFiles;
 
     public TContext CreateDbContext(string[] args)
     {
@@ -22,8 +23,9 @@ public abstract class OuranosDesignTimeDbContextFactory<TContext>(params string[
 
         var configuration = configurationBuilder.Build();
 
-        var postgresOptions = configuration.GetSection(PostgresOptions.SectionName).Get<PostgresOptions>()
-                              ?? throw new InvalidOperationException("Postgres options not found.");
+        var postgresOptions =
+            configuration.GetSection(PostgresOptions.SectionName).Get<PostgresOptions>()
+            ?? throw new InvalidOperationException("Postgres options not found.");
 
         var optionsBuilder = new DbContextOptionsBuilder<TContext>();
         optionsBuilder.UseNpgsql(postgresOptions.GetConnectionString());

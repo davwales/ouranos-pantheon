@@ -1,12 +1,12 @@
 using Ardalis.GuardClauses;
+using Flagsmith;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.GetModel.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
-using Flagsmith;
+using Ouranos.Pantheon.Modules.Shared.Application;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Models.GetModel;
 
@@ -39,8 +39,10 @@ public sealed class GetModelHandler : IPantheonHandler<GetModelInput, GetModelRe
         _logger.LogTrace("Attempting to handle get model query '{@query}'.", query);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var model = await _dbContext.ModelConfigs
-            .FirstOrDefaultAsync(m => m.Id == query.ModelId, cancellationToken);
+        var model = await _dbContext.ModelConfigs.FirstOrDefaultAsync(
+            m => m.Id == query.ModelId,
+            cancellationToken
+        );
 
         Guard.Against.NotFound(query.ModelId, model);
 

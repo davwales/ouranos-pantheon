@@ -20,7 +20,10 @@ public sealed class GetAllPositionsEndpointTests
         var input = new GetAllPositionsInput(new Id<Market>(Guid.NewGuid().ToString()));
         var expected = new PagedResponse<GetAllPositionsResponse>([], 0, 0, 10);
 
-        _bus.InvokeAsync<PagedResponse<GetAllPositionsResponse>>(Arg.Any<object>(), Arg.Any<CancellationToken>())
+        _bus.InvokeAsync<PagedResponse<GetAllPositionsResponse>>(
+                Arg.Any<object>(),
+                Arg.Any<CancellationToken>()
+            )
             .Returns(Task.FromResult(expected));
 
         // Act

@@ -431,20 +431,11 @@ public partial class DecomposeStrategyConfiguration : Migration
             """
         );
 
-        migrationBuilder.DropTable(
-            name: "backtest_optimized_components",
-            schema: "plutus"
-        );
+        migrationBuilder.DropTable(name: "backtest_optimized_components", schema: "plutus");
 
-        migrationBuilder.DropTable(
-            name: "backtest_optimized_signal_weights",
-            schema: "plutus"
-        );
+        migrationBuilder.DropTable(name: "backtest_optimized_signal_weights", schema: "plutus");
 
-        migrationBuilder.DropTable(
-            name: "signal_weight",
-            schema: "plutus"
-        );
+        migrationBuilder.DropTable(name: "signal_weight", schema: "plutus");
 
         migrationBuilder.DropPrimaryKey(
             name: "pk_composite_component",
@@ -740,15 +731,24 @@ public partial class DecomposeStrategyConfiguration : Migration
             schema: "plutus",
             columns: table => new
             {
-                strategy_configuration_backtest_results_backtest_id = table.Column<Guid>(type: "uuid", nullable: false),
-                id = table.Column<int>(type: "integer", nullable: false)
+                strategy_configuration_backtest_results_backtest_id = table.Column<Guid>(
+                    type: "uuid",
+                    nullable: false
+                ),
+                id = table
+                    .Column<int>(type: "integer", nullable: false)
                     .Annotation(
                         "Npgsql:ValueGenerationStrategy",
                         NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
                     ),
                 strategy_id = table.Column<Guid>(type: "uuid", nullable: false),
                 type = table.Column<int>(type: "integer", nullable: false),
-                weight = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false)
+                weight = table.Column<decimal>(
+                    type: "numeric(18,2)",
+                    precision: 18,
+                    scale: 2,
+                    nullable: false
+                ),
             },
             constraints: table =>
             {
@@ -772,14 +772,23 @@ public partial class DecomposeStrategyConfiguration : Migration
             schema: "plutus",
             columns: table => new
             {
-                strategy_configuration_backtest_results_backtest_id = table.Column<Guid>(type: "uuid", nullable: false),
-                id = table.Column<int>(type: "integer", nullable: false)
+                strategy_configuration_backtest_results_backtest_id = table.Column<Guid>(
+                    type: "uuid",
+                    nullable: false
+                ),
+                id = table
+                    .Column<int>(type: "integer", nullable: false)
                     .Annotation(
                         "Npgsql:ValueGenerationStrategy",
                         NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
                     ),
                 type = table.Column<int>(type: "integer", nullable: false),
-                weight = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false)
+                weight = table.Column<decimal>(
+                    type: "numeric(18,2)",
+                    precision: 18,
+                    scale: 2,
+                    nullable: false
+                ),
             },
             constraints: table =>
             {
@@ -803,18 +812,30 @@ public partial class DecomposeStrategyConfiguration : Migration
             schema: "plutus",
             columns: table => new
             {
-                strategy_configuration_strategy_id = table.Column<Guid>(type: "uuid", nullable: false),
-                id = table.Column<int>(type: "integer", nullable: false)
+                strategy_configuration_strategy_id = table.Column<Guid>(
+                    type: "uuid",
+                    nullable: false
+                ),
+                id = table
+                    .Column<int>(type: "integer", nullable: false)
                     .Annotation(
                         "Npgsql:ValueGenerationStrategy",
                         NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
                     ),
                 type = table.Column<int>(type: "integer", nullable: false),
-                weight = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false)
+                weight = table.Column<decimal>(
+                    type: "numeric(18,2)",
+                    precision: 18,
+                    scale: 2,
+                    nullable: false
+                ),
             },
             constraints: table =>
             {
-                table.PrimaryKey("pk_signal_weight", x => new { x.strategy_configuration_strategy_id, x.id });
+                table.PrimaryKey(
+                    "pk_signal_weight",
+                    x => new { x.strategy_configuration_strategy_id, x.id }
+                );
                 table.ForeignKey(
                     name: "fk_signal_weight_strategies_strategy_configuration_strategy_id",
                     column: x => x.strategy_configuration_strategy_id,

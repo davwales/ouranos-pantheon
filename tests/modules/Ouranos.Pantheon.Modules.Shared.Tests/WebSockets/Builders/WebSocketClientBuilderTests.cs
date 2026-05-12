@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Ouranos.Pantheon.Modules.Shared.Tests.WebSockets.TestUtils;
+using Ouranos.Pantheon.Modules.Shared.WebSockets;
 using Ouranos.Pantheon.Modules.Shared.WebSockets.Builders;
 using Ouranos.Pantheon.Modules.Shared.WebSockets.Serializers;
 using Ouranos.Pantheon.Modules.Shared.WebSockets.Serializers.Converters;
@@ -7,7 +8,6 @@ using Ouranos.Pantheon.Modules.Shared.WebSockets.Serializers.TypeResolvers;
 using Ouranos.Pantheon.Modules.Shared.WebSockets.WebSocketClients;
 using Ouranos.Pantheon.Tests.Utils;
 using Ouranos.Pantheon.Tests.Utils.Shouldly;
-using Ouranos.Pantheon.Modules.Shared.WebSockets;
 
 namespace Ouranos.Pantheon.Modules.Shared.Tests.WebSockets.Builders;
 
@@ -173,7 +173,9 @@ public sealed class WebSocketClientBuilderTests
         builder.UseSerializer<TestSerializer>();
 
         // Assert
-        _services.ShouldContainServiceWithImplementation<IMessageSerializer, TestSerializer>(ServiceLifetime.Singleton);
+        _services.ShouldContainServiceWithImplementation<IMessageSerializer, TestSerializer>(
+            ServiceLifetime.Singleton
+        );
     }
 
     [Fact]
@@ -227,7 +229,9 @@ public sealed class WebSocketClientBuilderTests
         builder.UseConverter<TestConverter>();
 
         // Assert
-        _services.ShouldContainServiceWithImplementation<IMessageConverter, TestConverter>(ServiceLifetime.Singleton);
+        _services.ShouldContainServiceWithImplementation<IMessageConverter, TestConverter>(
+            ServiceLifetime.Singleton
+        );
     }
 
     [Fact]
@@ -253,7 +257,9 @@ public sealed class WebSocketClientBuilderTests
         builder.UseTypeResolver<TestTypeResolver>();
 
         // Assert
-        _services.ShouldContainServiceWithImplementation<ITypeResolver, TestTypeResolver>(ServiceLifetime.Singleton);
+        _services.ShouldContainServiceWithImplementation<ITypeResolver, TestTypeResolver>(
+            ServiceLifetime.Singleton
+        );
     }
 
     [Fact]
@@ -279,7 +285,9 @@ public sealed class WebSocketClientBuilderTests
         builder.Build();
 
         // Assert
-        _services.ShouldContainServiceWithImplementation<ITypeResolver, JsonTypeResolver>(ServiceLifetime.Singleton);
+        _services.ShouldContainServiceWithImplementation<ITypeResolver, JsonTypeResolver>(
+            ServiceLifetime.Singleton
+        );
 
         _services.ShouldContainServiceWithImplementation<IMessageConverter, JsonMessageConverter>(
             ServiceLifetime.Singleton

@@ -4,8 +4,8 @@ using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetSymbolGroup.Schem
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.SymbolGroups;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
@@ -18,7 +18,9 @@ public sealed class GetSymbolGroupHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly GetSymbolGroupHandler _handler;
-    private readonly ILogger<GetSymbolGroupHandler> _logger = Substitute.For<ILogger<GetSymbolGroupHandler>>();
+    private readonly ILogger<GetSymbolGroupHandler> _logger = Substitute.For<
+        ILogger<GetSymbolGroupHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
 
     public GetSymbolGroupHandlerTests()

@@ -52,7 +52,13 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
 
         ChatTokenUsage? usage = null;
 
-        await foreach (var update in chatClient.CompleteChatStreamingAsync(chatMessages, options, cancellationToken))
+        await foreach (
+            var update in chatClient.CompleteChatStreamingAsync(
+                chatMessages,
+                options,
+                cancellationToken
+            )
+        )
         {
             foreach (var part in update.ContentUpdate)
             {
@@ -137,22 +143,28 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
         using var response = await _httpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
 
-        var result = await response.Content.ReadFromJsonAsync<List<List<ForecastPoint>>>(cancellationToken) ??
-                     throw new InvalidOperationException("Failed to parse plutus forecast response.");
+        var result =
+            await response.Content.ReadFromJsonAsync<List<List<ForecastPoint>>>(cancellationToken)
+            ?? throw new InvalidOperationException("Failed to parse plutus forecast response.");
 
         _logger.LogDebug("Successfully generated plutus forecasts using Ouranos ML.");
         return result;
     }
 
-    private static ChatMessage MapMessage(MessageDto message) => message.Role switch
-    {
-        RoleDto.System => ChatMessage.CreateSystemMessage(message.Content),
-        RoleDto.User => ChatMessage.CreateUserMessage(message.Content),
-        RoleDto.Assistant => ChatMessage.CreateAssistantMessage(message.Content),
-        _ => throw new InvalidOperationException($"Unknown role: {message.Role}")
-    };
+    private static ChatMessage MapMessage(MessageDto message) =>
+        message.Role switch
+        {
+            RoleDto.System => ChatMessage.CreateSystemMessage(message.Content),
+            RoleDto.User => ChatMessage.CreateUserMessage(message.Content),
+            RoleDto.Assistant => ChatMessage.CreateAssistantMessage(message.Content),
+            _ => throw new InvalidOperationException($"Unknown role: {message.Role}"),
+        };
 
-    private static ChatCompletionOptions BuildOptions(float? temperature, int? maxTokens, float? frequencyPenalty)
+    private static ChatCompletionOptions BuildOptions(
+        float? temperature,
+        int? maxTokens,
+        float? frequencyPenalty
+    )
     {
         var options = new ChatCompletionOptions();
 

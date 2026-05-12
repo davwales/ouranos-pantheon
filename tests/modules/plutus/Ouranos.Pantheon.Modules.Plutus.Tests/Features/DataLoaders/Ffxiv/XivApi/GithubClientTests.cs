@@ -32,7 +32,7 @@ public sealed class GithubClientTests
         var handler = new FakeHttpMessageHandler(statusCode, content);
         var httpClient = new HttpClient(handler)
         {
-            BaseAddress = new Uri("https://raw.githubusercontent.com/")
+            BaseAddress = new Uri("https://raw.githubusercontent.com/"),
         };
         return new GithubClient(_logger, httpClient);
     }
@@ -84,12 +84,13 @@ public sealed class GithubClientTests
     {
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken
+        )
         {
             cancellationToken.ThrowIfCancellationRequested();
             var response = new HttpResponseMessage(statusCode)
             {
-                Content = new StringContent(content, Encoding.UTF8, "text/plain")
+                Content = new StringContent(content, Encoding.UTF8, "text/plain"),
             };
             return Task.FromResult(response);
         }

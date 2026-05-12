@@ -49,14 +49,19 @@ public sealed class JsonTypeResolverTests
         var fixture = new Fixture();
         var message = fixture.Create<TestMessage>();
         var bytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
-        var resolver = new JsonTypeResolver(nameof(TestMessage.Type), new Dictionary<string, Type>());
+        var resolver = new JsonTypeResolver(
+            nameof(TestMessage.Type),
+            new Dictionary<string, Type>()
+        );
 
         // Act
         var resolve = () => resolver.ResolveType(bytes);
 
         // Assert
         var actualException = resolve.ShouldThrow<InvalidOperationException>();
-        actualException.Message.ShouldBe($"No type mapping found for discriminator: {message.Type}.");
+        actualException.Message.ShouldBe(
+            $"No type mapping found for discriminator: {message.Type}."
+        );
     }
 
     [Fact]

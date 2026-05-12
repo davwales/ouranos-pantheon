@@ -1,15 +1,16 @@
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Extensions;
 using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.CreateSymbolGroup.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.SymbolGroups;
+using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.CreateSymbolGroup;
 
-public sealed class CreateSymbolGroupHandler : IPantheonHandler<CreateSymbolGroupInput, IdResponse<SymbolGroup>>
+public sealed class CreateSymbolGroupHandler
+    : IPantheonHandler<CreateSymbolGroupInput, IdResponse<SymbolGroup>>
 {
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<CreateSymbolGroupHandler> _logger;

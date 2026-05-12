@@ -4,10 +4,7 @@ namespace Ouranos.Pantheon.Modules.Shared.Extensions;
 
 public static class EnumerableExtensions
 {
-    public static IEnumerable<IEnumerable<T>> Batch<T>(
-        this IEnumerable<T> source,
-        int batchSize
-    )
+    public static IEnumerable<IEnumerable<T>> Batch<T>(this IEnumerable<T> source, int batchSize)
     {
         Guard.Against.NegativeOrZero(batchSize);
 

@@ -44,7 +44,11 @@ public sealed class IterationSetupStepTests
         );
         var payload = new BacktestPayload(parameters) { Entity = null, ProgressInterval = 10 };
 
-        var context = new PipelineContext(CancellationToken.None) { CurrentIteration = 10, TotalIterations = 100 };
+        var context = new PipelineContext(CancellationToken.None)
+        {
+            CurrentIteration = 10,
+            TotalIterations = 100,
+        };
 
         var step = new IterationSetupStep(_dbContextFactory);
 
@@ -78,7 +82,11 @@ public sealed class IterationSetupStepTests
         );
         var payload = new BacktestPayload(parameters) { Entity = backtest, ProgressInterval = 0 };
 
-        var context = new PipelineContext(CancellationToken.None) { CurrentIteration = 10, TotalIterations = 100 };
+        var context = new PipelineContext(CancellationToken.None)
+        {
+            CurrentIteration = 10,
+            TotalIterations = 100,
+        };
 
         var step = new IterationSetupStep(_dbContextFactory);
 
@@ -113,7 +121,11 @@ public sealed class IterationSetupStepTests
         );
         var payload = new BacktestPayload(parameters) { Entity = backtest, ProgressInterval = -1 };
 
-        var context = new PipelineContext(CancellationToken.None) { CurrentIteration = 10, TotalIterations = 100 };
+        var context = new PipelineContext(CancellationToken.None)
+        {
+            CurrentIteration = 10,
+            TotalIterations = 100,
+        };
 
         var step = new IterationSetupStep(_dbContextFactory);
 
@@ -150,7 +162,11 @@ public sealed class IterationSetupStepTests
         );
         var payload = new BacktestPayload(parameters) { Entity = backtest, ProgressInterval = 10 };
 
-        var context = new PipelineContext(CancellationToken.None) { CurrentIteration = 5, TotalIterations = 100 };
+        var context = new PipelineContext(CancellationToken.None)
+        {
+            CurrentIteration = 5,
+            TotalIterations = 100,
+        };
 
         var step = new IterationSetupStep(_dbContextFactory);
 
@@ -187,7 +203,11 @@ public sealed class IterationSetupStepTests
         );
         var payload = new BacktestPayload(parameters) { Entity = backtest, ProgressInterval = 10 };
 
-        var context = new PipelineContext(CancellationToken.None) { CurrentIteration = 10, TotalIterations = 100 };
+        var context = new PipelineContext(CancellationToken.None)
+        {
+            CurrentIteration = 10,
+            TotalIterations = 100,
+        };
 
         var step = new IterationSetupStep(_dbContextFactory);
 
@@ -224,7 +244,11 @@ public sealed class IterationSetupStepTests
         );
         var payload = new BacktestPayload(parameters) { Entity = backtest, ProgressInterval = 10 };
 
-        var context = new PipelineContext(CancellationToken.None) { CurrentIteration = 99, TotalIterations = 100 };
+        var context = new PipelineContext(CancellationToken.None)
+        {
+            CurrentIteration = 99,
+            TotalIterations = 100,
+        };
 
         var step = new IterationSetupStep(_dbContextFactory);
 
@@ -271,7 +295,11 @@ public sealed class IterationSetupStepTests
         );
         var payload = new BacktestPayload(parameters) { Entity = backtest, ProgressInterval = 10 };
 
-        var context = new PipelineContext(CancellationToken.None) { CurrentIteration = 10, TotalIterations = 100 };
+        var context = new PipelineContext(CancellationToken.None)
+        {
+            CurrentIteration = 10,
+            TotalIterations = 100,
+        };
 
         var step = new IterationSetupStep(_dbContextFactory);
 
@@ -312,7 +340,6 @@ public sealed class IterationSetupStepTests
         var payload = new BacktestPayload(parameters) { Entity = backtest, ProgressInterval = 1 };
         var context = new PipelineContext(CancellationToken.None) { TotalIterations = 100 };
         var step = new IterationSetupStep(_dbContextFactory);
-
 
         context.CurrentIteration = 0;
         await step.ExecuteAsync(context, payload);

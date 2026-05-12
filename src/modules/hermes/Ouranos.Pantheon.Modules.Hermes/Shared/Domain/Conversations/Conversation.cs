@@ -1,14 +1,15 @@
 using Ardalis.GuardClauses;
-using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits;
+using Ouranos.Pantheon.Modules.Shared.Domain;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 
 public sealed class Conversation : BaseEntity<Id<Conversation>>
 {
-    private Conversation(Id<Conversation> id) : base(id)
+    private Conversation(Id<Conversation> id)
+        : base(id)
     {
         Name = string.Empty;
     }
@@ -21,11 +22,13 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
 
     private Persona? _persona;
 
-    public Persona Persona => _persona ?? throw new NavigationPropertyNotLoadedException<Conversation>();
+    public Persona Persona =>
+        _persona ?? throw new NavigationPropertyNotLoadedException<Conversation>();
 
     private ModelConfig? _modelConfig;
 
-    public ModelConfig ModelConfig => _modelConfig ?? throw new NavigationPropertyNotLoadedException<Conversation>();
+    public ModelConfig ModelConfig =>
+        _modelConfig ?? throw new NavigationPropertyNotLoadedException<Conversation>();
 
     public List<Message> Messages { get; private set; } = [];
 
@@ -61,7 +64,11 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
 
         if (modelConfig is not null)
         {
-            Guard.Against.InvalidInput(modelConfig, nameof(modelConfig), c => c.Id == modelConfigId);
+            Guard.Against.InvalidInput(
+                modelConfig,
+                nameof(modelConfig),
+                c => c.Id == modelConfigId
+            );
         }
 
         var conversation = new Conversation(id)
@@ -73,7 +80,7 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
             Traits = [.. traits],
             IsPublic = isPublic,
             _persona = persona,
-            _modelConfig = modelConfig
+            _modelConfig = modelConfig,
         };
 
         return conversation;

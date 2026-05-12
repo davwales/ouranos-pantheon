@@ -7,7 +7,9 @@ public sealed class StreamResponse<TSource, TResult>(
     Func<TSource, Task<TResult>> transform
 )
 {
-    public async IAsyncEnumerable<TResult> GetStream([EnumeratorCancellation] CancellationToken token = default)
+    public async IAsyncEnumerable<TResult> GetStream(
+        [EnumeratorCancellation] CancellationToken token = default
+    )
     {
         var stream = await streamFactory(token);
         await foreach (var item in stream.WithCancellation(token))

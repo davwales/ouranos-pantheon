@@ -14,7 +14,7 @@ public sealed class WebSocketWorkerTests
     {
         HealthCheckIntervalSeconds = 0,
         ReconnectBaseDelaySeconds = 0,
-        ReconnectMaxDelaySeconds = 0
+        ReconnectMaxDelaySeconds = 0,
     };
 
     [Fact]
@@ -28,13 +28,12 @@ public sealed class WebSocketWorkerTests
         _webSocketClient
             .When(x => x.ConnectAsync(Arg.Any<CancellationToken>()))
             .Do(_ =>
+            {
+                if (++connectCount >= 2)
                 {
-                    if (++connectCount >= 2)
-                    {
-                        cts.Cancel();
-                    }
+                    cts.Cancel();
                 }
-            );
+            });
 
         _webSocketClient.IsListening.Returns(false);
 
@@ -61,13 +60,12 @@ public sealed class WebSocketWorkerTests
         _webSocketClient
             .When(x => x.ConnectAsync(Arg.Any<CancellationToken>()))
             .Do(_ =>
+            {
+                if (++connectCount >= 2)
                 {
-                    if (++connectCount >= 2)
-                    {
-                        cts.Cancel();
-                    }
+                    cts.Cancel();
                 }
-            );
+            });
 
         _webSocketClient.IsListening.Throws(new InvalidOperationException("Connection error"));
 
@@ -91,11 +89,10 @@ public sealed class WebSocketWorkerTests
         var worker = GivenWorkerWithOptions(ZeroDelayOptions);
 
         _webSocketClient.IsListening.Returns(_ =>
-            {
-                cts.Cancel();
-                return true;
-            }
-        );
+        {
+            cts.Cancel();
+            return true;
+        });
 
         // Act
         await worker.StartAsync(cts.Token);

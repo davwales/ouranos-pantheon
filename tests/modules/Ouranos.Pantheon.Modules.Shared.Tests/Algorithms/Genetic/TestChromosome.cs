@@ -6,9 +6,7 @@ internal sealed class TestChromosome : IChromosome<bool>
 {
     public bool[] Genes { get; } = [true, false, true];
 
-    public void Mutate(double mutationRate)
-    {
-    }
+    public void Mutate(double mutationRate) { }
 
     public IChromosome<bool> Crossover(IChromosome<bool> other)
     {

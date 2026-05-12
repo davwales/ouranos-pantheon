@@ -2,12 +2,12 @@ using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
-using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetAllTrades.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
+using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Pagination;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
 
@@ -57,25 +57,29 @@ public sealed class GetAllTradesHandler
 
         var limits = _queryOptions.Value;
         Guard.Against.OutOfRange(input.Skip, nameof(input.Skip), 0, limits.MaxSkip);
-        Guard.Against.OutOfRange(input.Take, nameof(input.Take), limits.MinPageSize, limits.MaxPageSize);
+        Guard.Against.OutOfRange(
+            input.Take,
+            nameof(input.Take),
+            limits.MinPageSize,
+            limits.MaxPageSize
+        );
 
-        var items = await _dbContext.Trades
-            .AsQueryable()
+        var items = await _dbContext
+            .Trades.AsQueryable()
             .AsNoTracking()
             .FilterBy(input.Filter, FilterBuilder)
             .SortBy(input.SortField, input.SortDirection, SortBuilder)
             .Paginate(input.Skip, input.Take)
             .Select(t => new GetAllTradesResponse(
-                    t.Id,
-                    t.SymbolId,
-                    t.Symbol.MarketId,
-                    t.Symbol.Name,
-                    t.Symbol.Code,
-                    t.Price,
-                    t.Volume,
-                    t.Timestamp
-                )
-            )
+                t.Id,
+                t.SymbolId,
+                t.Symbol.MarketId,
+                t.Symbol.Name,
+                t.Symbol.Code,
+                t.Price,
+                t.Volume,
+                t.Timestamp
+            ))
             .ToListAsync(cancellationToken);
 
         _logger.LogDebug("Successfully handled get all trades request.");

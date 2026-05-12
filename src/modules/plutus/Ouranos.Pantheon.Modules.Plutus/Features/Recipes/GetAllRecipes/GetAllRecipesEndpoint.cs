@@ -10,8 +10,7 @@ public static class GetAllRecipesEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapGet("/api/plutus/recipes", Handle)
-            .WithTags("Plutus.Recipes");
+        app.MapGet("/api/plutus/recipes", Handle).WithTags("Plutus.Recipes");
     }
 
     internal static async Task<IResult> Handle(

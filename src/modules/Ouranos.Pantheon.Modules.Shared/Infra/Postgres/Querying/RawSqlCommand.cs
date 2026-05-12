@@ -35,7 +35,9 @@ public sealed class RawSqlCommand
     /// </summary>
     public RawSqlCommand WithId<T>(string name, Id<T> id)
     {
-        _parameters.Add(new NpgsqlParameter(name, NpgsqlDbType.Uuid) { Value = Guid.Parse(id.Value) });
+        _parameters.Add(
+            new NpgsqlParameter(name, NpgsqlDbType.Uuid) { Value = Guid.Parse(id.Value) }
+        );
         return this;
     }
 
@@ -46,7 +48,9 @@ public sealed class RawSqlCommand
     public RawSqlCommand WithIds<T>(string name, IEnumerable<Id<T>> ids)
     {
         var uuids = ids.Select(id => Guid.Parse(id.Value)).ToArray();
-        _parameters.Add(new NpgsqlParameter(name, NpgsqlDbType.Array | NpgsqlDbType.Uuid) { Value = uuids });
+        _parameters.Add(
+            new NpgsqlParameter(name, NpgsqlDbType.Array | NpgsqlDbType.Uuid) { Value = uuids }
+        );
         return this;
     }
 

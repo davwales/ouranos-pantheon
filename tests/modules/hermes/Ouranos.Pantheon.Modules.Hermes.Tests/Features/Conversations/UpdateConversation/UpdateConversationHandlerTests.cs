@@ -18,7 +18,9 @@ public sealed class UpdateConversationHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly UpdateConversationHandler _handler;
-    private readonly ILogger<UpdateConversationHandler> _logger = Substitute.For<ILogger<UpdateConversationHandler>>();
+    private readonly ILogger<UpdateConversationHandler> _logger = Substitute.For<
+        ILogger<UpdateConversationHandler>
+    >();
     private readonly HermesDbContext _dbContext;
 
     public UpdateConversationHandlerTests()

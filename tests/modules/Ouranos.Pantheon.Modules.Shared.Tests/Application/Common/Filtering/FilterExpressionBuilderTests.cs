@@ -11,7 +11,9 @@ public sealed class FilterExpressionBuilderTests
 
     private readonly IQueryable<Item> _items = new Item[]
     {
-        new("Sword", 100, true, "Weapon"), new("Shield", 50, false, "Armor"), new("Bow", 75, true, "Weapon"),
+        new("Sword", 100, true, "Weapon"),
+        new("Shield", 50, false, "Armor"),
+        new("Bow", 75, true, "Weapon"),
     }.AsQueryable();
 
     [Fact]
@@ -73,8 +75,11 @@ public sealed class FilterExpressionBuilderTests
     public void ConvertValue_WhenIdType_ShouldCreateIdInstance()
     {
         // Arrange
-        var items = new ItemWithId[] { new(new Id<Item>("id-1"), "Alpha"), new(new Id<Item>("id-2"), "Beta"), }
-            .AsQueryable();
+        var items = new ItemWithId[]
+        {
+            new(new Id<Item>("id-1"), "Alpha"),
+            new(new Id<Item>("id-2"), "Beta"),
+        }.AsQueryable();
 
         var builder = new FilterBuilder<ItemWithId>().On(nameof(ItemWithId.Id), x => x.Id);
 
@@ -116,8 +121,11 @@ public sealed class FilterExpressionBuilderTests
     public void FilterBy_WhenCaseInsensitiveIn_ShouldMatchRegardlessOfCasing()
     {
         // Arrange
-        var builder = new FilterBuilder<Item>()
-            .On(nameof(Item.Name), x => x.Name, caseInsensitive: true);
+        var builder = new FilterBuilder<Item>().On(
+            nameof(Item.Name),
+            x => x.Name,
+            caseInsensitive: true
+        );
 
         // Act
         var result = _items.FilterBy(["Name:in:SWORD,BOW"], builder).ToList();
@@ -143,12 +151,17 @@ public sealed class FilterExpressionBuilderTests
     [InlineData("GuidVal:eq:00000000-0000-0000-0000-000000000001")]
     [InlineData("DateVal:lt:2099-01-01")]
     [InlineData("DateOffsetVal:lt:2099-01-01")]
-    public void FilterBy_WhenVariousFieldTypes_ShouldApplyFilterWithoutThrowing(string filterExpression)
+    public void FilterBy_WhenVariousFieldTypes_ShouldApplyFilterWithoutThrowing(
+        string filterExpression
+    )
     {
         // Arrange
         var guid = new Guid("00000000-0000-0000-0000-000000000001");
         var now = DateTime.UtcNow;
-        var items = new TypedItem[] { new(42L, 1.5f, 2.5, guid, now, DateTimeOffset.UtcNow) }.AsQueryable();
+        var items = new TypedItem[]
+        {
+            new(42L, 1.5f, 2.5, guid, now, DateTimeOffset.UtcNow),
+        }.AsQueryable();
 
         var builder = new FilterBuilder<TypedItem>()
             .On(nameof(TypedItem.LongVal), x => x.LongVal)
@@ -185,8 +198,7 @@ public sealed class FilterExpressionBuilderTests
             new("Gamma", TestStatus.Pending),
         }.AsQueryable();
 
-        var builder = new FilterBuilder<EnumItem>()
-            .On(nameof(EnumItem.Status), x => x.Status);
+        var builder = new FilterBuilder<EnumItem>().On(nameof(EnumItem.Status), x => x.Status);
 
         // Act
         var result = items.FilterBy(["Status:eq:Active"], builder).ToList();
@@ -207,8 +219,7 @@ public sealed class FilterExpressionBuilderTests
             new("Gamma", TestStatus.Pending),
         }.AsQueryable();
 
-        var builder = new FilterBuilder<EnumItem>()
-            .On(nameof(EnumItem.Status), x => x.Status);
+        var builder = new FilterBuilder<EnumItem>().On(nameof(EnumItem.Status), x => x.Status);
 
         // Act
         var result = items.FilterBy(["Status:neq:Active"], builder).ToList();
@@ -228,8 +239,7 @@ public sealed class FilterExpressionBuilderTests
             new("Beta", TestStatus.Inactive),
         }.AsQueryable();
 
-        var builder = new FilterBuilder<EnumItem>()
-            .On(nameof(EnumItem.Status), x => x.Status);
+        var builder = new FilterBuilder<EnumItem>().On(nameof(EnumItem.Status), x => x.Status);
 
         // Act
         var result = items.FilterBy(["Status:eq:active"], builder).ToList();

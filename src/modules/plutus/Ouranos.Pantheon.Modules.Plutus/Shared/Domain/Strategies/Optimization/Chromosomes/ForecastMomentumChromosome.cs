@@ -8,12 +8,11 @@ public sealed class ForecastMomentumChromosome(
     ForecastMomentumConfig forecastMomentumConfig
 ) : StrategyChromosome(configuration)
 {
-    public ForecastMomentumConfig ForecastMomentumConfig { get; private set; } = forecastMomentumConfig;
+    public ForecastMomentumConfig ForecastMomentumConfig { get; private set; } =
+        forecastMomentumConfig;
 
     public ForecastMomentumChromosome(TradingConfiguration configuration)
-        : this(configuration, new ForecastMomentumConfig())
-    {
-    }
+        : this(configuration, new ForecastMomentumConfig()) { }
 
     public override BacktestParameters ApplyConfigOverrides(BacktestParameters parameters)
     {
@@ -35,11 +34,17 @@ public sealed class ForecastMomentumChromosome(
     {
         if (other is not ForecastMomentumChromosome otherChromosome)
         {
-            throw new InvalidOperationException($"Crossover partner must be a {nameof(ForecastMomentumChromosome)}.");
+            throw new InvalidOperationException(
+                $"Crossover partner must be a {nameof(ForecastMomentumChromosome)}."
+            );
         }
 
         var random = Random.Shared;
-        var childConfig = CrossoverCommonFields(Configuration, otherChromosome.Configuration, random);
+        var childConfig = CrossoverCommonFields(
+            Configuration,
+            otherChromosome.Configuration,
+            random
+        );
 
         var childForecast = new ForecastMomentumConfig(
             random.NextDouble() < 0.5
@@ -77,6 +82,9 @@ public sealed class ForecastMomentumChromosome(
             ? Math.Max(1, current.ForecastHorizonDays.Value + random.Next(-3, 4))
             : (int?)null;
 
-        ForecastMomentumConfig = new ForecastMomentumConfig(forecastMovementThreshold, forecastHorizonDays);
+        ForecastMomentumConfig = new ForecastMomentumConfig(
+            forecastMovementThreshold,
+            forecastHorizonDays
+        );
     }
 }

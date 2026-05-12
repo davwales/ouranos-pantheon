@@ -16,15 +16,26 @@ public sealed class GetAllBacktestsHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly GetAllBacktestsHandler _handler;
-    private readonly ILogger<GetAllBacktestsHandler> _logger = Substitute.For<ILogger<GetAllBacktestsHandler>>();
+    private readonly ILogger<GetAllBacktestsHandler> _logger = Substitute.For<
+        ILogger<GetAllBacktestsHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
-    private readonly IOptions<QueryOptions> _queryOptions = Substitute.For<IOptions<QueryOptions>>();
+    private readonly IOptions<QueryOptions> _queryOptions = Substitute.For<
+        IOptions<QueryOptions>
+    >();
 
     public GetAllBacktestsHandlerTests()
     {
         _fixture.Customize(new IdCustomization());
         _dbContext = DbContextExtensions.Mock<PlutusDbContext>();
-        _queryOptions.Value.Returns(new QueryOptions { MaxSkip = 1000, MinPageSize = 1, MaxPageSize = 100 });
+        _queryOptions.Value.Returns(
+            new QueryOptions
+            {
+                MaxSkip = 1000,
+                MinPageSize = 1,
+                MaxPageSize = 100,
+            }
+        );
         _handler = new GetAllBacktestsHandler(_logger, _dbContext, _queryOptions);
     }
 

@@ -2,12 +2,12 @@ using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
-using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetAllSymbols.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
+using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Pagination;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
 
@@ -55,17 +55,21 @@ public sealed class GetAllSymbolsHandler
 
         var limits = _queryOptions.Value;
         Guard.Against.OutOfRange(input.Skip, nameof(input.Skip), 0, limits.MaxSkip);
-        Guard.Against.OutOfRange(input.Take, nameof(input.Take), limits.MinPageSize, limits.MaxPageSize);
+        Guard.Against.OutOfRange(
+            input.Take,
+            nameof(input.Take),
+            limits.MinPageSize,
+            limits.MaxPageSize
+        );
 
-        var q = _dbContext.Symbols
-            .AsQueryable()
+        var q = _dbContext
+            .Symbols.AsQueryable()
             .AsNoTracking()
             .FilterBy(input.Filter, FilterBuilder);
 
         var totalCount = await q.CountAsync(cancellationToken);
 
-        var items = await q
-            .SortBy(input.SortField, input.SortDirection, SortBuilder)
+        var items = await q.SortBy(input.SortField, input.SortDirection, SortBuilder)
             .Paginate(input.Skip, input.Take)
             .Select(s => new GetAllSymbolsResponse(s.Id, s.Code, s.Subcode, s.Name, s.MarketId))
             .ToListAsync(cancellationToken);

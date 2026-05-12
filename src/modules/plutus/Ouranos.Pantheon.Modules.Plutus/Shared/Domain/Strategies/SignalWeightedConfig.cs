@@ -14,9 +14,8 @@ public sealed record SignalWeightedConfig(
     decimal? PriceVelocityWeight = null
 )
 {
-    public SignalWeightedConfig() : this(null, null)
-    {
-    }
+    public SignalWeightedConfig()
+        : this(null, null) { }
 
     public bool HasSignalWeights =>
         TaxAdjustedRoiWeight.HasValue
@@ -28,13 +27,13 @@ public sealed record SignalWeightedConfig(
         || PriceVelocityWeight.HasValue;
 
     public List<SignalWeight> GetSignalWeights() =>
-    [
-        new(SignalType.TaxAdjustedRoi, TaxAdjustedRoiWeight ?? 0),
-        new(SignalType.VolumeAnomaly, VolumeAnomalyWeight ?? 0),
-        new(SignalType.TrendMomentum, TrendMomentumWeight ?? 0),
-        new(SignalType.BollingerBands, BollingerBandsWeight ?? 0),
-        new(SignalType.Rsi, RsiWeight ?? 0),
-        new(SignalType.MovingAverageCrossover, MovingAverageCrossoverWeight ?? 0),
-        new(SignalType.PriceVelocity, PriceVelocityWeight ?? 0),
-    ];
+        [
+            new(SignalType.TaxAdjustedRoi, TaxAdjustedRoiWeight ?? 0),
+            new(SignalType.VolumeAnomaly, VolumeAnomalyWeight ?? 0),
+            new(SignalType.TrendMomentum, TrendMomentumWeight ?? 0),
+            new(SignalType.BollingerBands, BollingerBandsWeight ?? 0),
+            new(SignalType.Rsi, RsiWeight ?? 0),
+            new(SignalType.MovingAverageCrossover, MovingAverageCrossoverWeight ?? 0),
+            new(SignalType.PriceVelocity, PriceVelocityWeight ?? 0),
+        ];
 }

@@ -8,8 +8,8 @@ public sealed class IdJsonConverterFactory : JsonConverterFactory
 {
     public override bool CanConvert(Type typeToConvert)
     {
-        return typeToConvert.IsGenericType &&
-               typeToConvert.GetGenericTypeDefinition() == typeof(Id<>);
+        return typeToConvert.IsGenericType
+            && typeToConvert.GetGenericTypeDefinition() == typeof(Id<>);
     }
 
     public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
@@ -22,7 +22,11 @@ public sealed class IdJsonConverterFactory : JsonConverterFactory
 
 public sealed class IdJsonConverter<T> : JsonConverter<Id<T>>
 {
-    public override Id<T> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override Id<T> Read(
+        ref Utf8JsonReader reader,
+        Type typeToConvert,
+        JsonSerializerOptions options
+    )
     {
         var value = reader.GetString() ?? throw new JsonException("Expected string for Id<T>");
         return Id<T>.Parse(value, null);

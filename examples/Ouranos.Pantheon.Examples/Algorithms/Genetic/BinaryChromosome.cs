@@ -10,10 +10,7 @@ public sealed class BinaryChromosome : IChromosome<bool>
 
     public BinaryChromosome(int length)
     {
-        Genes = Enumerable
-            .Range(0, length)
-            .Select(_ => _random.Next(2) == 1)
-            .ToArray();
+        Genes = Enumerable.Range(0, length).Select(_ => _random.Next(2) == 1).ToArray();
     }
 
     public void Mutate(double mutationRate)

@@ -3,6 +3,4 @@ using Ouranos.Pantheon.Modules.Shared.Domain;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.DeleteConversation.Schemas;
 
-public sealed record DeleteConversationInput(
-    Id<Conversation> ConversationId
-);
+public sealed record DeleteConversationInput(Id<Conversation> ConversationId);

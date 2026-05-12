@@ -27,32 +27,31 @@ public sealed record BacktestResults(
     TradingConfiguration? OptimizedConfiguration
 )
 {
-    public BacktestResults() : this(
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        null,
-        null,
-        null,
-        null,
-        null,
-        0,
-        0,
-        0,
-        0,
-        [],
-        null,
-        null,
-        null,
-        null,
-        null
-    )
-    {
-    }
+    public BacktestResults()
+        : this(
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null,
+            null,
+            0,
+            0,
+            0,
+            0,
+            [],
+            null,
+            null,
+            null,
+            null,
+            null
+        ) { }
 }

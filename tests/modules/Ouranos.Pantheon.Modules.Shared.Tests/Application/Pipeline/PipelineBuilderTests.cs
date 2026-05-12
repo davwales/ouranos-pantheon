@@ -64,7 +64,8 @@ public sealed class PipelineBuilderTests
         // Arrange
         var executed = false;
         var builder = new PipelineBuilder<TestPayload>(CreateEmptyRegistry());
-        builder.AddStep((_, _) =>
+        builder.AddStep(
+            (_, _) =>
             {
                 executed = true;
                 return Task.CompletedTask;
@@ -88,19 +89,22 @@ public sealed class PipelineBuilderTests
         var builder = new PipelineBuilder<TestPayload>(CreateEmptyRegistry());
 
         builder
-            .AddStep((_, _) =>
+            .AddStep(
+                (_, _) =>
                 {
                     executionOrder.Add(1);
                     return Task.CompletedTask;
                 }
             )
-            .AddStep((_, _) =>
+            .AddStep(
+                (_, _) =>
                 {
                     executionOrder.Add(2);
                     return Task.CompletedTask;
                 }
             )
-            .AddStep((_, _) =>
+            .AddStep(
+                (_, _) =>
                 {
                     executionOrder.Add(3);
                     return Task.CompletedTask;
@@ -123,7 +127,9 @@ public sealed class PipelineBuilderTests
         var builder = new PipelineBuilder<TestPayload>(CreateEmptyRegistry());
 
         // Act
-        var exception = Should.Throw<ArgumentNullException>(() => builder.AddStep((IStep<TestPayload>)null!));
+        var exception = Should.Throw<ArgumentNullException>(() =>
+            builder.AddStep((IStep<TestPayload>)null!)
+        );
 
         // Assert
         exception.ParamName.ShouldNotBeNullOrEmpty();

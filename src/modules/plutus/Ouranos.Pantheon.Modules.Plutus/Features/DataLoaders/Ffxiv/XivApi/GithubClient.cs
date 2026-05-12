@@ -8,10 +8,7 @@ public sealed class GithubClient : IGithubClient
     private readonly HttpClient _httpClient;
     private readonly ILogger<GithubClient> _logger;
 
-    public GithubClient(
-        ILogger<GithubClient> logger,
-        HttpClient httpClient
-    )
+    public GithubClient(ILogger<GithubClient> logger, HttpClient httpClient)
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(httpClient);
@@ -20,9 +17,7 @@ public sealed class GithubClient : IGithubClient
         _httpClient = httpClient;
     }
 
-    public async Task<List<ItemResponse>> GetItems(
-        CancellationToken cancellationToken = default
-    )
+    public async Task<List<ItemResponse>> GetItems(CancellationToken cancellationToken = default)
     {
         _logger.LogTrace("Attempting to get items from the XivApi GitHub.");
         cancellationToken.ThrowIfCancellationRequested();
@@ -34,11 +29,15 @@ public sealed class GithubClient : IGithubClient
 
         response.EnsureSuccessStatusCode();
 
-        var itemStream = await response.Content.ReadAsStreamAsync(cancellationToken)
-                         ?? throw new InvalidOperationException("Failed to get item csv content.");
+        var itemStream =
+            await response.Content.ReadAsStreamAsync(cancellationToken)
+            ?? throw new InvalidOperationException("Failed to get item csv content.");
         var items = ItemParser.ParseItemCsv(itemStream);
 
-        _logger.LogDebug("Successfully retrieved '{itemCount}' items from the XivApi GitHub.", items.Count);
+        _logger.LogDebug(
+            "Successfully retrieved '{itemCount}' items from the XivApi GitHub.",
+            items.Count
+        );
         return items;
     }
 }

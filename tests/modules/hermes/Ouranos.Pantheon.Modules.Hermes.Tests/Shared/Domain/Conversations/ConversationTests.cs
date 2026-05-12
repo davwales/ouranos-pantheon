@@ -85,7 +85,8 @@ public sealed class ConversationTests
         );
 
         // Act
-        var create = () => Conversation.Create(id, personaId, modelConfigId, [], [], persona: mismatchedPersona);
+        var create = () =>
+            Conversation.Create(id, personaId, modelConfigId, [], [], persona: mismatchedPersona);
 
         // Assert
         create.ShouldThrow<ArgumentException>();
@@ -106,7 +107,8 @@ public sealed class ConversationTests
         );
 
         // Act
-        var create = () => Conversation.Create(id, personaId, modelConfigId, [], [], modelConfig: mismatchedModel);
+        var create = () =>
+            Conversation.Create(id, personaId, modelConfigId, [], [], modelConfig: mismatchedModel);
 
         // Assert
         create.ShouldThrow<ArgumentException>();
@@ -119,7 +121,11 @@ public sealed class ConversationTests
         var id = new Id<Conversation>(Guid.NewGuid().ToString());
         var personaId = new Id<Persona>(Guid.NewGuid().ToString());
         var modelConfigId = new Id<ModelConfig>(Guid.NewGuid().ToString());
-        var persona = Persona.Create(personaId, _fixture.Create<string>(), _fixture.Create<string>());
+        var persona = Persona.Create(
+            personaId,
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
         var modelConfig = ModelConfig.Create(
             modelConfigId,
             _fixture.Create<string>(),
@@ -201,14 +207,15 @@ public sealed class ConversationTests
         );
 
         // Act
-        var update = () => conversation.Update(
-            newName!,
-            new Id<Persona>(Guid.NewGuid().ToString()),
-            new Id<ModelConfig>(Guid.NewGuid().ToString()),
-            [],
-            [],
-            true
-        );
+        var update = () =>
+            conversation.Update(
+                newName!,
+                new Id<Persona>(Guid.NewGuid().ToString()),
+                new Id<ModelConfig>(Guid.NewGuid().ToString()),
+                [],
+                [],
+                true
+            );
 
         // Assert
         update.ShouldThrow<ArgumentException>();

@@ -11,8 +11,7 @@ public static class GetTraitEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapGet("/api/hermes/traits/{traitId}", Handle)
-            .WithTags("Hermes.Traits");
+        app.MapGet("/api/hermes/traits/{traitId}", Handle).WithTags("Hermes.Traits");
     }
 
     internal static async Task<IResult> Handle(

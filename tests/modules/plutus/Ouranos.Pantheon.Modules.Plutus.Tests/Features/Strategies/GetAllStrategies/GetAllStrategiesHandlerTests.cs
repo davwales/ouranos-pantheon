@@ -16,14 +16,20 @@ public sealed class GetAllStrategiesHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly GetAllStrategiesHandler _handler;
-    private readonly ILogger<GetAllStrategiesHandler> _logger = Substitute.For<ILogger<GetAllStrategiesHandler>>();
+    private readonly ILogger<GetAllStrategiesHandler> _logger = Substitute.For<
+        ILogger<GetAllStrategiesHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
 
     public GetAllStrategiesHandlerTests()
     {
         _fixture.Customize(new IdCustomization());
         _dbContext = DbContextExtensions.Mock<PlutusDbContext>();
-        _handler = new GetAllStrategiesHandler(_logger, _dbContext, Options.Create(new QueryOptions()));
+        _handler = new GetAllStrategiesHandler(
+            _logger,
+            _dbContext,
+            Options.Create(new QueryOptions())
+        );
     }
 
     [Fact]

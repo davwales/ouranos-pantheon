@@ -6,10 +6,10 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Traits.GetTrait.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Shared.Domain;
-using Trait = Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits.Trait;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
+using Trait = Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits.Trait;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.Traits.GetTrait;
 
@@ -36,7 +36,12 @@ public sealed class GetTraitHandlerTests
     public async Task Handle_WhenHappyPath_ShouldReturnTraitResponse()
     {
         // Arrange
-        var trait = Trait.Create(new Id<Trait>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>(), true);
+        var trait = Trait.Create(
+            new Id<Trait>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            true
+        );
         await _dbContext.SeedData(trait);
 
         var query = new GetTraitInput(trait.Id);
@@ -69,7 +74,12 @@ public sealed class GetTraitHandlerTests
     public async Task Handle_WhenNotPublicAndPublicModeEnabled_ShouldThrowNotFoundException()
     {
         // Arrange
-        var trait = Trait.Create(new Id<Trait>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>(), false);
+        var trait = Trait.Create(
+            new Id<Trait>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            false
+        );
         await _dbContext.SeedData(trait);
 
         var flags = Substitute.For<IFlags>();
@@ -89,7 +99,12 @@ public sealed class GetTraitHandlerTests
     public async Task Handle_WhenNotPublicAndPublicModeDisabled_ShouldReturnTrait()
     {
         // Arrange
-        var trait = Trait.Create(new Id<Trait>(Guid.NewGuid().ToString()), _fixture.Create<string>(), _fixture.Create<string>(), false);
+        var trait = Trait.Create(
+            new Id<Trait>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            false
+        );
         await _dbContext.SeedData(trait);
 
         var query = new GetTraitInput(trait.Id);

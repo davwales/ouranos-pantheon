@@ -18,14 +18,20 @@ public sealed class TrendMomentumSignalComputer : ISignalComputer
     public SignalType Type => SignalType.TrendMomentum;
     public string Label => "Trend Momentum";
     public string Description => "Short average price vs long average price delta as a percentage.";
-    public IReadOnlyList<InvestmentIntent> Intents => [InvestmentIntent.Sell, InvestmentIntent.Merch];
+    public IReadOnlyList<InvestmentIntent> Intents =>
+        [InvestmentIntent.Sell, InvestmentIntent.Merch];
 
     public Task<decimal?> ComputeAsync(SignalComputeContext context, CancellationToken ct)
     {
         var shortSnap = context.ShortSnapshot;
         var longSnap = context.LongSnapshot;
 
-        if (shortSnap is null || longSnap is null || shortSnap.TotalVolume == 0 || longSnap.TotalVolume == 0)
+        if (
+            shortSnap is null
+            || longSnap is null
+            || shortSnap.TotalVolume == 0
+            || longSnap.TotalVolume == 0
+        )
         {
             return Task.FromResult<decimal?>(null);
         }

@@ -18,7 +18,10 @@ public sealed class GetAllForecastsEndpointTests
         var input = new GetAllForecastsInput(Take: 10);
         var expected = new PagedResponse<GetAllForecastsResponse>([], 0, 0, 10);
 
-        _bus.InvokeAsync<PagedResponse<GetAllForecastsResponse>>(Arg.Any<object>(), Arg.Any<CancellationToken>())
+        _bus.InvokeAsync<PagedResponse<GetAllForecastsResponse>>(
+                Arg.Any<object>(),
+                Arg.Any<CancellationToken>()
+            )
             .Returns(Task.FromResult(expected));
 
         // Act

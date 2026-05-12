@@ -26,7 +26,16 @@ public sealed class PriceVelocitySignalComputerTests
     public async Task ComputeAsync_WhenOnlyOneBucket_ReturnsNull()
     {
         // Arrange
-        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, null, null, null, [Bucket(100m)]);
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            0m,
+            1000m,
+            null,
+            null,
+            null,
+            [Bucket(100m)]
+        );
 
         // Act
         var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
@@ -40,7 +49,16 @@ public sealed class PriceVelocitySignalComputerTests
     {
         // Arrange
         var buckets = new List<PriceBucket> { Bucket(0m), Bucket(100m) };
-        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, null, null, null, buckets);
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            0m,
+            1000m,
+            null,
+            null,
+            null,
+            buckets
+        );
 
         // Act
         var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
@@ -54,7 +72,16 @@ public sealed class PriceVelocitySignalComputerTests
     {
         // Arrange
         var buckets = new List<PriceBucket> { Bucket(100m), Bucket(100m) };
-        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, null, null, null, buckets);
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            0m,
+            1000m,
+            null,
+            null,
+            null,
+            buckets
+        );
 
         // Act
         var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
@@ -68,10 +95,20 @@ public sealed class PriceVelocitySignalComputerTests
     {
         // Arrange
         var buckets = new List<PriceBucket> { Bucket(100m), Bucket(103m) };
-        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, null, null, null, buckets);
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            0m,
+            1000m,
+            null,
+            null,
+            null,
+            buckets
+        );
 
         // Act
-        var result = await BuildComputer(threshold: 0.03m).ComputeAsync(context, CancellationToken.None);
+        var result = await BuildComputer(threshold: 0.03m)
+            .ComputeAsync(context, CancellationToken.None);
 
         // Assert
         result.ShouldBe(1m);
@@ -82,10 +119,20 @@ public sealed class PriceVelocitySignalComputerTests
     {
         // Arrange
         var buckets = new List<PriceBucket> { Bucket(100m), Bucket(97m) };
-        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, null, null, null, buckets);
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            0m,
+            1000m,
+            null,
+            null,
+            null,
+            buckets
+        );
 
         // Act
-        var result = await BuildComputer(threshold: 0.03m).ComputeAsync(context, CancellationToken.None);
+        var result = await BuildComputer(threshold: 0.03m)
+            .ComputeAsync(context, CancellationToken.None);
 
         // Assert
         result.ShouldBe(-1m);
@@ -96,10 +143,20 @@ public sealed class PriceVelocitySignalComputerTests
     {
         // Arrange
         var buckets = new List<PriceBucket> { Bucket(100m), Bucket(103m) };
-        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, null, null, null, buckets);
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            0m,
+            1000m,
+            null,
+            null,
+            null,
+            buckets
+        );
 
         // Act
-        var result = await BuildComputer(threshold: 0m).ComputeAsync(context, CancellationToken.None);
+        var result = await BuildComputer(threshold: 0m)
+            .ComputeAsync(context, CancellationToken.None);
 
         // Assert
         result.ShouldBeNull();

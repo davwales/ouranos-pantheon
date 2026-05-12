@@ -19,7 +19,9 @@ public sealed class GetMarketTradesHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly GetMarketTradesHandler _handler;
-    private readonly ILogger<GetMarketTradesHandler> _logger = Substitute.For<ILogger<GetMarketTradesHandler>>();
+    private readonly ILogger<GetMarketTradesHandler> _logger = Substitute.For<
+        ILogger<GetMarketTradesHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
 
     public GetMarketTradesHandlerTests()
@@ -27,7 +29,11 @@ public sealed class GetMarketTradesHandlerTests
         _fixture.Customize(new IdCustomization());
 
         _dbContext = DbContextExtensions.Mock<PlutusDbContext>();
-        _handler = new GetMarketTradesHandler(_logger, _dbContext, Options.Create(new QueryOptions()));
+        _handler = new GetMarketTradesHandler(
+            _logger,
+            _dbContext,
+            Options.Create(new QueryOptions())
+        );
     }
 
     [Fact]

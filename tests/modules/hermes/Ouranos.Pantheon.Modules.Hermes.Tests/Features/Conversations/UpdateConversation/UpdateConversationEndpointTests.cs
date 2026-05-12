@@ -39,6 +39,7 @@ public sealed class UpdateConversationEndpointTests
 
         // Assert
         result.ShouldBeOfType<Ok<IdResponse<Conversation>>>();
-        await _bus.Received(1).InvokeAsync<IdResponse<Conversation>>(Arg.Any<UpdateConversationInput>(), ct);
+        await _bus.Received(1)
+            .InvokeAsync<IdResponse<Conversation>>(Arg.Any<UpdateConversationInput>(), ct);
     }
 }

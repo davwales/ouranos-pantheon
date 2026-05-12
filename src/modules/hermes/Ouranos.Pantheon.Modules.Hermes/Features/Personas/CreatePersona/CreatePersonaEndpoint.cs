@@ -9,8 +9,7 @@ public static class CreatePersonaEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapPost("/api/hermes/personas", Handle)
-            .WithTags("Hermes.Personas");
+        app.MapPost("/api/hermes/personas", Handle).WithTags("Hermes.Personas");
     }
 
     internal static async Task<IResult> Handle(

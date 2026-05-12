@@ -4,14 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres;
-using Ouranos.Pantheon.Modules.Shared.WebSockets;
-using Ouranos.Pantheon.Modules.Shared.WebSockets.Listeners;
-using Ouranos.Pantheon.Modules.Shared.WebSockets.Serializers;
-using Ouranos.Pantheon.Modules.Shared.WebSockets.Serializers.Converters;
-using Ouranos.Pantheon.Modules.Shared.WebSockets.Serializers.TypeResolvers;
-using Ouranos.Pantheon.Modules.Shared.WebSockets.WebSocketClients;
+using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Consumer;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Ffxiv;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Ffxiv.Messages;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Ffxiv.Serializers;
@@ -20,72 +13,79 @@ using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Osrs;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Stocks;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Stocks.Messages;
-using Ouranos.Pantheon.Modules.Plutus.Shared;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
-using Ouranos.Pantheon.Modules.Shared;
-using Wolverine;
-using Wolverine.RabbitMQ;
-using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Consumer;
-using Ouranos.Pantheon.Modules.Plutus.Features.Trades.MarketOverviewBucket;
-using Ouranos.Pantheon.Modules.Plutus.Features.Trades.MarketTradeSnapshot;
-using Ouranos.Pantheon.Modules.Plutus.Features.Signals.Shared;
-using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSymbolSignals;
-using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSignalRankings;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals.Computers;
-using Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetAllMarkets;
-using Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetMarket;
-using Ouranos.Pantheon.Modules.Plutus.Features.Markets.CreateMarket;
-using Ouranos.Pantheon.Modules.Plutus.Features.Markets.UpdateMarket;
-using Ouranos.Pantheon.Modules.Plutus.Features.Markets.DeleteMarket;
-using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketTrades;
-using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetAllTrades;
-using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketOverview;
-using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetRecipeTrades;
-using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetSymbolTrades;
-using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetAllSymbols;
-using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetSymbol;
-using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetDailySymbolSummary;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetAllForecasts;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetForecastEfficacy;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetMarketForecast;
-using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.GetAllRecipes;
-using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.GetRecipe;
-using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.CreateRecipe;
-using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.UpdateRecipe;
-using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.DeleteRecipe;
-using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.CreateSymbolGroup;
-using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetAllSymbolGroups;
-using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetSymbolGroup;
-using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.UpdateSymbolGroup;
-using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.DeleteSymbolGroup;
-using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.CreateStrategy;
-using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetAllStrategies;
-using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetStrategy;
-using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.UpdateStrategy;
-using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.DeleteStrategy;
-using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.SetStrategyActive;
-using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetAllBacktests;
-using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetBacktest;
-using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetRecommendations;
-using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.OptimizeStrategy;
-using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest;
-using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Steps;
-using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.CancelBacktest;
-using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RestartBacktest;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Executors;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
-using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
+using Ouranos.Pantheon.Modules.Plutus.Features.Markets.CreateMarket;
+using Ouranos.Pantheon.Modules.Plutus.Features.Markets.DeleteMarket;
+using Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetAllMarkets;
+using Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetMarket;
+using Ouranos.Pantheon.Modules.Plutus.Features.Markets.UpdateMarket;
+using Ouranos.Pantheon.Modules.Plutus.Features.Positions.ClosePosition;
 using Ouranos.Pantheon.Modules.Plutus.Features.Positions.CreatePosition;
 using Ouranos.Pantheon.Modules.Plutus.Features.Positions.GetAllPositions;
 using Ouranos.Pantheon.Modules.Plutus.Features.Positions.GetPosition;
-using Ouranos.Pantheon.Modules.Plutus.Features.Positions.UpdatePosition;
-using Ouranos.Pantheon.Modules.Plutus.Features.Positions.ClosePosition;
 using Ouranos.Pantheon.Modules.Plutus.Features.Positions.LinkPosition;
+using Ouranos.Pantheon.Modules.Plutus.Features.Positions.UpdatePosition;
+using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.CreateRecipe;
+using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.DeleteRecipe;
+using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.GetAllRecipes;
+using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.GetRecipe;
+using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.UpdateRecipe;
+using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSignalRankings;
+using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSymbolSignals;
+using Ouranos.Pantheon.Modules.Plutus.Features.Signals.Shared;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.CancelBacktest;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.CreateStrategy;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.DeleteStrategy;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetAllBacktests;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetAllStrategies;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetBacktest;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetRecommendations;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetStrategy;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.OptimizeStrategy;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RestartBacktest;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Steps;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.SetStrategyActive;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.UpdateStrategy;
+using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.CreateSymbolGroup;
+using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.DeleteSymbolGroup;
+using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetAllSymbolGroups;
+using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetSymbolGroup;
+using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.UpdateSymbolGroup;
+using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetAllSymbols;
+using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetDailySymbolSummary;
+using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetSymbol;
+using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetAllTrades;
+using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketOverview;
+using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketTrades;
+using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetRecipeTrades;
+using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetSymbolTrades;
+using Ouranos.Pantheon.Modules.Plutus.Features.Trades.MarketOverviewBucket;
+using Ouranos.Pantheon.Modules.Plutus.Features.Trades.MarketTradeSnapshot;
+using Ouranos.Pantheon.Modules.Plutus.Shared;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals.Computers;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Executors;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization;
+using Ouranos.Pantheon.Modules.Shared;
+using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
+using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres;
+using Ouranos.Pantheon.Modules.Shared.WebSockets;
+using Ouranos.Pantheon.Modules.Shared.WebSockets.Listeners;
+using Ouranos.Pantheon.Modules.Shared.WebSockets.Serializers;
+using Ouranos.Pantheon.Modules.Shared.WebSockets.Serializers.Converters;
+using Ouranos.Pantheon.Modules.Shared.WebSockets.Serializers.TypeResolvers;
+using Ouranos.Pantheon.Modules.Shared.WebSockets.WebSocketClients;
+using Wolverine;
+using Wolverine.RabbitMQ;
 
 namespace Ouranos.Pantheon.Modules.Plutus;
 
@@ -95,14 +95,18 @@ public sealed class PlutusModule : IPantheonModule
     {
         var plutusOptionsSection = builder.Configuration.GetSection(PlutusOptions.SectionName);
 
-        builder.Services
-            .AddCoreOuranosMachineLearningModule(builder.Configuration)
+        builder
+            .Services.AddCoreOuranosMachineLearningModule(builder.Configuration)
             .AddCorePostgresModule<PlutusDbContext>(
                 builder.Configuration,
                 typeof(PlutusModule).Assembly
             )
-            .Configure<OptimizationOptions>(plutusOptionsSection.GetSection(OptimizationOptions.SectionName))
-            .Configure<BacktestDataOptions>(plutusOptionsSection.GetSection(BacktestDataOptions.SectionName));
+            .Configure<OptimizationOptions>(
+                plutusOptionsSection.GetSection(OptimizationOptions.SectionName)
+            )
+            .Configure<BacktestDataOptions>(
+                plutusOptionsSection.GetSection(BacktestDataOptions.SectionName)
+            );
 
         ConfigureDataLoaders(builder);
         ConfigureSignalComputers(builder);
@@ -178,18 +182,26 @@ public sealed class PlutusModule : IPantheonModule
 
     public void ConfigureWolverine(WolverineOptions opts, IConfiguration configuration)
     {
-        opts.PublishMessage<RunBacktestMessage>().ToRabbitExchange(
-            RunBacktestMessage.Exchange,
-            e => { e.BindQueue(RunBacktestMessage.Queue); }
-        );
+        opts.PublishMessage<RunBacktestMessage>()
+            .ToRabbitExchange(
+                RunBacktestMessage.Exchange,
+                e =>
+                {
+                    e.BindQueue(RunBacktestMessage.Queue);
+                }
+            );
 
         opts.ListenToRabbitQueue(RunBacktestMessage.Queue)
             .DeadLetterQueueing(new DeadLetterQueue(RunBacktestMessage.DeadLetterQueue));
 
-        opts.PublishMessage<OptimizeStrategyMessage>().ToRabbitExchange(
-            OptimizeStrategyMessage.Exchange,
-            e => { e.BindQueue(OptimizeStrategyMessage.Queue); }
-        );
+        opts.PublishMessage<OptimizeStrategyMessage>()
+            .ToRabbitExchange(
+                OptimizeStrategyMessage.Exchange,
+                e =>
+                {
+                    e.BindQueue(OptimizeStrategyMessage.Queue);
+                }
+            );
 
         opts.ListenToRabbitQueue(OptimizeStrategyMessage.Queue)
             .DeadLetterQueueing(new DeadLetterQueue(OptimizeStrategyMessage.DeadLetterQueue));
@@ -200,16 +212,24 @@ public sealed class PlutusModule : IPantheonModule
 
         var loaders = dataLoadersSection.Get<DataLoadersOptions>() ?? new DataLoadersOptions();
 
-        if (!loaders.Ffxiv.IsEnabled && !loaders.Osrs.IsEnabled &&
-            !loaders.Stocks.IsEnabled && !loaders.Consumer.IsEnabled)
+        if (
+            !loaders.Ffxiv.IsEnabled
+            && !loaders.Osrs.IsEnabled
+            && !loaders.Stocks.IsEnabled
+            && !loaders.Consumer.IsEnabled
+        )
         {
             return;
         }
 
-        opts.PublishMessage<TradeMessage>().ToRabbitExchange(
-            TradeMessage.Exchange,
-            e => { e.BindQueue(TradeMessage.Queue); }
-        );
+        opts.PublishMessage<TradeMessage>()
+            .ToRabbitExchange(
+                TradeMessage.Exchange,
+                e =>
+                {
+                    e.BindQueue(TradeMessage.Queue);
+                }
+            );
 
         if (loaders.Consumer.IsEnabled)
         {
@@ -222,8 +242,10 @@ public sealed class PlutusModule : IPantheonModule
     {
         var plutusOptionsSection = builder.Configuration.GetSection(PlutusOptions.SectionName);
 
-        builder.Services
-            .Configure<SignalOptions>(plutusOptionsSection.GetSection(SignalOptions.SectionName))
+        builder
+            .Services.Configure<SignalOptions>(
+                plutusOptionsSection.GetSection(SignalOptions.SectionName)
+            )
             .AddSingleton<ISignalComputer, TaxAdjustedRoiSignalComputer>()
             .AddSingleton<ISignalComputer, VolumeAnomalySignalComputer>()
             .AddSingleton<ISignalComputer, TrendMomentumSignalComputer>()
@@ -235,8 +257,8 @@ public sealed class PlutusModule : IPantheonModule
 
     private static void ConfigureStrategyExecutors(IHostApplicationBuilder builder)
     {
-        builder.Services
-            .AddSingleton<IStrategyExecutor, SignalWeightedExecutor>()
+        builder
+            .Services.AddSingleton<IStrategyExecutor, SignalWeightedExecutor>()
             .AddSingleton<IStrategyExecutor, ForecastMomentumExecutor>()
             .AddSingleton<IStrategyExecutor, MeanReversionExecutor>()
             .AddSingleton<IStrategyExecutor, RecipeArbitrageExecutor>()
@@ -258,8 +280,8 @@ public sealed class PlutusModule : IPantheonModule
         var plutusOptionsSection = builder.Configuration.GetSection(PlutusOptions.SectionName);
         var dataLoadersSection = plutusOptionsSection.GetSection(DataLoadersOptions.SectionName);
 
-        builder.Services
-            .Configure<PlutusOptions>(plutusOptionsSection)
+        builder
+            .Services.Configure<PlutusOptions>(plutusOptionsSection)
             .Configure<MarketTradeSnapshotOptions>(
                 plutusOptionsSection.GetSection(MarketTradeSnapshotOptions.SectionName)
             )
@@ -267,10 +289,18 @@ public sealed class PlutusModule : IPantheonModule
                 plutusOptionsSection.GetSection(MarketOverviewBucketOptions.SectionName)
             )
             .Configure<DataLoadersOptions>(dataLoadersSection)
-            .Configure<FfxivDataLoaderOptions>(dataLoadersSection.GetSection(FfxivDataLoaderOptions.SectionName))
-            .Configure<OsrsDataLoaderOptions>(dataLoadersSection.GetSection(OsrsDataLoaderOptions.SectionName))
-            .Configure<StocksDataLoaderOptions>(dataLoadersSection.GetSection(StocksDataLoaderOptions.SectionName))
-            .Configure<ConsumerDataLoaderOptions>(dataLoadersSection.GetSection(ConsumerDataLoaderOptions.SectionName))
+            .Configure<FfxivDataLoaderOptions>(
+                dataLoadersSection.GetSection(FfxivDataLoaderOptions.SectionName)
+            )
+            .Configure<OsrsDataLoaderOptions>(
+                dataLoadersSection.GetSection(OsrsDataLoaderOptions.SectionName)
+            )
+            .Configure<StocksDataLoaderOptions>(
+                dataLoadersSection.GetSection(StocksDataLoaderOptions.SectionName)
+            )
+            .Configure<ConsumerDataLoaderOptions>(
+                dataLoadersSection.GetSection(ConsumerDataLoaderOptions.SectionName)
+            )
             .AddSingleton<IQueueTradeMessages, QueueTradeMessages>()
             .AddTransient<FfxivListener>()
             .AddTransient<FfxivSubscriptionInitializer>()
@@ -280,20 +310,21 @@ public sealed class PlutusModule : IPantheonModule
             .AddTransient<StocksSubscriptionListener>()
             .AddTransient<StocksErrorListener>();
 
-        builder.Services.AddHttpClient<IGithubClient, GithubClient>((sp, client) =>
+        builder.Services.AddHttpClient<IGithubClient, GithubClient>(
+            (sp, client) =>
             {
                 var options = sp.GetRequiredService<IOptions<FfxivDataLoaderOptions>>();
                 client.BaseAddress = new Uri(options.Value.XivApi.BaseAddress);
             }
         );
 
-        builder.Services.AddHttpClient<IWikiClient, OsrsWikiClient>((sp, client) =>
+        builder.Services.AddHttpClient<IWikiClient, OsrsWikiClient>(
+            (sp, client) =>
             {
                 var options = sp.GetRequiredService<IOptions<OsrsDataLoaderOptions>>();
                 client.BaseAddress = new Uri(options.Value.Wiki.BaseAddress);
             }
         );
-
 
         var loaders = dataLoadersSection.Get<DataLoadersOptions>() ?? new DataLoadersOptions();
 
@@ -347,7 +378,7 @@ public sealed class PlutusModule : IPantheonModule
             [ErrorMessage.TypeIndicator] = typeof(ErrorMessage),
             [SuccessMessage.TypeIndicator] = typeof(SuccessMessage),
             [SubscriptionAckMessage.TypeIndicator] = typeof(SubscriptionAckMessage),
-            [AlpacaTradeMessage.TypeIndicator] = typeof(AlpacaTradeMessage)
+            [AlpacaTradeMessage.TypeIndicator] = typeof(AlpacaTradeMessage),
         };
 
         var converter = new JsonMessageConverter();

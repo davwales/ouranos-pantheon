@@ -4,5 +4,5 @@ public enum SignalStrength
 {
     Weak = 0,
     Medium = 1,
-    Strong = 2
+    Strong = 2,
 }

@@ -17,12 +17,16 @@ public sealed class VolumeAnomalySignalComputer : ISignalComputer
 
     public SignalType Type => SignalType.VolumeAnomaly;
     public string Label => "Volume Anomaly";
-    public string Description => "Short-period volume rate vs long-period rate; spike indicates bullish activity.";
+    public string Description =>
+        "Short-period volume rate vs long-period rate; spike indicates bullish activity.";
 
     public IReadOnlyList<InvestmentIntent> Intents =>
-    [
-        InvestmentIntent.Buy, InvestmentIntent.Sell, InvestmentIntent.Flip, InvestmentIntent.Merch
-    ];
+        [
+            InvestmentIntent.Buy,
+            InvestmentIntent.Sell,
+            InvestmentIntent.Flip,
+            InvestmentIntent.Merch,
+        ];
 
     public Task<decimal?> ComputeAsync(SignalComputeContext context, CancellationToken ct)
     {
@@ -34,8 +38,12 @@ public sealed class VolumeAnomalySignalComputer : ISignalComputer
             return Task.FromResult<decimal?>(null);
         }
 
-        var shortWindowMinutes = (decimal)(_options.Value.ShortTimeFrame.ToTimeSpan()?.TotalMinutes ?? 0);
-        var longWindowMinutes = (decimal)(_options.Value.LongTimeFrame.ToTimeSpan()?.TotalMinutes ?? 0);
+        var shortWindowMinutes = (decimal)(
+            _options.Value.ShortTimeFrame.ToTimeSpan()?.TotalMinutes ?? 0
+        );
+        var longWindowMinutes = (decimal)(
+            _options.Value.LongTimeFrame.ToTimeSpan()?.TotalMinutes ?? 0
+        );
         if (shortWindowMinutes == 0 || longWindowMinutes == 0)
         {
             return Task.FromResult<decimal?>(null);

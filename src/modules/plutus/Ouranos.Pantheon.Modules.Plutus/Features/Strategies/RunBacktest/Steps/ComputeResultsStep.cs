@@ -1,6 +1,6 @@
-using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
+using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Steps;
 
@@ -37,15 +37,21 @@ public sealed class ComputeResultsStep : IStep<BacktestPayload>
         var totalReturnPercent = budget > 0 ? totalReturn / budget : 0;
         var winningTrades = closedPositions.Count(p => p.ProfitLoss > 0);
         var losingTrades = closedPositions.Count(p => p.ProfitLoss <= 0);
-        var winRate = closedPositions.Count > 0 ? (decimal)winningTrades / closedPositions.Count : 0;
+        var winRate =
+            closedPositions.Count > 0 ? (decimal)winningTrades / closedPositions.Count : 0;
         var sharpeRatio = ComputeSharpeRatio(portfolioValues);
         var sortinoRatio = ComputeSortinoRatio(portfolioValues);
         var maxDrawdownAbsolute = maxDrawdown * peakPortfolioValue;
         var cagr = ComputeCagr(totalReturnPercent, totalDays);
         var calmarRatio = maxDrawdown != 0 ? cagr / maxDrawdown : 0;
         var grossProfit = closedPositions.Where(p => p.ProfitLoss > 0).Sum(p => p.ProfitLoss);
-        var grossLoss = Math.Abs(closedPositions.Where(p => p.ProfitLoss < 0).Sum(p => p.ProfitLoss));
-        var profitFactor = grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? decimal.MaxValue : 0;
+        var grossLoss = Math.Abs(
+            closedPositions.Where(p => p.ProfitLoss < 0).Sum(p => p.ProfitLoss)
+        );
+        var profitFactor =
+            grossLoss > 0 ? grossProfit / grossLoss
+            : grossProfit > 0 ? decimal.MaxValue
+            : 0;
         var avgWin = winningTrades > 0 ? grossProfit / winningTrades : 0;
         var avgLoss = losingTrades > 0 ? grossLoss / losingTrades : 0;
         var expectancy = (winRate * avgWin) - ((1 - winRate) * avgLoss);
@@ -71,7 +77,7 @@ public sealed class ComputeResultsStep : IStep<BacktestPayload>
             BestTrade = closedPositions.Count > 0 ? closedPositions.Max(p => p.ReturnPercent) : 0,
             WorstTrade = closedPositions.Count > 0 ? closedPositions.Min(p => p.ReturnPercent) : 0,
             FinalBalance = balance,
-            Positions = closedPositions
+            Positions = closedPositions,
         };
     }
 
@@ -97,7 +103,8 @@ public sealed class ComputeResultsStep : IStep<BacktestPayload>
         }
 
         var avgReturn = returns.Average();
-        var sampleVariance = returns.Sum(r => (r - avgReturn) * (r - avgReturn)) / (returns.Count - 1);
+        var sampleVariance =
+            returns.Sum(r => (r - avgReturn) * (r - avgReturn)) / (returns.Count - 1);
         var stdDev = (decimal)Math.Sqrt((double)sampleVariance);
         return stdDev > 0 ? avgReturn / stdDev * (decimal)Math.Sqrt(365) : 0;
     }

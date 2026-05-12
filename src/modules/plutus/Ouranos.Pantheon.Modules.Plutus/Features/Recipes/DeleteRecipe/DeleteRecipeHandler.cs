@@ -1,11 +1,11 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.DeleteRecipe.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Recipes;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Recipes;
+using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Recipes.DeleteRecipe;
 
@@ -14,10 +14,7 @@ public sealed class DeleteRecipeHandler : IPantheonHandler<DeleteRecipeInput, Id
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<DeleteRecipeHandler> _logger;
 
-    public DeleteRecipeHandler(
-        ILogger<DeleteRecipeHandler> logger,
-        PlutusDbContext dbContext
-    )
+    public DeleteRecipeHandler(ILogger<DeleteRecipeHandler> logger, PlutusDbContext dbContext)
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(dbContext);
@@ -34,8 +31,10 @@ public sealed class DeleteRecipeHandler : IPantheonHandler<DeleteRecipeInput, Id
         _logger.LogTrace("Attempting to handle delete recipe command '{@command}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var recipe = await _dbContext.Recipes
-            .FirstOrDefaultAsync(r => r.Id == command.RecipeId, cancellationToken);
+        var recipe = await _dbContext.Recipes.FirstOrDefaultAsync(
+            r => r.Id == command.RecipeId,
+            cancellationToken
+        );
 
         Guard.Against.NotFound(command.RecipeId, recipe);
 

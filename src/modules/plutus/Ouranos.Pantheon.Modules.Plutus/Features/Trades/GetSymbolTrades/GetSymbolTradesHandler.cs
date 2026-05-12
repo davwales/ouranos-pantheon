@@ -1,31 +1,33 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Ouranos.Pantheon.Modules.Shared.Application;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Extensions;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Functions;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Querying;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetSymbolTrades.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
-using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
+using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Extensions;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Functions;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Querying;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetSymbolTrades;
 
-internal sealed record BucketOpenClose(DateTimeOffset BucketStart, decimal OpenPrice, decimal ClosePrice);
+internal sealed record BucketOpenClose(
+    DateTimeOffset BucketStart,
+    decimal OpenPrice,
+    decimal ClosePrice
+);
 
-public sealed class GetSymbolTradesHandler : IPantheonHandler<GetSymbolTradesInput, GetSymbolTradesResponse>
+public sealed class GetSymbolTradesHandler
+    : IPantheonHandler<GetSymbolTradesInput, GetSymbolTradesResponse>
 {
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<GetSymbolTradesHandler> _logger;
 
-    public GetSymbolTradesHandler(
-        ILogger<GetSymbolTradesHandler> logger,
-        PlutusDbContext dbContext
-    )
+    public GetSymbolTradesHandler(ILogger<GetSymbolTradesHandler> logger, PlutusDbContext dbContext)
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(dbContext);
@@ -46,8 +48,9 @@ public sealed class GetSymbolTradesHandler : IPantheonHandler<GetSymbolTradesInp
             ? DateTimeOffset.UtcNow - span
             : null;
 
-        var baseQuery = _dbContext.Trades
-            .Where(t => t.SymbolId == query.SymbolId && (since == null || t.Timestamp >= since));
+        var baseQuery = _dbContext.Trades.Where(t =>
+            t.SymbolId == query.SymbolId && (since == null || t.Timestamp >= since)
+        );
 
         var aggregatedStats = await baseQuery
             .GroupBy(t => 1)
@@ -57,9 +60,8 @@ public sealed class GetSymbolTradesHandler : IPantheonHandler<GetSymbolTradesInp
                 MaxPrice = g.Max(t => t.Price),
                 TotalSpent = g.Sum(t => t.Price * t.Volume),
                 Volume = g.Sum(t => t.Volume),
-                NumTransactions = g.Count()
-            }
-            )
+                NumTransactions = g.Count(),
+            })
             .FirstOrDefaultAsync(cancellationToken);
 
         if (aggregatedStats is null)
@@ -68,7 +70,11 @@ public sealed class GetSymbolTradesHandler : IPantheonHandler<GetSymbolTradesInp
             return new GetSymbolTradesResponse(0, 0, 0, 0, 0, 0, []);
         }
 
-        var (buckets, interval) = await GetBucketedTrades(baseQuery, query.NumBuckets, cancellationToken);
+        var (buckets, interval) = await GetBucketedTrades(
+            baseQuery,
+            query.NumBuckets,
+            cancellationToken
+        );
 
         if (buckets.Count > 0 && interval.HasValue)
         {
@@ -85,15 +91,18 @@ public sealed class GetSymbolTradesHandler : IPantheonHandler<GetSymbolTradesInp
                 buckets =
                 [
                     .. buckets.Select(b =>
+                    {
+                        if (!openClose.TryGetValue(b.BucketStart, out var oc))
                         {
-                            if (!openClose.TryGetValue(b.BucketStart, out var oc))
-                            {
-                                return b;
-                            }
-
-                            return b with { OpenPrice = oc.OpenPrice, ClosePrice = oc.ClosePrice };
+                            return b;
                         }
-                    )
+
+                        return b with
+                        {
+                            OpenPrice = oc.OpenPrice,
+                            ClosePrice = oc.ClosePrice,
+                        };
+                    }),
                 ];
             }
             catch (InvalidOperationException)
@@ -105,26 +114,22 @@ public sealed class GetSymbolTradesHandler : IPantheonHandler<GetSymbolTradesInp
         var response = new GetSymbolTradesResponse(
             aggregatedStats.MinPrice,
             aggregatedStats.MaxPrice,
-            aggregatedStats.Volume > 0
-                ? aggregatedStats.TotalSpent / aggregatedStats.Volume
-                : 0m,
+            aggregatedStats.Volume > 0 ? aggregatedStats.TotalSpent / aggregatedStats.Volume : 0m,
             aggregatedStats.TotalSpent,
             aggregatedStats.Volume,
             aggregatedStats.NumTransactions,
             [
-                .. buckets
-                    .Select(b => new GetSymbolTradeBucketsResponse(
-                            b.AveragePrice,
-                            b.Volume,
-                            b.TotalSpent,
-                            b.MinPrice,
-                            b.MaxPrice,
-                            b.NumTransactions,
-                            b.BucketStart,
-                            b.OpenPrice,
-                            b.ClosePrice
-                        )
-                    )
+                .. buckets.Select(b => new GetSymbolTradeBucketsResponse(
+                    b.AveragePrice,
+                    b.Volume,
+                    b.TotalSpent,
+                    b.MinPrice,
+                    b.MaxPrice,
+                    b.NumTransactions,
+                    b.BucketStart,
+                    b.OpenPrice,
+                    b.ClosePrice
+                )),
             ]
         );
 
@@ -143,27 +148,36 @@ public sealed class GetSymbolTradesHandler : IPantheonHandler<GetSymbolTradesInp
         var intervalLiteral = interval.ToTimescaleInterval();
 
         var command = since is not null
-            ? RawSqlCommand.FromSql($"""
-                SELECT time_bucket('{intervalLiteral}'::interval, "timestamp") AS bucket_start,
-                       first(price, "timestamp") AS open_price,
-                       last(price, "timestamp") AS close_price
-                FROM plutus.trades
-                WHERE symbol_id = @symbolId AND "timestamp" >= @since
-                GROUP BY bucket_start
-                """)
+            ? RawSqlCommand
+                .FromSql(
+                    $"""
+                    SELECT time_bucket('{intervalLiteral}'::interval, "timestamp") AS bucket_start,
+                           first(price, "timestamp") AS open_price,
+                           last(price, "timestamp") AS close_price
+                    FROM plutus.trades
+                    WHERE symbol_id = @symbolId AND "timestamp" >= @since
+                    GROUP BY bucket_start
+                    """
+                )
                 .WithId("@symbolId", symbolId)
                 .WithDateTimeOffset("@since", since)
-            : RawSqlCommand.FromSql($"""
-                SELECT time_bucket('{intervalLiteral}'::interval, "timestamp") AS bucket_start,
-                       first(price, "timestamp") AS open_price,
-                       last(price, "timestamp") AS close_price
-                FROM plutus.trades
-                WHERE symbol_id = @symbolId
-                GROUP BY bucket_start
-                """)
+            : RawSqlCommand
+                .FromSql(
+                    $"""
+                    SELECT time_bucket('{intervalLiteral}'::interval, "timestamp") AS bucket_start,
+                           first(price, "timestamp") AS open_price,
+                           last(price, "timestamp") AS close_price
+                    FROM plutus.trades
+                    WHERE symbol_id = @symbolId
+                    GROUP BY bucket_start
+                    """
+                )
                 .WithId("@symbolId", symbolId);
 
-        var results = await dbContext.Database.ExecuteQueryAsync<BucketOpenClose>(command, cancellationToken);
+        var results = await dbContext.Database.ExecuteQueryAsync<BucketOpenClose>(
+            command,
+            cancellationToken
+        );
 
         return results.ToDictionary(r => r.BucketStart);
     }
@@ -180,9 +194,8 @@ public sealed class GetSymbolTradesHandler : IPantheonHandler<GetSymbolTradesInp
             {
                 StartTime = g.Min(t => t.Timestamp),
                 EndTime = g.Max(t => t.Timestamp),
-                Duration = g.Max(t => t.Timestamp) - g.Min(t => t.Timestamp)
-            }
-            )
+                Duration = g.Max(t => t.Timestamp) - g.Min(t => t.Timestamp),
+            })
             .FirstOrDefaultAsync(cancellationToken);
 
         if (timeRange is null || timeRange.Duration <= TimeSpan.Zero)
@@ -195,19 +208,18 @@ public sealed class GetSymbolTradesHandler : IPantheonHandler<GetSymbolTradesInp
         var buckets = await query
             .GroupBy(t => TimescaleDbFunctions.TimeBucket(interval, t.Timestamp))
             .Select(group => new BucketDto(
-                    group.First().SymbolId,
-                    group.Key,
-                    group.Sum(x => x.Price * x.Volume),
-                    group.Sum(x => x.Volume),
-                    group.Min(x => x.Price),
-                    group.Max(x => x.Price),
-                    group.Count(),
-                    group.Sum(x => x.Price * x.Volume) / group.Sum(x => x.Volume),
-                    group.Max(x => x.Price) - group.Min(x => x.Price),
-                    0m,
-                    0m
-                )
-            )
+                group.First().SymbolId,
+                group.Key,
+                group.Sum(x => x.Price * x.Volume),
+                group.Sum(x => x.Volume),
+                group.Min(x => x.Price),
+                group.Max(x => x.Price),
+                group.Count(),
+                group.Sum(x => x.Price * x.Volume) / group.Sum(x => x.Volume),
+                group.Max(x => x.Price) - group.Min(x => x.Price),
+                0m,
+                0m
+            ))
             .ToListAsync(cancellationToken);
 
         return ([.. buckets.OrderBy(b => b.BucketStart)], interval);

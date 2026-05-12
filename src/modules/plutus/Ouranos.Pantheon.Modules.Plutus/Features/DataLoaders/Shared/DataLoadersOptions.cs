@@ -14,12 +14,11 @@ public sealed record DataLoadersOptions(
 {
     public const string SectionName = "DataLoaders";
 
-    public DataLoadersOptions() : this(
-        Ffxiv: new FfxivDataLoaderOptions(),
-        Osrs: new OsrsDataLoaderOptions(),
-        Stocks: new StocksDataLoaderOptions(),
-        Consumer: new ConsumerDataLoaderOptions()
-    )
-    {
-    }
+    public DataLoadersOptions()
+        : this(
+            Ffxiv: new FfxivDataLoaderOptions(),
+            Osrs: new OsrsDataLoaderOptions(),
+            Stocks: new StocksDataLoaderOptions(),
+            Consumer: new ConsumerDataLoaderOptions()
+        ) { }
 }

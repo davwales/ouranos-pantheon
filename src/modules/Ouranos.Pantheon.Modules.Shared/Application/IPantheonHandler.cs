@@ -1,8 +1,6 @@
 namespace Ouranos.Pantheon.Modules.Shared.Application;
 
-public interface IPantheonHandler
-{
-}
+public interface IPantheonHandler { }
 
 public interface IPantheonHandler<in TInput, TOutput> : IPantheonHandler
     where TInput : class

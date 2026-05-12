@@ -16,7 +16,9 @@ public sealed class ClosePositionHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
     private readonly ClosePositionHandler _handler;
-    private readonly ILogger<ClosePositionHandler> _logger = Substitute.For<ILogger<ClosePositionHandler>>();
+    private readonly ILogger<ClosePositionHandler> _logger = Substitute.For<
+        ILogger<ClosePositionHandler>
+    >();
     private readonly PlutusDbContext _dbContext;
 
     public ClosePositionHandlerTests()
@@ -32,13 +34,7 @@ public sealed class ClosePositionHandlerTests
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
         var symbolId = _fixture.Create<Id<Symbol>>();
-        var position = Position.Create(
-            PositionSide.Buy,
-            marketId,
-            symbolId,
-            150.50m,
-            10m
-        );
+        var position = Position.Create(PositionSide.Buy, marketId, symbolId, 150.50m, 10m);
         await _dbContext.Positions.AddAsync(position);
         await _dbContext.SaveChangesAsync();
 
@@ -63,13 +59,7 @@ public sealed class ClosePositionHandlerTests
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
         var symbolId = _fixture.Create<Id<Symbol>>();
-        var position = Position.Create(
-            PositionSide.Buy,
-            marketId,
-            symbolId,
-            150.50m,
-            10m
-        );
+        var position = Position.Create(PositionSide.Buy, marketId, symbolId, 150.50m, 10m);
         await _dbContext.Positions.AddAsync(position);
         await _dbContext.SaveChangesAsync();
 
@@ -92,13 +82,7 @@ public sealed class ClosePositionHandlerTests
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
         var symbolId = _fixture.Create<Id<Symbol>>();
-        var position = Position.Create(
-            PositionSide.Sell,
-            marketId,
-            symbolId,
-            155.00m,
-            10m
-        );
+        var position = Position.Create(PositionSide.Sell, marketId, symbolId, 155.00m, 10m);
         await _dbContext.Positions.AddAsync(position);
         await _dbContext.SaveChangesAsync();
 
@@ -121,13 +105,7 @@ public sealed class ClosePositionHandlerTests
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
         var symbolId = _fixture.Create<Id<Symbol>>();
-        var position = Position.Create(
-            PositionSide.Sell,
-            marketId,
-            symbolId,
-            155.00m,
-            10m
-        );
+        var position = Position.Create(PositionSide.Sell, marketId, symbolId, 155.00m, 10m);
         await _dbContext.Positions.AddAsync(position);
         await _dbContext.SaveChangesAsync();
 
@@ -150,13 +128,7 @@ public sealed class ClosePositionHandlerTests
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
         var symbolId = _fixture.Create<Id<Symbol>>();
-        var position = Position.Create(
-            PositionSide.Buy,
-            marketId,
-            symbolId,
-            150.50m,
-            10m
-        );
+        var position = Position.Create(PositionSide.Buy, marketId, symbolId, 150.50m, 10m);
         await _dbContext.Positions.AddAsync(position);
         await _dbContext.SaveChangesAsync();
 
@@ -175,13 +147,7 @@ public sealed class ClosePositionHandlerTests
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
         var symbolId = _fixture.Create<Id<Symbol>>();
-        var position = Position.Create(
-            PositionSide.Sell,
-            marketId,
-            symbolId,
-            155.00m,
-            10m
-        );
+        var position = Position.Create(PositionSide.Sell, marketId, symbolId, 155.00m, 10m);
         await _dbContext.Positions.AddAsync(position);
         await _dbContext.SaveChangesAsync();
 
@@ -216,13 +182,7 @@ public sealed class ClosePositionHandlerTests
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
         var symbolId = _fixture.Create<Id<Symbol>>();
-        var position = Position.Create(
-            PositionSide.Buy,
-            marketId,
-            symbolId,
-            150.50m,
-            10m
-        );
+        var position = Position.Create(PositionSide.Buy, marketId, symbolId, 150.50m, 10m);
         position.Close(PositionStatus.Bought);
         await _dbContext.Positions.AddAsync(position);
         await _dbContext.SaveChangesAsync();

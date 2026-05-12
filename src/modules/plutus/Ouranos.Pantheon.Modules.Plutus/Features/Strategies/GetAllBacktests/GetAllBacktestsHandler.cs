@@ -2,11 +2,11 @@ using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetAllBacktests.Schemas;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
-using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetAllBacktests.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetAllBacktests;
 
@@ -51,38 +51,48 @@ public sealed class GetAllBacktestsHandler
 
         var limits = _queryOptions.Value;
         Guard.Against.OutOfRange(input.Skip, nameof(input.Skip), 0, limits.MaxSkip);
-        Guard.Against.OutOfRange(input.Take, nameof(input.Take), limits.MinPageSize, limits.MaxPageSize);
+        Guard.Against.OutOfRange(
+            input.Take,
+            nameof(input.Take),
+            limits.MinPageSize,
+            limits.MaxPageSize
+        );
 
-        var backtests = await _dbContext.Backtests
-            .AsNoTracking()
+        var backtests = await _dbContext
+            .Backtests.AsNoTracking()
             .Where(b => b.StrategyId == input.StrategyId)
             .OrderByDescending(b => b.CreatedAt)
             .Select(b => new GetAllBacktestsResponse(
-                    b.Id,
-                    b.MarketId,
-                    b.StartDate,
-                    b.EndDate,
-                    b.Budget,
-                    b.Kind,
-                    b.Status,
-                    b.Results != null ? b.Results.TotalReturnPercent : null,
-                    b.Results != null ? b.Results.WinRate : null,
-                    b.Results != null ? b.Results.SharpeRatio : null,
-                    b.Results != null ? b.Results.TotalTrades : null,
-                    b.CreatedAt
-                )
-            )
+                b.Id,
+                b.MarketId,
+                b.StartDate,
+                b.EndDate,
+                b.Budget,
+                b.Kind,
+                b.Status,
+                b.Results != null ? b.Results.TotalReturnPercent : null,
+                b.Results != null ? b.Results.WinRate : null,
+                b.Results != null ? b.Results.SharpeRatio : null,
+                b.Results != null ? b.Results.TotalTrades : null,
+                b.CreatedAt
+            ))
             .ToListAsync(cancellationToken);
 
         var totalCount = backtests.Count;
 
-        var sorted = backtests.AsQueryable()
+        var sorted = backtests
+            .AsQueryable()
             .SortBy(input.SortField, input.SortDirection, SortBuilder)
             .Skip(input.Skip)
             .Take(input.Take)
             .ToList();
 
         _logger.LogDebug("Successfully handled get all backtests request.");
-        return new PagedResponse<GetAllBacktestsResponse>(sorted, totalCount, input.Skip, input.Take);
+        return new PagedResponse<GetAllBacktestsResponse>(
+            sorted,
+            totalCount,
+            input.Skip,
+            input.Take
+        );
     }
 }

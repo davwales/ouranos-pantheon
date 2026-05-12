@@ -1,13 +1,14 @@
 using Ardalis.GuardClauses;
-using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
+using Ouranos.Pantheon.Modules.Shared.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
 
 public sealed class ForecastRecord : BaseEntity<Id<ForecastRecord>>
 {
-    private ForecastRecord(Id<ForecastRecord> id) : base(id)
+    private ForecastRecord(Id<ForecastRecord> id)
+        : base(id)
     {
         Predicted = new ForecastPoint(0, 0, 0, 0);
     }
@@ -61,7 +62,7 @@ public sealed class ForecastRecord : BaseEntity<Id<ForecastRecord>>
             GeneratedAt = generatedAt,
             TargetAt = targetAt,
             HorizonDays = horizonDays,
-            Predicted = predicted
+            Predicted = predicted,
         };
     }
 
