@@ -1,4 +1,3 @@
-using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -12,6 +11,7 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Executors;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization.Chromosomes;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
@@ -216,7 +216,8 @@ public sealed class OptimizeStrategyConsumerTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration { BuyThreshold = 0m, MaxPositions = 10 }
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         var backtest = Backtest.Create(
             strategy.Id,
@@ -293,7 +294,8 @@ public sealed class OptimizeStrategyConsumerTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration { BuyThreshold = 0.1m }
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         var backtest = Backtest.Create(
             strategy.Id,
@@ -341,53 +343,44 @@ public sealed class OptimizeStrategyConsumerTests
     }
 
     [Fact]
-    public void ExtractConfiguration_WhenValidChromosome_ShouldReturnConfig()
+    public void ExtractStrategyChromosome_WhenValidChromosome_ShouldReturnChromosome()
     {
         // Arrange
-        var chromosome = new StrategyConfigurationChromosome(
-            StrategyType.SignalWeighted,
-            new StrategyConfiguration { MaxPositions = 5, MaxPositionPercent = 0.2m }
+        var config = new TradingConfiguration { MaxPositions = 5, MaxPositionPercent = 0.2m, HoldPeriodDays = 10 };
+        var weights = new SignalWeightedConfig(
+            BuyThreshold: 50m,
+            SellThreshold: 50m,
+            TaxAdjustedRoiWeight: 1.0m,
+            VolumeAnomalyWeight: 0.5m,
+            TrendMomentumWeight: 0.8m,
+            BollingerBandsWeight: 1.2m,
+            RsiWeight: 0.6m,
+            MovingAverageCrossoverWeight: 0.9m,
+            PriceVelocityWeight: 0.7m
         );
-
-        var method = typeof(OptimizeStrategyConsumer).GetMethod(
-            "ExtractConfiguration",
-            BindingFlags.Static | BindingFlags.NonPublic,
-            null,
-            [typeof(IChromosome<double>)],
-            null
-        );
-        method.ShouldNotBeNull();
+        var chromosome = new SignalWeightedChromosome(config, weights);
 
         // Act
-        var result = (StrategyConfiguration)method.Invoke(null, [chromosome])!;
+        var result = OptimizeStrategyConsumer.ExtractStrategyChromosome(chromosome);
 
         // Assert
-        result.ShouldNotBeNull();
-        result.MaxPositions.ShouldBe(5);
-        result.MaxPositionPercent.ShouldBe(0.2m);
+        result.ShouldBeSameAs(chromosome);
+        result.Configuration.MaxPositions.ShouldBe(5);
+        result.Configuration.MaxPositionPercent.ShouldBe(0.2m);
+        result.Configuration.HoldPeriodDays.ShouldBe(10);
     }
 
     [Fact]
-    public void ExtractConfiguration_WhenWrongType_ShouldThrow()
+    public void ExtractStrategyChromosome_WhenWrongType_ShouldThrow()
     {
         // Arrange
         var wrongChromosome = Substitute.For<IChromosome<double>>();
 
-        var method = typeof(OptimizeStrategyConsumer).GetMethod(
-            "ExtractConfiguration",
-            BindingFlags.Static | BindingFlags.NonPublic,
-            null,
-            [typeof(IChromosome<double>)],
-            null
-        );
-        method.ShouldNotBeNull();
-
         // Act
-        var act = () => method.Invoke(null, [wrongChromosome]);
+        var act = () => OptimizeStrategyConsumer.ExtractStrategyChromosome(wrongChromosome);
 
         // Assert
-        var exception = act.ShouldThrow<TargetInvocationException>();
-        exception.InnerException.ShouldBeOfType<InvalidOperationException>();
-        exception.InnerException!.Message.ShouldContain("StrategyConfigurationChromosome");
+        var exception = act.ShouldThrow<InvalidOperationException>();
+        exception.Message.ShouldContain("StrategyChromosome");
     }
 }

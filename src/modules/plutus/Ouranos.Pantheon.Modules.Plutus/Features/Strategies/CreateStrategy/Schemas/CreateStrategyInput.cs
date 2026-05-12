@@ -9,5 +9,9 @@ public sealed record CreateStrategyInput(
     string Name,
     string? Description,
     StrategyType Type,
-    StrategyConfiguration Configuration
+    TradingConfiguration Configuration,
+    SignalWeightedConfig? SignalWeightedConfig = null,
+    ForecastMomentumConfig? ForecastMomentumConfig = null,
+    MeanReversionConfig? MeanReversionConfig = null,
+    RecipeArbitrageConfig? RecipeArbitrageConfig = null
 );

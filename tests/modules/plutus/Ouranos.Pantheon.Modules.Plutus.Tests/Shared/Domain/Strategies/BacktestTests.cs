@@ -131,34 +131,55 @@ public sealed class BacktestTests
         var backtest = CreateValidBacktest();
         backtest.MarkRunning();
 
-        var results = new BacktestResults(
-            TotalReturn: 100m,
-            TotalReturnPercent: 0.1m,
-            MaxDrawdown: 50m,
-            MaxDrawdownPercent: 0.05m,
-            WinRate: 0.6m,
-            TotalTrades: 10,
-            WinningTrades: 6,
-            LosingTrades: 4,
-            SharpeRatio: 1.5m,
-            SortinoRatio: 2.0m,
-            CalmarRatio: 1.0m,
-            Cagr: 0.08m,
-            ProfitFactor: 1.5m,
-            Expectancy: 5m,
-            AverageTradeReturn: 0.1m,
-            BestTrade: 0.5m,
-            WorstTrade: -0.2m,
-            FinalBalance: 11000m,
-            Positions: []
-        );
+        var results = new BacktestResults
+        {
+            TotalReturn = 100m,
+            TotalReturnPercent = 0.1m,
+            MaxDrawdown = 50m,
+            MaxDrawdownPercent = 0.05m,
+            WinRate = 0.6m,
+            TotalTrades = 10,
+            WinningTrades = 6,
+            LosingTrades = 4,
+            SharpeRatio = 1.5m,
+            SortinoRatio = 2.0m,
+            CalmarRatio = 1.0m,
+            Cagr = 0.08m,
+            ProfitFactor = 1.5m,
+            Expectancy = 5m,
+            AverageTradeReturn = 0.1m,
+            BestTrade = 0.5m,
+            WorstTrade = -0.2m,
+            FinalBalance = 11000m,
+            Positions = []
+        };
 
         // Act
         backtest.Complete(results);
 
         // Assert
         backtest.Status.ShouldBe(BacktestStatus.Completed);
-        backtest.Results.ShouldBe(results);
+        backtest.Results.ShouldNotBeNull();
+        backtest.Results.TotalReturn.ShouldBe(results.TotalReturn);
+        backtest.Results.TotalReturnPercent.ShouldBe(results.TotalReturnPercent);
+        backtest.Results.MaxDrawdown.ShouldBe(results.MaxDrawdown);
+        backtest.Results.MaxDrawdownPercent.ShouldBe(results.MaxDrawdownPercent);
+        backtest.Results.WinRate.ShouldBe(results.WinRate);
+        backtest.Results.TotalTrades.ShouldBe(results.TotalTrades);
+        backtest.Results.WinningTrades.ShouldBe(results.WinningTrades);
+        backtest.Results.LosingTrades.ShouldBe(results.LosingTrades);
+        backtest.Results.SharpeRatio.ShouldBe(results.SharpeRatio);
+        backtest.Results.SortinoRatio.ShouldBe(results.SortinoRatio);
+        backtest.Results.CalmarRatio.ShouldBe(results.CalmarRatio);
+        backtest.Results.Cagr.ShouldBe(results.Cagr);
+        backtest.Results.ProfitFactor.ShouldBe(results.ProfitFactor);
+        backtest.Results.Expectancy.ShouldBe(results.Expectancy);
+        backtest.Results.AverageTradeReturn.ShouldBe(results.AverageTradeReturn);
+        backtest.Results.BestTrade.ShouldBe(results.BestTrade);
+        backtest.Results.WorstTrade.ShouldBe(results.WorstTrade);
+        backtest.Results.FinalBalance.ShouldBe(results.FinalBalance);
+        backtest.Results.Positions.ShouldBeEmpty();
+        backtest.Results.OptimizedConfiguration.ShouldBe(results.OptimizedConfiguration);
     }
 
     [Fact]
@@ -181,27 +202,28 @@ public sealed class BacktestTests
         // Arrange
         var backtest = CreateValidBacktest();
 
-        var results = new BacktestResults(
-            TotalReturn: 100m,
-            TotalReturnPercent: 0.1m,
-            MaxDrawdown: 50m,
-            MaxDrawdownPercent: 0.05m,
-            WinRate: 0.6m,
-            TotalTrades: 10,
-            WinningTrades: 6,
-            LosingTrades: 4,
-            SharpeRatio: 1.5m,
-            SortinoRatio: 2.0m,
-            CalmarRatio: 1.0m,
-            Cagr: 0.08m,
-            ProfitFactor: 1.5m,
-            Expectancy: 5m,
-            AverageTradeReturn: 0.1m,
-            BestTrade: 0.5m,
-            WorstTrade: -0.2m,
-            FinalBalance: 11000m,
-            Positions: []
-        );
+        var results = new BacktestResults
+        {
+            TotalReturn = 100m,
+            TotalReturnPercent = 0.1m,
+            MaxDrawdown = 50m,
+            MaxDrawdownPercent = 0.05m,
+            WinRate = 0.6m,
+            TotalTrades = 10,
+            WinningTrades = 6,
+            LosingTrades = 4,
+            SharpeRatio = 1.5m,
+            SortinoRatio = 2.0m,
+            CalmarRatio = 1.0m,
+            Cagr = 0.08m,
+            ProfitFactor = 1.5m,
+            Expectancy = 5m,
+            AverageTradeReturn = 0.1m,
+            BestTrade = 0.5m,
+            WorstTrade = -0.2m,
+            FinalBalance = 11000m,
+            Positions = []
+        };
 
         // Act
         var complete = () => { backtest.Complete(results); };

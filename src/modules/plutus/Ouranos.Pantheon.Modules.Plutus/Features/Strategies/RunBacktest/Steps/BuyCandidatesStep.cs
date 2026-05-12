@@ -14,7 +14,7 @@ public sealed class BuyCandidatesStep : IStep<BacktestPayload>
 
         var currentDate = payload.Context.CurrentDate(context);
         var configuration = payload.Parameters.Configuration;
-        var buyThreshold = configuration.BuyThreshold ?? 0m;
+        var buyThreshold = payload.Parameters.SignalWeightedConfig?.BuyThreshold ?? 0m;
         var maxPositions = configuration.MaxPositions ?? int.MaxValue;
         var maxPositionPercent = configuration.MaxPositionPercent ?? 1m;
 

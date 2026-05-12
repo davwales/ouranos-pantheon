@@ -22,10 +22,10 @@ public sealed class StrategyTests
         var name = _fixture.Create<string>();
         var description = _fixture.Create<string>();
         var type = StrategyType.SignalWeighted;
-        var config = new StrategyConfiguration();
+        var config = new TradingConfiguration();
 
         // Act
-        var strategy = Strategy.Create(marketId, name, description, type, config);
+        var strategy = Strategy.Create(marketId, name, description, type, config, new SignalWeightedConfig());
 
         // Assert
         strategy.Id.ShouldNotBe(default);
@@ -33,7 +33,8 @@ public sealed class StrategyTests
         strategy.Name.ShouldBe(name);
         strategy.Description.ShouldBe(description);
         strategy.Type.ShouldBe(type);
-        strategy.Configuration.ShouldBe(config);
+        strategy.TradingConfiguration.ShouldBe(config);
+        strategy.SignalWeightedConfig.ShouldNotBeNull();
         strategy.IsActive.ShouldBeTrue();
     }
 
@@ -45,10 +46,17 @@ public sealed class StrategyTests
     {
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
-        var config = new StrategyConfiguration();
+        var config = new TradingConfiguration();
 
         // Act
-        var create = () => Strategy.Create(marketId, name!, null, StrategyType.SignalWeighted, config);
+        var create = () => Strategy.Create(
+            marketId,
+            name!,
+            null,
+            StrategyType.SignalWeighted,
+            config,
+            new SignalWeightedConfig()
+        );
 
         // Assert
         create.ShouldThrow<ArgumentException>();
@@ -62,7 +70,14 @@ public sealed class StrategyTests
         var name = _fixture.Create<string>();
 
         // Act
-        var create = () => Strategy.Create(marketId, name, null, StrategyType.SignalWeighted, null!);
+        var create = () => Strategy.Create(
+            marketId,
+            name,
+            null,
+            StrategyType.SignalWeighted,
+            null!,
+            new SignalWeightedConfig()
+        );
 
         // Assert
         create.ShouldThrow<ArgumentNullException>();
@@ -85,8 +100,9 @@ public sealed class StrategyTests
             _fixture.Create<string>(),
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration(),
-            wrongMarket
+            new TradingConfiguration(),
+            new SignalWeightedConfig(),
+            market: wrongMarket
         );
 
         // Assert
@@ -102,17 +118,18 @@ public sealed class StrategyTests
             "Original",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration()
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
-        var newConfig = new StrategyConfiguration(BuyThreshold: 0.5m);
+        var newConfig = new TradingConfiguration();
 
         // Act
-        strategy.Update("Updated", "New description", newConfig);
+        strategy.Update("Updated", "New description", newConfig, new SignalWeightedConfig());
 
         // Assert
         strategy.Name.ShouldBe("Updated");
         strategy.Description.ShouldBe("New description");
-        strategy.Configuration.ShouldBe(newConfig);
+        strategy.TradingConfiguration.ShouldBe(newConfig);
     }
 
     [Theory]
@@ -127,11 +144,12 @@ public sealed class StrategyTests
             "Original",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration()
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
 
         // Act
-        var update = () => strategy.Update(name!, null, new StrategyConfiguration());
+        var update = () => strategy.Update(name!, null, new TradingConfiguration(), new SignalWeightedConfig());
 
         // Assert
         update.ShouldThrow<ArgumentException>();
@@ -146,11 +164,12 @@ public sealed class StrategyTests
             "Original",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration()
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
 
         // Act
-        var update = () => strategy.Update("Updated", null, null!);
+        var update = () => strategy.Update("Updated", null, null!, new SignalWeightedConfig());
 
         // Assert
         update.ShouldThrow<ArgumentNullException>();
@@ -165,7 +184,8 @@ public sealed class StrategyTests
             "Test",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration()
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
 
         // Act
@@ -184,7 +204,8 @@ public sealed class StrategyTests
             "Test",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration()
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         strategy.SetActive(false);
 
@@ -204,7 +225,8 @@ public sealed class StrategyTests
             "Test",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration()
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
 
         // Act

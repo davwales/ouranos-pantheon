@@ -1,55 +1,36 @@
 "use client";
 
+import { NumericInput } from "@/app/components/numeric-input";
 import { Input } from "@/components/ui/input";
-import {
-  type StrategyConfiguration,
-  type StrategyType,
-} from "@/lib/api/plutus";
-import { NumberInput } from "./number-input";
-import { signalTypeLabels } from "./strategy-constants";
+import { type StrategyConfigBundle, type StrategyType } from "@/lib/api/plutus";
+import { signalWeightFields, type SignalWeightKey } from "./strategy-constants";
 
-function SignalWeightedConfig({
+function SignalWeightedConfigSection({
   config,
   onChange,
 }: {
-  config: StrategyConfiguration;
-  onChange: (c: StrategyConfiguration) => void;
+  config: NonNullable<StrategyConfigBundle["signalWeightedConfig"]>;
+  onChange: (c: StrategyConfigBundle["signalWeightedConfig"]) => void;
 }) {
-  const signalTypes = [
-    "TaxAdjustedRoi",
-    "VolumeAnomaly",
-    "TrendMomentum",
-    "BollingerBands",
-    "Rsi",
-    "MovingAverageCrossover",
-    "PriceVelocity",
-  ];
-
-  const weights =
-    config.signalWeights && config.signalWeights.length > 0
-      ? config.signalWeights
-      : signalTypes.map((t) => ({ type: t, weight: 1 }));
+  function handleWeightChange(key: SignalWeightKey, value: number) {
+    onChange({ ...config, [key]: value });
+  }
 
   return (
     <div className="space-y-4">
       <h4 className="text-sm font-semibold">Signal Weights</h4>
       <div className="space-y-2">
-        {weights.map((w, i) => (
-          <div key={w.type} className="flex items-center gap-4">
+        {signalWeightFields.map((field) => (
+          <div key={field.key} className="flex items-center gap-4">
             <span className="text-sm flex-1 min-w-0 truncate">
-              {signalTypeLabels[w.type] ?? w.type}
+              {field.label as string}
             </span>
             <Input
               type="number"
-              value={w.weight}
-              onChange={(e) => {
-                const newWeights = [...weights];
-                newWeights[i] = {
-                  ...newWeights[i],
-                  weight: parseFloat(e.target.value) || 0,
-                };
-                onChange({ ...config, signalWeights: newWeights });
-              }}
+              value={config[field.key] ?? 1}
+              onChange={(e) =>
+                handleWeightChange(field.key, parseFloat(e.target.value) || 0)
+              }
               className="w-24"
               step={0.1}
               min={0}
@@ -58,7 +39,7 @@ function SignalWeightedConfig({
         ))}
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <NumberInput
+        <NumericInput
           label="Buy Threshold"
           hint="Score above which to buy"
           value={config.buyThreshold}
@@ -67,7 +48,7 @@ function SignalWeightedConfig({
           max={1}
           step={0.01}
         />
-        <NumberInput
+        <NumericInput
           label="Sell Threshold"
           hint="Score below which to sell (negative)"
           value={config.sellThreshold}
@@ -81,16 +62,16 @@ function SignalWeightedConfig({
   );
 }
 
-function ForecastMomentumConfig({
+function ForecastMomentumConfigSection({
   config,
   onChange,
 }: {
-  config: StrategyConfiguration;
-  onChange: (c: StrategyConfiguration) => void;
+  config: NonNullable<StrategyConfigBundle["forecastMomentumConfig"]>;
+  onChange: (c: StrategyConfigBundle["forecastMomentumConfig"]) => void;
 }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <NumberInput
+      <NumericInput
         label="Forecast Movement Threshold"
         hint="Min price change to trigger a signal"
         value={config.forecastMovementThreshold}
@@ -98,7 +79,7 @@ function ForecastMomentumConfig({
         min={0}
         step={0.01}
       />
-      <NumberInput
+      <NumericInput
         label="Forecast Horizon Days"
         value={config.forecastHorizonDays}
         onChange={(v) => onChange({ ...config, forecastHorizonDays: v })}
@@ -110,16 +91,16 @@ function ForecastMomentumConfig({
   );
 }
 
-function MeanReversionConfig({
+function MeanReversionConfigSection({
   config,
   onChange,
 }: {
-  config: StrategyConfiguration;
-  onChange: (c: StrategyConfiguration) => void;
+  config: NonNullable<StrategyConfigBundle["meanReversionConfig"]>;
+  onChange: (c: StrategyConfigBundle["meanReversionConfig"]) => void;
 }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <NumberInput
+      <NumericInput
         label="Deviation Multiplier"
         hint="Standard deviations from mean to trigger"
         value={config.deviationMultiplier}
@@ -127,7 +108,7 @@ function MeanReversionConfig({
         min={0.1}
         step={0.1}
       />
-      <NumberInput
+      <NumericInput
         label="Mean Time Frame Value"
         hint="Time frame for mean calculation"
         value={config.meanTimeFrameValue}
@@ -140,16 +121,16 @@ function MeanReversionConfig({
   );
 }
 
-function RecipeArbitrageConfig({
+function RecipeArbitrageConfigSection({
   config,
   onChange,
 }: {
-  config: StrategyConfiguration;
-  onChange: (c: StrategyConfiguration) => void;
+  config: NonNullable<StrategyConfigBundle["recipeArbitrageConfig"]>;
+  onChange: (c: StrategyConfigBundle["recipeArbitrageConfig"]) => void;
 }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <NumberInput
+      <NumericInput
         label="Min Margin Percent"
         hint="Minimum margin % to consider a recipe profitable"
         value={config.minMarginPercent}
@@ -164,26 +145,38 @@ function RecipeArbitrageConfig({
 
 export function StrategyConfigForm({
   type,
-  config,
+  bundle,
   onChange,
 }: {
   type: StrategyType;
-  config: StrategyConfiguration;
-  onChange: (c: StrategyConfiguration) => void;
+  bundle: StrategyConfigBundle;
+  onChange: (bundle: StrategyConfigBundle) => void;
 }) {
   return (
     <div className="space-y-4">
       {type === "SignalWeighted" && (
-        <SignalWeightedConfig config={config} onChange={onChange} />
+        <SignalWeightedConfigSection
+          config={bundle.signalWeightedConfig ?? {}}
+          onChange={(c) => onChange({ ...bundle, signalWeightedConfig: c })}
+        />
       )}
       {type === "ForecastMomentum" && (
-        <ForecastMomentumConfig config={config} onChange={onChange} />
+        <ForecastMomentumConfigSection
+          config={bundle.forecastMomentumConfig ?? {}}
+          onChange={(c) => onChange({ ...bundle, forecastMomentumConfig: c })}
+        />
       )}
       {type === "MeanReversion" && (
-        <MeanReversionConfig config={config} onChange={onChange} />
+        <MeanReversionConfigSection
+          config={bundle.meanReversionConfig ?? {}}
+          onChange={(c) => onChange({ ...bundle, meanReversionConfig: c })}
+        />
       )}
       {type === "RecipeArbitrage" && (
-        <RecipeArbitrageConfig config={config} onChange={onChange} />
+        <RecipeArbitrageConfigSection
+          config={bundle.recipeArbitrageConfig ?? {}}
+          onChange={(c) => onChange({ ...bundle, recipeArbitrageConfig: c })}
+        />
       )}
       {type === "Composite" && (
         <p className="text-sm text-muted-foreground">

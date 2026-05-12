@@ -39,7 +39,15 @@ public sealed class UpdateStrategyHandler : IPantheonHandler<UpdateStrategyInput
 
         Guard.Against.NotFound(command.StrategyId, strategy);
 
-        strategy.Update(command.Name, command.Description, command.Configuration);
+        strategy.Update(
+            command.Name,
+            command.Description,
+            command.Configuration,
+            command.SignalWeightedConfig,
+            command.ForecastMomentumConfig,
+            command.MeanReversionConfig,
+            command.RecipeArbitrageConfig
+        );
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 

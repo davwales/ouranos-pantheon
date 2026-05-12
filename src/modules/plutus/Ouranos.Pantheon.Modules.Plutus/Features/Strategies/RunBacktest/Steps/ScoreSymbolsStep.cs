@@ -71,7 +71,11 @@ public sealed class ScoreSymbolsStep(
                 priceBuckets,
                 signals,
                 forecastedPrice,
-                forecastedChange
+                forecastedChange,
+                SignalWeightedConfig: ctx.SignalWeightedConfig,
+                ForecastMomentumConfig: ctx.ForecastMomentumConfig,
+                MeanReversionConfig: ctx.MeanReversionConfig,
+                RecipeArbitrageConfig: ctx.RecipeArbitrageConfig
             );
 
             var score = ctx.Executor.Score(scoreContext, payload.Parameters.Configuration);

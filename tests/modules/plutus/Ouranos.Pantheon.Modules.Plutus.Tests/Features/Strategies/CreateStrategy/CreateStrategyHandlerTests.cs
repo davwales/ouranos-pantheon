@@ -34,7 +34,8 @@ public sealed class CreateStrategyHandlerTests
             _fixture.Create<string>(),
             _fixture.Create<string>(),
             StrategyType.SignalWeighted,
-            new StrategyConfiguration()
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
 
         // Act
@@ -61,7 +62,7 @@ public sealed class CreateStrategyHandlerTests
             _fixture.Create<string>(),
             null,
             StrategyType.ForecastMomentum,
-            new StrategyConfiguration()
+            new TradingConfiguration()
         );
 
         // Act
@@ -82,7 +83,7 @@ public sealed class CreateStrategyHandlerTests
             _fixture.Create<string>(),
             null,
             StrategyType.MeanReversion,
-            new StrategyConfiguration()
+            new TradingConfiguration()
         );
         var cancellationToken = new CancellationToken(true);
 

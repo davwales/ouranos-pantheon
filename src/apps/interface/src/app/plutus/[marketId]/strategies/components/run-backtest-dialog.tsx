@@ -1,12 +1,12 @@
 "use client";
 
+import { NumericInput } from "@/app/components/numeric-input";
 import { ResponsiveDialog } from "@/app/components/responsive-dialog/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { plutusApi } from "@/lib/api/plutus";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { NumberInput } from "./number-input";
 
 export function RunBacktestDialog({
   strategyId,
@@ -109,7 +109,7 @@ export function RunBacktestDialog({
             End date must be after start date
           </p>
         )}
-        <NumberInput
+        <NumericInput
           label="Budget"
           hint="Initial capital for the backtest"
           value={budget}
@@ -127,7 +127,7 @@ export function RunBacktestDialog({
         </div>
         {showAdvanced && (
           <div className="space-y-4 border rounded-lg p-3 bg-muted/30">
-            <NumberInput
+            <NumericInput
               label="Volume Participation Rate"
               hint="Max fraction of daily volume per trade (0-1)"
               value={volumeParticipationRate}
@@ -136,7 +136,7 @@ export function RunBacktestDialog({
               max={1}
               step={0.01}
             />
-            <NumberInput
+            <NumericInput
               label="Slippage Multiplier"
               hint="Price impact per unit of volume ratio (0 = none)"
               value={slippageMultiplier}

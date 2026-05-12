@@ -30,7 +30,7 @@ public sealed class GetAllStrategiesHandler
             .On(nameof(GetAllStrategiesResponse.BacktestCount), x => x.BacktestCount)
             .On(nameof(GetAllStrategiesResponse.LastBacktestReturn), x => x.LastBacktestReturn)
             .On(nameof(GetAllStrategiesResponse.CreatedAt), x => x.CreatedAt)
-            .Default(x => x.CreatedAt, SortDirection.Desc);
+            .Default(x => x.CreatedAt);
 
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<GetAllStrategiesHandler> _logger;
@@ -78,24 +78,31 @@ public sealed class GetAllStrategiesHandler
             {
                 StrategyId = g.Key,
                 Count = g.Count(),
-                LastReturn = g.OrderByDescending(b => b.CreatedAt).Select(b => b.Results!.TotalReturnPercent).FirstOrDefault(),
-                LastWinRate = g.OrderByDescending(b => b.CreatedAt).Select(b => b.Results!.WinRate).FirstOrDefault()
-            })
+                LastReturn =
+                        g.OrderByDescending(b => b.CreatedAt).Select(b =>
+                                b.Results != null ? b.Results.TotalReturnPercent : (decimal?)null
+                            )
+                            .FirstOrDefault(),
+                LastWinRate = g.OrderByDescending(b => b.CreatedAt)
+                        .Select(b => b.Results != null ? b.Results.WinRate : (decimal?)null).FirstOrDefault()
+            }
+            )
             .ToDictionaryAsync(x => x.StrategyId, cancellationToken);
 
         var projected = strategies
             .Select(s => new GetAllStrategiesResponse(
-                s.Id,
-                s.MarketId,
-                s.Name,
-                s.Description,
-                s.Type,
-                s.IsActive,
-                s.CreatedAt,
-                backtestSummaries.TryGetValue(s.Id, out var summary) ? summary.Count : 0,
-                backtestSummaries.TryGetValue(s.Id, out var s2) ? s2.LastReturn : null,
-                backtestSummaries.TryGetValue(s.Id, out var s3) ? s3.LastWinRate : null
-            ))
+                    s.Id,
+                    s.MarketId,
+                    s.Name,
+                    s.Description,
+                    s.Type,
+                    s.IsActive,
+                    s.CreatedAt,
+                    backtestSummaries.TryGetValue(s.Id, out var summary) ? summary.Count : 0,
+                    backtestSummaries.TryGetValue(s.Id, out var s2) ? s2.LastReturn : null,
+                    backtestSummaries.TryGetValue(s.Id, out var s3) ? s3.LastWinRate : null
+                )
+            )
             .ToList();
 
         var filtered = projected.AsQueryable().FilterBy(input.Filter, FilterBuilder);

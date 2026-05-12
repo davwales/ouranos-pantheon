@@ -18,46 +18,65 @@ public sealed class StrategyEntityConfiguration : IEntityTypeConfiguration<Strat
         builder.HasIndex(s => s.MarketId);
 
         builder.OwnsOne(
-            s => s.Configuration,
-            cfg =>
+            s => s.TradingConfiguration,
+            config =>
             {
-                cfg.Property(c => c.BuyThreshold).HasPrecision(18, 2);
-                cfg.Property(c => c.SellThreshold).HasPrecision(18, 2);
-                cfg.Property(c => c.ForecastMovementThreshold).HasPrecision(18, 2);
-                cfg.Property(c => c.ForecastHorizonDays);
-                cfg.Property(c => c.DeviationMultiplier).HasPrecision(18, 2);
-                cfg.Property(c => c.MeanTimeFrameValue);
-                cfg.Property(c => c.MinMarginPercent).HasPrecision(18, 2);
-                cfg.Property(c => c.MaxPositions);
-                cfg.Property(c => c.MaxPositionPercent).HasPrecision(18, 2);
-                cfg.Property(c => c.HoldPeriodDays);
-
-                cfg.OwnsMany(
-                    c => c.SignalWeights,
-                    sw =>
-                    {
-                        sw.ToTable("signal_weight", "plutus");
-                        sw.Property(w => w.Type).HasConversion<int>();
-                        sw.Property(w => w.Weight).HasPrecision(18, 2);
-                    }
-                );
-
-                cfg.OwnsMany(
-                    c => c.Components,
-                    comp =>
-                    {
-                        comp.ToTable("composite_component", "plutus");
-                        comp.Property(c => c.StrategyId).HasIdConversion();
-                        comp.Property(c => c.Type).HasConversion<int>();
-                        comp.Property(c => c.Weight).HasPrecision(18, 2);
-                    }
-                );
-
-                cfg.Navigation(c => c.SignalWeights);
-                cfg.Navigation(c => c.Components);
+                config.Property(c => c.MaxPositions);
+                config.Property(c => c.MaxPositionPercent).HasPrecision(18, 2);
+                config.Property(c => c.HoldPeriodDays);
             }
         );
 
-        builder.Navigation(s => s.Configuration).IsRequired();
+        builder.OwnsOne(
+            s => s.SignalWeightedConfig,
+            config =>
+            {
+                config.Property(c => c.BuyThreshold).HasPrecision(18, 2);
+                config.Property(c => c.SellThreshold).HasPrecision(18, 2);
+                config.Property(c => c.TaxAdjustedRoiWeight).HasPrecision(18, 2);
+                config.Property(c => c.VolumeAnomalyWeight).HasPrecision(18, 2);
+                config.Property(c => c.TrendMomentumWeight).HasPrecision(18, 2);
+                config.Property(c => c.BollingerBandsWeight).HasPrecision(18, 2);
+                config.Property(c => c.RsiWeight).HasPrecision(18, 2);
+                config.Property(c => c.MovingAverageCrossoverWeight).HasPrecision(18, 2);
+                config.Property(c => c.PriceVelocityWeight).HasPrecision(18, 2);
+            }
+        );
+
+        builder.OwnsOne(
+            s => s.ForecastMomentumConfig,
+            config =>
+            {
+                config.Property(c => c.ForecastMovementThreshold).HasPrecision(18, 2);
+                config.Property(c => c.ForecastHorizonDays);
+            }
+        );
+
+        builder.OwnsOne(
+            s => s.MeanReversionConfig,
+            config =>
+            {
+                config.Property(c => c.DeviationMultiplier).HasPrecision(18, 2);
+                config.Property(c => c.MeanTimeFrameValue);
+            }
+        );
+
+        builder.OwnsOne(
+            s => s.RecipeArbitrageConfig,
+            config => { config.Property(c => c.MinMarginPercent).HasPrecision(18, 2); }
+        );
+
+        builder.OwnsMany(
+            s => s.Components,
+            comp =>
+            {
+                comp.ToTable("composite_component", "plutus");
+                comp.Property(c => c.StrategyId).HasIdConversion();
+                comp.Property(c => c.Type).HasConversion<int>();
+                comp.Property(c => c.Weight).HasPrecision(18, 2);
+            }
+        );
+
+        builder.Navigation(s => s.Components);
     }
 }

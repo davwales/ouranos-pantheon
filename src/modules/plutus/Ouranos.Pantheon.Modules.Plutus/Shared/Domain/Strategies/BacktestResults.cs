@@ -20,10 +20,39 @@ public sealed record BacktestResults(
     decimal WorstTrade,
     decimal FinalBalance,
     List<BacktestPosition> Positions,
-    StrategyConfiguration? OptimizedConfiguration = null
+    SignalWeightedConfig? OptimizedSignalWeightedConfig,
+    ForecastMomentumConfig? OptimizedForecastMomentumConfig,
+    MeanReversionConfig? OptimizedMeanReversionConfig,
+    RecipeArbitrageConfig? OptimizedRecipeArbitrageConfig,
+    TradingConfiguration? OptimizedConfiguration
 )
 {
-    public BacktestResults() : this(0, 0, 0, 0, 0, 0, 0, 0, 0, null, null, null, null, null, 0, 0, 0, 0, [])
+    public BacktestResults() : this(
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        null,
+        null,
+        null,
+        null,
+        null,
+        0,
+        0,
+        0,
+        0,
+        [],
+        null,
+        null,
+        null,
+        null,
+        null
+    )
     {
     }
 }

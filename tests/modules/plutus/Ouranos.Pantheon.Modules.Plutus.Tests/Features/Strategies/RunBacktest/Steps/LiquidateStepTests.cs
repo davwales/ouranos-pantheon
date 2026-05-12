@@ -33,7 +33,8 @@ public sealed class LiquidateStepTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration()
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var endDate = DateTimeOffset.UtcNow;
@@ -89,7 +90,8 @@ public sealed class LiquidateStepTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration()
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var endDate = DateTimeOffset.UtcNow;
@@ -139,7 +141,8 @@ public sealed class LiquidateStepTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration()
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var endDate = DateTimeOffset.UtcNow;
@@ -193,7 +196,8 @@ public sealed class LiquidateStepTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration()
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var endDate = DateTimeOffset.UtcNow;
@@ -243,7 +247,8 @@ public sealed class LiquidateStepTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration()
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var endDate = DateTimeOffset.UtcNow;
@@ -300,7 +305,8 @@ public sealed class LiquidateStepTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration()
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var endDate = DateTimeOffset.UtcNow;
@@ -346,7 +352,8 @@ public sealed class LiquidateStepTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration()
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         var parameters = new BacktestParameters(
             marketId,
@@ -385,7 +392,8 @@ public sealed class LiquidateStepTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration()
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         var parameters = new BacktestParameters(
             marketId,

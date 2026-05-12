@@ -7,5 +7,9 @@ public sealed record UpdateStrategyInput(
     Id<Strategy> StrategyId,
     string Name,
     string? Description,
-    StrategyConfiguration Configuration
+    TradingConfiguration Configuration,
+    SignalWeightedConfig? SignalWeightedConfig = null,
+    ForecastMomentumConfig? ForecastMomentumConfig = null,
+    MeanReversionConfig? MeanReversionConfig = null,
+    RecipeArbitrageConfig? RecipeArbitrageConfig = null
 );

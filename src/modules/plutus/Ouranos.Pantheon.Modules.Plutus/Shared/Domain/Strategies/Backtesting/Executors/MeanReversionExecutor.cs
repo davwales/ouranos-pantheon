@@ -4,14 +4,15 @@ public sealed class MeanReversionExecutor : IStrategyExecutor
 {
     public StrategyType SupportedType => StrategyType.MeanReversion;
 
-    public decimal? Score(StrategyScoreContext context, StrategyConfiguration configuration)
+    public decimal? Score(StrategyScoreContext context, TradingConfiguration configuration)
     {
         if (context.PriceBuckets.Count < 2 || context.CurrentPrice == 0)
         {
             return null;
         }
 
-        var timeFrame = configuration.MeanTimeFrameValue ?? context.PriceBuckets.Count;
+        var meanReversionConfig = context.MeanReversionConfig;
+        var timeFrame = meanReversionConfig?.MeanTimeFrameValue ?? context.PriceBuckets.Count;
         var effectiveBuckets = Math.Min(timeFrame, context.PriceBuckets.Count);
 
         var prices = context.PriceBuckets
@@ -27,7 +28,7 @@ public sealed class MeanReversionExecutor : IStrategyExecutor
             return 0m;
         }
 
-        var deviationMultiplier = configuration.DeviationMultiplier ?? 2m;
+        var deviationMultiplier = meanReversionConfig?.DeviationMultiplier ?? 2m;
         if (deviationMultiplier == 0)
         {
             deviationMultiplier = 2m;

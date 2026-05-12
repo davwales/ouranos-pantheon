@@ -20,5 +20,10 @@ public sealed record StrategyScoreContext(
     IReadOnlyList<PriceBucket> PriceBuckets,
     IReadOnlyList<Signal> Signals,
     decimal? ForecastedPrice,
-    decimal? ForecastedPriceChange
+    decimal? ForecastedPriceChange,
+    SignalWeightedConfig? SignalWeightedConfig = null,
+    ForecastMomentumConfig? ForecastMomentumConfig = null,
+    MeanReversionConfig? MeanReversionConfig = null,
+    RecipeArbitrageConfig? RecipeArbitrageConfig = null,
+    List<CompositeComponent>? Components = null
 );

@@ -95,9 +95,9 @@ public sealed class GetRecommendationsHandler : IPantheonHandler<GetRecommendati
         }
 
         var taxRate = market.Taxes.Flat?.Rate ?? 0m;
-        var buyThreshold = strategy.Configuration.BuyThreshold ?? 0.1m;
-        var maxPositions = strategy.Configuration.MaxPositions ?? int.MaxValue;
-        var maxPositionPercent = strategy.Configuration.MaxPositionPercent ?? 1m;
+        var buyThreshold = strategy.SignalWeightedConfig?.BuyThreshold ?? 0.1m;
+        var maxPositions = strategy.TradingConfiguration.MaxPositions ?? int.MaxValue;
+        var maxPositionPercent = strategy.TradingConfiguration.MaxPositionPercent ?? 1m;
 
         var recommendations = new List<StrategyRecommendation>();
 
@@ -140,10 +140,15 @@ public sealed class GetRecommendationsHandler : IPantheonHandler<GetRecommendati
                 [],
                 symbolSignals,
                 forecastedPrice,
-                forecastedChange
+                forecastedChange,
+                SignalWeightedConfig: strategy.SignalWeightedConfig,
+                ForecastMomentumConfig: strategy.ForecastMomentumConfig,
+                MeanReversionConfig: strategy.MeanReversionConfig,
+                RecipeArbitrageConfig: strategy.RecipeArbitrageConfig,
+                Components: strategy.Components
             );
 
-            var score = executor.Score(context, strategy.Configuration);
+            var score = executor.Score(context, strategy.TradingConfiguration);
             if (score is null || score.Value <= buyThreshold)
             {
                 continue;
