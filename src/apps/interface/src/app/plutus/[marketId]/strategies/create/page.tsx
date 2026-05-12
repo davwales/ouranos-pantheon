@@ -13,14 +13,14 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  type StrategyConfiguration,
+  type StrategyConfigBundle,
   type StrategyType,
   plutusApi,
 } from "@/lib/api/plutus";
 import { RefreshCw } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { NumberInput } from "../components/number-input";
+import { NumericInput } from "@/app/components/numeric-input";
 import { StrategyConfigForm } from "../components/strategy-config-form";
 
 const strategyTypes: { value: StrategyType; label: string }[] = [
@@ -57,10 +57,12 @@ export default function CreateStrategyPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [config, setConfig] = useState<StrategyConfiguration>({
-    signalWeights: null,
-    buyThreshold: null,
-    sellThreshold: null,
+  const [bundle, setBundle] = useState<StrategyConfigBundle>({
+    tradingConfiguration: {
+      maxPositions: 10,
+      maxPositionPercent: 0.2,
+      holdPeriodDays: 7,
+    },
   });
 
   const handleSubmit = async () => {
@@ -72,7 +74,7 @@ export default function CreateStrategyPage() {
         name,
         description: description || null,
         type,
-        configuration: config,
+        ...bundle,
       });
       router.replace(`/plutus/${marketId}/strategies/${response.id}`);
     } catch (err) {
@@ -136,7 +138,9 @@ export default function CreateStrategyPage() {
                   value={type}
                   onValueChange={(value) => {
                     setType(value as StrategyType);
-                    setConfig({});
+                    setBundle({
+                      tradingConfiguration: bundle.tradingConfiguration,
+                    });
                   }}
                 >
                   <SelectTrigger className="w-full">
@@ -163,8 +167,8 @@ export default function CreateStrategyPage() {
             <CardContent>
               <StrategyConfigForm
                 type={type}
-                config={config}
-                onChange={setConfig}
+                bundle={bundle}
+                onChange={setBundle}
               />
             </CardContent>
           </Card>
@@ -176,30 +180,52 @@ export default function CreateStrategyPage() {
               <CardTitle>Position Limits</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <NumberInput
+              <NumericInput
                 label="Max Positions"
                 hint="Maximum number of simultaneous positions"
-                value={config.maxPositions}
-                onChange={(v) => setConfig({ ...config, maxPositions: v })}
+                value={bundle.tradingConfiguration.maxPositions}
+                onChange={(v) =>
+                  setBundle({
+                    ...bundle,
+                    tradingConfiguration: {
+                      ...bundle.tradingConfiguration,
+                      maxPositions: v ?? 0,
+                    },
+                  })
+                }
                 min={1}
                 step={1}
               />
-              <NumberInput
+              <NumericInput
                 label="Max Position Percent"
                 hint="Max budget allocation per position (0-1)"
-                value={config.maxPositionPercent}
+                value={bundle.tradingConfiguration.maxPositionPercent}
                 onChange={(v) =>
-                  setConfig({ ...config, maxPositionPercent: v })
+                  setBundle({
+                    ...bundle,
+                    tradingConfiguration: {
+                      ...bundle.tradingConfiguration,
+                      maxPositionPercent: v ?? 0,
+                    },
+                  })
                 }
                 min={0.01}
                 max={1}
                 step={0.01}
               />
-              <NumberInput
+              <NumericInput
                 label="Hold Period Days"
                 hint="Maximum days to hold a position"
-                value={config.holdPeriodDays}
-                onChange={(v) => setConfig({ ...config, holdPeriodDays: v })}
+                value={bundle.tradingConfiguration.holdPeriodDays}
+                onChange={(v) =>
+                  setBundle({
+                    ...bundle,
+                    tradingConfiguration: {
+                      ...bundle.tradingConfiguration,
+                      holdPeriodDays: v ?? 0,
+                    },
+                  })
+                }
                 min={1}
                 step={1}
               />

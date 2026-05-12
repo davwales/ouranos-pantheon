@@ -13,6 +13,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Steps;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization.Chromosomes;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Wolverine.Attributes;
 
@@ -95,7 +96,7 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
             backtest.UpdateProgress(2, "Market data loaded, starting optimization...");
             await dbContext.SaveChangesAsync(cancellationToken);
 
-            var bestConfig = await RunOptimizationAsync(
+            var bestChromosome = await RunOptimizationAsync(
                 backtest,
                 message,
                 data,
@@ -113,13 +114,37 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
                 backtest.EndDate,
                 backtest.Budget,
                 cancellationToken,
-                bestConfig,
+                bestChromosome.Configuration,
                 data,
                 message.VolumeParticipationRate,
-                message.SlippageMultiplier
+                message.SlippageMultiplier,
+                bestChromosome
             );
 
-            var finalResults = results with { OptimizedConfiguration = bestConfig };
+            var finalResults = results with
+            {
+                OptimizedConfiguration = bestChromosome.Configuration,
+                OptimizedSignalWeightedConfig = bestChromosome switch
+                {
+                    SignalWeightedChromosome sw => sw.SignalWeightedConfig,
+                    _ => null
+                },
+                OptimizedForecastMomentumConfig = bestChromosome switch
+                {
+                    ForecastMomentumChromosome fm => fm.ForecastMomentumConfig,
+                    _ => null
+                },
+                OptimizedMeanReversionConfig = bestChromosome switch
+                {
+                    MeanReversionChromosome mr => mr.MeanReversionConfig,
+                    _ => null
+                },
+                OptimizedRecipeArbitrageConfig = bestChromosome switch
+                {
+                    RecipeArbitrageChromosome ra => ra.RecipeArbitrageConfig,
+                    _ => null
+                }
+            };
 
             backtest.Complete(finalResults);
             await dbContext.SaveChangesAsync(cancellationToken);
@@ -146,7 +171,7 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
         }
     }
 
-    private async Task<StrategyConfiguration> RunOptimizationAsync(
+    private async Task<StrategyChromosome> RunOptimizationAsync(
         Backtest backtest,
         OptimizeStrategyMessage message,
         BacktestData data,
@@ -156,7 +181,7 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
     {
         var population = Enumerable
             .Range(0, (int)message.PopulationSize)
-            .Select(_ => new StrategyConfigurationChromosome(backtest.Strategy.Type))
+            .Select(_ => StrategyChromosome.CreateRandom(backtest.Strategy.Type))
             .ToList();
 
         var engine = new GeneticAlgorithmBuilder<double>()
@@ -165,17 +190,18 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
             .SetPopulationSize(message.PopulationSize)
             .AddFitnessComponent(async chromosome =>
                 {
-                    var config = ExtractConfiguration(chromosome);
+                    var strategyChromosome = ExtractStrategyChromosome(chromosome);
                     var results = await RunBacktestSafelyAsync(
                         backtest.Strategy,
                         backtest.MarketId,
                         backtest.StartDate,
                         backtest.EndDate,
                         backtest.Budget,
-                        config,
+                        strategyChromosome.Configuration,
                         data,
                         message.VolumeParticipationRate,
                         message.SlippageMultiplier,
+                        strategyChromosome,
                         cancellationToken
                     );
 
@@ -216,7 +242,7 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
             cancellationToken: cancellationToken
         );
 
-        var bestConfig = ExtractConfiguration(bestChromosome);
+        var bestStrategyChromosome = ExtractStrategyChromosome(bestChromosome);
         var bestFitness = await engine.EvaluateFitnessAsync(bestChromosome);
 
         if (bestFitness <= double.MinValue / 2)
@@ -224,7 +250,7 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
             _logger.LogWarning(
                 "Optimization found no viable configuration. Falling back to original strategy configuration."
             );
-            return backtest.Strategy.Configuration;
+            return StrategyChromosome.Create(backtest.Strategy.Type, backtest.Strategy.TradingConfiguration);
         }
 
         _logger.LogDebug(
@@ -233,7 +259,7 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
             bestFitness
         );
 
-        return bestConfig;
+        return bestStrategyChromosome;
     }
 
     private async Task<BacktestResults> RunPipelineAsync(
@@ -243,25 +269,25 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
         DateTimeOffset endDate,
         decimal budget,
         CancellationToken cancellationToken,
-        StrategyConfiguration configurationOverride,
+        TradingConfiguration configurationOverride,
         BacktestData data,
         decimal volumeParticipationRate,
-        decimal slippageMultiplier
+        decimal slippageMultiplier,
+        StrategyChromosome chromosome
     )
     {
-        var payload = new BacktestPayload(
-            new BacktestParameters(
-                marketId,
-                strategy,
-                startDate,
-                endDate,
-                budget,
-                volumeParticipationRate,
-                slippageMultiplier,
-                configurationOverride
-            )
-        )
-        { Data = data };
+        var parameters = new BacktestParameters(
+            marketId,
+            strategy,
+            startDate,
+            endDate,
+            budget,
+            volumeParticipationRate,
+            slippageMultiplier,
+            configurationOverride
+        );
+        parameters = chromosome.ApplyConfigOverrides(parameters);
+        var payload = new BacktestPayload(parameters) { Data = data };
 
         var backtestPipeline = new PipelineBuilder<BacktestPayload>(_stepRegistry)
             .AddStep<InitializeStep>()
@@ -294,10 +320,11 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
         DateTimeOffset startDate,
         DateTimeOffset endDate,
         decimal budget,
-        StrategyConfiguration configuration,
+        TradingConfiguration configuration,
         BacktestData data,
         decimal volumeParticipationRate,
         decimal slippageMultiplier,
+        StrategyChromosome chromosome,
         CancellationToken cancellationToken
     )
     {
@@ -312,8 +339,9 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
                 cancellationToken,
                 configuration,
                 data,
-                volumeParticipationRate: volumeParticipationRate,
-                slippageMultiplier: slippageMultiplier
+                volumeParticipationRate,
+                slippageMultiplier,
+                chromosome
             );
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
@@ -323,15 +351,15 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
         }
     }
 
-    private static StrategyConfiguration ExtractConfiguration(IChromosome<double> chromosome)
+    internal static StrategyChromosome ExtractStrategyChromosome(IChromosome<double> chromosome)
     {
-        if (chromosome is StrategyConfigurationChromosome configChromosome)
+        if (chromosome is StrategyChromosome strategyChromosome)
         {
-            return configChromosome.Configuration;
+            return strategyChromosome;
         }
 
         throw new InvalidOperationException(
-            $"Expected {nameof(StrategyConfigurationChromosome)} but got {chromosome.GetType().Name}."
+            $"Expected {nameof(StrategyChromosome)} but got {chromosome.GetType().Name}."
         );
     }
 }

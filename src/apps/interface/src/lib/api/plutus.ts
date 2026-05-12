@@ -265,20 +265,46 @@ export interface CompositeComponent {
   weight: number;
 }
 
-export interface StrategyConfiguration {
-  signalWeights?: SignalWeight[] | null;
+export interface TradingConfiguration {
+  maxPositions: number;
+  maxPositionPercent: number;
+  holdPeriodDays: number;
+}
+
+export interface SignalWeightedConfig {
   buyThreshold?: number | null;
   sellThreshold?: number | null;
+  taxAdjustedRoiWeight?: number | null;
+  volumeAnomalyWeight?: number | null;
+  trendMomentumWeight?: number | null;
+  bollingerBandsWeight?: number | null;
+  rsiWeight?: number | null;
+  movingAverageCrossoverWeight?: number | null;
+  priceVelocityWeight?: number | null;
+}
+
+export interface ForecastMomentumConfig {
   forecastMovementThreshold?: number | null;
   forecastHorizonDays?: number | null;
+}
+
+export interface MeanReversionConfig {
   deviationMultiplier?: number | null;
   meanTimeFrameValue?: number | null;
-  minMarginPercent?: number | null;
-  components?: CompositeComponent[] | null;
-  maxPositions?: number | null;
-  maxPositionPercent?: number | null;
-  holdPeriodDays?: number | null;
 }
+
+export interface RecipeArbitrageConfig {
+  minMarginPercent?: number | null;
+}
+
+export type StrategyConfigBundle = {
+  tradingConfiguration: TradingConfiguration;
+  signalWeightedConfig?: SignalWeightedConfig | null;
+  forecastMomentumConfig?: ForecastMomentumConfig | null;
+  meanReversionConfig?: MeanReversionConfig | null;
+  recipeArbitrageConfig?: RecipeArbitrageConfig | null;
+  components?: CompositeComponent[] | null;
+};
 
 export interface Strategy {
   id: string;
@@ -299,7 +325,12 @@ export interface StrategyDetail {
   name: string;
   description?: string | null;
   type: StrategyType;
-  configuration: StrategyConfiguration;
+  tradingConfiguration: TradingConfiguration;
+  signalWeightedConfig?: SignalWeightedConfig | null;
+  forecastMomentumConfig?: ForecastMomentumConfig | null;
+  meanReversionConfig?: MeanReversionConfig | null;
+  recipeArbitrageConfig?: RecipeArbitrageConfig | null;
+  components?: CompositeComponent[] | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -352,7 +383,11 @@ export interface BacktestResults {
   worstTrade: number;
   finalBalance: number;
   positions: BacktestPosition[];
-  optimizedConfiguration?: StrategyConfiguration | null;
+  optimizedConfiguration?: TradingConfiguration | null;
+  optimizedSignalWeightedConfig?: SignalWeightedConfig | null;
+  optimizedForecastMomentumConfig?: ForecastMomentumConfig | null;
+  optimizedMeanReversionConfig?: MeanReversionConfig | null;
+  optimizedRecipeArbitrageConfig?: RecipeArbitrageConfig | null;
 }
 
 export interface BacktestDetail {
@@ -612,17 +647,39 @@ export const plutusApi = {
     name: string;
     description?: string | null;
     type: StrategyType;
-    configuration: StrategyConfiguration;
-  }) => api.post<IdResponse>("/api/plutus/strategies", input),
+    tradingConfiguration: TradingConfiguration;
+    signalWeightedConfig?: SignalWeightedConfig | null;
+    forecastMomentumConfig?: ForecastMomentumConfig | null;
+    meanReversionConfig?: MeanReversionConfig | null;
+    recipeArbitrageConfig?: RecipeArbitrageConfig | null;
+    components?: CompositeComponent[] | null;
+  }) => {
+    const { tradingConfiguration, ...rest } = input;
+    return api.post<IdResponse>("/api/plutus/strategies", {
+      ...rest,
+      configuration: tradingConfiguration,
+    });
+  },
 
   updateStrategy: (
     strategyId: string,
     input: {
       name: string;
       description?: string | null;
-      configuration: StrategyConfiguration;
+      tradingConfiguration: TradingConfiguration;
+      signalWeightedConfig?: SignalWeightedConfig | null;
+      forecastMomentumConfig?: ForecastMomentumConfig | null;
+      meanReversionConfig?: MeanReversionConfig | null;
+      recipeArbitrageConfig?: RecipeArbitrageConfig | null;
+      components?: CompositeComponent[] | null;
     },
-  ) => api.put<IdResponse>(`/api/plutus/strategies/${strategyId}`, input),
+  ) => {
+    const { tradingConfiguration, ...rest } = input;
+    return api.put<IdResponse>(`/api/plutus/strategies/${strategyId}`, {
+      ...rest,
+      configuration: tradingConfiguration,
+    });
+  },
 
   deleteStrategy: (strategyId: string) =>
     api.del<IdResponse>(`/api/plutus/strategies/${strategyId}`),

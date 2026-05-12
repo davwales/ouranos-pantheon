@@ -1,12 +1,12 @@
 "use client";
 
+import { NumericInput } from "@/app/components/numeric-input";
 import { ResponsiveDialog } from "@/app/components/responsive-dialog/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { plutusApi } from "@/lib/api/plutus";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { NumberInput } from "./number-input";
 
 export function OptimizeDialog({
   strategyId,
@@ -105,14 +105,14 @@ export function OptimizeDialog({
             End date must be after start date
           </p>
         )}
-        <NumberInput
+        <NumericInput
           label="Budget"
           hint="Initial capital for optimization"
           value={budget}
           onChange={(v) => setBudget(v ?? 0)}
           min={1}
         />
-        <NumberInput
+        <NumericInput
           label="Generations"
           hint="Number of optimization generations"
           value={generations}
@@ -121,7 +121,7 @@ export function OptimizeDialog({
           max={500}
           step={1}
         />
-        <NumberInput
+        <NumericInput
           label="Population Size"
           hint="Population per generation"
           value={populationSize}
@@ -141,7 +141,7 @@ export function OptimizeDialog({
         </div>
         {showAdvanced && (
           <div className="space-y-4 border rounded-lg p-3 bg-muted/30">
-            <NumberInput
+            <NumericInput
               label="Sharpe Ratio Weight"
               hint="Weight for risk-adjusted return"
               value={sharpeRatioWeight}
@@ -150,7 +150,7 @@ export function OptimizeDialog({
               min={-10}
               max={10}
             />
-            <NumberInput
+            <NumericInput
               label="Total Return Weight"
               hint="Weight for total return"
               value={totalReturnWeight}
@@ -159,7 +159,7 @@ export function OptimizeDialog({
               min={-10}
               max={10}
             />
-            <NumberInput
+            <NumericInput
               label="Max Drawdown Weight"
               hint="Negative weight penalizes drawdown"
               value={maxDrawdownWeight}
@@ -168,7 +168,7 @@ export function OptimizeDialog({
               min={-10}
               max={10}
             />
-            <NumberInput
+            <NumericInput
               label="Volume Participation Rate"
               hint="Max fraction of daily volume per trade (0-1)"
               value={volumeParticipationRate}
@@ -177,7 +177,7 @@ export function OptimizeDialog({
               max={1}
               step={0.01}
             />
-            <NumberInput
+            <NumericInput
               label="Slippage Multiplier"
               hint="Price impact per unit of volume ratio (0 = none)"
               value={slippageMultiplier}

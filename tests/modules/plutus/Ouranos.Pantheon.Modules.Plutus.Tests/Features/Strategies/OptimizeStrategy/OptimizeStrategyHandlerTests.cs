@@ -37,7 +37,8 @@ public sealed class OptimizeStrategyHandlerTests
             "Test",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration()
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         await setupContext.Strategies.AddAsync(strategy);
         await setupContext.SaveChangesAsync();
@@ -92,7 +93,8 @@ public sealed class OptimizeStrategyHandlerTests
             "Test",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration()
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         await setupContext.Strategies.AddAsync(strategy);
         await setupContext.SaveChangesAsync();
@@ -124,7 +126,8 @@ public sealed class OptimizeStrategyHandlerTests
             "Test",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration()
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         await setupContext.Strategies.AddAsync(strategy);
         await setupContext.SaveChangesAsync();

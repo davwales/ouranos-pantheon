@@ -4,5 +4,5 @@ public interface IStrategyExecutor
 {
     StrategyType SupportedType { get; }
 
-    decimal? Score(StrategyScoreContext context, StrategyConfiguration configuration);
+    decimal? Score(StrategyScoreContext context, TradingConfiguration configuration);
 }

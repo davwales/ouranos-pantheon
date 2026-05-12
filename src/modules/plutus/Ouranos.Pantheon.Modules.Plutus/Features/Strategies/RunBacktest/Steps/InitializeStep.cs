@@ -54,7 +54,11 @@ public sealed class InitializeStep : IStep<BacktestPayload>
             executor,
             taxRate,
             windowDays,
-            payload.Parameters.StartDate
+            payload.Parameters.StartDate,
+            SignalWeightedConfig: payload.Parameters.SignalWeightedConfig,
+            ForecastMomentumConfig: payload.Parameters.ForecastMomentumConfig,
+            MeanReversionConfig: payload.Parameters.MeanReversionConfig,
+            RecipeArbitrageConfig: payload.Parameters.RecipeArbitrageConfig
         );
 
         _logger.LogDebug(

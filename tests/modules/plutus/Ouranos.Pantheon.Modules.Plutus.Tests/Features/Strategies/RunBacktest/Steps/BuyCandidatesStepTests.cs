@@ -34,7 +34,8 @@ public sealed class BuyCandidatesStepTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration()
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         var parameters = new BacktestParameters(
             marketId,
@@ -73,7 +74,8 @@ public sealed class BuyCandidatesStepTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration(BuyThreshold: 10m)
+            new TradingConfiguration(),
+            new SignalWeightedConfig(BuyThreshold: 10m)
         );
         var parameters = new BacktestParameters(
             marketId,
@@ -111,7 +113,8 @@ public sealed class BuyCandidatesStepTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration(BuyThreshold: 0m, MaxPositions: 5, MaxPositionPercent: 0.25m)
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var parameters = new BacktestParameters(
@@ -155,7 +158,8 @@ public sealed class BuyCandidatesStepTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration(BuyThreshold: 0m, MaxPositions: 5, MaxPositionPercent: 0.25m)
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         var parameters = new BacktestParameters(
             marketId,
@@ -201,7 +205,8 @@ public sealed class BuyCandidatesStepTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration(BuyThreshold: 0m, MaxPositions: 5, MaxPositionPercent: 0.25m)
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         var parameters = new BacktestParameters(
             marketId,
@@ -240,7 +245,8 @@ public sealed class BuyCandidatesStepTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration(BuyThreshold: 0m, MaxPositions: 5, MaxPositionPercent: 1m)
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var parameters = new BacktestParameters(
@@ -284,7 +290,8 @@ public sealed class BuyCandidatesStepTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration(BuyThreshold: 0m, MaxPositions: 5, MaxPositionPercent: 1m)
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var parameters = new BacktestParameters(

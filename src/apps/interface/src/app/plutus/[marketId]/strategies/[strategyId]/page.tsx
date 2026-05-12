@@ -3,8 +3,8 @@
 import { Typography } from "@/app/components/typography";
 import { useApi } from "@/hooks/use-api";
 import {
-  type StrategyConfiguration,
-  type StrategyDetail,
+  StrategyConfigBundle,
+  StrategyDetail,
   plutusApi,
 } from "@/lib/api/plutus";
 import { RefreshCw } from "lucide-react";
@@ -15,6 +15,17 @@ import { RunBacktestDialog } from "../components/run-backtest-dialog";
 import { StrategyEditForm } from "../components/strategy-edit-form";
 import { StrategyHeader } from "../components/strategy-header";
 import { StrategyReadOnlyView } from "../components/strategy-read-only-view";
+
+function detailToBundle(detail: StrategyDetail): StrategyConfigBundle {
+  return {
+    tradingConfiguration: detail.tradingConfiguration,
+    signalWeightedConfig: detail.signalWeightedConfig,
+    forecastMomentumConfig: detail.forecastMomentumConfig,
+    meanReversionConfig: detail.meanReversionConfig,
+    recipeArbitrageConfig: detail.recipeArbitrageConfig,
+    components: detail.components,
+  };
+}
 
 export default function StrategyDetailPage() {
   const { marketId, strategyId } = useParams<{
@@ -37,7 +48,13 @@ export default function StrategyDetailPage() {
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [config, setConfig] = useState<StrategyConfiguration>({});
+  const [bundle, setBundle] = useState<StrategyConfigBundle>({
+    tradingConfiguration: {
+      maxPositions: 10,
+      maxPositionPercent: 0.2,
+      holdPeriodDays: 7,
+    },
+  });
 
   const data = strategy.data;
 
@@ -45,7 +62,7 @@ export default function StrategyDetailPage() {
     if (data) {
       setName(data.name);
       setDescription(data.description ?? "");
-      setConfig({ ...data.configuration });
+      setBundle(detailToBundle(data));
     }
   }, [data]);
 
@@ -85,7 +102,7 @@ export default function StrategyDetailPage() {
       await plutusApi.updateStrategy(strategyId, {
         name: name.trim(),
         description: description.trim() || null,
-        configuration: config,
+        ...bundle,
       });
       reexecute();
       setIsEditing(false);
@@ -100,7 +117,7 @@ export default function StrategyDetailPage() {
     if (data) {
       setName(data.name);
       setDescription(data.description ?? "");
-      setConfig({ ...data.configuration });
+      setBundle(detailToBundle(data));
     }
     setIsEditing(false);
   };
@@ -146,13 +163,13 @@ export default function StrategyDetailPage() {
           data={data}
           name={name}
           description={description}
-          config={config}
+          bundle={bundle}
           onNameChange={setName}
           onDescriptionChange={setDescription}
-          onConfigChange={setConfig}
+          onBundleChange={setBundle}
         />
       ) : (
-        <StrategyReadOnlyView configuration={data.configuration} />
+        <StrategyReadOnlyView data={data} />
       )}
 
       <RunBacktestDialog

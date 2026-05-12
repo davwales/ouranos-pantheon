@@ -18,7 +18,7 @@ public sealed class CloseExitsStep(IEnumerable<ISignalComputer> signalComputers)
 
         var ctx = payload.Context;
         var holdLimit = payload.Parameters.Configuration.HoldPeriodDays ?? int.MaxValue;
-        var sellThreshold = payload.Parameters.Configuration.SellThreshold;
+        var sellThreshold = payload.Parameters.SignalWeightedConfig?.SellThreshold;
 
         var toClose = new List<KeyValuePair<Id<Symbol>, OpenPosition>>();
 
@@ -148,7 +148,11 @@ public sealed class CloseExitsStep(IEnumerable<ISignalComputer> signalComputers)
             priceBuckets,
             signals,
             forecastedPrice,
-            forecastedChange
+            forecastedChange,
+            SignalWeightedConfig: ctx.SignalWeightedConfig,
+            ForecastMomentumConfig: ctx.ForecastMomentumConfig,
+            MeanReversionConfig: ctx.MeanReversionConfig,
+            RecipeArbitrageConfig: ctx.RecipeArbitrageConfig
         );
 
         var score = ctx.Executor.Score(scoreContext, payload.Parameters.Configuration);

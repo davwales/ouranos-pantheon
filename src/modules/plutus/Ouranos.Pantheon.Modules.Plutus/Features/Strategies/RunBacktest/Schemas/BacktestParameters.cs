@@ -12,9 +12,26 @@ public sealed record BacktestParameters(
     decimal Budget,
     decimal VolumeParticipationRate = 0.25m,
     decimal SlippageMultiplier = 0.1m,
-    StrategyConfiguration? ConfigurationOverride = null
+    TradingConfiguration? ConfigurationOverride = null,
+    SignalWeightedConfig? SignalWeightedConfigOverride = null,
+    ForecastMomentumConfig? ForecastMomentumConfigOverride = null,
+    MeanReversionConfig? MeanReversionConfigOverride = null,
+    RecipeArbitrageConfig? RecipeArbitrageConfigOverride = null
 )
 {
-    public StrategyConfiguration Configuration => ConfigurationOverride ?? Strategy.Configuration;
+    public TradingConfiguration Configuration => ConfigurationOverride ?? Strategy.TradingConfiguration;
+
+    public SignalWeightedConfig? SignalWeightedConfig =>
+        SignalWeightedConfigOverride ?? Strategy.SignalWeightedConfig;
+
+    public ForecastMomentumConfig? ForecastMomentumConfig =>
+        ForecastMomentumConfigOverride ?? Strategy.ForecastMomentumConfig;
+
+    public MeanReversionConfig? MeanReversionConfig =>
+        MeanReversionConfigOverride ?? Strategy.MeanReversionConfig;
+
+    public RecipeArbitrageConfig? RecipeArbitrageConfig =>
+        RecipeArbitrageConfigOverride ?? Strategy.RecipeArbitrageConfig;
+
     public int TotalDays => (int)(EndDate - StartDate).TotalDays;
 }

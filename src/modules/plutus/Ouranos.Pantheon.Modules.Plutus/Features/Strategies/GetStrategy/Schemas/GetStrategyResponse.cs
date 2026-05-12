@@ -10,7 +10,11 @@ public sealed record GetStrategyResponse(
     string Name,
     string? Description,
     StrategyType Type,
-    StrategyConfiguration Configuration,
+    TradingConfiguration TradingConfiguration,
+    SignalWeightedConfig? SignalWeightedConfig,
+    ForecastMomentumConfig? ForecastMomentumConfig,
+    MeanReversionConfig? MeanReversionConfig,
+    RecipeArbitrageConfig? RecipeArbitrageConfig,
     bool IsActive,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt

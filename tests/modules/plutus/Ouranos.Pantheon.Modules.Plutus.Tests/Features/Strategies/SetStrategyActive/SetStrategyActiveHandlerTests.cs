@@ -33,7 +33,8 @@ public sealed class SetStrategyActiveHandlerTests
             "Test",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration()
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         await _dbContext.Strategies.AddAsync(strategy);
         await _dbContext.SaveChangesAsync();
@@ -58,7 +59,8 @@ public sealed class SetStrategyActiveHandlerTests
             "Test",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration()
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         strategy.SetActive(false);
         await _dbContext.Strategies.AddAsync(strategy);

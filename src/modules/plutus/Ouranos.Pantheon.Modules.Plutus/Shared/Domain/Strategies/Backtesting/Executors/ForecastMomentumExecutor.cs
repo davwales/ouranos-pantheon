@@ -4,14 +4,14 @@ public sealed class ForecastMomentumExecutor : IStrategyExecutor
 {
     public StrategyType SupportedType => StrategyType.ForecastMomentum;
 
-    public decimal? Score(StrategyScoreContext context, StrategyConfiguration configuration)
+    public decimal? Score(StrategyScoreContext context, TradingConfiguration configuration)
     {
         if (context.ForecastedPriceChange is null || context.CurrentPrice == 0)
         {
             return null;
         }
 
-        var threshold = configuration.ForecastMovementThreshold ?? 0.01m;
+        var threshold = context.ForecastMomentumConfig?.ForecastMovementThreshold ?? 0.01m;
         if (threshold == 0)
         {
             threshold = 0.01m;

@@ -1,4 +1,4 @@
-import { StrategyType } from "@/lib/api/plutus";
+import { type StrategyType } from "@/lib/api/plutus";
 import { Activity, Calendar, Clock, Gauge } from "lucide-react";
 
 export const strategyTypeLabels: Record<StrategyType, string> = {
@@ -18,6 +18,31 @@ export const signalTypeLabels: Record<string, string> = {
   MovingAverageCrossover: "Moving Average Crossover",
   PriceVelocity: "Price Velocity",
 };
+
+export type SignalWeightKey =
+  | "taxAdjustedRoiWeight"
+  | "volumeAnomalyWeight"
+  | "trendMomentumWeight"
+  | "bollingerBandsWeight"
+  | "rsiWeight"
+  | "movingAverageCrossoverWeight"
+  | "priceVelocityWeight";
+
+export const signalWeightFields: Array<{
+  label: string;
+  key: SignalWeightKey;
+}> = [
+  { label: signalTypeLabels.TaxAdjustedRoi, key: "taxAdjustedRoiWeight" },
+  { label: signalTypeLabels.VolumeAnomaly, key: "volumeAnomalyWeight" },
+  { label: signalTypeLabels.TrendMomentum, key: "trendMomentumWeight" },
+  { label: signalTypeLabels.BollingerBands, key: "bollingerBandsWeight" },
+  { label: signalTypeLabels.Rsi, key: "rsiWeight" },
+  {
+    label: signalTypeLabels.MovingAverageCrossover,
+    key: "movingAverageCrossoverWeight",
+  },
+  { label: signalTypeLabels.PriceVelocity, key: "priceVelocityWeight" },
+];
 
 export function typeIcon(type: StrategyType) {
   switch (type) {

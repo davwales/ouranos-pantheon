@@ -13,9 +13,10 @@ public sealed class CompositeExecutor : IStrategyExecutor
             .ToDictionary(e => e.SupportedType);
     }
 
-    public decimal? Score(StrategyScoreContext context, StrategyConfiguration configuration)
+    public decimal? Score(StrategyScoreContext context, TradingConfiguration configuration)
     {
-        if (configuration.Components is null || configuration.Components.Count == 0)
+        var components = context.Components;
+        if (components is null || components.Count == 0)
         {
             return null;
         }
@@ -23,7 +24,7 @@ public sealed class CompositeExecutor : IStrategyExecutor
         var weightedSum = 0m;
         var totalWeight = 0m;
 
-        foreach (var component in configuration.Components)
+        foreach (var component in components)
         {
             if (!_executors.TryGetValue(component.Type, out var executor))
             {

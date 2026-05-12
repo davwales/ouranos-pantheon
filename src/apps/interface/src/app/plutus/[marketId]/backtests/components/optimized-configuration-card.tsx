@@ -7,9 +7,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { type StrategyConfiguration } from "@/lib/api/plutus";
+import { BacktestResults } from "@/lib/api/plutus";
 import { ArrowRight } from "lucide-react";
-import { signalTypeLabels } from "../../strategies/components/strategy-constants";
+import { signalWeightFields } from "../../strategies/components/strategy-constants";
 
 function ConfigRow({
   label,
@@ -30,36 +30,19 @@ function ConfigRow({
 }
 
 export function OptimizedConfigurationCard({
-  configuration,
+  results,
   isApplying,
   onApplyToStrategy,
 }: {
-  configuration: StrategyConfiguration;
+  results: BacktestResults;
   isApplying?: boolean;
   onApplyToStrategy?: () => void;
 }) {
-  const hasSignalWeights =
-    configuration.signalWeights != null &&
-    configuration.signalWeights.length > 0;
-
-  const scalarFields: Array<{
-    label: string;
-    key: keyof StrategyConfiguration;
-  }> = [
-    { label: "Buy Threshold", key: "buyThreshold" },
-    { label: "Sell Threshold", key: "sellThreshold" },
-    { label: "Max Positions", key: "maxPositions" },
-    { label: "Max Position Percent", key: "maxPositionPercent" },
-    { label: "Hold Period Days", key: "holdPeriodDays" },
-    { label: "Forecast Movement Threshold", key: "forecastMovementThreshold" },
-    { label: "Forecast Horizon Days", key: "forecastHorizonDays" },
-    { label: "Deviation Multiplier", key: "deviationMultiplier" },
-    { label: "Mean Time Frame Value", key: "meanTimeFrameValue" },
-    { label: "Min Margin Percent", key: "minMarginPercent" },
-  ];
-
-  const hasComponents =
-    configuration.components != null && configuration.components.length > 0;
+  const trading = results.optimizedConfiguration;
+  const signalWeighted = results.optimizedSignalWeightedConfig;
+  const forecastMomentum = results.optimizedForecastMomentumConfig;
+  const meanReversion = results.optimizedMeanReversionConfig;
+  const recipeArbitrage = results.optimizedRecipeArbitrageConfig;
 
   return (
     <Card>
@@ -81,7 +64,27 @@ export function OptimizedConfigurationCard({
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {hasSignalWeights && (
+          {trading && (
+            <div className="space-y-1">
+              <Typography
+                variant="small"
+                className="font-semibold uppercase tracking-wide text-muted-foreground"
+              >
+                Trading Rules
+              </Typography>
+              <ConfigRow label="Max Positions" value={trading.maxPositions} />
+              <ConfigRow
+                label="Max Position Percent"
+                value={trading.maxPositionPercent}
+              />
+              <ConfigRow
+                label="Hold Period Days"
+                value={trading.holdPeriodDays}
+              />
+            </div>
+          )}
+
+          {signalWeighted && (
             <div className="space-y-2">
               <Typography
                 variant="small"
@@ -89,48 +92,79 @@ export function OptimizedConfigurationCard({
               >
                 Signal Weights
               </Typography>
-              {configuration.signalWeights!.map((sw, i) => (
+              {signalWeightFields.map(
+                (field) =>
+                  signalWeighted[field.key] != null && (
+                    <ConfigRow
+                      key={field.key}
+                      label={field.label as string}
+                      value={signalWeighted[field.key] as number}
+                    />
+                  ),
+              )}
+              <div className="mt-2 space-y-1">
                 <ConfigRow
-                  key={i}
-                  label={signalTypeLabels[sw.type] ?? sw.type}
-                  value={sw.weight}
+                  label="Buy Threshold"
+                  value={signalWeighted.buyThreshold}
                 />
-              ))}
+                <ConfigRow
+                  label="Sell Threshold"
+                  value={signalWeighted.sellThreshold}
+                />
+              </div>
             </div>
           )}
-          <div className="space-y-1">
-            <Typography
-              variant="small"
-              className="font-semibold uppercase tracking-wide text-muted-foreground"
-            >
-              Parameters
-            </Typography>
-            {scalarFields.map(
-              (field) =>
-                configuration[field.key] != null && (
-                  <ConfigRow
-                    key={field.key}
-                    label={field.label}
-                    value={configuration[field.key] as string | number}
-                  />
-                ),
-            )}
-          </div>
-          {hasComponents && (
-            <div className="space-y-2">
+
+          {forecastMomentum && (
+            <div className="space-y-1">
               <Typography
                 variant="small"
                 className="font-semibold uppercase tracking-wide text-muted-foreground"
               >
-                Components
+                Forecast Parameters
               </Typography>
-              {configuration.components!.map((c, i) => (
-                <ConfigRow
-                  key={i}
-                  label={c.strategyId}
-                  value={`Weight: ${c.weight}`}
-                />
-              ))}
+              <ConfigRow
+                label="Forecast Movement Threshold"
+                value={forecastMomentum.forecastMovementThreshold}
+              />
+              <ConfigRow
+                label="Forecast Horizon Days"
+                value={forecastMomentum.forecastHorizonDays}
+              />
+            </div>
+          )}
+
+          {meanReversion && (
+            <div className="space-y-1">
+              <Typography
+                variant="small"
+                className="font-semibold uppercase tracking-wide text-muted-foreground"
+              >
+                Mean Reversion Parameters
+              </Typography>
+              <ConfigRow
+                label="Deviation Multiplier"
+                value={meanReversion.deviationMultiplier}
+              />
+              <ConfigRow
+                label="Mean Time Frame Value"
+                value={meanReversion.meanTimeFrameValue}
+              />
+            </div>
+          )}
+
+          {recipeArbitrage && (
+            <div className="space-y-1">
+              <Typography
+                variant="small"
+                className="font-semibold uppercase tracking-wide text-muted-foreground"
+              >
+                Recipe Arbitrage Parameters
+              </Typography>
+              <ConfigRow
+                label="Min Margin Percent"
+                value={recipeArbitrage.minMarginPercent}
+              />
             </div>
           )}
         </div>

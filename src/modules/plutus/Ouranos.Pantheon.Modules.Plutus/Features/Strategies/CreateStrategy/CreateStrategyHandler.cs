@@ -38,7 +38,11 @@ public sealed class CreateStrategyHandler : IPantheonHandler<CreateStrategyInput
             command.Name,
             command.Description,
             command.Type,
-            command.Configuration
+            command.Configuration,
+            command.SignalWeightedConfig,
+            command.ForecastMomentumConfig,
+            command.MeanReversionConfig,
+            command.RecipeArbitrageConfig
         );
 
         await _dbContext.Strategies.AddAsync(strategy, cancellationToken);

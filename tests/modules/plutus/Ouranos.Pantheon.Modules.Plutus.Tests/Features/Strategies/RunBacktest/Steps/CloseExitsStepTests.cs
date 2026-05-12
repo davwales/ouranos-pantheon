@@ -34,7 +34,8 @@ public sealed class CloseExitsStepTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration(HoldPeriodDays: 1)
+            new TradingConfiguration { HoldPeriodDays = 1 },
+            new SignalWeightedConfig()
         );
         var startDate = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
         var parameters = new BacktestParameters(
@@ -90,7 +91,8 @@ public sealed class CloseExitsStepTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration(HoldPeriodDays: 5)
+            new TradingConfiguration { HoldPeriodDays = 1 },
+            new SignalWeightedConfig()
         );
         var startDate = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
         var parameters = new BacktestParameters(
@@ -133,7 +135,7 @@ public sealed class CloseExitsStepTests
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
         var executor = Substitute.For<IStrategyExecutor>();
-        executor.Score(Arg.Any<StrategyScoreContext>(), Arg.Any<StrategyConfiguration>())
+        executor.Score(Arg.Any<StrategyScoreContext>(), Arg.Any<TradingConfiguration>())
             .Returns(3m);
         var signalComputer = Substitute.For<ISignalComputer>();
         signalComputer.Type.Returns(SignalType.TaxAdjustedRoi);
@@ -144,7 +146,8 @@ public sealed class CloseExitsStepTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration(SellThreshold: 5m, HoldPeriodDays: 100)
+            new TradingConfiguration(),
+            new SignalWeightedConfig(SellThreshold: 5m)
         );
         var startDate = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
         var parameters = new BacktestParameters(
@@ -189,7 +192,7 @@ public sealed class CloseExitsStepTests
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
         var executor = Substitute.For<IStrategyExecutor>();
-        executor.Score(Arg.Any<StrategyScoreContext>(), Arg.Any<StrategyConfiguration>())
+        executor.Score(Arg.Any<StrategyScoreContext>(), Arg.Any<TradingConfiguration>())
             .Returns(7m);
         var signalComputer = Substitute.For<ISignalComputer>();
         signalComputer.Type.Returns(SignalType.TaxAdjustedRoi);
@@ -200,7 +203,8 @@ public sealed class CloseExitsStepTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration(SellThreshold: 5m, HoldPeriodDays: 100)
+            new TradingConfiguration(),
+            new SignalWeightedConfig(SellThreshold: 5m)
         );
         var startDate = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
         var parameters = new BacktestParameters(
@@ -251,7 +255,8 @@ public sealed class CloseExitsStepTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration(HoldPeriodDays: 1)
+            new TradingConfiguration { HoldPeriodDays = 1 },
+            new SignalWeightedConfig()
         );
         var startDate = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
         var parameters = new BacktestParameters(
@@ -299,7 +304,8 @@ public sealed class CloseExitsStepTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration(HoldPeriodDays: 1)
+            new TradingConfiguration { HoldPeriodDays = 1 },
+            new SignalWeightedConfig()
         );
         var startDate = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
         var parameters = new BacktestParameters(
@@ -338,7 +344,8 @@ public sealed class CloseExitsStepTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration(HoldPeriodDays: 1)
+            new TradingConfiguration { HoldPeriodDays = 1 },
+            new SignalWeightedConfig()
         );
         var startDate = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
         var parameters = new BacktestParameters(
@@ -393,7 +400,8 @@ public sealed class CloseExitsStepTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration()
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         var startDate = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
         var parameters = new BacktestParameters(
@@ -428,7 +436,8 @@ public sealed class CloseExitsStepTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration()
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         var startDate = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
         var parameters = new BacktestParameters(

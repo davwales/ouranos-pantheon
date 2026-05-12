@@ -4,7 +4,7 @@ public sealed class RecipeArbitrageExecutor : IStrategyExecutor
 {
     public StrategyType SupportedType => StrategyType.RecipeArbitrage;
 
-    public decimal? Score(StrategyScoreContext context, StrategyConfiguration configuration)
+    public decimal? Score(StrategyScoreContext context, TradingConfiguration configuration)
     {
         var shortSnap = context.ShortSnapshot;
         if (shortSnap is null || shortSnap.MinPrice == 0)
@@ -12,7 +12,7 @@ public sealed class RecipeArbitrageExecutor : IStrategyExecutor
             return null;
         }
 
-        var minMargin = configuration.MinMarginPercent ?? 0.01m;
+        var minMargin = context.RecipeArbitrageConfig?.MinMarginPercent ?? 0.01m;
         if (minMargin == 0)
         {
             minMargin = 0.01m;

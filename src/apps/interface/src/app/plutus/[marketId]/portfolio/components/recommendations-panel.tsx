@@ -1,14 +1,28 @@
 "use client";
 
+import { NumericInput } from "@/app/components/numeric-input";
+import { abbreviateNumber } from "@/app/components/pretty-number/abbreviate-number";
 import { Button } from "@/components/ui/button";
-import { useApi } from "@/hooks/use-api";
 import {
   type Strategy,
   type StrategyRecommendation,
   plutusApi,
 } from "@/lib/api/plutus";
-import { Lightbulb, RefreshCw } from "lucide-react";
-import { useState } from "react";
+import { Lightbulb, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { useCallback, useRef, useState } from "react";
+
+const DEFAULT_BUDGET = 10000;
+
+type RecommendationsState =
+  | { status: "idle"; data: undefined }
+  | { status: "loading"; data: StrategyRecommendation[] | undefined }
+  | { status: "success"; data: StrategyRecommendation[] }
+  | {
+      status: "error";
+      data: StrategyRecommendation[] | undefined;
+      error: Error;
+    };
 
 export function RecommendationsPanel({
   marketId,
@@ -22,19 +36,48 @@ export function RecommendationsPanel({
   const [selectedStrategyId, setSelectedStrategyId] = useState<string | null>(
     null,
   );
+  const [budget, setBudget] = useState(DEFAULT_BUDGET);
+  const [recommendationsState, setRecommendationsState] =
+    useState<RecommendationsState>({ status: "idle", data: undefined });
+  const abortRef = useRef<AbortController | null>(null);
 
-  const [recommendationsState, reexecuteRecommendations] = useApi(
-    () =>
-      selectedStrategyId
-        ? plutusApi.getRecommendations(selectedStrategyId, {
-            marketId,
-            budget: 10000,
-          })
-        : Promise.resolve({ recommendations: [] }),
-    [selectedStrategyId, marketId],
-  );
+  const handleGenerate = useCallback(async () => {
+    if (!selectedStrategyId) {
+      return;
+    }
 
-  const recommendations = recommendationsState.data?.recommendations ?? [];
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    setRecommendationsState((prev) => ({
+      status: "loading",
+      data: prev.data,
+    }));
+
+    try {
+      const result = await plutusApi.getRecommendations(selectedStrategyId, {
+        marketId,
+        budget,
+      });
+      if (!controller.signal.aborted) {
+        setRecommendationsState({
+          status: "success",
+          data: result.recommendations,
+        });
+      }
+    } catch (error) {
+      if (!controller.signal.aborted) {
+        setRecommendationsState((prev) => ({
+          status: "error",
+          data: prev.data,
+          error: error instanceof Error ? error : new Error(String(error)),
+        }));
+      }
+    }
+  }, [selectedStrategyId, marketId, budget]);
+
+  const recommendations = recommendationsState.data ?? [];
   const loading = recommendationsState.status === "loading";
 
   const activeStrategies = strategies.filter((s) => s.isActive);
@@ -50,38 +93,57 @@ export function RecommendationsPanel({
         <h3 className="font-semibold">Strategy Recommendations</h3>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-4">
-        {activeStrategies.map((strategy) => (
-          <Button
-            key={strategy.id}
-            variant={selectedStrategyId === strategy.id ? "default" : "outline"}
-            size="sm"
-            onClick={() =>
-              setSelectedStrategyId(
-                selectedStrategyId === strategy.id ? null : strategy.id,
-              )
-            }
-          >
-            {strategy.name}
-          </Button>
-        ))}
+      <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 mb-4">
+        {activeStrategies.map((strategy) => {
+          const isSelected = selectedStrategyId === strategy.id;
+          return (
+            <Button
+              key={strategy.id}
+              variant={isSelected ? "default" : "outline"}
+              size="sm"
+              className="w-full sm:w-auto"
+              onClick={() => {
+                const newId = isSelected ? null : strategy.id;
+                setSelectedStrategyId(newId);
+                setRecommendationsState({ status: "idle", data: undefined });
+              }}
+            >
+              {strategy.name}
+            </Button>
+          );
+        })}
+        {selectedStrategyId && (
+          <div className="flex items-center gap-1.5 w-full sm:w-auto sm:ml-auto">
+            <label
+              htmlFor="budget-input"
+              className="text-xs text-muted-foreground whitespace-nowrap"
+            >
+              Budget:
+            </label>
+            <NumericInput
+              id="budget-input"
+              value={budget}
+              onChange={(v) => setBudget(v ?? DEFAULT_BUDGET)}
+              min={1}
+              className="w-full sm:w-36 h-7 text-sm"
+            />
+          </div>
+        )}
       </div>
 
       {selectedStrategyId && (
         <>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-muted-foreground">
-              {recommendations.length} recommendation
-              {recommendations.length !== 1 ? "s" : ""}
-            </span>
-            {loading ? (
-              <RefreshCw className="w-4 h-4 animate-spin" />
-            ) : (
-              <RefreshCw
-                onClick={reexecuteRecommendations}
-                className="w-4 h-4 hover:cursor-pointer"
-              />
-            )}
+          <div className="flex items-center justify-stretch sm:justify-end mb-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full sm:w-auto"
+              onClick={handleGenerate}
+              disabled={loading || !selectedStrategyId}
+            >
+              <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+              {loading ? "Generating..." : "Generate"}
+            </Button>
           </div>
 
           {recommendations.length > 0 && (
@@ -89,6 +151,7 @@ export function RecommendationsPanel({
               {recommendations.map((rec: StrategyRecommendation) => (
                 <RecommendationRow
                   key={rec.symbolId}
+                  marketId={marketId}
                   recommendation={rec}
                   onCreatePosition={onCreatePosition}
                 />
@@ -98,7 +161,9 @@ export function RecommendationsPanel({
 
           {recommendations.length === 0 && !loading && (
             <p className="text-sm text-muted-foreground py-2">
-              No recommendations found for the selected strategy.
+              {recommendationsState.status === "idle"
+                ? "Set your budget and click Generate to get recommendations."
+                : "No recommendations found for the selected strategy."}
             </p>
           )}
         </>
@@ -106,7 +171,8 @@ export function RecommendationsPanel({
 
       {!selectedStrategyId && (
         <p className="text-sm text-muted-foreground">
-          Select a strategy to view buy/sell recommendations for this market.
+          Select a strategy to generate buy/sell recommendations for this
+          market.
         </p>
       )}
     </div>
@@ -114,31 +180,47 @@ export function RecommendationsPanel({
 }
 
 function RecommendationRow({
+  marketId,
   recommendation,
   onCreatePosition,
 }: {
+  marketId: string;
   recommendation: StrategyRecommendation;
   onCreatePosition: (symbolId: string, symbolName: string) => void;
 }) {
   return (
-    <div className="flex items-center justify-between py-2 first:pt-0 last:pb-0">
-      <div className="flex flex-col">
-        <span className="font-medium">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-2 first:pt-0 last:pb-0">
+      <div className="flex flex-col gap-0.5 min-w-0">
+        <Link
+          href={`/plutus/${marketId}/${recommendation.symbolId}`}
+          className="font-medium hover:underline truncate"
+        >
           {recommendation.symbolName}
           {recommendation.symbolSubcode
             ? ` (${recommendation.symbolSubcode})`
             : ""}
-        </span>
-        <span className="text-xs text-muted-foreground">
-          Score: {recommendation.score.toFixed(3)} &middot; Price:{" "}
-          {recommendation.currentPrice.toFixed(2)} &middot; Suggested:{" "}
-          {recommendation.suggestedAllocation.toFixed(2)} (
-          {recommendation.suggestedVolume} units)
-        </span>
+        </Link>
+        <div className="flex flex-wrap gap-x-2 text-xs text-muted-foreground">
+          <span>Score: {recommendation.score.toFixed(3)}</span>
+          <span className="hidden sm:inline">&middot;</span>
+          <span>Price: {abbreviateNumber(recommendation.currentPrice)}</span>
+          <span className="hidden sm:inline">&middot;</span>
+          <span>
+            Allocation: {abbreviateNumber(recommendation.suggestedAllocation)}
+          </span>
+          <span className="hidden sm:inline">&middot;</span>
+          <span>{recommendation.suggestedVolume} units</span>
+        </div>
+        {recommendation.rationale && (
+          <span className="text-xs text-muted-foreground italic">
+            {recommendation.rationale}
+          </span>
+        )}
       </div>
       <Button
         variant="outline"
         size="sm"
+        className="w-full sm:w-auto shrink-0"
         onClick={() =>
           onCreatePosition(recommendation.symbolId, recommendation.symbolName)
         }

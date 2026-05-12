@@ -35,7 +35,8 @@ public sealed class DeleteStrategyHandlerTests
             "Test",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration()
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         await _dbContext.Strategies.AddAsync(strategy);
         await _dbContext.SaveChangesAsync();

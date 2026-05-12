@@ -23,13 +23,16 @@ public static class UpdateStrategyEndpoint
         CancellationToken ct
     )
     {
-        var input = new UpdateStrategyInput(strategyId, body.Name, body.Description, body.Configuration);
+        var input = new UpdateStrategyInput(
+            strategyId,
+            body.Name,
+            body.Description,
+            body.Configuration,
+            body.SignalWeightedConfig,
+            body.ForecastMomentumConfig,
+            body.MeanReversionConfig,
+            body.RecipeArbitrageConfig
+        );
         return Results.Ok(await bus.InvokeAsync<IdResponse<Strategy>>(input, ct));
     }
 }
-
-public sealed record UpdateStrategyBody(
-    string Name,
-    string? Description,
-    StrategyConfiguration Configuration
-);

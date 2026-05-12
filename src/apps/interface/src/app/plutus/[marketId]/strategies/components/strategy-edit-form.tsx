@@ -1,11 +1,11 @@
 "use client";
 
+import { NumericInput } from "@/app/components/numeric-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { StrategyConfiguration, StrategyDetail } from "@/lib/api/plutus";
+import { StrategyConfigBundle, StrategyDetail } from "@/lib/api/plutus";
 import { FieldLabel } from "./field-label";
-import { NumberInput } from "./number-input";
 import { StrategyConfigForm } from "./strategy-config-form";
 import { strategyTypeLabels } from "./strategy-constants";
 
@@ -13,18 +13,18 @@ export function StrategyEditForm({
   data,
   name,
   description,
-  config,
+  bundle,
   onNameChange,
   onDescriptionChange,
-  onConfigChange,
+  onBundleChange,
 }: {
   data: StrategyDetail;
   name: string;
   description: string;
-  config: StrategyConfiguration;
+  bundle: StrategyConfigBundle;
   onNameChange: (v: string) => void;
   onDescriptionChange: (v: string) => void;
-  onConfigChange: (v: StrategyConfiguration) => void;
+  onBundleChange: (v: StrategyConfigBundle) => void;
 }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -67,8 +67,8 @@ export function StrategyEditForm({
           <CardContent>
             <StrategyConfigForm
               type={data.type}
-              config={config}
-              onChange={onConfigChange}
+              bundle={bundle}
+              onChange={onBundleChange}
             />
           </CardContent>
         </Card>
@@ -80,30 +80,52 @@ export function StrategyEditForm({
             <CardTitle>Position Limits</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <NumberInput
+            <NumericInput
               label="Max Positions"
               hint="Maximum number of simultaneous positions"
-              value={config.maxPositions}
-              onChange={(v) => onConfigChange({ ...config, maxPositions: v })}
+              value={bundle.tradingConfiguration.maxPositions}
+              onChange={(v) =>
+                onBundleChange({
+                  ...bundle,
+                  tradingConfiguration: {
+                    ...bundle.tradingConfiguration,
+                    maxPositions: v ?? 0,
+                  },
+                })
+              }
               min={1}
               step={1}
             />
-            <NumberInput
+            <NumericInput
               label="Max Position Percent"
               hint="Max budget allocation per position (0-1)"
-              value={config.maxPositionPercent}
+              value={bundle.tradingConfiguration.maxPositionPercent}
               onChange={(v) =>
-                onConfigChange({ ...config, maxPositionPercent: v })
+                onBundleChange({
+                  ...bundle,
+                  tradingConfiguration: {
+                    ...bundle.tradingConfiguration,
+                    maxPositionPercent: v ?? 0,
+                  },
+                })
               }
               min={0.01}
               max={1}
               step={0.01}
             />
-            <NumberInput
+            <NumericInput
               label="Hold Period Days"
               hint="Maximum days to hold a position"
-              value={config.holdPeriodDays}
-              onChange={(v) => onConfigChange({ ...config, holdPeriodDays: v })}
+              value={bundle.tradingConfiguration.holdPeriodDays}
+              onChange={(v) =>
+                onBundleChange({
+                  ...bundle,
+                  tradingConfiguration: {
+                    ...bundle.tradingConfiguration,
+                    holdPeriodDays: v ?? 0,
+                  },
+                })
+              }
               min={1}
               step={1}
             />

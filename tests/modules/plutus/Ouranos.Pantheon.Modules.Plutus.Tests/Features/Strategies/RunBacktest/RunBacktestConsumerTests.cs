@@ -116,7 +116,8 @@ public sealed class RunBacktestConsumerTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration { BuyThreshold = 0m, MaxPositions = 10 }
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         var backtest = Backtest.Create(
             strategy.Id,
@@ -187,7 +188,8 @@ public sealed class RunBacktestConsumerTests
             "Test Strategy",
             null,
             StrategyType.RecipeArbitrage,
-            new StrategyConfiguration { MinMarginPercent = 0.01m }
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         var backtest = Backtest.Create(
             strategy.Id,
@@ -234,7 +236,8 @@ public sealed class RunBacktestConsumerTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration { BuyThreshold = 0m, MaxPositions = 10 }
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         var backtest = Backtest.Create(
             strategy.Id,
@@ -297,7 +300,8 @@ public sealed class RunBacktestConsumerTests
             "Test Strategy",
             null,
             StrategyType.RecipeArbitrage,
-            new StrategyConfiguration { MinMarginPercent = 0.01m }
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         var backtest = Backtest.Create(
             strategy.Id,

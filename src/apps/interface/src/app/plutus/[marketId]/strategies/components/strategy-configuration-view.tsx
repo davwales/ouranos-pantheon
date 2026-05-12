@@ -1,31 +1,37 @@
 import { Typography } from "@/app/components/typography";
 import { type StrategyDetail } from "@/lib/api/plutus";
 import { ConfigRow } from "./config-row";
-import { signalTypeLabels, strategyTypeLabels } from "./strategy-constants";
+import { signalWeightFields, strategyTypeLabels } from "./strategy-constants";
 
-export function StrategyConfigurationView({
-  configuration,
-}: {
-  configuration: StrategyDetail["configuration"];
-}) {
-  const signalTypes = [
-    "TaxAdjustedRoi",
-    "VolumeAnomaly",
-    "TrendMomentum",
-    "BollingerBands",
-    "Rsi",
-    "MovingAverageCrossover",
-    "PriceVelocity",
-  ];
-
-  const weights =
-    configuration.signalWeights && configuration.signalWeights.length > 0
-      ? configuration.signalWeights
-      : signalTypes.map((t) => ({ type: t, weight: 1 }));
+export function StrategyConfigurationView({ data }: { data: StrategyDetail }) {
+  const config = data.signalWeightedConfig;
 
   return (
     <div className="space-y-4">
-      {weights.length > 0 && (
+      <div className="space-y-1">
+        <Typography
+          variant="small"
+          className="font-semibold uppercase tracking-wide text-muted-foreground"
+        >
+          Trading Rules
+        </Typography>
+        <div className="mt-2 space-y-1">
+          <ConfigRow
+            label="Max Positions"
+            value={data.tradingConfiguration.maxPositions}
+          />
+          <ConfigRow
+            label="Max Position Percent"
+            value={data.tradingConfiguration.maxPositionPercent}
+          />
+          <ConfigRow
+            label="Hold Period Days"
+            value={data.tradingConfiguration.holdPeriodDays}
+          />
+        </div>
+      </div>
+
+      {config && (
         <div className="space-y-2">
           <Typography
             variant="small"
@@ -33,60 +39,86 @@ export function StrategyConfigurationView({
           >
             Signal Weights
           </Typography>
-          {weights.map((w, i) => (
-            <ConfigRow
-              key={i}
-              label={signalTypeLabels[w.type] ?? w.type}
-              value={w.weight}
-            />
-          ))}
+          {signalWeightFields.map(
+            (field) =>
+              config[field.key] != null && (
+                <ConfigRow
+                  key={field.key}
+                  label={field.label as string}
+                  value={config[field.key] as number}
+                />
+              ),
+          )}
         </div>
       )}
-      <div>
-        <Typography
-          variant="small"
-          className="font-semibold uppercase tracking-wide text-muted-foreground"
-        >
-          Parameters
-        </Typography>
-        <div className="mt-2 space-y-1">
-          <ConfigRow label="Buy Threshold" value={configuration.buyThreshold} />
-          <ConfigRow
-            label="Sell Threshold"
-            value={configuration.sellThreshold}
-          />
-          <ConfigRow
-            label="Forecast Movement Threshold"
-            value={configuration.forecastMovementThreshold}
-          />
-          <ConfigRow
-            label="Forecast Horizon Days"
-            value={configuration.forecastHorizonDays}
-          />
-          <ConfigRow
-            label="Deviation Multiplier"
-            value={configuration.deviationMultiplier}
-          />
-          <ConfigRow
-            label="Mean Time Frame Value"
-            value={configuration.meanTimeFrameValue}
-          />
-          <ConfigRow
-            label="Min Margin Percent"
-            value={configuration.minMarginPercent}
-          />
-          <ConfigRow label="Max Positions" value={configuration.maxPositions} />
-          <ConfigRow
-            label="Max Position Percent"
-            value={configuration.maxPositionPercent}
-          />
-          <ConfigRow
-            label="Hold Period Days"
-            value={configuration.holdPeriodDays}
-          />
+
+      {config?.buyThreshold != null && (
+        <ConfigRow label="Buy Threshold" value={config.buyThreshold} />
+      )}
+      {config?.sellThreshold != null && (
+        <ConfigRow label="Sell Threshold" value={config.sellThreshold} />
+      )}
+
+      {data.forecastMomentumConfig && (
+        <div className="space-y-1">
+          <Typography
+            variant="small"
+            className="font-semibold uppercase tracking-wide text-muted-foreground"
+          >
+            Forecast Parameters
+          </Typography>
+          <div className="mt-2 space-y-1">
+            <ConfigRow
+              label="Forecast Movement Threshold"
+              value={data.forecastMomentumConfig.forecastMovementThreshold}
+            />
+            <ConfigRow
+              label="Forecast Horizon Days"
+              value={data.forecastMomentumConfig.forecastHorizonDays}
+            />
+          </div>
         </div>
-      </div>
-      {configuration.components && configuration.components.length > 0 && (
+      )}
+
+      {data.meanReversionConfig && (
+        <div className="space-y-1">
+          <Typography
+            variant="small"
+            className="font-semibold uppercase tracking-wide text-muted-foreground"
+          >
+            Mean Reversion Parameters
+          </Typography>
+          <div className="mt-2 space-y-1">
+            <ConfigRow
+              label="Deviation Multiplier"
+              value={data.meanReversionConfig.deviationMultiplier}
+            />
+            <ConfigRow
+              label="Mean Time Frame Value"
+              value={data.meanReversionConfig.meanTimeFrameValue}
+            />
+          </div>
+        </div>
+      )}
+
+      {data.recipeArbitrageConfig && (
+        <div className="space-y-1">
+          <Typography
+            variant="small"
+            className="font-semibold uppercase tracking-wide text-muted-foreground"
+          >
+            Recipe Arbitrage Parameters
+          </Typography>
+          <div className="mt-2 space-y-1">
+            <ConfigRow
+              label="Min Margin Percent"
+              value={data.recipeArbitrageConfig.minMarginPercent}
+            />
+          </div>
+        </div>
+      )}
+
+      {data.components && data.components.length > 0 && (
         <div className="space-y-2">
           <Typography
             variant="small"
@@ -94,7 +126,7 @@ export function StrategyConfigurationView({
           >
             Components
           </Typography>
-          {configuration.components.map((c, i) => (
+          {data.components.map((c, i) => (
             <ConfigRow
               key={i}
               label={strategyTypeLabels[c.type] ?? c.type}

@@ -10,7 +10,7 @@ public class Strategy : BaseEntity<Id<Strategy>>
     protected Strategy(Id<Strategy> id) : base(id)
     {
         Name = string.Empty;
-        Configuration = new StrategyConfiguration();
+        TradingConfiguration = new TradingConfiguration();
     }
 
     public Id<Market> MarketId { get; init; }
@@ -21,7 +21,15 @@ public class Strategy : BaseEntity<Id<Strategy>>
 
     public StrategyType Type { get; init; }
 
-    public StrategyConfiguration Configuration { get; private set; }
+    public TradingConfiguration TradingConfiguration { get; set; }
+
+    public SignalWeightedConfig? SignalWeightedConfig { get; set; }
+    public ForecastMomentumConfig? ForecastMomentumConfig { get; set; }
+    public MeanReversionConfig? MeanReversionConfig { get; set; }
+    public RecipeArbitrageConfig? RecipeArbitrageConfig { get; set; }
+
+    private List<CompositeComponent>? _components;
+    public List<CompositeComponent> Components => _components ??= [];
 
     public bool IsActive { get; private set; } = true;
 
@@ -33,12 +41,17 @@ public class Strategy : BaseEntity<Id<Strategy>>
         string name,
         string? description,
         StrategyType type,
-        StrategyConfiguration configuration,
-        Market? market = null
+        TradingConfiguration tradingConfiguration,
+        SignalWeightedConfig? signalWeightedConfig = null,
+        ForecastMomentumConfig? forecastMomentumConfig = null,
+        MeanReversionConfig? meanReversionConfig = null,
+        RecipeArbitrageConfig? recipeArbitrageConfig = null,
+        Market? market = null,
+        List<CompositeComponent>? components = null
     )
     {
         Guard.Against.NullOrWhiteSpace(name);
-        Guard.Against.Null(configuration);
+        Guard.Against.Null(tradingConfiguration);
 
         if (market is not null)
         {
@@ -51,19 +64,36 @@ public class Strategy : BaseEntity<Id<Strategy>>
             Name = name,
             Description = description,
             Type = type,
-            Configuration = configuration,
-            _market = market
+            TradingConfiguration = tradingConfiguration,
+            SignalWeightedConfig = signalWeightedConfig,
+            ForecastMomentumConfig = forecastMomentumConfig,
+            MeanReversionConfig = meanReversionConfig,
+            RecipeArbitrageConfig = recipeArbitrageConfig,
+            _market = market,
+            _components = components
         };
     }
 
-    public void Update(string name, string? description, StrategyConfiguration configuration)
+    public void Update(
+        string name,
+        string? description,
+        TradingConfiguration tradingConfiguration,
+        SignalWeightedConfig? signalWeightedConfig = null,
+        ForecastMomentumConfig? forecastMomentumConfig = null,
+        MeanReversionConfig? meanReversionConfig = null,
+        RecipeArbitrageConfig? recipeArbitrageConfig = null
+    )
     {
         Guard.Against.NullOrWhiteSpace(name);
-        Guard.Against.Null(configuration);
+        Guard.Against.Null(tradingConfiguration);
 
         Name = name;
         Description = description;
-        Configuration = configuration;
+        TradingConfiguration = tradingConfiguration;
+        SignalWeightedConfig = signalWeightedConfig;
+        ForecastMomentumConfig = forecastMomentumConfig;
+        MeanReversionConfig = meanReversionConfig;
+        RecipeArbitrageConfig = recipeArbitrageConfig;
 
         Update();
     }

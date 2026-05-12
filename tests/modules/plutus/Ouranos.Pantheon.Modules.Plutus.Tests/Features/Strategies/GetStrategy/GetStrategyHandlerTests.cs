@@ -29,7 +29,14 @@ public sealed class GetStrategyHandlerTests
     {
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
-        var strategy = Strategy.Create(marketId, "Test Strategy", "Description", StrategyType.SignalWeighted, new StrategyConfiguration());
+        var strategy = Strategy.Create(
+            marketId,
+            "Test Strategy",
+            "Description",
+            StrategyType.SignalWeighted,
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
+        );
         await _dbContext.Strategies.AddAsync(strategy);
         await _dbContext.SaveChangesAsync();
 

@@ -89,7 +89,12 @@ export default function BacktestDetailPage() {
       await plutusApi.updateStrategy(backtest.strategyId, {
         name: strategy.name,
         description: strategy.description ?? null,
-        configuration: backtest.results.optimizedConfiguration,
+        tradingConfiguration: backtest.results.optimizedConfiguration,
+        signalWeightedConfig: backtest.results.optimizedSignalWeightedConfig,
+        forecastMomentumConfig:
+          backtest.results.optimizedForecastMomentumConfig,
+        meanReversionConfig: backtest.results.optimizedMeanReversionConfig,
+        recipeArbitrageConfig: backtest.results.optimizedRecipeArbitrageConfig,
       });
       router.push(`/plutus/${marketId}/strategies/${backtest.strategyId}`);
     } finally {
@@ -98,6 +103,10 @@ export default function BacktestDetailPage() {
   }, [
     backtest?.strategyId,
     backtest?.results?.optimizedConfiguration,
+    backtest?.results?.optimizedSignalWeightedConfig,
+    backtest?.results?.optimizedForecastMomentumConfig,
+    backtest?.results?.optimizedMeanReversionConfig,
+    backtest?.results?.optimizedRecipeArbitrageConfig,
     strategy,
     marketId,
     router,
@@ -190,9 +199,13 @@ export default function BacktestDetailPage() {
 
           <BacktestStatisticsGrid results={results} />
 
-          {results.optimizedConfiguration && (
+          {(results.optimizedConfiguration != null ||
+            results.optimizedSignalWeightedConfig != null ||
+            results.optimizedForecastMomentumConfig != null ||
+            results.optimizedMeanReversionConfig != null ||
+            results.optimizedRecipeArbitrageConfig != null) && (
             <OptimizedConfigurationCard
-              configuration={results.optimizedConfiguration}
+              results={results}
               isApplying={isApplyingConfig}
               onApplyToStrategy={strategy ? handleApplyToStrategy : undefined}
             />

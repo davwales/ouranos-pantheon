@@ -32,7 +32,8 @@ public sealed class TrackMetricsStepTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration()
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var parameters = new BacktestParameters(
@@ -70,7 +71,8 @@ public sealed class TrackMetricsStepTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration()
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var parameters = new BacktestParameters(
@@ -109,7 +111,8 @@ public sealed class TrackMetricsStepTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration()
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var parameters = new BacktestParameters(
@@ -149,7 +152,8 @@ public sealed class TrackMetricsStepTests
             "Test Strategy",
             null,
             StrategyType.SignalWeighted,
-            new StrategyConfiguration()
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
         );
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var parameters = new BacktestParameters(

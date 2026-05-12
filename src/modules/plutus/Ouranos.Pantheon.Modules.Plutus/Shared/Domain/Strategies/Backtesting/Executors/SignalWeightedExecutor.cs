@@ -4,20 +4,22 @@ public sealed class SignalWeightedExecutor : IStrategyExecutor
 {
     public StrategyType SupportedType => StrategyType.SignalWeighted;
 
-    public decimal? Score(StrategyScoreContext context, StrategyConfiguration configuration)
+    public decimal? Score(StrategyScoreContext context, TradingConfiguration configuration)
     {
         if (context.Signals.Count == 0)
         {
             return null;
         }
 
-        if (configuration.SignalWeights is null || configuration.SignalWeights.Count == 0)
+        var signalWeightedConfig = context.SignalWeightedConfig;
+
+        if (signalWeightedConfig is null || !signalWeightedConfig.HasSignalWeights)
         {
             var values = context.Signals.Where(s => s.Value != 0).Select(s => s.Value).ToList();
             return values.Count > 0 ? values.Average() : null;
         }
 
-        var weightMap = configuration.SignalWeights
+        var weightMap = signalWeightedConfig.GetSignalWeights()
             .Where(w => w.Weight != 0)
             .ToDictionary(w => w.Type, w => w.Weight);
 
