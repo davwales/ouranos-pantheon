@@ -74,6 +74,9 @@ export default function ChatInterfaceView({
     null,
   );
   const [isConfigOpen, setIsConfigOpen] = useState(false);
+  const [composedSystemPrompt, setComposedSystemPrompt] = useState<
+    string | null
+  >(null);
   const { setActions, clearActions } = useNavBarActions();
 
   const buildUpdatePayload = useCallback(
@@ -218,21 +221,27 @@ export default function ChatInterfaceView({
         },
         ...(conversationId ? { conversationId } : {}),
       })) {
-        if (chunk.$type === "usage") {
-          setTokenUsage({
-            inputTokens: chunk.inputTokens,
-            outputTokens: chunk.outputTokens,
-            totalTokens: chunk.totalTokens,
-          });
-        } else if (chunk.$type === "content") {
-          setMessages((prev) => {
-            const updated = [...prev];
-            updated[updated.length - 1] = {
-              ...updated[updated.length - 1],
-              content: updated[updated.length - 1].content + chunk.content,
-            };
-            return updated;
-          });
+        switch (chunk.$type) {
+          case "systemPrompt":
+            setComposedSystemPrompt(chunk.systemPrompt);
+            break;
+          case "usage":
+            setTokenUsage({
+              inputTokens: chunk.inputTokens,
+              outputTokens: chunk.outputTokens,
+              totalTokens: chunk.totalTokens,
+            });
+            break;
+          case "content":
+            setMessages((prev) => {
+              const updated = [...prev];
+              updated[updated.length - 1] = {
+                ...updated[updated.length - 1],
+                content: updated[updated.length - 1].content + chunk.content,
+              };
+              return updated;
+            });
+            break;
         }
       }
     } catch (error) {
@@ -396,6 +405,7 @@ export default function ChatInterfaceView({
         tokenUsage={tokenUsage}
         contextWindow={model.contextWindow}
         isCompacting={isCompacting}
+        composedSystemPrompt={composedSystemPrompt}
         onCompact={messages.length > 0 ? handleCompact : undefined}
         onPersonaChange={(p) => {
           onPersonaChange?.(p);

@@ -25,6 +25,7 @@ import { hermesApi } from "@/lib/api/hermes";
 import { generateID } from "@/lib/utils";
 import { ChevronDown, Minimize2, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { SystemPromptView } from "@/app/hermes/components/system-prompt-view";
 
 export function ConversationConfigSheet({
   open,
@@ -44,6 +45,7 @@ export function ConversationConfigSheet({
   contextWindow,
   isCompacting,
   onCompact,
+  composedSystemPrompt,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -66,6 +68,7 @@ export function ConversationConfigSheet({
   contextWindow?: number | null;
   isCompacting?: boolean;
   onCompact?: () => void;
+  composedSystemPrompt?: string | null;
 }) {
   const [personasState] = useApi(() => hermesApi.getAllPersonas());
   const [modelsState] = useApi(() => hermesApi.getAllModels());
@@ -250,6 +253,18 @@ export function ConversationConfigSheet({
               )}
             </CollapsibleContent>
           </Collapsible>
+
+          {composedSystemPrompt && (
+            <Collapsible defaultOpen={false}>
+              <CollapsibleTrigger className="flex items-center justify-between w-full rounded-md px-2 py-2 hover:bg-accent transition-colors">
+                <p className="text-sm font-medium">System Prompt</p>
+                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-2">
+                <SystemPromptView content={composedSystemPrompt} />
+              </CollapsibleContent>
+            </Collapsible>
+          )}
 
           {(onRename ?? onDelete ?? onVisibilityChange) && (
             <>

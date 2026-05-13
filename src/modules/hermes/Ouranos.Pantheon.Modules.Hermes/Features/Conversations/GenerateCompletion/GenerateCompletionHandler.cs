@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.SystemPrompt;
 using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Shared.Extensions;
 using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
@@ -44,11 +45,19 @@ public sealed class GenerateCompletionHandler
         _logger.LogTrace("Attempting to handle generate completion query '{@query}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
+        var systemPrompt = ComposeSystemPrompt(command.Conversation);
+
+        yield return new SystemPromptChunkResponse(systemPrompt);
+
         var buffer = new StringBuilder();
         ChatCompletionUsage? tokenUsage = null;
 
         await foreach (
-            var chunk in GenerateCompletionStream(command.Conversation, cancellationToken)
+            var chunk in GenerateCompletionStream(
+                command.Conversation,
+                systemPrompt,
+                cancellationToken
+            )
         )
         {
             if (chunk.Text is not null)
@@ -134,8 +143,31 @@ public sealed class GenerateCompletionHandler
         _logger.LogDebug("Successfully handled generate completion request.");
     }
 
+    internal static string ComposeSystemPrompt(ConversationInput conversation)
+    {
+        var builder = new SystemPromptBuilder()
+            .WithPersona(
+                conversation.Persona.Name,
+                conversation.Persona.Description,
+                conversation.Persona.Personality,
+                conversation.Persona.Scenario
+            )
+            .WithModel(conversation.Model.SystemPrompt);
+
+        if (conversation.Traits is not null)
+        {
+            foreach (var trait in conversation.Traits)
+            {
+                builder.AddTrait(trait.Name, trait.Content);
+            }
+        }
+
+        return builder.Build();
+    }
+
     private async IAsyncEnumerable<ChatCompletionChunk> GenerateCompletionStream(
         ConversationInput conversation,
+        string systemPrompt,
         [EnumeratorCancellation] CancellationToken cancellationToken = default
     )
     {
@@ -144,12 +176,6 @@ public sealed class GenerateCompletionHandler
             conversation
         );
         cancellationToken.ThrowIfCancellationRequested();
-
-        var systemPrompt = ComposeSystemPrompt(
-            conversation.Persona,
-            conversation.Model.SystemPrompt,
-            conversation.Traits
-        );
 
         List<MessageDto> messages =
         [
@@ -173,43 +199,6 @@ public sealed class GenerateCompletionHandler
         }
 
         _logger.LogDebug("Successfully generated a chat completion.");
-    }
-
-    internal static string ComposeSystemPrompt(
-        PersonaInput persona,
-        string systemPrompt,
-        List<TraitInput>? traits
-    )
-    {
-        var builder = new StringBuilder();
-
-        builder.AppendLine($"{persona.Name}: {persona.Description}");
-
-        if (!string.IsNullOrWhiteSpace(persona.Personality))
-        {
-            builder.AppendLine($"Personality: {persona.Personality}");
-        }
-
-        if (!string.IsNullOrWhiteSpace(persona.Scenario))
-        {
-            builder.AppendLine($"Scenario: {persona.Scenario}");
-        }
-
-        builder.AppendLine();
-        builder.Append(systemPrompt);
-
-        if (traits is { Count: > 0 })
-        {
-            foreach (var trait in traits)
-            {
-                builder.AppendLine();
-                builder.AppendLine();
-                builder.AppendLine($"[{trait.Name}]");
-                builder.Append(trait.Content);
-            }
-        }
-
-        return builder.ToString();
     }
 
     private static RoleDto MapRole(Role role)

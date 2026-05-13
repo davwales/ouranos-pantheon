@@ -156,6 +156,7 @@ export interface CreateConversationInput {
 }
 
 export type CompletionChunk =
+  | { $type: "systemPrompt"; systemPrompt: string }
   | { $type: "content"; content: string }
   | {
       $type: "usage";
