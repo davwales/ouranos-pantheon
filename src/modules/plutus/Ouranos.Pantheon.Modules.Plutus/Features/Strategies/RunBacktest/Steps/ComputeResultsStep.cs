@@ -77,7 +77,6 @@ public sealed class ComputeResultsStep : IStep<BacktestPayload>
             BestTrade = closedPositions.Count > 0 ? closedPositions.Max(p => p.ReturnPercent) : 0,
             WorstTrade = closedPositions.Count > 0 ? closedPositions.Min(p => p.ReturnPercent) : 0,
             FinalBalance = balance,
-            Positions = closedPositions,
         };
     }
 

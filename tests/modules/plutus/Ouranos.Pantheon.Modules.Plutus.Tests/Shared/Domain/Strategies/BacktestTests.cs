@@ -151,7 +151,6 @@ public sealed class BacktestTests
             BestTrade = 0.5m,
             WorstTrade = -0.2m,
             FinalBalance = 11000m,
-            Positions = [],
         };
 
         // Act
@@ -178,7 +177,7 @@ public sealed class BacktestTests
         backtest.Results.BestTrade.ShouldBe(results.BestTrade);
         backtest.Results.WorstTrade.ShouldBe(results.WorstTrade);
         backtest.Results.FinalBalance.ShouldBe(results.FinalBalance);
-        backtest.Results.Positions.ShouldBeEmpty();
+        backtest.Positions.ShouldBeEmpty();
         backtest.Results.OptimizedConfiguration.ShouldBe(results.OptimizedConfiguration);
     }
 
@@ -225,7 +224,6 @@ public sealed class BacktestTests
             BestTrade = 0.5m,
             WorstTrade = -0.2m,
             FinalBalance = 11000m,
-            Positions = [],
         };
 
         // Act
