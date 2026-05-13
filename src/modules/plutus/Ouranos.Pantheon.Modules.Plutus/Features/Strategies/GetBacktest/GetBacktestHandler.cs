@@ -31,6 +31,7 @@ public sealed class GetBacktestHandler : IPantheonHandler<GetBacktestInput, GetB
 
         var backtest = await _dbContext
             .Backtests.AsNoTracking()
+            .Include(b => b.Positions.OrderByDescending(p => p.EntryTime))
             .FirstOrDefaultAsync(b => b.Id == query.BacktestId, cancellationToken);
 
         Guard.Against.NotFound(query.BacktestId, backtest);
@@ -48,6 +49,7 @@ public sealed class GetBacktestHandler : IPantheonHandler<GetBacktestInput, GetB
             backtest.ProgressPercent,
             backtest.ProgressMessage,
             backtest.Results,
+            backtest.Positions,
             backtest.ErrorMessage,
             backtest.CreatedAt,
             backtest.UpdatedAt

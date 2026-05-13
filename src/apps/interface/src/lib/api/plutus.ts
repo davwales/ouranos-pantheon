@@ -382,7 +382,6 @@ export interface BacktestResults {
   bestTrade: number;
   worstTrade: number;
   finalBalance: number;
-  positions: BacktestPosition[];
   optimizedConfiguration?: TradingConfiguration | null;
   optimizedSignalWeightedConfig?: SignalWeightedConfig | null;
   optimizedForecastMomentumConfig?: ForecastMomentumConfig | null;
@@ -402,6 +401,7 @@ export interface BacktestDetail {
   progressPercent: number;
   progressMessage: string | null;
   results?: BacktestResults | null;
+  positions: BacktestPosition[];
   errorMessage?: string | null;
   createdAt: string;
   updatedAt: string;

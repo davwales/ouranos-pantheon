@@ -30,8 +30,7 @@ public class Backtest : BaseEntity<Id<Backtest>>
 
     public BacktestResults? Results { get; set; }
 
-    private List<BacktestPosition>? _positions;
-    public List<BacktestPosition> Positions => _positions ??= [];
+    public List<BacktestPosition> Positions { get; set; } = [];
 
     public string? ErrorMessage { get; private set; }
 
@@ -121,7 +120,6 @@ public class Backtest : BaseEntity<Id<Backtest>>
         }
 
         Results = results;
-        _positions = results.Positions;
         Status = BacktestStatus.Completed;
         Update();
         return true;

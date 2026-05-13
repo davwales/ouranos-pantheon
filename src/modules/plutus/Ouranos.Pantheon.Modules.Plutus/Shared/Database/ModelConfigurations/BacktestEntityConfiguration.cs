@@ -93,8 +93,6 @@ public sealed class BacktestEntityConfiguration : IEntityTypeConfiguration<Backt
                         config.Property(c => c.HoldPeriodDays);
                     }
                 );
-
-                results.Ignore(r => r.Positions);
             }
         );
 

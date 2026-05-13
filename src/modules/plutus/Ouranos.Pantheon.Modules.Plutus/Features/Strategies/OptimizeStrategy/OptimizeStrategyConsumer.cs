@@ -116,7 +116,7 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
             backtest.UpdateProgress(92, "Running final backtest with optimized configuration...");
             await dbContext.SaveChangesAsync(cancellationToken);
 
-            var results = await RunPipelineAsync(
+            var (pipelineResults, pipelinePositions) = await RunPipelineAsync(
                 backtest.Strategy,
                 backtest.MarketId,
                 backtest.StartDate,
@@ -130,7 +130,7 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
                 bestChromosome
             );
 
-            var finalResults = results with
+            var finalResults = pipelineResults with
             {
                 OptimizedConfiguration = bestChromosome.Configuration,
                 OptimizedSignalWeightedConfig = bestChromosome switch
@@ -156,6 +156,7 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
             };
 
             backtest.Complete(finalResults);
+            backtest.Positions = pipelinePositions;
             await dbContext.SaveChangesAsync(cancellationToken);
 
             _logger.LogDebug(
@@ -210,7 +211,7 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
             .AddFitnessComponent(async chromosome =>
             {
                 var strategyChromosome = ExtractStrategyChromosome(chromosome);
-                var results = await RunBacktestSafelyAsync(
+                var pipelineResult = await RunBacktestSafelyAsync(
                     backtest.Strategy,
                     backtest.MarketId,
                     backtest.StartDate,
@@ -224,14 +225,16 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
                     cancellationToken
                 );
 
-                if (results is null)
+                if (pipelineResult is null)
                 {
                     return double.MinValue;
                 }
 
-                return message.SharpeRatioWeight * (double)results.SharpeRatio
-                    + message.TotalReturnWeight * (double)results.TotalReturnPercent
-                    + message.MaxDrawdownWeight * (double)results.MaxDrawdownPercent;
+                return message.SharpeRatioWeight * (double)pipelineResult.Value.Results.SharpeRatio
+                    + message.TotalReturnWeight
+                        * (double)pipelineResult.Value.Results.TotalReturnPercent
+                    + message.MaxDrawdownWeight
+                        * (double)pipelineResult.Value.Results.MaxDrawdownPercent;
             })
             .Build();
 
@@ -288,7 +291,10 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
         return bestStrategyChromosome;
     }
 
-    private async Task<BacktestResults> RunPipelineAsync(
+    private async Task<(
+        BacktestResults Results,
+        List<BacktestPosition> Positions
+    )> RunPipelineAsync(
         Strategy strategy,
         Id<Market> marketId,
         DateTimeOffset startDate,
@@ -340,10 +346,13 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
             );
         }
 
-        return payload.Results;
+        return (payload.Results, payload.Portfolio.ClosedPositions);
     }
 
-    private async Task<BacktestResults?> RunBacktestSafelyAsync(
+    private async Task<(
+        BacktestResults Results,
+        List<BacktestPosition> Positions
+    )?> RunBacktestSafelyAsync(
         Strategy strategy,
         Id<Market> marketId,
         DateTimeOffset startDate,

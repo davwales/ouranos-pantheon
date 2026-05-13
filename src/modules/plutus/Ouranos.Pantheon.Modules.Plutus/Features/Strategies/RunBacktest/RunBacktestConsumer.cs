@@ -138,6 +138,7 @@ public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
             }
 
             backtest.Complete(payload.Results);
+            backtest.Positions = payload.Portfolio.ClosedPositions;
             await dbContext.SaveChangesAsync(cancellationToken);
 
             _logger.LogDebug("Backtest '{backtestId}' completed successfully.", message.BacktestId);

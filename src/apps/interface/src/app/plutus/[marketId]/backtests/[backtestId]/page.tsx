@@ -211,8 +211,8 @@ export default function BacktestDetailPage() {
             />
           )}
 
-          {results.positions && results.positions.length > 0 && (
-            <BacktestPositionsTable positions={results.positions} />
+          {backtest.positions && backtest.positions.length > 0 && (
+            <BacktestPositionsTable positions={backtest.positions} />
           )}
         </>
       )}

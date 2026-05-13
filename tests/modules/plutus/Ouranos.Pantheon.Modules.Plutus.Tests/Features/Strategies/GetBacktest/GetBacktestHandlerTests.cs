@@ -72,6 +72,113 @@ public sealed class GetBacktestHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenCompletedBacktest_ShouldReturnPositions()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var strategy = Strategy.Create(
+            marketId,
+            "Test Strategy",
+            null,
+            StrategyType.SignalWeighted,
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
+        );
+        await _dbContext.Strategies.AddAsync(strategy);
+        await _dbContext.SaveChangesAsync();
+
+        var backtest = Backtest.Create(
+            strategy.Id,
+            marketId,
+            DateTimeOffset.UtcNow,
+            DateTimeOffset.UtcNow.AddDays(30),
+            10000m
+        );
+        await _dbContext.Backtests.AddAsync(backtest);
+        await _dbContext.SaveChangesAsync();
+
+        backtest.MarkRunning();
+
+        var positions = new List<BacktestPosition>
+        {
+            new(
+                "BTCUSD",
+                "Bitcoin",
+                50000m,
+                52000m,
+                0.5m,
+                1000m,
+                2.0m,
+                DateTimeOffset.UtcNow.AddDays(-5),
+                DateTimeOffset.UtcNow.AddDays(-1)
+            ),
+            new(
+                "ETHUSD",
+                "Ethereum",
+                3000m,
+                3200m,
+                2.0m,
+                400m,
+                6.67m,
+                DateTimeOffset.UtcNow.AddDays(-4),
+                DateTimeOffset.UtcNow.AddDays(-2)
+            ),
+        };
+
+        var results = new BacktestResults(
+            TotalReturn: 1000m,
+            TotalReturnPercent: 10.0m,
+            MaxDrawdown: 200m,
+            MaxDrawdownPercent: 2.0m,
+            WinRate: 60.0m,
+            TotalTrades: 10,
+            WinningTrades: 6,
+            LosingTrades: 4,
+            SharpeRatio: 1.5m,
+            SortinoRatio: 2.0m,
+            CalmarRatio: 1.2m,
+            Cagr: 8.5m,
+            ProfitFactor: 2.0m,
+            Expectancy: 100m,
+            AverageTradeReturn: 100m,
+            BestTrade: 500m,
+            WorstTrade: -200m,
+            FinalBalance: 11000m,
+            OptimizedSignalWeightedConfig: null,
+            OptimizedForecastMomentumConfig: null,
+            OptimizedMeanReversionConfig: null,
+            OptimizedRecipeArbitrageConfig: null,
+            OptimizedConfiguration: null
+        );
+
+        backtest.Complete(results);
+        backtest.Positions = positions;
+        await _dbContext.SaveChangesAsync();
+
+        var query = new GetBacktestInput(backtest.Id);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Id.ShouldBe(backtest.Id);
+        result.Status.ShouldBe(BacktestStatus.Completed);
+        result.Results.ShouldNotBeNull();
+        result.Positions.Count.ShouldBe(2);
+
+        var btcPosition = result.Positions.First(p => p.SymbolId == "BTCUSD");
+        btcPosition.SymbolName.ShouldBe("Bitcoin");
+        btcPosition.EntryPrice.ShouldBe(50000m);
+        btcPosition.ExitPrice.ShouldBe(52000m);
+
+        var ethPosition = result.Positions.First(p => p.SymbolId == "ETHUSD");
+        ethPosition.SymbolName.ShouldBe("Ethereum");
+        ethPosition.EntryPrice.ShouldBe(3000m);
+        ethPosition.ExitPrice.ShouldBe(3200m);
+    }
+
+    [Fact]
     public async Task Handle_WhenBacktestNotFound_ShouldThrow()
     {
         // Arrange

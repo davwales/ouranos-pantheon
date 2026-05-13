@@ -16,6 +16,7 @@ public sealed record GetBacktestResponse(
     int ProgressPercent,
     string? ProgressMessage,
     BacktestResults? Results,
+    List<BacktestPosition> Positions,
     string? ErrorMessage,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt
