@@ -10,6 +10,7 @@ public static class HostingExtensions
     private const string CorsPolicy = "AllowLocalAndServer";
     private static readonly IReadOnlyList<IPantheonModule> Modules =
     [
+        new SharedModule(),
         new HermesModule(),
         new PlutusModule(),
     ];
