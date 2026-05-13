@@ -29,8 +29,10 @@ public sealed class SymbolSignalCalculateJobTests
         _dbContext = DbContextExtensions.Mock<PlutusDbContext>();
     }
 
-    private SymbolSignalCalculateJob CreateJob(IEnumerable<ISignalComputer>? computers = null) =>
-        new(_logger, _dbContext, Options.Create(_signalOptions), computers ?? []);
+    private SymbolSignalCalculateJob CreateJob(IEnumerable<ISignalComputer>? computers = null)
+    {
+        return new(_logger, _dbContext, Options.Create(_signalOptions), computers ?? []);
+    }
 
     [Fact]
     public async Task Execute_WhenNoSymbols_ShouldCreateNoSignals()

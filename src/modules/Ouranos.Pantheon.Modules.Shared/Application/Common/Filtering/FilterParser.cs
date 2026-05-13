@@ -89,10 +89,12 @@ public static class FilterParser
         return new FieldFilterNode(field, op, value);
     }
 
-    private static FilterOperator ParseOperator(string op) =>
-        Enum.TryParse(op, true, out FilterOperator result)
+    private static FilterOperator ParseOperator(string op)
+    {
+        return Enum.TryParse(op, true, out FilterOperator result)
             ? result
             : throw new FormatException($"Invalid filter operator '{op}'.");
+    }
 
     private static List<string> Split(string s)
     {

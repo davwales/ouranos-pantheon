@@ -37,8 +37,9 @@ public sealed class GetAllConversationsHandlerTests
         _flagsmith.GetEnvironmentFlags().Returns(Task.FromResult(flags));
     }
 
-    private static Conversation CreateConversation(bool isPublic) =>
-        Conversation.Create(
+    private static Conversation CreateConversation(bool isPublic)
+    {
+        return Conversation.Create(
             new Id<Conversation>(Guid.NewGuid().ToString()),
             new Id<Persona>(Guid.NewGuid().ToString()),
             new Id<ModelConfig>(Guid.NewGuid().ToString()),
@@ -47,6 +48,7 @@ public sealed class GetAllConversationsHandlerTests
             Guid.NewGuid().ToString(),
             isPublic
         );
+    }
 
     [Fact]
     public async Task Handle_WhenConversationsExist_ShouldReturnAll()

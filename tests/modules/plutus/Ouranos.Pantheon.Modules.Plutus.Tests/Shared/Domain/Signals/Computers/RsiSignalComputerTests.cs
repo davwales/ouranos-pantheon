@@ -11,10 +11,15 @@ public sealed class RsiSignalComputerTests
     private static readonly Id<Symbol> SymbolId = new("sym-1");
     private static readonly Id<Market> MarketId = new("mkt-1");
 
-    private static RsiSignalComputer BuildComputer() => new();
+    private static RsiSignalComputer BuildComputer()
+    {
+        return new();
+    }
 
-    private static PriceBucket Bucket(decimal avgPrice) =>
-        new(DateTimeOffset.UtcNow, avgPrice, avgPrice * 0.99m, avgPrice * 1.01m, 100m);
+    private static PriceBucket Bucket(decimal avgPrice)
+    {
+        return new(DateTimeOffset.UtcNow, avgPrice, avgPrice * 0.99m, avgPrice * 1.01m, 100m);
+    }
 
     [Fact]
     public async Task ComputeAsync_WhenFewerBucketsThanRsiPeriod_ReturnsNull()

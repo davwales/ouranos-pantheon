@@ -271,7 +271,9 @@ public sealed class GetSymbolSignalsHandlerTests
         public string Description => $"{label} description";
         public IReadOnlyList<InvestmentIntent> Intents => intents;
 
-        public Task<decimal?> ComputeAsync(SignalComputeContext context, CancellationToken ct) =>
-            Task.FromResult<decimal?>(0m);
+        public Task<decimal?> ComputeAsync(SignalComputeContext context, CancellationToken ct)
+        {
+            return Task.FromResult<decimal?>(0m);
+        }
     }
 }

@@ -1,27 +1,23 @@
 #!/usr/bin/env sh
 
-# Restore tools (ensures csharpier is available)
 dotnet tool restore --verbosity quiet
 
-# Run CSharpier to check formatting
 dotnet csharpier check .
 if [ $? -ne 0 ]; then
   echo "Code is not formatted correctly. Please run 'dotnet csharpier format .' to format the code." >&2
   exit 1
 fi
 
-# Run dotnet format for style and analyzer rules only (not whitespace — CSharpier handles that)
-dotnet format style Ouranos.Pantheon.sln --verify-no-changes --verbosity diagnostic --severity error --no-restore
+dotnet format style --verify-no-changes --verbosity diagnostic --no-restore
 if [ $? -ne 0 ]; then
   echo "Style issues found. Please run 'dotnet format style' to fix them." >&2
   exit 1
 fi
 
-dotnet format analyzers Ouranos.Pantheon.sln --verify-no-changes --verbosity diagnostic --severity error --no-restore
+dotnet format analyzers --verify-no-changes --verbosity diagnostic --no-restore
 if [ $? -ne 0 ]; then
   echo "Analyzer issues found. Please run 'dotnet format analyzers' to fix them." >&2
   exit 1
 fi
 
-# Allow the commit to proceed if no issues were found
 exit 0

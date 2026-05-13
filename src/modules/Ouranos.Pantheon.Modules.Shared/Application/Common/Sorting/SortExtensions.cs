@@ -7,7 +7,10 @@ public static class SortExtensions
         string? sortField,
         string? sortDirection,
         SortBuilder<T> builder
-    ) => builder.Apply(query, sortField, sortDirection);
+    )
+    {
+        return builder.Apply(query, sortField, sortDirection);
+    }
 
     public static IQueryable<T> SortBy<T>(
         this IQueryable<T> query,

@@ -123,13 +123,15 @@ public sealed class GetSymbolSignalsHandler
         );
     }
 
-    private static SignalDirection DeriveDirection(decimal value) =>
-        value switch
+    private static SignalDirection DeriveDirection(decimal value)
+    {
+        return value switch
         {
             > 0 => SignalDirection.Bullish,
             < 0 => SignalDirection.Bearish,
             _ => SignalDirection.Neutral,
         };
+    }
 
     private static SignalStrength DeriveStrength(decimal value)
     {

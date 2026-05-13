@@ -212,8 +212,9 @@ public sealed class GenerateCompletionHandler
         return builder.ToString();
     }
 
-    private static RoleDto MapRole(Role role) =>
-        role switch
+    private static RoleDto MapRole(Role role)
+    {
+        return role switch
         {
             Role.System => RoleDto.System,
             Role.User => RoleDto.User,
@@ -221,4 +222,5 @@ public sealed class GenerateCompletionHandler
             Role.Summary => RoleDto.Assistant,
             _ => throw new InvalidOperationException($"Unknown role: {role}"),
         };
+    }
 }

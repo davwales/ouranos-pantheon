@@ -63,12 +63,14 @@ public sealed class GenerateCompletionHandlerTests
         yield return new ChatCompletionChunk(null, usage);
     }
 
-    private static ConversationInput CreateConversation(params CompletionMessageInput[] messages) =>
-        new(
+    private static ConversationInput CreateConversation(params CompletionMessageInput[] messages)
+    {
+        return new(
             new ModelInput("test-model", "You are a helpful assistant."),
             new PersonaInput("TestBot", "A test persona"),
             messages.ToList()
         );
+    }
 
     [Fact]
     public async Task Handle_WhenHappyPath_ShouldStreamChunks()

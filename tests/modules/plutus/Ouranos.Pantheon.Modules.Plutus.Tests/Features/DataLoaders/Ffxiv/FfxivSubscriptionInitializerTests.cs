@@ -16,8 +16,9 @@ public sealed class FfxivSubscriptionInitializerTests
 
     private readonly IWebSocketClient _client = Substitute.For<IWebSocketClient>();
 
-    private FfxivSubscriptionInitializer CreateInitializer(IReadOnlyCollection<int> worlds) =>
-        new(
+    private FfxivSubscriptionInitializer CreateInitializer(IReadOnlyCollection<int> worlds)
+    {
+        return new(
             _logger,
             Options.Create(
                 new FfxivDataLoaderOptions(
@@ -28,6 +29,7 @@ public sealed class FfxivSubscriptionInitializerTests
                 )
             )
         );
+    }
 
     [Fact]
     public async Task OnConnectedAsync_WhenNoWorldsConfigured_ShouldSubscribeGlobally()

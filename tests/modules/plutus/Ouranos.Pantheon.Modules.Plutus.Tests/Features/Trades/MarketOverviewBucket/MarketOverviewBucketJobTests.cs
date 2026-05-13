@@ -28,8 +28,9 @@ public sealed class MarketOverviewBucketJobTests
         _fixture.Customize(new IdCustomization());
     }
 
-    private MarketOverviewBucketJob CreateJob(int numBuckets = 10) =>
-        new(
+    private MarketOverviewBucketJob CreateJob(int numBuckets = 10)
+    {
+        return new(
             _logger,
             _dbContext,
             Options.Create(
@@ -40,6 +41,7 @@ public sealed class MarketOverviewBucketJobTests
                 )
             )
         );
+    }
 
     [Fact]
     public async Task ExecuteFifteenMinutes_WhenNoTrades_ShouldCreateNoBuckets()

@@ -164,12 +164,14 @@ public sealed class CreateConversationHandler
         }
     }
 
-    private RoleDto MapRole(Role role) =>
-        role switch
+    private RoleDto MapRole(Role role)
+    {
+        return role switch
         {
             Role.System => RoleDto.System,
             Role.Assistant => RoleDto.Assistant,
             Role.User => RoleDto.User,
             _ => throw new ArgumentException($"Unsupported role: {role}", nameof(role)),
         };
+    }
 }

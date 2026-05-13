@@ -4,8 +4,10 @@ namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.DataLoaders.Osrs;
 
 public sealed class MappingTests
 {
-    private static Mapping MakeMapping(object members) =>
-        new(1234, "Test Item", "icon.png", "A test item", members, 100, 200, 1000, 500);
+    private static Mapping MakeMapping(object members)
+    {
+        return new(1234, "Test Item", "icon.png", "A test item", members, 100, 200, 1000, 500);
+    }
 
     [Fact]
     public void IsMembers_WhenMembersIsBoolTrue_ReturnsTrue()

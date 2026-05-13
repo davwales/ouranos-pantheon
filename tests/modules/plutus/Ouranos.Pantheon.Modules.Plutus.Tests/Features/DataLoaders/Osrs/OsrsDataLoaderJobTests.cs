@@ -24,8 +24,9 @@ public sealed class OsrsDataLoaderJobTests
     private readonly TickerFunctionContext _context = new();
     private readonly string _dbName = Guid.NewGuid().ToString();
 
-    private OsrsDataLoaderJob CreateJob(bool isEnabled = true) =>
-        new(
+    private OsrsDataLoaderJob CreateJob(bool isEnabled = true)
+    {
+        return new(
             _logger,
             _wikiClient,
             _queue,
@@ -41,8 +42,12 @@ public sealed class OsrsDataLoaderJobTests
                 )
             )
         );
+    }
 
-    private PlutusDbContext CreateContext() => DbContextExtensions.Mock<PlutusDbContext>(_dbName);
+    private PlutusDbContext CreateContext()
+    {
+        return DbContextExtensions.Mock<PlutusDbContext>(_dbName);
+    }
 
     private async Task SeedState(DateTimeOffset? lastProcessed = null)
     {

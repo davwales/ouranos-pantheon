@@ -66,8 +66,9 @@ public sealed class FilterBuilder<T>
         return Expression.Lambda<Func<T, bool>>(BuildBody(node, param), param);
     }
 
-    private Expression BuildBody(FilterNode node, ParameterExpression param) =>
-        node switch
+    private Expression BuildBody(FilterNode node, ParameterExpression param)
+    {
+        return node switch
         {
             FieldFilterNode field => BuildFieldBody(field, param),
             CompositeFilterNode composite => BuildCompositeBody(composite, param),
@@ -75,6 +76,7 @@ public sealed class FilterBuilder<T>
                 $"Unknown filter node type '{node.GetType().Name}'."
             ),
         };
+    }
 
     private Expression BuildCompositeBody(CompositeFilterNode node, ParameterExpression param)
     {
