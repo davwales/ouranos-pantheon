@@ -6,6 +6,7 @@ import { Typography } from "@/app/components/typography";
 import CandlestickChart from "@/app/plutus/components/candlestick-chart";
 import PriceChart from "@/app/plutus/components/price-chart";
 import TimeFrameSelection from "@/app/plutus/components/time_frame_selection";
+import { ForecastEfficacyView } from "./components/forecast-efficacy-view";
 import PercentChange from "./components/percent-change";
 import { SignalsSection } from "./components/signals-section";
 import { SymbolPositionsView } from "./components/symbol-positions-view";
@@ -194,6 +195,7 @@ export default function SymbolDetail() {
         className="mt-4 max-h-96 w-full"
       />
       <SignalsSection symbolId={symbolId} />
+      <ForecastEfficacyView symbolId={symbolId} />
       <SymbolPositionsView marketId={marketId} symbol={data?.symbol} />
     </div>
   );
