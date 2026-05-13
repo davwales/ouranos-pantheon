@@ -466,6 +466,20 @@ export interface ClosePositionResponse {
   status: PositionStatus;
 }
 
+export interface ForecastEfficacyRow {
+  symbolId: string;
+  symbolName: string;
+  marketId: string;
+  modelName: string;
+  horizonDays: number;
+  evaluatedCount: number;
+  meanAbsoluteError: number | null;
+  meanAbsolutePercentageError: number | null;
+  meanBias: number | null;
+  firstGeneratedAt: string | null;
+  lastGeneratedAt: string | null;
+}
+
 export interface PageParams {
   skip?: number;
   take?: number;
@@ -568,6 +582,23 @@ export const plutusApi = {
   getMarketForecasts: (marketId: string, params?: PageParams) =>
     api.get<PagedResponse<GetMarketForecastRow>>(
       `/api/plutus/markets/${marketId}/forecasts`,
+      params,
+    ),
+
+  getForecastEfficacy: (
+    params?: {
+      symbolId?: string;
+      marketId?: string;
+      modelName?: string;
+      horizonDays?: number;
+      since?: string;
+      until?: string;
+      skip?: number;
+      take?: number;
+    },
+  ) =>
+    api.get<PagedResponse<ForecastEfficacyRow>>(
+      "/api/plutus/forecasts/efficacy",
       params,
     ),
 
