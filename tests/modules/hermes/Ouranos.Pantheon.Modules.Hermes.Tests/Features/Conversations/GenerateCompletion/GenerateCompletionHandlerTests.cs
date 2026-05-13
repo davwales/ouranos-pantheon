@@ -10,7 +10,6 @@ using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning.Dtos;
-using Ouranos.Pantheon.Tests.Utils.Shouldly;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.Conversations.GenerateCompletion;
@@ -92,10 +91,24 @@ public sealed class GenerateCompletionHandlerTests
         var command = new GenerateCompletionInput(
             CreateConversation(new CompletionMessageInput("Hi", Role.User))
         );
-        var expected = chunks.Select(c => new ContentChunkResponse(c)).ToList();
 
-        // Act + Assert
-        await _handler.Handle(command, CancellationToken.None).ShouldMatchAsync(expected);
+        // Act
+        var responses = new List<GenerateCompletionResponse>();
+        await foreach (var r in _handler.Handle(command, CancellationToken.None))
+        {
+            responses.Add(r);
+        }
+
+        // Assert
+        var systemPromptChunk = responses.OfType<SystemPromptChunkResponse>().SingleOrDefault();
+        systemPromptChunk.ShouldNotBeNull();
+        systemPromptChunk.SystemPrompt.ShouldContain("## Persona");
+        systemPromptChunk.SystemPrompt.ShouldContain("## Instructions");
+
+        var contentChunks = responses.OfType<ContentChunkResponse>().ToList();
+        contentChunks.Count.ShouldBe(2);
+        contentChunks[0].Content.ShouldBe("Hello");
+        contentChunks[1].Content.ShouldBe(" world");
     }
 
     [Fact]
@@ -173,58 +186,6 @@ public sealed class GenerateCompletionHandlerTests
 
         // Assert
         await _dbContextFactory.DidNotReceive().CreateDbContextAsync(Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public void ComposeSystemPrompt_WhenFullPersona_ShouldBuildCorrectString()
-    {
-        // Arrange
-        var persona = new PersonaInput("TestBot", "A helpful bot", "Friendly", "In a chat");
-        var systemPrompt = "You are an assistant.";
-
-        // Act
-        var result = GenerateCompletionHandler.ComposeSystemPrompt(persona, systemPrompt, null);
-
-        // Assert
-        result.ShouldContain("TestBot: A helpful bot");
-        result.ShouldContain("Personality: Friendly");
-        result.ShouldContain("Scenario: In a chat");
-        result.ShouldContain(systemPrompt);
-    }
-
-    [Fact]
-    public void ComposeSystemPrompt_WhenNoPersonalityOrScenario_ShouldOmitThem()
-    {
-        // Arrange
-        var persona = new PersonaInput("TestBot", "A helpful bot");
-        var systemPrompt = "You are an assistant.";
-
-        // Act
-        var result = GenerateCompletionHandler.ComposeSystemPrompt(persona, systemPrompt, null);
-
-        // Assert
-        result.ShouldContain("TestBot: A helpful bot");
-        result.ShouldNotContain("Personality:");
-        result.ShouldNotContain("Scenario:");
-        result.ShouldContain(systemPrompt);
-    }
-
-    [Fact]
-    public void ComposeSystemPrompt_WhenTraitsProvided_ShouldAppend()
-    {
-        // Arrange
-        var persona = new PersonaInput("TestBot", "A helpful bot");
-        var systemPrompt = "Base prompt.";
-        List<TraitInput> traits = [new("Kindness", "Always be kind"), new("Brevity", "Be concise")];
-
-        // Act
-        var result = GenerateCompletionHandler.ComposeSystemPrompt(persona, systemPrompt, traits);
-
-        // Assert
-        result.ShouldContain("[Kindness]");
-        result.ShouldContain("Always be kind");
-        result.ShouldContain("[Brevity]");
-        result.ShouldContain("Be concise");
     }
 
     [Fact]
@@ -308,5 +269,68 @@ public sealed class GenerateCompletionHandlerTests
 
         // Assert
         responses.ShouldNotContain(r => r is UsageChunkResponse);
+    }
+
+    [Fact]
+    public void ComposeSystemPrompt_WhenFullPersona_ShouldIncludeAllFields()
+    {
+        // Arrange
+        var persona = new PersonaInput("TestBot", "A helpful bot", "Friendly", "In a chat");
+        var conversation = new ConversationInput(
+            new ModelInput("test-model", "You are an assistant."),
+            persona,
+            [new CompletionMessageInput("Hi", Role.User)]
+        );
+
+        // Act
+        var result = GenerateCompletionHandler.ComposeSystemPrompt(conversation);
+
+        // Assert
+        result.ShouldContain("## Persona");
+        result.ShouldContain("**Name:** TestBot");
+        result.ShouldContain("**Description:** A helpful bot");
+        result.ShouldContain("**Personality:** Friendly");
+        result.ShouldContain("**Scenario:** In a chat");
+        result.ShouldContain("## Instructions");
+        result.ShouldContain("You are an assistant.");
+    }
+
+    [Fact]
+    public void ComposeSystemPrompt_WhenTraitsProvided_ShouldIncludeTraitSection()
+    {
+        // Arrange
+        var conversation = new ConversationInput(
+            new ModelInput("test-model", "Base prompt."),
+            new PersonaInput("TestBot", "A helpful bot"),
+            [new CompletionMessageInput("Hi", Role.User)],
+            [new TraitInput("Kindness", "Always be kind"), new TraitInput("Brevity", "Be concise")]
+        );
+
+        // Act
+        var result = GenerateCompletionHandler.ComposeSystemPrompt(conversation);
+
+        // Assert
+        result.ShouldContain("## Traits");
+        result.ShouldContain("### Kindness");
+        result.ShouldContain("Always be kind");
+        result.ShouldContain("### Brevity");
+        result.ShouldContain("Be concise");
+    }
+
+    [Fact]
+    public void ComposeSystemPrompt_WhenNoTraits_ShouldOmitTraitSection()
+    {
+        // Arrange
+        var conversation = new ConversationInput(
+            new ModelInput("test-model", "Base prompt."),
+            new PersonaInput("TestBot", "A helpful bot"),
+            [new CompletionMessageInput("Hi", Role.User)]
+        );
+
+        // Act
+        var result = GenerateCompletionHandler.ComposeSystemPrompt(conversation);
+
+        // Assert
+        result.ShouldNotContain("## Traits");
     }
 }
