@@ -27,6 +27,26 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content
+      Include="..\..\apps\gateway\Ouranos.Pantheon.Apps.Gateway\appsettings.json"
+      Condition="Exists('..\..\apps\gateway\Ouranos.Pantheon.Apps.Gateway\appsettings.json')"
+    >
+      <Link>appsettings.json</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </Content>
+
+    <Content
+      Include="..\..\apps\gateway\Ouranos.Pantheon.Apps.Gateway\appsettings.Development.json"
+      Condition="Exists('..\..\apps\gateway\Ouranos.Pantheon.Apps.Gateway\appsettings.Development.json')"
+    >
+      <Link>appsettings.Development.json</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Algorithms\" />
   </ItemGroup>
 </Project>
