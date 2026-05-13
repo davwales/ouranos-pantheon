@@ -212,11 +212,18 @@ public sealed class ForecastEvaluatorJobTests
         _dbContext.ForecastRecords.Single(r => r.SymbolId == symbolB.Id).EvaluatedAt.ShouldBeNull();
     }
 
-    private static Market CreateMarket() =>
-        Market.Create(new Id<Market>(Guid.NewGuid().ToString()), "Test Market", new Taxes(null));
+    private static Market CreateMarket()
+    {
+        return Market.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            "Test Market",
+            new Taxes(null)
+        );
+    }
 
-    private static Symbol CreateSymbol(Id<Market> marketId) =>
-        Symbol.Create(
+    private static Symbol CreateSymbol(Id<Market> marketId)
+    {
+        return Symbol.Create(
             new Id<Symbol>(Guid.NewGuid().ToString()),
             Guid.NewGuid().ToString(),
             null,
@@ -224,12 +231,14 @@ public sealed class ForecastEvaluatorJobTests
             marketId,
             new AdditionalFields()
         );
+    }
 
     private static ForecastRecord CreatePendingRecord(
         DateTimeOffset targetAt,
         Id<Symbol>? symbolId = null
-    ) =>
-        ForecastRecord.Create(
+    )
+    {
+        return ForecastRecord.Create(
             new Id<ForecastRecord>(Guid.NewGuid().ToString()),
             new Id<ForecastRun>(Guid.NewGuid().ToString()),
             new Id<Market>(Guid.NewGuid().ToString()),
@@ -240,4 +249,5 @@ public sealed class ForecastEvaluatorJobTests
             1,
             new ForecastPoint(100m, 90m, 110m, 50m)
         );
+    }
 }

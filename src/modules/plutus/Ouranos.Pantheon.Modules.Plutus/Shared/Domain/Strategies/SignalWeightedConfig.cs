@@ -26,7 +26,9 @@ public sealed record SignalWeightedConfig(
         || MovingAverageCrossoverWeight.HasValue
         || PriceVelocityWeight.HasValue;
 
-    public List<SignalWeight> GetSignalWeights() =>
+    public List<SignalWeight> GetSignalWeights()
+    {
+        return
         [
             new(SignalType.TaxAdjustedRoi, TaxAdjustedRoiWeight ?? 0),
             new(SignalType.VolumeAnomaly, VolumeAnomalyWeight ?? 0),
@@ -36,4 +38,5 @@ public sealed record SignalWeightedConfig(
             new(SignalType.MovingAverageCrossover, MovingAverageCrossoverWeight ?? 0),
             new(SignalType.PriceVelocity, PriceVelocityWeight ?? 0),
         ];
+    }
 }

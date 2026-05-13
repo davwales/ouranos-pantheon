@@ -151,14 +151,16 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
         return result;
     }
 
-    private static ChatMessage MapMessage(MessageDto message) =>
-        message.Role switch
+    private static ChatMessage MapMessage(MessageDto message)
+    {
+        return message.Role switch
         {
             RoleDto.System => ChatMessage.CreateSystemMessage(message.Content),
             RoleDto.User => ChatMessage.CreateUserMessage(message.Content),
             RoleDto.Assistant => ChatMessage.CreateAssistantMessage(message.Content),
             _ => throw new InvalidOperationException($"Unknown role: {message.Role}"),
         };
+    }
 
     private static ChatCompletionOptions BuildOptions(
         float? temperature,

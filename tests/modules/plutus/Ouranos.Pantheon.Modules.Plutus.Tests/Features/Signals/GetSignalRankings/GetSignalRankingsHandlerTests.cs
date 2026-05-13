@@ -28,8 +28,10 @@ public sealed class GetSignalRankingsHandlerTests
         _dbContext = DbContextExtensions.Mock<PlutusDbContext>();
     }
 
-    private GetSignalRankingsHandler BuildHandler(IEnumerable<ISignalComputer>? computers = null) =>
-        new(_logger, _dbContext, Options.Create(new QueryOptions()), computers ?? []);
+    private GetSignalRankingsHandler BuildHandler(IEnumerable<ISignalComputer>? computers = null)
+    {
+        return new(_logger, _dbContext, Options.Create(new QueryOptions()), computers ?? []);
+    }
 
     [Fact]
     public async Task Handle_WhenNoSignals_ShouldReturnEmptyPagedResponse()

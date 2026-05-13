@@ -36,11 +36,14 @@ public sealed class TradeConsumerTests
         );
     }
 
-    private TradeConsumer CreateConsumer() =>
-        new(_logger, Options.Create(_options), _dbContext, _cache);
+    private TradeConsumer CreateConsumer()
+    {
+        return new(_logger, Options.Create(_options), _dbContext, _cache);
+    }
 
-    private TradeMessage CreateMessage(string symbolCode) =>
-        new(
+    private TradeMessage CreateMessage(string symbolCode)
+    {
+        return new(
             Producer: Producer.Osrs,
             SymbolCode: symbolCode,
             SymbolSubcode: "p2p",
@@ -50,6 +53,7 @@ public sealed class TradeConsumerTests
             Timestamp: DateTimeOffset.UtcNow,
             AdditionalFields: new AdditionalFields()
         );
+    }
 
     [Fact]
     public async Task Handle_WhenSymbolDoesNotExist_ShouldCreateSymbolAndTrade()

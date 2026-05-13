@@ -16,8 +16,14 @@ public sealed class MarketTradeSnapshotJobTests
     private readonly PlutusDbContext _dbContext = DbContextExtensions.Mock<PlutusDbContext>();
     private readonly TickerFunctionContext _context = new();
 
-    private MarketTradeSnapshotJob CreateJob() =>
-        new(_logger, _dbContext, Options.Create(new MarketTradeSnapshotOptions(BatchSize: 500)));
+    private MarketTradeSnapshotJob CreateJob()
+    {
+        return new(
+            _logger,
+            _dbContext,
+            Options.Create(new MarketTradeSnapshotOptions(BatchSize: 500))
+        );
+    }
 
     [Fact]
     public async Task ExecuteFifteenMinutes_WhenNoTrades_ShouldCreateNoSnapshots()

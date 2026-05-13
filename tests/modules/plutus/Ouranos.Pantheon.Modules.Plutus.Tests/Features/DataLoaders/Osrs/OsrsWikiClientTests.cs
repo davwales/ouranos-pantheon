@@ -20,8 +20,9 @@ public sealed class OsrsWikiClientTests
         return client;
     }
 
-    private OsrsWikiClient CreateClient(HttpClient httpClient) =>
-        new(
+    private OsrsWikiClient CreateClient(HttpClient httpClient)
+    {
+        return new(
             httpClient,
             _logger,
             Options.Create(
@@ -35,6 +36,7 @@ public sealed class OsrsWikiClientTests
                 )
             )
         );
+    }
 
     [Fact]
     public async Task GetMappings_WhenSuccessful_ShouldReturnMappings()

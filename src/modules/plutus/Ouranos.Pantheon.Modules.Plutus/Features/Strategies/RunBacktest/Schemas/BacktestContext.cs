@@ -16,6 +16,8 @@ public sealed record BacktestContext(
     RecipeArbitrageConfig? RecipeArbitrageConfig = null
 )
 {
-    public DateTimeOffset CurrentDate(PipelineContext ctx) =>
-        StartDate.AddDays(ctx.CurrentIteration);
+    public DateTimeOffset CurrentDate(PipelineContext ctx)
+    {
+        return StartDate.AddDays(ctx.CurrentIteration);
+    }
 }

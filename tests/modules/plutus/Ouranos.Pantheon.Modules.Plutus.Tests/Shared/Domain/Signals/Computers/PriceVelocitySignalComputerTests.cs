@@ -19,8 +19,10 @@ public sealed class PriceVelocitySignalComputerTests
         return new PriceVelocitySignalComputer(options);
     }
 
-    private static PriceBucket Bucket(decimal avgPrice) =>
-        new(DateTimeOffset.UtcNow, avgPrice, avgPrice * 0.99m, avgPrice * 1.01m, 100m);
+    private static PriceBucket Bucket(decimal avgPrice)
+    {
+        return new(DateTimeOffset.UtcNow, avgPrice, avgPrice * 0.99m, avgPrice * 1.01m, 100m);
+    }
 
     [Fact]
     public async Task ComputeAsync_WhenOnlyOneBucket_ReturnsNull()

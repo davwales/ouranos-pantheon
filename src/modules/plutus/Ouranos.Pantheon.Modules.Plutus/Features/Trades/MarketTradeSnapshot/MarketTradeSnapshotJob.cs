@@ -32,40 +32,58 @@ public sealed class MarketTradeSnapshotJob
     }
 
     [TickerFunction("MarketTradeSnapshot_FifteenMinutes", "*/30 * * * * *")]
-    public Task ExecuteFifteenMinutes(TickerFunctionContext _, CancellationToken ct) =>
-        RefreshAsync(TimeFrame.FifteenMinutes, ct);
+    public Task ExecuteFifteenMinutes(TickerFunctionContext _, CancellationToken ct)
+    {
+        return RefreshAsync(TimeFrame.FifteenMinutes, ct);
+    }
 
     [TickerFunction("MarketTradeSnapshot_OneHour", "0 */2 * * * *")]
-    public Task ExecuteOneHour(TickerFunctionContext _, CancellationToken ct) =>
-        RefreshAsync(TimeFrame.OneHour, ct);
+    public Task ExecuteOneHour(TickerFunctionContext _, CancellationToken ct)
+    {
+        return RefreshAsync(TimeFrame.OneHour, ct);
+    }
 
     [TickerFunction("MarketTradeSnapshot_FourHours", "0 */5 * * * *")]
-    public Task ExecuteFourHours(TickerFunctionContext _, CancellationToken ct) =>
-        RefreshAsync(TimeFrame.FourHours, ct);
+    public Task ExecuteFourHours(TickerFunctionContext _, CancellationToken ct)
+    {
+        return RefreshAsync(TimeFrame.FourHours, ct);
+    }
 
     [TickerFunction("MarketTradeSnapshot_OneDay", "0 */10 * * * *")]
-    public Task ExecuteOneDay(TickerFunctionContext _, CancellationToken ct) =>
-        RefreshAsync(TimeFrame.OneDay, ct);
+    public Task ExecuteOneDay(TickerFunctionContext _, CancellationToken ct)
+    {
+        return RefreshAsync(TimeFrame.OneDay, ct);
+    }
 
     [TickerFunction("MarketTradeSnapshot_OneWeek", "0 */20 * * * *")]
-    public Task ExecuteOneWeek(TickerFunctionContext _, CancellationToken ct) =>
-        RefreshAsync(TimeFrame.OneWeek, ct);
+    public Task ExecuteOneWeek(TickerFunctionContext _, CancellationToken ct)
+    {
+        return RefreshAsync(TimeFrame.OneWeek, ct);
+    }
 
     [TickerFunction("MarketTradeSnapshot_OneMonth", "0 */30 * * * *")]
-    public Task ExecuteOneMonth(TickerFunctionContext _, CancellationToken ct) =>
-        RefreshAsync(TimeFrame.OneMonth, ct);
+    public Task ExecuteOneMonth(TickerFunctionContext _, CancellationToken ct)
+    {
+        return RefreshAsync(TimeFrame.OneMonth, ct);
+    }
 
     [TickerFunction("MarketTradeSnapshot_SixMonths", "0 */45 * * * *")]
-    public Task ExecuteSixMonths(TickerFunctionContext _, CancellationToken ct) =>
-        RefreshAsync(TimeFrame.SixMonths, ct);
+    public Task ExecuteSixMonths(TickerFunctionContext _, CancellationToken ct)
+    {
+        return RefreshAsync(TimeFrame.SixMonths, ct);
+    }
 
     [TickerFunction("MarketTradeSnapshot_OneYear", "0 0 * * * *")]
-    public Task ExecuteOneYear(TickerFunctionContext _, CancellationToken ct) =>
-        RefreshAsync(TimeFrame.OneYear, ct);
+    public Task ExecuteOneYear(TickerFunctionContext _, CancellationToken ct)
+    {
+        return RefreshAsync(TimeFrame.OneYear, ct);
+    }
 
     [TickerFunction("MarketTradeSnapshot_AllTime", "0 0 * * * *")]
-    public Task ExecuteAllTime(TickerFunctionContext _, CancellationToken ct) =>
-        RefreshAsync(TimeFrame.AllTime, ct);
+    public Task ExecuteAllTime(TickerFunctionContext _, CancellationToken ct)
+    {
+        return RefreshAsync(TimeFrame.AllTime, ct);
+    }
 
     private async Task RefreshAsync(TimeFrame frame, CancellationToken ct)
     {

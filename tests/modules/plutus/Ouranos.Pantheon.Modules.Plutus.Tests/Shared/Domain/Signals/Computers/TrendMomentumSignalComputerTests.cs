@@ -25,8 +25,9 @@ public sealed class TrendMomentumSignalComputerTests
         TimeFrame frame,
         decimal avgPrice,
         decimal volume = 1000m
-    ) =>
-        MarketTradeSnapshot.Create(
+    )
+    {
+        return MarketTradeSnapshot.Create(
             MarketId,
             SymbolId,
             frame,
@@ -38,6 +39,7 @@ public sealed class TrendMomentumSignalComputerTests
             1000m,
             0m
         );
+    }
 
     [Fact]
     public async Task ComputeAsync_WhenShortAverageDeltaEqualsThreshold_ReturnsOne()

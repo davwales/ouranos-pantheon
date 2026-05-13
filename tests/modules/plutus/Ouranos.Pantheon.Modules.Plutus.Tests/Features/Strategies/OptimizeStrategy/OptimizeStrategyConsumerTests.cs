@@ -62,8 +62,9 @@ public sealed class OptimizeStrategyConsumerTests
         _backtestDataOptions = Options.Create(new BacktestDataOptions());
     }
 
-    private OptimizeStrategyConsumer CreateConsumer() =>
-        new(
+    private OptimizeStrategyConsumer CreateConsumer()
+    {
+        return new(
             _logger,
             _dbContextFactory,
             _dataService,
@@ -71,6 +72,7 @@ public sealed class OptimizeStrategyConsumerTests
             _backtestDataOptions,
             _stepRegistry
         );
+    }
 
     private BacktestData CreateBacktestData(Market market, List<Symbol> symbols)
     {

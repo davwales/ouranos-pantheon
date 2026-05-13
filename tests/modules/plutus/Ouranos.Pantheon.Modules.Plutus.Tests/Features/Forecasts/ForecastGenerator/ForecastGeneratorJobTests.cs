@@ -237,16 +237,19 @@ public sealed class ForecastGeneratorJobTests
         _dbContext.Forecasts.Single().Id.ShouldNotBe(existingForecast.Id);
     }
 
-    private static Market CreateMarket(bool isForecastingEnabled) =>
-        Market.Create(
+    private static Market CreateMarket(bool isForecastingEnabled)
+    {
+        return Market.Create(
             new Id<Market>(Guid.NewGuid().ToString()),
             "Test Market",
             new Taxes(null),
             isForecastingEnabled
         );
+    }
 
-    private static Symbol CreateSymbol(Id<Market> marketId) =>
-        Symbol.Create(
+    private static Symbol CreateSymbol(Id<Market> marketId)
+    {
+        return Symbol.Create(
             new Id<Symbol>(Guid.NewGuid().ToString()),
             Guid.NewGuid().ToString(),
             null,
@@ -254,8 +257,11 @@ public sealed class ForecastGeneratorJobTests
             marketId,
             new AdditionalFields()
         );
+    }
 
-    private static Trade[] CreateTrades(Id<Symbol> symbolId) =>
+    private static Trade[] CreateTrades(Id<Symbol> symbolId)
+    {
+        return
         [
             .. Enumerable
                 .Range(0, 30)
@@ -269,10 +275,18 @@ public sealed class ForecastGeneratorJobTests
                     )
                 ),
         ];
+    }
 
-    private static List<MlForecastPoint> CreateMlPredictions(int count) =>
-        [.. Enumerable.Range(0, count).Select(_ => new MlForecastPoint(100m, 90m, 110m, 50m))];
+    private static List<MlForecastPoint> CreateMlPredictions(int count)
+    {
+        return
+        [
+            .. Enumerable.Range(0, count).Select(_ => new MlForecastPoint(100m, 90m, 110m, 50m)),
+        ];
+    }
 
-    private static List<ForecastPoint> CreateDomainPredictions(int count) =>
-        [.. Enumerable.Range(0, count).Select(_ => new ForecastPoint(100m, 90m, 110m, 50m))];
+    private static List<ForecastPoint> CreateDomainPredictions(int count)
+    {
+        return [.. Enumerable.Range(0, count).Select(_ => new ForecastPoint(100m, 90m, 110m, 50m))];
+    }
 }

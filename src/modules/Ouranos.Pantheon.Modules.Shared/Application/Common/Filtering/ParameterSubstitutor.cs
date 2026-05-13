@@ -8,12 +8,17 @@ internal static class ParameterSubstitutor
         Expression body,
         ParameterExpression from,
         ParameterExpression to
-    ) => new SubstitutorVisitor(from, to).Visit(body);
+    )
+    {
+        return new SubstitutorVisitor(from, to).Visit(body);
+    }
 
     private sealed class SubstitutorVisitor(ParameterExpression from, ParameterExpression to)
         : ExpressionVisitor
     {
-        protected override Expression VisitParameter(ParameterExpression node) =>
-            node == from ? to : base.VisitParameter(node);
+        protected override Expression VisitParameter(ParameterExpression node)
+        {
+            return node == from ? to : base.VisitParameter(node);
+        }
     }
 }

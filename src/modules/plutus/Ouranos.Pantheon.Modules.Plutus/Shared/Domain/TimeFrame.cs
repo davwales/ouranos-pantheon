@@ -15,8 +15,9 @@ public enum TimeFrame
 
 public static class TimeFrameExtensions
 {
-    public static TimeSpan? ToTimeSpan(this TimeFrame frame) =>
-        frame switch
+    public static TimeSpan? ToTimeSpan(this TimeFrame frame)
+    {
+        return frame switch
         {
             TimeFrame.FifteenMinutes => TimeSpan.FromMinutes(15),
             TimeFrame.OneHour => TimeSpan.FromHours(1),
@@ -29,4 +30,5 @@ public static class TimeFrameExtensions
             TimeFrame.AllTime => null,
             _ => throw new ArgumentOutOfRangeException(nameof(frame)),
         };
+    }
 }

@@ -22,8 +22,8 @@ jobs:
       - run: dotnet restore --verbosity quiet
       - run: dotnet tool restore
       - run: dotnet csharpier check .
-      - run: dotnet format style Ouranos.Pantheon.sln --verify-no-changes --no-restore --severity error
-      - run: dotnet format analyzers Ouranos.Pantheon.sln --verify-no-changes --no-restore --severity error
+      - run: dotnet format style --verify-no-changes --no-restore
+      - run: dotnet format analyzers --verify-no-changes --no-restore
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
