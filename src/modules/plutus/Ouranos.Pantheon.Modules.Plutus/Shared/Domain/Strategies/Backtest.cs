@@ -5,9 +5,9 @@ using Ouranos.Pantheon.Modules.Shared.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 
-public class Backtest : BaseEntity<Id<Backtest>>
+public sealed class Backtest : BaseEntity<Id<Backtest>>
 {
-    protected Backtest(Id<Backtest> id)
+    private Backtest(Id<Backtest> id)
         : base(id) { }
 
     public Id<Strategy> StrategyId { get; init; }
@@ -28,9 +28,9 @@ public class Backtest : BaseEntity<Id<Backtest>>
 
     public string? ProgressMessage { get; private set; }
 
-    public BacktestResults? Results { get; set; }
+    public BacktestResults? Results { get; internal set; }
 
-    public List<BacktestPosition> Positions { get; set; } = [];
+    public List<BacktestPosition> Positions { get; internal set; } = [];
 
     public string? ErrorMessage { get; private set; }
 
@@ -181,6 +181,7 @@ public class Backtest : BaseEntity<Id<Backtest>>
         ProgressMessage = null;
         Results = null;
         ErrorMessage = null;
+        Positions.Clear();
         Update();
         return true;
     }

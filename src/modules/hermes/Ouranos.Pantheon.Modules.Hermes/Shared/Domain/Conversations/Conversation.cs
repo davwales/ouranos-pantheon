@@ -8,6 +8,8 @@ namespace Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 
 public sealed class Conversation : BaseEntity<Id<Conversation>>
 {
+    private const string DefaultName = "New Conversation";
+
     private Conversation(Id<Conversation> id)
         : base(id)
     {
@@ -73,7 +75,7 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
 
         var conversation = new Conversation(id)
         {
-            Name = string.IsNullOrWhiteSpace(name) ? "New Conversation" : name.Trim(),
+            Name = string.IsNullOrWhiteSpace(name) ? DefaultName : name.Trim(),
             PersonaId = personaId,
             ModelConfigId = modelConfigId,
             Messages = [.. messages],
@@ -95,11 +97,10 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
         bool isPublic
     )
     {
-        Guard.Against.NullOrWhiteSpace(name);
         Guard.Against.Null(personaId);
         Guard.Against.Null(modelConfigId);
 
-        Name = name;
+        Name = string.IsNullOrWhiteSpace(name) ? DefaultName : name.Trim();
         PersonaId = personaId;
         ModelConfigId = modelConfigId;
         Messages = [.. messages];

@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Ouranos.Pantheon.Modules.Hermes.Features.Personas.UpdatePersona.Schemas;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
+using Ouranos.Pantheon.Modules.Shared.Domain;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Personas.UpdatePersona;
@@ -13,11 +15,21 @@ public static class UpdatePersonaEndpoint
     }
 
     internal static async Task<IResult> Handle(
-        UpdatePersonaInput input,
+        Id<Persona> personaId,
+        UpdatePersonaBody body,
         IMessageBus bus,
         CancellationToken ct
     )
     {
+        var input = new UpdatePersonaInput(
+            personaId,
+            body.Name,
+            body.Description,
+            body.Personality,
+            body.Scenario,
+            body.IsDefault,
+            body.IsPublic
+        );
         return Results.Ok(await bus.InvokeAsync<UpdatePersonaResponse>(input, ct));
     }
 }

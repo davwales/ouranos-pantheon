@@ -1,5 +1,7 @@
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
+using System.Text;
+using System.Text.Json;
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using OpenAI;
@@ -14,6 +16,11 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
     private readonly HttpClient _httpClient;
     private readonly OpenAIClient _openAiClient;
     private readonly ILogger<OuranosMachineLearningClient> _logger;
+
+    private static readonly JsonSerializerOptions SnakeCaseOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+    };
 
     public OuranosMachineLearningClient(
         ILogger<OuranosMachineLearningClient> logger,
@@ -109,7 +116,7 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
         var options = BuildOptions(temperature, maxTokens, frequencyPenalty);
 
         var result = await chatClient.CompleteChatAsync(chatMessages, options, cancellationToken);
-        var content = result.Value.Content[0].Text;
+        var content = result.Value.Content.Count > 0 ? result.Value.Content[0].Text : string.Empty;
 
         ChatCompletionUsage? usage = null;
         if (result.Value.Usage is not null)
@@ -136,16 +143,18 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
         );
         cancellationToken.ThrowIfCancellationRequested();
 
-        var json = System.Text.Json.JsonSerializer.Serialize(payload);
+        var json = JsonSerializer.Serialize(payload, SnakeCaseOptions);
         using var request = new HttpRequestMessage(HttpMethod.Post, "plutus/forecast");
-        request.Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        request.Content = new StringContent(json, Encoding.UTF8, "application/json");
 
         using var response = await _httpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
 
         var result =
-            await response.Content.ReadFromJsonAsync<List<List<ForecastPoint>>>(cancellationToken)
-            ?? throw new InvalidOperationException("Failed to parse plutus forecast response.");
+            await response.Content.ReadFromJsonAsync<List<List<ForecastPoint>>>(
+                SnakeCaseOptions,
+                cancellationToken
+            ) ?? throw new InvalidOperationException("Failed to parse plutus forecast response.");
 
         _logger.LogDebug("Successfully generated plutus forecasts using Ouranos ML.");
         return result;

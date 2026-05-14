@@ -5,9 +5,9 @@ using Ouranos.Pantheon.Modules.Shared.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 
-public class Strategy : BaseEntity<Id<Strategy>>
+public sealed class Strategy : BaseEntity<Id<Strategy>>
 {
-    protected Strategy(Id<Strategy> id)
+    private Strategy(Id<Strategy> id)
         : base(id)
     {
         Name = string.Empty;

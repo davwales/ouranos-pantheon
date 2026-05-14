@@ -119,9 +119,9 @@ public sealed class CompactConversationHandler
         if (tokenUsage is not null)
         {
             yield return new CompactUsageChunkResponse(
-                0,
+                tokenUsage.InputTokens,
                 tokenUsage.OutputTokens,
-                tokenUsage.OutputTokens
+                tokenUsage.TotalTokens
             );
         }
 
@@ -168,7 +168,11 @@ public sealed class CompactConversationHandler
 
         if (tokenUsage is not null)
         {
-            conversation.RecordTokenUsage(0, tokenUsage.OutputTokens, tokenUsage.OutputTokens);
+            conversation.RecordTokenUsage(
+                tokenUsage.InputTokens,
+                tokenUsage.OutputTokens,
+                tokenUsage.TotalTokens
+            );
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);

@@ -20,8 +20,7 @@ public sealed class UpdateConversationEndpointTests
         // Arrange
         var ct = CancellationToken.None;
         var conversationId = new Id<Conversation>(Guid.NewGuid().ToString());
-        var input = new UpdateConversationInput(
-            conversationId,
+        var body = new UpdateConversationBody(
             "Updated Name",
             new Id<Persona>(Guid.NewGuid().ToString()),
             new Id<ModelConfig>(Guid.NewGuid().ToString()),
@@ -29,17 +28,37 @@ public sealed class UpdateConversationEndpointTests
             [],
             true
         );
+        var expectedInput = new UpdateConversationInput(
+            conversationId,
+            body.Name,
+            body.PersonaId,
+            body.ModelConfigId,
+            body.TraitIds,
+            body.Messages,
+            body.IsPublic
+        );
         var expected = new IdResponse<Conversation>(conversationId);
 
         _bus.InvokeAsync<IdResponse<Conversation>>(Arg.Any<object>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expected));
 
         // Act
-        var result = await UpdateConversationEndpoint.Handle(conversationId, input, _bus, ct);
+        var result = await UpdateConversationEndpoint.Handle(conversationId, body, _bus, ct);
 
         // Assert
         result.ShouldBeOfType<Ok<IdResponse<Conversation>>>();
         await _bus.Received(1)
-            .InvokeAsync<IdResponse<Conversation>>(Arg.Any<UpdateConversationInput>(), ct);
+            .InvokeAsync<IdResponse<Conversation>>(
+                Arg.Is<UpdateConversationInput>(i =>
+                    i.ConversationId == conversationId
+                    && i.Name == body.Name
+                    && i.PersonaId == body.PersonaId
+                    && i.ModelConfigId == body.ModelConfigId
+                    && i.TraitIds == body.TraitIds
+                    && i.Messages == body.Messages
+                    && i.IsPublic == body.IsPublic
+                ),
+                ct
+            );
     }
 }

@@ -127,7 +127,7 @@ public static class CoreExtensions
         var tickerQDbContextFactory = app.Services.GetRequiredService<
             IDbContextFactory<TickerQDbContext>
         >();
-        var tickerQDbContext = await tickerQDbContextFactory.CreateDbContextAsync();
+        await using var tickerQDbContext = await tickerQDbContextFactory.CreateDbContextAsync();
         await tickerQDbContext.Database.MigrateAsync();
 
         app.UseTickerQ();

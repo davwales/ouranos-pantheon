@@ -384,9 +384,9 @@ public sealed class CompactConversationHandlerTests
         // Assert
         var usageResponse = results.OfType<CompactUsageChunkResponse>().SingleOrDefault();
         usageResponse.ShouldNotBeNull();
-        usageResponse.InputTokens.ShouldBe(0);
+        usageResponse.InputTokens.ShouldBe(100);
         usageResponse.OutputTokens.ShouldBe(50);
-        usageResponse.TotalTokens.ShouldBe(50);
+        usageResponse.TotalTokens.ShouldBe(150);
     }
 
     [Fact]

@@ -344,10 +344,11 @@ export default function ChatInterfaceView({
             return updated;
           });
         } else if (chunk.$type === "usage") {
+          // Input tokens are not carried forward, so they are excluded.
           setTokenUsage({
-            inputTokens: chunk.inputTokens,
+            inputTokens: 0,
             outputTokens: chunk.outputTokens,
-            totalTokens: chunk.totalTokens,
+            totalTokens: chunk.outputTokens,
           });
         }
       }
