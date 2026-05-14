@@ -49,6 +49,8 @@ public sealed class CreateConversationHandler
         _logger.LogTrace("Attempting to handle create conversation command '{@command}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
+        Guard.Against.Null(command.Messages, nameof(command.Messages));
+
         var conversationId = DatabaseExtensions.CreateId<Conversation>();
 
         var messages = command
@@ -64,12 +66,11 @@ public sealed class CreateConversationHandler
             )
             .ToList();
 
-        var traits =
-            command.TraitIds.Length > 0
-                ? await _dbContext
-                    .Traits.Where(t => command.TraitIds.Contains(t.Id))
-                    .ToListAsync(cancellationToken)
-                : [];
+        var traits = command.TraitIds is { Length: > 0 }
+            ? await _dbContext
+                .Traits.Where(t => command.TraitIds.Contains(t.Id))
+                .ToListAsync(cancellationToken)
+            : [];
 
         var name = string.IsNullOrWhiteSpace(command.Name)
             ? await GenerateNameAsync(command, cancellationToken)
@@ -144,7 +145,7 @@ public sealed class CreateConversationHandler
                 cancellationToken: cancellationToken
             );
 
-            var trimmed = result.Content.Trim();
+            var trimmed = result.Content?.Trim();
             if (string.IsNullOrWhiteSpace(trimmed))
             {
                 return null;
@@ -154,7 +155,15 @@ public sealed class CreateConversationHandler
                 ? trimmed[..MaxGeneratedNameLength]
                 : trimmed;
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex)
+        {
+            _logger.LogWarning(
+                ex,
+                "Failed to auto-generate conversation name; falling back to default."
+            );
+            return null;
+        }
+        catch (TaskCanceledException ex)
         {
             _logger.LogWarning(
                 ex,
@@ -171,6 +180,7 @@ public sealed class CreateConversationHandler
             Role.System => RoleDto.System,
             Role.Assistant => RoleDto.Assistant,
             Role.User => RoleDto.User,
+            Role.Summary => RoleDto.Assistant,
             _ => throw new ArgumentException($"Unsupported role: {role}", nameof(role)),
         };
     }

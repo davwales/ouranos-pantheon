@@ -18,12 +18,20 @@ public static class UpdateConversationEndpoint
 
     internal static async Task<IResult> Handle(
         Id<Conversation> conversationId,
-        UpdateConversationInput input,
+        UpdateConversationBody body,
         IMessageBus bus,
         CancellationToken ct
     )
     {
-        var command = input with { ConversationId = conversationId };
-        return Results.Ok(await bus.InvokeAsync<IdResponse<Conversation>>(command, ct));
+        var input = new UpdateConversationInput(
+            conversationId,
+            body.Name,
+            body.PersonaId,
+            body.ModelConfigId,
+            body.TraitIds,
+            body.Messages,
+            body.IsPublic
+        );
+        return Results.Ok(await bus.InvokeAsync<IdResponse<Conversation>>(input, ct));
     }
 }

@@ -172,7 +172,9 @@ public sealed class CreateConversationHandlerTests
                 Arg.Any<float?>(),
                 Arg.Any<CancellationToken>()
             )
-            .Returns<ChatCompletionResult>(_ => throw new Exception("ML service unavailable"));
+            .Returns<ChatCompletionResult>(_ =>
+                throw new HttpRequestException("ML service unavailable")
+            );
 
         var options = Options.Create(new HermesOptions("Generate a name.", "test-model"));
         var handler = new CreateConversationHandler(_logger, _dbContext, _mlClient, options);

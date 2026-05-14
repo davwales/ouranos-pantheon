@@ -194,7 +194,7 @@ public sealed class ConversationTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData(" ")]
-    public void Update_WhenInvalidName_ShouldThrowArgumentException(string? newName)
+    public void Update_WhenInvalidName_ShouldDefaultToNewConversation(string? newName)
     {
         // Arrange
         var id = new Id<Conversation>(Guid.NewGuid().ToString());
@@ -207,17 +207,16 @@ public sealed class ConversationTests
         );
 
         // Act
-        var update = () =>
-            conversation.Update(
-                newName!,
-                new Id<Persona>(Guid.NewGuid().ToString()),
-                new Id<ModelConfig>(Guid.NewGuid().ToString()),
-                [],
-                [],
-                true
-            );
+        conversation.Update(
+            newName!,
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [],
+            [],
+            true
+        );
 
         // Assert
-        update.ShouldThrow<ArgumentException>();
+        conversation.Name.ShouldBe("New Conversation");
     }
 }

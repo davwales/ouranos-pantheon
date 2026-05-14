@@ -65,7 +65,8 @@ public sealed class GenerateCompletionHandler
                 buffer.Append(chunk.Text);
                 yield return new ContentChunkResponse(chunk.Text);
             }
-            else if (chunk.Usage is not null)
+
+            if (chunk.Usage is not null)
             {
                 tokenUsage = chunk.Usage;
             }

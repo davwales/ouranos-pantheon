@@ -16,7 +16,12 @@ public sealed class IdJsonConverterFactory : JsonConverterFactory
     {
         var entityType = typeToConvert.GetGenericArguments()[0];
         var converterType = typeof(IdJsonConverter<>).MakeGenericType(entityType);
-        return (JsonConverter)Activator.CreateInstance(converterType)!;
+        var instance =
+            Activator.CreateInstance(converterType)
+            ?? throw new InvalidOperationException(
+                $"Failed to create converter for type '{typeToConvert.Name}'."
+            );
+        return (JsonConverter)instance;
     }
 }
 

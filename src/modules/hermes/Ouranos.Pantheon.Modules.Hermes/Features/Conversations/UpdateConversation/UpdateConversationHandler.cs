@@ -36,6 +36,9 @@ public sealed class UpdateConversationHandler
         _logger.LogTrace("Attempting to handle update conversation command '{@command}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
+        Guard.Against.Null(command.Messages, nameof(command.Messages));
+        Guard.Against.Null(command.TraitIds, nameof(command.TraitIds));
+
         var conversation = await _dbContext
             .Conversations.Include(c => c.Traits)
             .Include(c => c.Messages)

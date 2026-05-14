@@ -19,7 +19,7 @@ public abstract class OuranosDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.HasDefaultSchema(_schema.ToLower());
+        modelBuilder.HasDefaultSchema(_schema.ToLowerInvariant());
         modelBuilder.ApplyConfigurationsFromAssembly(GetType().Assembly);
         modelBuilder.HasTimescaleDbFunctions();
     }

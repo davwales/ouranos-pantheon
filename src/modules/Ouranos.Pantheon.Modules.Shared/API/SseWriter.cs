@@ -1,5 +1,7 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Converters;
 
 namespace Ouranos.Pantheon.Modules.Shared.API;
 
@@ -7,7 +9,10 @@ public static class SseWriter
 {
     private static readonly JsonSerializerOptions SerializerOptions = new(
         JsonSerializerDefaults.Web
-    );
+    )
+    {
+        Converters = { new IdJsonConverterFactory(), new JsonStringEnumConverter() },
+    };
 
     /// <summary>
     /// Writes a Server-Sent Event to the HTTP response stream with the given data object

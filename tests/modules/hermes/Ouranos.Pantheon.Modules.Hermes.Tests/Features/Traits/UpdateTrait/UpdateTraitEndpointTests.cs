@@ -17,17 +17,18 @@ public sealed class UpdateTraitEndpointTests
         // Arrange
         var ct = CancellationToken.None;
         var traitId = new Id<Trait>(Guid.NewGuid().ToString());
-        var input = new UpdateTraitInput(traitId, "Kindness", "Always be kind");
+        var body = new UpdateTraitBody("Kindness", "Always be kind");
         var expected = new UpdateTraitResponse(traitId);
+        var expectedInput = new UpdateTraitInput(traitId, body.Name, body.Content, body.IsPublic);
 
         _bus.InvokeAsync<UpdateTraitResponse>(Arg.Any<object>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expected));
 
         // Act
-        var result = await UpdateTraitEndpoint.Handle(input, _bus, ct);
+        var result = await UpdateTraitEndpoint.Handle(traitId, body, _bus, ct);
 
         // Assert
         result.ShouldBeOfType<Ok<UpdateTraitResponse>>();
-        await _bus.Received(1).InvokeAsync<UpdateTraitResponse>(input, ct);
+        await _bus.Received(1).InvokeAsync<UpdateTraitResponse>(expectedInput, ct);
     }
 }

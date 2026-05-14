@@ -7,9 +7,9 @@ using Ouranos.Pantheon.Modules.Shared.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Positions;
 
-public class Position : BaseEntity<Id<Position>>
+public sealed class Position : BaseEntity<Id<Position>>
 {
-    protected Position(Id<Position> id)
+    private Position(Id<Position> id)
         : base(id)
     {
         Status = PositionStatus.Pending;
@@ -147,6 +147,11 @@ public class Position : BaseEntity<Id<Position>>
             throw new InvalidOperationException(
                 $"Cannot link a '{Side}' position to a buy position."
             );
+        }
+
+        if (buyPositionId == Id)
+        {
+            throw new InvalidOperationException("Cannot link a position to itself.");
         }
 
         Guard.Against.NullOrWhiteSpace(buyPositionId.Value, nameof(buyPositionId));
