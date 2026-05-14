@@ -3,10 +3,19 @@
 import AutosizeTextarea from "@/app/components/autosize-textarea";
 import { ConfirmationButton } from "@/app/components/confirmation-button";
 import { Typography } from "@/app/components/typography";
+import { type AvailableModel, hermesApi } from "@/lib/api/hermes";
 import { ModelFormInput } from "@/app/hermes/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { useApi } from "@/hooks/use-api";
 import React, { ChangeEvent, useMemo, useState } from "react";
 
 export function ModelForm({
@@ -36,6 +45,15 @@ export function ModelForm({
       isPublic: true,
     },
   );
+  const [availableModelsState] = useApi(() => hermesApi.getAvailableModels());
+
+  const modelOptions = useMemo(() => {
+    const models = availableModelsState.data ?? [];
+    models.sort((a, b) =>
+      a.modelIdentifier.localeCompare(b.modelIdentifier),
+    );
+    return models;
+  }, [availableModelsState.data]);
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -63,16 +81,25 @@ export function ModelForm({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
         <Typography variant="h4">Model Identifier</Typography>
-        <Input
-          type="text"
-          readOnly={isReadOnly}
+        <Select
           value={model.modelIdentifier}
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            setModel((prev) => ({ ...prev, modelIdentifier: e.target.value }))
+          onValueChange={(value) =>
+            setModel((prev) => ({ ...prev, modelIdentifier: value }))
           }
-          placeholder="e.g. llama3.2"
-          className="w-full"
-        />
+          disabled={isReadOnly}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select a model" />
+          </SelectTrigger>
+          <SelectContent>
+            {modelOptions.map((m) => (
+              <SelectItem key={m.modelIdentifier} value={m.modelIdentifier}>
+                {m.modelIdentifier}
+                {m.ownedBy ? ` (${m.ownedBy})` : ""}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">

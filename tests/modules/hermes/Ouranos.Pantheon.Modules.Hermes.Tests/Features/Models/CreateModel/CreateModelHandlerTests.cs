@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.CreateModel;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.CreateModel.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.AvailableModels;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
@@ -26,13 +27,26 @@ public sealed class CreateModelHandlerTests
         _handler = new CreateModelHandler(_logger, _dbContext);
     }
 
+    private async Task SeedAvailableModel(string modelIdentifier)
+    {
+        var availableModel = AvailableModel.Create(
+            new Id<AvailableModel>(Guid.NewGuid().ToString()),
+            modelIdentifier,
+            "test-org"
+        );
+        await _dbContext.SeedData(availableModel);
+    }
+
     [Fact]
     public async Task Handle_WhenHappyPath_ShouldCreateModelAndReturnId()
     {
         // Arrange
+        var modelIdentifier = _fixture.Create<string>();
+        await SeedAvailableModel(modelIdentifier);
+
         var command = new CreateModelInput(
             _fixture.Create<string>(),
-            _fixture.Create<string>(),
+            modelIdentifier,
             _fixture.Create<string>()
         );
 
@@ -52,10 +66,13 @@ public sealed class CreateModelHandlerTests
     public async Task Handle_WhenIsDefaultTrue_ShouldClearOtherDefaults()
     {
         // Arrange
+        var modelIdentifier = _fixture.Create<string>();
+        await SeedAvailableModel(modelIdentifier);
+
         var existingDefault = ModelConfig.Create(
             new Id<ModelConfig>(Guid.NewGuid().ToString()),
             _fixture.Create<string>(),
-            _fixture.Create<string>(),
+            modelIdentifier,
             _fixture.Create<string>(),
             isDefault: true
         );
@@ -63,7 +80,7 @@ public sealed class CreateModelHandlerTests
 
         var command = new CreateModelInput(
             _fixture.Create<string>(),
-            _fixture.Create<string>(),
+            modelIdentifier,
             _fixture.Create<string>(),
             IsDefault: true
         );
@@ -85,9 +102,12 @@ public sealed class CreateModelHandlerTests
     public async Task Handle_WhenContextWindowProvided_ShouldSaveContextWindow()
     {
         // Arrange
+        var modelIdentifier = _fixture.Create<string>();
+        await SeedAvailableModel(modelIdentifier);
+
         var command = new CreateModelInput(
             _fixture.Create<string>(),
-            _fixture.Create<string>(),
+            modelIdentifier,
             _fixture.Create<string>(),
             ContextWindow: 128_000
         );
@@ -105,9 +125,12 @@ public sealed class CreateModelHandlerTests
     public async Task Handle_WhenContextWindowNotProvided_ShouldLeaveContextWindowNull()
     {
         // Arrange
+        var modelIdentifier = _fixture.Create<string>();
+        await SeedAvailableModel(modelIdentifier);
+
         var command = new CreateModelInput(
             _fixture.Create<string>(),
-            _fixture.Create<string>(),
+            modelIdentifier,
             _fixture.Create<string>()
         );
 
@@ -136,5 +159,48 @@ public sealed class CreateModelHandlerTests
 
         // Assert
         await handle.ShouldThrowAsync<OperationCanceledException>();
+    }
+
+    [Fact]
+    public async Task Handle_WhenModelIdentifierMatchesAvailableModel_ShouldMarkAvailable()
+    {
+        // Arrange
+        var modelIdentifier = "available-model";
+        await SeedAvailableModel(modelIdentifier);
+
+        var command = new CreateModelInput(
+            _fixture.Create<string>(),
+            modelIdentifier,
+            _fixture.Create<string>()
+        );
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var savedModel = await _dbContext.ModelConfigs.FindAsync(result.ModelId);
+        savedModel.ShouldNotBeNull();
+        savedModel.IsUnavailable.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Handle_WhenModelIdentifierNotInAvailableModels_ShouldMarkUnavailable()
+    {
+        // Arrange
+        await SeedAvailableModel("some-other-model");
+
+        var command = new CreateModelInput(
+            _fixture.Create<string>(),
+            "nonexistent-model",
+            _fixture.Create<string>()
+        );
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var savedModel = await _dbContext.ModelConfigs.FindAsync(result.ModelId);
+        savedModel.ShouldNotBeNull();
+        savedModel.IsUnavailable.ShouldBeTrue();
     }
 }

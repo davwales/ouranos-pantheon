@@ -11,6 +11,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.UpdateConversation;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.CreateModel;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.DeleteModel;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.GetAllModels;
+using Ouranos.Pantheon.Modules.Hermes.Features.Models.GetAvailableModels;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.GetModel;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.UpdateModel;
 using Ouranos.Pantheon.Modules.Hermes.Features.Personas.CreatePersona;
@@ -63,6 +64,7 @@ public sealed class HermesModule : IPantheonModule
         DeletePersonaEndpoint.Map(app);
 
         GetAllModelsEndpoint.Map(app);
+        GetAvailableModelsEndpoint.Map(app);
         GetModelEndpoint.Map(app);
         CreateModelEndpoint.Map(app);
         UpdateModelEndpoint.Map(app);

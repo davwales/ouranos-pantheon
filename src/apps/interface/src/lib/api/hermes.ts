@@ -23,8 +23,15 @@ export interface ModelConfig {
   contextWindow?: number | null;
   isDefault: boolean;
   isPublic: boolean;
+  isUnavailable: boolean;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface AvailableModel {
+  id: string;
+  modelIdentifier: string;
+  ownedBy: string;
 }
 
 export interface MessageInput {
@@ -207,6 +214,9 @@ export const hermesApi = {
 
   getAllModels: (params?: { filter?: string[] }) =>
     api.get<ModelConfig[]>("/api/hermes/models", params),
+
+  getAvailableModels: () =>
+    api.get<AvailableModel[]>("/api/hermes/available-models"),
 
   getModel: (modelId: string) =>
     api.get<ModelConfig>(`/api/hermes/models/${modelId}`),

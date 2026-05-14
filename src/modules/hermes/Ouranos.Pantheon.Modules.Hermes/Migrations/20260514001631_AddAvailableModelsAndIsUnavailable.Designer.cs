@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 
 #nullable disable
 
-namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
+namespace Ouranos.Pantheon.Modules.Hermes.Migrations
 {
     [DbContext(typeof(HermesDbContext))]
-    partial class HermesDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260514001631_AddAvailableModelsAndIsUnavailable")]
+    partial class AddAvailableModelsAndIsUnavailable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

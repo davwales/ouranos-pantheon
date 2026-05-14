@@ -1,9 +1,11 @@
 "use client";
 
 import InfoCard from "@/app/components/info-card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useApi } from "@/hooks/use-api";
 import { hermesApi } from "@/lib/api/hermes";
+import { AlertTriangle } from "lucide-react";
 import Link from "next/link";
 
 export default function ModelsPage() {
@@ -18,7 +20,14 @@ export default function ModelsPage() {
               label={model.name}
               description={model.modelIdentifier}
               className="hover:bg-accent h-full w-full"
-            />
+            >
+              {model.isUnavailable && (
+                <Badge variant="destructive" className="mt-1 gap-1">
+                  <AlertTriangle className="h-3 w-3" />
+                  Unavailable
+                </Badge>
+              )}
+            </InfoCard>
           </Link>
         ))}
       </div>

@@ -70,6 +70,20 @@ public sealed class UpdateModelHandler : IPantheonHandler<UpdateModelInput, Upda
             command.IsPublic
         );
 
+        var isAvailable = await _dbContext.AvailableModels.AnyAsync(
+            m => m.ModelIdentifier == command.ModelIdentifier,
+            cancellationToken
+        );
+
+        if (isAvailable)
+        {
+            model.MarkAvailable();
+        }
+        else
+        {
+            model.MarkUnavailable();
+        }
+
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         _logger.LogDebug("Successfully handled update model request.");

@@ -8,6 +8,7 @@ export default function InfoCard({
   iconSrc,
   alt,
   className,
+  children,
   ...props
 }: React.ComponentProps<"div"> & {
   label: string;
@@ -24,7 +25,7 @@ export default function InfoCard({
       )}
     >
       {iconSrc && (
-        <div className="flex-shrink-0 w-20 h-20 bg-accent-foreground rounded-2xl flex items-center justify-center">
+        <div className="shrink-0 w-20 h-20 bg-accent-foreground rounded-2xl flex items-center justify-center">
           <Image
             src={iconSrc}
             alt={alt ?? ""}
@@ -41,6 +42,7 @@ export default function InfoCard({
             {description}
           </Typography>
         )}
+        {children}
       </div>
     </div>
   );

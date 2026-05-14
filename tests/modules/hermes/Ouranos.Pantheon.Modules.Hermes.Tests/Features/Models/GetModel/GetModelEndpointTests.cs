@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.GetModel;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.GetModel.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Extensions;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.Models.GetModel;
@@ -16,7 +16,8 @@ public sealed class GetModelEndpointTests
     {
         // Arrange
         var ct = CancellationToken.None;
-        var modelId = new Id<ModelConfig>(Guid.NewGuid().ToString());
+        var modelId = DatabaseExtensions.CreateId<ModelConfig>();
+
         var expected = new GetModelResponse(
             modelId,
             "GPT-4",
@@ -27,7 +28,8 @@ public sealed class GetModelEndpointTests
             null,
             null,
             false,
-            true
+            true,
+            false
         );
 
         _bus.InvokeAsync<GetModelResponse>(Arg.Any<object>(), Arg.Any<CancellationToken>())

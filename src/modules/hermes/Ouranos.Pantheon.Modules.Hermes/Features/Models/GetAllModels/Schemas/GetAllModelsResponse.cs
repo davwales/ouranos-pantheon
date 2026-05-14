@@ -13,5 +13,6 @@ public sealed record GetAllModelsResponse(
     float? RepeatPenalty,
     int? ContextWindow,
     bool IsDefault,
-    bool IsPublic
+    bool IsPublic,
+    bool IsUnavailable
 );

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.AvailableModels;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
@@ -14,6 +15,8 @@ public sealed class HermesDbContext(DbContextOptions<HermesDbContext> options)
 
     public DbSet<ModelConfig> ModelConfigs { get; set; }
 
+    public DbSet<AvailableModel> AvailableModels { get; set; }
+
     public DbSet<Trait> Traits { get; set; }
 
     public DbSet<Conversation> Conversations { get; set; }
@@ -26,6 +29,7 @@ public sealed class HermesDbContext(DbContextOptions<HermesDbContext> options)
 
         modelBuilder.Entity<Persona>();
         modelBuilder.Entity<ModelConfig>();
+        modelBuilder.Entity<AvailableModel>();
         modelBuilder.Entity<Trait>();
         modelBuilder.Entity<Conversation>();
         modelBuilder.Entity<Message>();

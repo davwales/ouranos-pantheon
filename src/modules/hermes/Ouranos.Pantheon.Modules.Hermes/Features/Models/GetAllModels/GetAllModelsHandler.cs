@@ -19,7 +19,8 @@ public sealed class GetAllModelsHandler
         new FilterBuilder<ModelConfig>()
             .On(nameof(ModelConfig.Name), m => m.Name, caseInsensitive: true)
             .On(nameof(ModelConfig.ModelIdentifier), m => m.ModelIdentifier, caseInsensitive: true)
-            .On(nameof(ModelConfig.IsPublic), m => m.IsPublic);
+            .On(nameof(ModelConfig.IsPublic), m => m.IsPublic)
+            .On(nameof(ModelConfig.IsUnavailable), m => m.IsUnavailable);
 
     private static readonly SortBuilder<ModelConfig> SortBuilder = new SortBuilder<ModelConfig>()
         .On(nameof(ModelConfig.Name), m => m.Name)
@@ -79,7 +80,8 @@ public sealed class GetAllModelsHandler
                 m.RepeatPenalty,
                 m.ContextWindow,
                 m.IsDefault,
-                m.IsPublic
+                m.IsPublic,
+                m.IsUnavailable
             ))
             .ToListAsync(cancellationToken);
 

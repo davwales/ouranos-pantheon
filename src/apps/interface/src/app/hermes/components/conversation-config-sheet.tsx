@@ -73,6 +73,8 @@ export function ConversationConfigSheet({
   const [personasState] = useApi(() => hermesApi.getAllPersonas());
   const [modelsState] = useApi(() => hermesApi.getAllModels());
   const [traitsState] = useApi(() => hermesApi.getAllTraits());
+
+  const availableModels = modelsState.data?.filter((m) => !m.isUnavailable) ?? [];
   const [personasOpen, setPersonasOpen] = useState(false);
   const [modelsOpen, setModelsOpen] = useState(false);
   const [traitsOpen, setTraitsOpen] = useState(false);
@@ -171,7 +173,7 @@ export function ConversationConfigSheet({
             label="Model"
             open={modelsOpen}
             onOpenChange={setModelsOpen}
-            items={modelsState.data?.map((m) => ({
+            items={availableModels.map((m) => ({
               id: m.id ?? "",
               label: m.name,
               description: m.modelIdentifier,
