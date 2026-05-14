@@ -31,6 +31,8 @@ public class ModelConfig : BaseEntity<Id<ModelConfig>>
 
     public bool IsPublic { get; private set; }
 
+    public bool IsUnavailable { get; private set; }
+
     public static ModelConfig Create(
         Id<ModelConfig> id,
         string name,
@@ -59,6 +61,7 @@ public class ModelConfig : BaseEntity<Id<ModelConfig>>
             ContextWindow = contextWindow,
             IsDefault = isDefault,
             IsPublic = isPublic,
+            IsUnavailable = false,
         };
     }
 
@@ -87,5 +90,17 @@ public class ModelConfig : BaseEntity<Id<ModelConfig>>
         ContextWindow = contextWindow;
         IsDefault = isDefault;
         IsPublic = isPublic;
+    }
+
+    public void MarkUnavailable()
+    {
+        IsUnavailable = true;
+        Update();
+    }
+
+    public void MarkAvailable()
+    {
+        IsUnavailable = false;
+        Update();
     }
 }

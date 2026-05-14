@@ -27,4 +27,8 @@ public interface IOuranosMachineLearningClient
         GetPlutusForecastsRequest payload,
         CancellationToken cancellationToken = default
     );
+
+    Task<List<AvailableModelDto>> GetAvailableModelsAsync(
+        CancellationToken cancellationToken = default
+    );
 }

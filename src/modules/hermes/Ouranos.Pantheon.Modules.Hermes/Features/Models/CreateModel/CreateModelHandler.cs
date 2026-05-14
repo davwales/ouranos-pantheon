@@ -66,6 +66,16 @@ public sealed class CreateModelHandler : IPantheonHandler<CreateModelInput, Crea
             command.IsPublic
         );
 
+        var isAvailable = await _dbContext.AvailableModels.AnyAsync(
+            m => m.ModelIdentifier == command.ModelIdentifier,
+            cancellationToken
+        );
+
+        if (!isAvailable)
+        {
+            model.MarkUnavailable();
+        }
+
         await _dbContext.ModelConfigs.AddAsync(model, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
 

@@ -151,6 +151,26 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
         return result;
     }
 
+    public async Task<List<AvailableModelDto>> GetAvailableModelsAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        _logger.LogTrace("Attempting to fetch available models from Ouranos ML.");
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var models = await _openAiClient.GetOpenAIModelClient().GetModelsAsync(cancellationToken);
+
+        var result = models
+            .Value.Select(m => new AvailableModelDto(m.Id, m.OwnedBy ?? string.Empty))
+            .ToList();
+
+        _logger.LogDebug(
+            "Successfully fetched {Count} available models from Ouranos ML.",
+            result.Count
+        );
+        return result;
+    }
+
     private static ChatMessage MapMessage(MessageDto message)
     {
         return message.Role switch

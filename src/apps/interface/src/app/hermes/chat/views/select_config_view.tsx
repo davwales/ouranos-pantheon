@@ -22,6 +22,8 @@ export default function SelectConfigView({
   const [personasState] = useApi(() => hermesApi.getAllPersonas());
   const [modelsState] = useApi(() => hermesApi.getAllModels());
 
+  const availableModels = modelsState.data?.filter((m) => !m.isUnavailable) ?? [];
+
   const handlePersonaSelected = (selected: PersonaFormInput) => {
     if (selected.id === persona?.id) {
       setPersona(undefined);
@@ -60,7 +62,7 @@ export default function SelectConfigView({
       <div className="mt-6">
         <p className="text-sm font-medium mb-2">Model</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {modelsState.data?.map((m) => (
+          {availableModels.map((m) => (
             <InfoCard
               key={m.id}
               label={m.name}

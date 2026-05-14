@@ -3,8 +3,10 @@
 import { Typography } from "@/app/components/typography";
 import { ModelForm } from "@/app/hermes/components/model_form";
 import { ModelFormInput } from "@/app/hermes/types";
+import { Badge } from "@/components/ui/badge";
 import { useApi } from "@/hooks/use-api";
 import { hermesApi } from "@/lib/api/hermes";
+import { AlertTriangle } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -65,9 +67,17 @@ export default function EditModelPage() {
 
   return (
     <div className="m-4">
-      <Typography variant="h2" className="border-b-0">
-        Edit Model
-      </Typography>
+      <div className="flex items-center gap-3">
+        <Typography variant="h2" className="border-b-0">
+          Edit Model
+        </Typography>
+        {model.isUnavailable && (
+          <Badge variant="destructive" className="gap-1">
+            <AlertTriangle className="h-3 w-3" />
+            Unavailable
+          </Badge>
+        )}
+      </div>
 
       <ModelForm
         initial={model}

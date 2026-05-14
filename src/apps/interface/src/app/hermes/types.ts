@@ -19,6 +19,7 @@ export interface ModelFormInput {
   contextWindow?: number | null;
   isDefault: boolean;
   isPublic: boolean;
+  isUnavailable?: boolean;
 }
 
 export interface TraitFormInput {
