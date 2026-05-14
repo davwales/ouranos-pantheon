@@ -221,7 +221,7 @@ export const hermesApi = {
   getModel: (modelId: string) =>
     api.get<ModelConfig>(`/api/hermes/models/${modelId}`),
 
-  createModel: (input: Omit<ModelConfig, "id" | "createdAt" | "updatedAt">) =>
+  createModel: (input: Omit<ModelConfig, "id" | "createdAt" | "updatedAt" | "isUnavailable">) =>
     api.post<{ id: string }>("/api/hermes/models", input),
 
   updateModel: (input: {
