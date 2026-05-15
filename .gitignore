@@ -411,6 +411,8 @@ CLAUDE.md
 .prompt_history/
 memory/*.md
 AGENTS.md
+context.md
+plan.md
 
 appsettings.Local.json
 appsettings.Development.json

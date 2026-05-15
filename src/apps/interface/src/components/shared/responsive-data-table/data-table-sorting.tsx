@@ -1,0 +1,156 @@
+import { Content, ResponsiveContent } from "@/components/shared/responsive-content";
+import { ExtendedColumnDef, SortArgs, SortDirection } from "@/components/shared/responsive-data-table/types";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
+
+export function DataTableSorting({
+    columns,
+    sort,
+    onSortChange,
+}: {
+    columns: ExtendedColumnDef<any>[];
+    sort?: SortArgs;
+    onSortChange?: (sort: SortArgs) => void;
+}) {
+    const getSortState = (columnId: string): SortDirection | null => {
+        if (!sort) return null;
+
+        const parts = columnId.split('.');
+        let current = sort;
+        for (const part of parts) {
+            if (!current || !current[part]) {
+                return null;
+            } else if (typeof current[part] === 'object') {
+                current = current[part] as SortArgs;
+            } else {
+                return current[part] as SortDirection;
+            }
+        }
+
+        return null;
+    };
+
+    const idToObject = (columnId: string, direction: SortDirection): SortArgs => {
+        const parts = columnId.split('.');
+        const root: SortArgs = {};
+        let current = root;
+
+        for (let i = 0; i < parts.length - 1; i++) {
+            current[parts[i]] = {};
+            current = current[parts[i]] as SortArgs;
+        }
+
+        current[parts[parts.length - 1]] = direction;
+        return root;
+    }
+
+    const getCurrentSortColumn = (): string => {
+        if (!sort) return "";
+
+        const findNestedPath = (obj: SortArgs, currentPath: string[] = []): string | null => {
+            for (const [key, value] of Object.entries(obj)) {
+                if (typeof value === 'object') {
+                    const nestedPath = findNestedPath(value as SortArgs, [...currentPath, key]);
+                    if (nestedPath) return nestedPath;
+                } else {
+                    return [...currentPath, key].join('.');
+                }
+            }
+            return null;
+        };
+
+        return findNestedPath(sort) ?? "";
+    };
+
+    const handleSortChange = (columnId: string, direction?: SortDirection) => {
+        if (!onSortChange) return;
+
+        if (!columnId) {
+            onSortChange({});
+            return;
+        }
+
+        if (direction) {
+            onSortChange(idToObject(columnId, direction));
+        } else {
+            const currentDirection = getSortState(columnId);
+            const newDirection: SortDirection | null = !currentDirection
+                ? "ASC"
+                : currentDirection === "ASC"
+                ? "DESC"
+                : null;
+
+            if (newDirection) {
+                onSortChange(idToObject(columnId, newDirection));
+            } else {
+                onSortChange({});
+            }
+        }
+    };
+
+    return (
+        <ResponsiveContent>
+            <Content type="mobile">
+                <div className="flex items-center gap-2 mt-2 w-full">
+                    <h6>Sort By</h6>
+                    <Select
+                        value={getCurrentSortColumn()}
+                        onValueChange={(value) => handleSortChange(value)}
+                    >
+                        <SelectTrigger className="flex-grow max-w-1/2">
+                            <SelectValue placeholder="Sort by column" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {columns.map((column) => {
+                                if (!column.id) return null;
+                                return (
+                                    <SelectItem key={column.id} value={column.id}>
+                                        {typeof column.header === 'string' ? column.header : column.id}
+                                    </SelectItem>
+                                )
+                            })}
+                        </SelectContent>
+                    </Select>
+
+                    <Select
+                        value={getSortState(getCurrentSortColumn()) ?? ""}
+                        onValueChange={(value) => handleSortChange(getCurrentSortColumn(), value as SortDirection)}
+                        disabled={!getCurrentSortColumn()}
+                    >
+                        <SelectTrigger className="flex-grow max-w-1/2">
+                            <SelectValue placeholder="Direction" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="ASC">Ascending</SelectItem>
+                            <SelectItem value="DESC">Descending</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            </Content>
+
+            <Content type="desktop">
+                {columns.map((column) => {
+                    const direction = getSortState(column.id ?? '');
+                    const getSortIcon = () => {
+                        if (!direction) {
+                            return <ArrowUpDown className="opacity-0 hover:opacity-100 h-4 w-4" />;
+                        }
+                        return direction === "ASC" ?
+                            <ArrowUp className="h-4 w-4" /> :
+                            <ArrowDown className="h-4 w-4" />;
+                    };
+
+                    return (
+                        <div
+                            key={column.id}
+                            className="flex items-center gap-2 cursor-pointer select-none"
+                            onClick={() => handleSortChange(column.id ?? '')}
+                        >
+                            {getSortIcon()}
+                        </div>
+                    );
+                })}
+            </Content>
+        </ResponsiveContent>
+    );
+}
