@@ -205,6 +205,7 @@ export default function PortfolioPage() {
       <ResponsiveDataTable
         columns={openColumns}
         data={openData?.items}
+        loading={fetchingOpen && !openData}
         state={openTableState}
         onStateChange={setOpenTableState}
         pageInfo={openPageInfo}
@@ -217,6 +218,7 @@ export default function PortfolioPage() {
       <ResponsiveDataTable
         columns={closedColumns}
         data={closedData?.items}
+        loading={fetchingClosed && !closedData}
         state={closedTableState}
         onStateChange={setClosedTableState}
         pageInfo={closedPageInfo}

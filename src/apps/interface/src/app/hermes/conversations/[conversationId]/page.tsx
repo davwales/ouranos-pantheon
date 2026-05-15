@@ -10,6 +10,7 @@ import { useApi } from "@/hooks/use-api";
 import { hermesApi } from "@/lib/api/hermes";
 import { useParams, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { ChatMessageSkeleton } from "@/app/components/skeletons/chat-message-skeleton";
 
 export default function ResumeConversationPage() {
   const { conversationId } = useParams<{ conversationId: string }>();
@@ -77,7 +78,11 @@ export default function ResumeConversationPage() {
   }, [activeTraits, saved]);
 
   if (state.status === "loading") {
-    return <div className="m-4">Loading...</div>;
+    return (
+      <div className="m-4">
+        <ChatMessageSkeleton pairCount={2} />
+      </div>
+    );
   }
 
   if (

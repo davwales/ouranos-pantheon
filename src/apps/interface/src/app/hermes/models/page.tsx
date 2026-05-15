@@ -1,6 +1,7 @@
 "use client";
 
 import InfoCard from "@/app/components/info-card";
+import { InfoCardGridSkeleton } from "@/app/components/skeletons/info-card-skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useApi } from "@/hooks/use-api";
@@ -13,24 +14,28 @@ export default function ModelsPage() {
 
   return (
     <div className="m-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {state.data?.map((model) => (
-          <Link href={`/hermes/models/${model.id}`} key={model.id}>
-            <InfoCard
-              label={model.name}
-              description={model.modelIdentifier}
-              className="hover:bg-accent h-full w-full"
-            >
-              {model.isUnavailable && (
-                <Badge variant="destructive" className="mt-1 gap-1">
-                  <AlertTriangle className="h-3 w-3" />
-                  Unavailable
-                </Badge>
-              )}
-            </InfoCard>
-          </Link>
-        ))}
-      </div>
+      {state.status === "loading" && !state.data ? (
+        <InfoCardGridSkeleton />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {state.data?.map((model) => (
+            <Link href={`/hermes/models/${model.id}`} key={model.id}>
+              <InfoCard
+                label={model.name}
+                description={model.modelIdentifier}
+                className="hover:bg-accent h-full w-full"
+              >
+                {model.isUnavailable && (
+                  <Badge variant="destructive" className="mt-1 gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    Unavailable
+                  </Badge>
+                )}
+              </InfoCard>
+            </Link>
+          ))}
+        </div>
+      )}
 
       <Button size="lg" variant="link" className="mt-4 w-full">
         <Link href="/hermes/models/create">Create New</Link>

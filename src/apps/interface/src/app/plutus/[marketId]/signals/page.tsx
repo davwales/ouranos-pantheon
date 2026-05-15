@@ -242,6 +242,7 @@ export default function SignalRankingsDetail() {
       <ResponsiveDataTable
         columns={columns}
         data={data?.items}
+        loading={fetching && !data}
         state={tableState}
         onStateChange={setTableState}
         pageInfo={pageInfo}

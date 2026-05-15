@@ -9,6 +9,7 @@ import { hermesApi } from "@/lib/api/hermes";
 import { AlertTriangle } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { FormSkeleton } from "@/app/components/skeletons/form-skeleton";
 
 export default function EditModelPage() {
   const router = useRouter();
@@ -62,7 +63,11 @@ export default function EditModelPage() {
   };
 
   if (fetching || !model) {
-    return <div>Loading...</div>;
+    return (
+      <div className="m-4">
+        <FormSkeleton fields={7} hasTitle checkboxes={2} />
+      </div>
+    );
   }
 
   return (

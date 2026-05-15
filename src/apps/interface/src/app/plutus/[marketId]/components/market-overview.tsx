@@ -10,6 +10,8 @@ import useInterval from "@/hooks/use_interval";
 import { plutusApi } from "@/lib/api/plutus";
 import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
+import { ChartSkeleton } from "@/app/components/skeletons/chart-skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function MarketOverview({ marketId }: { marketId: string }) {
   const timeFrameKey = usePlutusStore(
@@ -33,6 +35,23 @@ export default function MarketOverview({ marketId }: { marketId: string }) {
 
   const overview =
     overviewState.status === "success" ? overviewState.data : null;
+
+  if (overviewState.status === "loading" && !overview) {
+    return (
+      <div className="space-y-4" aria-hidden="true">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-7 w-36" />
+          <TimeFrameSelection />
+        </div>
+        <div className="flex gap-6">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-4 w-28" />
+        </div>
+        <ChartSkeleton className="mt-2" legendCount={2} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

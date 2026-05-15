@@ -99,6 +99,7 @@ export default function RecentMarketTrades() {
       <ResponsiveDataTable
         columns={columns}
         data={state.data}
+        loading={state.status === "loading" && !state.data}
         state={tableState}
         onStateChange={setTableState}
         disableFiltering
