@@ -66,6 +66,8 @@ export type ExtendedColumnDef<TData> = ColumnDef<TData> & {
 export interface DataTableProps<TData> {
   columns: ExtendedColumnDef<TData>[];
   data: TData[] | null | undefined;
+  loading?: boolean;
+  skeletonRows?: number;
   scrollTop?: boolean;
   state?: DataTableState;
   onStateChange?: (state: DataTableState) => void;

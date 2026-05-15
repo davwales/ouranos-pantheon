@@ -6,6 +6,7 @@ import { useApi } from "@/hooks/use-api";
 import { GetSymbolSignalsResponse, plutusApi } from "@/lib/api/plutus";
 import { useState } from "react";
 import { SignalCard } from "./signal-card";
+import { SignalsSectionSkeleton } from "@/app/components/skeletons/signal-card-skeleton";
 
 const INTENTS = ["All", "Buy", "Sell", "Flip", "Merch"] as const;
 type IntentFilter = (typeof INTENTS)[number];
@@ -104,6 +105,10 @@ export function SignalsSection({ symbolId }: { symbolId: string }) {
   );
 
   const data = state.data;
+
+  if (state.status === "loading" && !data) {
+    return <SignalsSectionSkeleton />;
+  }
 
   return (
     <div className="mt-8">

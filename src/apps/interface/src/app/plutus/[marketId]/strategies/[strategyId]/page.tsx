@@ -1,5 +1,6 @@
 "use client";
 
+import { StrategyDetailSkeleton } from "@/app/components/skeletons/strategy-detail-skeleton";
 import { Typography } from "@/app/components/typography";
 import { useApi } from "@/hooks/use-api";
 import {
@@ -7,7 +8,6 @@ import {
   StrategyDetail,
   plutusApi,
 } from "@/lib/api/plutus";
-import { RefreshCw } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { OptimizeDialog } from "../components/optimize-dialog";
@@ -122,16 +122,12 @@ export default function StrategyDetailPage() {
     setIsEditing(false);
   };
 
-  if (strategy.status === "error") {
+  if (strategy.status === "error" && !data) {
     return <Typography variant="lead">Error loading strategy</Typography>;
   }
 
   if (!data) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <RefreshCw className="animate-spin" />
-      </div>
-    );
+    return <StrategyDetailSkeleton />;
   }
 
   return (

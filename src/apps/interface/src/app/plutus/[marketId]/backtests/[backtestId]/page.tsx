@@ -4,7 +4,8 @@ import { Typography } from "@/app/components/typography";
 import { useApi } from "@/hooks/use-api";
 import useInterval from "@/hooks/use_interval";
 import { BacktestDetail, StrategyDetail, plutusApi } from "@/lib/api/plutus";
-import { ArrowLeft, RefreshCw } from "lucide-react";
+import { BacktestDetailSkeleton } from "@/app/components/skeletons/backtest-detail-skeleton";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
@@ -128,11 +129,7 @@ export default function BacktestDetailPage() {
   }
 
   if (!backtest) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <RefreshCw className="animate-spin" />
-      </div>
-    );
+    return <BacktestDetailSkeleton />;
   }
 
   const results = backtest.results;

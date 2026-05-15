@@ -24,6 +24,7 @@ import {
 import { useParams } from "next/navigation";
 import React, { ReactNode, useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
+import { SymbolDetailSkeleton } from "@/app/components/skeletons/symbol-detail-skeleton";
 
 interface SymbolDetails {
   symbol: Symbol;
@@ -156,6 +157,10 @@ export default function SymbolDetail() {
       }) ?? [],
     [state.data?.trades.trades],
   );
+
+  if (state.status === "loading" && !data) {
+    return <SymbolDetailSkeleton />;
+  }
 
   return (
     <div>

@@ -23,6 +23,10 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
+import { DetailSkeleton } from "@/app/components/skeletons/detail-skeleton";
+import { FormSkeleton } from "@/app/components/skeletons/form-skeleton";
+import { DataTableSkeleton } from "@/app/components/skeletons/data-table-skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function GroupDetailPage() {
   const { marketId, groupId } = useParams<{
@@ -193,7 +197,19 @@ export default function GroupDetailPage() {
   );
 
   if (fetching) {
-    return <div>Loading...</div>;
+    return (
+      <div aria-hidden="true">
+        <DetailSkeleton sections={["header"]} />
+        <FormSkeleton fields={2} hasTitle={false} className="mt-4 max-w-lg" />
+        <div className="mt-8">
+          <div className="flex items-center justify-between mb-1">
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-9 w-40" />
+          </div>
+          <DataTableSkeleton columns={5} rows={3} hasFilters={false} hasPagination={false} />
+        </div>
+      </div>
+    );
   }
 
   if (!group) {

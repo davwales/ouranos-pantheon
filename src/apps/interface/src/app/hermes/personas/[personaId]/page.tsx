@@ -7,6 +7,7 @@ import { useApi } from "@/hooks/use-api";
 import { hermesApi } from "@/lib/api/hermes";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { FormSkeleton } from "@/app/components/skeletons/form-skeleton";
 
 export default function EditPersonaPage() {
   const router = useRouter();
@@ -57,7 +58,11 @@ export default function EditPersonaPage() {
   };
 
   if (fetching || !persona) {
-    return <div>Loading...</div>;
+    return (
+      <div className="m-4">
+        <FormSkeleton fields={4} hasTitle checkboxes={2} />
+      </div>
+    );
   }
 
   return (

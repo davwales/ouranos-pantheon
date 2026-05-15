@@ -7,6 +7,7 @@ import { useApi } from "@/hooks/use-api";
 import { ForecastEfficacyRow, plutusApi } from "@/lib/api/plutus";
 import { subDays } from "date-fns";
 import { useMemo, useState } from "react";
+import { ForecastEfficacySkeleton } from "@/app/components/skeletons/forecast-efficacy-skeleton";
 
 function formatPercent(value: number | null): string {
   if (value === null) return "—";
@@ -125,14 +126,7 @@ export function ForecastEfficacyView({
   }, [data, activeHorizon]);
 
   if (state.status === "loading") {
-    return (
-      <div className="mt-8">
-        <Typography variant="h2">Forecast Accuracy</Typography>
-        <Typography variant="muted" className="mt-2">
-          Loading...
-        </Typography>
-      </div>
-    );
+    return <ForecastEfficacySkeleton />;
   }
 
   if (!data?.items.length) {

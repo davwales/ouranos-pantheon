@@ -9,6 +9,7 @@ import {
 } from "@/app/hermes/types";
 import { hermesApi } from "@/lib/api/hermes";
 import { useEffect, useState } from "react";
+import { ChatMessageSkeleton } from "@/app/components/skeletons/chat-message-skeleton";
 
 type ConversationState = "loading" | "setup" | "chat";
 
@@ -61,7 +62,11 @@ export default function Conversation() {
   };
 
   if (conversationState === "loading") {
-    return <div className="m-4">Loading...</div>;
+    return (
+      <div className="m-4">
+        <ChatMessageSkeleton pairCount={1} />
+      </div>
+    );
   }
 
   if (conversationState === "chat" && persona && model) {
