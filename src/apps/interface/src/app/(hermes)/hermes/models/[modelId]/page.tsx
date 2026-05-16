@@ -10,6 +10,7 @@ import { AlertTriangle } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FormSkeleton } from "@/components/shared/skeletons/form-skeleton";
+import { NotFoundCard } from "@/components/shared/not-found-card";
 
 export default function EditModelPage() {
   const router = useRouter();
@@ -18,6 +19,10 @@ export default function EditModelPage() {
   const [model, setModel] = useState<ModelFormInput>();
 
   const [state] = useApi(() => hermesApi.getModel(modelId), [modelId]);
+
+  if (state.status === "error" && !state.data) {
+    return <NotFoundCard title="Model not found" backHref="/hermes/models" backLabel="Back to Models" />;
+  }
 
   const fetching = state.status === "loading";
 

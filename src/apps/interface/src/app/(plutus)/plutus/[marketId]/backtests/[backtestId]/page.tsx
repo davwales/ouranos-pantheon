@@ -18,6 +18,7 @@ import { CancelledBacktestView } from "../_components/cancelled-backtest-view";
 import { FailedBacktestView } from "../_components/failed-backtest-view";
 import { InProgressBacktestView } from "../_components/in-progress-backtest-view";
 import { OptimizedConfigurationCard } from "../_components/optimized-configuration-card";
+import { NotFoundCard } from "@/components/shared/not-found-card";
 
 export default function BacktestDetailPage() {
   const { marketId, backtestId } = useParams<{
@@ -114,18 +115,7 @@ export default function BacktestDetailPage() {
   ]);
 
   if (backtestState.status === "error") {
-    return (
-      <div className="space-y-4">
-        <Link
-          href={`/plutus/${marketId}/strategies/${backtest?.strategyId ?? ""}/backtests`}
-          className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="w-4 h-4 mr-1" />
-          Back to Backtests
-        </Link>
-        <Typography variant="lead">Error loading backtest</Typography>
-      </div>
-    );
+    return <NotFoundCard title="Backtest not found" message="This backtest doesn\u0027t exist or has been removed." backHref={`/plutus/${marketId}/strategies`} backLabel="Back to Strategies" />;
   }
 
   if (!backtest) {

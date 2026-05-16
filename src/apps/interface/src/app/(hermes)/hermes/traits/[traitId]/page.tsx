@@ -8,6 +8,7 @@ import { hermesApi } from "@/lib/api/hermes";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FormSkeleton } from "@/components/shared/skeletons/form-skeleton";
+import { NotFoundCard } from "@/components/shared/not-found-card";
 
 export default function EditTraitPage() {
   const router = useRouter();
@@ -16,6 +17,10 @@ export default function EditTraitPage() {
   const [trait, setTrait] = useState<TraitFormInput>();
 
   const [state] = useApi(() => hermesApi.getTrait(traitId), [traitId]);
+
+  if (state.status === "error" && !state.data) {
+    return <NotFoundCard title="Trait not found" backHref="/hermes/traits" backLabel="Back to Traits" />;
+  }
 
   const fetching = state.status === "loading";
 

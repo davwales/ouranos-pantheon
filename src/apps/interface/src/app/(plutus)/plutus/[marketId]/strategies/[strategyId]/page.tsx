@@ -15,6 +15,7 @@ import { RunBacktestDialog } from "../_components/run-backtest-dialog";
 import { StrategyEditForm } from "../_components/strategy-edit-form";
 import { StrategyHeader } from "../_components/strategy-header";
 import { StrategyReadOnlyView } from "../_components/strategy-read-only-view";
+import { NotFoundCard } from "@/components/shared/not-found-card";
 
 function detailToBundle(detail: StrategyDetail): StrategyConfigBundle {
   return {
@@ -123,7 +124,7 @@ export default function StrategyDetailPage() {
   };
 
   if (strategy.status === "error" && !data) {
-    return <Typography variant="lead">Error loading strategy</Typography>;
+    return <NotFoundCard title="Strategy not found" backHref={`/plutus/${marketId}/strategies`} backLabel="Back to Strategies" />;
   }
 
   if (!data) {

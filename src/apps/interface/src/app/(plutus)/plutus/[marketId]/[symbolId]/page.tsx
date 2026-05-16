@@ -25,6 +25,7 @@ import { useParams } from "next/navigation";
 import React, { ReactNode, useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { SymbolDetailSkeleton } from "@/app/(plutus)/plutus/[marketId]/[symbolId]/_components/symbol-detail-skeleton";
+import { NotFoundCard } from "@/components/shared/not-found-card";
 
 interface SymbolDetails {
   symbol: Symbol;
@@ -157,6 +158,10 @@ export default function SymbolDetail() {
       }) ?? [],
     [state.data?.trades.trades],
   );
+
+  if (state.status === "error" && !data) {
+    return <NotFoundCard title="Symbol not found" backHref={`/plutus/${marketId}`} backLabel="Back to Market" />;
+  }
 
   if (state.status === "loading" && !data) {
     return <SymbolDetailSkeleton />;

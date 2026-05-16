@@ -27,6 +27,7 @@ import { DetailSkeleton } from "@/components/shared/skeletons/detail-skeleton";
 import { FormSkeleton } from "@/components/shared/skeletons/form-skeleton";
 import { DataTableSkeleton } from "@/components/shared/skeletons/data-table-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
+import { NotFoundCard } from "@/components/shared/not-found-card";
 
 export default function GroupDetailPage() {
   const { marketId, groupId } = useParams<{
@@ -213,7 +214,7 @@ export default function GroupDetailPage() {
   }
 
   if (!group) {
-    return <div>Group not found</div>;
+    return <NotFoundCard title="Group not found" backHref={`/plutus/${marketId}/groups`} backLabel="Back to Groups" />;
   }
 
   return (

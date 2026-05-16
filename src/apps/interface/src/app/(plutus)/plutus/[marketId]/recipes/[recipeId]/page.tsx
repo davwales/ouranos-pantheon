@@ -18,6 +18,7 @@ import { RecipeSymbol } from "../types";
 import { DetailSkeleton } from "@/components/shared/skeletons/detail-skeleton";
 import { FormSkeleton } from "@/components/shared/skeletons/form-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
+import { NotFoundCard } from "@/components/shared/not-found-card";
 
 export default function RecipeDetailPage() {
   const { marketId, recipeId } = useParams<{
@@ -136,7 +137,7 @@ export default function RecipeDetailPage() {
   }
 
   if (!recipe) {
-    return <div>Recipe not found</div>;
+    return <NotFoundCard title="Recipe not found" backHref={`/plutus/${marketId}/recipes`} backLabel="Back to Recipes" />;
   }
 
   return (

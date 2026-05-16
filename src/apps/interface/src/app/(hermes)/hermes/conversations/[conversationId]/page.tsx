@@ -11,6 +11,7 @@ import { hermesApi } from "@/lib/api/hermes";
 import { useParams, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { ChatMessageSkeleton } from "@/components/shared/skeletons/chat-message-skeleton";
+import { NotFoundCard } from "@/components/shared/not-found-card";
 
 export default function ResumeConversationPage() {
   const { conversationId } = useParams<{ conversationId: string }>();
@@ -91,7 +92,7 @@ export default function ResumeConversationPage() {
     !resolvedPersona ||
     !resolvedModel
   ) {
-    return <div className="m-4">Failed to load conversation.</div>;
+    return <NotFoundCard title="Conversation not found" message="This conversation doesn't exist or has been removed." backHref="/hermes/conversations" backLabel="Back to Conversations" />;
   }
 
   return (
