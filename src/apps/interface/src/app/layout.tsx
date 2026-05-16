@@ -1,8 +1,8 @@
-import { Footer } from "@/app/components/footer";
-import { NavBarActionsProvider } from "@/app/components/nav-bar-actions-context";
-import { NavigationBarItem } from "@/app/components/responsive-navigation-bar";
-import ResponsiveNavigationBar from "@/app/components/responsive-navigation-bar/responsive-navigation-bar";
-import { ThemeProvider } from "@/app/components/theme-provider";
+import { Footer } from "@/components/shared/footer";
+import { NavBarActionsProvider } from "@/components/shared/nav-bar-actions-context";
+import { NavigationBarItem } from "@/components/shared/responsive-navigation-bar";
+import ResponsiveNavigationBar from "@/components/shared/responsive-navigation-bar/responsive-navigation-bar";
+import { ThemeProvider } from "@/components/shared/theme-provider";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
