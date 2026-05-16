@@ -18,10 +18,6 @@ export default function EditPersonaPage() {
 
   const [state] = useApi(() => hermesApi.getPersona(personaId), [personaId]);
 
-  if (state.status === "error" && !state.data) {
-    return <NotFoundCard title="Persona not found" backHref="/hermes/personas" backLabel="Back to Personas" />;
-  }
-
   const fetching = state.status === "loading";
 
   useEffect(() => {
@@ -29,6 +25,10 @@ export default function EditPersonaPage() {
       setPersona({ ...state.data });
     }
   }, [state]);
+
+  if (state.status === "error" && !state.data) {
+    return <NotFoundCard title="Persona not found" backHref="/hermes/personas" backLabel="Back to Personas" />;
+  }
 
   const handleDelete = async () => {
     setLoading(true);

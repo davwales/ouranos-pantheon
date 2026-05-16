@@ -18,10 +18,6 @@ export default function EditTraitPage() {
 
   const [state] = useApi(() => hermesApi.getTrait(traitId), [traitId]);
 
-  if (state.status === "error" && !state.data) {
-    return <NotFoundCard title="Trait not found" backHref="/hermes/traits" backLabel="Back to Traits" />;
-  }
-
   const fetching = state.status === "loading";
 
   useEffect(() => {
@@ -29,6 +25,10 @@ export default function EditTraitPage() {
       setTrait({ ...state.data });
     }
   }, [state]);
+
+  if (state.status === "error" && !state.data) {
+    return <NotFoundCard title="Trait not found" backHref="/hermes/traits" backLabel="Back to Traits" />;
+  }
 
   const handleDelete = async () => {
     setLoading(true);

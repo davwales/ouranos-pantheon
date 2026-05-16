@@ -20,10 +20,6 @@ export default function EditModelPage() {
 
   const [state] = useApi(() => hermesApi.getModel(modelId), [modelId]);
 
-  if (state.status === "error" && !state.data) {
-    return <NotFoundCard title="Model not found" backHref="/hermes/models" backLabel="Back to Models" />;
-  }
-
   const fetching = state.status === "loading";
 
   useEffect(() => {
@@ -31,6 +27,10 @@ export default function EditModelPage() {
       setModel({ ...state.data });
     }
   }, [state]);
+
+  if (state.status === "error" && !state.data) {
+    return <NotFoundCard title="Model not found" backHref="/hermes/models" backLabel="Back to Models" />;
+  }
 
   const handleDelete = async () => {
     setLoading(true);
