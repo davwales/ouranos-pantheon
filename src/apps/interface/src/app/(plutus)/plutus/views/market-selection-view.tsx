@@ -1,9 +1,6 @@
 "use client";
 
-// Views separate UI composition (Client Components) from data-fetching Server Components (page.tsx).
-// This pattern keeps page.tsx focused on data fetching and passing props down.
-
-import InfoCard from "@/components/shared/info-card";
+import { InfoCard } from "@/components/shared/info-card";
 import { Typography } from "@/components/shared/typography";
 import { useApi } from "@/hooks/use-api";
 import { plutusApi } from "@/lib/api/plutus";

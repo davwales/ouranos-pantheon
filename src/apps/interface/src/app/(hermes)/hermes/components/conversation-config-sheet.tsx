@@ -1,7 +1,7 @@
 "use client";
 
 import AutosizeTextarea from "@/components/shared/autosize-textarea";
-import InfoCard from "@/components/shared/info-card";
+import { InfoCard } from "@/components/shared/info-card";
 import { ContextUsageBar } from "@/app/(hermes)/hermes/components/context-usage-bar";
 import {
   ModelFormInput,

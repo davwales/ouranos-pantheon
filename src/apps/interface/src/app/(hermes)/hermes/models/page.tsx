@@ -1,6 +1,6 @@
 "use client";
 
-import InfoCard from "@/components/shared/info-card";
+import { InfoCard } from "@/components/shared/info-card";
 import { InfoCardGridSkeleton } from "@/components/shared/skeletons/info-card-skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

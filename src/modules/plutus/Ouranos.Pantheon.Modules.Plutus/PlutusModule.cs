@@ -342,6 +342,7 @@ public sealed class PlutusModule : IPantheonModule
     private static WebSocketWorker BuildFfxivWorker(IServiceProvider sp)
     {
         var wsOptions = sp.GetRequiredService<IOptions<FfxivDataLoaderOptions>>().Value.WebSocket;
+        var healthState = sp.GetService<WebSocketHealthState>();
 
         var converter = new BsonMessageConverter();
         var typeResolver = new ConstantTypeResolver(typeof(SaleMessage));
@@ -365,13 +366,16 @@ public sealed class PlutusModule : IPantheonModule
         return new WebSocketWorker(
             sp.GetRequiredService<ILogger<WebSocketWorker>>(),
             client,
-            Options.Create(wsOptions)
+            Options.Create(wsOptions),
+            "ffxiv",
+            healthState
         );
     }
 
     private static WebSocketWorker BuildStocksWorker(IServiceProvider sp)
     {
         var wsOptions = sp.GetRequiredService<IOptions<StocksDataLoaderOptions>>().Value.WebSocket;
+        var healthState = sp.GetService<WebSocketHealthState>();
 
         var typeMap = new Dictionary<string, Type>
         {
@@ -403,7 +407,9 @@ public sealed class PlutusModule : IPantheonModule
         return new WebSocketWorker(
             sp.GetRequiredService<ILogger<WebSocketWorker>>(),
             client,
-            Options.Create(wsOptions)
+            Options.Create(wsOptions),
+            "stocks",
+            healthState
         );
     }
 }

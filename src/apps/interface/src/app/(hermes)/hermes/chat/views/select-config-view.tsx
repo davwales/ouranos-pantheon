@@ -1,4 +1,4 @@
-import InfoCard from "@/components/shared/info-card";
+import { InfoCard } from "@/components/shared/info-card";
 import { ModelFormInput, PersonaFormInput } from "@/app/(hermes)/hermes/types";
 import { Button } from "@/components/ui/button";
 import { useApi } from "@/hooks/use-api";

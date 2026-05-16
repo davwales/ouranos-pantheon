@@ -1,4 +1,4 @@
-import InfoCard from "@/components/shared/info-card";
+import { InfoCard } from "@/components/shared/info-card";
 import MarketOverview from "@/app/(plutus)/plutus/[marketId]/_components/market-overview";
 import { plutusApi } from "@/lib/api/plutus";
 import { notFound } from "next/navigation";
