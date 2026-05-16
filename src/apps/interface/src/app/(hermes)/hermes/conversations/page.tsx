@@ -1,6 +1,6 @@
 "use client";
 
-import InfoCard from "@/components/shared/info-card";
+import { InfoCard } from "@/components/shared/info-card";
 import { InfoCardGridSkeleton } from "@/components/shared/skeletons/info-card-skeleton";
 import { useApi } from "@/hooks/use-api";
 import { hermesApi } from "@/lib/api/hermes";

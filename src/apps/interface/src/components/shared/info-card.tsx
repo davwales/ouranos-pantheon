@@ -2,7 +2,7 @@ import { Typography } from "@/components/shared/typography";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 
-export default function InfoCard({
+export function InfoCard({
   label,
   description,
   iconSrc,

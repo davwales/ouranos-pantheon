@@ -1,4 +1,4 @@
-import InfoCard from "@/components/shared/info-card";
+import { InfoCard } from "@/components/shared/info-card";
 import Link from "next/link";
 
 export default function Hermes() {

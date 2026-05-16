@@ -15,3 +15,4 @@ export { DetailSkeleton } from "./detail-skeleton";
 export { FormSkeleton } from "./form-skeleton";
 export { ChatMessageSkeleton } from "./chat-message-skeleton";
 export { ChartSkeleton } from "./chart-skeleton";
+export { HealthDashboardSkeleton } from "./health-dashboard-skeleton";

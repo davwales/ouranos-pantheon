@@ -5,9 +5,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Features.Health;
+using Ouranos.Pantheon.Modules.Shared.Features.Health.Checks;
 using Ouranos.Pantheon.Modules.Shared.Infra.Flagsmith;
 using Ouranos.Pantheon.Modules.Shared.Infra.Postgres;
 using Ouranos.Pantheon.Modules.Shared.Infra.RabbitMq;
+using Ouranos.Pantheon.Modules.Shared.WebSockets;
 using Serilog;
 using TickerQ.Dashboard.DependencyInjection;
 using TickerQ.DependencyInjection;
@@ -113,6 +116,15 @@ public static class CoreExtensions
         });
 
         builder.Services.AddMemoryCache().AddSerilog();
+
+        builder
+            .Services.AddSingleton<WebSocketHealthState>()
+            .Configure<HealthOptions>(configuration.GetSection(HealthOptions.SectionName))
+            .AddSingleton<IHealthCheck, PostgresHealthCheck>()
+            .AddSingleton<IHealthCheck, RabbitMqHealthCheck>()
+            .AddSingleton<IHealthCheck, OuranosMlHealthCheck>()
+            .AddSingleton<IHealthCheck, WebSocketHealthCheck>()
+            .AddSingleton<IHealthCheck, TickerQHealthCheck>();
 
         return builder;
     }

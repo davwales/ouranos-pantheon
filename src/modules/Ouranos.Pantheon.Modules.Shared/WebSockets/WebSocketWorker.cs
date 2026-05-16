@@ -6,25 +6,19 @@ using Ouranos.Pantheon.Modules.Shared.WebSockets.WebSocketClients;
 
 namespace Ouranos.Pantheon.Modules.Shared.WebSockets;
 
-public sealed class WebSocketWorker : BackgroundService
+public sealed class WebSocketWorker(
+    ILogger<WebSocketWorker> logger,
+    IWebSocketClient client,
+    IOptions<WebSocketOptions> options,
+    string workerName = "unknown",
+    WebSocketHealthState? health = null
+) : BackgroundService
 {
-    private readonly IWebSocketClient _client;
-    private readonly ILogger<WebSocketWorker> _logger;
-    private readonly IOptions<WebSocketOptions> _options;
-
-    public WebSocketWorker(
-        ILogger<WebSocketWorker> logger,
-        IWebSocketClient client,
-        IOptions<WebSocketOptions> options
-    )
-    {
-        Guard.Against.Null(logger);
-        Guard.Against.Null(client);
-
-        _logger = logger;
-        _client = client;
-        _options = options;
-    }
+    private readonly IWebSocketClient _client = Guard.Against.Null(client);
+    private readonly ILogger<WebSocketWorker> _logger = Guard.Against.Null(logger);
+    private readonly IOptions<WebSocketOptions> _options = options;
+    private readonly WebSocketHealthState? _health = health;
+    private readonly string _workerName = workerName;
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
@@ -70,16 +64,19 @@ public sealed class WebSocketWorker : BackgroundService
 
             await _client.ConnectAsync(cancellationToken);
             _logger.LogInformation("WebSocketWorker connected to '{host}'.", _options.Value.Host);
+            _health?.Report(_workerName, true);
 
             await MonitorConnectionAsync(cancellationToken);
             return true;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
+            _health?.Report(_workerName, false);
             return false;
         }
         catch (Exception ex)
         {
+            _health?.Report(_workerName, false);
             _logger.LogError(
                 ex,
                 "WebSocketWorker error for '{host}', reconnecting in {delay}s.",
@@ -102,6 +99,7 @@ public sealed class WebSocketWorker : BackgroundService
 
         if (!cancellationToken.IsCancellationRequested)
         {
+            _health?.Report(_workerName, false);
             _logger.LogWarning(
                 "WebSocketWorker lost connection to '{host}', reconnecting.",
                 _options.Value.Host

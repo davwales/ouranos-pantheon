@@ -1,11 +1,11 @@
-import { Typography } from "@/components/shared/typography";
+import { AppOverview } from "./_components/app-overview";
+import { HealthDashboard } from "./_components/health-dashboard";
 
 export default function Home() {
   return (
-    <div className="p-4">
-      <Typography>
-        This is the landing page.
-      </Typography>
+    <div className="m-4 space-y-6">
+      <AppOverview />
+      <HealthDashboard />
     </div>
-  )
+  );
 }
