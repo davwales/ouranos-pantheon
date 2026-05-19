@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-// Proxy scaffold — add auth guards, rewrites, CSP headers, etc. here.
+// Proxy scaffold - add auth guards, rewrites, CSP headers, etc. here.
 export function proxy(request: NextRequest) {
   return NextResponse.next();
 }

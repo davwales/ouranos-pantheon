@@ -63,6 +63,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketOverview;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketTrades;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetRecipeTrades;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetSymbolTrades;
+using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetVolumeHeatmap;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.MarketOverviewBucket;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.MarketTradeSnapshot;
 using Ouranos.Pantheon.Modules.Plutus.Shared;
@@ -131,6 +132,7 @@ public sealed class PlutusModule : IPantheonModule
         GetMarketTradesEndpoint.Map(app);
         GetMarketOverviewEndpoint.Map(app);
         GetAllTradesEndpoint.Map(app);
+        GetVolumeHeatmapEndpoint.Map(app);
         GetRecipeTradesEndpoint.Map(app);
         GetSymbolTradesEndpoint.Map(app);
 

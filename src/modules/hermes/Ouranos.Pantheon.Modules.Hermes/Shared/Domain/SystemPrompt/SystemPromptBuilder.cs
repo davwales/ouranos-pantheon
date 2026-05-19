@@ -157,7 +157,7 @@ public sealed class SystemPromptBuilder
             $"""
             ## Persona
 
-            You are acting as a character defined below. Adopt this persona fully — respond in their voice, reflect their knowledge and mannerisms, and stay in character throughout the conversation.
+            You are acting as a character defined below. Adopt this persona fully - respond in their voice, reflect their knowledge and mannerisms, and stay in character throughout the conversation.
 
             **Name:** {_personaName}
             **Description:** {_personaDescription}

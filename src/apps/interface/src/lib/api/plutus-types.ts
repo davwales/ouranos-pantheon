@@ -94,6 +94,17 @@ export interface GetMarketOverviewResponse {
   trades: MarketOverviewBucket[];
 }
 
+export interface HeatmapCell {
+  dayOfWeek: number;
+  hour: number;
+  totalTrades: number;
+  percentage: number;
+}
+
+export interface GetVolumeHeatmapResponse {
+  rows: HeatmapCell[];
+}
+
 export interface GetDailySymbolSummaryResponse {
   averagePrice: number;
   minPrice: number;
