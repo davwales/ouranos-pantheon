@@ -1,6 +1,6 @@
 import coreWebVitalsConfig from "eslint-config-next/core-web-vitals";
 
-export default [
+const eslintConfig = [
   ...coreWebVitalsConfig,
   {
     // TanStack Table v8 is incompatible with the React Compiler. The affected
@@ -12,3 +12,5 @@ export default [
     },
   },
 ];
+
+export default eslintConfig;

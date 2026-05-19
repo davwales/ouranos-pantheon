@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   SelectedSymbol,
   SymbolSearch,
@@ -31,24 +31,15 @@ function QuantityInput({
   onValueCommit: (value: number) => void;
 }) {
   const [rawValue, setRawValue] = useState(String(initialValue));
-  const [committedValue, setCommittedValue] = useState(initialValue);
-
-  useEffect(() => {
-    if (initialValue !== committedValue) {
-      setRawValue(String(initialValue));
-      setCommittedValue(initialValue);
-    }
-  }, [initialValue, committedValue]);
 
   const handleBlur = () => {
     const parsed = parseFloat(rawValue);
     if (isNaN(parsed)) {
-      setRawValue(String(committedValue));
+      setRawValue(String(initialValue));
       return;
     }
     const clamped = Math.max(1, parsed);
-    if (clamped !== committedValue) {
-      setCommittedValue(clamped);
+    if (clamped !== initialValue) {
       onValueCommit(clamped);
     }
     setRawValue(String(clamped));
@@ -149,6 +140,7 @@ export function SymbolTable({
         accessorFn: (row: TableSymbol) => row.quantity,
         cell: ({ row }) => (
           <QuantityInput
+            key={`${row.original.symbolId}-${row.original.quantity}`}
             initialValue={row.original.quantity}
             onValueCommit={(quantity) =>
               handleQuantityChange(row.original, quantity)
