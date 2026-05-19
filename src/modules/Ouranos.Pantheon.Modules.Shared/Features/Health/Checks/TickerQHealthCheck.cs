@@ -37,15 +37,22 @@ public sealed class TickerQHealthCheck(
 
         if (enabledTickers.Count == 0)
         {
+            var zeroData = new TickerQHealthData(0, 0, 0, 0, 0);
+
             return new HealthCheckResult(
                 HealthStatus.NotConfigured,
                 "No enabled tickers found",
-                DateTime.UtcNow
+                DateTime.UtcNow,
+                zeroData
             );
         }
 
         var overallStatus = HealthStatus.Healthy;
         var details = new List<string>();
+        var healthy = 0;
+        var failed = 0;
+        var overdue = 0;
+        var neverRan = 0;
 
         foreach (var ticker in enabledTickers)
         {
@@ -60,6 +67,7 @@ public sealed class TickerQHealthCheck(
             {
                 overallStatus = WorstOf(overallStatus, HealthStatus.Degraded);
                 details.Add($"{ticker.Description ?? ticker.Function}: never ran");
+                neverRan++;
                 continue;
             }
 
@@ -71,6 +79,7 @@ public sealed class TickerQHealthCheck(
                 details.Add(
                     $"{ticker.Description ?? ticker.Function}: last run failed — {latest.ExceptionMessage}"
                 );
+                failed++;
                 continue;
             }
 
@@ -84,13 +93,23 @@ public sealed class TickerQHealthCheck(
                 details.Add(
                     $"{ticker.Description ?? ticker.Function}: overdue (status {latest.Status})"
                 );
+                overdue++;
                 continue;
             }
 
             details.Add($"{ticker.Description ?? ticker.Function}: healthy");
+            healthy++;
         }
 
         var description = string.Join("; ", details);
+
+        var data = new TickerQHealthData(
+            Healthy: healthy,
+            Failed: failed,
+            Overdue: overdue,
+            NeverRan: neverRan,
+            Total: enabledTickers.Count
+        );
 
         _logger.LogDebug(
             "TickerQ health check result: {Status} — {Description}.",
@@ -98,7 +117,7 @@ public sealed class TickerQHealthCheck(
             description
         );
 
-        return new HealthCheckResult(overallStatus, description, DateTime.UtcNow);
+        return new HealthCheckResult(overallStatus, description, DateTime.UtcNow, data);
     }
 
     private static HealthStatus WorstOf(HealthStatus current, HealthStatus candidate)

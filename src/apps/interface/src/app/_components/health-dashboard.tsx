@@ -18,6 +18,7 @@ function transformHealthResponse(dto: GetHealthResponseDto): HealthSummary {
     resource,
     status: check.status,
     detail: check.description,
+    data: check.data,
   }));
   return {
     overallStatus: dto.status,
@@ -56,7 +57,7 @@ export function HealthDashboard() {
   }, [fetchHealth]);
 
   const isLoading = state.status === "loading";
-  const data = state.status === "success" ? state.data : state.data;
+  const data = state.data;
   const error = state.status === "error" ? state.error : null;
 
   return (

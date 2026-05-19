@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   SelectedSymbol,
   SymbolSearch,
@@ -30,16 +30,19 @@ function QuantityInput({
   initialValue: number;
   onValueCommit: (value: number) => void;
 }) {
-  const [value, setValue] = useState(initialValue);
-
-  useEffect(() => {
-    setValue(initialValue);
-  }, [initialValue]);
+  const [rawValue, setRawValue] = useState(String(initialValue));
 
   const handleBlur = () => {
-    if (value !== initialValue) {
-      onValueCommit(value);
+    const parsed = parseFloat(rawValue);
+    if (isNaN(parsed)) {
+      setRawValue(String(initialValue));
+      return;
     }
+    const clamped = Math.max(1, parsed);
+    if (clamped !== initialValue) {
+      onValueCommit(clamped);
+    }
+    setRawValue(String(clamped));
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -50,12 +53,13 @@ function QuantityInput({
 
   return (
     <Input
-      value={value}
-      onChange={(e) => setValue(Number(e.target.value))}
+      value={rawValue}
+      onChange={(e) => setRawValue(e.target.value)}
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
       min={1}
-      type="number"
+      type="text"
+      inputMode="numeric"
     />
   );
 }
@@ -136,6 +140,7 @@ export function SymbolTable({
         accessorFn: (row: TableSymbol) => row.quantity,
         cell: ({ row }) => (
           <QuantityInput
+            key={`${row.original.symbolId}-${row.original.quantity}`}
             initialValue={row.original.quantity}
             onValueCommit={(quantity) =>
               handleQuantityChange(row.original, quantity)

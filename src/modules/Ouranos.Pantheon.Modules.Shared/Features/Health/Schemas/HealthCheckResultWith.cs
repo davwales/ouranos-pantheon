@@ -4,5 +4,6 @@ internal sealed record HealthCheckResultWith(
     string Name,
     HealthStatus Status,
     string Description,
-    DateTime Timestamp
+    DateTime Timestamp,
+    object? Data = null
 );
