@@ -77,7 +77,7 @@ public sealed class TickerQHealthCheck(
             {
                 overallStatus = WorstOf(overallStatus, HealthStatus.Unhealthy);
                 details.Add(
-                    $"{ticker.Description ?? ticker.Function}: last run failed — {latest.ExceptionMessage}"
+                    $"{ticker.Description ?? ticker.Function}: last run failed - {latest.ExceptionMessage}"
                 );
                 failed++;
                 continue;
@@ -112,7 +112,7 @@ public sealed class TickerQHealthCheck(
         );
 
         _logger.LogDebug(
-            "TickerQ health check result: {Status} — {Description}.",
+            "TickerQ health check result: {Status} - {Description}.",
             overallStatus,
             description
         );

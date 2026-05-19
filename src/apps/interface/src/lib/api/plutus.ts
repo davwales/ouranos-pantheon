@@ -11,6 +11,7 @@ export type {
   GetSymbolTradesResponse,
   MarketOverviewBucket,
   GetMarketOverviewResponse,
+  GetVolumeHeatmapResponse,
   GetDailySymbolSummaryResponse,
   ForecastPoint,
   ForecastPrediction,
@@ -62,6 +63,7 @@ import type {
   GetMarketTradesRow,
   GetRecipeTradesRow,
   GetMarketOverviewResponse,
+  GetVolumeHeatmapResponse,
   GetSymbolTradesResponse,
   GetDailySymbolSummaryResponse,
   GetSymbolSignalsResponse,
@@ -148,6 +150,12 @@ export const plutusApi = {
     api.get<GetMarketOverviewResponse>(
       `/api/plutus/markets/${marketId}/overview`,
       { timeFrame, numBuckets },
+    ),
+
+  getVolumeHeatmap: (marketId: string, lookbackWeeks?: number) =>
+    api.get<GetVolumeHeatmapResponse>(
+      `/api/plutus/markets/${marketId}/volume-heatmap`,
+      lookbackWeeks !== undefined ? { lookbackWeeks } : undefined,
     ),
 
   getSymbolTrades: (

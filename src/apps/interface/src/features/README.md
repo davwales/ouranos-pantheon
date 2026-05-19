@@ -14,10 +14,10 @@ src/features/<feature-name>/
 
 ## Examples
 
-- `auth/` — Authentication guards, login/logout flows
-- `notifications/` — Toast/alert system
-- `settings/` — User preferences
-- `analytics/` — Page view tracking
+- `auth/` - Authentication guards, login/logout flows
+- `notifications/` - Toast/alert system
+- `settings/` - User preferences
+- `analytics/` - Page view tracking
 
 ## Guidelines
 

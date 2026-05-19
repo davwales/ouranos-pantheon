@@ -46,7 +46,7 @@ export function HealthSummaryCard({
 
       {error && checks && (
         <Typography variant="muted" className="text-amber-600">
-          Last update failed — showing cached data.
+          Last update failed - showing cached data.
         </Typography>
       )}
 

@@ -1,5 +1,6 @@
 import { InfoCard } from "@/components/shared/info-card";
 import MarketOverview from "@/app/(plutus)/plutus/[marketId]/_components/market-overview";
+import VolumeHeatmap from "@/app/(plutus)/plutus/[marketId]/_components/volume-heatmap";
 import { plutusApi } from "@/lib/api/plutus";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -74,6 +75,8 @@ export default async function MarketLanding({
   return (
     <div className="space-y-6">
       <MarketOverview marketId={marketId} />
+
+      <VolumeHeatmap marketId={marketId} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {features.map((feature, i) => (

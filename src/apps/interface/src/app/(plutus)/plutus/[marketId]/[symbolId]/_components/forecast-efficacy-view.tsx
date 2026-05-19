@@ -10,7 +10,7 @@ import { useMemo, useState } from "react";
 import { ForecastEfficacySkeleton } from "@/app/(plutus)/plutus/[marketId]/[symbolId]/_components/forecast-efficacy-skeleton";
 
 function formatPercent(value: number | null): string {
-  if (value === null) return "—";
+  if (value === null) return "-";
   return `${(value * 100).toFixed(1)}%`;
 }
 
@@ -20,7 +20,7 @@ function biasColor(bias: number | null): string {
 }
 
 function formatBias(bias: number | null): string {
-  if (bias === null) return "—";
+  if (bias === null) return "-";
   const prefix = bias > 0 ? "+" : "";
   return `${prefix}${bias.toFixed(2)}`;
 }
@@ -79,7 +79,7 @@ function ModelCard({ row }: { row: ForecastEfficacyRow }) {
             value={
               row.meanAbsoluteError !== null
                 ? abbreviateNumber(row.meanAbsoluteError, 2)
-                : "—"
+                : "-"
             }
           />
         </div>
