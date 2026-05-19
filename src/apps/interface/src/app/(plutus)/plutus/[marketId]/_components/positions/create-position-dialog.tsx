@@ -4,6 +4,7 @@ import { ResponsiveDialog } from "@/components/shared/responsive-dialog/responsi
 import { SymbolSelect } from "@/app/(plutus)/plutus/components/symbol-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/shared/numeric-input";
 import { type PositionSide, plutusApi } from "@/lib/api/plutus";
 import { useEffect, useState } from "react";
 
@@ -136,29 +137,19 @@ export function CreatePositionDialog({
           </div>
         </div>
         <div className="space-y-1">
-          <label className="text-sm font-medium block">Cost</label>
-          <Input
-            type="number"
-            value={cost ?? ""}
-            onChange={(e) => {
-              const v =
-                e.target.value === "" ? null : parseFloat(e.target.value);
-              setCost(v == null || isNaN(v) ? null : v);
-            }}
+          <NumericInput
+            label="Cost"
+            value={cost}
+            onChange={setCost}
             min={0}
             step={0.01}
           />
         </div>
         <div className="space-y-1">
-          <label className="text-sm font-medium block">Quantity</label>
-          <Input
-            type="number"
-            value={quantity ?? ""}
-            onChange={(e) => {
-              const v =
-                e.target.value === "" ? null : parseFloat(e.target.value);
-              setQuantity(v == null || isNaN(v) ? null : v);
-            }}
+          <NumericInput
+            label="Quantity"
+            value={quantity}
+            onChange={setQuantity}
             min={1}
             step={1}
           />

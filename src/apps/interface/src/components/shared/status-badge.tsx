@@ -7,10 +7,10 @@ interface StatusBadgeProps {
 }
 
 const STATUS_CLASSES: Record<HealthStatus, string> = {
-  Healthy: "bg-green-100 text-green-800",
-  Degraded: "bg-amber-100 text-amber-800",
-  Unhealthy: "bg-red-100 text-red-800",
-  NotConfigured: "bg-gray-100 text-gray-500",
+  Healthy: "bg-green-500/15 text-green-700 dark:bg-green-500/20 dark:text-green-300",
+  Degraded: "bg-amber-500/15 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300",
+  Unhealthy: "bg-red-500/15 text-red-700 dark:bg-red-500/20 dark:text-red-300",
+  NotConfigured: "bg-muted text-muted-foreground",
 };
 
 export function StatusBadge({ status }: StatusBadgeProps) {

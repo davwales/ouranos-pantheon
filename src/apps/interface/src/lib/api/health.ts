@@ -6,6 +6,7 @@ export interface HealthCheckResultDto {
   status: HealthStatus;
   description: string;
   timestamp: string;
+  data?: Record<string, unknown>;
 }
 
 export interface GetHealthResponseDto {
@@ -17,6 +18,7 @@ export interface HealthCheckRow {
   resource: string;
   status: HealthStatus;
   detail: string;
+  data?: Record<string, unknown>;
 }
 
 export interface HealthSummary {

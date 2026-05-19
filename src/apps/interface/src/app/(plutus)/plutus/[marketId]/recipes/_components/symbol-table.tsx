@@ -30,16 +30,28 @@ function QuantityInput({
   initialValue: number;
   onValueCommit: (value: number) => void;
 }) {
-  const [value, setValue] = useState(initialValue);
+  const [rawValue, setRawValue] = useState(String(initialValue));
+  const [committedValue, setCommittedValue] = useState(initialValue);
 
   useEffect(() => {
-    setValue(initialValue);
-  }, [initialValue]);
+    if (initialValue !== committedValue) {
+      setRawValue(String(initialValue));
+      setCommittedValue(initialValue);
+    }
+  }, [initialValue, committedValue]);
 
   const handleBlur = () => {
-    if (value !== initialValue) {
-      onValueCommit(value);
+    const parsed = parseFloat(rawValue);
+    if (isNaN(parsed)) {
+      setRawValue(String(committedValue));
+      return;
     }
+    const clamped = Math.max(1, parsed);
+    if (clamped !== committedValue) {
+      setCommittedValue(clamped);
+      onValueCommit(clamped);
+    }
+    setRawValue(String(clamped));
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -50,12 +62,13 @@ function QuantityInput({
 
   return (
     <Input
-      value={value}
-      onChange={(e) => setValue(Number(e.target.value))}
+      value={rawValue}
+      onChange={(e) => setRawValue(e.target.value)}
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
       min={1}
-      type="number"
+      type="text"
+      inputMode="numeric"
     />
   );
 }

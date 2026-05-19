@@ -46,7 +46,6 @@ export default function RecipeDetailPage() {
   );
 
   const recipe = state.data;
-  const fetching = state.status === "loading";
 
   useEffect(() => {
     if (recipe) {
@@ -95,7 +94,11 @@ export default function RecipeDetailPage() {
     }
   };
 
-  if (fetching) {
+  if (state.status === "error" && !recipe) {
+    return <NotFoundCard title="Recipe not found" backHref={`/plutus/${marketId}/recipes`} backLabel="Back to Recipes" />;
+  }
+
+  if (state.status === "loading" && !recipe) {
     return (
       <div aria-hidden="true">
         <DetailSkeleton sections={["header"]} />
@@ -134,10 +137,6 @@ export default function RecipeDetailPage() {
         </div>
       </div>
     );
-  }
-
-  if (!recipe) {
-    return <NotFoundCard title="Recipe not found" backHref={`/plutus/${marketId}/recipes`} backLabel="Back to Recipes" />;
   }
 
   return (

@@ -3,6 +3,7 @@ import { HealthDashboardSkeleton } from "@/components/shared/skeletons/health-da
 import { Typography } from "@/components/shared/typography";
 import { Button } from "@/components/ui/button";
 import type { HealthStatus, HealthCheckRow } from "@/lib/api/health";
+import { HealthCheckCard } from "./health-check-card";
 
 interface HealthSummaryCardProps {
   overallStatus: HealthStatus | null;
@@ -31,10 +32,9 @@ export function HealthSummaryCard({
 }: HealthSummaryCardProps) {
   return (
     <div className="space-y-4">
-      {/* Header row with title, overall badge, and last-checked timestamp */}
       <div className="flex items-center gap-2 justify-between flex-wrap">
         <div className="flex items-center gap-2 flex-wrap">
-          <Typography variant="lead">System Health</Typography>
+          <Typography variant="h4">System Health</Typography>
           {overallStatus && <StatusBadge status={overallStatus} />}
         </div>
         {lastCheckedAt && (
@@ -44,17 +44,14 @@ export function HealthSummaryCard({
         )}
       </div>
 
-      {/* Stale-data warning */}
       {error && checks && (
         <Typography variant="muted" className="text-amber-600">
           Last update failed — showing cached data.
         </Typography>
       )}
 
-      {/* Loading state */}
       {isLoading && !checks && <HealthDashboardSkeleton />}
 
-      {/* Error state with no cached data */}
       {error && !checks && !isLoading && (
         <div className="space-y-2">
           <Typography variant="muted" className="text-destructive">
@@ -66,24 +63,23 @@ export function HealthSummaryCard({
         </div>
       )}
 
-      {/* Health check rows */}
       {checks && checks.length > 0 && (
-        <div className="space-y-0 divide-y">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {checks.map((check) => (
-            <div
+            <HealthCheckCard
               key={check.resource}
-              className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-2 md:gap-4 py-3 items-center"
-            >
-              <Typography variant="small">
-                {RESOURCE_LABELS[check.resource] ?? check.resource}
-              </Typography>
-              <StatusBadge status={check.status} />
-              <Typography variant="muted" className="md:text-right">
-                {check.detail}
-              </Typography>
-            </div>
+              resource={check.resource}
+              label={RESOURCE_LABELS[check.resource] ?? check.resource}
+              status={check.status}
+              detail={check.detail}
+              data={check.data}
+            />
           ))}
         </div>
+      )}
+
+      {checks && checks.length === 0 && (
+        <Typography variant="muted">No health checks registered.</Typography>
       )}
     </div>
   );

@@ -1,4 +1,7 @@
+"use client";
+
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/shared/numeric-input";
 
 export function RecipeForm({
   name,
@@ -23,12 +26,12 @@ export function RecipeForm({
       </div>
 
       <div>
-        <label className="text-sm font-medium">Cost</label>
-        <Input
+        <NumericInput
+          label="Cost"
           value={cost}
-          onChange={(e) => onCostChange(Number(e.target.value))}
-          className="mt-1"
-          type="number"
+          onChange={(v) => onCostChange(v ?? 0)}
+          min={0}
+          step={0.01}
         />
       </div>
     </div>

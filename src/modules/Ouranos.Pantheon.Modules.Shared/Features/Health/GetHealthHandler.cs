@@ -44,7 +44,7 @@ public sealed class GetHealthHandler : IPantheonHandler<GetHealthRequest, GetHea
 
         var checksDict = results.ToDictionary(
             r => r.Name,
-            r => new HealthCheckResult(r.Status, r.Description, r.Timestamp)
+            r => new HealthCheckResult(r.Status, r.Description, r.Timestamp, r.Data)
         );
 
         var overallStatus = ComputeOverallStatus(checksDict.Values);
@@ -71,7 +71,8 @@ public sealed class GetHealthHandler : IPantheonHandler<GetHealthRequest, GetHea
                 check.Name,
                 result.Status,
                 result.Description,
-                result.Timestamp
+                result.Timestamp,
+                result.Data
             );
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
@@ -86,7 +87,8 @@ public sealed class GetHealthHandler : IPantheonHandler<GetHealthRequest, GetHea
                 check.Name,
                 HealthStatus.Unhealthy,
                 $"Timed out after {timeoutSeconds}s",
-                DateTime.UtcNow
+                DateTime.UtcNow,
+                null
             );
         }
         catch (Exception ex)
@@ -97,7 +99,8 @@ public sealed class GetHealthHandler : IPantheonHandler<GetHealthRequest, GetHea
                 check.Name,
                 HealthStatus.Unhealthy,
                 ex.Message,
-                DateTime.UtcNow
+                DateTime.UtcNow,
+                null
             );
         }
     }

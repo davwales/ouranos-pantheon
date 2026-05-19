@@ -52,7 +52,6 @@ export default function GroupDetailPage() {
   );
 
   const group = state.data;
-  const fetching = state.status === "loading";
 
   useEffect(() => {
     if (group) {
@@ -197,7 +196,11 @@ export default function GroupDetailPage() {
     [marketId],
   );
 
-  if (fetching) {
+  if (state.status === "error" && !group) {
+    return <NotFoundCard title="Group not found" backHref={`/plutus/${marketId}/groups`} backLabel="Back to Groups" />;
+  }
+
+  if (state.status === "loading" && !group) {
     return (
       <div aria-hidden="true">
         <DetailSkeleton sections={["header"]} />
@@ -211,10 +214,6 @@ export default function GroupDetailPage() {
         </div>
       </div>
     );
-  }
-
-  if (!group) {
-    return <NotFoundCard title="Group not found" backHref={`/plutus/${marketId}/groups`} backLabel="Back to Groups" />;
   }
 
   return (
