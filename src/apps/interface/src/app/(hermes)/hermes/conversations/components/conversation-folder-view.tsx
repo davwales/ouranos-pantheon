@@ -33,7 +33,7 @@ export function ConversationFolderView({
   onDropConversation: (
     conversationId: string,
     folderId: string | null,
-  ) => void;
+  ) => Promise<void>;
 }) {
   const currentFolder = useMemo(
     () => allFolders.find((f) => f.id === currentFolderId) ?? null,
