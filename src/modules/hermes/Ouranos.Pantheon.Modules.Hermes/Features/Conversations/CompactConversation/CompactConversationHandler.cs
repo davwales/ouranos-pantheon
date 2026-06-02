@@ -61,6 +61,19 @@ public sealed class CompactConversationHandler
         );
         cancellationToken.ThrowIfCancellationRequested();
 
+        if (command.ConversationId is not null)
+        {
+            await using var authContext = await _dbContextFactory.CreateDbContextAsync(
+                cancellationToken
+            );
+
+            var conversation = await authContext
+                .Conversations.AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == command.ConversationId, cancellationToken);
+
+            Guard.Against.NotFound(command.ConversationId.Value, conversation);
+        }
+
         Guard.Against.Null(command.Messages, nameof(command.Messages));
 
         var lastSummaryIndex = command.Messages.FindLastIndex(m => m.Role == Role.Summary);

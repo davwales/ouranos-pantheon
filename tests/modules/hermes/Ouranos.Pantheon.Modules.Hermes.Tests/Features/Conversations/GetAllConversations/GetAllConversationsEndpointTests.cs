@@ -14,20 +14,24 @@ public sealed class GetAllConversationsEndpointTests
     {
         // Arrange
         var ct = CancellationToken.None;
-        var input = new GetAllConversationsInput();
+        var parameters = new GetAllConversationsInput();
         var expected = new List<GetAllConversationsResponse>();
 
         _bus.InvokeAsync<List<GetAllConversationsResponse>>(
-                Arg.Any<object>(),
+                Arg.Any<GetAllConversationsInput>(),
                 Arg.Any<CancellationToken>()
             )
             .Returns(Task.FromResult(expected));
 
         // Act
-        var result = await GetAllConversationsEndpoint.Handle(input, _bus, ct);
+        var result = await GetAllConversationsEndpoint.Handle(parameters, _bus, ct);
 
         // Assert
         result.ShouldBeOfType<Ok<List<GetAllConversationsResponse>>>();
-        await _bus.Received(1).InvokeAsync<List<GetAllConversationsResponse>>(input, ct);
+        await _bus.Received(1)
+            .InvokeAsync<List<GetAllConversationsResponse>>(
+                Arg.Any<GetAllConversationsInput>(),
+                ct
+            );
     }
 }

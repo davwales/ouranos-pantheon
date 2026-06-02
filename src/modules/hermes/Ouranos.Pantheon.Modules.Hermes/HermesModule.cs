@@ -8,6 +8,11 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GetAllConversations;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GetConversation;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.UpdateConversation;
+using Ouranos.Pantheon.Modules.Hermes.Features.Folders.CreateFolder;
+using Ouranos.Pantheon.Modules.Hermes.Features.Folders.DeleteFolder;
+using Ouranos.Pantheon.Modules.Hermes.Features.Folders.GetAllFolders;
+using Ouranos.Pantheon.Modules.Hermes.Features.Folders.GetFolder;
+using Ouranos.Pantheon.Modules.Hermes.Features.Folders.UpdateFolder;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.CreateModel;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.DeleteModel;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.GetAllModels;
@@ -83,5 +88,11 @@ public sealed class HermesModule : IPantheonModule
         CreateTraitEndpoint.Map(app);
         UpdateTraitEndpoint.Map(app);
         DeleteTraitEndpoint.Map(app);
+
+        GetAllFoldersEndpoint.Map(app);
+        GetFolderEndpoint.Map(app);
+        CreateFolderEndpoint.Map(app);
+        UpdateFolderEndpoint.Map(app);
+        DeleteFolderEndpoint.Map(app);
     }
 }

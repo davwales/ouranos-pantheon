@@ -10,27 +10,15 @@ using Ouranos.Pantheon.Modules.Shared.Application;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GetConversation;
 
-public sealed class GetConversationHandler
-    : IPantheonHandler<GetConversationInput, GetConversationResponse>
+public sealed class GetConversationHandler(
+    ILogger<GetConversationHandler> logger,
+    HermesDbContext dbContext,
+    IFlagsmithClient flagsmith
+) : IPantheonHandler<GetConversationInput, GetConversationResponse>
 {
-    private readonly HermesDbContext _dbContext;
-    private readonly IFlagsmithClient _flagsmith;
-    private readonly ILogger<GetConversationHandler> _logger;
-
-    public GetConversationHandler(
-        ILogger<GetConversationHandler> logger,
-        HermesDbContext dbContext,
-        IFlagsmithClient flagsmith
-    )
-    {
-        Guard.Against.Null(logger);
-        Guard.Against.Null(dbContext);
-        Guard.Against.Null(flagsmith);
-
-        _logger = logger;
-        _dbContext = dbContext;
-        _flagsmith = flagsmith;
-    }
+    private readonly HermesDbContext _dbContext = Guard.Against.Null(dbContext);
+    private readonly IFlagsmithClient _flagsmith = Guard.Against.Null(flagsmith);
+    private readonly ILogger<GetConversationHandler> _logger = Guard.Against.Null(logger);
 
     public async Task<GetConversationResponse> Handle(
         GetConversationInput query,
@@ -44,18 +32,18 @@ public sealed class GetConversationHandler
             .Conversations.Include(c => c.Persona)
             .Include(c => c.ModelConfig)
             .Include(c => c.Traits)
+            .Include(c => c.Folder)
             .Include(c => c.Messages.OrderBy(m => m.SortOrder))
             .FirstOrDefaultAsync(c => c.Id == query.ConversationId, cancellationToken);
 
         Guard.Against.NotFound(query.ConversationId, conversation);
 
-        if (!conversation.IsPublic)
+        var flags = await _flagsmith.GetEnvironmentFlags();
+        var isPublicMode = await flags.IsFeatureEnabled(HermesFeatureFlags.PublicMode);
+
+        if (isPublicMode && (!conversation.IsPublic || conversation.Folder?.IsPublic == false))
         {
-            var flags = await _flagsmith.GetEnvironmentFlags();
-            if (await flags.IsFeatureEnabled(HermesFeatureFlags.PublicMode))
-            {
-                Guard.Against.NotFound(query.ConversationId, (Conversation?)null);
-            }
+            Guard.Against.NotFound(query.ConversationId, (Conversation?)null);
         }
 
         _logger.LogDebug("Successfully handled get conversation request.");
@@ -78,6 +66,7 @@ public sealed class GetConversationHandler
             conversation.Id,
             conversation.Name,
             conversation.IsPublic,
+            conversation.FolderId,
             new GetConversationPersonaResponse(
                 conversation.Persona.Id,
                 conversation.Persona.Name,

@@ -1,3 +1,4 @@
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits;
@@ -11,5 +12,6 @@ public sealed record UpdateConversationBody(
     Id<ModelConfig> ModelConfigId,
     Id<Trait>[] TraitIds,
     List<UpdateConversationMessageInput> Messages,
-    bool IsPublic
+    bool IsPublic,
+    Id<Folder>? FolderId = null
 );

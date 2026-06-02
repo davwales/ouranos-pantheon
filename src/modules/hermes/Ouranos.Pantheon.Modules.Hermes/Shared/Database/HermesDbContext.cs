@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.AvailableModels;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits;
@@ -21,6 +22,8 @@ public sealed class HermesDbContext(DbContextOptions<HermesDbContext> options)
 
     public DbSet<Conversation> Conversations { get; set; }
 
+    public DbSet<Folder> Folders { get; set; }
+
     public DbSet<Message> Messages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -32,6 +35,7 @@ public sealed class HermesDbContext(DbContextOptions<HermesDbContext> options)
         modelBuilder.Entity<AvailableModel>();
         modelBuilder.Entity<Trait>();
         modelBuilder.Entity<Conversation>();
+        modelBuilder.Entity<Folder>();
         modelBuilder.Entity<Message>();
     }
 }

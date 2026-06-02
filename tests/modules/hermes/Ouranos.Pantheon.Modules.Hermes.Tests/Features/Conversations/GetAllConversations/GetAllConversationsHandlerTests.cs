@@ -5,6 +5,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GetAllConversations
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Shared.Domain;
@@ -118,6 +119,34 @@ public sealed class GetAllConversationsHandlerTests
 
         // Assert
         await handle.ShouldThrowAsync<OperationCanceledException>();
+    }
+
+    [Fact]
+    public async Task Handle_WhenFolderIdProvided_WithUnprotectedFolder_ShouldReturnConversations()
+    {
+        // Arrange
+        var folder = Folder.Create(new Id<Folder>(Guid.NewGuid().ToString()), "Unprotected Folder");
+        var conversation = Conversation.Create(
+            new Id<Conversation>(Guid.NewGuid().ToString()),
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [],
+            [],
+            Guid.NewGuid().ToString(),
+            true,
+            folderId: folder.Id
+        );
+        await _dbContext.SeedData(folder);
+        await _dbContext.SeedData(conversation);
+
+        var query = new GetAllConversationsInput(FolderId: folder.Id);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Count.ShouldBe(1);
+        result[0].Id.ShouldBe(conversation.Id);
     }
 
     [Fact]

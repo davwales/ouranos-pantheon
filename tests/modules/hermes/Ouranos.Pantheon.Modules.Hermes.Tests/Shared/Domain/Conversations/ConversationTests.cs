@@ -179,7 +179,15 @@ public sealed class ConversationTests
         );
 
         // Act
-        conversation.Update(newName, newPersonaId, newModelConfigId, [message], [trait], false);
+        conversation.Update(
+            newName,
+            newPersonaId,
+            newModelConfigId,
+            [message],
+            [trait],
+            false,
+            null
+        );
 
         // Assert
         conversation.Name.ShouldBe(newName);
@@ -213,7 +221,8 @@ public sealed class ConversationTests
             new Id<ModelConfig>(Guid.NewGuid().ToString()),
             [],
             [],
-            true
+            true,
+            null
         );
 
         // Assert

@@ -21,6 +21,8 @@ export type {
   CreateConversationInput,
   CompletionChunk,
   Trait,
+  FolderSummary,
+  UpdateFolderInput,
 } from "./hermes-types";
 export { Role } from "./hermes-types";
 
@@ -37,6 +39,8 @@ import type {
   CreateConversationInput,
   CompactConversationInput,
   Trait,
+  FolderSummary,
+  UpdateFolderInput,
 } from "./hermes-types";
 import type { CompletionChunk, CompactChunk } from "./hermes-types";
 
@@ -73,8 +77,12 @@ export const hermesApi = {
   getModel: (modelId: string) =>
     api.get<ModelConfig>(`/api/hermes/models/${modelId}`),
 
-  createModel: (input: Omit<ModelConfig, "id" | "createdAt" | "updatedAt" | "isUnavailable">) =>
-    api.post<{ id: string }>("/api/hermes/models", input),
+  createModel: (
+    input: Omit<
+      ModelConfig,
+      "id" | "createdAt" | "updatedAt" | "isUnavailable"
+    >,
+  ) => api.post<{ id: string }>("/api/hermes/models", input),
 
   updateModel: (input: {
     modelId: string;
@@ -111,8 +119,10 @@ export const hermesApi = {
   deleteTrait: (traitId: string) =>
     api.del<{ id: string }>(`/api/hermes/traits/${traitId}`),
 
-  getAllConversations: () =>
-    api.get<ConversationSummary[]>("/api/hermes/conversations"),
+  getAllConversations: (params?: { folderId?: string }) =>
+    api.get<ConversationSummary[]>("/api/hermes/conversations", {
+      folderId: params?.folderId,
+    }),
 
   getConversation: (id: string) =>
     api.get<SavedConversation>(`/api/hermes/conversations/${id}`),
@@ -129,11 +139,34 @@ export const hermesApi = {
       traitIds: string[];
       messages: MessageInput[];
       isPublic: boolean;
+      folderId?: string | null;
     },
   ) => api.put<{ id: string }>(`/api/hermes/conversations/${id}`, input),
 
   deleteConversation: (id: string) =>
     api.del<{ id: string }>(`/api/hermes/conversations/${id}`),
+
+  createFolder: (input: {
+    name: string;
+    isPublic: boolean;
+    parentFolderId?: string | null;
+  }) => api.post<{ id: string }>("/api/hermes/folders", input),
+
+  getAllFolders: (params?: {
+    parentFolderId?: string | null;
+    sortField?: string;
+    sortDirection?: string;
+    filter?: string[];
+  }) => api.get<FolderSummary[]>("/api/hermes/folders", params),
+
+  getFolder: (folderId: string) =>
+    api.get<FolderSummary>(`/api/hermes/folders/${folderId}`),
+
+  updateFolder: (folderId: string, input: UpdateFolderInput) =>
+    api.put<{ id: string }>(`/api/hermes/folders/${folderId}`, input),
+
+  deleteFolder: (folderId: string) =>
+    api.del<{ id: string }>(`/api/hermes/folders/${folderId}`),
 };
 
 export async function* streamCompletion(

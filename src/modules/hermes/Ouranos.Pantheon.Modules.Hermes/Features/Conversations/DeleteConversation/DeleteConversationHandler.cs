@@ -35,10 +35,9 @@ public sealed class DeleteConversationHandler
         _logger.LogTrace("Attempting to handle delete conversation command '{@command}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var conversation = await _dbContext.Conversations.FirstOrDefaultAsync(
-            c => c.Id == command.ConversationId,
-            cancellationToken
-        );
+        var conversation = await _dbContext
+            .Conversations.Include(c => c.Folder)
+            .FirstOrDefaultAsync(c => c.Id == command.ConversationId, cancellationToken);
 
         Guard.Against.NotFound(command.ConversationId, conversation);
 

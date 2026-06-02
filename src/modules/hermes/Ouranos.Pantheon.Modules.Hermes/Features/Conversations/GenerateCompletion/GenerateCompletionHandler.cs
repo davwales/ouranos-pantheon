@@ -45,6 +45,19 @@ public sealed class GenerateCompletionHandler
         _logger.LogTrace("Attempting to handle generate completion query '{@query}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
+        if (command.ConversationId is not null)
+        {
+            await using var authContext = await _dbContextFactory.CreateDbContextAsync(
+                cancellationToken
+            );
+
+            var conversation = await authContext
+                .Conversations.AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == command.ConversationId, cancellationToken);
+
+            Guard.Against.NotFound(command.ConversationId.Value, conversation);
+        }
+
         var systemPrompt = ComposeSystemPrompt(command.Conversation);
 
         yield return new SystemPromptChunkResponse(systemPrompt);

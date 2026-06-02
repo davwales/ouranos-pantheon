@@ -5,6 +5,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.CreateConversation.
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits;
@@ -349,6 +350,34 @@ public sealed class CreateConversationHandlerTests
         savedConversation.InputTokenCount.ShouldBeNull();
         savedConversation.OutputTokenCount.ShouldBeNull();
         savedConversation.TotalTokenCount.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Handle_WhenCreatingInFolder_ShouldSucceed()
+    {
+        // Arrange
+        var folder = Folder.Create(new Id<Folder>(Guid.NewGuid().ToString()), "Unprotected Folder");
+        await _dbContext.SeedData(folder);
+
+        var command = new CreateConversationInput(
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [],
+            [],
+            _fixture.Create<string>(),
+            FolderId: folder.Id
+        );
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeOfType<CreateConversationResponse>();
+        result.Id.ShouldNotBe(default);
+
+        var savedConversation = await _dbContext.Conversations.FindAsync(result.Id);
+        savedConversation.ShouldNotBeNull();
+        savedConversation.FolderId.ShouldBe(folder.Id);
     }
 
     [Fact]

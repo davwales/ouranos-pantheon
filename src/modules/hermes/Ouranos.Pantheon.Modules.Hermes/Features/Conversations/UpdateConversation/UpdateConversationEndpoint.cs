@@ -30,7 +30,8 @@ public static class UpdateConversationEndpoint
             body.ModelConfigId,
             body.TraitIds,
             body.Messages,
-            body.IsPublic
+            body.IsPublic,
+            body.FolderId
         );
         return Results.Ok(await bus.InvokeAsync<IdResponse<Conversation>>(input, ct));
     }
