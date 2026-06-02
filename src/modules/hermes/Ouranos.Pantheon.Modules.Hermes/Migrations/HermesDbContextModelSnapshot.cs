@@ -86,6 +86,10 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<Guid?>("FolderId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("folder_id");
+
                     b.Property<int?>("InputTokenCount")
                         .HasColumnType("integer")
                         .HasColumnName("input_token_count");
@@ -121,6 +125,9 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_conversations");
+
+                    b.HasIndex("FolderId")
+                        .HasDatabaseName("ix_conversations_folder_id");
 
                     b.HasIndex("ModelConfigId")
                         .HasDatabaseName("ix_conversations_model_config_id");
@@ -170,6 +177,42 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
                         .HasDatabaseName("ix_messages_conversation_id_sort_order");
 
                     b.ToTable("messages", "hermes");
+                });
+
+            modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders.Folder", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("IsPublic")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_public");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<Guid?>("ParentFolderId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("parent_folder_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_folders");
+
+                    b.HasIndex("ParentFolderId")
+                        .HasDatabaseName("ix_folders_parent_folder_id");
+
+                    b.ToTable("folders", "hermes");
                 });
 
             modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models.ModelConfig", b =>
@@ -334,6 +377,12 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
 
             modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations.Conversation", b =>
                 {
+                    b.HasOne("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders.Folder", "Folder")
+                        .WithMany("Conversations")
+                        .HasForeignKey("FolderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("fk_conversations_folders_folder_id");
+
                     b.HasOne("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models.ModelConfig", "ModelConfig")
                         .WithMany()
                         .HasForeignKey("ModelConfigId")
@@ -347,6 +396,8 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_conversations_personas_persona_id");
+
+                    b.Navigation("Folder");
 
                     b.Navigation("ModelConfig");
 
@@ -363,9 +414,27 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
                         .HasConstraintName("fk_messages_conversations_conversation_id");
                 });
 
+            modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders.Folder", b =>
+                {
+                    b.HasOne("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders.Folder", "ParentFolder")
+                        .WithMany("ChildFolders")
+                        .HasForeignKey("ParentFolderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("fk_folders_folders_parent_folder_id");
+
+                    b.Navigation("ParentFolder");
+                });
+
             modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations.Conversation", b =>
                 {
                     b.Navigation("Messages");
+                });
+
+            modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders.Folder", b =>
+                {
+                    b.Navigation("ChildFolders");
+
+                    b.Navigation("Conversations");
                 });
 #pragma warning restore 612, 618
         }

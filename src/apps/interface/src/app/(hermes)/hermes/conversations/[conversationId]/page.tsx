@@ -6,25 +6,26 @@ import {
   PersonaFormInput,
   TraitFormInput,
 } from "@/app/(hermes)/hermes/types";
+import { MoveToFolderDropdown } from "@/app/(hermes)/hermes/conversations/components/move-to-folder-dropdown";
 import { useApi } from "@/hooks/use-api";
 import { hermesApi } from "@/lib/api/hermes";
 import { useParams, useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { buildFolderTree, flattenFolders } from "../lib/folder-utils";
 import { ChatMessageSkeleton } from "@/components/shared/skeletons/chat-message-skeleton";
 import { NotFoundCard } from "@/components/shared/not-found-card";
 
 export default function ResumeConversationPage() {
   const { conversationId } = useParams<{ conversationId: string }>();
   const router = useRouter();
-  const [state] = useApi(
-    () => hermesApi.getConversation(conversationId),
-    [conversationId],
-  );
   const [savedConversationId, setSavedConversationId] =
     useState<string>(conversationId);
   const [conversationName, setConversationName] = useState<
     string | undefined
   >();
+  const [folderId, setFolderId] = useState<string | null | undefined>(
+    undefined,
+  );
   const [persona, setPersona] = useState<PersonaFormInput | undefined>();
   const [model, setModel] = useState<ModelFormInput | undefined>();
   const [activeTraits, setActiveTraits] = useState<
@@ -32,7 +33,28 @@ export default function ResumeConversationPage() {
   >();
   const [isPublic, setIsPublic] = useState<boolean | undefined>();
 
+  const [state] = useApi(
+    () => hermesApi.getConversation(conversationId),
+    [conversationId],
+  );
+  const [foldersState] = useApi(() => hermesApi.getAllFolders());
+
   const saved = state.data;
+
+  const resolvedFolderId = useMemo(
+    () => (folderId !== undefined ? folderId : saved?.folderId ?? null),
+    [folderId, saved?.folderId],
+  );
+
+  const folderTree = useMemo(
+    () => buildFolderTree(foldersState.data ?? []),
+    [foldersState.data],
+  );
+
+  const allFolders = useMemo(
+    () => flattenFolders(folderTree),
+    [folderTree],
+  );
 
   const resolvedPersona = useMemo<PersonaFormInput | undefined>(() => {
     if (persona) return persona;
@@ -78,6 +100,34 @@ export default function ResumeConversationPage() {
     );
   }, [activeTraits, saved]);
 
+  const handleMoveToFolder = useCallback(
+    async (targetFolderId: string | null) => {
+      if (!saved || !resolvedPersona || !resolvedModel) return;
+
+      await hermesApi.updateConversation(savedConversationId, {
+        name: conversationName ?? saved.name,
+        personaId: resolvedPersona.id!,
+        modelConfigId: resolvedModel.id!,
+        traitIds: resolvedTraits
+          .filter((t) => t.id && !t.isEphemeral)
+          .map((t) => t.id!),
+        messages: saved.messages,
+        isPublic: isPublic ?? saved.isPublic,
+        folderId: targetFolderId,
+      });
+      setFolderId(targetFolderId);
+    },
+    [
+      saved,
+      resolvedPersona,
+      resolvedModel,
+      savedConversationId,
+      conversationName,
+      resolvedTraits,
+      isPublic,
+    ],
+  );
+
   if (state.status === "loading") {
     return (
       <div className="m-4">
@@ -92,56 +142,75 @@ export default function ResumeConversationPage() {
     !resolvedPersona ||
     !resolvedModel
   ) {
-    return <NotFoundCard title="Conversation not found" message="This conversation doesn't exist or has been removed." backHref="/hermes/conversations" backLabel="Back to Conversations" />;
+    return (
+      <NotFoundCard
+        title="Conversation not found"
+        message="This conversation doesn't exist or has been removed."
+        backHref="/hermes/conversations"
+        backLabel="Back to Conversations"
+      />
+    );
   }
 
   return (
-    <ChatInterfaceView
-      persona={resolvedPersona}
-      model={resolvedModel}
-      activeTraits={resolvedTraits}
-      onPersonaChange={setPersona}
-      onModelChange={setModel}
-      onTraitsChange={setActiveTraits}
-      initialMessages={saved.messages}
-      initialTokenUsage={saved.tokenUsage}
-      conversationId={savedConversationId}
-      conversationName={conversationName ?? saved.name}
-      conversationIsPublic={isPublic ?? saved.isPublic}
-      onConversationSaved={(id, name) => {
-        setSavedConversationId(id);
-        setConversationName(name);
-      }}
-      onRename={async (name) => {
-        await hermesApi.updateConversation(savedConversationId, {
-          name,
-          personaId: resolvedPersona.id!,
-          modelConfigId: resolvedModel.id!,
-          traitIds: resolvedTraits
-            .filter((t) => t.id && !t.isEphemeral)
-            .map((t) => t.id!),
-          messages: saved.messages,
-          isPublic: isPublic ?? saved.isPublic,
-        });
-        setConversationName(name);
-      }}
-      onDelete={async () => {
-        await hermesApi.deleteConversation(savedConversationId);
-        router.push("/hermes/conversations");
-      }}
-      onVisibilityChange={async (value) => {
-        await hermesApi.updateConversation(savedConversationId, {
-          name: conversationName ?? saved.name,
-          personaId: resolvedPersona.id!,
-          modelConfigId: resolvedModel.id!,
-          traitIds: resolvedTraits
-            .filter((t) => t.id && !t.isEphemeral)
-            .map((t) => t.id!),
-          messages: saved.messages,
-          isPublic: value,
-        });
-        setIsPublic(value);
-      }}
-    />
+    <>
+      <div className="flex items-center justify-between m-4 mb-0">
+        <h1 className="text-lg font-semibold truncate">
+          {conversationName ?? saved.name}
+        </h1>
+        <MoveToFolderDropdown
+          folders={allFolders}
+          currentFolderId={resolvedFolderId}
+          onMove={handleMoveToFolder}
+        />
+      </div>
+      <ChatInterfaceView
+        persona={resolvedPersona}
+        model={resolvedModel}
+        activeTraits={resolvedTraits}
+        onPersonaChange={setPersona}
+        onModelChange={setModel}
+        onTraitsChange={setActiveTraits}
+        initialMessages={saved.messages}
+        initialTokenUsage={saved.tokenUsage}
+        conversationId={savedConversationId}
+        conversationName={conversationName ?? saved.name}
+        conversationIsPublic={isPublic ?? saved.isPublic}
+        onConversationSaved={(id, name) => {
+          setSavedConversationId(id);
+          setConversationName(name);
+        }}
+        onRename={async (name) => {
+          await hermesApi.updateConversation(savedConversationId, {
+            name,
+            personaId: resolvedPersona.id!,
+            modelConfigId: resolvedModel.id!,
+            traitIds: resolvedTraits
+              .filter((t) => t.id && !t.isEphemeral)
+              .map((t) => t.id!),
+            messages: saved.messages,
+            isPublic: isPublic ?? saved.isPublic,
+          });
+          setConversationName(name);
+        }}
+        onDelete={async () => {
+          await hermesApi.deleteConversation(savedConversationId);
+          router.push("/hermes/conversations");
+        }}
+        onVisibilityChange={async (value) => {
+          await hermesApi.updateConversation(savedConversationId, {
+            name: conversationName ?? saved.name,
+            personaId: resolvedPersona.id!,
+            modelConfigId: resolvedModel.id!,
+            traitIds: resolvedTraits
+              .filter((t) => t.id && !t.isEphemeral)
+              .map((t) => t.id!),
+            messages: saved.messages,
+            isPublic: value,
+          });
+          setIsPublic(value);
+        }}
+      />
+    </>
   );
 }

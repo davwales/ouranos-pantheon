@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.UpdateConversation.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
 using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Extensions;
@@ -42,9 +43,19 @@ public sealed class UpdateConversationHandler
         var conversation = await _dbContext
             .Conversations.Include(c => c.Traits)
             .Include(c => c.Messages)
+            .Include(c => c.Folder)
             .FirstOrDefaultAsync(c => c.Id == command.ConversationId, cancellationToken);
 
         Guard.Against.NotFound(command.ConversationId, conversation);
+
+        if (command.FolderId is not null && command.FolderId != conversation.FolderId)
+        {
+            await FolderValidation.ValidateFolderExistsAsync(
+                _dbContext,
+                command.FolderId,
+                cancellationToken
+            );
+        }
 
         var traits = await _dbContext
             .Traits.Where(t => command.TraitIds.Contains(t.Id))
@@ -67,7 +78,8 @@ public sealed class UpdateConversationHandler
             command.ModelConfigId,
             newMessages,
             traits,
-            command.IsPublic
+            command.IsPublic,
+            command.FolderId
         );
         await _dbContext.SaveChangesAsync(cancellationToken);
 

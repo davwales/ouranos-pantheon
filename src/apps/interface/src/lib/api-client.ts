@@ -72,6 +72,7 @@ export const api = {
       string,
       string | number | boolean | string[] | undefined | null
     >,
+    headers?: Record<string, string>,
   ) => {
     const qs = new URLSearchParams();
     for (const [k, v] of Object.entries(params ?? {})) {
@@ -83,7 +84,7 @@ export const api = {
       }
     }
     const qstr = qs.toString();
-    return apiFetch<T>(qstr ? `${path}?${qstr}` : path);
+    return apiFetch<T>(qstr ? `${path}?${qstr}` : path, { headers });
   },
   post: <T>(path: string, body: unknown) =>
     apiFetch<T>(path, { method: "POST", body: JSON.stringify(body) }),
@@ -91,5 +92,6 @@ export const api = {
     apiFetch<T>(path, { method: "PUT", body: JSON.stringify(body) }),
   patch: <T>(path: string, body: unknown) =>
     apiFetch<T>(path, { method: "PATCH", body: JSON.stringify(body) }),
-  del: <T>(path: string) => apiFetch<T>(path, { method: "DELETE" }),
+  del: <T>(path: string, headers?: Record<string, string>) =>
+    apiFetch<T>(path, { method: "DELETE", headers }),
 };

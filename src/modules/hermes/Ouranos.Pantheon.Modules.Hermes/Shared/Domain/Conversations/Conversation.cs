@@ -1,4 +1,5 @@
 using Ardalis.GuardClauses;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits;
@@ -44,6 +45,13 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
 
     public List<Trait> Traits { get; private set; } = [];
 
+    public Id<Folder>? FolderId { get; private set; }
+
+    private Folder? _folder;
+
+    public Folder Folder =>
+        _folder ?? throw new NavigationPropertyNotLoadedException<Conversation>();
+
     public static Conversation Create(
         Id<Conversation> id,
         Id<Persona> personaId,
@@ -53,7 +61,9 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
         string? name = null,
         bool isPublic = true,
         Persona? persona = null,
-        ModelConfig? modelConfig = null
+        ModelConfig? modelConfig = null,
+        Id<Folder>? folderId = null,
+        Folder? folder = null
     )
     {
         Guard.Against.Null(personaId);
@@ -73,6 +83,11 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
             );
         }
 
+        if (folder is not null)
+        {
+            Guard.Against.InvalidInput(folder, nameof(folder), f => f.Id == folderId);
+        }
+
         var conversation = new Conversation(id)
         {
             Name = string.IsNullOrWhiteSpace(name) ? DefaultName : name.Trim(),
@@ -83,6 +98,8 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
             IsPublic = isPublic,
             _persona = persona,
             _modelConfig = modelConfig,
+            FolderId = folderId,
+            _folder = folder,
         };
 
         return conversation;
@@ -94,7 +111,8 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
         Id<ModelConfig> modelConfigId,
         IEnumerable<Message> messages,
         IEnumerable<Trait> traits,
-        bool isPublic
+        bool isPublic,
+        Id<Folder>? folderId
     )
     {
         Guard.Against.Null(personaId);
@@ -106,6 +124,7 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
         Messages = [.. messages];
         Traits = [.. traits];
         IsPublic = isPublic;
+        FolderId = folderId;
         Update();
     }
 

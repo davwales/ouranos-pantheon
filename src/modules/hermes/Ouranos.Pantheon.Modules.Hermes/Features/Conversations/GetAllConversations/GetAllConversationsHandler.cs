@@ -12,8 +12,11 @@ using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GetAllConversations;
 
-public sealed class GetAllConversationsHandler
-    : IPantheonHandler<GetAllConversationsInput, List<GetAllConversationsResponse>>
+public sealed class GetAllConversationsHandler(
+    ILogger<GetAllConversationsHandler> logger,
+    HermesDbContext dbContext,
+    IFlagsmithClient flagsmith
+) : IPantheonHandler<GetAllConversationsInput, List<GetAllConversationsResponse>>
 {
     private static readonly FilterBuilder<Conversation> FilterBuilder =
         new FilterBuilder<Conversation>()
@@ -25,24 +28,9 @@ public sealed class GetAllConversationsHandler
         .On(nameof(Conversation.UpdatedAt), c => c.UpdatedAt)
         .Default(c => c.UpdatedAt);
 
-    private readonly HermesDbContext _dbContext;
-    private readonly IFlagsmithClient _flagsmith;
-    private readonly ILogger<GetAllConversationsHandler> _logger;
-
-    public GetAllConversationsHandler(
-        ILogger<GetAllConversationsHandler> logger,
-        HermesDbContext dbContext,
-        IFlagsmithClient flagsmith
-    )
-    {
-        Guard.Against.Null(logger);
-        Guard.Against.Null(dbContext);
-        Guard.Against.Null(flagsmith);
-
-        _logger = logger;
-        _dbContext = dbContext;
-        _flagsmith = flagsmith;
-    }
+    private readonly HermesDbContext _dbContext = Guard.Against.Null(dbContext);
+    private readonly IFlagsmithClient _flagsmith = Guard.Against.Null(flagsmith);
+    private readonly ILogger<GetAllConversationsHandler> _logger = Guard.Against.Null(logger);
 
     public async Task<List<GetAllConversationsResponse>> Handle(
         GetAllConversationsInput query,
@@ -55,11 +43,19 @@ public sealed class GetAllConversationsHandler
         var flags = await _flagsmith.GetEnvironmentFlags();
         var isPublicMode = await flags.IsFeatureEnabled(HermesFeatureFlags.PublicMode);
 
-        var dbQuery = _dbContext.Conversations.AsQueryable().AsNoTracking();
+        IQueryable<Conversation> dbQuery = _dbContext
+            .Conversations.AsQueryable()
+            .AsNoTracking()
+            .Include(c => c.Folder);
+
+        if (query.FolderId is not null)
+        {
+            dbQuery = dbQuery.Where(c => c.FolderId == query.FolderId);
+        }
 
         if (isPublicMode)
         {
-            dbQuery = dbQuery.Where(c => c.IsPublic);
+            dbQuery = dbQuery.Where(c => c.IsPublic && (c.FolderId == null || c.Folder.IsPublic));
         }
 
         var conversations = await dbQuery
@@ -69,6 +65,7 @@ public sealed class GetAllConversationsHandler
                 c.Id,
                 c.Name,
                 c.IsPublic,
+                c.FolderId,
                 c.CreatedAt,
                 c.UpdatedAt
             ))

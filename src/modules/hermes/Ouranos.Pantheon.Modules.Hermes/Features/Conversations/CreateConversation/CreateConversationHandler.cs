@@ -6,6 +6,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.CreateConversation.
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
 using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Shared.Extensions;
 using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
@@ -72,6 +73,12 @@ public sealed class CreateConversationHandler
                 .ToListAsync(cancellationToken)
             : [];
 
+        var folder = await FolderValidation.ValidateFolderExistsAsync(
+            _dbContext,
+            command.FolderId,
+            cancellationToken
+        );
+
         var name = string.IsNullOrWhiteSpace(command.Name)
             ? await GenerateNameAsync(command, cancellationToken)
             : command.Name;
@@ -83,7 +90,9 @@ public sealed class CreateConversationHandler
             messages,
             traits,
             name,
-            command.IsPublic
+            command.IsPublic,
+            folderId: command.FolderId,
+            folder: folder
         );
 
         if (
@@ -173,7 +182,7 @@ public sealed class CreateConversationHandler
         }
     }
 
-    private RoleDto MapRole(Role role)
+    private static RoleDto MapRole(Role role)
     {
         return role switch
         {

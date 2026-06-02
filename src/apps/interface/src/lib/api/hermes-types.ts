@@ -70,10 +70,22 @@ export interface GenerateCompletionInput {
   conversationId?: string;
 }
 
+export type FolderSummary = {
+  id: string;
+  name: string;
+  isPublic: boolean;
+  parentFolderId: string | null;
+  conversationCount: number;
+  subfolderCount: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export interface ConversationSummary {
   id: string;
   name: string;
   isPublic: boolean;
+  folderId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -113,6 +125,7 @@ export interface SavedConversation {
   id: string;
   name: string;
   isPublic: boolean;
+  folderId: string | null;
   persona: SavedConversationPersona;
   model: SavedConversationModel;
   traits: SavedConversationTrait[];
@@ -155,6 +168,7 @@ export interface CreateConversationInput {
   messages: MessageInput[];
   name?: string;
   isPublic?: boolean;
+  folderId?: string | null;
   inputTokenCount?: number | null;
   outputTokenCount?: number | null;
   totalTokenCount?: number | null;
@@ -169,6 +183,12 @@ export type CompletionChunk =
       outputTokens: number;
       totalTokens: number;
     };
+
+export interface UpdateFolderInput {
+  name: string;
+  isPublic: boolean;
+  parentFolderId?: string | null;
+}
 
 export enum Role {
   System = "System",

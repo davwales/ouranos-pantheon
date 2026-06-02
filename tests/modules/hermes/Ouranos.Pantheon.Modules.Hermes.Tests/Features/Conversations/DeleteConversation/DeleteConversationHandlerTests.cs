@@ -4,6 +4,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.DeleteConversation;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.DeleteConversation.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
@@ -43,6 +44,36 @@ public sealed class DeleteConversationHandlerTests
             _fixture.Create<string>()
         );
 
+        await _dbContext.SeedData(conversation);
+
+        var command = new DeleteConversationInput(conversation.Id);
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeOfType<IdResponse<Conversation>>();
+        result.Id.ShouldBe(conversation.Id);
+
+        var deleted = await _dbContext.Conversations.FindAsync(conversation.Id);
+        deleted.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Handle_WhenConversationInUnprotectedFolder_ShouldDelete()
+    {
+        // Arrange
+        var folder = Folder.Create(new Id<Folder>(Guid.NewGuid().ToString()), "Unprotected Folder");
+        var conversation = Conversation.Create(
+            new Id<Conversation>(Guid.NewGuid().ToString()),
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [],
+            [],
+            _fixture.Create<string>(),
+            folderId: folder.Id
+        );
+        await _dbContext.SeedData(folder);
         await _dbContext.SeedData(conversation);
 
         var command = new DeleteConversationInput(conversation.Id);

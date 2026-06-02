@@ -116,10 +116,10 @@ public sealed class GenerateCompletionHandlerTests
     {
         // Arrange
         var dbName = Guid.NewGuid().ToString();
-        var dbContext = DbContextExtensions.Mock<HermesDbContext>(dbName);
+
         _dbContextFactory
             .CreateDbContextAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(dbContext));
+            .Returns(call => Task.FromResult(DbContextExtensions.Mock<HermesDbContext>(dbName)));
 
         _mlClient
             .StreamChatCompletionAsync(
@@ -143,8 +143,9 @@ public sealed class GenerateCompletionHandlerTests
             [],
             "Test"
         );
-        await dbContext.Conversations.AddAsync(conversation);
-        await dbContext.SaveChangesAsync();
+        await using var seedContext = DbContextExtensions.Mock<HermesDbContext>(dbName);
+        await seedContext.Conversations.AddAsync(conversation);
+        await seedContext.SaveChangesAsync();
 
         var command = new GenerateCompletionInput(
             CreateConversation(new CompletionMessageInput("Hello", Role.User)),
