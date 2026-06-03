@@ -13,6 +13,7 @@ import TimeFrameSelection from "@/app/(plutus)/plutus/components/time-frame-sele
 import { PlutusState, usePlutusStore } from "@/stores/plutus-store";
 import { useApi } from "@/hooks/use-api";
 import { GetMarketTradesRow, plutusApi } from "@/lib/api/plutus";
+import { NotFoundCard } from "@/components/shared/not-found-card";
 import { RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -190,6 +191,10 @@ export default function MarketDetail() {
     ],
     [marketId],
   );
+
+  if (state.status === "error" && !data) {
+    return <NotFoundCard title="Explorer data not found" backHref={`/plutus/${marketId}`} backLabel="Back to Market" />;
+  }
 
   return (
     <div>
