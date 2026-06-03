@@ -1,8 +1,6 @@
 import { InfoCard } from "@/components/shared/info-card";
 import MarketOverview from "@/app/(plutus)/plutus/[marketId]/_components/market-overview";
 import VolumeHeatmap from "@/app/(plutus)/plutus/[marketId]/_components/volume-heatmap";
-import { plutusApi } from "@/lib/api/plutus";
-import { notFound } from "next/navigation";
 import Link from "next/link";
 
 const features: {
@@ -65,12 +63,6 @@ export default async function MarketLanding({
   params: Promise<{ marketId: string }>;
 }) {
   const { marketId } = await params;
-
-  try {
-    await plutusApi.getMarket(marketId);
-  } catch {
-    notFound();
-  }
 
   return (
     <div className="space-y-6">
