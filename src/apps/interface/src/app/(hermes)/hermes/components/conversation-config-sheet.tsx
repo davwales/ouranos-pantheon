@@ -148,7 +148,10 @@ export function ConversationConfigSheet({
                   variant="outline"
                   size="sm"
                   className="w-full"
-                  onClick={onCompact}
+                  onClick={() => {
+                    onCompact?.();
+                    onOpenChange(false);
+                  }}
                   disabled={isCompacting}
                 >
                   <Minimize2 className="h-4 w-4 mr-2" />

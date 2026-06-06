@@ -11,13 +11,8 @@ import {
   PersonaFormInput,
   TraitFormInput,
 } from "@/app/(hermes)/hermes/types";
-import {
-  hermesApi,
-  MessageInput,
-  Role,
-  streamCompact,
-  streamCompletion,
-} from "@/lib/api/hermes";
+import { hermesApi, MessageInput, Role } from "@/lib/api/hermes";
+import { useMessageController } from "@/hooks/use-message-controller";
 import { Bookmark, SlidersHorizontal } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
@@ -59,17 +54,7 @@ export default function ChatInterfaceView({
   onDelete?: () => void;
   onVisibilityChange?: (isPublic: boolean) => void;
 }) {
-  const [messages, setMessages] = useState<MessageInput[]>(
-    initialMessages ?? [],
-  );
   const [inputText, setInputText] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isCompacting, setIsCompacting] = useState(false);
-  const [tokenUsage, setTokenUsage] = useState<{
-    inputTokens: number;
-    outputTokens: number;
-    totalTokens: number;
-  } | null>(initialTokenUsage ?? null);
   const [editingMessageIndex, setEditingMessageIndex] = useState<number | null>(
     null,
   );
@@ -78,6 +63,39 @@ export default function ChatInterfaceView({
     string | null
   >(null);
   const { setActions, clearActions } = useNavBarActions();
+
+  const {
+    messages,
+    isGenerating,
+    isCompacting,
+    compactionError,
+    tokenUsage,
+    addUserMessage,
+    updateMessageContent,
+    deleteMessage,
+    retryMessage,
+    compactMessages,
+  } = useMessageController({
+    initialMessages: initialMessages ?? [],
+    initialTokenUsage: initialTokenUsage ?? null,
+    model,
+    persona,
+    activeTraits,
+    conversationId,
+    onSystemPromptChange: setComposedSystemPrompt,
+    onMessagesPersist: conversationId
+      ? (updatedMessages: MessageInput[]) => {
+          hermesApi
+            .updateConversation(
+              conversationId,
+              buildUpdatePayload({ messages: updatedMessages }),
+            )
+            .catch((err) =>
+              console.error("Failed to update conversation:", err),
+            );
+        }
+      : undefined,
+  });
 
   const buildUpdatePayload = useCallback(
     (overrides: {
@@ -164,119 +182,17 @@ export default function ChatInterfaceView({
     isGenerating,
   ]);
 
-  const getMessagesForLlm = useCallback(
-    (allMessages: MessageInput[]): MessageInput[] => {
-      const lastSummaryIndex = allMessages.findLastIndex(
-        (m) => m.role === Role.Summary,
-      );
-
-      if (lastSummaryIndex === -1) {
-        return allMessages;
-      }
-
-      const messagesAfterSummary = allMessages.slice(lastSummaryIndex);
-      return messagesAfterSummary.map((m) =>
-        m.role === Role.Summary ? { ...m, role: Role.Assistant } : m,
-      );
-    },
-    [],
-  );
-
-  const generateCompletion = async (currentMessages: MessageInput[]) => {
-    if (isGenerating) return;
-    setIsGenerating(true);
-
-    const assistantMessage: MessageInput = {
-      role: Role.Assistant,
-      content: "",
-    };
-    setMessages((prev) => [...prev, assistantMessage]);
-
-    const messagesForLlm = getMessagesForLlm(currentMessages);
-
-    try {
-      for await (const chunk of streamCompletion({
-        conversation: {
-          model: {
-            modelIdentifier: model.modelIdentifier,
-            systemPrompt: model.systemPrompt,
-            temperature: model.temperature,
-            maxTokens: model.maxTokens,
-            repeatPenalty: model.repeatPenalty,
-          },
-          persona: {
-            name: persona.name,
-            description: persona.description,
-            personality: persona.personality,
-            scenario: persona.scenario,
-          },
-          traits: activeTraits.map((t) => ({
-            name: t.name,
-            content: t.content,
-          })),
-          messages: messagesForLlm.map(({ role, content }) => ({
-            role,
-            content,
-          })),
-        },
-        ...(conversationId ? { conversationId } : {}),
-      })) {
-        switch (chunk.$type) {
-          case "systemPrompt":
-            setComposedSystemPrompt(chunk.systemPrompt);
-            break;
-          case "usage":
-            setTokenUsage({
-              inputTokens: chunk.inputTokens,
-              outputTokens: chunk.outputTokens,
-              totalTokens: chunk.totalTokens,
-            });
-            break;
-          case "content":
-            setMessages((prev) => {
-              const updated = [...prev];
-              updated[updated.length - 1] = {
-                ...updated[updated.length - 1],
-                content: updated[updated.length - 1].content + chunk.content,
-              };
-              return updated;
-            });
-            break;
-        }
-      }
-    } catch (error) {
-      console.error("Error sending message:", error);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
   const handleUpdateMessage = () => {
-    if (!editingMessageIndex || !inputText.trim()) return;
-    setMessages((prev) => {
-      const updatedMessages = [...prev];
-      updatedMessages[editingMessageIndex].content = inputText;
-      if (conversationId) {
-        hermesApi
-          .updateConversation(
-            conversationId,
-            buildUpdatePayload({ messages: updatedMessages }),
-          )
-          .catch((err) => console.error("Failed to update conversation:", err));
-      }
-      return updatedMessages;
-    });
+    if (editingMessageIndex === null || !inputText.trim()) return;
+    updateMessageContent(editingMessageIndex, inputText);
     setEditingMessageIndex(null);
     setInputText("");
   };
 
   const handleNewMessage = async () => {
-    if (!inputText.trim()) return;
-    const userMessage: MessageInput = { role: Role.User, content: inputText };
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
+    const text = inputText;
     setInputText("");
-    await generateCompletion(updatedMessages);
+    await addUserMessage(text);
   };
 
   const handleMessageEdit = (index: number) => {
@@ -290,73 +206,11 @@ export default function ChatInterfaceView({
   };
 
   const handleMessageDeleted = (index: number) => {
-    setMessages((prev) => {
-      const updatedMessages = prev.filter((_, i) => i < index);
-      if (conversationId) {
-        hermesApi
-          .updateConversation(
-            conversationId,
-            buildUpdatePayload({ messages: updatedMessages }),
-          )
-          .catch((err) => console.error("Failed to update conversation:", err));
-      }
-      return updatedMessages;
-    });
+    deleteMessage(index);
   };
 
   const handleMessageRetry = async (index: number) => {
-    const updatedMessages = messages.filter((_, i) => i < index);
-    setMessages(updatedMessages);
-    await generateCompletion(updatedMessages);
-  };
-
-  const handleCompact = async () => {
-    if (isCompacting || isGenerating) return;
-
-    const compactableMessages = messages.filter(
-      (m) => m.role === Role.User || m.role === Role.Assistant,
-    );
-    if (compactableMessages.length === 0) return;
-
-    setIsCompacting(true);
-    try {
-      const summaryMessage: MessageInput = {
-        role: Role.Summary,
-        content: "",
-      };
-      setMessages((prev) => [...prev, summaryMessage]);
-
-      for await (const chunk of streamCompact({
-        ...(conversationId ? { conversationId } : {}),
-        modelIdentifier: model.modelIdentifier,
-        systemPrompt: model.systemPrompt,
-        personaName: persona.name,
-        personaDescription: persona.description,
-        messages,
-      })) {
-        if (chunk.$type === "content") {
-          setMessages((prev) => {
-            const updated = [...prev];
-            updated[updated.length - 1] = {
-              ...updated[updated.length - 1],
-              content: updated[updated.length - 1].content + chunk.content,
-            };
-            return updated;
-          });
-        } else if (chunk.$type === "usage") {
-          // Input tokens are not carried forward, so they are excluded.
-          setTokenUsage({
-            inputTokens: 0,
-            outputTokens: chunk.outputTokens,
-            totalTokens: chunk.outputTokens,
-          });
-        }
-      }
-    } catch (error) {
-      console.error("Error compacting conversation:", error);
-    } finally {
-      setIsCompacting(false);
-    }
+    await retryMessage(index);
   };
 
   return (
@@ -368,6 +222,16 @@ export default function ChatInterfaceView({
         onEditMessage={handleMessageEdit}
         onRetryMessage={handleMessageRetry}
         isGenerating={isGenerating}
+        isCompacting={isCompacting}
+        compactionError={compactionError}
+        onRetryCompact={() => {
+          const lastSummaryIndex = messages.findLastIndex(
+            (m) => m.role === Role.Summary,
+          );
+          if (lastSummaryIndex !== -1) {
+            retryMessage(lastSummaryIndex);
+          }
+        }}
         className="mb-2"
       />
 
@@ -407,7 +271,7 @@ export default function ChatInterfaceView({
         contextWindow={model.contextWindow}
         isCompacting={isCompacting}
         composedSystemPrompt={composedSystemPrompt}
-        onCompact={messages.length > 0 ? handleCompact : undefined}
+        onCompact={messages.length > 0 ? () => compactMessages(messages) : undefined}
         onPersonaChange={(p) => {
           onPersonaChange?.(p);
           if (conversationId && p.id) {
