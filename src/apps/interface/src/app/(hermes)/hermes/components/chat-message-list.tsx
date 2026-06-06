@@ -1,19 +1,25 @@
+"use client";
+
 import {
   MenuAction,
   ResponsiveContextMenu,
 } from "@/components/shared/responsive-context-menu";
 import { Message } from "@/app/(hermes)/hermes/components/message";
+import SummaryView from "@/app/(hermes)/hermes/components/summary-view";
 import { MessageInput, Role } from "@/lib/api/hermes";
-import { Minimize2, Pencil, RotateCcw, Trash } from "lucide-react";
+import { Pencil, RotateCcw, Trash } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 export default function ChatMessageList({
   messages,
   personaName,
   isGenerating,
+  isCompacting,
+  compactionError,
   onEditMessage,
   onDeleteMessage,
   onRetryMessage,
+  onRetryCompact,
   ...props
 }: React.ComponentProps<"div"> & {
   messages: MessageInput[];
@@ -21,7 +27,10 @@ export default function ChatMessageList({
   onEditMessage?: (index: number) => void;
   onDeleteMessage?: (index: number) => void;
   onRetryMessage?: (index: number) => void;
+  onRetryCompact?: () => void;
   isGenerating?: boolean;
+  isCompacting?: boolean;
+  compactionError?: string | null;
 }) {
   const messageListRef = useRef<HTMLDivElement | null>(null);
 
@@ -35,7 +44,23 @@ export default function ChatMessageList({
     const msg = messages[index];
 
     if (msg.role === Role.Summary) {
-      return [];
+      return [
+        {
+          label: "Edit",
+          icon: <Pencil />,
+          onClick: () => onEditMessage?.(index),
+        },
+        {
+          label: "Retry",
+          icon: <RotateCcw />,
+          onClick: () => onRetryMessage?.(index),
+        },
+        {
+          label: "Delete",
+          icon: <Trash />,
+          onClick: () => onDeleteMessage?.(index),
+        },
+      ];
     }
 
     const actions: MenuAction[] = [
@@ -73,14 +98,13 @@ export default function ChatMessageList({
         return (
           <div key={index}>
             {isSummary && (
-              <div className="flex items-center gap-3 mx-2 my-4">
-                <div className="flex-1 h-px bg-border" />
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
-                  <Minimize2 className="h-3 w-3" />
-                  <span>Conversation compacted</span>
-                </div>
-                <div className="flex-1 h-px bg-border" />
-              </div>
+              <SummaryView
+                content={msg.content}
+                isCompacting={!!isCompacting}
+                compactionError={compactionError ?? null}
+                isLastSummary={messages.findLastIndex((m) => m.role === Role.Summary) === index}
+                onRetryCompact={() => onRetryCompact?.()}
+              />
             )}
             <div
               className={`flex mt-4 mx-2 ${

@@ -1,8 +1,10 @@
 using System.Runtime.CompilerServices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.CompactConversation;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.CompactConversation.Schemas;
+using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
@@ -30,12 +32,14 @@ public sealed class CompactConversationHandlerTests
         IDbContextFactory<HermesDbContext>
     >();
 
+    private readonly IOptions<HermesOptions> _options = Options.Create(new HermesOptions());
+
     private readonly CompactConversationHandler _handler;
 
     public CompactConversationHandlerTests()
     {
         _fixture.Customize(new IdCustomization());
-        _handler = new CompactConversationHandler(_logger, _mlClient, _dbContextFactory);
+        _handler = new CompactConversationHandler(_logger, _mlClient, _dbContextFactory, _options);
     }
 
     private static async IAsyncEnumerable<ChatCompletionChunk> CreateStream(
@@ -438,7 +442,11 @@ public sealed class CompactConversationHandlerTests
         };
 
         // Act
-        var result = CompactConversationHandler.ComposeSummaryPrompt(command, messages);
+        var result = CompactConversationHandler.ComposeSummaryPrompt(
+            command,
+            messages,
+            HermesOptions.DefaultCompactionSummaryPrompt
+        );
 
         // Assert
         result.ShouldContain("You are summarizing a conversation for context compaction.");
@@ -446,5 +454,99 @@ public sealed class CompactConversationHandlerTests
         result.ShouldContain("User: Hello!");
         result.ShouldContain("AssistantBot: How can I help?");
         result.ShouldContain("User: Tell me about X.");
+    }
+
+    [Fact]
+    public void ComposeSummaryPrompt_WhenCustomPromptProvided_ShouldUseCustomPrompt()
+    {
+        // Arrange
+        var customPrompt =
+            "Custom prompt for {PersonaName} with {PersonaDescription}. Conversation history:";
+        var command = new CompactConversationInput(
+            null,
+            "test-model",
+            "You are helpful.",
+            "CustomBot",
+            "A custom persona",
+            []
+        );
+
+        var messages = new List<CompactConversationMessageInput> { new("Hello!", Role.User) };
+
+        // Act
+        var result = CompactConversationHandler.ComposeSummaryPrompt(
+            command,
+            messages,
+            customPrompt
+        );
+
+        // Assert
+        result.ShouldContain("Custom prompt for CustomBot with A custom persona.");
+        result.ShouldContain("User: Hello!");
+    }
+
+    [Fact]
+    public async Task Handle_WhenCustomOptionsProvided_ShouldPassThemToMlClient()
+    {
+        // Arrange
+        var customOptions = Options.Create(
+            new HermesOptions(
+                ConversationNameSystemPrompt: "name prompt",
+                ConversationNameModel: "name-model",
+                CompactionSummaryPrompt: "Custom system prompt.",
+                CompactionTemperature: 0.7f,
+                CompactionMaxTokens: 2048
+            )
+        );
+
+        var handler = new CompactConversationHandler(
+            _logger,
+            _mlClient,
+            _dbContextFactory,
+            customOptions
+        );
+
+        var messages = new List<CompactConversationMessageInput>
+        {
+            new("Hello", Role.User),
+            new("Hi!", Role.Assistant),
+        };
+
+        var command = CreateCommand(messages: messages);
+        var expectedSummary = "Custom summary.";
+
+        _mlClient
+            .StreamChatCompletionAsync(
+                Arg.Any<string>(),
+                Arg.Any<List<MessageDto>>(),
+                Arg.Any<float?>(),
+                Arg.Any<int?>(),
+                Arg.Any<float?>(),
+                Arg.Any<CancellationToken>()
+            )
+            .Returns(CreateStream([expectedSummary]));
+
+        // Act
+        var results = new List<CompactConversationResponse>();
+        await foreach (var chunk in handler.Handle(command, CancellationToken.None))
+        {
+            results.Add(chunk);
+        }
+
+        // Assert
+        _mlClient
+            .Received(1)
+            .StreamChatCompletionAsync(
+                Arg.Any<string>(),
+                Arg.Is<List<MessageDto>>(msgs => msgs[0].Content.Contains("Custom system prompt.")),
+                Arg.Is<float?>(t => t == 0.7f),
+                Arg.Is<int?>(m => m == 2048),
+                Arg.Any<float?>(),
+                Arg.Any<CancellationToken>()
+            );
+
+        var contentChunks = results.OfType<CompactContentChunkResponse>().ToList();
+        contentChunks.Count.ShouldBe(1);
+        contentChunks[0].Content.ShouldBe(expectedSummary);
     }
 }

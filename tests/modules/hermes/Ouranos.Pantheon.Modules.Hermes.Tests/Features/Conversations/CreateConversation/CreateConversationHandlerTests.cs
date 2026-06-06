@@ -94,8 +94,20 @@ public sealed class CreateConversationHandlerTests
             )
             .Returns(new ChatCompletionResult(generatedName, null));
 
-        var options = Options.Create(new HermesOptions("Generate a name.", "test-model"));
-        var handler = new CreateConversationHandler(_logger, _dbContext, _mlClient, options);
+        var handler = new CreateConversationHandler(
+            _logger,
+            _dbContext,
+            _mlClient,
+            Options.Create(
+                new HermesOptions(
+                    ConversationNameSystemPrompt: "Generate a name.",
+                    ConversationNameModel: "test-model",
+                    CompactionSummaryPrompt: HermesOptions.DefaultCompactionSummaryPrompt,
+                    CompactionTemperature: HermesOptions.DefaultCompactionTemperature,
+                    CompactionMaxTokens: HermesOptions.DefaultCompactionMaxTokens
+                )
+            )
+        );
         var command = new CreateConversationInput(
             personaId,
             modelConfigId,
@@ -141,8 +153,20 @@ public sealed class CreateConversationHandlerTests
             )
             .Returns(new ChatCompletionResult(longName, null));
 
-        var options = Options.Create(new HermesOptions("Generate a name.", "test-model"));
-        var handler = new CreateConversationHandler(_logger, _dbContext, _mlClient, options);
+        var handler = new CreateConversationHandler(
+            _logger,
+            _dbContext,
+            _mlClient,
+            Options.Create(
+                new HermesOptions(
+                    ConversationNameSystemPrompt: "Generate a name.",
+                    ConversationNameModel: "test-model",
+                    CompactionSummaryPrompt: HermesOptions.DefaultCompactionSummaryPrompt,
+                    CompactionTemperature: HermesOptions.DefaultCompactionTemperature,
+                    CompactionMaxTokens: HermesOptions.DefaultCompactionMaxTokens
+                )
+            )
+        );
         var command = new CreateConversationInput(
             personaId,
             modelConfigId,
@@ -177,8 +201,20 @@ public sealed class CreateConversationHandlerTests
                 throw new HttpRequestException("ML service unavailable")
             );
 
-        var options = Options.Create(new HermesOptions("Generate a name.", "test-model"));
-        var handler = new CreateConversationHandler(_logger, _dbContext, _mlClient, options);
+        var handler = new CreateConversationHandler(
+            _logger,
+            _dbContext,
+            _mlClient,
+            Options.Create(
+                new HermesOptions(
+                    ConversationNameSystemPrompt: "Generate a name.",
+                    ConversationNameModel: "test-model",
+                    CompactionSummaryPrompt: HermesOptions.DefaultCompactionSummaryPrompt,
+                    CompactionTemperature: HermesOptions.DefaultCompactionTemperature,
+                    CompactionMaxTokens: HermesOptions.DefaultCompactionMaxTokens
+                )
+            )
+        );
         var command = new CreateConversationInput(
             personaId,
             modelConfigId,
@@ -278,8 +314,20 @@ public sealed class CreateConversationHandlerTests
             )
             .Returns(new ChatCompletionResult("Generated Name", null));
 
-        var options = Options.Create(new HermesOptions("Generate a name.", "test-model"));
-        var handler = new CreateConversationHandler(_logger, _dbContext, _mlClient, options);
+        var handler = new CreateConversationHandler(
+            _logger,
+            _dbContext,
+            _mlClient,
+            Options.Create(
+                new HermesOptions(
+                    ConversationNameSystemPrompt: "Generate a name.",
+                    ConversationNameModel: "test-model",
+                    CompactionSummaryPrompt: HermesOptions.DefaultCompactionSummaryPrompt,
+                    CompactionTemperature: HermesOptions.DefaultCompactionTemperature,
+                    CompactionMaxTokens: HermesOptions.DefaultCompactionMaxTokens
+                )
+            )
+        );
 
         var command = new CreateConversationInput(
             personaId,

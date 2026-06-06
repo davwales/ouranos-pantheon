@@ -3,7 +3,9 @@ using System.Text;
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.CompactConversation.Schemas;
+using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using Ouranos.Pantheon.Modules.Shared.Application;
@@ -20,34 +22,24 @@ public sealed class CompactConversationHandler
     private readonly ILogger<CompactConversationHandler> _logger;
     private readonly IOuranosMachineLearningClient _mlClient;
     private readonly IDbContextFactory<HermesDbContext> _dbContextFactory;
-
-    private const string SummaryPromptTemplate = """
-        You are summarizing a conversation for context compaction.
-
-        The conversation is with {PersonaName}: {PersonaDescription}
-
-        Summarize the following conversation history concisely, preserving:
-        - Key topics discussed and decisions made
-        - Important facts, preferences, or constraints established
-        - The current state of any ongoing tasks or problems
-        - Any unresolved questions or open items
-
-        Be concise but thorough. The summary will replace the full conversation history for future context.
-        """;
+    private readonly IOptions<HermesOptions> _options;
 
     public CompactConversationHandler(
         ILogger<CompactConversationHandler> logger,
         IOuranosMachineLearningClient mlClient,
-        IDbContextFactory<HermesDbContext> dbContextFactory
+        IDbContextFactory<HermesDbContext> dbContextFactory,
+        IOptions<HermesOptions> options
     )
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(mlClient);
         Guard.Against.Null(dbContextFactory);
+        Guard.Against.Null(options);
 
         _logger = logger;
         _mlClient = mlClient;
         _dbContextFactory = dbContextFactory;
+        _options = options;
     }
 
     public async IAsyncEnumerable<CompactConversationResponse> Handle(
@@ -92,7 +84,12 @@ public sealed class CompactConversationHandler
             );
         }
 
-        var summaryPrompt = ComposeSummaryPrompt(command, userAndAssistantMessages);
+        var options = _options.Value;
+        var summaryPrompt = ComposeSummaryPrompt(
+            command,
+            userAndAssistantMessages,
+            options.EffectiveCompactionSummaryPrompt
+        );
         var buffer = new StringBuilder();
         ChatCompletionUsage? tokenUsage = null;
 
@@ -103,8 +100,8 @@ public sealed class CompactConversationHandler
                     new MessageDto(summaryPrompt, RoleDto.System),
                     new MessageDto("Provide the summary now.", RoleDto.User),
                 ],
-                temperature: 0.3f,
-                maxTokens: 1024,
+                temperature: options.EffectiveCompactionTemperature,
+                maxTokens: options.EffectiveCompactionMaxTokens,
                 cancellationToken: cancellationToken
             )
         )
@@ -195,10 +192,11 @@ public sealed class CompactConversationHandler
 
     internal static string ComposeSummaryPrompt(
         CompactConversationInput command,
-        IEnumerable<CompactConversationMessageInput> messages
+        IEnumerable<CompactConversationMessageInput> messages,
+        string summaryPromptTemplate
     )
     {
-        var prompt = SummaryPromptTemplate
+        var prompt = summaryPromptTemplate
             .Replace("{PersonaName}", command.PersonaName)
             .Replace("{PersonaDescription}", command.PersonaDescription);
 
