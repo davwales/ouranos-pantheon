@@ -54,6 +54,9 @@ export type {
   ClosePositionResponse,
   ForecastEfficacyRow,
   PageParams,
+  SignalHistoryPoint,
+  SignalHistoryResponse,
+  GetSymbolSignalHistoryResponse,
 } from "./plutus-types";
 
 import type {
@@ -67,6 +70,7 @@ import type {
   GetSymbolTradesResponse,
   GetDailySymbolSummaryResponse,
   GetSymbolSignalsResponse,
+  GetSymbolSignalHistoryResponse,
   GetSignalRankingsRow,
   GetMarketForecastRow,
   ForecastEfficacyRow,
@@ -186,6 +190,15 @@ export const plutusApi = {
     api.get<GetSymbolSignalsResponse>(
       `/api/plutus/symbols/${symbolId}/signals`,
       intent ? { intent } : undefined,
+    ),
+
+  getSymbolSignalHistory: (
+    symbolId: string,
+    params?: { from?: string; to?: string; types?: string; intent?: string },
+  ) =>
+    api.get<GetSymbolSignalHistoryResponse>(
+      `/api/plutus/symbols/${symbolId}/signal-history`,
+      params,
     ),
 
   getSignalRankings: (marketId: string, page?: PageParams) =>

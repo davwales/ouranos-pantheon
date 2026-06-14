@@ -33,6 +33,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.GetAllRecipes;
 using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.GetRecipe;
 using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.UpdateRecipe;
 using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSignalRankings;
+using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSymbolSignalHistory;
 using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSymbolSignals;
 using Ouranos.Pantheon.Modules.Plutus.Features.Signals.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.CancelBacktest;
@@ -151,6 +152,7 @@ public sealed class PlutusModule : IPantheonModule
         DeleteRecipeEndpoint.Map(app);
 
         GetSymbolSignalsEndpoint.Map(app);
+        GetSymbolSignalHistoryEndpoint.Map(app);
         GetSignalRankingsEndpoint.Map(app);
 
         CreateSymbolGroupEndpoint.Map(app);

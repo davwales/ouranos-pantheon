@@ -3,7 +3,7 @@
 import { Typography } from "@/components/shared/typography";
 import { Button } from "@/components/ui/button";
 import { useApi } from "@/hooks/use-api";
-import { GetSymbolSignalsResponse, plutusApi } from "@/lib/api/plutus";
+import { GetSymbolSignalHistoryResponse, plutusApi } from "@/lib/api/plutus";
 import { useState } from "react";
 import { SignalCard } from "./signal-card";
 import { SignalsSectionSkeleton } from "@/app/(plutus)/plutus/[marketId]/[symbolId]/_components/signal-card-skeleton";
@@ -35,7 +35,7 @@ function SummaryBar({ value }: { value: number }) {
 function SignalSummarySection({
   data,
 }: {
-  data: GetSymbolSignalsResponse["summary"];
+  data: GetSymbolSignalHistoryResponse["summary"];
 }) {
   const scoreColor =
     data.aggregatedScore > 0
@@ -95,11 +95,11 @@ function SignalSummarySection({
 export function SignalsSection({ symbolId }: { symbolId: string }) {
   const [intent, setIntent] = useState<IntentFilter>("All");
 
-  const [state] = useApi<GetSymbolSignalsResponse>(
+  const [state] = useApi<GetSymbolSignalHistoryResponse>(
     () =>
-      plutusApi.getSymbolSignals(
+      plutusApi.getSymbolSignalHistory(
         symbolId,
-        intent === "All" ? undefined : intent,
+        intent === "All" ? undefined : { intent },
       ),
     [symbolId, intent],
   );

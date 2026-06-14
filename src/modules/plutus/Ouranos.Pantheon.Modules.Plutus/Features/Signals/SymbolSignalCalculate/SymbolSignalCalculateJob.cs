@@ -116,13 +116,22 @@ public sealed class SymbolSignalCalculateJob
             }
         }
 
-        var symbolIds = symbols.Select(s => s.Id).ToHashSet();
-        var existing = await _dbContext
-            .Signals.Where(s => symbolIds.Contains(s.SymbolId))
-            .ToListAsync(ct);
-        _dbContext.Signals.RemoveRange(existing);
         _dbContext.Signals.AddRange(signals);
         await _dbContext.SaveChangesAsync(ct);
+
+        var cutoff = DateTimeOffset.UtcNow.AddDays(-_options.Value.HistoryRetentionDays);
+        var purgeable = await _dbContext.Signals.Where(s => s.ComputedAt < cutoff).ToListAsync(ct);
+
+        if (purgeable.Count > 0)
+        {
+            _dbContext.Signals.RemoveRange(purgeable);
+            await _dbContext.SaveChangesAsync(ct);
+            _logger.LogInformation(
+                "Purged {Count} signals older than {Cutoff}",
+                purgeable.Count,
+                cutoff
+            );
+        }
 
         _logger.LogInformation(
             "Computed {Count} signals for {SymbolCount} symbols.",

@@ -12,7 +12,8 @@ public sealed record SignalOptions(
     decimal MomentumThreshold,
     decimal MaCrossoverThreshold,
     decimal PriceVelocityThreshold,
-    int BollingerMultiplier
+    int BollingerMultiplier,
+    int HistoryRetentionDays = 7
 )
 {
     public const string SectionName = "Signals";
@@ -28,6 +29,7 @@ public sealed record SignalOptions(
             MomentumThreshold: 0.05m,
             MaCrossoverThreshold: 0.02m,
             PriceVelocityThreshold: 0.03m,
-            BollingerMultiplier: 2
+            BollingerMultiplier: 2,
+            HistoryRetentionDays: 7
         ) { }
 }

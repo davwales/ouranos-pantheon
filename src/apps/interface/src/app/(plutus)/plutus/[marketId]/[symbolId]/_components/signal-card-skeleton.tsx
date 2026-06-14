@@ -24,6 +24,8 @@ export function SignalCardSkeleton({ className }: SignalCardSkeletonProps) {
           <Skeleton className="h-3 w-4" />
         </div>
       </div>
+      {/* Sparkline */}
+      <Skeleton className="h-12 w-full rounded-sm" />
       {/* Tags and direction */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex gap-1 flex-wrap">
