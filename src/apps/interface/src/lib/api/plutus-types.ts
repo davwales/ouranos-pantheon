@@ -187,6 +187,29 @@ export interface SignalSummary {
   isMerchFavourable: boolean;
 }
 
+export interface SignalHistoryPoint {
+  value: number;
+  computedAt: string;
+}
+
+export interface SignalHistoryResponse {
+  type: string;
+  label: string;
+  description: string;
+  intents: string[];
+  currentValue: number;
+  direction: string;
+  strength: string;
+  history: SignalHistoryPoint[];
+}
+
+export interface GetSymbolSignalHistoryResponse {
+  symbolId: string;
+  symbolName: string;
+  signals: SignalHistoryResponse[];
+  summary: SignalSummary;
+}
+
 export interface GetSymbolSignalsResponse {
   signals: SignalResponse[];
   summary: SignalSummary;

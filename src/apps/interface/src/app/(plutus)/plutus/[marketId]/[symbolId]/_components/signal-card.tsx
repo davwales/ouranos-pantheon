@@ -1,5 +1,6 @@
 import { Typography } from "@/components/shared/typography";
-import { SignalResponse } from "@/lib/api/plutus";
+import { SignalHistoryResponse } from "@/lib/api/plutus";
+import { SignalSparkline } from "./signal-sparkline";
 
 function ValueBar({ value }: { value: number }) {
   const isPositive = value > 0;
@@ -45,8 +46,8 @@ function ValueBar({ value }: { value: number }) {
   );
 }
 
-export function SignalCard({ signal }: { signal: SignalResponse }) {
-  const { label, description, value, direction, strength, intents } = signal;
+export function SignalCard({ signal }: { signal: SignalHistoryResponse }) {
+  const { label, description, currentValue, direction, strength, intents, history } = signal;
 
   const directionColor =
     direction === "Bullish"
@@ -64,7 +65,9 @@ export function SignalCard({ signal }: { signal: SignalResponse }) {
         </Typography>
       </div>
 
-      <ValueBar value={value} />
+      <ValueBar value={currentValue} />
+
+      <SignalSparkline history={history} />
 
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex gap-1 flex-wrap">

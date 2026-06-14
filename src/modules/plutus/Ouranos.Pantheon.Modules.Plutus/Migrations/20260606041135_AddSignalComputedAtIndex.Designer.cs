@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
@@ -11,9 +12,11 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 namespace Ouranos.Pantheon.Modules.Plutus.Migrations
 {
     [DbContext(typeof(PlutusDbContext))]
-    partial class PlutusDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260606041135_AddSignalComputedAtIndex")]
+    partial class AddSignalComputedAtIndex
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -355,7 +358,7 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                         .HasName("pk_signals");
 
                     b.HasIndex("ComputedAt")
-                        .IsDescending(true)
+                        .IsDescending()
                         .HasDatabaseName("ix_signals_computed_at");
 
                     b.HasIndex("MarketId")
