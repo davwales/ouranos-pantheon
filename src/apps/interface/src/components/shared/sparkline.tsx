@@ -8,21 +8,32 @@ import {
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
+  YAxis,
 } from "recharts";
 
-type SignalHistoryPoint = { value: number; computedAt: string };
+export type SparklinePoint = { value: number; timestamp: string };
 
-type SignalSparklineProps = {
-  history: SignalHistoryPoint[];
+export type SparklineProps = {
+  data: SparklinePoint[];
+  domain?: [number, number];
+  colorPositive?: string;
+  colorZero?: string;
+  colorNegative?: string;
 };
 
-export function SignalSparkline({ history }: SignalSparklineProps) {
-  if (history.length < 2) {
+export function Sparkline({
+  data: rawData,
+  domain = [-1, 1],
+  colorPositive = "#22c55e",
+  colorZero = "var(--muted-foreground)",
+  colorNegative = "#ef4444",
+}: SparklineProps) {
+  if (rawData.length < 2) {
     return null;
   }
 
-  const sorted = [...history].sort(
-    (a, b) => new Date(a.computedAt).getTime() - new Date(b.computedAt).getTime(),
+  const sorted = [...rawData].sort(
+    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
   );
 
   let data = sorted;
@@ -34,10 +45,32 @@ export function SignalSparkline({ history }: SignalSparklineProps) {
     }
   }
 
-  return <SparklineChart data={data} />;
+  return (
+    <SparklineChart
+      data={data}
+      domain={domain}
+      colorPositive={colorPositive}
+      colorZero={colorZero}
+      colorNegative={colorNegative}
+    />
+  );
 }
 
-function SparklineChart({ data }: { data: SignalHistoryPoint[] }) {
+type SparklineChartProps = {
+  data: SparklinePoint[];
+  domain: [number, number];
+  colorPositive: string;
+  colorZero: string;
+  colorNegative: string;
+};
+
+function SparklineChart({
+  data,
+  domain,
+  colorPositive,
+  colorZero,
+  colorNegative,
+}: SparklineChartProps) {
   const gradientId = useId();
   const lastIndex = data.length - 1;
 
@@ -50,23 +83,40 @@ function SparklineChart({ data }: { data: SignalHistoryPoint[] }) {
         <defs>
           <linearGradient
             id={gradientId}
-            gradientUnits="objectBoundingBox"
+            gradientUnits="userSpaceOnUse"
             x1="0"
             x2="0"
-            y1="0"
-            y2="1"
+            y1="4"
+            y2="44"
           >
-            <stop offset="0%" stopColor="#22c55e" />
-            <stop offset="50%" stopColor="var(--muted-foreground)" />
-            <stop offset="100%" stopColor="#ef4444" />
+            <stop offset="0%" stopColor={colorPositive} />
+            <stop offset="50%" stopColor={colorZero} />
+            <stop offset="100%" stopColor={colorNegative} />
           </linearGradient>
         </defs>
+        <YAxis hide domain={domain} />
         <ReferenceLine y={0} stroke="var(--border)" strokeWidth={1} />
-        <Tooltip content={<SparklineTooltip />} />
+        <Tooltip
+          content={
+            <SparklineTooltip
+              colorPositive={colorPositive}
+              colorZero={colorZero}
+              colorNegative={colorNegative}
+            />
+          }
+        />
         <Line
           dataKey="value"
           type="monotone"
-          dot={(props) => <SparklineDot {...props} lastIndex={lastIndex} />}
+          dot={(props) => (
+            <SparklineDot
+              {...props}
+              lastIndex={lastIndex}
+              colorPositive={colorPositive}
+              colorZero={colorZero}
+              colorNegative={colorNegative}
+            />
+          )}
           isAnimationActive={false}
           strokeWidth={1.5}
           stroke={`url(#${gradientId})`}
@@ -82,12 +132,18 @@ function SparklineDot({
   index,
   payload,
   lastIndex,
+  colorPositive,
+  colorZero,
+  colorNegative,
 }: {
   cx?: number;
   cy?: number;
   index?: number;
-  payload?: SignalHistoryPoint;
+  payload?: SparklinePoint;
   lastIndex: number;
+  colorPositive: string;
+  colorZero: string;
+  colorNegative: string;
 }) {
   if (
     cx === undefined ||
@@ -101,10 +157,10 @@ function SparklineDot({
 
   const fill =
     payload.value > 0
-      ? "#22c55e"
+      ? colorPositive
       : payload.value < 0
-        ? "#ef4444"
-        : "var(--muted-foreground)";
+        ? colorNegative
+        : colorZero;
 
   return (
     <circle
@@ -121,22 +177,28 @@ function SparklineDot({
 function SparklineTooltip({
   active,
   payload,
+  colorPositive,
+  colorZero,
+  colorNegative,
 }: {
   active?: boolean;
-  payload?: { payload: SignalHistoryPoint }[];
+  payload?: { payload: SparklinePoint }[];
+  colorPositive: string;
+  colorZero: string;
+  colorNegative: string;
 }) {
   if (!active || !payload?.length) {
     return null;
   }
 
   const point = payload[0].payload;
-  const date = new Date(point.computedAt);
+  const date = new Date(point.timestamp);
   const valueColor =
     point.value > 0
-      ? "#22c55e"
+      ? colorPositive
       : point.value < 0
-        ? "#ef4444"
-        : "var(--muted-foreground)";
+        ? colorNegative
+        : colorZero;
 
   return (
     <div className="rounded-lg border border-border/50 bg-background px-2 py-1 text-xs shadow-xl">
