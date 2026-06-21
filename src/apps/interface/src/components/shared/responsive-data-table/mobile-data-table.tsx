@@ -3,8 +3,10 @@ import { DataTablePagination } from "@/components/shared/responsive-data-table/d
 import { DataTableSorting } from "@/components/shared/responsive-data-table/data-table-sorting";
 import {
   DataTableProps,
+  ExtendedColumnDef,
   PaginationArgs,
   SortArgs,
+  withDefaultState,
 } from "@/components/shared/responsive-data-table/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,15 +52,9 @@ export default function MobileDataTable<TData>({
     }
   };
 
-  const handleFilterChange = (filter: Record<string, any>) => {
-    if (onStateChange) {
-      onStateChange({ ...state, filter });
-    }
-  };
-
   const handleSortChange = (sort: SortArgs) => {
     if (onStateChange) {
-      onStateChange({ ...state, sort });
+      onStateChange(withDefaultState(state, { sort }));
     }
   };
 
@@ -66,10 +62,7 @@ export default function MobileDataTable<TData>({
     updatedPaginationArgs: PaginationArgs,
   ) => {
     if (onStateChange) {
-      onStateChange({
-        ...state,
-        pagination: updatedPaginationArgs,
-      });
+      onStateChange(withDefaultState(state, { pagination: updatedPaginationArgs }));
 
       const pageChanged = updatedPaginationArgs.skip != state?.pagination?.skip;
       if (pageChanged) {
@@ -85,8 +78,8 @@ export default function MobileDataTable<TData>({
       {!disableFiltering && (
         <DataTableFiltering
           columns={columns}
-          filter={state?.filter ?? {}}
-          onFilterChange={handleFilterChange}
+          state={state}
+          onStateChange={onStateChange}
         />
       )}
 

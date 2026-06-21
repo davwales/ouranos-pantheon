@@ -106,10 +106,7 @@ export default function BacktestsPage() {
   );
 
   const { sortField, sortDirection } = extractSort(tableState.sort);
-  const filter = useMemo(
-    () => extractFilter(tableState.filter),
-    [tableState.filter],
-  );
+  const filter = useMemo(() => extractFilter(tableState), [tableState]);
 
   const [strategyState] = useApi<StrategyDetail>(
     () => plutusApi.getStrategy(strategyId),
