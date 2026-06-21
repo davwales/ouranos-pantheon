@@ -1,289 +1,93 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+"use client";
+
+import { SmartFilterInput } from "@/components/shared/smart-filter";
+import { FilterModeToggle } from "./filter-mode-toggle";
+import type { FilterModeDef } from "./filter-mode-toggle";
+import { Sparkles } from "lucide-react";
+import { type ComponentProps } from "react";
+import { filterGroupToQuery } from "./filter-group-converters";
+import { FilterGroupBuilder } from "./filter-group-builder";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useDebounce } from "@/hooks/use-debounce";
-import { Plus } from "lucide-react";
-import React, { useEffect, useLayoutEffect, useState } from "react";
-import {
-  ExtendedColumnDef,
-  FilterCondition,
-  FilterOperator,
-  OPERATOR_LABELS,
+  type DataTableState,
+  DEFAULT_FILTER_MODE,
+  EMPTY_FILTER,
+  type ExtendedColumnDef,
+  type FilterMode,
 } from "./types";
 
-interface FilterInputProps {
-  columns: ExtendedColumnDef<any>[];
-  value: FilterCondition;
-  onChange: (value: FilterCondition) => void;
-  onRemove: () => void;
-}
+const FILTER_MODES: FilterModeDef[] = [
+  { id: "builder", label: "Builder" },
+  {
+    id: "smart",
+    label: "Smart",
+    icon: Sparkles,
+    tooltip:
+      "Filter with natural language, e.g. 'symbolName contains gold and limit > 100'",
+  },
+];
 
-function FilterInput({ columns, value, onChange, onRemove }: FilterInputProps) {
-  const filterableColumns = columns.filter((col) => col.filterConfig);
-  const currentColumn = columns.find((col) => col.id === value.field);
-
-  const [textInputValue, setTextInputValue] = useState(
-    String(value.value ?? ""),
-  );
-  const debouncedTextValue = useDebounce(textInputValue);
-
-  const onChangeRef = React.useRef(onChange);
-  const valueRef = React.useRef(value);
-  const filterTypeRef = React.useRef(currentColumn?.filterConfig?.type);
-
-  useLayoutEffect(() => {
-    onChangeRef.current = onChange;
-    valueRef.current = value;
-    filterTypeRef.current = currentColumn?.filterConfig?.type;
-  });
-
-  useEffect(() => {
-    if (filterTypeRef.current === "number") {
-      const parsed = parseFloat(debouncedTextValue);
-      if (!Number.isNaN(parsed))
-        onChangeRef.current({ ...valueRef.current, value: parsed });
-    } else if (
-      filterTypeRef.current !== "boolean" &&
-      filterTypeRef.current !== "enum" &&
-      filterTypeRef.current !== "date"
-    ) {
-      onChangeRef.current({ ...valueRef.current, value: debouncedTextValue });
-    }
-  }, [debouncedTextValue]);
-
-  const handleColumnChange = (columnId: string) => {
-    const column = columns.find((col) => col.id === columnId);
-    if (!column?.filterConfig) return;
-
-    onChange({
-      field: columnId,
-      operator: column.filterConfig.operators[0],
-      value: "",
-    });
-  };
-
-  const handleOperatorChange = (operator: FilterOperator) => {
-    onChange({ ...value, operator });
-  };
-
-  const handleValueChange = (newValue: string) => {
-    let parsedValue: any = newValue;
-
-    switch (currentColumn?.filterConfig?.type) {
-      case "number":
-        parsedValue = parseFloat(newValue);
-        break;
-      case "boolean":
-        parsedValue = newValue === "true";
-        break;
-      case "date":
-        parsedValue = new Date(newValue).toISOString();
-        break;
-    }
-
-    onChange({ ...value, value: parsedValue });
-  };
-
-  if (!currentColumn?.filterConfig) return null;
-
-  return (
-    <div className="flex flex-col md:flex-row gap-2 my-2 rounded-lg">
-      <Select value={value.field} onValueChange={handleColumnChange}>
-        <SelectTrigger className="w-full md:w-48">
-          <SelectValue placeholder="Column" />
-        </SelectTrigger>
-        <SelectContent>
-          {filterableColumns.map((col) => (
-            <SelectItem key={col.id} value={col.id as string}>
-              {col.header as string}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select value={value.operator} onValueChange={handleOperatorChange}>
-        <SelectTrigger className="w-full md:w-48">
-          <SelectValue placeholder="Operator" />
-        </SelectTrigger>
-        <SelectContent>
-          {currentColumn.filterConfig.operators.map((op: FilterOperator) => (
-            <SelectItem key={op} value={op}>
-              {OPERATOR_LABELS[op]}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      {currentColumn.filterConfig.type === "enum" ? (
-        <Select value={value.value} onValueChange={handleValueChange}>
-          <SelectTrigger className="w-full md:w-48">
-            <SelectValue placeholder="Value" />
-          </SelectTrigger>
-          <SelectContent>
-            {currentColumn.filterConfig.enumValues?.map((val: string) => (
-              <SelectItem key={val} value={val}>
-                {val}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      ) : currentColumn.filterConfig.type === "date" ? (
-        <Input
-          type="date"
-          value={value.value}
-          onChange={(e) => handleValueChange(e.target.value)}
-          className="w-full md:w-48"
-        />
-      ) : (
-        <Input
-          type="text"
-          value={textInputValue}
-          onChange={(e) => setTextInputValue(e.target.value)}
-          className="w-full md:w-48"
-        />
-      )}
-
-      <Button
-        variant="destructive"
-        onClick={onRemove}
-        className="self-end w-full md:w-auto md:self-center"
-      >
-        Remove
-      </Button>
-    </div>
-  );
+function transitionMode(
+  to: FilterMode,
+  state: DataTableState | undefined,
+  columns: ExtendedColumnDef<any>[],
+): DataTableState {
+  if (to === "smart") {
+    const currentGroup = state?.filter ?? EMPTY_FILTER;
+    return { ...state, filterMode: to, smartQuery: filterGroupToQuery(currentGroup, columns) };
+  }
+  return { ...state, filterMode: to };
 }
 
 export function DataTableFiltering<TData>({
-  onFilterChange,
   columns,
-  filter,
+  state,
+  onStateChange,
   ...props
-}: React.ComponentProps<"div"> & {
-  onFilterChange?: (filter: Record<string, any>) => void;
+}: ComponentProps<"div"> & {
   columns: ExtendedColumnDef<TData>[];
-  filter: Record<string, any>;
+  state?: DataTableState;
+  onStateChange?: (state: DataTableState) => void;
 }) {
-  const filterConditions = (() => {
-    const conditions: FilterCondition[] = [];
+  const mode = state?.filterMode ?? DEFAULT_FILTER_MODE;
+  const currentState = state ?? { filterMode: DEFAULT_FILTER_MODE };
 
-    const processNestedObject = (
-      obj: Record<string, any>,
-      currentPath: string[] = [],
-    ) => {
-      Object.entries(obj).forEach(([key, value]) => {
-        if (
-          typeof value === "object" &&
-          value !== null &&
-          !Array.isArray(value)
-        ) {
-          if (Object.keys(value).some((k) => k in OPERATOR_LABELS)) {
-            Object.entries(value).forEach(([operator, operatorValue]) => {
-              if (operator in OPERATOR_LABELS) {
-                conditions.push({
-                  field: [...currentPath, key].join("."),
-                  operator: operator as FilterOperator,
-                  value: operatorValue,
-                });
-              }
-            });
-          } else {
-            processNestedObject(value, [...currentPath, key]);
-          }
-        }
-      });
-    };
-
-    processNestedObject(filter);
-    return conditions;
-  })();
-
-  const handleAddFilter = () => {
-    const filterableColumns = columns.filter((col) => col.filterConfig);
-    if (filterableColumns.length === 0) return;
-
-    const newFilter: FilterCondition = {
-      field: filterableColumns[0].id as string,
-      operator: filterableColumns[0].filterConfig!.operators[0],
-      value: "",
-    };
-
-    updateFilter([...filterConditions, newFilter]);
-  };
-
-  const handleFilterChange = (
-    index: number,
-    updatedFilter: FilterCondition,
-  ) => {
-    const updatedFilters = [...filterConditions];
-    updatedFilters[index] = updatedFilter;
-    updateFilter(updatedFilters);
-  };
-
-  const handleRemoveFilter = (index: number) => {
-    const updatedFilters = filterConditions.filter((_, i) => i !== index);
-    updateFilter(updatedFilters);
-  };
-
-  const updateFilter = (conditions: FilterCondition[]) => {
-    const filterObject: Record<string, any> = {};
-
-    conditions.forEach((condition) => {
-      const column = columns.find((col) => col.id === condition.field);
-      if (!column?.filterConfig) return;
-
-      const fieldPath = condition.field.split(".");
-      let currentLevel = filterObject;
-
-      for (let i = 0; i < fieldPath.length - 1; i++) {
-        const part = fieldPath[i];
-        if (!currentLevel[part]) {
-          currentLevel[part] = {};
-        }
-        currentLevel = currentLevel[part];
-      }
-
-      const lastPart = fieldPath[fieldPath.length - 1];
-      if (!currentLevel[lastPart]) {
-        currentLevel[lastPart] = {};
-      }
-      currentLevel[lastPart][condition.operator] = condition.value;
-    });
-
-    if (onFilterChange) {
-      onFilterChange(filterObject);
-    }
+  const handleModeChange = (newMode: FilterMode) => {
+    onStateChange?.(transitionMode(newMode, state, columns));
   };
 
   return (
     <div {...props}>
-      <Button
-        onClick={handleAddFilter}
-        className="w-full md:w-auto"
-        disabled={!columns.some((col) => col.filterConfig)}
-      >
-        Add Filter <Plus className="ml-2 h-4 w-4" />
-      </Button>
-
-      <div className="flex flex-col mt-2">
-        {filterConditions.map((filter, index) => (
-          <FilterInput
-            key={index}
-            columns={columns}
-            value={filter}
-            onChange={(updatedFilter) =>
-              handleFilterChange(index, updatedFilter)
+      <FilterModeToggle
+        modes={FILTER_MODES}
+        activeMode={mode}
+        onModeChange={handleModeChange}
+      />
+      {mode === "builder" ? (
+        <div className="mt-2">
+        <FilterGroupBuilder
+          group={currentState.filter ?? EMPTY_FILTER}
+          columns={columns}
+          depth={0}
+          onChange={(newGroup) =>
+            onStateChange?.({ ...currentState, filter: newGroup })
+          }
+        />
+        </div>
+      ) : (
+        <SmartFilterInput
+          columns={columns}
+          value={currentState.smartQuery ?? ""}
+          onQueryChange={(query) =>
+            onStateChange?.({ ...currentState, smartQuery: query })
+          }
+          onChange={(result) => {
+            if (result) {
+              onStateChange?.({ ...currentState, filter: result });
             }
-            onRemove={() => handleRemoveFilter(index)}
-          />
-        ))}
-      </div>
+          }}
+          className="mt-2"
+        />
+      )}
     </div>
   );
 }

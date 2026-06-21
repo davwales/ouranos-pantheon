@@ -38,20 +38,14 @@ export default function PortfolioPage() {
 
   const openSort = extractSort(openTableState.sort);
   const openFilter = useMemo(
-    () => [
-      ...(extractFilter(openTableState.filter) ?? []),
-      "status:eq:Pending",
-    ],
-    [openTableState.filter],
+    () => [...(extractFilter(openTableState) ?? []), "status:eq:Pending"],
+    [openTableState],
   );
 
   const closedSort = extractSort(closedTableState.sort);
   const closedFilter = useMemo(
-    () => [
-      ...(extractFilter(closedTableState.filter) ?? []),
-      "status:neq:Pending",
-    ],
-    [closedTableState.filter],
+    () => [...(extractFilter(closedTableState) ?? []), "status:neq:Pending"],
+    [closedTableState],
   );
 
   const [openState, reexecuteOpen] = useApi(

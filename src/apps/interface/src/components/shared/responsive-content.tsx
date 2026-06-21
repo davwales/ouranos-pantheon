@@ -22,7 +22,11 @@ export function ResponsiveContent({
     const isMobile = useIsMobile();
     const targetType: ContentType = isMobile ? "mobile" : "desktop";
 
-    const content = children.filter((child) => child.props.type === targetType);
+    const content = React.Children.toArray(children).filter(
+      (child) =>
+        React.isValidElement(child) &&
+        (child.props as Record<string, unknown>).type === targetType,
+    );
 
     return (
         <div {...props}>
