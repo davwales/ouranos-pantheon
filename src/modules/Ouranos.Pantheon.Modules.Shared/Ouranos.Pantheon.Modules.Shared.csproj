@@ -10,8 +10,11 @@
     <PackageReference Include="TickerQ" />
     <PackageReference Include="TickerQ.EntityFrameworkCore" />
     <PackageReference Include="TickerQ.Dashboard" />
+    <PackageReference Include="Marten" />
     <PackageReference Include="WolverineFx" />
+    <PackageReference Include="WolverineFx.Marten" />
     <PackageReference Include="WolverineFx.RabbitMq" />
+    <PackageReference Include="WolverineFx.RuntimeCompilation" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
