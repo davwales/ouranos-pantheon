@@ -1,8 +1,10 @@
 using System.Reflection;
+using Marten;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Wolverine.Marten;
 
 namespace Ouranos.Pantheon.Modules.Shared.Infra.Postgres;
 
@@ -43,6 +45,36 @@ public static class PostgresModule
                         .UseSnakeCaseNamingConvention();
                 }
             );
+    }
+
+    public static IServiceCollection AddCoreMartenModule<TMarker>(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        string schemaName,
+        Action<StoreOptions>? configure = null
+    )
+        where TMarker : class, IDocumentStore
+    {
+        services.Configure<PostgresOptions>(configuration.GetSection(PostgresOptions.SectionName));
+
+        void ConfigureStore(StoreOptions options)
+        {
+            var postgresOptions =
+                configuration.GetSection(PostgresOptions.SectionName).Get<PostgresOptions>()
+                ?? new PostgresOptions();
+
+            options.Connection(postgresOptions.GetConnectionString());
+            options.DatabaseSchemaName = schemaName;
+
+            configure?.Invoke(options);
+        }
+
+        services
+            .AddMartenStore<TMarker>(ConfigureStore)
+            .IntegrateWithWolverine()
+            .ApplyAllDatabaseChangesOnStartup();
+
+        return services;
     }
 
     public static async Task<IServiceProvider> ApplyCorePostgresMigrations<TContext>(

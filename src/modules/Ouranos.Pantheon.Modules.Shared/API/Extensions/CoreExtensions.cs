@@ -1,3 +1,4 @@
+using JasperFx;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -49,6 +50,8 @@ public static class CoreExtensions
 
         builder.UseWolverine(opts =>
         {
+            opts.UseRuntimeCompilation();
+
             opts.Discovery.IncludeAssembly(typeof(IPantheonModule).Assembly);
 
             opts.Discovery.CustomizeHandlerDiscovery(x =>
@@ -86,6 +89,12 @@ public static class CoreExtensions
                 opts.Discovery.IncludeAssembly(module.GetType().Assembly);
                 module.ConfigureWolverine(opts, builder.Configuration);
             }
+        });
+
+        builder.Services.CritterStackDefaults(x =>
+        {
+            x.Development.ResourceAutoCreate = AutoCreate.All;
+            x.Production.ResourceAutoCreate = AutoCreate.None;
         });
 
         foreach (var module in modules)

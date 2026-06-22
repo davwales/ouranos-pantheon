@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RunSettingsFilePath>$(MSBuildThisFileDirectory)coverage.runsettings</RunSettingsFilePath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\src\modules\hestia\Ouranos.Pantheon.Modules.Hestia\Ouranos.Pantheon.Modules.Hestia.csproj" />
+    <ProjectReference Include="..\..\..\Ouranos.Pantheon.Tests.Utils\Ouranos.Pantheon.Tests.Utils.csproj" />
+  </ItemGroup>
+</Project>
