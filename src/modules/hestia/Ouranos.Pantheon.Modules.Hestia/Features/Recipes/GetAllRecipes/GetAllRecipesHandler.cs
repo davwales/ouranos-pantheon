@@ -1,0 +1,80 @@
+using Ardalis.GuardClauses;
+using Marten;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetAllRecipes.Schemas;
+using Ouranos.Pantheon.Modules.Hestia.Shared.Database;
+using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes;
+using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
+using Ouranos.Pantheon.Modules.Shared.Application.Common.Pagination;
+using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
+using Ouranos.Pantheon.Modules.Shared.Domain;
+
+namespace Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetAllRecipes;
+
+public sealed class GetAllRecipesHandler(
+    ILogger<GetAllRecipesHandler> logger,
+    IHestiaMartenStore store,
+    IOptions<QueryOptions> queryOptions
+) : IPantheonHandler<GetAllRecipesInput, PagedResponse<GetAllRecipesResponse>>
+{
+    private static readonly FilterBuilder<RecipeDocument> FilterBuilder =
+        new FilterBuilder<RecipeDocument>()
+            .On(nameof(RecipeDocument.Title), r => r.Title, caseInsensitive: true)
+            .On(nameof(RecipeDocument.SourceUrl), r => r.SourceUrl, caseInsensitive: true);
+
+    private static readonly SortBuilder<RecipeDocument> SortBuilder =
+        new SortBuilder<RecipeDocument>()
+            .On(nameof(GetAllRecipesResponse.Title), r => r.Title)
+            .Default(r => r.CreatedAt, SortDirection.Desc);
+
+    private readonly IHestiaMartenStore _store = Guard.Against.Null(store);
+    private readonly ILogger<GetAllRecipesHandler> _logger = Guard.Against.Null(logger);
+    private readonly IOptions<QueryOptions> _queryOptions = Guard.Against.Null(queryOptions);
+
+    public async Task<PagedResponse<GetAllRecipesResponse>> Handle(
+        GetAllRecipesInput input,
+        CancellationToken cancellationToken = default
+    )
+    {
+        _logger.LogTrace("Attempting to handle get all recipes query '{@query}'.", input);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var limits = _queryOptions.Value;
+        Guard.Against.OutOfRange(input.Skip, nameof(input.Skip), 0, limits.MaxSkip);
+        Guard.Against.OutOfRange(
+            input.Take,
+            nameof(input.Take),
+            limits.MinPageSize,
+            limits.MaxPageSize
+        );
+
+        using var session = _store.QuerySession();
+        var filtered = session.Query<RecipeDocument>().FilterBy(input.Filter, FilterBuilder);
+        var totalCount = await filtered.CountAsync(cancellationToken);
+
+        var projected = await filtered
+            .SortBy(input.SortField, input.SortDirection, SortBuilder)
+            .Paginate(input.Skip, input.Take)
+            .Select(r => new
+            {
+                r.Id,
+                r.Title,
+                r.SourceUrl,
+            })
+            .ToListAsync(cancellationToken);
+
+        var items = projected
+            .Select(r => new GetAllRecipesResponse(
+                new Id<RecipeDocument>(r.Id.ToString()),
+                r.Title,
+                r.SourceUrl
+            ))
+            .ToList();
+
+        _logger.LogDebug("Successfully handled get all recipes request.");
+        return new PagedResponse<GetAllRecipesResponse>(items, totalCount, input.Skip, input.Take);
+    }
+}
