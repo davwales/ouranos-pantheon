@@ -1,6 +1,7 @@
 using JasperFx.Events.Projections;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
+using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetAllRecipes;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Database;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes.Projections;
 using Ouranos.Pantheon.Modules.Shared;
@@ -23,7 +24,8 @@ public sealed class HestiaModule : IPantheonModule
                 options =>
                 {
                     options.Projections.Add<RecipeProjection>(ProjectionLifecycle.Async);
-                }
+                },
+                initialData: [new HestiaRecipeSeedData()]
             );
 
         return builder;
@@ -35,5 +37,8 @@ public sealed class HestiaModule : IPantheonModule
         return host;
     }
 
-    public void MapEndpoints(WebApplication app) { }
+    public void MapEndpoints(WebApplication app)
+    {
+        GetAllRecipesEndpoint.Map(app);
+    }
 }

@@ -20,4 +20,6 @@ public sealed class RecipeDocument
     public List<Ingredient> Ingredients { get; set; } = [];
 
     public string Notes { get; set; } = string.Empty;
+
+    public DateTimeOffset CreatedAt { get; set; }
 }

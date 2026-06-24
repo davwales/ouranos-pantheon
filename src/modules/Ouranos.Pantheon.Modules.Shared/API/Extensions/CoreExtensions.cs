@@ -94,7 +94,7 @@ public static class CoreExtensions
         builder.Services.CritterStackDefaults(x =>
         {
             x.Development.ResourceAutoCreate = AutoCreate.All;
-            x.Production.ResourceAutoCreate = AutoCreate.None;
+            x.Production.ResourceAutoCreate = AutoCreate.CreateOrUpdate;
         });
 
         foreach (var module in modules)

@@ -51,7 +51,8 @@ public static class PostgresModule
         this IServiceCollection services,
         IConfiguration configuration,
         string schemaName,
-        Action<StoreOptions>? configure = null
+        Action<StoreOptions>? configure = null,
+        Marten.Schema.IInitialData[]? initialData = null
     )
         where TMarker : class, IDocumentStore
     {
@@ -71,6 +72,7 @@ public static class PostgresModule
 
         services
             .AddMartenStore<TMarker>(ConfigureStore)
+            .InitializeWith(initialData ?? [])
             .IntegrateWithWolverine()
             .ApplyAllDatabaseChangesOnStartup();
 
