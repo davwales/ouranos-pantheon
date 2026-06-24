@@ -9,6 +9,7 @@ using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Features.Health;
 using Ouranos.Pantheon.Modules.Shared.Features.Health.Checks;
 using Ouranos.Pantheon.Modules.Shared.Infra.Flagsmith;
+using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Infra.Postgres;
 using Ouranos.Pantheon.Modules.Shared.Infra.RabbitMq;
 using Ouranos.Pantheon.Modules.Shared.WebSockets;
@@ -51,6 +52,10 @@ public static class CoreExtensions
         builder.UseWolverine(opts =>
         {
             opts.UseRuntimeCompilation();
+
+            // IOuranosMachineLearningClient is registered via AddHttpClient<TInterface,TImpl>(lambda),
+            // which is an opaque factory Wolverine 6 cannot inline. Allowlist it for service location.
+            opts.CodeGeneration.AlwaysUseServiceLocationFor<IOuranosMachineLearningClient>();
 
             opts.Discovery.IncludeAssembly(typeof(IPantheonModule).Assembly);
 

@@ -186,6 +186,8 @@ public sealed class PlutusModule : IPantheonModule
 
     public void ConfigureWolverine(WolverineOptions opts, IConfiguration configuration)
     {
+        opts.CodeGeneration.AlwaysUseServiceLocationFor<PlutusDbContext>();
+
         opts.PublishMessage<RunBacktestMessage>()
             .ToRabbitExchange(
                 RunBacktestMessage.Exchange,
