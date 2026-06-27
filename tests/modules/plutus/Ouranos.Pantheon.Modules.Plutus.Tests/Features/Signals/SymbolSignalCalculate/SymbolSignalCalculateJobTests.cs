@@ -31,7 +31,12 @@ public sealed class SymbolSignalCalculateJobTests
 
     private SymbolSignalCalculateJob CreateJob(IEnumerable<ISignalComputer>? computers = null)
     {
-        return new(_logger, _dbContext, Options.Create(_signalOptions), computers ?? []);
+        return new TestableSymbolSignalCalculateJob(
+            _logger,
+            _dbContext,
+            Options.Create(_signalOptions),
+            computers ?? []
+        );
     }
 
     [Fact]
@@ -298,7 +303,7 @@ public sealed class SymbolSignalCalculateJobTests
         var signalCountBeforePurge = _dbContext.Signals.Count();
         signalCountBeforePurge.ShouldBe(2);
 
-        // Act — make the old signal appear older than the retention window
+        // Act - make the old signal appear older than the retention window
         var entry = _dbContext.Entry(oldSignal);
         entry.Property(s => s.ComputedAt).CurrentValue = DateTimeOffset.UtcNow.AddDays(
             -_signalOptions.HistoryRetentionDays - 1
