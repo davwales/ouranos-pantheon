@@ -272,48 +272,4 @@ public sealed class SymbolSignalCalculateJobTests
         _dbContext.Signals.Count(s => s.Type == SignalType.TaxAdjustedRoi).ShouldBe(1);
         _dbContext.Signals.Count(s => s.Type == SignalType.Rsi).ShouldBe(1);
     }
-
-    [Fact]
-    public async Task Execute_WhenSignalsOlderThanRetention_ShouldPurgeOldSignals()
-    {
-        // Arrange
-        var market = Market.Create(
-            new Id<Market>(Guid.NewGuid().ToString()),
-            "Test Market",
-            new Taxes(null)
-        );
-        var symbol = Symbol.Create(
-            new Id<Symbol>(Guid.NewGuid().ToString()),
-            "ITEM1",
-            null,
-            "Item One",
-            market.Id,
-            new AdditionalFields()
-        );
-
-        var oldSignal = Signal.Create(market.Id, symbol.Id, SignalType.TaxAdjustedRoi, 0.1m);
-        var recentSignal = Signal.Create(market.Id, symbol.Id, SignalType.Rsi, 0.5m);
-
-        var job = CreateJob([]);
-
-        await _dbContext.SeedData(market);
-        await _dbContext.SeedData(symbol);
-        await _dbContext.SeedData(oldSignal, recentSignal);
-
-        var signalCountBeforePurge = _dbContext.Signals.Count();
-        signalCountBeforePurge.ShouldBe(2);
-
-        // Act - make the old signal appear older than the retention window
-        var entry = _dbContext.Entry(oldSignal);
-        entry.Property(s => s.ComputedAt).CurrentValue = DateTimeOffset.UtcNow.AddDays(
-            -_signalOptions.HistoryRetentionDays - 1
-        );
-        await _dbContext.SaveChangesAsync();
-
-        await job.Execute(_context, CancellationToken.None);
-
-        // Assert
-        _dbContext.Signals.Count().ShouldBe(1);
-        _dbContext.Signals.First().Type.ShouldBe(SignalType.Rsi);
-    }
 }

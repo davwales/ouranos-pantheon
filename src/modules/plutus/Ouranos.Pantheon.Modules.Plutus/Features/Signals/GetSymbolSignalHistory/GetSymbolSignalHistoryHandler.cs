@@ -1,6 +1,8 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Npgsql;
+using NpgsqlTypes;
 using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSymbolSignalHistory.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSymbolSignals.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
@@ -8,10 +10,12 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Extensions;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Querying;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSymbolSignalHistory;
 
-public sealed class GetSymbolSignalHistoryHandler
+public class GetSymbolSignalHistoryHandler
     : IPantheonHandler<GetSymbolSignalHistoryInput, GetSymbolSignalHistoryResponse>
 {
     private readonly ILogger<GetSymbolSignalHistoryHandler> _logger;
@@ -133,7 +137,9 @@ public sealed class GetSymbolSignalHistoryHandler
         ];
     }
 
-    private async Task<Dictionary<SignalType, List<RawSignalPoint>>> FetchSignalGroups(
+    protected internal virtual async Task<
+        Dictionary<SignalType, List<RawSignalPoint>>
+    > FetchSignalGroups(
         Id<Symbol> symbolId,
         DateTimeOffset from,
         DateTimeOffset to,
@@ -142,28 +148,66 @@ public sealed class GetSymbolSignalHistoryHandler
         CancellationToken ct
     )
     {
-        var query = _dbContext
-            .Signals.AsNoTracking()
-            .Where(s => s.SymbolId == symbolId)
-            .Where(s => s.ComputedAt >= from && s.ComputedAt <= to);
+        var requested = requestedTypes is { Count: > 0 } r ? r : null;
+        var intent = typesForIntent is { Count: > 0 } i ? i : null;
 
-        if (requestedTypes is { Count: > 0 })
+        IEnumerable<SignalType> selected = (requested, intent) switch
         {
-            query = query.Where(s => requestedTypes.Contains(s.Type));
-        }
+            ({ } req, { } it) => req.Intersect(it),
+            ({ } req, null) => req,
+            (null, { } it) => it,
+            _ => Enum.GetValues<SignalType>(),
+        };
 
-        if (typesForIntent is { Count: > 0 })
-        {
-            query = query.Where(s => typesForIntent.Contains(s.Type));
-        }
+        int[] effectiveTypes = [.. selected.Select(t => (int)t)];
 
-        var raw = await query
-            .OrderBy(s => s.Type)
-            .ThenBy(s => s.ComputedAt)
-            .Select(s => new RawSignalPoint(s.Type, s.Value, s.ComputedAt))
-            .ToListAsync(ct);
+        var alignedFrom = new DateTimeOffset(
+            from.Ticks - (from.Ticks % (TimeSpan.TicksPerMinute * 30)),
+            from.Offset
+        );
 
-        return raw.GroupBy(s => s.Type).ToDictionary(g => g.Key, g => g.ToList());
+        var command = RawSqlCommand
+            .FromSql(
+                """
+                SELECT time_bucket_gapfill('30 minutes'::interval, bucket, @from, @to) AS bucket,
+                       signal_type,
+                       locf(last(last_value, bucket)) AS value
+                FROM plutus.signal_history_30m
+                WHERE symbol_id = @symbolId
+                  AND bucket >= @from
+                  AND bucket < @to
+                  AND signal_type = ANY(@types)
+                GROUP BY time_bucket_gapfill('30 minutes'::interval, bucket, @from, @to), signal_type
+                ORDER BY signal_type, bucket
+                """
+            )
+            .WithId("@symbolId", symbolId)
+            .WithDateTimeOffset("@from", alignedFrom)
+            .WithDateTimeOffset("@to", to)
+            .WithParameter(
+                new NpgsqlParameter("@types", NpgsqlDbType.Array | NpgsqlDbType.Integer)
+                {
+                    Value = effectiveTypes,
+                }
+            );
+
+        var rows = await _dbContext.Database.ExecuteQueryAsync<SignalHistoryGapfillRow>(
+            command,
+            ct
+        );
+
+        return rows.Where(r => r.Value.HasValue && r.Bucket >= from)
+            .GroupBy(r => r.SignalType)
+            .ToDictionary(
+                g => (SignalType)g.Key,
+                g =>
+                    g.Select(r => new RawSignalPoint(
+                            (SignalType)r.SignalType,
+                            r.Value.GetValueOrDefault(),
+                            r.Bucket
+                        ))
+                        .ToList()
+            );
     }
 
     private List<SignalHistoryResponse> BuildSignalResponses(
@@ -291,5 +335,9 @@ public sealed class GetSymbolSignalHistoryHandler
         };
     }
 
-    private sealed record RawSignalPoint(SignalType Type, decimal Value, DateTimeOffset ComputedAt);
+    protected internal sealed record RawSignalPoint(
+        SignalType Type,
+        decimal Value,
+        DateTimeOffset ComputedAt
+    );
 }

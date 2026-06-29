@@ -115,17 +115,6 @@ public class SymbolSignalCalculateJob
             _dbContext.Signals.AddRange(signals);
             await _dbContext.SaveChangesAsync(ct);
 
-            var cutoff = DateTimeOffset.UtcNow.AddDays(-_options.Value.HistoryRetentionDays);
-            var purged = await PurgeOldSignalsAsync(cutoff, ct);
-            if (purged > 0)
-            {
-                _logger.LogInformation(
-                    "Purged {Count} signals older than {Cutoff}",
-                    purged,
-                    cutoff
-                );
-            }
-
             _logger.LogInformation(
                 "Computed {Count} signals for {SymbolCount} symbols.",
                 signals.Count,
@@ -175,52 +164,6 @@ public class SymbolSignalCalculateJob
             .WithDateTimeOffset("@since", since);
 
         return await _dbContext.Database.ExecuteQueryAsync<SymbolBucketRow>(command, ct);
-    }
-
-    /// <summary>
-    ///     Purges signals older than <paramref name="cutoff" /> with a server-side
-    ///     <c>ExecuteDeleteAsync</c> (<c>DELETE ... WHERE computed_at &lt; @cutoff</c>),
-    ///     returning the deleted row count. No entity materialization, no
-    ///     ChangeTracker - avoids the many GB load-all-then-RemoveRange leak.
-    ///     Overridable so tests can stub the purge against the in-memory provider,
-    ///     which cannot execute <c>ExecuteDeleteAsync</c>.
-    /// </summary>
-    protected internal virtual async Task<int> PurgeOldSignalsAsync(
-        DateTimeOffset cutoff,
-        CancellationToken ct
-    )
-    {
-        // Batched server-side delete to stay well under the command timeout even when the
-        // Signals table has a large accumulated backlog. Each batch deletes up to
-        // batchSize rows (a fast, indexed DELETE on computed_at); the loop is capped per
-        // tick so a huge backlog drains across successive ticks instead of one long run.
-        const int batchSize = 5000;
-        const int maxBatchesPerTick = 100;
-        var totalPurged = 0;
-
-        for (var i = 0; i < maxBatchesPerTick && !ct.IsCancellationRequested; i++)
-        {
-            var deleted = await _dbContext.Database.ExecuteSqlInterpolatedAsync(
-                $"""
-                DELETE FROM plutus.signals
-                WHERE id IN (
-                    SELECT id FROM plutus.signals
-                    WHERE computed_at < {cutoff}
-                    ORDER BY computed_at
-                    LIMIT {batchSize}
-                )
-                """,
-                ct
-            );
-
-            totalPurged += deleted;
-            if (deleted < batchSize)
-            {
-                break;
-            }
-        }
-
-        return totalPurged;
     }
 
     private static Dictionary<Id<Symbol>, List<PriceBucket>> BuildBucketsBySymbol(
