@@ -28,3 +28,6 @@ dotnet_diagnostic.CA1852.severity = warning
 
 # CA1873: Avoid potentially expensive logging
 dotnet_diagnostic.CA1873.severity = silent
+
+# CS9107: Parameter is captured into the state of the enclosing type and its value is also passed to the base constructor. The value might be captured by the base class as well.
+dotnet_diagnostic.CS9107.severity = suggestion

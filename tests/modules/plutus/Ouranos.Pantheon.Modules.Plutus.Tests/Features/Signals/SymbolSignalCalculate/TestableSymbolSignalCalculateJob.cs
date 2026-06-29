@@ -12,27 +12,21 @@ namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Signals.SymbolSignalCal
 
 /// <summary>
 ///     Test-only subclass of <see cref="SymbolSignalCalculateJob" /> that replaces the
-///     raw-SQL <c>time_bucket</c> aggregation and the <c>ExecuteDeleteAsync</c> purge
-///     with in-memory-safe stubs. The EF Core in-memory provider cannot execute raw
-///     SQL or <c>ExecuteDeleteAsync</c>, so the production seams are overridden here.
-///     This stub mirrors the server-side aggregation over the small set of trades
-///     seeded by each test - it is NOT used in production and never materializes the
-///     24h trade window in the running service.
+///     raw-SQL <c>time_bucket</c> aggregation with an in-memory-safe stub. The EF Core
+///     in-memory provider cannot execute raw SQL, so the production seam is overridden
+///     here. The manual signal purge (previously overridden here too) has been removed
+///     entirely - retention is now enforced by TimescaleDB's
+///     <c>add_retention_policy</c> background job, declared in the
+///     <c>ConvertSignalsToHypertable</c> EF migration.
 /// </summary>
-internal sealed class TestableSymbolSignalCalculateJob : SymbolSignalCalculateJob
+internal sealed class TestableSymbolSignalCalculateJob(
+    ILogger<SymbolSignalCalculateJob> logger,
+    PlutusDbContext dbContext,
+    IOptions<SignalOptions> options,
+    IEnumerable<ISignalComputer> computers
+) : SymbolSignalCalculateJob(logger, dbContext, options, computers)
 {
-    private readonly PlutusDbContext _dbContext;
-
-    public TestableSymbolSignalCalculateJob(
-        ILogger<SymbolSignalCalculateJob> logger,
-        PlutusDbContext dbContext,
-        IOptions<SignalOptions> options,
-        IEnumerable<ISignalComputer> computers
-    )
-        : base(logger, dbContext, options, computers)
-    {
-        _dbContext = dbContext;
-    }
+    private readonly PlutusDbContext _dbContext = dbContext;
 
     protected internal override async Task<List<SymbolBucketRow>> LoadSymbolBucketsAsync(
         DateTimeOffset since,
@@ -61,22 +55,5 @@ internal sealed class TestableSymbolSignalCalculateJob : SymbolSignalCalculateJo
             .ToListAsync(ct);
 
         return [.. rows.OrderBy(r => r.SymbolId).ThenBy(r => r.BucketStart)];
-    }
-
-    protected internal override async Task<int> PurgeOldSignalsAsync(
-        DateTimeOffset cutoff,
-        CancellationToken ct
-    )
-    {
-        var purgeable = await _dbContext.Signals.Where(s => s.ComputedAt < cutoff).ToListAsync(ct);
-
-        if (purgeable.Count == 0)
-        {
-            return 0;
-        }
-
-        _dbContext.Signals.RemoveRange(purgeable);
-        await _dbContext.SaveChangesAsync(ct);
-        return purgeable.Count;
     }
 }

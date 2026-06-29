@@ -9,7 +9,7 @@ public sealed class SignalConfiguration : IEntityTypeConfiguration<Signal>
 {
     public void Configure(EntityTypeBuilder<Signal> builder)
     {
-        builder.HasKey(s => s.Id);
+        builder.HasKey(s => new { s.Id, s.ComputedAt });
         builder.Property(s => s.Id).HasIdConversion();
         builder.Property(s => s.MarketId).HasIdConversion();
         builder.Property(s => s.SymbolId).HasIdConversion();
