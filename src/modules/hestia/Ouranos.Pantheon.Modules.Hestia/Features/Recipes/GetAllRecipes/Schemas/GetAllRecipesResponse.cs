@@ -3,4 +3,4 @@ using Ouranos.Pantheon.Modules.Shared.Domain;
 
 namespace Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetAllRecipes.Schemas;
 
-public sealed record GetAllRecipesResponse(Id<RecipeDocument> Id, string Title, string? SourceUrl);
+public sealed record GetAllRecipesResponse(Id<Recipe> Id, string Title, string? SourceUrl);
