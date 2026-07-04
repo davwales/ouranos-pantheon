@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Converters;
 using Wolverine.Marten;
 
 namespace Ouranos.Pantheon.Modules.Shared.Infra.Postgres;
@@ -68,6 +69,11 @@ public static class PostgresModule
             options.DatabaseSchemaName = schemaName;
 
             configure?.Invoke(options);
+
+            options.UseSystemTextJsonForSerialization(configure: jsonOptions =>
+            {
+                jsonOptions.Converters.Add(new IdJsonConverterFactory());
+            });
         }
 
         services

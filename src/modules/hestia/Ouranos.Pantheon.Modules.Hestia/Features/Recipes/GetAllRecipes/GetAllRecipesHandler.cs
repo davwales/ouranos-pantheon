@@ -10,7 +10,6 @@ using Ouranos.Pantheon.Modules.Shared.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Pagination;
 using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
-using Ouranos.Pantheon.Modules.Shared.Domain;
 
 namespace Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetAllRecipes;
 
@@ -20,15 +19,13 @@ public sealed class GetAllRecipesHandler(
     IOptions<QueryOptions> queryOptions
 ) : IPantheonHandler<GetAllRecipesInput, PagedResponse<GetAllRecipesResponse>>
 {
-    private static readonly FilterBuilder<RecipeDocument> FilterBuilder =
-        new FilterBuilder<RecipeDocument>()
-            .On(nameof(RecipeDocument.Title), r => r.Title, caseInsensitive: true)
-            .On(nameof(RecipeDocument.SourceUrl), r => r.SourceUrl, caseInsensitive: true);
+    private static readonly FilterBuilder<Recipe> FilterBuilder = new FilterBuilder<Recipe>()
+        .On(nameof(Recipe.Title), r => r.Title, caseInsensitive: true)
+        .On(nameof(Recipe.SourceUrl), r => r.SourceUrl, caseInsensitive: true);
 
-    private static readonly SortBuilder<RecipeDocument> SortBuilder =
-        new SortBuilder<RecipeDocument>()
-            .On(nameof(GetAllRecipesResponse.Title), r => r.Title)
-            .Default(r => r.CreatedAt, SortDirection.Desc);
+    private static readonly SortBuilder<Recipe> SortBuilder = new SortBuilder<Recipe>()
+        .On(nameof(GetAllRecipesResponse.Title), r => r.Title)
+        .Default(r => r.CreatedAt, SortDirection.Desc);
 
     private readonly IHestiaMartenStore _store = Guard.Against.Null(store);
     private readonly ILogger<GetAllRecipesHandler> _logger = Guard.Against.Null(logger);
@@ -52,27 +49,14 @@ public sealed class GetAllRecipesHandler(
         );
 
         using var session = _store.QuerySession();
-        var filtered = session.Query<RecipeDocument>().FilterBy(input.Filter, FilterBuilder);
+        var filtered = session.Query<Recipe>().FilterBy(input.Filter, FilterBuilder);
         var totalCount = await filtered.CountAsync(cancellationToken);
 
-        var projected = await filtered
+        var items = await filtered
             .SortBy(input.SortField, input.SortDirection, SortBuilder)
             .Paginate(input.Skip, input.Take)
-            .Select(r => new
-            {
-                r.Id,
-                r.Title,
-                r.SourceUrl,
-            })
+            .Select(r => new GetAllRecipesResponse(r.RecipeId, r.Title, r.SourceUrl))
             .ToListAsync(cancellationToken);
-
-        var items = projected
-            .Select(r => new GetAllRecipesResponse(
-                new Id<RecipeDocument>(r.Id.ToString()),
-                r.Title,
-                r.SourceUrl
-            ))
-            .ToList();
 
         _logger.LogDebug("Successfully handled get all recipes request.");
         return new PagedResponse<GetAllRecipesResponse>(items, totalCount, input.Skip, input.Take);

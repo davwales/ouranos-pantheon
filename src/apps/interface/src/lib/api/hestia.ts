@@ -1,8 +1,8 @@
 import { api } from "@/lib/api-client";
 import type { PagedResponse } from "@/lib/api-client";
-import type { RecipeSummary } from "./hestia-types";
+import type { CreateRecipeInput, CreateRecipeResponse, RecipeSummary } from "./hestia-types";
 
-export type { RecipeSummary } from "./hestia-types";
+export type { CreateRecipeInput, CreateRecipeResponse, RecipeSummary } from "./hestia-types";
 
 export type GetAllRecipesParams = {
   skip?: number;
@@ -15,4 +15,7 @@ export type GetAllRecipesParams = {
 export const hestiaApi = {
   getAllRecipes: (params?: GetAllRecipesParams) =>
     api.get<PagedResponse<RecipeSummary>>("/api/hestia/recipes", params),
+
+  createRecipe: (input: CreateRecipeInput) =>
+    api.post<CreateRecipeResponse>("/api/hestia/recipes", input),
 };
