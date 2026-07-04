@@ -2,6 +2,7 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Signals.Shared;
 
+/// <summary>Configuration options for signal processing.</summary>
 public sealed record SignalOptions(
     TimeFrame ShortTimeFrame,
     TimeFrame MediumTimeFrame,
@@ -12,8 +13,7 @@ public sealed record SignalOptions(
     decimal MomentumThreshold,
     decimal MaCrossoverThreshold,
     decimal PriceVelocityThreshold,
-    int BollingerMultiplier,
-    int HistoryRetentionDays = 7
+    int BollingerMultiplier
 )
 {
     public const string SectionName = "Signals";
@@ -29,7 +29,6 @@ public sealed record SignalOptions(
             MomentumThreshold: 0.05m,
             MaCrossoverThreshold: 0.02m,
             PriceVelocityThreshold: 0.03m,
-            BollingerMultiplier: 2,
-            HistoryRetentionDays: 7
+            BollingerMultiplier: 2
         ) { }
 }

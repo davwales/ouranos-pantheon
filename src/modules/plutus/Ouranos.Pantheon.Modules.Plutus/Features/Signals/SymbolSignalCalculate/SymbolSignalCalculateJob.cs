@@ -3,18 +3,25 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Plutus.Features.Signals.Shared;
+using Ouranos.Pantheon.Modules.Plutus.Features.Signals.SymbolSignalCalculate.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
+using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Extensions;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Functions;
+using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Querying;
 using TickerQ.Utilities.Base;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Signals.SymbolSignalCalculate;
 
-public sealed class SymbolSignalCalculateJob
+public class SymbolSignalCalculateJob
 {
     private readonly ILogger<SymbolSignalCalculateJob> _logger;
     private readonly PlutusDbContext _dbContext;
     private readonly IOptions<SignalOptions> _options;
     private readonly IReadOnlyList<ISignalComputer> _computers;
+    private int _executing;
 
     public SymbolSignalCalculateJob(
         ILogger<SymbolSignalCalculateJob> logger,
@@ -36,164 +43,156 @@ public sealed class SymbolSignalCalculateJob
     [TickerFunction("SymbolSignalCalculate", "0 * * * * *")]
     public async Task Execute(TickerFunctionContext _, CancellationToken ct)
     {
-        var shortSnapshots = await _dbContext
-            .MarketTradeSnapshots.AsNoTracking()
-            .Where(s => s.TimeFrame == _options.Value.ShortTimeFrame)
-            .ToDictionaryAsync(s => s.SymbolId, ct);
-
-        var mediumSnapshots = await _dbContext
-            .MarketTradeSnapshots.AsNoTracking()
-            .Where(s => s.TimeFrame == _options.Value.MediumTimeFrame)
-            .ToDictionaryAsync(s => s.SymbolId, ct);
-
-        var longSnapshots = await _dbContext
-            .MarketTradeSnapshots.AsNoTracking()
-            .Where(s => s.TimeFrame == _options.Value.LongTimeFrame)
-            .ToDictionaryAsync(s => s.SymbolId, ct);
-
-        var taxRates = await _dbContext
-            .Markets.AsNoTracking()
-            .ToDictionaryAsync(m => m.Id, m => m.Taxes.Flat?.Rate ?? 0m, ct);
-
-        var symbols = await _dbContext.Symbols.AsNoTracking().ToListAsync(ct);
-
-        var since = DateTimeOffset.UtcNow - TimeSpan.FromDays(1);
-        var recentTrades = await _dbContext
-            .Trades.AsNoTracking()
-            .Where(t => t.Timestamp >= since)
-            .Select(t => new
-            {
-                t.SymbolId,
-                t.Price,
-                t.Volume,
-                t.Timestamp,
-            })
-            .ToListAsync(ct);
-
-        var bucketsBySymbol = recentTrades
-            .GroupBy(t => t.SymbolId)
-            .ToDictionary(
-                g => g.Key,
-                g =>
-                    ComputeBuckets(
-                        g.Select(t => (t.Timestamp, t.Price, t.Volume)),
-                        _options.Value.BucketCount
-                    )
-            );
-
-        var signals = new List<Signal>();
-
-        foreach (var symbol in symbols)
+        if (Interlocked.Exchange(ref _executing, 1) == 1)
         {
-            var taxRate = taxRates.GetValueOrDefault(symbol.MarketId, 0m);
-            var limit = symbol.AdditionalFields.Limit ?? 0m;
+            _logger.LogWarning("SymbolSignalCalculate already running; skipping tick.");
+            return;
+        }
 
-            shortSnapshots.TryGetValue(symbol.Id, out var shortSnap);
-            mediumSnapshots.TryGetValue(symbol.Id, out var primarySnap);
-            longSnapshots.TryGetValue(symbol.Id, out var longSnap);
-            bucketsBySymbol.TryGetValue(symbol.Id, out var buckets);
+        try
+        {
+            var shortSnapshots = await _dbContext
+                .MarketTradeSnapshots.AsNoTracking()
+                .Where(s => s.TimeFrame == _options.Value.ShortTimeFrame)
+                .ToDictionaryAsync(s => s.SymbolId, ct);
 
-            var context = new SignalComputeContext(
-                symbol.Id,
-                symbol.MarketId,
-                taxRate,
-                limit,
-                shortSnap,
-                primarySnap,
-                longSnap,
-                buckets ?? []
-            );
+            var mediumSnapshots = await _dbContext
+                .MarketTradeSnapshots.AsNoTracking()
+                .Where(s => s.TimeFrame == _options.Value.MediumTimeFrame)
+                .ToDictionaryAsync(s => s.SymbolId, ct);
 
-            foreach (var computer in _computers)
+            var longSnapshots = await _dbContext
+                .MarketTradeSnapshots.AsNoTracking()
+                .Where(s => s.TimeFrame == _options.Value.LongTimeFrame)
+                .ToDictionaryAsync(s => s.SymbolId, ct);
+
+            var taxRates = await _dbContext
+                .Markets.AsNoTracking()
+                .ToDictionaryAsync(m => m.Id, m => m.Taxes.Flat?.Rate ?? 0m, ct);
+
+            var symbols = await _dbContext.Symbols.AsNoTracking().ToListAsync(ct);
+
+            var since = DateTimeOffset.UtcNow - TimeSpan.FromDays(1);
+            var bucketInterval = TimeSpan.FromDays(1).Divide(_options.Value.BucketCount);
+            var rows = await LoadSymbolBucketsAsync(since, bucketInterval, ct);
+            var bucketsBySymbol = BuildBucketsBySymbol(rows);
+
+            var signals = new List<Signal>();
+
+            foreach (var symbol in symbols)
             {
-                var value = await computer.ComputeAsync(context, ct);
-                if (value is not null)
+                var taxRate = taxRates.GetValueOrDefault(symbol.MarketId, 0m);
+                var limit = symbol.AdditionalFields.Limit ?? 0m;
+
+                shortSnapshots.TryGetValue(symbol.Id, out var shortSnap);
+                mediumSnapshots.TryGetValue(symbol.Id, out var primarySnap);
+                longSnapshots.TryGetValue(symbol.Id, out var longSnap);
+                bucketsBySymbol.TryGetValue(symbol.Id, out var buckets);
+
+                var context = new SignalComputeContext(
+                    symbol.Id,
+                    symbol.MarketId,
+                    taxRate,
+                    limit,
+                    shortSnap,
+                    primarySnap,
+                    longSnap,
+                    buckets ?? []
+                );
+
+                foreach (var computer in _computers)
                 {
-                    signals.Add(
-                        Signal.Create(symbol.MarketId, symbol.Id, computer.Type, value.Value)
-                    );
+                    var value = await computer.ComputeAsync(context, ct);
+                    if (value is not null)
+                    {
+                        signals.Add(
+                            Signal.Create(symbol.MarketId, symbol.Id, computer.Type, value.Value)
+                        );
+                    }
                 }
             }
-        }
 
-        _dbContext.Signals.AddRange(signals);
-        await _dbContext.SaveChangesAsync(ct);
-
-        var cutoff = DateTimeOffset.UtcNow.AddDays(-_options.Value.HistoryRetentionDays);
-        var purgeable = await _dbContext.Signals.Where(s => s.ComputedAt < cutoff).ToListAsync(ct);
-
-        if (purgeable.Count > 0)
-        {
-            _dbContext.Signals.RemoveRange(purgeable);
+            _dbContext.Signals.AddRange(signals);
             await _dbContext.SaveChangesAsync(ct);
+
             _logger.LogInformation(
-                "Purged {Count} signals older than {Cutoff}",
-                purgeable.Count,
-                cutoff
+                "Computed {Count} signals for {SymbolCount} symbols.",
+                signals.Count,
+                symbols.Count
+            );
+        }
+        finally
+        {
+            Interlocked.Exchange(ref _executing, 0);
+        }
+    }
+
+    /// <summary>
+    ///     Loads fixed-anchor volume-weighted price buckets per symbol via a single
+    ///     server-side TimescaleDB <c>time_bucket</c> aggregation, avoiding the
+    ///     many GB in-memory materialization of raw 24h trades. Buckets are anchored
+    ///     to <paramref name="since" /> via the <c>time_bucket</c> origin argument.
+    ///     Overridable so tests can supply an in-memory-safe stub without exercising
+    ///     raw SQL (the EF Core in-memory provider cannot run <c>time_bucket</c>).
+    /// </summary>
+    protected internal virtual async Task<List<SymbolBucketRow>> LoadSymbolBucketsAsync(
+        DateTimeOffset since,
+        TimeSpan bucketInterval,
+        CancellationToken ct
+    )
+    {
+        var intervalLiteral = bucketInterval.ToTimescaleInterval();
+
+        var command = RawSqlCommand
+            .FromSql(
+                $"""
+                SELECT symbol_id,
+                       time_bucket('{intervalLiteral}'::interval, "timestamp", @since) AS bucket_start,
+                       CASE WHEN SUM(volume) > 0
+                            THEN SUM(price * volume) / SUM(volume)
+                            ELSE AVG(price)
+                       END AS average_price,
+                       MIN(price) AS min_price,
+                       MAX(price) AS max_price,
+                       SUM(volume) AS volume
+                FROM plutus.trades
+                WHERE "timestamp" >= @since
+                GROUP BY symbol_id, time_bucket('{intervalLiteral}'::interval, "timestamp", @since)
+                ORDER BY symbol_id, bucket_start
+                """
+            )
+            .WithDateTimeOffset("@since", since);
+
+        return await _dbContext.Database.ExecuteQueryAsync<SymbolBucketRow>(command, ct);
+    }
+
+    private static Dictionary<Id<Symbol>, List<PriceBucket>> BuildBucketsBySymbol(
+        List<SymbolBucketRow> rows
+    )
+    {
+        var bucketsBySymbol = new Dictionary<Id<Symbol>, List<PriceBucket>>();
+
+        foreach (var row in rows)
+        {
+            var symbolId = new Id<Symbol>(row.SymbolId.ToString());
+
+            if (!bucketsBySymbol.TryGetValue(symbolId, out var list))
+            {
+                list = [];
+                bucketsBySymbol[symbolId] = list;
+            }
+
+            list.Add(
+                new PriceBucket(
+                    row.BucketStart,
+                    row.AveragePrice,
+                    row.MinPrice,
+                    row.MaxPrice,
+                    row.Volume
+                )
             );
         }
 
-        _logger.LogInformation(
-            "Computed {Count} signals for {SymbolCount} symbols.",
-            signals.Count,
-            symbols.Count
-        );
-    }
-
-    private static IReadOnlyList<PriceBucket> ComputeBuckets(
-        IEnumerable<(DateTimeOffset Timestamp, decimal Price, decimal Volume)> trades,
-        int bucketCount
-    )
-    {
-        var sorted = trades.OrderBy(t => t.Timestamp).ToList();
-        if (sorted.Count == 0)
-        {
-            return [];
-        }
-
-        var start = sorted[0].Timestamp;
-        var end = sorted[^1].Timestamp;
-        var duration = end - start;
-
-        if (duration <= TimeSpan.Zero)
-        {
-            var vol = sorted.Sum(t => t.Volume);
-            var avgPrice =
-                vol > 0 ? sorted.Sum(t => t.Price * t.Volume) / vol : sorted.Average(t => t.Price);
-
-            return
-            [
-                new PriceBucket(
-                    start,
-                    avgPrice,
-                    sorted.Min(t => t.Price),
-                    sorted.Max(t => t.Price),
-                    vol
-                ),
-            ];
-        }
-
-        var bucketSize = duration.TotalSeconds / bucketCount;
-
-        return
-        [
-            .. sorted
-                .GroupBy(t => (int)((t.Timestamp - start).TotalSeconds / bucketSize))
-                .Select(g =>
-                {
-                    var vol = g.Sum(t => t.Volume);
-                    var avgPrice =
-                        vol > 0 ? g.Sum(t => t.Price * t.Volume) / vol : g.Average(t => t.Price);
-
-                    return new PriceBucket(
-                        start + TimeSpan.FromSeconds(g.Key * bucketSize),
-                        avgPrice,
-                        g.Min(t => t.Price),
-                        g.Max(t => t.Price),
-                        vol
-                    );
-                })
-                .OrderBy(b => b.BucketStart),
-        ];
+        return bucketsBySymbol;
     }
 }

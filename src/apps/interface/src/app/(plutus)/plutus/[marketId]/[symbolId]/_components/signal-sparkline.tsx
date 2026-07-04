@@ -25,16 +25,7 @@ export function SignalSparkline({ history }: SignalSparklineProps) {
     (a, b) => new Date(a.computedAt).getTime() - new Date(b.computedAt).getTime(),
   );
 
-  let data = sorted;
-  if (sorted.length > 200) {
-    const step = Math.ceil(sorted.length / 200);
-    data = sorted.filter((_, i) => i % step === 0);
-    if (data[data.length - 1] !== sorted[sorted.length - 1]) {
-      data.push(sorted[sorted.length - 1]);
-    }
-  }
-
-  return <SparklineChart data={data} />;
+  return <SparklineChart data={sorted} />;
 }
 
 function SparklineChart({ data }: { data: SignalHistoryPoint[] }) {
