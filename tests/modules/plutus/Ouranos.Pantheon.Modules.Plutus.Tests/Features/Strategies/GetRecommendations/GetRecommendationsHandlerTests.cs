@@ -2,10 +2,14 @@ using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetRecommendations;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetRecommendations.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Executors;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
@@ -151,6 +155,70 @@ public sealed class GetRecommendationsHandlerTests
 
         // Assert
         await act.ShouldThrowAsync<OperationCanceledException>();
+    }
+
+    [Fact]
+    public async Task Handle_WhenSignalsAndSnapshotExist_ShouldProduceRecommendation()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var symbol = Symbol.Create(
+            symbolId,
+            "TEST",
+            null,
+            "Test Symbol",
+            marketId,
+            new AdditionalFields()
+        );
+        await _dbContext.Markets.AddAsync(market);
+        await _dbContext.Symbols.AddAsync(symbol);
+        await _dbContext.SaveChangesAsync();
+
+        var snapshot = MarketTradeSnapshot.Create(
+            marketId,
+            symbolId,
+            TimeFrame.OneHour,
+            totalSpent: 1000m,
+            minPrice: 5m,
+            maxPrice: 15m,
+            totalVolume: 100m,
+            numTransactions: 10,
+            limit: decimal.MaxValue,
+            tax: 0m
+        );
+        await _dbContext.MarketTradeSnapshots.AddAsync(snapshot);
+        await _dbContext.SaveChangesAsync();
+
+        await _dbContext.LatestSignals.AddRangeAsync(
+            new LatestSignal(symbolId, SignalType.BollingerBands, 0.6m),
+            new LatestSignal(symbolId, SignalType.Rsi, 0.4m)
+        );
+        await _dbContext.SaveChangesAsync();
+
+        var strategy = Strategy.Create(
+            marketId,
+            "Test Strategy",
+            null,
+            StrategyType.SignalWeighted,
+            new TradingConfiguration(),
+            new SignalWeightedConfig()
+        );
+        await _dbContext.Strategies.AddAsync(strategy);
+        await _dbContext.SaveChangesAsync();
+
+        var query = new GetRecommendationsInput(strategy.Id, marketId, 10000m);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeOfType<GetRecommendationsResponse>();
+        result.Recommendations.Count.ShouldBe(1);
+        var recommendation = result.Recommendations.Single();
+        recommendation.SymbolId.ShouldBe(symbolId.ToString());
+        recommendation.Score.ShouldBe(0.5m);
     }
 
     [Fact]

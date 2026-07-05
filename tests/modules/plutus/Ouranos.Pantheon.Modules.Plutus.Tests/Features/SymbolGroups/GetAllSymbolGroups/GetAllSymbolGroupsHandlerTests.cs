@@ -38,6 +38,16 @@ public sealed class GetAllSymbolGroupsHandlerTests
         );
     }
 
+    private async Task SeedLatestSignals(
+        params (Id<Symbol> SymbolId, SignalType Type, decimal Value)[] rows
+    )
+    {
+        await _dbContext.LatestSignals.AddRangeAsync(
+            rows.Select(r => new LatestSignal(r.SymbolId, r.Type, r.Value))
+        );
+        await _dbContext.SaveChangesAsync();
+    }
+
     [Fact]
     public async Task Handle_WhenGroupsExist_ShouldReturnPagedGroups()
     {
@@ -189,13 +199,13 @@ public sealed class GetAllSymbolGroupsHandlerTests
             members: [member]
         );
 
-        var bullishSignal = Signal.Create(market.Id, symbol.Id, SignalType.BollingerBands, 0.8m);
-        var bearishSignal = Signal.Create(market.Id, symbol.Id, SignalType.Rsi, -0.4m);
-
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(symbol);
         await _dbContext.SeedData(group);
-        await _dbContext.SeedData(bullishSignal, bearishSignal);
+        await SeedLatestSignals(
+            (symbol.Id, SignalType.BollingerBands, 0.8m),
+            (symbol.Id, SignalType.Rsi, -0.4m)
+        );
 
         var query = new GetAllSymbolGroupsInput(market.Id, Take: 10);
 
@@ -207,6 +217,7 @@ public sealed class GetAllSymbolGroupsHandlerTests
         result.Items.Count().ShouldBe(1);
         var item = result.Items.First();
         item.AverageOverallScore.ShouldNotBeNull();
+        item.AverageOverallScore.ShouldBe((0.8m + -0.4m) / 2m);
         item.BullishCount.ShouldBe(1);
         item.BearishCount.ShouldBe(0);
     }

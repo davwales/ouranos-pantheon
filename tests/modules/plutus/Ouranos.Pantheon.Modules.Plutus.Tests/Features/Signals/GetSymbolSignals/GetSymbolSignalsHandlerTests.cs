@@ -132,13 +132,13 @@ public sealed class GetSymbolSignalsHandlerTests
             new AdditionalFields()
         );
 
-        var bullishSignal = Signal.Create(market.Id, symbol.Id, SignalType.Rsi, 0.8m);
-        var bearishSignal = Signal.Create(market.Id, symbol.Id, SignalType.BollingerBands, -0.5m);
-        var neutralSignal = Signal.Create(market.Id, symbol.Id, SignalType.PriceVelocity, 0m);
-
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(symbol);
-        await _dbContext.SeedData(bullishSignal, bearishSignal, neutralSignal);
+        await SeedLatestSignals(
+            (symbol.Id, SignalType.Rsi, 0.8m),
+            (symbol.Id, SignalType.BollingerBands, -0.5m),
+            (symbol.Id, SignalType.PriceVelocity, 0m)
+        );
 
         var handler = new GetSymbolSignalsHandler(_logger, _dbContext, _computers);
         var query = new GetSymbolSignalsInput(symbol.Id);
@@ -188,12 +188,12 @@ public sealed class GetSymbolSignalsHandlerTests
             new AdditionalFields()
         );
 
-        var signal1 = Signal.Create(market.Id, symbol.Id, SignalType.Rsi, 0.8m);
-        var signal2 = Signal.Create(market.Id, symbol.Id, SignalType.BollingerBands, -0.4m);
-
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(symbol);
-        await _dbContext.SeedData(signal1, signal2);
+        await SeedLatestSignals(
+            (symbol.Id, SignalType.Rsi, 0.8m),
+            (symbol.Id, SignalType.BollingerBands, -0.4m)
+        );
 
         var handler = new GetSymbolSignalsHandler(_logger, _dbContext, _computers);
         var query = new GetSymbolSignalsInput(symbol.Id);
@@ -226,12 +226,12 @@ public sealed class GetSymbolSignalsHandlerTests
             new AdditionalFields()
         );
 
-        var rsiSignal = Signal.Create(market.Id, symbol.Id, SignalType.Rsi, 0.7m);
-        var bbSignal = Signal.Create(market.Id, symbol.Id, SignalType.BollingerBands, -0.3m);
-
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(symbol);
-        await _dbContext.SeedData(rsiSignal, bbSignal);
+        await SeedLatestSignals(
+            (symbol.Id, SignalType.Rsi, 0.7m),
+            (symbol.Id, SignalType.BollingerBands, -0.3m)
+        );
 
         var handler = new GetSymbolSignalsHandler(_logger, _dbContext, _computers);
         var query = new GetSymbolSignalsInput(symbol.Id, Intent: InvestmentIntent.Buy);
@@ -258,6 +258,16 @@ public sealed class GetSymbolSignalsHandlerTests
 
         // Assert
         await get.ShouldThrowAsync<OperationCanceledException>();
+    }
+
+    private async Task SeedLatestSignals(
+        params (Id<Symbol> SymbolId, SignalType Type, decimal Value)[] rows
+    )
+    {
+        await _dbContext.LatestSignals.AddRangeAsync(
+            rows.Select(r => new LatestSignal(r.SymbolId, r.Type, r.Value))
+        );
+        await _dbContext.SaveChangesAsync();
     }
 
     private sealed class StubSignalComputer(

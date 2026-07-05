@@ -38,6 +38,8 @@ public class PlutusDbContext(DbContextOptions<PlutusDbContext> options)
 
     public DbSet<Signal> Signals => Set<Signal>();
 
+    public DbSet<LatestSignal> LatestSignals => Set<LatestSignal>();
+
     public DbSet<SymbolGroup> SymbolGroups { get; set; }
 
     public DbSet<SymbolGroupMember> SymbolGroupMembers { get; set; }
@@ -63,6 +65,7 @@ public class PlutusDbContext(DbContextOptions<PlutusDbContext> options)
         modelBuilder.Entity<MarketTradeSnapshot>();
         modelBuilder.Entity<MarketOverviewBucket>();
         modelBuilder.Entity<Signal>();
+        modelBuilder.Entity<LatestSignal>();
         modelBuilder.Entity<SymbolGroup>();
         modelBuilder.Entity<SymbolGroupMember>();
         modelBuilder.Entity<Position>();

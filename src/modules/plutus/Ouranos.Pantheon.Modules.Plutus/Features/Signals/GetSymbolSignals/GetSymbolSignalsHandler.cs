@@ -43,10 +43,12 @@ public sealed class GetSymbolSignalsHandler
 
         Guard.Against.NotFound(input.SymbolId, symbol);
 
-        var signalsQuery = _dbContext
-            .Signals.AsNoTracking()
-            .Where(s => s.SymbolId == input.SymbolId);
+        var latestRows = await _dbContext
+            .LatestSignals.AsNoTracking()
+            .Where(s => s.SymbolId == input.SymbolId)
+            .ToListAsync(cancellationToken);
 
+        IEnumerable<LatestSignal> filteredRows = latestRows;
         if (input.Intent is { } intent)
         {
             var matchingTypes = _computers
@@ -54,16 +56,12 @@ public sealed class GetSymbolSignalsHandler
                 .Select(c => c.Type)
                 .ToHashSet();
 
-            signalsQuery = signalsQuery.Where(s => matchingTypes.Contains(s.Type));
+            filteredRows = latestRows.Where(r => matchingTypes.Contains(r.SignalType));
         }
 
-        var rawSignals = await signalsQuery
-            .Select(s => new { s.Type, s.Value })
-            .ToListAsync(cancellationToken);
-
-        var signalResponses = rawSignals
-            .Where(s => _computers.ContainsKey(s.Type))
-            .Select(s => ToSignalResponse(s.Type, s.Value))
+        var signalResponses = filteredRows
+            .Where(r => _computers.ContainsKey(r.SignalType))
+            .Select(r => ToSignalResponse(r.SignalType, r.LastValue))
             .ToList();
 
         _logger.LogDebug("Successfully handled get symbol signals query.");

@@ -93,38 +93,56 @@ public sealed class GetSignalRankingsHandler
             limits.MaxPageSize
         );
 
-        var signalRankings = await _dbContext
-            .Signals.AsNoTracking()
+        var symbols = await _dbContext
+            .Symbols.AsNoTracking()
             .Where(s => s.MarketId == input.MarketId)
-            .GroupBy(s => new
+            .Select(s => new
             {
-                s.SymbolId,
-                s.Symbol.Name,
-                s.Symbol.Subcode,
+                s.Id,
+                s.Name,
+                s.Subcode,
             })
-            .Select(g => new
-            {
-                g.Key.SymbolId,
-                g.Key.Name,
-                g.Key.Subcode,
-                OverallScore = g.Average(x => x.Value),
-                BuyScore = _buyTypes.Count > 0
-                    ? g.Average(x => _buyTypes.Contains(x.Type) ? x.Value : null)
-                    : null,
-                SellScore = _sellTypes.Count > 0
-                    ? g.Average(x => _sellTypes.Contains(x.Type) ? x.Value : null)
-                    : null,
-                FlipScore = _flipTypes.Count > 0
-                    ? g.Average(x => _flipTypes.Contains(x.Type) ? x.Value : null)
-                    : null,
-                MerchScore = _merchTypes.Count > 0
-                    ? g.Average(x => _merchTypes.Contains(x.Type) ? x.Value : null)
-                    : null,
-                SignalCount = g.Count(),
-                BullishCount = g.Count(x => x.Value > 0),
-                BearishCount = g.Count(x => x.Value < 0),
-            })
+            .ToDictionaryAsync(s => s.Id, cancellationToken);
+
+        var symbolIds = symbols.Keys.ToList();
+
+        var latestRows = await _dbContext
+            .LatestSignals.AsNoTracking()
+            .Where(s => symbolIds.Contains(s.SymbolId))
             .ToListAsync(cancellationToken);
+
+        var signalRankings = latestRows
+            .GroupBy(r => r.SymbolId)
+            .Select(g => (Group: g, SymbolId: g.Key))
+            .Where(t => symbols.ContainsKey(t.SymbolId))
+            .Select(t =>
+            {
+                var symInfo = symbols[t.SymbolId];
+                var g = t.Group;
+                return new
+                {
+                    t.SymbolId,
+                    symInfo.Name,
+                    symInfo.Subcode,
+                    OverallScore = g.Average(r => r.LastValue),
+                    BuyScore = g.Average(r =>
+                        _buyTypes.Contains(r.SignalType) ? (decimal?)r.LastValue : null
+                    ),
+                    SellScore = g.Average(r =>
+                        _sellTypes.Contains(r.SignalType) ? (decimal?)r.LastValue : null
+                    ),
+                    FlipScore = g.Average(r =>
+                        _flipTypes.Contains(r.SignalType) ? (decimal?)r.LastValue : null
+                    ),
+                    MerchScore = g.Average(r =>
+                        _merchTypes.Contains(r.SignalType) ? (decimal?)r.LastValue : null
+                    ),
+                    SignalCount = g.Count(),
+                    BullishCount = g.Count(r => r.LastValue > 0),
+                    BearishCount = g.Count(r => r.LastValue < 0),
+                };
+            })
+            .ToList();
 
         var snapshotLookup = await _dbContext
             .MarketTradeSnapshots.AsNoTracking()

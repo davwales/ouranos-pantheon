@@ -83,10 +83,14 @@ public sealed class GetRecommendationsHandler
             .Where(s => symbolIds.Contains(s.SymbolId) && s.MarketId == query.MarketId)
             .ToListAsync(cancellationToken);
 
-        var signals = await _dbContext
-            .Signals.AsNoTracking()
+        var latestRows = await _dbContext
+            .LatestSignals.AsNoTracking()
             .Where(s => symbolIds.Contains(s.SymbolId))
             .ToListAsync(cancellationToken);
+
+        var signals = latestRows
+            .Select(ls => Signal.Create(query.MarketId, ls.SymbolId, ls.SignalType, ls.LastValue))
+            .ToList();
 
         var forecasts = await _dbContext
             .Forecasts.AsNoTracking()
