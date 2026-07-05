@@ -33,6 +33,16 @@ public sealed class GetSignalRankingsHandlerTests
         return new(_logger, _dbContext, Options.Create(new QueryOptions()), computers ?? []);
     }
 
+    private async Task SeedLatestSignals(
+        params (Id<Symbol> SymbolId, SignalType Type, decimal Value)[] rows
+    )
+    {
+        await _dbContext.LatestSignals.AddRangeAsync(
+            rows.Select(r => new LatestSignal(r.SymbolId, r.Type, r.Value))
+        );
+        await _dbContext.SaveChangesAsync();
+    }
+
     [Fact]
     public async Task Handle_WhenNoSignals_ShouldReturnEmptyPagedResponse()
     {
@@ -68,18 +78,9 @@ public sealed class GetSignalRankingsHandlerTests
             new AdditionalFields()
         );
 
-        var signal = Signal.Create(
-            market.Id,
-            symbol.Id,
-            SignalType.BollingerBands,
-            0.5m,
-            market,
-            symbol
-        );
-
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(symbol);
-        await _dbContext.SeedData(signal);
+        await SeedLatestSignals((symbol.Id, SignalType.BollingerBands, 0.5m));
 
         var handler = BuildHandler();
         var query = new GetSignalRankingsInput(market.Id, Take: 10);

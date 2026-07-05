@@ -40,7 +40,7 @@ public class SymbolSignalCalculateJob
         _computers = [.. computers];
     }
 
-    [TickerFunction("SymbolSignalCalculate", "0 * * * * *")]
+    [TickerFunction("SymbolSignalCalculate", "0 */5 * * * *")]
     public async Task Execute(TickerFunctionContext _, CancellationToken ct)
     {
         if (Interlocked.Exchange(ref _executing, 1) == 1)

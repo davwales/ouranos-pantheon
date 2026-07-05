@@ -4,6 +4,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetSymbolGroup.Schem
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.SymbolGroups;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
@@ -29,6 +30,16 @@ public sealed class GetSymbolGroupHandlerTests
 
         _dbContext = DbContextExtensions.Mock<PlutusDbContext>();
         _handler = new GetSymbolGroupHandler(_logger, _dbContext);
+    }
+
+    private async Task SeedLatestSignals(
+        params (Id<Symbol> SymbolId, SignalType Type, decimal Value)[] rows
+    )
+    {
+        await _dbContext.LatestSignals.AddRangeAsync(
+            rows.Select(r => new LatestSignal(r.SymbolId, r.Type, r.Value))
+        );
+        await _dbContext.SaveChangesAsync();
     }
 
     [Fact]
@@ -155,5 +166,57 @@ public sealed class GetSymbolGroupHandlerTests
 
         // Assert
         await get.ShouldThrowAsync<OperationCanceledException>();
+    }
+
+    [Fact]
+    public async Task Handle_WhenSignalsExist_ShouldProjectMemberSignalScore()
+    {
+        // Arrange
+        var market = Market.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            new Taxes(null)
+        );
+
+        var symbol = Symbol.Create(
+            new Id<Symbol>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            null,
+            _fixture.Create<string>(),
+            market.Id,
+            new AdditionalFields()
+        );
+
+        var member = SymbolGroupMember.Create(
+            new Id<SymbolGroup>(Guid.NewGuid().ToString()),
+            symbol.Id,
+            symbol
+        );
+
+        var group = SymbolGroup.Create(
+            member.SymbolGroupId,
+            _fixture.Create<string>(),
+            null,
+            market.Id,
+            members: [member]
+        );
+
+        await _dbContext.SeedData(market);
+        await _dbContext.SeedData(symbol);
+        await _dbContext.SeedData(group);
+        await SeedLatestSignals(
+            (symbol.Id, SignalType.Rsi, 0.9m),
+            (symbol.Id, SignalType.BollingerBands, 0.3m)
+        );
+
+        var query = new GetSymbolGroupInput(group.Id);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        var sym = result.Symbols.Single();
+        sym.SignalScore.ShouldBe((0.9m + 0.3m) / 2m);
     }
 }
