@@ -14,7 +14,7 @@ public sealed record Recipe : BaseEventSourcedEntity
     public Id<Recipe> RecipeId { get; init; }
     public string Title { get; init; } = string.Empty;
     public string? SourceUrl { get; init; }
-    public string Instructions { get; init; } = string.Empty;
+    public List<Step> Steps { get; init; } = [];
     public List<Ingredient> Ingredients { get; init; } = [];
     public string Notes { get; init; } = string.Empty;
     public DateTimeOffset CreatedAt { get; init; }
@@ -31,7 +31,7 @@ public sealed record Recipe : BaseEventSourcedEntity
             RecipeId = new Id<Recipe>(@event.Id.ToString()),
             Title = @event.Title,
             SourceUrl = @event.SourceUrl,
-            Instructions = @event.Instructions,
+            Steps = @event.Steps,
             Ingredients = @event.Ingredients,
             Notes = @event.Notes,
             CreatedAt = @event.CreatedAt,
@@ -47,15 +47,15 @@ public sealed record Recipe : BaseEventSourcedEntity
         Guid id,
         string title,
         string? sourceUrl,
-        string instructions,
+        List<Step> steps,
         List<Ingredient> ingredients,
         string notes
     )
     {
         Guard.Against.NullOrWhiteSpace(title);
         Guard.Against.OutOfRange(title.Length, nameof(title), 1, 200);
-        Guard.Against.NullOrWhiteSpace(instructions);
-        Guard.Against.OutOfRange(instructions.Length, nameof(instructions), 1, 10_000);
+        Guard.Against.Null(steps);
+        Guard.Against.OutOfRange(steps.Count, nameof(steps), 1, 100);
         Guard.Against.Null(ingredients);
         Guard.Against.OutOfRange(ingredients.Count, nameof(ingredients), 1, 100);
 
@@ -73,7 +73,7 @@ public sealed record Recipe : BaseEventSourcedEntity
             id,
             title,
             sourceUrl,
-            instructions,
+            steps,
             ingredients,
             notes,
             DateTimeOffset.UtcNow
@@ -93,7 +93,7 @@ public sealed record Recipe : BaseEventSourcedEntity
             RecipeId = new Id<Recipe>(@event.Id.ToString()),
             Title = @event.Title,
             SourceUrl = @event.SourceUrl,
-            Instructions = @event.Instructions,
+            Steps = @event.Steps,
             Ingredients = @event.Ingredients,
             Notes = @event.Notes,
             CreatedAt = @event.CreatedAt,

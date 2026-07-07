@@ -39,7 +39,7 @@ public sealed class GetRecipeHandler(ILogger<GetRecipeHandler> logger, IHestiaMa
             recipe.RecipeId,
             recipe.Title,
             recipe.SourceUrl,
-            recipe.Instructions,
+            [.. recipe.Steps.Select(s => new StepResponse(s.Text))],
             [.. recipe.Ingredients.Select(i => new IngredientResponse(i.Quantity, i.Unit, i.Name))],
             recipe.Notes,
             recipe.CreatedAt

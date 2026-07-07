@@ -12,19 +12,25 @@ public sealed class RecipeTests
         return [new Ingredient(0m, "cups", "flour")];
     }
 
+    private static List<Step> ValidSteps()
+    {
+        return [new Step("Mix and bake.")];
+    }
+
     [Fact]
     public void Create_WhenHappyPath_ShouldReturnRecipeWithCorrectState()
     {
         // Arrange
         var id = Guid.NewGuid();
         var ingredients = ValidIngredients();
+        var steps = ValidSteps();
 
         // Act
         var result = Recipe.Create(
             id,
             "Chocolate Cake",
             "https://example.com/cake",
-            "Mix and bake.",
+            steps,
             ingredients,
             "Best served warm."
         );
@@ -33,7 +39,7 @@ public sealed class RecipeTests
         result.State.Id.ShouldBe(id);
         result.State.Title.ShouldBe("Chocolate Cake");
         result.State.SourceUrl.ShouldBe("https://example.com/cake");
-        result.State.Instructions.ShouldBe("Mix and bake.");
+        result.State.Steps.ShouldBe(steps);
         result.State.Ingredients.ShouldBe(ingredients);
         result.State.Notes.ShouldBe("Best served warm.");
         result.State.CreatedAt.ShouldBeGreaterThan(DateTimeOffset.MinValue);
@@ -42,7 +48,7 @@ public sealed class RecipeTests
         @event.Id.ShouldBe(id);
         @event.Title.ShouldBe("Chocolate Cake");
         @event.SourceUrl.ShouldBe("https://example.com/cake");
-        @event.Instructions.ShouldBe("Mix and bake.");
+        @event.Steps.ShouldBe(steps);
         @event.Ingredients.ShouldBe(ingredients);
         @event.Notes.ShouldBe("Best served warm.");
         @event.CreatedAt.ShouldBe(result.State.CreatedAt);
@@ -56,7 +62,7 @@ public sealed class RecipeTests
             Guid.NewGuid(),
             "Chocolate Cake",
             "https://example.com/cake",
-            "Mix and bake.",
+            ValidSteps(),
             ValidIngredients(),
             "Best served warm.",
             DateTimeOffset.UtcNow
@@ -70,7 +76,7 @@ public sealed class RecipeTests
         recipe.RecipeId.ShouldBe(new Id<Recipe>(@event.Id.ToString()));
         recipe.Title.ShouldBe(@event.Title);
         recipe.SourceUrl.ShouldBe(@event.SourceUrl);
-        recipe.Instructions.ShouldBe(@event.Instructions);
+        recipe.Steps.ShouldBe(@event.Steps);
         recipe.Ingredients.ShouldBe(@event.Ingredients);
         recipe.Notes.ShouldBe(@event.Notes);
         recipe.CreatedAt.ShouldBe(@event.CreatedAt);
@@ -84,7 +90,7 @@ public sealed class RecipeTests
             Guid.NewGuid(),
             "Chocolate Cake",
             "https://example.com/cake",
-            "Mix and bake.",
+            ValidSteps(),
             ValidIngredients(),
             "Best served warm.",
             DateTimeOffset.UtcNow
@@ -99,7 +105,7 @@ public sealed class RecipeTests
         result.RecipeId.ShouldBe(new Id<Recipe>(@event.Id.ToString()));
         result.Title.ShouldBe(@event.Title);
         result.SourceUrl.ShouldBe(@event.SourceUrl);
-        result.Instructions.ShouldBe(@event.Instructions);
+        result.Steps.ShouldBe(@event.Steps);
         result.Ingredients.ShouldBe(@event.Ingredients);
         result.Notes.ShouldBe(@event.Notes);
         result.CreatedAt.ShouldBe(@event.CreatedAt);
@@ -116,7 +122,7 @@ public sealed class RecipeTests
 
         // Act
         Action act = () =>
-            Recipe.Create(id, title!, "https://example.com", "Mix.", ValidIngredients(), "");
+            Recipe.Create(id, title!, "https://example.com", ValidSteps(), ValidIngredients(), "");
 
         // Assert
         act.ShouldThrow<ArgumentException>();
@@ -130,39 +136,48 @@ public sealed class RecipeTests
         var title = new string('a', 201);
 
         // Act
-        Action act = () => Recipe.Create(id, title, null, "Mix.", ValidIngredients(), "");
+        Action act = () => Recipe.Create(id, title, null, ValidSteps(), ValidIngredients(), "");
 
         // Assert
         act.ShouldThrow<ArgumentOutOfRangeException>();
     }
 
-    [Theory]
-    [InlineData(null!)]
-    [InlineData("")]
-    [InlineData("   ")]
-    public void Create_WhenInstructionsIsNullOrWhitespace_ShouldThrowArgumentException(
-        string? instructions
-    )
+    [Fact]
+    public void Create_WhenStepsIsNull_ShouldThrowArgumentNullException()
     {
         // Arrange
         var id = Guid.NewGuid();
 
         // Act
-        Action act = () => Recipe.Create(id, "Title", null, instructions!, ValidIngredients(), "");
+        Action act = () => Recipe.Create(id, "Title", null, null!, ValidIngredients(), "");
 
         // Assert
-        act.ShouldThrow<ArgumentException>();
+        act.ShouldThrow<ArgumentNullException>();
     }
 
     [Fact]
-    public void Create_WhenInstructionsExceedsMaxLength_ShouldThrowArgumentOutOfRangeException()
+    public void Create_WhenStepsIsEmptyList_ShouldThrowArgumentOutOfRangeException()
     {
         // Arrange
         var id = Guid.NewGuid();
-        var instructions = new string('a', 10_001);
+        var steps = new List<Step>();
 
         // Act
-        Action act = () => Recipe.Create(id, "Title", null, instructions, ValidIngredients(), "");
+        Action act = () => Recipe.Create(id, "Title", null, steps, ValidIngredients(), "");
+
+        // Assert
+        act.ShouldThrow<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
+    public void Create_WhenStepsExceedsMaxCount_ShouldThrowArgumentOutOfRangeException()
+    {
+        // Arrange
+        var id = Guid.NewGuid();
+        var steps = Enumerable.Range(0, 101).Select(_ => new Step("Mix.")).ToList();
+
+        // Act
+        Action act = () => Recipe.Create(id, "Title", null, steps, ValidIngredients(), "");
 
         // Assert
         act.ShouldThrow<ArgumentOutOfRangeException>();
@@ -175,7 +190,7 @@ public sealed class RecipeTests
         var id = Guid.NewGuid();
 
         // Act
-        Action act = () => Recipe.Create(id, "Title", null, "Mix.", null!, "");
+        Action act = () => Recipe.Create(id, "Title", null, ValidSteps(), null!, "");
 
         // Assert
         act.ShouldThrow<ArgumentNullException>();
@@ -189,7 +204,7 @@ public sealed class RecipeTests
         var ingredients = new List<Ingredient>();
 
         // Act
-        Action act = () => Recipe.Create(id, "Title", null, "Mix.", ingredients, "");
+        Action act = () => Recipe.Create(id, "Title", null, ValidSteps(), ingredients, "");
 
         // Assert
         act.ShouldThrow<ArgumentOutOfRangeException>();
@@ -206,7 +221,7 @@ public sealed class RecipeTests
             .ToList();
 
         // Act
-        Action act = () => Recipe.Create(id, "Title", null, "Mix.", ingredients, "");
+        Action act = () => Recipe.Create(id, "Title", null, ValidSteps(), ingredients, "");
 
         // Assert
         act.ShouldThrow<ArgumentOutOfRangeException>();
@@ -220,7 +235,8 @@ public sealed class RecipeTests
         var sourceUrl = new string('a', 2_001);
 
         // Act
-        Action act = () => Recipe.Create(id, "Title", sourceUrl, "Mix.", ValidIngredients(), "");
+        Action act = () =>
+            Recipe.Create(id, "Title", sourceUrl, ValidSteps(), ValidIngredients(), "");
 
         // Assert
         act.ShouldThrow<ArgumentOutOfRangeException>();
@@ -234,7 +250,8 @@ public sealed class RecipeTests
         var notes = new string('a', 10_001);
 
         // Act
-        Action act = () => Recipe.Create(id, "Title", null, "Mix.", ValidIngredients(), notes);
+        Action act = () =>
+            Recipe.Create(id, "Title", null, ValidSteps(), ValidIngredients(), notes);
 
         // Assert
         act.ShouldThrow<ArgumentOutOfRangeException>();
@@ -246,9 +263,10 @@ public sealed class RecipeTests
         // Arrange
         var id = Guid.NewGuid();
         var ingredients = ValidIngredients();
+        var steps = ValidSteps();
 
         // Act
-        var result = Recipe.Create(id, "Title", null, "Mix.", ingredients, "");
+        var result = Recipe.Create(id, "Title", null, steps, ingredients, "");
 
         // Assert
         result.State.Id.ShouldBe(id);
@@ -262,9 +280,10 @@ public sealed class RecipeTests
         // Arrange
         var id = Guid.NewGuid();
         var ingredients = ValidIngredients();
+        var steps = ValidSteps();
 
         // Act
-        var result = Recipe.Create(id, "Title", null, "Mix.", ingredients, "");
+        var result = Recipe.Create(id, "Title", null, steps, ingredients, "");
 
         // Assert
         result.State.Id.ShouldBe(id);
@@ -283,7 +302,7 @@ public sealed class RecipeTests
             id,
             "Chocolate Cake",
             null,
-            "Mix and bake.",
+            ValidSteps(),
             ValidIngredients(),
             ""
         );
@@ -301,10 +320,11 @@ public sealed class RecipeTests
         // Arrange
         var id = Guid.NewGuid();
         var ingredients = ValidIngredients();
+        var steps = ValidSteps();
         var sourceUrl = "   ";
 
         // Act
-        var result = Recipe.Create(id, "Title", sourceUrl, "Mix.", ingredients, "");
+        var result = Recipe.Create(id, "Title", sourceUrl, steps, ingredients, "");
 
         // Assert
         result.State.Id.ShouldBe(id);

@@ -13,6 +13,7 @@ export type {
   Ingredient,
   Recipe,
   RecipeSummary,
+  Step,
 } from "./hestia-types";
 
 export type GetAllRecipesParams = {

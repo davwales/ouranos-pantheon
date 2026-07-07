@@ -12,7 +12,11 @@ public sealed class HestiaRecipeSeedData : IInitialData
         Guid.Parse("68cd9db4-17de-4209-bb87-decb97e8d68b"),
         "Cinnamon Sugar",
         null,
-        "In a small bowl, mix both ingredients together. Store in a dry location indefinitely.",
+        [
+            new Step(
+                "In a small bowl, mix both ingredients together. Store in a dry location indefinitely."
+            ),
+        ],
         [
             new Ingredient(4m, "tablespoons", "granulated sugar"),
             new Ingredient(1m, "tablespoon", "ground cinnamon"),

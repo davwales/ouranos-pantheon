@@ -13,6 +13,7 @@ import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 import { IngredientRow } from "./ingredient-row";
+import { InstructionStepRow } from "./instruction-step-row";
 import { RecipeFormField } from "./recipe-form-field";
 import { useRecipeForm } from "./use-recipe-form";
 
@@ -26,6 +27,11 @@ export function RecipeForm() {
     updateIngredient,
     addIngredient,
     removeIngredient,
+    updateStep,
+    addStep,
+    removeStep,
+    moveStepUp,
+    moveStepDown,
     submit,
   } = useRecipeForm();
 
@@ -83,18 +89,36 @@ export function RecipeForm() {
             </Button>
           </div>
 
-          <RecipeFormField
-            label="Instructions"
-            required
-            error={errors.instructions}
-          >
-            <AutosizeTextarea
-              value={form.instructions}
-              onChange={(e) => updateField("instructions", e.target.value)}
-              className="min-h-48"
+          <div className="space-y-2">
+            <label className="text-sm font-medium">
+              Steps <span aria-hidden="true">*</span>
+            </label>
+            {form.steps.map((row, index) => (
+              <InstructionStepRow
+                key={index}
+                index={index}
+                text={row.text}
+                onTextChange={updateStep}
+                onMoveUp={moveStepUp}
+                onMoveDown={moveStepDown}
+                onRemove={removeStep}
+                canMoveUp={index > 0}
+                canMoveDown={index < form.steps.length - 1}
+                canRemove={form.steps.length > 1}
+                disabled={isSubmitting}
+                error={errors.steps?.[index]?.text}
+              />
+            ))}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addStep}
               disabled={isSubmitting}
-            />
-          </RecipeFormField>
+            >
+              + Add step
+            </Button>
+          </div>
 
           <RecipeFormField label="Notes" error={errors.notes}>
             <AutosizeTextarea
