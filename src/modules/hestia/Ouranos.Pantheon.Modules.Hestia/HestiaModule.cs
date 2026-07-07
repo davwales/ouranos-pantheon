@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.CreateRecipe;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetAllRecipes;
+using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetRecipe;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Database;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes;
 using Ouranos.Pantheon.Modules.Shared;
@@ -42,5 +43,6 @@ public sealed class HestiaModule : IPantheonModule
     {
         GetAllRecipesEndpoint.Map(app);
         CreateRecipeEndpoint.Map(app);
+        GetRecipeEndpoint.Map(app);
     }
 }

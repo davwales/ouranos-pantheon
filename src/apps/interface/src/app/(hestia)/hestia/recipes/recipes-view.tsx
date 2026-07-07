@@ -1,4 +1,5 @@
 import { InfoCard } from "@/components/shared/info-card";
+import Link from "next/link";
 import type { RecipeSummary } from "@/lib/api/hestia-types";
 
 export type RecipesViewProps = {
@@ -16,28 +17,15 @@ export function RecipesView({ recipes }: RecipesViewProps) {
 
   return (
     <div className="m-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {recipes.map((recipe) => {
-        const card = (
+      {recipes.map((recipe) => (
+        <Link key={recipe.id} href={`/hestia/recipes/${recipe.id}`}>
           <InfoCard
             label={recipe.title}
             description={recipe.sourceUrl ?? "No source"}
             className="hover:bg-accent h-full w-full"
           />
-        );
-
-        return recipe.sourceUrl ? (
-          <a
-            key={recipe.id}
-            href={recipe.sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {card}
-          </a>
-        ) : (
-          <div key={recipe.id}>{card}</div>
-        );
-      })}
+        </Link>
+      ))}
     </div>
   );
 }
