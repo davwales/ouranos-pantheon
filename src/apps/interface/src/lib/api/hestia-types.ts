@@ -16,11 +16,15 @@ export type Ingredient = {
   name: string;
 };
 
+export type Step = {
+  text: string;
+};
+
 export type Recipe = {
   id: string;
   title: string;
   sourceUrl: string | null;
-  instructions: string;
+  steps: Step[];
   ingredients: Ingredient[];
   notes: string;
   createdAt: string;
@@ -29,7 +33,7 @@ export type Recipe = {
 export type CreateRecipeInput = {
   title: string;
   sourceUrl: string | null;
-  instructions: string;
+  steps: Step[];
   ingredients: IngredientInput[];
   notes: string;
 };

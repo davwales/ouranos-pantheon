@@ -21,7 +21,7 @@ public sealed class CreateRecipeEndpointTests
         var input = new CreateRecipeInput(
             "Chocolate Cake",
             null,
-            "Mix and bake.",
+            [new StepInput("Mix and bake.")],
             [new IngredientInput(0m, "", "flour"), new IngredientInput(0m, "", "sugar")],
             "Warm."
         );

@@ -31,9 +31,15 @@ export function RecipeReadOnlyView({ data }: RecipeReadOnlyViewProps) {
           <CardTitle>Instructions</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="whitespace-pre-wrap text-base leading-relaxed">
-            {data.instructions}
-          </p>
+          {data.steps.length > 0 ? (
+            <ol className="list-decimal space-y-2 pl-6 text-base leading-relaxed marker:text-muted-foreground marker:font-medium">
+              {data.steps.map((step, index) => (
+                <li key={index} className="pl-1">{step.text}</li>
+              ))}
+            </ol>
+          ) : (
+            <p className="text-base text-muted-foreground">No instructions provided.</p>
+          )}
         </CardContent>
       </Card>
 

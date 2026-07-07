@@ -29,7 +29,7 @@ public sealed class CreateRecipeHandler(
             Guid.NewGuid(),
             command.Title,
             command.SourceUrl,
-            command.Instructions,
+            [.. command.Steps.Select(s => new Step(s.Text))],
             [.. command.Ingredients.Select(i => new Ingredient(i.Quantity, i.Unit, i.Name))],
             command.Notes ?? string.Empty
         );

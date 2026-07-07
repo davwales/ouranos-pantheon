@@ -38,7 +38,7 @@ function mockRecipe(overrides: Partial<Recipe> = {}): Recipe {
     id: "test-recipe-1",
     title: "Chocolate Cake",
     sourceUrl: "https://example.com/cake",
-    instructions: "Mix and bake for 30 minutes.",
+    steps: [{ text: "Mix and bake for 30 minutes." }],
     ingredients: [
       { quantity: 4, unit: "tablespoons", name: "granulated sugar" },
       { quantity: 1, unit: "tablespoon", name: "ground cinnamon" },

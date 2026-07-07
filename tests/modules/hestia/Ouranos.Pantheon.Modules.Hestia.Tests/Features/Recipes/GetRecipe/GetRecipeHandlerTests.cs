@@ -25,7 +25,7 @@ public sealed class GetRecipeHandlerTests
         Guid id,
         string title = "Chocolate Cake",
         string? sourceUrl = "https://example.com/cake",
-        string instructions = "Mix and bake.",
+        List<Step>? steps = null,
         string notes = "Best served warm."
     )
     {
@@ -35,7 +35,9 @@ public sealed class GetRecipeHandlerTests
             new(1m, "tablespoon", "ground cinnamon"),
         };
 
-        return Recipe.Create(id, title, sourceUrl, instructions, ingredients, notes).State;
+        return Recipe
+            .Create(id, title, sourceUrl, steps ?? [new Step("Mix and bake.")], ingredients, notes)
+            .State;
     }
 
     [Fact]
@@ -58,7 +60,8 @@ public sealed class GetRecipeHandlerTests
         result.Id.ShouldBe(recipe.RecipeId);
         result.Title.ShouldBe(recipe.Title);
         result.SourceUrl.ShouldBe(recipe.SourceUrl);
-        result.Instructions.ShouldBe(recipe.Instructions);
+        result.Steps.Count.ShouldBe(1);
+        result.Steps[0].Text.ShouldBe("Mix and bake.");
         result.Notes.ShouldBe(recipe.Notes);
         result.CreatedAt.ShouldBe(recipe.CreatedAt);
         result.Ingredients.Count.ShouldBe(2);

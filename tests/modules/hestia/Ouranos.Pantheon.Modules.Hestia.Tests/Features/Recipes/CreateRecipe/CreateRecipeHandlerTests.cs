@@ -31,7 +31,7 @@ public sealed class CreateRecipeHandlerTests
     private static CreateRecipeInput ValidInput(
         string title = "Chocolate Cake",
         string? sourceUrl = "https://example.com/cake",
-        string instructions = "Mix and bake.",
+        IReadOnlyList<StepInput>? steps = null,
         IReadOnlyList<IngredientInput>? ingredients = null,
         string notes = "Best served warm."
     )
@@ -39,7 +39,7 @@ public sealed class CreateRecipeHandlerTests
         return new CreateRecipeInput(
             title,
             sourceUrl,
-            instructions,
+            steps ?? [new StepInput("Mix and bake.")],
             ingredients
                 ??
                 [
@@ -83,7 +83,8 @@ public sealed class CreateRecipeHandlerTests
         var ev = capturedEvents[0].ShouldBeOfType<RecipeCreated>();
         ev.Title.ShouldBe(input.Title);
         ev.SourceUrl.ShouldBe(input.SourceUrl);
-        ev.Instructions.ShouldBe(input.Instructions);
+        ev.Steps.Count.ShouldBe(1);
+        ev.Steps[0].Text.ShouldBe("Mix and bake.");
         ev.Notes.ShouldBe(input.Notes);
         ev.Ingredients.Count.ShouldBe(2);
         ev.Ingredients[0].ShouldBe(new Ingredient(0m, "cups", "flour"));
@@ -134,6 +135,36 @@ public sealed class CreateRecipeHandlerTests
         ev.Ingredients[0].ShouldBe(new Ingredient(4m, "tablespoons", "granulated sugar"));
         ev.Ingredients[1].ShouldBe(new Ingredient(1m, "tablespoon", "ground cinnamon"));
         ev.Ingredients[2].ShouldBe(new Ingredient(0.5m, "teaspoon", "vanilla extract"));
+    }
+
+    [Fact]
+    public async Task Handle_WhenStepsProvided_ShouldMapStructuredSteps()
+    {
+        // Arrange
+        var input = ValidInput(
+            steps:
+            [
+                new StepInput("Preheat the oven to 350°F."),
+                new StepInput("Mix the dry ingredients in a large bowl."),
+                new StepInput("Bake for 30 minutes, then cool on a rack."),
+            ]
+        );
+        object[]? capturedEvents = null;
+        _events
+            .When(e => e.StartStream(Arg.Any<Guid>(), Arg.Any<object[]>()))
+            .Do(call => capturedEvents = call.Arg<object[]>());
+
+        // Act
+        await _handler.Handle(input, CancellationToken.None);
+
+        // Assert
+        capturedEvents.ShouldNotBeNull();
+        capturedEvents!.Length.ShouldBe(1);
+        var ev = capturedEvents[0].ShouldBeOfType<RecipeCreated>();
+        ev.Steps.Count.ShouldBe(3);
+        ev.Steps[0].ShouldBe(new Step("Preheat the oven to 350°F."));
+        ev.Steps[1].ShouldBe(new Step("Mix the dry ingredients in a large bowl."));
+        ev.Steps[2].ShouldBe(new Step("Bake for 30 minutes, then cool on a rack."));
     }
 
     [Fact]

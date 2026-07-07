@@ -7,7 +7,7 @@ public sealed record RecipeCreated(
     Guid Id,
     string Title,
     string? SourceUrl,
-    string Instructions,
+    List<Step> Steps,
     List<Ingredient> Ingredients,
     string Notes,
     DateTimeOffset CreatedAt

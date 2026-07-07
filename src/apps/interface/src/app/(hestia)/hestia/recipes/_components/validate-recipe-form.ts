@@ -1,4 +1,4 @@
-import type { FormErrors, IngredientFormRow, RecipeFormState } from "./recipe-form-types";
+import type { FormErrors, RecipeFormState } from "./recipe-form-types";
 
 export function validateRecipeForm(form: RecipeFormState): FormErrors {
   const next: FormErrors = {};
@@ -7,8 +7,33 @@ export function validateRecipeForm(form: RecipeFormState): FormErrors {
     next.title = "This field is required";
   }
 
-  if (form.instructions.trim() === "") {
-    next.instructions = "This field is required";
+  const stepErrors: FormErrors["steps"] = [];
+  let hasAtLeastOneStepText = false;
+
+  for (const row of form.steps) {
+    const rowErrors: { text?: string } = {};
+    const text = row.text.trim();
+
+    if (text !== "") {
+      hasAtLeastOneStepText = true;
+
+      if (text.length > 2000) {
+        rowErrors.text = "Step must be 2000 characters or less";
+      }
+    }
+
+    stepErrors.push(rowErrors);
+  }
+
+  if (!hasAtLeastOneStepText) {
+    stepErrors[0] = {
+      ...stepErrors[0],
+      text: "At least one step is required",
+    };
+  }
+
+  if (stepErrors.some((e) => Object.keys(e).length > 0)) {
+    next.steps = stepErrors;
   }
 
   const ingredientErrors: FormErrors["ingredients"] = [];

@@ -87,7 +87,7 @@ describe("RecipeForm", () => {
     expect(
       screen.getByLabelText(/name for ingredient 1/i),
     ).toBeInTheDocument();
-    expect(screen.getByLabelText(/instructions/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/text for step 1/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/notes/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /save/i })).toBeInTheDocument();
   });
@@ -135,7 +135,7 @@ describe("RecipeForm", () => {
     fireEvent.change(screen.getByLabelText(/quantity for ingredient 1/i), {
       target: { value: "2" },
     });
-    fireEvent.change(screen.getByLabelText(/instructions/i), {
+    fireEvent.change(screen.getByLabelText(/text for step 1/i), {
       target: { value: "Mix and bake." },
     });
 
@@ -161,7 +161,7 @@ describe("RecipeForm", () => {
     addIngredientRow();
     await fillIngredientRow("4", "large", "eggs", 1);
 
-    fireEvent.change(screen.getByLabelText(/instructions/i), {
+    fireEvent.change(screen.getByLabelText(/text for step 1/i), {
       target: { value: "Boil pasta. Mix eggs." },
     });
 
@@ -175,7 +175,7 @@ describe("RecipeForm", () => {
           { quantity: 400, unit: "g", name: "spaghetti" },
           { quantity: 4, unit: "large", name: "eggs" },
         ],
-        instructions: "Boil pasta. Mix eggs.",
+        steps: [{ text: "Boil pasta. Mix eggs." }],
         notes: "",
       });
     });
@@ -198,7 +198,7 @@ describe("RecipeForm", () => {
     addIngredientRow();
     await fillIngredientRow("1", "cup", "water", 1);
 
-    fireEvent.change(screen.getByLabelText(/instructions/i), {
+    fireEvent.change(screen.getByLabelText(/text for step 1/i), {
       target: { value: "Mix and bake." },
     });
 
@@ -229,7 +229,7 @@ describe("RecipeForm", () => {
 
     await fillIngredientRow("400", "g", "spaghetti");
 
-    fireEvent.change(screen.getByLabelText(/instructions/i), {
+    fireEvent.change(screen.getByLabelText(/text for step 1/i), {
       target: { value: "Boil pasta." },
     });
 
