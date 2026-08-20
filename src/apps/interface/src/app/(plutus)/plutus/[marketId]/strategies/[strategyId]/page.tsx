@@ -1,32 +1,16 @@
 "use client";
 
 import { StrategyDetailSkeleton } from "@/app/(plutus)/plutus/[marketId]/strategies/_components/strategy-detail-skeleton";
-import { Typography } from "@/components/shared/typography";
+import { NotFoundCard } from "@/components/shared/not-found-card";
 import { useApi } from "@/hooks/use-api";
-import {
-  StrategyConfigBundle,
-  StrategyDetail,
-  plutusApi,
-} from "@/lib/api/plutus";
+import { type StrategyDetail, plutusApi } from "@/lib/api/plutus";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { OptimizeDialog } from "../_components/optimize-dialog";
 import { RunBacktestDialog } from "../_components/run-backtest-dialog";
-import { StrategyEditForm } from "../_components/strategy-edit-form";
+import { StrategyConfigForm } from "../_components/strategy-config-form";
 import { StrategyHeader } from "../_components/strategy-header";
 import { StrategyReadOnlyView } from "../_components/strategy-read-only-view";
-import { NotFoundCard } from "@/components/shared/not-found-card";
-
-function detailToBundle(detail: StrategyDetail): StrategyConfigBundle {
-  return {
-    tradingConfiguration: detail.tradingConfiguration,
-    signalWeightedConfig: detail.signalWeightedConfig,
-    forecastMomentumConfig: detail.forecastMomentumConfig,
-    meanReversionConfig: detail.meanReversionConfig,
-    recipeArbitrageConfig: detail.recipeArbitrageConfig,
-    components: detail.components,
-  };
-}
 
 export default function StrategyDetailPage() {
   const { marketId, strategyId } = useParams<{
@@ -41,31 +25,12 @@ export default function StrategyDetailPage() {
   );
 
   const [isEditing, setIsEditing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [toggling, setToggling] = useState(false);
   const [runBacktestOpen, setRunBacktestOpen] = useState(false);
   const [optimizeOpen, setOptimizeOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [bundle, setBundle] = useState<StrategyConfigBundle>({
-    tradingConfiguration: {
-      maxPositions: 10,
-      maxPositionPercent: 0.2,
-      holdPeriodDays: 7,
-    },
-  });
-
   const data = strategy.data;
-
-  useEffect(() => {
-    if (data) {
-      setName(data.name);
-      setDescription(data.description ?? "");
-      setBundle(detailToBundle(data));
-    }
-  }, [data]);
 
   const handleToggleActive = async () => {
     if (!data) return;
@@ -95,36 +60,23 @@ export default function StrategyDetailPage() {
     }
   };
 
-  const handleSave = async () => {
-    if (!data) return;
-    setIsSaving(true);
-    setError(null);
-    try {
-      await plutusApi.updateStrategy(strategyId, {
-        name: name.trim(),
-        description: description.trim() || null,
-        ...bundle,
-      });
-      reexecute();
-      setIsEditing(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save strategy");
-    } finally {
-      setIsSaving(false);
-    }
+  const handleEditSuccess = () => {
+    reexecute();
+    setIsEditing(false);
   };
 
-  const handleCancel = () => {
-    if (data) {
-      setName(data.name);
-      setDescription(data.description ?? "");
-      setBundle(detailToBundle(data));
-    }
+  const handleCancelEdit = () => {
     setIsEditing(false);
   };
 
   if (strategy.status === "error" && !data) {
-    return <NotFoundCard title="Strategy not found" backHref={`/plutus/${marketId}/strategies`} backLabel="Back to Strategies" />;
+    return (
+      <NotFoundCard
+        title="Strategy not found"
+        backHref={`/plutus/${marketId}/strategies`}
+        backLabel="Back to Strategies"
+      />
+    );
   }
 
   if (!data) {
@@ -143,12 +95,8 @@ export default function StrategyDetailPage() {
         marketId={marketId}
         strategyId={strategyId}
         isEditing={isEditing}
-        isSaving={isSaving}
         toggling={toggling}
-        editedName={name}
         onEdit={() => setIsEditing(true)}
-        onCancel={handleCancel}
-        onSave={handleSave}
         onToggleActive={handleToggleActive}
         onDelete={handleDelete}
         onRunBacktest={() => setRunBacktestOpen(true)}
@@ -156,14 +104,13 @@ export default function StrategyDetailPage() {
       />
 
       {isEditing ? (
-        <StrategyEditForm
-          data={data}
-          name={name}
-          description={description}
-          bundle={bundle}
-          onNameChange={setName}
-          onDescriptionChange={setDescription}
-          onBundleChange={setBundle}
+        <StrategyConfigForm
+          mode="edit"
+          marketId={data.marketId}
+          strategyId={data.id}
+          initialStrategy={data}
+          onSuccess={handleEditSuccess}
+          onCancel={handleCancelEdit}
         />
       ) : (
         <StrategyReadOnlyView data={data} />

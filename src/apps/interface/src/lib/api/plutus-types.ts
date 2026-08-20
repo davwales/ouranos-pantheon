@@ -269,13 +269,6 @@ export interface IdResponse {
   id: string;
 }
 
-export type StrategyType =
-  | "SignalWeighted"
-  | "ForecastMomentum"
-  | "MeanReversion"
-  | "RecipeArbitrage"
-  | "Composite";
-
 export type BacktestStatus =
   | "Pending"
   | "Running"
@@ -285,15 +278,23 @@ export type BacktestStatus =
 
 export type BacktestKind = "Backtest" | "Optimization";
 
-export interface SignalWeight {
-  type: string;
+export type InputKind =
+  | "SignalTaxAdjustedRoi"
+  | "SignalVolumeAnomaly"
+  | "SignalTrendMomentum"
+  | "SignalBollingerBands"
+  | "SignalRsi"
+  | "SignalMovingAverageCrossover"
+  | "SignalPriceVelocity";
+
+export interface InputWeight {
+  kind: InputKind;
   weight: number;
 }
 
-export interface CompositeComponent {
-  strategyId: string;
-  type: StrategyType;
-  weight: number;
+export interface InputThresholds {
+  buyThreshold?: number | null;
+  sellThreshold?: number | null;
 }
 
 export interface TradingConfiguration {
@@ -302,47 +303,11 @@ export interface TradingConfiguration {
   holdPeriodDays: number;
 }
 
-export interface SignalWeightedConfig {
-  buyThreshold?: number | null;
-  sellThreshold?: number | null;
-  taxAdjustedRoiWeight?: number | null;
-  volumeAnomalyWeight?: number | null;
-  trendMomentumWeight?: number | null;
-  bollingerBandsWeight?: number | null;
-  rsiWeight?: number | null;
-  movingAverageCrossoverWeight?: number | null;
-  priceVelocityWeight?: number | null;
-}
-
-export interface ForecastMomentumConfig {
-  forecastMovementThreshold?: number | null;
-  forecastHorizonDays?: number | null;
-}
-
-export interface MeanReversionConfig {
-  deviationMultiplier?: number | null;
-  meanTimeFrameValue?: number | null;
-}
-
-export interface RecipeArbitrageConfig {
-  minMarginPercent?: number | null;
-}
-
-export type StrategyConfigBundle = {
-  tradingConfiguration: TradingConfiguration;
-  signalWeightedConfig?: SignalWeightedConfig | null;
-  forecastMomentumConfig?: ForecastMomentumConfig | null;
-  meanReversionConfig?: MeanReversionConfig | null;
-  recipeArbitrageConfig?: RecipeArbitrageConfig | null;
-  components?: CompositeComponent[] | null;
-};
-
 export interface Strategy {
   id: string;
   marketId: string;
   name: string;
   description?: string | null;
-  type: StrategyType;
   isActive: boolean;
   createdAt: string;
   backtestCount: number;
@@ -355,13 +320,9 @@ export interface StrategyDetail {
   marketId: string;
   name: string;
   description?: string | null;
-  type: StrategyType;
   tradingConfiguration: TradingConfiguration;
-  signalWeightedConfig?: SignalWeightedConfig | null;
-  forecastMomentumConfig?: ForecastMomentumConfig | null;
-  meanReversionConfig?: MeanReversionConfig | null;
-  recipeArbitrageConfig?: RecipeArbitrageConfig | null;
-  components?: CompositeComponent[] | null;
+  inputWeights: InputWeight[];
+  thresholds: InputThresholds;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -413,11 +374,12 @@ export interface BacktestResults {
   bestTrade: number;
   worstTrade: number;
   finalBalance: number;
+  turnoverRate: number;
+  isValidated: boolean;
+  outSampleResults: BacktestResults | null;
   optimizedConfiguration?: TradingConfiguration | null;
-  optimizedSignalWeightedConfig?: SignalWeightedConfig | null;
-  optimizedForecastMomentumConfig?: ForecastMomentumConfig | null;
-  optimizedMeanReversionConfig?: MeanReversionConfig | null;
-  optimizedRecipeArbitrageConfig?: RecipeArbitrageConfig | null;
+  optimizedInputWeights?: InputWeight[] | null;
+  optimizedThresholds?: InputThresholds | null;
 }
 
 export interface BacktestDetail {

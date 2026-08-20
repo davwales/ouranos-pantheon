@@ -3,10 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Extensions;
 using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Querying;
@@ -58,122 +56,20 @@ public sealed class BacktestDataQueryService : IBacktestDataQueryService
 
         var effectiveStart = lookbackDays > 0 ? startDate.AddDays(-lookbackDays) : startDate;
 
-        var snapshotsTask = LoadSnapshotsAsync(symbolIds, marketId, cancellationToken);
-        var forecastsTask = LoadForecastsAsync(symbolIds, marketId, cancellationToken);
-        var dailyPricesTask = LoadDailyPricesAsync(
+        var dailyAggregates = await LoadDailyAggregatesAsync(
             symbolIds,
             effectiveStart,
             endDate,
             cancellationToken
         );
-        var dailyAggregatesTask = LoadDailyAggregatesAsync(
-            symbolIds,
-            effectiveStart,
-            endDate,
-            cancellationToken
-        );
-
-        await Task.WhenAll(snapshotsTask, forecastsTask, dailyPricesTask, dailyAggregatesTask);
-
-        var snapshots = await snapshotsTask;
-        var forecasts = await forecastsTask;
-        var dailyPrices = await dailyPricesTask;
-        var dailyAggregates = await dailyAggregatesTask;
 
         _logger.LogDebug(
-            "Loaded backtest data: {symbolCount} symbols, {snapshotCount} snapshots, "
-                + "{forecastCount} forecasts, {dailyPriceCount} daily prices, "
-                + "{dailyAggregateCount} daily aggregates.",
+            "Loaded backtest data: {symbolCount} symbols, {dailyAggregateCount} daily aggregates.",
             symbols.Count,
-            snapshots.Count,
-            forecasts.Count,
-            dailyPrices.Count,
             dailyAggregates.Count
         );
 
-        return BacktestData.FromRaw(
-            market,
-            symbols,
-            snapshots,
-            forecasts,
-            dailyPrices,
-            dailyAggregates
-        );
-    }
-
-    private async Task<List<MarketTradeSnapshot>> LoadSnapshotsAsync(
-        List<Id<Symbol>> symbolIds,
-        Id<Market> marketId,
-        CancellationToken cancellationToken
-    )
-    {
-        await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-
-        return await dbContext
-            .MarketTradeSnapshots.AsNoTracking()
-            .Where(s => symbolIds.Contains(s.SymbolId) && s.MarketId == marketId)
-            .ToListAsync(cancellationToken);
-    }
-
-    private async Task<List<Forecast>> LoadForecastsAsync(
-        List<Id<Symbol>> symbolIds,
-        Id<Market> marketId,
-        CancellationToken cancellationToken
-    )
-    {
-        await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-
-        return await dbContext
-            .Forecasts.AsNoTracking()
-            .Include(f => f.Predictions)
-            .Where(f => symbolIds.Contains(f.SymbolId) && f.MarketId == marketId)
-            .ToListAsync(cancellationToken);
-    }
-
-    /// <summary>
-    ///     Loads one closing price per symbol per day using TimescaleDB
-    ///     <c>time_bucket</c> and <c>last()</c> aggregate.
-    ///     Fully server-side: no client-side grouping or sorting.
-    /// </summary>
-    private async Task<List<DailyPrice>> LoadDailyPricesAsync(
-        List<Id<Symbol>> symbolIds,
-        DateTimeOffset startDate,
-        DateTimeOffset endDate,
-        CancellationToken cancellationToken
-    )
-    {
-        await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-
-        var command = RawSqlCommand
-            .FromSql(
-                """
-                SELECT symbol_id,
-                       time_bucket('1 day', "timestamp") AS date,
-                       last(price, "timestamp") AS close_price
-                FROM plutus.trades
-                WHERE symbol_id = ANY(@symbolIds)
-                  AND "timestamp" >= @startDate
-                  AND "timestamp" <= @endDate
-                GROUP BY symbol_id, time_bucket('1 day', "timestamp")
-                """
-            )
-            .WithIds("@symbolIds", symbolIds)
-            .WithDateTimeOffset("@startDate", startDate)
-            .WithDateTimeOffset("@endDate", endDate);
-
-        var rows = await dbContext.Database.ExecuteQueryAsync<DailyPriceRow>(
-            command,
-            cancellationToken
-        );
-
-        return
-        [
-            .. rows.Select(d => new DailyPrice(
-                new Id<Symbol>(d.SymbolId.ToString()),
-                DateOnly.FromDateTime(d.Date.UtcDateTime),
-                d.ClosePrice
-            )),
-        ];
+        return BacktestData.FromRaw(market, symbols, dailyAggregates);
     }
 
     /// <summary>

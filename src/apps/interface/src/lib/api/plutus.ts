@@ -26,17 +26,12 @@ export type {
   SymbolGroupDetail,
   SymbolGroupSymbol,
   IdResponse,
-  StrategyType,
   BacktestStatus,
   BacktestKind,
-  SignalWeight,
-  CompositeComponent,
+  InputKind,
+  InputWeight,
+  InputThresholds,
   TradingConfiguration,
-  SignalWeightedConfig,
-  ForecastMomentumConfig,
-  MeanReversionConfig,
-  RecipeArbitrageConfig,
-  StrategyConfigBundle,
   Strategy,
   StrategyDetail,
   BacktestSummary,
@@ -90,17 +85,9 @@ import type {
   Position,
   ClosePositionResponse,
   PageParams,
-} from "./plutus-types";
-import type {
-  StrategyType,
   TradingConfiguration,
-  SignalWeightedConfig,
-  ForecastMomentumConfig,
-  MeanReversionConfig,
-  RecipeArbitrageConfig,
-  CompositeComponent,
-  BacktestKind,
-  BacktestStatus,
+  InputWeight,
+  InputThresholds,
   PositionSide,
   PositionStatus,
 } from "./plutus-types";
@@ -308,13 +295,9 @@ export const plutusApi = {
     marketId: string;
     name: string;
     description?: string | null;
-    type: StrategyType;
     tradingConfiguration: TradingConfiguration;
-    signalWeightedConfig?: SignalWeightedConfig | null;
-    forecastMomentumConfig?: ForecastMomentumConfig | null;
-    meanReversionConfig?: MeanReversionConfig | null;
-    recipeArbitrageConfig?: RecipeArbitrageConfig | null;
-    components?: CompositeComponent[] | null;
+    inputWeights: InputWeight[];
+    thresholds?: InputThresholds | null;
   }) => {
     const { tradingConfiguration, ...rest } = input;
     return api.post<IdResponse>("/api/plutus/strategies", {
@@ -329,11 +312,8 @@ export const plutusApi = {
       name: string;
       description?: string | null;
       tradingConfiguration: TradingConfiguration;
-      signalWeightedConfig?: SignalWeightedConfig | null;
-      forecastMomentumConfig?: ForecastMomentumConfig | null;
-      meanReversionConfig?: MeanReversionConfig | null;
-      recipeArbitrageConfig?: RecipeArbitrageConfig | null;
-      components?: CompositeComponent[] | null;
+      inputWeights: InputWeight[];
+      thresholds?: InputThresholds | null;
     },
   ) => {
     const { tradingConfiguration, ...rest } = input;
@@ -411,9 +391,12 @@ export const plutusApi = {
       budget: number;
       generations?: number;
       populationSize?: number;
-      sharpeRatioWeight?: number;
-      totalReturnWeight?: number;
-      maxDrawdownWeight?: number;
+      sortinoWeight?: number;
+      cagrWeight?: number;
+      drawdownWeight?: number;
+      turnoverWeight?: number;
+      l1RegularizationWeight?: number;
+      outSampleRatio?: number;
       volumeParticipationRate?: number;
       slippageMultiplier?: number;
     },

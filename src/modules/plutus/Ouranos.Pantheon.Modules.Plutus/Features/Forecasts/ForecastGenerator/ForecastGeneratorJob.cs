@@ -57,12 +57,6 @@ public sealed class ForecastGeneratorJob
             return;
         }
 
-        if (_options.Value.Forecasting.RemoveOutdatedForecasts)
-        {
-            _logger.LogInformation("Removing all outdated forecasts.");
-            await _dbContext.Forecasts.ExecuteDeleteAsync(ct);
-        }
-
         var generatedAt = DateTimeOffset.UtcNow;
         var targetBase = new DateTimeOffset(generatedAt.UtcDateTime.Date, TimeSpan.Zero);
 
@@ -143,15 +137,6 @@ public sealed class ForecastGeneratorJob
                         )
                     );
                 }
-            }
-
-            if (!_options.Value.Forecasting.RemoveOutdatedForecasts)
-            {
-                var forecastSymbolIds = forecasts.Select(f => f.SymbolId).ToList();
-                var outdated = await _dbContext
-                    .Forecasts.Where(f => forecastSymbolIds.Contains(f.SymbolId))
-                    .ToListAsync(ct);
-                _dbContext.Forecasts.RemoveRange(outdated);
             }
 
             _dbContext.Forecasts.AddRange(forecasts);

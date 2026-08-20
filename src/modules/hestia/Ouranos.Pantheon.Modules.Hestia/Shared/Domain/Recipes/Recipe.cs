@@ -21,7 +21,7 @@ public sealed record Recipe : BaseEventSourcedEntity
 
     /// <summary>
     /// Marten convention: project a <see cref="RecipeCreated"/> event into the
-    /// initial aggregate state. No validation — events are historical truth.
+    /// initial aggregate state. No validation - events are historical truth.
     /// </summary>
     public static Recipe Create(RecipeCreated @event)
     {

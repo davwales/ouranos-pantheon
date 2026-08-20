@@ -12,9 +12,13 @@ public sealed record OptimizeStrategyInput(
     decimal Budget,
     int Generations = 20,
     int PopulationSize = 20,
-    double SharpeRatioWeight = 0.5,
-    double TotalReturnWeight = 0.3,
-    double MaxDrawdownWeight = -0.2,
-    decimal VolumeParticipationRate = 0.25m,
-    decimal SlippageMultiplier = 0.1m
+    double SortinoWeight = 0.4,
+    double CagrWeight = 0.3,
+    double DrawdownWeight = 0.5,
+    double TurnoverWeight = 0.1,
+    double L1RegularizationWeight = 0.05,
+    double OutSampleRatio = 0.2,
+    decimal? VolumeParticipationRate = null,
+    decimal? SlippageMultiplier = null,
+    int MinTrades = 5
 );

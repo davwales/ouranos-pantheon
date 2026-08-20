@@ -39,9 +39,9 @@ public sealed class RunBacktestHandlerTests
             marketId,
             "Test",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         await setupContext.Strategies.AddAsync(strategy);
         await setupContext.SaveChangesAsync();

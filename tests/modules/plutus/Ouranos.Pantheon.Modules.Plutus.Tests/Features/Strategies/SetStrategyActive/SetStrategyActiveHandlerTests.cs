@@ -34,9 +34,9 @@ public sealed class SetStrategyActiveHandlerTests
             _fixture.Create<Id<Market>>(),
             "Test",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         await _dbContext.Strategies.AddAsync(strategy);
         await _dbContext.SaveChangesAsync();
@@ -60,9 +60,9 @@ public sealed class SetStrategyActiveHandlerTests
             _fixture.Create<Id<Market>>(),
             "Test",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         strategy.SetActive(false);
         await _dbContext.Strategies.AddAsync(strategy);

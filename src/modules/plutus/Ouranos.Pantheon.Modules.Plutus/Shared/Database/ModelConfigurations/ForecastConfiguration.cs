@@ -9,7 +9,7 @@ public sealed class ForecastConfiguration : IEntityTypeConfiguration<Forecast>
 {
     public void Configure(EntityTypeBuilder<Forecast> builder)
     {
-        builder.HasKey(p => p.Id);
+        builder.HasKey(p => new { p.Id, p.CreatedAt });
 
         builder.Property(p => p.Id).HasIdConversion();
         builder.Property(p => p.MarketId).HasIdConversion();
@@ -25,7 +25,8 @@ public sealed class ForecastConfiguration : IEntityTypeConfiguration<Forecast>
                 x.Property(f => f.Volume);
             }
         );
-        builder.OwnsMany(p => p.Predictions);
+        builder.OwnsMany(p => p.Predictions, b => b.ToJson());
+        builder.HasIndex(f => new { f.SymbolId, f.CreatedAt });
         builder.HasOne(f => f.Symbol).WithMany().HasForeignKey(f => f.SymbolId);
     }
 }

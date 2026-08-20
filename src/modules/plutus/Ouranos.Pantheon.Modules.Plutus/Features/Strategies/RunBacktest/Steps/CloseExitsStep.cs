@@ -1,17 +1,19 @@
 using Ardalis.GuardClauses;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Steps;
 
-public sealed class CloseExitsStep(IEnumerable<ISignalComputer> signalComputers)
+public sealed class CloseExitsStep(ISignalScoringService signalScoringService)
     : IStep<BacktestPayload>
 {
+    private readonly ISignalScoringService _signalScoringService = Guard.Against.Null(
+        signalScoringService
+    );
+
     public async Task ExecuteAsync(PipelineContext context, BacktestPayload payload)
     {
         context.CancellationToken.ThrowIfCancellationRequested();
@@ -19,7 +21,7 @@ public sealed class CloseExitsStep(IEnumerable<ISignalComputer> signalComputers)
 
         var ctx = payload.Context;
         var holdLimit = payload.Parameters.Configuration.HoldPeriodDays ?? int.MaxValue;
-        var sellThreshold = payload.Parameters.SignalWeightedConfig?.SellThreshold;
+        var sellThreshold = payload.Parameters.Thresholds.SellThreshold;
 
         var toClose = new List<KeyValuePair<Id<Symbol>, OpenPosition>>();
 
@@ -119,6 +121,14 @@ public sealed class CloseExitsStep(IEnumerable<ISignalComputer> signalComputers)
         decimal sellThreshold
     )
     {
+        var cachedScore = payload.Portfolio.ScoredSymbols?.FirstOrDefault(s =>
+            s.Symbol.Id == symbolId
+        );
+        if (cachedScore is not null)
+        {
+            return cachedScore.Score < sellThreshold;
+        }
+
         var currentDate = ctx.CurrentDate(context);
         var snapshots = ctx.Data.GetSnapshotsForSymbol(symbolId, currentDate);
         var currentPrice = ctx.Data.GetLatestPrice(symbolId, currentDate);
@@ -129,29 +139,18 @@ public sealed class CloseExitsStep(IEnumerable<ISignalComputer> signalComputers)
         }
 
         var limit = ctx.Data.Market.Taxes.Flat?.Maximum ?? decimal.MaxValue;
-        var forecast = ctx.Data.GetForecastForSymbol(symbolId, currentDate);
-        var (forecastedPrice, forecastedChange) = BacktestMath.GetForecastData(
-            forecast,
-            currentPrice
-        );
 
         var allAggregates = ctx.Data.GetWindowAggregates(
             symbolId,
             DateTimeOffset.MinValue,
-            currentDate
+            currentDate,
+            windowDays: 30
         );
         var priceBuckets = BacktestMath.BuildPriceBucketsFromAggregates(allAggregates);
 
-        var signals = await ReconstructSignalsAsync(
-            symbolId,
-            ctx.TaxRate,
-            limit,
-            snapshots,
-            priceBuckets,
-            context
-        );
+        var signalHistory = ScoreSymbolsStep.GetSignalHistory(payload, symbolId);
 
-        var scoreContext = new StrategyScoreContext(
+        var scoreResult = await _signalScoringService.BuildScoreContextAsync(
             symbolId,
             payload.Parameters.MarketId,
             symbolName,
@@ -159,59 +158,16 @@ public sealed class CloseExitsStep(IEnumerable<ISignalComputer> signalComputers)
             currentPrice,
             ctx.TaxRate,
             limit,
-            snapshots.Short,
-            snapshots.Medium,
-            snapshots.Long,
+            snapshots,
             priceBuckets,
-            signals,
-            forecastedPrice,
-            forecastedChange,
-            SignalWeightedConfig: ctx.SignalWeightedConfig,
-            ForecastMomentumConfig: ctx.ForecastMomentumConfig,
-            MeanReversionConfig: ctx.MeanReversionConfig,
-            RecipeArbitrageConfig: ctx.RecipeArbitrageConfig
+            ctx.InputWeights,
+            ctx.Thresholds,
+            signalHistory,
+            context.CancellationToken
         );
 
-        var score = ctx.Executor.Score(scoreContext, payload.Parameters.Configuration);
+        var score = ctx.Executor.Score(scoreResult.Context, payload.Parameters.Configuration);
 
         return score < sellThreshold;
-    }
-
-    private async Task<IReadOnlyList<Signal>> ReconstructSignalsAsync(
-        Id<Symbol> symbolId,
-        decimal taxRate,
-        decimal limit,
-        (
-            MarketTradeSnapshot? Short,
-            MarketTradeSnapshot? Medium,
-            MarketTradeSnapshot? Long
-        ) snapshots,
-        IReadOnlyList<PriceBucket> priceBuckets,
-        PipelineContext context
-    )
-    {
-        var signals = new List<Signal>();
-
-        foreach (var computer in signalComputers)
-        {
-            var computeContext = new SignalComputeContext(
-                symbolId,
-                snapshots.Short?.MarketId ?? default,
-                taxRate,
-                limit,
-                snapshots.Short,
-                snapshots.Medium,
-                snapshots.Long,
-                priceBuckets
-            );
-
-            var value = await computer.ComputeAsync(computeContext, context.CancellationToken);
-            if (value is not null)
-            {
-                signals.Add(Signal.Create(default, symbolId, computer.Type, value.Value));
-            }
-        }
-
-        return signals;
     }
 }

@@ -1,5 +1,7 @@
 using Ardalis.GuardClauses;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Steps;
@@ -35,24 +37,15 @@ public sealed class LiquidateStep : IStep<BacktestPayload>
 
             if (exitVolume <= 0)
             {
-                var forcedExitPrice = pos.EntryPrice * 0.5m;
-                var forcedGrossValue = forcedExitPrice * pos.Volume;
-                var forcedTax = forcedGrossValue * ctx.TaxRate;
-                var forcedTaxCap = ctx.Data.Market.Taxes.Flat?.Maximum ?? decimal.MaxValue;
-                var forcedCappedTax = Math.Min(forcedTax, forcedTaxCap);
-                var forcedNetProceeds = forcedGrossValue - forcedCappedTax;
-
-                payload.Portfolio.Balance += forcedNetProceeds;
-                payload.Portfolio.ClosedPositions.Add(
-                    BacktestMath.CreateClosedPosition(
-                        pos,
-                        forcedExitPrice,
-                        pos.Volume,
-                        forcedNetProceeds - pos.EntryPrice * pos.Volume,
-                        endDate
-                    )
+                var (forcedProceeds, forcedClosed) = ForceLiquidate(
+                    pos,
+                    exitPrice,
+                    endDate,
+                    ctx.TaxRate,
+                    ctx.Data.Market
                 );
-
+                payload.Portfolio.Balance += forcedProceeds;
+                payload.Portfolio.ClosedPositions.Add(forcedClosed);
                 continue;
             }
 
@@ -67,29 +60,53 @@ public sealed class LiquidateStep : IStep<BacktestPayload>
             }
 
             var remainingVolume = pos.Volume - exitVolume;
-            var remainingCostBasis = pos.EntryPrice * remainingVolume;
-            var forcedExitPrice2 = pos.EntryPrice * 0.5m;
-            var forcedGrossValue2 = forcedExitPrice2 * remainingVolume;
-            var forcedTax2 = forcedGrossValue2 * ctx.TaxRate;
-            var forcedTaxCap2 = ctx.Data.Market.Taxes.Flat?.Maximum ?? decimal.MaxValue;
-            var forcedNetProceeds2 = forcedGrossValue2 - Math.Min(forcedTax2, forcedTaxCap2);
-
-            payload.Portfolio.Balance += forcedNetProceeds2;
-            payload.Portfolio.ClosedPositions.Add(
-                BacktestMath.CreateClosedPosition(
-                    pos with
-                    {
-                        Volume = remainingVolume,
-                    },
-                    forcedExitPrice2,
-                    remainingVolume,
-                    forcedNetProceeds2 - remainingCostBasis,
-                    endDate
-                )
+            var (residualProceeds, residualClosed) = ForceLiquidate(
+                pos with
+                {
+                    Volume = remainingVolume,
+                },
+                exitPrice,
+                endDate,
+                ctx.TaxRate,
+                ctx.Data.Market
             );
+            payload.Portfolio.Balance += residualProceeds;
+            payload.Portfolio.ClosedPositions.Add(residualClosed);
         }
 
         payload.Portfolio.OpenPositions.Clear();
         return Task.CompletedTask;
+    }
+
+    /// <summary>
+    ///     Mark-to-market liquidation for the volume a participation cap could not
+    ///     sell. Computes gross value at <paramref name="exitPrice" />, applies the
+    ///     flat tax capped at the market maximum, and produces the closed-position
+    ///     record with the resulting net P&amp;L. Used both when no volume could be
+    ///     sold at all and when only a partial fill left residue behind.
+    /// </summary>
+    private static (decimal NetProceeds, BacktestPosition ClosedPosition) ForceLiquidate(
+        OpenPosition position,
+        decimal exitPrice,
+        DateTimeOffset endDate,
+        decimal taxRate,
+        Market market
+    )
+    {
+        var grossValue = exitPrice * position.Volume;
+        var tax = grossValue * taxRate;
+        var taxCap = market.Taxes.Flat?.Maximum ?? decimal.MaxValue;
+        var netProceeds = grossValue - Math.Min(tax, taxCap);
+        var costBasis = position.EntryPrice * position.Volume;
+
+        var closedPosition = BacktestMath.CreateClosedPosition(
+            position,
+            exitPrice,
+            position.Volume,
+            netProceeds - costBasis,
+            endDate
+        );
+
+        return (netProceeds, closedPosition);
     }
 }

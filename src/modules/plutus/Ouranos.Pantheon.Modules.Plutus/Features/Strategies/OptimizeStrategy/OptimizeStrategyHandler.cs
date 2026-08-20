@@ -51,6 +51,12 @@ public sealed class OptimizeStrategyHandler
             d => d > command.StartDate,
             "End date must be after start date."
         );
+        Guard.Against.InvalidInput(
+            command.OutSampleRatio,
+            nameof(command.OutSampleRatio),
+            r => r is > 0 and < 1,
+            "Out-of-sample ratio must be between 0 and 1 (exclusive)."
+        );
 
         var strategy = await dbContext.Strategies.FirstOrDefaultAsync(
             s => s.Id == command.StrategyId,
@@ -77,11 +83,15 @@ public sealed class OptimizeStrategyHandler
                 backtest.Id,
                 (uint)command.Generations,
                 (uint)command.PopulationSize,
-                command.SharpeRatioWeight,
-                command.TotalReturnWeight,
-                command.MaxDrawdownWeight,
-                command.VolumeParticipationRate,
-                command.SlippageMultiplier
+                command.SortinoWeight,
+                command.CagrWeight,
+                command.DrawdownWeight,
+                command.TurnoverWeight,
+                command.L1RegularizationWeight,
+                command.OutSampleRatio,
+                command.VolumeParticipationRate ?? 0.25m,
+                command.SlippageMultiplier ?? 0.1m,
+                command.MinTrades
             )
         );
 

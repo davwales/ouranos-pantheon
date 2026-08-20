@@ -1,107 +1,151 @@
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Inputs;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization.Chromosomes;
 using Ouranos.Pantheon.Modules.Shared.Algorithms.Genetic;
+using Ouranos.Pantheon.Modules.Shared.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Tests.Shared.Domain.Strategies.Optimization.Chromosomes;
 
 public sealed class StrategyChromosomeTests
 {
-    private static readonly StrategyType[] AllStrategyTypes =
-    [
-        StrategyType.SignalWeighted,
-        StrategyType.ForecastMomentum,
-        StrategyType.MeanReversion,
-        StrategyType.RecipeArbitrage,
-        StrategyType.Composite,
-    ];
+    private static readonly InputKind[] InputKinds = Enum.GetValues<InputKind>();
 
-    public static IEnumerable<object[]> StrategyTypeData =>
-        AllStrategyTypes.Select(t => new object[] { t });
-
-    [Theory]
-    [MemberData(nameof(StrategyTypeData))]
-    public void CreateRandom_WhenGivenTypeOnly_ShouldCreateRandomConfiguration(StrategyType type)
+    private static StrategyChromosome ChromosomeWithAllCommonFields()
     {
-        // Arrange & Act
-        var chromosome = StrategyChromosome.CreateRandom(type);
+        var config = new TradingConfiguration
+        {
+            MaxPositions = 5,
+            MaxPositionPercent = 0.25m,
+            HoldPeriodDays = 10,
+        };
 
-        // Assert
-        chromosome.ShouldNotBeNull();
-        chromosome.Configuration.ShouldNotBeNull();
-        chromosome.Configuration.ShouldBeAssignableTo<TradingConfiguration>();
-    }
-
-    [Theory]
-    [MemberData(nameof(StrategyTypeData))]
-    public void Create_WhenGivenExplicitConfig_ShouldStoreIt(StrategyType type)
-    {
-        // Arrange
-        var config = new TradingConfiguration { MaxPositions = 15, HoldPeriodDays = 10 };
-
-        // Act
-        var chromosome = StrategyChromosome.Create(type, config);
-
-        // Assert
-        chromosome.Configuration.ShouldBeSameAs(config);
-        chromosome.Configuration.MaxPositions.ShouldBe(15);
-        chromosome.Configuration.HoldPeriodDays.ShouldBe(10);
-    }
-
-    [Theory]
-    [MemberData(nameof(StrategyTypeData))]
-    public void Implements_ShouldSatisfyIChromosomeContract(StrategyType type)
-    {
-        // Arrange
-        var chromosome = StrategyChromosome.CreateRandom(type);
-
-        // Act
-        var asInterface = chromosome as IChromosome<double>;
-
-        // Assert
-        asInterface.ShouldNotBeNull();
-        asInterface.Genes.ShouldNotBeNull();
+        var weights = new List<InputWeight> { new(InputKind.SignalTaxAdjustedRoi, 1m) };
+        return new StrategyChromosome(config, weights, new InputThresholds());
     }
 
     [Fact]
-    public void CreateRandom_WhenGivenTypeOnly_ShouldProduceVariedConfigsAcrossCalls()
+    public void Genes_WhenCalled_ShouldReturnNonEmptyDoubleArray()
     {
         // Arrange
-        var configs = new List<TradingConfiguration>();
+        IChromosome<double> chromosome = StrategyChromosome.CreateRandom();
 
         // Act
-        for (var i = 0; i < 10; i++)
-        {
-            var chromosome = StrategyChromosome.CreateRandom(StrategyType.SignalWeighted);
-            configs.Add(chromosome.Configuration);
-        }
+        var genes = chromosome.Genes;
 
         // Assert
-        var distinctMaxPositions = configs.Select(c => c.MaxPositions).Distinct().Count();
-        distinctMaxPositions.ShouldBeGreaterThan(1);
+        genes.ShouldBeOfType<double[]>();
+        genes.ShouldNotBeEmpty();
+        genes.ShouldAllBe(g => !double.IsNaN(g));
     }
 
-    [Theory]
-    [MemberData(nameof(StrategyTypeData))]
-    public void CreateRandom_WhenAnyType_ShouldSetCommonFields(StrategyType type)
-    {
-        // Arrange & Act
-        var chromosome = StrategyChromosome.CreateRandom(type);
-
-        // Assert
-        chromosome.Configuration.MaxPositions.ShouldNotBeNull();
-        chromosome.Configuration.MaxPositions.Value.ShouldBeInRange(1, 19);
-        chromosome.Configuration.MaxPositionPercent.ShouldNotBeNull();
-        chromosome.Configuration.MaxPositionPercent.Value.ShouldBeInRange(0.05m, 0.50m);
-        chromosome.Configuration.HoldPeriodDays.ShouldNotBeNull();
-        chromosome.Configuration.HoldPeriodDays.Value.ShouldBeInRange(1, 29);
-    }
-
-    [Theory]
-    [MemberData(nameof(StrategyTypeData))]
-    public void Mutate_WhenRateIsZero_ShouldNotChangeConfiguration(StrategyType type)
+    [Fact]
+    public void Genes_WhenAllCommonFieldsSet_HasFixedLengthThreeCommonPlusSevenWeightsPlusTwoThresholds()
     {
         // Arrange
-        var chromosome = StrategyChromosome.CreateRandom(type);
+        var chromosome = ChromosomeWithAllCommonFields();
+
+        // Act
+        var genes = chromosome.Genes;
+
+        // Assert
+        genes.Length.ShouldBe(12);
+    }
+
+    [Fact]
+    public void Genes_WhenCommonFieldsSet_ShouldSerializeThemFirstInOrder()
+    {
+        // Arrange
+        var config = new TradingConfiguration
+        {
+            MaxPositions = 7,
+            MaxPositionPercent = 0.25m,
+            HoldPeriodDays = 12,
+        };
+        var chromosome = new StrategyChromosome(
+            config,
+            StrategyTestFactory.DefaultWeights(),
+            new InputThresholds()
+        );
+
+        // Act
+        var genes = chromosome.Genes;
+
+        // Assert
+        genes[0].ShouldBe(7);
+        genes[1].ShouldBe(0.25);
+        genes[2].ShouldBe(12);
+    }
+
+    [Fact]
+    public void Genes_WhenWeightsSet_LaysThemOutInEnumOrderAfterCommonFields()
+    {
+        // Arrange
+        var config = new TradingConfiguration
+        {
+            MaxPositions = 1,
+            MaxPositionPercent = 0.1m,
+            HoldPeriodDays = 1,
+        };
+
+        var weights = new List<InputWeight>
+        {
+            new(InputKind.SignalPriceVelocity, 0.7m),
+            new(InputKind.SignalTaxAdjustedRoi, 0.1m),
+            new(InputKind.SignalRsi, 1.0m),
+        };
+
+        var chromosome = new StrategyChromosome(config, weights, new InputThresholds());
+
+        // Act
+        var genes = chromosome.Genes;
+
+        // Assert
+        for (var i = 0; i < InputKinds.Length; i++)
+        {
+            var kind = InputKinds[i];
+            var expected = weights.FirstOrDefault(w => w.Kind == kind)?.Weight ?? 0m;
+            genes[3 + i].ShouldBe((double)expected);
+        }
+    }
+
+    [Fact]
+    public void Configuration_WhenCreateRandom_ShouldHaveAllCommonFieldsWithinExpectedBounds()
+    {
+        // Arrange & Act
+        var chromosome = StrategyChromosome.CreateRandom();
+
+        // Assert
+        var maxPositions = chromosome.Configuration.MaxPositions;
+        maxPositions.ShouldNotBeNull();
+        maxPositions.Value.ShouldBeInRange(1, 19);
+
+        var maxPositionPercent = chromosome.Configuration.MaxPositionPercent;
+        maxPositionPercent.ShouldNotBeNull();
+        maxPositionPercent.Value.ShouldBeInRange(0.05m, 0.50m);
+
+        var holdPeriodDays = chromosome.Configuration.HoldPeriodDays;
+        holdPeriodDays.ShouldNotBeNull();
+        holdPeriodDays.Value.ShouldBeInRange(1, 29);
+    }
+
+    [Fact]
+    public void CreateRandom_ProducesOneWeightPerInputKind()
+    {
+        // Arrange & Act
+        var chromosome = StrategyChromosome.CreateRandom();
+
+        // Assert
+        chromosome.InputWeights.Select(w => w.Kind).ShouldBe(InputKinds, ignoreOrder: false);
+        chromosome.InputWeights.Count.ShouldBe(InputKinds.Length);
+    }
+
+    [Fact]
+    public void Mutate_WhenRateIsZero_ShouldNotChangeConfiguration()
+    {
+        // Arrange
+        var chromosome = StrategyChromosome.CreateRandom();
         var originalConfig = chromosome.Configuration;
 
         // Act
@@ -111,191 +155,128 @@ public sealed class StrategyChromosomeTests
         chromosome.Configuration.ShouldBe(originalConfig);
     }
 
-    [Theory]
-    [MemberData(nameof(StrategyTypeData))]
-    public void Mutate_WhenCalled_ShouldNotThrow(StrategyType type)
+    [Fact]
+    public void Mutate_WhenRateIsZero_NeverChangesGenes()
     {
         // Arrange
-        var chromosome = StrategyChromosome.CreateRandom(type);
+        var chromosome = StrategyChromosome.CreateRandom();
 
-        // Act & Assert
-        Should.NotThrow(() => chromosome.Mutate(0.5));
+        // Act
+        var before = chromosome.Genes;
+        for (var i = 0; i < 25; i++)
+        {
+            chromosome.Mutate(0.0);
+        }
+
+        var after = chromosome.Genes;
+
+        // Assert
+        after.ShouldBe(before);
     }
 
-    [Theory]
-    [MemberData(nameof(StrategyTypeData))]
-    public void Crossover_WhenBothSameType_ShouldReturnChildOfSameType(StrategyType type)
+    [Fact]
+    public void Mutate_WhenRateIsOne_ChangesAtMostOneFeatureGroupPerCall()
     {
         // Arrange
-        var parent1 = StrategyChromosome.CreateRandom(type);
-        var parent2 = StrategyChromosome.CreateRandom(type);
+        var chromosome = ChromosomeWithAllCommonFields();
+        var ranges = new (int min, int max)[] { (0, 3), (3, 10), (10, 12) };
+
+        // Act & Assert
+        for (var i = 0; i < 50; i++)
+        {
+            var before = chromosome.Genes;
+            chromosome.Mutate(1.0);
+            var after = chromosome.Genes;
+
+            var changedGroups = ranges.Count(r =>
+                Enumerable.Range(r.min, r.max - r.min).Any(g => before[g] != after[g])
+            );
+            changedGroups.ShouldBeLessThanOrEqualTo(1);
+        }
+    }
+
+    [Fact]
+    public void Crossover_WhenPartnerIsChromosome_ShouldReturnChromosomeChild()
+    {
+        // Arrange
+        var parent1 = StrategyChromosome.CreateRandom();
+        var parent2 = StrategyChromosome.CreateRandom();
 
         // Act
         var child = parent1.Crossover(parent2);
 
         // Assert
         child.ShouldNotBeNull();
-        child.ShouldBeAssignableTo<StrategyChromosome>();
-        var childChromosome = (StrategyChromosome)child;
-        childChromosome.Configuration.ShouldNotBeNull();
+        child.ShouldBeOfType<StrategyChromosome>();
+        ((StrategyChromosome)child).Configuration.ShouldNotBeNull();
     }
 
-    [Theory]
-    [MemberData(nameof(StrategyTypeData))]
-    public void Crossover_WhenBothSameType_ChildShouldInheritFieldsFromParents(StrategyType type)
+    [Fact]
+    public void Crossover_ChildGenesAllComeFromEitherParent()
     {
         // Arrange
-        var config1 = new TradingConfiguration
-        {
-            MaxPositions = 3,
-            MaxPositionPercent = 0.10m,
-            HoldPeriodDays = 7,
-        };
-        var config2 = new TradingConfiguration
-        {
-            MaxPositions = 15,
-            MaxPositionPercent = 0.40m,
-            HoldPeriodDays = 25,
-        };
-        var parent1 = StrategyChromosome.Create(type, config1);
-        var parent2 = StrategyChromosome.Create(type, config2);
-
-        // Act
-        var child = parent1.Crossover(parent2);
-
-        // Assert
-        var childConfig = ((StrategyChromosome)child).Configuration;
-
-        int?[] validMaxPositions = [config1.MaxPositions, config2.MaxPositions];
-        validMaxPositions.ShouldContain(childConfig.MaxPositions);
-
-        var validMaxPositionPercents = new[]
-        {
-            config1.MaxPositionPercent,
-            config2.MaxPositionPercent,
-        };
-        validMaxPositionPercents.ShouldContain(childConfig.MaxPositionPercent);
-
-        int?[] validHoldPeriodDays = [config1.HoldPeriodDays, config2.HoldPeriodDays];
-        validHoldPeriodDays.ShouldContain(childConfig.HoldPeriodDays);
-    }
-
-    [Theory]
-    [MemberData(nameof(StrategyTypeData))]
-    public void Crossover_Result_ShouldHaveSameTypeAsParents(StrategyType type)
-    {
-        // Arrange
-        var parent1 = StrategyChromosome.CreateRandom(type);
-        var parent2 = StrategyChromosome.CreateRandom(type);
+        var parent1 = StrategyChromosome.CreateRandom();
+        var parent2 = StrategyChromosome.CreateRandom();
+        var parent1Genes = parent1.Genes;
+        var parent2Genes = parent2.Genes;
 
         // Act
         var child = (StrategyChromosome)parent1.Crossover(parent2);
-
-        // Assert
         var childGenes = child.Genes;
-        childGenes.Length.ShouldBeGreaterThan(0);
-    }
-
-    [Theory]
-    [MemberData(nameof(StrategyTypeData))]
-    public void Interface_Genes_ShouldReturnDoubleArray(StrategyType type)
-    {
-        // Arrange
-        IChromosome<double> chromosome = StrategyChromosome.CreateRandom(type);
-
-        // Act
-        var genes = chromosome.Genes;
 
         // Assert
-        genes.ShouldBeOfType<double[]>();
-    }
-
-    [Theory]
-    [MemberData(nameof(StrategyTypeData))]
-    public void Interface_Crossover_ShouldReturnIChromosomeDouble(StrategyType type)
-    {
-        // Arrange
-        IChromosome<double> parent1 = StrategyChromosome.CreateRandom(type);
-        IChromosome<double> parent2 = StrategyChromosome.CreateRandom(type);
-
-        // Act
-        var child = parent1.Crossover(parent2);
-
-        // Assert
-        child.ShouldBeAssignableTo<IChromosome<double>>();
+        childGenes
+            .Select((g, i) => (g, i))
+            .ShouldAllBe(t => t.g == parent1Genes[t.i] || t.g == parent2Genes[t.i]);
     }
 
     [Fact]
-    public void Crossover_WhenDifferentTypes_ShouldThrowInvalidOperationException()
+    public void Crossover_WhenPartnerIsNotChromosome_ShouldThrowInvalidOperationException()
     {
         // Arrange
-        var parent1 = new SignalWeightedChromosome(new TradingConfiguration());
-        var parent2 = new ForecastMomentumChromosome(new TradingConfiguration());
-
-        // Act
-        var crossover = () => parent1.Crossover(parent2);
-
-        // Assert
-        crossover.ShouldThrow<InvalidOperationException>();
-    }
-
-    [Fact]
-    public void Crossover_WhenOtherIsNotStrategyChromosome_ShouldThrowInvalidOperationException()
-    {
-        // Arrange
-        var parent1 = new SignalWeightedChromosome(new TradingConfiguration());
+        var parent = StrategyChromosome.CreateRandom();
         var other = Substitute.For<IChromosome<double>>();
 
         // Act
-        var crossover = () => parent1.Crossover(other);
+        var crossover = () => parent.Crossover(other);
 
         // Assert
         crossover.ShouldThrow<InvalidOperationException>();
     }
 
-    [Theory]
-    [MemberData(nameof(StrategyTypeData))]
-    public void Genes_WhenCalled_ShouldReturnNonEmptyArray(StrategyType type)
+    [Fact]
+    public void ApplyConfigOverrides_SetsBothInputWeightsAndThresholdsOverrides()
     {
         // Arrange
-        var chromosome = StrategyChromosome.CreateRandom(type);
+        var strategy = Strategy.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            "Test",
+            null,
+            new TradingConfiguration(),
+            StrategyTestFactory.DefaultWeights(),
+            new InputThresholds(BuyThreshold: 0.1m)
+        );
+
+        var parameters = new BacktestParameters(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            strategy,
+            DateTimeOffset.UtcNow,
+            DateTimeOffset.UtcNow.AddDays(10),
+            10000m
+        );
+
+        var chromosome = new StrategyChromosome(
+            new TradingConfiguration { MaxPositions = 3 },
+            [new(InputKind.SignalRsi, 2m)],
+            new InputThresholds(SellThreshold: -0.2m)
+        );
 
         // Act
-        var genes = chromosome.Genes;
+        var overridden = chromosome.ApplyConfigOverrides(parameters);
 
         // Assert
-        genes.ShouldNotBeNull();
-        genes.Length.ShouldBeGreaterThan(0);
-        genes.ShouldAllBe(g => !double.IsNaN(g));
-    }
-
-    [Theory]
-    [MemberData(nameof(StrategyTypeData))]
-    public void Genes_ShouldBeConsistentWithConfiguration(StrategyType type)
-    {
-        // Arrange
-        var chromosome = StrategyChromosome.CreateRandom(type);
-        var config = chromosome.Configuration;
-        var genes = chromosome.Genes;
-
-        // Act & Assert
-        var index = 0;
-
-        if (config.MaxPositions.HasValue)
-        {
-            genes[index].ShouldBe(config.MaxPositions.Value);
-            index++;
-        }
-
-        if (config.MaxPositionPercent.HasValue)
-        {
-            genes[index].ShouldBe((double)config.MaxPositionPercent.Value);
-            index++;
-        }
-
-        if (config.HoldPeriodDays.HasValue)
-        {
-            genes[index].ShouldBe(config.HoldPeriodDays.Value);
-        }
+        overridden.InputWeightsOverride.ShouldNotBeNull();
+        overridden.InputWeightsOverride.ShouldBe(chromosome.InputWeights, ignoreOrder: false);
+        overridden.ThresholdsOverride.ShouldBe(chromosome.Thresholds);
     }
 }

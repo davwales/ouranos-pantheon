@@ -9,7 +9,6 @@ public sealed record GetAllStrategiesResponse(
     Id<Market> MarketId,
     string Name,
     string? Description,
-    StrategyType Type,
     bool IsActive,
     DateTimeOffset CreatedAt,
     int BacktestCount,

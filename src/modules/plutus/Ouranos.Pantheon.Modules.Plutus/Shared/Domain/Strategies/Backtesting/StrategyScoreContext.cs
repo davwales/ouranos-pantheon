@@ -1,5 +1,6 @@
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Inputs;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 using Ouranos.Pantheon.Modules.Shared.Domain;
@@ -19,11 +20,7 @@ public sealed record StrategyScoreContext(
     MarketTradeSnapshot? LongSnapshot,
     IReadOnlyList<PriceBucket> PriceBuckets,
     IReadOnlyList<Signal> Signals,
-    decimal? ForecastedPrice,
-    decimal? ForecastedPriceChange,
-    SignalWeightedConfig? SignalWeightedConfig = null,
-    ForecastMomentumConfig? ForecastMomentumConfig = null,
-    MeanReversionConfig? MeanReversionConfig = null,
-    RecipeArbitrageConfig? RecipeArbitrageConfig = null,
-    List<CompositeComponent>? Components = null
+    IReadOnlyList<InputWeight> InputWeights,
+    InputThresholds Thresholds,
+    IReadOnlyDictionary<SignalType, IReadOnlyList<decimal>>? SignalHistoryByType = null
 );

@@ -74,6 +74,7 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals.Computers;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Executors;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Scorers;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization;
 using Ouranos.Pantheon.Modules.Shared;
@@ -264,11 +265,15 @@ public sealed class PlutusModule : IPantheonModule
     private static void ConfigureStrategyExecutors(IHostApplicationBuilder builder)
     {
         builder
-            .Services.AddSingleton<IStrategyExecutor, SignalWeightedExecutor>()
-            .AddSingleton<IStrategyExecutor, ForecastMomentumExecutor>()
-            .AddSingleton<IStrategyExecutor, MeanReversionExecutor>()
-            .AddSingleton<IStrategyExecutor, RecipeArbitrageExecutor>()
-            .AddSingleton<CompositeExecutor>()
+            .Services.AddSingleton<IStrategyExecutor, StrategyExecutor>()
+            .AddSingleton<ISignalScoringService, SignalScoringService>()
+            .AddSingleton<IInputScorer, TaxAdjustedRoiInputScorer>()
+            .AddSingleton<IInputScorer, VolumeAnomalyInputScorer>()
+            .AddSingleton<IInputScorer, TrendMomentumInputScorer>()
+            .AddSingleton<IInputScorer, BollingerBandsInputScorer>()
+            .AddSingleton<IInputScorer, RsiInputScorer>()
+            .AddSingleton<IInputScorer, MovingAverageCrossoverInputScorer>()
+            .AddSingleton<IInputScorer, PriceVelocityInputScorer>()
             .AddSingleton<IBacktestDataQueryService, BacktestDataQueryService>()
             .AddScoped<IStep<BacktestPayload>, InitializeStep>()
             .AddScoped<IStep<BacktestPayload>, CloseExitsStep>()

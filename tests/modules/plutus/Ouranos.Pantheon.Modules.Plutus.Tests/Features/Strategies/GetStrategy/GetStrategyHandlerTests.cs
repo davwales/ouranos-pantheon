@@ -35,9 +35,9 @@ public sealed class GetStrategyHandlerTests
             marketId,
             "Test Strategy",
             "Description",
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         await _dbContext.Strategies.AddAsync(strategy);
         await _dbContext.SaveChangesAsync();
@@ -51,7 +51,6 @@ public sealed class GetStrategyHandlerTests
         result.Id.ShouldBe(strategy.Id);
         result.Name.ShouldBe("Test Strategy");
         result.Description.ShouldBe("Description");
-        result.Type.ShouldBe(StrategyType.SignalWeighted);
         result.IsActive.ShouldBeTrue();
     }
 

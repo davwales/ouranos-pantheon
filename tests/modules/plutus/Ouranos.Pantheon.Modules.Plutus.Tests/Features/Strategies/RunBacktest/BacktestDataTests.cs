@@ -3,7 +3,6 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 
@@ -31,7 +30,7 @@ public sealed class BacktestDataTests
         {
             new(symbolId, dateOnly, 100m, 100m, 100m, 500m),
         };
-        var data = BacktestData.FromRaw(market, [], [], [], [], dailyAggregates);
+        var data = BacktestData.FromRaw(market, [], dailyAggregates);
 
         // Act
         var result = data.GetDailyVolume(symbolId, currentDate);
@@ -53,7 +52,7 @@ public sealed class BacktestDataTests
         {
             new(symbolId, otherDate, 100m, 100m, 100m, 500m),
         };
-        var data = BacktestData.FromRaw(market, [], [], [], [], dailyAggregates);
+        var data = BacktestData.FromRaw(market, [], dailyAggregates);
 
         // Act
         var result = data.GetDailyVolume(symbolId, currentDate);
@@ -76,7 +75,7 @@ public sealed class BacktestDataTests
         {
             new(otherSymbolId, dateOnly, 100m, 100m, 100m, 500m),
         };
-        var data = BacktestData.FromRaw(market, [], [], [], [], dailyAggregates);
+        var data = BacktestData.FromRaw(market, [], dailyAggregates);
 
         // Act
         var result = data.GetDailyVolume(symbolId, currentDate);
@@ -92,50 +91,26 @@ public sealed class BacktestDataTests
         var symbolId = _fixture.Create<Id<Symbol>>();
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
-        var shortSnap = MarketTradeSnapshot.Create(
-            marketId,
-            symbolId,
-            TimeFrame.OneHour,
-            1000m,
-            90m,
-            110m,
-            1000m,
-            10,
-            1000m,
-            1m
-        );
-        var mediumSnap = MarketTradeSnapshot.Create(
-            marketId,
-            symbolId,
-            TimeFrame.OneWeek,
-            5000m,
-            80m,
-            120m,
-            5000m,
-            50,
-            1000m,
-            5m
-        );
-        var longSnap = MarketTradeSnapshot.Create(
-            marketId,
-            symbolId,
-            TimeFrame.OneMonth,
-            20000m,
-            70m,
-            130m,
-            20000m,
-            200,
-            1000m,
-            20m
-        );
-        var allSnapshots = new List<MarketTradeSnapshot> { shortSnap, mediumSnap, longSnap };
+        var asOfDate = DateTimeOffset.UtcNow;
+        var dateOnly = DateOnly.FromDateTime(asOfDate.UtcDateTime);
+        var dailyAggregates = Enumerable
+            .Range(0, 30)
+            .Select(i => new DailyTradeAggregate(
+                symbolId,
+                dateOnly.AddDays(-i),
+                100m,
+                90m,
+                110m,
+                1000m
+            ))
+            .ToList();
 
-        var data = BacktestData.FromRaw(market, [], allSnapshots, [], [], []);
+        var data = BacktestData.FromRaw(market, [], dailyAggregates);
 
         // Act
         var (shortResult, mediumResult, longResult) = data.GetSnapshotsForSymbol(
             symbolId,
-            DateTimeOffset.MaxValue
+            asOfDate
         );
 
         // Assert
@@ -145,6 +120,9 @@ public sealed class BacktestDataTests
         shortResult.TimeFrame.ShouldBe(TimeFrame.OneHour);
         mediumResult.TimeFrame.ShouldBe(TimeFrame.OneWeek);
         longResult.TimeFrame.ShouldBe(TimeFrame.OneMonth);
+
+        longResult.TotalVolume.ShouldBe(30 * 1000m);
+        shortResult.TotalVolume.ShouldBe(1000m * 60m / 1440m, 0.01m);
     }
 
     [Fact]
@@ -152,24 +130,10 @@ public sealed class BacktestDataTests
     {
         // Arrange
         var targetSymbolId = _fixture.Create<Id<Symbol>>();
-        var otherSymbolId = _fixture.Create<Id<Symbol>>();
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
-        var snap = MarketTradeSnapshot.Create(
-            marketId,
-            otherSymbolId,
-            TimeFrame.OneHour,
-            1000m,
-            90m,
-            110m,
-            1000m,
-            10,
-            1000m,
-            1m
-        );
-        var allSnapshots = new List<MarketTradeSnapshot> { snap };
 
-        var data = BacktestData.FromRaw(market, [], allSnapshots, [], [], []);
+        var data = BacktestData.FromRaw(market, [], []);
 
         // Act
         var (shortResult, mediumResult, longResult) = data.GetSnapshotsForSymbol(
@@ -190,9 +154,8 @@ public sealed class BacktestDataTests
         var symbolId = _fixture.Create<Id<Symbol>>();
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
-        var allSnapshots = new List<MarketTradeSnapshot>();
 
-        var data = BacktestData.FromRaw(market, [], allSnapshots, [], [], []);
+        var data = BacktestData.FromRaw(market, [], []);
 
         // Act
         var (shortResult, mediumResult, longResult) = data.GetSnapshotsForSymbol(
@@ -204,5 +167,72 @@ public sealed class BacktestDataTests
         shortResult.ShouldBeNull();
         mediumResult.ShouldBeNull();
         longResult.ShouldBeNull();
+    }
+
+    [Fact]
+    public void GetWindowAggregates_WithWindowDays_ReturnsRollingWindowOfExactSize()
+    {
+        // Arrange
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var marketId = _fixture.Create<Id<Market>>();
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var endDate = DateTimeOffset.UtcNow;
+        var endDateOnly = DateOnly.FromDateTime(endDate.UtcDateTime);
+        var dailyAggregates = Enumerable
+            .Range(0, 100)
+            .Select(i => new DailyTradeAggregate(
+                symbolId,
+                endDateOnly.AddDays(-i),
+                100m,
+                90m,
+                110m,
+                1000m
+            ))
+            .ToList();
+
+        var data = BacktestData.FromRaw(market, [], dailyAggregates);
+
+        // Act
+        var result = data.GetWindowAggregates(
+            symbolId,
+            DateTimeOffset.MinValue,
+            endDate,
+            windowDays: 30
+        );
+
+        // Assert
+        result.Count.ShouldBe(30);
+        result[0].Date.ShouldBe(endDateOnly.AddDays(-29));
+        result[^1].Date.ShouldBe(endDateOnly);
+    }
+
+    [Fact]
+    public void GetWindowAggregates_WithLegacyMinValueStart_ReturnsAllAggregatesUpToEnd()
+    {
+        // Arrange
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var marketId = _fixture.Create<Id<Market>>();
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var endDate = DateTimeOffset.UtcNow;
+        var endDateOnly = DateOnly.FromDateTime(endDate.UtcDateTime);
+        var dailyAggregates = Enumerable
+            .Range(0, 100)
+            .Select(i => new DailyTradeAggregate(
+                symbolId,
+                endDateOnly.AddDays(-i),
+                100m,
+                90m,
+                110m,
+                1000m
+            ))
+            .ToList();
+        var data = BacktestData.FromRaw(market, [], dailyAggregates);
+
+        // Act
+        var result = data.GetWindowAggregates(symbolId, DateTimeOffset.MinValue, endDate);
+
+        // Assert
+        result.Count.ShouldBe(100);
+        result[^1].Date.ShouldBe(endDateOnly);
     }
 }

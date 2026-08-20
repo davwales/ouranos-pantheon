@@ -98,7 +98,6 @@ public sealed class GetAllStrategiesHandler
                 s.MarketId,
                 s.Name,
                 s.Description,
-                s.Type,
                 s.IsActive,
                 s.CreatedAt,
                 backtestSummaries.TryGetValue(s.Id, out var summary) ? summary.Count : 0,

@@ -98,7 +98,7 @@ public partial class ConvertSignalsToHypertable : Migration
         // A full reversal would require: creating a new regular table with the
         // original schema, copying the data across, dropping the hypertable, and
         // renaming the new table into place. That is a destructive, data-moving
-        // operation that is intentionally left to operators — if a full rollback
+        // operation that is intentionally left to operators - if a full rollback
         // is required, restore from a backup taken before this migration.
         //
         // Down is therefore a safe no-op for the hypertable conversion itself:

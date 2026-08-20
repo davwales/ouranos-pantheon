@@ -31,9 +31,9 @@ public sealed class IterationSetupStepTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var parameters = new BacktestParameters(
             marketId,
@@ -68,9 +68,9 @@ public sealed class IterationSetupStepTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var backtest = CreateRunningBacktest(marketId);
         var parameters = new BacktestParameters(
@@ -107,9 +107,9 @@ public sealed class IterationSetupStepTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var backtest = CreateRunningBacktest(marketId);
         var parameters = new BacktestParameters(
@@ -146,9 +146,9 @@ public sealed class IterationSetupStepTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var backtest = CreateRunningBacktest(marketId);
         await SeedBacktestAsync(backtest);
@@ -187,9 +187,9 @@ public sealed class IterationSetupStepTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var backtest = CreateRunningBacktest(marketId);
         await SeedBacktestAsync(backtest);
@@ -228,9 +228,9 @@ public sealed class IterationSetupStepTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var backtest = CreateRunningBacktest(marketId);
         await SeedBacktestAsync(backtest);
@@ -269,9 +269,9 @@ public sealed class IterationSetupStepTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
 
         var backtest = CreateRunningBacktest(marketId);
@@ -322,9 +322,9 @@ public sealed class IterationSetupStepTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var backtest = CreateRunningBacktest(marketId);
         await SeedBacktestAsync(backtest);

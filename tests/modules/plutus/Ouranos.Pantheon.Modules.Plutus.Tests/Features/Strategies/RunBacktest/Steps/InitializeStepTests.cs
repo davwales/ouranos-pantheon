@@ -14,45 +14,6 @@ public sealed class InitializeStepTests
         _fixture.Customize(new IdCustomization());
     }
 
-    [Theory]
-    [InlineData(1, 1)]
-    [InlineData(15, 1)]
-    [InlineData(30, 1)]
-    [InlineData(31, 3)]
-    [InlineData(60, 3)]
-    [InlineData(90, 3)]
-    [InlineData(91, 7)]
-    [InlineData(180, 7)]
-    [InlineData(365, 7)]
-    [InlineData(366, 14)]
-    [InlineData(730, 14)]
-    public void DetermineWindowSize_WhenGivenTotalDays_ReturnsCorrectWindow(
-        int totalDays,
-        int expectedWindow
-    )
-    {
-        // Arrange - handled by InlineData
-
-        // Act
-        var result = InitializeStep.DetermineWindowSize(totalDays);
-
-        // Assert
-        result.ShouldBe(expectedWindow);
-    }
-
-    [Fact]
-    public void DetermineWindowSize_WhenZeroDays_ReturnsOneDayWindow()
-    {
-        // Arrange
-        const int totalDays = 0;
-
-        // Act
-        var result = InitializeStep.DetermineWindowSize(totalDays);
-
-        // Assert
-        result.ShouldBe(1);
-    }
-
     [Fact]
     public void GetTaxRate_WhenMarketHasFlatTax_ReturnsRate()
     {

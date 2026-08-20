@@ -35,9 +35,9 @@ public sealed class CreateStrategyHandlerTests
             new Id<Market>(Guid.NewGuid().ToString()),
             _fixture.Create<string>(),
             _fixture.Create<string>(),
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
 
         // Act
@@ -51,7 +51,6 @@ public sealed class CreateStrategyHandlerTests
         strategy.ShouldNotBeNull();
         strategy.Name.ShouldBe(command.Name);
         strategy.MarketId.ShouldBe(command.MarketId);
-        strategy.Type.ShouldBe(command.Type);
         strategy.IsActive.ShouldBeTrue();
     }
 
@@ -63,8 +62,9 @@ public sealed class CreateStrategyHandlerTests
             new Id<Market>(Guid.NewGuid().ToString()),
             _fixture.Create<string>(),
             null,
-            StrategyType.ForecastMomentum,
-            new TradingConfiguration()
+            new TradingConfiguration(),
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
 
         // Act
@@ -84,8 +84,9 @@ public sealed class CreateStrategyHandlerTests
             new Id<Market>(Guid.NewGuid().ToString()),
             _fixture.Create<string>(),
             null,
-            StrategyType.MeanReversion,
-            new TradingConfiguration()
+            new TradingConfiguration(),
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var cancellationToken = new CancellationToken(true);
 

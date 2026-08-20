@@ -43,10 +43,8 @@ public sealed class UpdateStrategyHandler
             command.Name,
             command.Description,
             command.Configuration,
-            command.SignalWeightedConfig,
-            command.ForecastMomentumConfig,
-            command.MeanReversionConfig,
-            command.RecipeArbitrageConfig
+            command.InputWeights,
+            command.Thresholds
         );
 
         await _dbContext.SaveChangesAsync(cancellationToken);

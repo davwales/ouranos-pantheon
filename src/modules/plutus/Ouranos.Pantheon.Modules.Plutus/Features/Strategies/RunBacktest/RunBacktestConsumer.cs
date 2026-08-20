@@ -74,7 +74,18 @@ public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
         }
 
         backtest.MarkRunning();
-        await dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            _logger.LogWarning(
+                "Backtest '{backtestId}' was claimed by a concurrent delivery. Skipping.",
+                message.BacktestId
+            );
+            return;
+        }
 
         try
         {
@@ -116,8 +127,8 @@ public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
                 .AddNestedPipeline(builder =>
                     builder
                         .AddStep<IterationSetupStep>()
-                        .AddStep<CloseExitsStep>()
                         .AddStep<ScoreSymbolsStep>()
+                        .AddStep<CloseExitsStep>()
                         .AddStep<BuyCandidatesStep>()
                         .AddStep<TrackMetricsStep>()
                         .WithIterations(totalDays + 1)
