@@ -1,5 +1,4 @@
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
@@ -42,25 +41,6 @@ public static class BacktestMath
         var netPnl = netProceeds - costBasis;
 
         return (netProceeds, exitVolume, netPnl);
-    }
-
-    public static (decimal? Price, decimal? Change) GetForecastData(
-        Forecast? forecast,
-        decimal currentPrice
-    )
-    {
-        if (forecast is null || currentPrice == 0)
-        {
-            return (null, null);
-        }
-
-        var forecastedPrice = forecast.Latest.AveragePrice;
-        if (forecastedPrice == 0)
-        {
-            return (forecastedPrice, null);
-        }
-
-        return (forecastedPrice, (forecastedPrice - currentPrice) / currentPrice);
     }
 
     public static IReadOnlyList<PriceBucket> BuildPriceBucketsFromAggregates(

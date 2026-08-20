@@ -13,6 +13,7 @@ public sealed class BacktestEntityConfiguration : IEntityTypeConfiguration<Backt
         builder.Property(b => b.Id).HasIdConversion();
         builder.Property(b => b.StrategyId).HasIdConversion();
         builder.Property(b => b.MarketId).HasIdConversion();
+        builder.Property(b => b.UpdatedAt).IsConcurrencyToken();
         builder.Property(b => b.Status).HasConversion<int>();
         builder
             .Property(b => b.Kind)
@@ -41,48 +42,28 @@ public sealed class BacktestEntityConfiguration : IEntityTypeConfiguration<Backt
                 results.Property(r => r.BestTrade).HasPrecision(18, 2);
                 results.Property(r => r.WorstTrade).HasPrecision(18, 2);
                 results.Property(r => r.FinalBalance).HasPrecision(18, 2);
+                results.Property(r => r.TurnoverRate).HasPrecision(18, 2);
 
                 results.OwnsOne(
-                    r => r.OptimizedSignalWeightedConfig,
+                    r => r.OptimizedThresholds,
                     config =>
                     {
-                        config.Property(c => c.BuyThreshold).HasPrecision(18, 2);
-                        config.Property(c => c.SellThreshold).HasPrecision(18, 2);
-                        config.Property(c => c.TaxAdjustedRoiWeight).HasPrecision(18, 2);
-                        config.Property(c => c.VolumeAnomalyWeight).HasPrecision(18, 2);
-                        config.Property(c => c.TrendMomentumWeight).HasPrecision(18, 2);
-                        config.Property(c => c.BollingerBandsWeight).HasPrecision(18, 2);
-                        config.Property(c => c.RsiWeight).HasPrecision(18, 2);
-                        config.Property(c => c.MovingAverageCrossoverWeight).HasPrecision(18, 2);
-                        config.Property(c => c.PriceVelocityWeight).HasPrecision(18, 2);
+                        config.Property(t => t.BuyThreshold).HasPrecision(18, 2);
+                        config.Property(t => t.SellThreshold).HasPrecision(18, 2);
                     }
                 );
 
-                results.OwnsOne(
-                    r => r.OptimizedForecastMomentumConfig,
-                    config =>
+                results.OwnsMany(
+                    r => r.OptimizedInputWeights,
+                    w =>
                     {
-                        config.Property(c => c.ForecastMovementThreshold).HasPrecision(18, 2);
-                        config.Property(c => c.ForecastHorizonDays);
+                        w.Property(x => x.Kind).HasConversion<int>();
+                        w.Property(x => x.Weight).HasPrecision(18, 2);
+                        w.HasIndex("BacktestResultsBacktestId", "Kind").IsUnique();
                     }
                 );
 
-                results.OwnsOne(
-                    r => r.OptimizedMeanReversionConfig,
-                    config =>
-                    {
-                        config.Property(c => c.DeviationMultiplier).HasPrecision(18, 2);
-                        config.Property(c => c.MeanTimeFrameValue);
-                    }
-                );
-
-                results.OwnsOne(
-                    r => r.OptimizedRecipeArbitrageConfig,
-                    config =>
-                    {
-                        config.Property(c => c.MinMarginPercent).HasPrecision(18, 2);
-                    }
-                );
+                results.Navigation(r => r.OptimizedInputWeights);
 
                 results.OwnsOne(
                     r => r.OptimizedConfiguration,
@@ -91,6 +72,34 @@ public sealed class BacktestEntityConfiguration : IEntityTypeConfiguration<Backt
                         config.Property(c => c.MaxPositions);
                         config.Property(c => c.MaxPositionPercent).HasPrecision(18, 2);
                         config.Property(c => c.HoldPeriodDays);
+                    }
+                );
+
+                results.OwnsOne(
+                    r => r.OutSampleResults,
+                    oos =>
+                    {
+                        oos.Property(o => o.TotalReturn).HasPrecision(18, 2);
+                        oos.Property(o => o.TotalReturnPercent).HasPrecision(18, 2);
+                        oos.Property(o => o.MaxDrawdown).HasPrecision(18, 2);
+                        oos.Property(o => o.MaxDrawdownPercent).HasPrecision(18, 2);
+                        oos.Property(o => o.WinRate).HasPrecision(18, 2);
+                        oos.Property(o => o.SharpeRatio).HasPrecision(18, 2);
+                        oos.Property(o => o.SortinoRatio).HasPrecision(18, 2);
+                        oos.Property(o => o.CalmarRatio).HasPrecision(18, 2);
+                        oos.Property(o => o.Cagr).HasPrecision(18, 2);
+                        oos.Property(o => o.ProfitFactor).HasPrecision(18, 2);
+                        oos.Property(o => o.Expectancy).HasPrecision(18, 2);
+                        oos.Property(o => o.AverageTradeReturn).HasPrecision(18, 2);
+                        oos.Property(o => o.BestTrade).HasPrecision(18, 2);
+                        oos.Property(o => o.WorstTrade).HasPrecision(18, 2);
+                        oos.Property(o => o.FinalBalance).HasPrecision(18, 2);
+                        oos.Ignore(o => o.OutSampleResults);
+                        oos.Ignore(o => o.OptimizedInputWeights);
+                        oos.Ignore(o => o.OptimizedThresholds);
+                        oos.Ignore(o => o.OptimizedConfiguration);
+                        oos.Ignore(o => o.IsValidated);
+                        oos.Ignore(o => o.TurnoverRate);
                     }
                 );
             }

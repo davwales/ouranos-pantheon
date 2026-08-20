@@ -1,5 +1,6 @@
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Inputs;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 
@@ -21,27 +22,21 @@ public sealed class StrategyTests
         var marketId = _fixture.Create<Id<Market>>();
         var name = _fixture.Create<string>();
         var description = _fixture.Create<string>();
-        var type = StrategyType.SignalWeighted;
         var config = new TradingConfiguration();
+        var weights = StrategyTestFactory.DefaultWeights();
+        var thresholds = new InputThresholds(BuyThreshold: 0.1m, SellThreshold: -0.1m);
 
         // Act
-        var strategy = Strategy.Create(
-            marketId,
-            name,
-            description,
-            type,
-            config,
-            new SignalWeightedConfig()
-        );
+        var strategy = Strategy.Create(marketId, name, description, config, weights, thresholds);
 
         // Assert
         strategy.Id.ShouldNotBe(default);
         strategy.MarketId.ShouldBe(marketId);
         strategy.Name.ShouldBe(name);
         strategy.Description.ShouldBe(description);
-        strategy.Type.ShouldBe(type);
         strategy.TradingConfiguration.ShouldBe(config);
-        strategy.SignalWeightedConfig.ShouldNotBeNull();
+        strategy.InputWeights.ShouldBeSameAs(weights);
+        strategy.Thresholds.ShouldBe(thresholds);
         strategy.IsActive.ShouldBeTrue();
     }
 
@@ -61,9 +56,9 @@ public sealed class StrategyTests
                 marketId,
                 name!,
                 null,
-                StrategyType.SignalWeighted,
                 config,
-                new SignalWeightedConfig()
+                StrategyTestFactory.DefaultWeights(),
+                null
             );
 
         // Assert
@@ -83,13 +78,54 @@ public sealed class StrategyTests
                 marketId,
                 name,
                 null,
-                StrategyType.SignalWeighted,
                 null!,
-                new SignalWeightedConfig()
+                StrategyTestFactory.DefaultWeights(),
+                null
             );
 
         // Assert
         create.ShouldThrow<ArgumentNullException>();
+    }
+
+    [Fact]
+    public void Create_WhenInputWeightsIsNull_ShouldThrowArgumentNullException()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var name = _fixture.Create<string>();
+
+        // Act
+        var create = () =>
+            Strategy.Create(marketId, name, null, new TradingConfiguration(), null!, null);
+
+        // Assert
+        create.ShouldThrow<ArgumentNullException>();
+    }
+
+    [Fact]
+    public void Create_WhenAllWeightsAreZero_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var zeroWeights = new List<InputWeight>
+        {
+            new(InputKind.SignalTaxAdjustedRoi, 0m),
+            new(InputKind.SignalRsi, 0m),
+        };
+
+        // Act
+        var create = () =>
+            Strategy.Create(
+                marketId,
+                _fixture.Create<string>(),
+                null,
+                new TradingConfiguration(),
+                zeroWeights,
+                null
+            );
+
+        // Assert
+        create.ShouldThrow<ArgumentException>();
     }
 
     [Fact]
@@ -109,9 +145,9 @@ public sealed class StrategyTests
                 marketId,
                 _fixture.Create<string>(),
                 null,
-                StrategyType.SignalWeighted,
                 new TradingConfiguration(),
-                new SignalWeightedConfig(),
+                StrategyTestFactory.DefaultWeights(),
+                null,
                 market: wrongMarket
             );
 
@@ -127,19 +163,23 @@ public sealed class StrategyTests
             _fixture.Create<Id<Market>>(),
             "Original",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var newConfig = new TradingConfiguration();
+        var newWeights = new List<InputWeight> { new(InputKind.SignalRsi, 2m) };
+        var newThresholds = new InputThresholds(BuyThreshold: 0.2m);
 
         // Act
-        strategy.Update("Updated", "New description", newConfig, new SignalWeightedConfig());
+        strategy.Update("Updated", "New description", newConfig, newWeights, newThresholds);
 
         // Assert
         strategy.Name.ShouldBe("Updated");
         strategy.Description.ShouldBe("New description");
         strategy.TradingConfiguration.ShouldBe(newConfig);
+        strategy.InputWeights.ShouldBeSameAs(newWeights);
+        strategy.Thresholds.ShouldBe(newThresholds);
     }
 
     [Theory]
@@ -153,14 +193,20 @@ public sealed class StrategyTests
             _fixture.Create<Id<Market>>(),
             "Original",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
 
         // Act
         var update = () =>
-            strategy.Update(name!, null, new TradingConfiguration(), new SignalWeightedConfig());
+            strategy.Update(
+                name!,
+                null,
+                new TradingConfiguration(),
+                StrategyTestFactory.DefaultWeights(),
+                null
+            );
 
         // Assert
         update.ShouldThrow<ArgumentException>();
@@ -174,16 +220,39 @@ public sealed class StrategyTests
             _fixture.Create<Id<Market>>(),
             "Original",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
 
         // Act
-        var update = () => strategy.Update("Updated", null, null!, new SignalWeightedConfig());
+        var update = () =>
+            strategy.Update("Updated", null, null!, StrategyTestFactory.DefaultWeights(), null);
 
         // Assert
         update.ShouldThrow<ArgumentNullException>();
+    }
+
+    [Fact]
+    public void Update_WhenAllWeightsAreZero_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var strategy = Strategy.Create(
+            _fixture.Create<Id<Market>>(),
+            "Original",
+            null,
+            new TradingConfiguration(),
+            StrategyTestFactory.DefaultWeights(),
+            null
+        );
+        var zeroWeights = new List<InputWeight> { new(InputKind.SignalTaxAdjustedRoi, 0m) };
+
+        // Act
+        var update = () =>
+            strategy.Update("Updated", null, new TradingConfiguration(), zeroWeights, null);
+
+        // Assert
+        update.ShouldThrow<ArgumentException>();
     }
 
     [Fact]
@@ -194,9 +263,9 @@ public sealed class StrategyTests
             _fixture.Create<Id<Market>>(),
             "Test",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
 
         // Act
@@ -214,9 +283,9 @@ public sealed class StrategyTests
             _fixture.Create<Id<Market>>(),
             "Test",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         strategy.SetActive(false);
 
@@ -235,9 +304,9 @@ public sealed class StrategyTests
             _fixture.Create<Id<Market>>(),
             "Test",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
 
         // Act

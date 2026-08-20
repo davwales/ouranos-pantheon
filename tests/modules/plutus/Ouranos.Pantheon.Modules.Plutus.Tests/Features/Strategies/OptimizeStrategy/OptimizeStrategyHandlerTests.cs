@@ -38,9 +38,9 @@ public sealed class OptimizeStrategyHandlerTests
             _fixture.Create<Id<Market>>(),
             "Test",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         await setupContext.Strategies.AddAsync(strategy);
         await setupContext.SaveChangesAsync();
@@ -95,9 +95,9 @@ public sealed class OptimizeStrategyHandlerTests
             _fixture.Create<Id<Market>>(),
             "Test",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         await setupContext.Strategies.AddAsync(strategy);
         await setupContext.SaveChangesAsync();
@@ -128,9 +128,9 @@ public sealed class OptimizeStrategyHandlerTests
             _fixture.Create<Id<Market>>(),
             "Test",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         await setupContext.Strategies.AddAsync(strategy);
         await setupContext.SaveChangesAsync();

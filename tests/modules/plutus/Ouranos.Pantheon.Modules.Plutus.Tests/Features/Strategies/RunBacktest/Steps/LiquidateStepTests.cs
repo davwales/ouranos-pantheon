@@ -32,9 +32,9 @@ public sealed class LiquidateStepTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var endDate = DateTimeOffset.UtcNow;
@@ -46,8 +46,15 @@ public sealed class LiquidateStepTests
         {
             new(symbolId, dateOnly, 150m, 150m, 150m, 1000m),
         };
-        var data = BacktestData.FromRaw(market, [], [], [], [], dailyAggregates);
-        payload.Context = new BacktestContext(data, executor, 0m, 7, startDate);
+        var data = BacktestData.FromRaw(market, [], dailyAggregates);
+        payload.Context = new BacktestContext(
+            data,
+            executor,
+            0m,
+            startDate,
+            parameters.InputWeights,
+            parameters.Thresholds
+        );
 
         var position = new OpenPosition(symbolId, "SYM", null, 100m, 10m, startDate);
         payload.Portfolio.OpenPositions[symbolId] = position;
@@ -86,17 +93,24 @@ public sealed class LiquidateStepTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var endDate = DateTimeOffset.UtcNow;
         var parameters = new BacktestParameters(marketId, strategy, startDate, endDate, 10000m);
         var payload = new BacktestPayload(parameters);
 
-        var data = BacktestData.FromRaw(market, [], [], [], [], []);
-        payload.Context = new BacktestContext(data, executor, 0m, 7, startDate);
+        var data = BacktestData.FromRaw(market, [], []);
+        payload.Context = new BacktestContext(
+            data,
+            executor,
+            0m,
+            startDate,
+            parameters.InputWeights,
+            parameters.Thresholds
+        );
 
         var position = new OpenPosition(symbolId, "SYM", null, 100m, 10m, startDate);
         payload.Portfolio.OpenPositions[symbolId] = position;
@@ -120,7 +134,7 @@ public sealed class LiquidateStepTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WhenExitVolumeZero_ForceLiquidatesAtHalfEntryPrice()
+    public async Task ExecuteAsync_WhenExitVolumeZero_MarkToMarketsAtLastPrice()
     {
         // Arrange
         var symbolId = _fixture.Create<Id<Symbol>>();
@@ -131,9 +145,9 @@ public sealed class LiquidateStepTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var endDate = DateTimeOffset.UtcNow;
@@ -145,8 +159,15 @@ public sealed class LiquidateStepTests
         {
             new(symbolId, dateOnly, 150m, 150m, 150m, 1m),
         };
-        var data = BacktestData.FromRaw(market, [], [], [], [], dailyAggregates);
-        payload.Context = new BacktestContext(data, executor, 0m, 7, startDate);
+        var data = BacktestData.FromRaw(market, [], dailyAggregates);
+        payload.Context = new BacktestContext(
+            data,
+            executor,
+            0m,
+            startDate,
+            parameters.InputWeights,
+            parameters.Thresholds
+        );
 
         var position = new OpenPosition(symbolId, "SYM", null, 100m, 10m, startDate);
         payload.Portfolio.OpenPositions[symbolId] = position;
@@ -160,19 +181,19 @@ public sealed class LiquidateStepTests
         // Assert
         payload.Portfolio.OpenPositions.ShouldBeEmpty();
         payload.Portfolio.ClosedPositions.Count.ShouldBe(1);
-        payload.Portfolio.Balance.ShouldBe(10000m + 500m);
+        payload.Portfolio.Balance.ShouldBe(10000m + 1500m);
 
         var closedPosition = payload.Portfolio.ClosedPositions[0];
-        closedPosition.ExitPrice.ShouldBe(50m);
+        closedPosition.ExitPrice.ShouldBe(150m);
         closedPosition.Volume.ShouldBe(10m);
-        closedPosition.ProfitLoss.ShouldBe(-500m);
+        closedPosition.ProfitLoss.ShouldBe(500m);
         closedPosition.EntryPrice.ShouldBe(100m);
         closedPosition.SymbolId.ShouldBe(symbolId.ToString());
         closedPosition.SymbolName.ShouldBe("SYM");
     }
 
     [Fact]
-    public async Task ExecuteAsync_WhenExitVolumeZeroWithTax_AppliesTaxCapToForcedLiquidation()
+    public async Task ExecuteAsync_WhenExitVolumeZeroWithTax_AppliesTaxCapToMarkToMarket()
     {
         // Arrange
         var symbolId = _fixture.Create<Id<Symbol>>();
@@ -187,9 +208,9 @@ public sealed class LiquidateStepTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var endDate = DateTimeOffset.UtcNow;
@@ -201,8 +222,15 @@ public sealed class LiquidateStepTests
         {
             new(symbolId, dateOnly, 150m, 150m, 150m, 1m),
         };
-        var data = BacktestData.FromRaw(market, [], [], [], [], dailyAggregates);
-        payload.Context = new BacktestContext(data, executor, 0.10m, 7, startDate);
+        var data = BacktestData.FromRaw(market, [], dailyAggregates);
+        payload.Context = new BacktestContext(
+            data,
+            executor,
+            0.10m,
+            startDate,
+            parameters.InputWeights,
+            parameters.Thresholds
+        );
 
         var position = new OpenPosition(symbolId, "SYM", null, 100m, 10m, startDate);
         payload.Portfolio.OpenPositions[symbolId] = position;
@@ -216,15 +244,15 @@ public sealed class LiquidateStepTests
         // Assert
         payload.Portfolio.OpenPositions.ShouldBeEmpty();
         payload.Portfolio.ClosedPositions.Count.ShouldBe(1);
-        payload.Portfolio.Balance.ShouldBe(10000m + 450m);
+        payload.Portfolio.Balance.ShouldBe(10000m + 1400m);
 
         var closedPosition = payload.Portfolio.ClosedPositions[0];
-        closedPosition.ExitPrice.ShouldBe(50m);
-        closedPosition.ProfitLoss.ShouldBe(-550m);
+        closedPosition.ExitPrice.ShouldBe(150m);
+        closedPosition.ProfitLoss.ShouldBe(400m);
     }
 
     [Fact]
-    public async Task ExecuteAsync_WhenPartialExit_ForceLiquidatesRemainingAtHalfEntryPrice()
+    public async Task ExecuteAsync_WhenPartialExit_MarkToMarketsRemainingAtObservedPrice()
     {
         // Arrange
         var symbolId = _fixture.Create<Id<Symbol>>();
@@ -235,9 +263,9 @@ public sealed class LiquidateStepTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var endDate = DateTimeOffset.UtcNow;
@@ -249,8 +277,15 @@ public sealed class LiquidateStepTests
         {
             new(symbolId, dateOnly, 150m, 150m, 150m, 20m),
         };
-        var data = BacktestData.FromRaw(market, [], [], [], [], dailyAggregates);
-        payload.Context = new BacktestContext(data, executor, 0m, 7, startDate);
+        var data = BacktestData.FromRaw(market, [], dailyAggregates);
+        payload.Context = new BacktestContext(
+            data,
+            executor,
+            0m,
+            startDate,
+            parameters.InputWeights,
+            parameters.Thresholds
+        );
 
         var position = new OpenPosition(symbolId, "SYM", null, 100m, 10m, startDate);
         payload.Portfolio.OpenPositions[symbolId] = position;
@@ -264,7 +299,7 @@ public sealed class LiquidateStepTests
         // Assert
         payload.Portfolio.OpenPositions.ShouldBeEmpty();
         payload.Portfolio.ClosedPositions.Count.ShouldBe(2);
-        payload.Portfolio.Balance.ShouldBe(10000m + 731.25m + 250m);
+        payload.Portfolio.Balance.ShouldBe(10000m + 731.25m + 750m);
 
         var firstClosed = payload.Portfolio.ClosedPositions[0];
         firstClosed.ExitPrice.ShouldBe(150m);
@@ -273,9 +308,9 @@ public sealed class LiquidateStepTests
         firstClosed.EntryPrice.ShouldBe(100m);
 
         var secondClosed = payload.Portfolio.ClosedPositions[1];
-        secondClosed.ExitPrice.ShouldBe(50m);
+        secondClosed.ExitPrice.ShouldBe(150m);
         secondClosed.Volume.ShouldBe(5m);
-        secondClosed.ProfitLoss.ShouldBe(-250m);
+        secondClosed.ProfitLoss.ShouldBe(250m);
         secondClosed.EntryPrice.ShouldBe(100m);
     }
 
@@ -290,9 +325,9 @@ public sealed class LiquidateStepTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var endDate = DateTimeOffset.UtcNow;
@@ -300,11 +335,12 @@ public sealed class LiquidateStepTests
         var payload = new BacktestPayload(parameters)
         {
             Context = new BacktestContext(
-                BacktestData.FromRaw(market, [], [], [], [], []),
+                BacktestData.FromRaw(market, [], []),
                 executor,
                 0m,
-                7,
-                startDate
+                startDate,
+                parameters.InputWeights,
+                parameters.Thresholds
             ),
         };
 
@@ -331,9 +367,9 @@ public sealed class LiquidateStepTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var parameters = new BacktestParameters(
             marketId,
@@ -345,11 +381,12 @@ public sealed class LiquidateStepTests
         var payload = new BacktestPayload(parameters)
         {
             Context = new BacktestContext(
-                BacktestData.FromRaw(market, [], [], [], [], []),
+                BacktestData.FromRaw(market, [], []),
                 executor,
                 0m,
-                7,
-                parameters.StartDate
+                parameters.StartDate,
+                parameters.InputWeights,
+                parameters.Thresholds
             ),
         };
 
@@ -373,9 +410,9 @@ public sealed class LiquidateStepTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var parameters = new BacktestParameters(
             marketId,

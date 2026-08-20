@@ -27,10 +27,8 @@ public static class UpdateStrategyEndpoint
             body.Name,
             body.Description,
             body.Configuration,
-            body.SignalWeightedConfig,
-            body.ForecastMomentumConfig,
-            body.MeanReversionConfig,
-            body.RecipeArbitrageConfig
+            body.InputWeights,
+            body.Thresholds
         );
         return Results.Ok(await bus.InvokeAsync<IdResponse<Strategy>>(input, ct));
     }

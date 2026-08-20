@@ -12,7 +12,6 @@ public sealed class ForecastingOptionsTests
 
         // Assert
         options.IsEnabled.ShouldBeTrue();
-        options.RemoveOutdatedForecasts.ShouldBeTrue();
         options.NumPredictions.ShouldBe(7);
         options.HistoryDays.ShouldBe(30);
         options.BatchSize.ShouldBe(500);

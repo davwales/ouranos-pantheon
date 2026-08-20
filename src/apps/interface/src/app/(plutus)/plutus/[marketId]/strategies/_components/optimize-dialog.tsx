@@ -1,12 +1,12 @@
 "use client";
 
-import { NumericInput } from "@/components/shared/numeric-input";
 import { ResponsiveDialog } from "@/components/shared/responsive-dialog/responsive-dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { plutusApi } from "@/lib/api/plutus";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { OptimizeAdvancedOptions } from "./optimize-advanced-options";
+import { OptimizeBasicOptions } from "./optimize-basic-options";
 
 export function OptimizeDialog({
   strategyId,
@@ -32,15 +32,41 @@ export function OptimizeDialog({
   const [budget, setBudget] = useState(10000);
   const [generations, setGenerations] = useState(20);
   const [populationSize, setPopulationSize] = useState(20);
-  const [sharpeRatioWeight, setSharpeRatioWeight] = useState(0.5);
-  const [totalReturnWeight, setTotalReturnWeight] = useState(0.3);
-  const [maxDrawdownWeight, setMaxDrawdownWeight] = useState(-0.2);
+  const [sortinoWeight, setSortinoWeight] = useState(0.4);
+  const [cagrWeight, setCagrWeight] = useState(0.3);
+  const [drawdownWeight, setDrawdownWeight] = useState(0.5);
+  const [turnoverWeight, setTurnoverWeight] = useState(0.1);
+  const [l1RegularizationWeight, setL1RegularizationWeight] = useState(0.05);
+  const [outSampleRatio, setOutSampleRatio] = useState(0.2);
   const [volumeParticipationRate, setVolumeParticipationRate] = useState(0.25);
   const [slippageMultiplier, setSlippageMultiplier] = useState(0.1);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dateInvalid = startDate > endDate;
+
+  useEffect(() => {
+    if (open) {
+      const today = new Date().toISOString().split("T")[0];
+      const monthAgo = new Date();
+      monthAgo.setDate(monthAgo.getDate() - 30);
+      setStartDate(monthAgo.toISOString().split("T")[0]);
+      setEndDate(today);
+      setBudget(10000);
+      setGenerations(20);
+      setPopulationSize(20);
+      setSortinoWeight(0.4);
+      setCagrWeight(0.3);
+      setDrawdownWeight(0.5);
+      setTurnoverWeight(0.1);
+      setL1RegularizationWeight(0.05);
+      setOutSampleRatio(0.2);
+      setVolumeParticipationRate(0.25);
+      setSlippageMultiplier(0.1);
+      setShowAdvanced(false);
+      setError(null);
+    }
+  }, [open]);
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -53,9 +79,12 @@ export function OptimizeDialog({
         budget,
         generations,
         populationSize,
-        sharpeRatioWeight,
-        totalReturnWeight,
-        maxDrawdownWeight,
+        sortinoWeight,
+        cagrWeight,
+        drawdownWeight,
+        turnoverWeight,
+        l1RegularizationWeight,
+        outSampleRatio,
         volumeParticipationRate,
         slippageMultiplier,
       });
@@ -84,109 +113,48 @@ export function OptimizeDialog({
             {error}
           </div>
         )}
-        <div className="space-y-1">
-          <label className="text-sm font-medium block">Start Date</label>
-          <Input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-          />
-        </div>
-        <div className="space-y-1">
-          <label className="text-sm font-medium block">End Date</label>
-          <Input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-          />
-        </div>
-        {dateInvalid && (
-          <p className="text-sm text-destructive">
-            End date must be after start date
-          </p>
-        )}
-        <NumericInput
-          label="Budget"
-          hint="Initial capital for optimization"
-          value={budget}
-          onChange={(v) => setBudget(v ?? 0)}
-          min={1}
-        />
-        <NumericInput
-          label="Generations"
-          hint="Number of optimization generations"
-          value={generations}
-          onChange={(v) => setGenerations(v ?? 1)}
-          min={1}
-          max={500}
-          step={1}
-        />
-        <NumericInput
-          label="Population Size"
-          hint="Population per generation"
-          value={populationSize}
-          onChange={(v) => setPopulationSize(v ?? 2)}
-          min={2}
-          max={200}
-          step={1}
+        <OptimizeBasicOptions
+          startDate={startDate}
+          onStartDateChange={setStartDate}
+          endDate={endDate}
+          onEndDateChange={setEndDate}
+          budget={budget}
+          onBudgetChange={setBudget}
+          generations={generations}
+          onGenerationsChange={setGenerations}
+          populationSize={populationSize}
+          onPopulationSizeChange={setPopulationSize}
+          dateInvalid={dateInvalid}
         />
         <div className="pt-1">
-          <button
+          <Button
             type="button"
+            variant="link"
             onClick={() => setShowAdvanced(!showAdvanced)}
             className="text-sm text-muted-foreground hover:text-foreground underline"
           >
             {showAdvanced ? "Hide" : "Show"} Advanced Options
-          </button>
+          </Button>
         </div>
         {showAdvanced && (
-          <div className="space-y-4 border rounded-lg p-3 bg-muted/30">
-            <NumericInput
-              label="Sharpe Ratio Weight"
-              hint="Weight for risk-adjusted return"
-              value={sharpeRatioWeight}
-              onChange={(v) => setSharpeRatioWeight(v ?? 0)}
-              step={0.1}
-              min={-10}
-              max={10}
-            />
-            <NumericInput
-              label="Total Return Weight"
-              hint="Weight for total return"
-              value={totalReturnWeight}
-              onChange={(v) => setTotalReturnWeight(v ?? 0)}
-              step={0.1}
-              min={-10}
-              max={10}
-            />
-            <NumericInput
-              label="Max Drawdown Weight"
-              hint="Negative weight penalizes drawdown"
-              value={maxDrawdownWeight}
-              onChange={(v) => setMaxDrawdownWeight(v ?? 0)}
-              step={0.1}
-              min={-10}
-              max={10}
-            />
-            <NumericInput
-              label="Volume Participation Rate"
-              hint="Max fraction of daily volume per trade (0-1)"
-              value={volumeParticipationRate}
-              onChange={(v) => setVolumeParticipationRate(v ?? 0.25)}
-              min={0.01}
-              max={1}
-              step={0.01}
-            />
-            <NumericInput
-              label="Slippage Multiplier"
-              hint="Price impact per unit of volume ratio (0 = none)"
-              value={slippageMultiplier}
-              onChange={(v) => setSlippageMultiplier(v ?? 0.1)}
-              min={0}
-              max={1}
-              step={0.01}
-            />
-          </div>
+          <OptimizeAdvancedOptions
+            sortinoWeight={sortinoWeight}
+            onSortinoWeightChange={setSortinoWeight}
+            cagrWeight={cagrWeight}
+            onCagrWeightChange={setCagrWeight}
+            drawdownWeight={drawdownWeight}
+            onDrawdownWeightChange={setDrawdownWeight}
+            turnoverWeight={turnoverWeight}
+            onTurnoverWeightChange={setTurnoverWeight}
+            l1RegularizationWeight={l1RegularizationWeight}
+            onL1RegularizationWeightChange={setL1RegularizationWeight}
+            outSampleRatio={outSampleRatio}
+            onOutSampleRatioChange={setOutSampleRatio}
+            volumeParticipationRate={volumeParticipationRate}
+            onVolumeParticipationRateChange={setVolumeParticipationRate}
+            slippageMultiplier={slippageMultiplier}
+            onSlippageMultiplierChange={setSlippageMultiplier}
+          />
         )}
         <Button
           className="w-full"

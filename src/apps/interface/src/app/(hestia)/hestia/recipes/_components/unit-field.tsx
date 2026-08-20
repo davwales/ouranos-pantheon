@@ -72,7 +72,7 @@ export function UnitField({
             onChange("");
           }}
           disabled={disabled}
-          aria-label={`${ariaLabel} — use list`}
+          aria-label={`${ariaLabel} - use list`}
         >
           <ChevronLeft className="size-4" />
         </Button>

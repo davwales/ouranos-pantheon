@@ -39,9 +39,9 @@ public sealed class RestartBacktestHandlerTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var backtest = Backtest.Create(
             strategy.Id,
@@ -88,9 +88,9 @@ public sealed class RestartBacktestHandlerTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var backtest = Backtest.Create(
             strategy.Id,
@@ -138,9 +138,9 @@ public sealed class RestartBacktestHandlerTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var backtest = Backtest.Create(
             strategy.Id,
@@ -187,9 +187,9 @@ public sealed class RestartBacktestHandlerTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var backtest = Backtest.Create(
             strategy.Id,

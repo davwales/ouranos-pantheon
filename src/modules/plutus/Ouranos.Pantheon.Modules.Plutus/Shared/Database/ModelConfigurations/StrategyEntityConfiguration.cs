@@ -12,7 +12,6 @@ public sealed class StrategyEntityConfiguration : IEntityTypeConfiguration<Strat
         builder.HasKey(s => s.Id);
         builder.Property(s => s.Id).HasIdConversion();
         builder.Property(s => s.MarketId).HasIdConversion();
-        builder.Property(s => s.Type).HasConversion<int>();
 
         builder.HasOne(s => s.Market).WithMany().HasForeignKey(s => s.MarketId);
         builder.HasIndex(s => s.MarketId);
@@ -28,58 +27,24 @@ public sealed class StrategyEntityConfiguration : IEntityTypeConfiguration<Strat
         );
 
         builder.OwnsOne(
-            s => s.SignalWeightedConfig,
+            s => s.Thresholds,
             config =>
             {
-                config.Property(c => c.BuyThreshold).HasPrecision(18, 2);
-                config.Property(c => c.SellThreshold).HasPrecision(18, 2);
-                config.Property(c => c.TaxAdjustedRoiWeight).HasPrecision(18, 2);
-                config.Property(c => c.VolumeAnomalyWeight).HasPrecision(18, 2);
-                config.Property(c => c.TrendMomentumWeight).HasPrecision(18, 2);
-                config.Property(c => c.BollingerBandsWeight).HasPrecision(18, 2);
-                config.Property(c => c.RsiWeight).HasPrecision(18, 2);
-                config.Property(c => c.MovingAverageCrossoverWeight).HasPrecision(18, 2);
-                config.Property(c => c.PriceVelocityWeight).HasPrecision(18, 2);
-            }
-        );
-
-        builder.OwnsOne(
-            s => s.ForecastMomentumConfig,
-            config =>
-            {
-                config.Property(c => c.ForecastMovementThreshold).HasPrecision(18, 2);
-                config.Property(c => c.ForecastHorizonDays);
-            }
-        );
-
-        builder.OwnsOne(
-            s => s.MeanReversionConfig,
-            config =>
-            {
-                config.Property(c => c.DeviationMultiplier).HasPrecision(18, 2);
-                config.Property(c => c.MeanTimeFrameValue);
-            }
-        );
-
-        builder.OwnsOne(
-            s => s.RecipeArbitrageConfig,
-            config =>
-            {
-                config.Property(c => c.MinMarginPercent).HasPrecision(18, 2);
+                config.Property(t => t.BuyThreshold).HasPrecision(18, 2);
+                config.Property(t => t.SellThreshold).HasPrecision(18, 2);
             }
         );
 
         builder.OwnsMany(
-            s => s.Components,
-            comp =>
+            s => s.InputWeights,
+            w =>
             {
-                comp.ToTable("composite_component", "plutus");
-                comp.Property(c => c.StrategyId).HasIdConversion();
-                comp.Property(c => c.Type).HasConversion<int>();
-                comp.Property(c => c.Weight).HasPrecision(18, 2);
+                w.Property(x => x.Kind).HasConversion<int>();
+                w.Property(x => x.Weight).HasPrecision(18, 2);
+                w.HasIndex("StrategyId", "Kind").IsUnique();
             }
         );
 
-        builder.Navigation(s => s.Components);
+        builder.Navigation(s => s.InputWeights);
     }
 }

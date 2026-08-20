@@ -1,5 +1,6 @@
 using Ardalis.GuardClauses;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Inputs;
 using Ouranos.Pantheon.Modules.Shared.Domain;
 using Ouranos.Pantheon.Modules.Shared.Extensions;
 
@@ -12,6 +13,8 @@ public sealed class Strategy : BaseEntity<Id<Strategy>>
     {
         Name = string.Empty;
         TradingConfiguration = new TradingConfiguration();
+        InputWeights = [];
+        Thresholds = new InputThresholds();
     }
 
     public Id<Market> MarketId { get; init; }
@@ -20,17 +23,16 @@ public sealed class Strategy : BaseEntity<Id<Strategy>>
 
     public string? Description { get; private set; }
 
-    public StrategyType Type { get; init; }
+    /// <summary>
+    ///     Weighted vector of every input this strategy blends. At least one entry
+    ///     with a non-zero weight is required for the strategy to produce scores.
+    ///     Weights are relative; the executor normalizes by total weight at score time.
+    /// </summary>
+    public List<InputWeight> InputWeights { get; private set; } = [];
 
-    public TradingConfiguration TradingConfiguration { get; set; }
+    public InputThresholds Thresholds { get; private set; } = new();
 
-    public SignalWeightedConfig? SignalWeightedConfig { get; set; }
-    public ForecastMomentumConfig? ForecastMomentumConfig { get; set; }
-    public MeanReversionConfig? MeanReversionConfig { get; set; }
-    public RecipeArbitrageConfig? RecipeArbitrageConfig { get; set; }
-
-    private List<CompositeComponent>? _components;
-    public List<CompositeComponent> Components => _components ??= [];
+    public TradingConfiguration TradingConfiguration { get; private set; }
 
     public bool IsActive { get; private set; } = true;
 
@@ -41,18 +43,27 @@ public sealed class Strategy : BaseEntity<Id<Strategy>>
         Id<Market> marketId,
         string name,
         string? description,
-        StrategyType type,
         TradingConfiguration tradingConfiguration,
-        SignalWeightedConfig? signalWeightedConfig = null,
-        ForecastMomentumConfig? forecastMomentumConfig = null,
-        MeanReversionConfig? meanReversionConfig = null,
-        RecipeArbitrageConfig? recipeArbitrageConfig = null,
-        Market? market = null,
-        List<CompositeComponent>? components = null
+        List<InputWeight>? inputWeights,
+        InputThresholds? thresholds,
+        Market? market = null
     )
     {
         Guard.Against.NullOrWhiteSpace(name);
         Guard.Against.Null(tradingConfiguration);
+        Guard.Against.Null(inputWeights);
+        Guard.Against.InvalidInput(
+            inputWeights,
+            nameof(inputWeights),
+            w => w.Any(i => i.Weight != 0m),
+            "Strategy must have at least one input weight with a non-zero weight."
+        );
+        Guard.Against.InvalidInput(
+            inputWeights,
+            nameof(inputWeights),
+            w => w.Select(i => i.Kind).Distinct().Count() == w.Count,
+            "Strategy input weights must not contain duplicate input kinds."
+        );
 
         if (market is not null)
         {
@@ -64,14 +75,10 @@ public sealed class Strategy : BaseEntity<Id<Strategy>>
             MarketId = marketId,
             Name = name,
             Description = description,
-            Type = type,
             TradingConfiguration = tradingConfiguration,
-            SignalWeightedConfig = signalWeightedConfig,
-            ForecastMomentumConfig = forecastMomentumConfig,
-            MeanReversionConfig = meanReversionConfig,
-            RecipeArbitrageConfig = recipeArbitrageConfig,
+            InputWeights = inputWeights,
+            Thresholds = thresholds ?? new InputThresholds(),
             _market = market,
-            _components = components,
         };
     }
 
@@ -79,22 +86,31 @@ public sealed class Strategy : BaseEntity<Id<Strategy>>
         string name,
         string? description,
         TradingConfiguration tradingConfiguration,
-        SignalWeightedConfig? signalWeightedConfig = null,
-        ForecastMomentumConfig? forecastMomentumConfig = null,
-        MeanReversionConfig? meanReversionConfig = null,
-        RecipeArbitrageConfig? recipeArbitrageConfig = null
+        List<InputWeight> inputWeights,
+        InputThresholds? thresholds
     )
     {
         Guard.Against.NullOrWhiteSpace(name);
         Guard.Against.Null(tradingConfiguration);
+        Guard.Against.Null(inputWeights);
+        Guard.Against.InvalidInput(
+            inputWeights,
+            nameof(inputWeights),
+            w => w.Any(i => i.Weight != 0m),
+            "Strategy must have at least one input weight with a non-zero weight."
+        );
+        Guard.Against.InvalidInput(
+            inputWeights,
+            nameof(inputWeights),
+            w => w.Select(i => i.Kind).Distinct().Count() == w.Count,
+            "Strategy input weights must not contain duplicate input kinds."
+        );
 
         Name = name;
         Description = description;
         TradingConfiguration = tradingConfiguration;
-        SignalWeightedConfig = signalWeightedConfig;
-        ForecastMomentumConfig = forecastMomentumConfig;
-        MeanReversionConfig = meanReversionConfig;
-        RecipeArbitrageConfig = recipeArbitrageConfig;
+        InputWeights = inputWeights;
+        Thresholds = thresholds ?? new InputThresholds();
 
         Update();
     }

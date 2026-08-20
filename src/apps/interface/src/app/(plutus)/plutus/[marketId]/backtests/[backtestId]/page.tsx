@@ -3,7 +3,7 @@
 import { Typography } from "@/components/shared/typography";
 import { useApi } from "@/hooks/use-api";
 import useInterval from "@/hooks/use-interval";
-import { BacktestDetail, StrategyDetail, plutusApi } from "@/lib/api/plutus";
+import { type BacktestDetail, type StrategyDetail, plutusApi } from "@/lib/api/plutus";
 import { BacktestDetailSkeleton } from "@/app/(plutus)/plutus/[marketId]/backtests/_components/backtest-detail-skeleton";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -57,12 +57,18 @@ export default function BacktestDetailPage() {
   const [isRestarting, setIsRestarting] = useState(false);
   const [isApplyingConfig, setIsApplyingConfig] = useState(false);
   const [runAgainOpen, setRunAgainOpen] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const handleCancel = useCallback(async () => {
     setIsCancelling(true);
+    setActionError(null);
     try {
       await plutusApi.cancelBacktest(backtestId);
       reexecute();
+    } catch (err) {
+      setActionError(
+        err instanceof Error ? err.message : "Failed to cancel backtest",
+      );
     } finally {
       setIsCancelling(false);
     }
@@ -70,9 +76,14 @@ export default function BacktestDetailPage() {
 
   const handleRestart = useCallback(async () => {
     setIsRestarting(true);
+    setActionError(null);
     try {
       await plutusApi.restartBacktest(backtestId);
       reexecute();
+    } catch (err) {
+      setActionError(
+        err instanceof Error ? err.message : "Failed to restart backtest",
+      );
     } finally {
       setIsRestarting(false);
     }
@@ -81,34 +92,36 @@ export default function BacktestDetailPage() {
   const handleApplyToStrategy = useCallback(async () => {
     if (
       !backtest?.strategyId ||
-      !backtest.results?.optimizedConfiguration ||
+      !backtest.results ||
       !strategy
     ) {
       return;
     }
     setIsApplyingConfig(true);
+    setActionError(null);
     try {
       await plutusApi.updateStrategy(backtest.strategyId, {
         name: strategy.name,
         description: strategy.description ?? null,
-        tradingConfiguration: backtest.results.optimizedConfiguration,
-        signalWeightedConfig: backtest.results.optimizedSignalWeightedConfig,
-        forecastMomentumConfig:
-          backtest.results.optimizedForecastMomentumConfig,
-        meanReversionConfig: backtest.results.optimizedMeanReversionConfig,
-        recipeArbitrageConfig: backtest.results.optimizedRecipeArbitrageConfig,
+        tradingConfiguration:
+          backtest.results.optimizedConfiguration ??
+          strategy.tradingConfiguration,
+        inputWeights:
+          backtest.results.optimizedInputWeights ?? strategy.inputWeights,
+        thresholds:
+          backtest.results.optimizedThresholds ?? strategy.thresholds,
       });
       router.push(`/plutus/${marketId}/strategies/${backtest.strategyId}`);
+    } catch (err) {
+      setActionError(
+        err instanceof Error ? err.message : "Failed to apply configuration",
+      );
     } finally {
       setIsApplyingConfig(false);
     }
   }, [
     backtest?.strategyId,
-    backtest?.results?.optimizedConfiguration,
-    backtest?.results?.optimizedSignalWeightedConfig,
-    backtest?.results?.optimizedForecastMomentumConfig,
-    backtest?.results?.optimizedMeanReversionConfig,
-    backtest?.results?.optimizedRecipeArbitrageConfig,
+    backtest?.results,
     strategy,
     marketId,
     router,
@@ -133,6 +146,12 @@ export default function BacktestDetailPage() {
         <ArrowLeft className="w-4 h-4 mr-1" />
         Back to Backtests
       </Link>
+
+      {actionError && (
+        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+          {actionError}
+        </div>
+      )}
 
       {backtest.status === "Pending" && (
         <InProgressBacktestView
@@ -187,10 +206,8 @@ export default function BacktestDetailPage() {
           <BacktestStatisticsGrid results={results} />
 
           {(results.optimizedConfiguration != null ||
-            results.optimizedSignalWeightedConfig != null ||
-            results.optimizedForecastMomentumConfig != null ||
-            results.optimizedMeanReversionConfig != null ||
-            results.optimizedRecipeArbitrageConfig != null) && (
+            results.optimizedInputWeights != null ||
+            results.optimizedThresholds != null) && (
             <OptimizedConfigurationCard
               results={results}
               isApplying={isApplyingConfig}

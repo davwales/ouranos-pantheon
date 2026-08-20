@@ -10,20 +10,12 @@ import { Typography } from "@/components/shared/typography";
 import { PlutusState, usePlutusStore } from "@/stores/plutus-store";
 import { Button } from "@/components/ui/button";
 import { useApi } from "@/hooks/use-api";
-import { Strategy, plutusApi } from "@/lib/api/plutus";
+import { type Strategy, plutusApi } from "@/lib/api/plutus";
 import { Plus, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
-
-const strategyTypeLabels: Record<string, string> = {
-  SignalWeighted: "Signal Weighted",
-  ForecastMomentum: "Forecast Momentum",
-  MeanReversion: "Mean Reversion",
-  RecipeArbitrage: "Recipe Arbitrage",
-  Composite: "Composite",
-};
 
 export default function StrategiesPage() {
   const { marketId } = useParams<{ marketId: string }>();
@@ -81,11 +73,6 @@ export default function StrategiesPage() {
           type: "string",
           operators: ["eq", "neq", "contains", "startsWith", "endsWith"],
         },
-      },
-      {
-        id: "type",
-        header: "Type",
-        accessorFn: (row) => strategyTypeLabels[row.type] ?? row.type,
       },
       {
         id: "backtestCount",

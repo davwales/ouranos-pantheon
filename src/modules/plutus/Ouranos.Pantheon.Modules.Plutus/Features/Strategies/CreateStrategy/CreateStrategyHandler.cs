@@ -35,12 +35,9 @@ public sealed class CreateStrategyHandler
             command.MarketId,
             command.Name,
             command.Description,
-            command.Type,
             command.Configuration,
-            command.SignalWeightedConfig,
-            command.ForecastMomentumConfig,
-            command.MeanReversionConfig,
-            command.RecipeArbitrageConfig
+            command.InputWeights,
+            command.Thresholds
         );
 
         await _dbContext.Strategies.AddAsync(strategy, cancellationToken);

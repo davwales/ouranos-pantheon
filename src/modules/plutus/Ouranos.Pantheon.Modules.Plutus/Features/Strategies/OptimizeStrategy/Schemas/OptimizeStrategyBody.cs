@@ -10,9 +10,13 @@ public sealed record OptimizeStrategyBody(
     decimal Budget,
     int Generations = 100,
     int PopulationSize = 50,
-    double SharpeRatioWeight = 0.5,
-    double TotalReturnWeight = 0.3,
-    double MaxDrawdownWeight = -0.2,
+    double SortinoWeight = 0.4,
+    double CagrWeight = 0.3,
+    double DrawdownWeight = 0.5,
+    double TurnoverWeight = 0.1,
+    double L1RegularizationWeight = 0.05,
+    double OutSampleRatio = 0.2,
     decimal? VolumeParticipationRate = null,
-    decimal? SlippageMultiplier = null
+    decimal? SlippageMultiplier = null,
+    int MinTrades = 5
 );

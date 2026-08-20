@@ -2,39 +2,20 @@ using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Executors;
 using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Steps;
 
-public sealed class InitializeStep : IStep<BacktestPayload>
+public sealed class InitializeStep(
+    ILogger<InitializeStep> logger,
+    IBacktestDataQueryService dataService,
+    IStrategyExecutor executor
+) : IStep<BacktestPayload>
 {
-    private readonly ILogger<InitializeStep> _logger;
-    private readonly IBacktestDataQueryService _dataService;
-    private readonly Dictionary<StrategyType, IStrategyExecutor> _executors;
-
-    public InitializeStep(
-        ILogger<InitializeStep> logger,
-        IBacktestDataQueryService dataService,
-        IEnumerable<IStrategyExecutor> executors,
-        CompositeExecutor compositeExecutor
-    )
-    {
-        _logger = Guard.Against.Null(logger);
-        _dataService = Guard.Against.Null(dataService);
-
-        _executors = new Dictionary<StrategyType, IStrategyExecutor>
-        {
-            [StrategyType.Composite] = compositeExecutor,
-        };
-
-        foreach (var executor in executors)
-        {
-            _executors.TryAdd(executor.SupportedType, executor);
-        }
-    }
+    private readonly ILogger<InitializeStep> _logger = Guard.Against.Null(logger);
+    private readonly IBacktestDataQueryService _dataService = Guard.Against.Null(dataService);
+    private readonly IStrategyExecutor _executor = Guard.Against.Null(executor);
 
     public async Task ExecuteAsync(PipelineContext context, BacktestPayload payload)
     {
@@ -51,64 +32,26 @@ public sealed class InitializeStep : IStep<BacktestPayload>
             );
 
         var taxRate = GetTaxRate(data.Market);
-        var executor = ResolveExecutor(payload.Parameters.Strategy.Type);
-        var windowDays = DetermineWindowSize(payload.Parameters.TotalDays);
 
         payload.Context = new BacktestContext(
             data,
-            executor,
+            _executor,
             taxRate,
-            windowDays,
             payload.Parameters.StartDate,
-            SignalWeightedConfig: payload.Parameters.SignalWeightedConfig,
-            ForecastMomentumConfig: payload.Parameters.ForecastMomentumConfig,
-            MeanReversionConfig: payload.Parameters.MeanReversionConfig,
-            RecipeArbitrageConfig: payload.Parameters.RecipeArbitrageConfig
+            payload.Parameters.InputWeights,
+            payload.Parameters.Thresholds
         );
 
         _logger.LogDebug(
-            "Running backtest for strategy '{strategyId}' with {symbolCount} symbols, {totalDays} days, {windowDays}-day windows.",
+            "Running backtest for strategy '{strategyId}' with {symbolCount} symbols, {totalDays} days.",
             payload.Parameters.Strategy.Id,
             payload.Context.Data.Symbols.Count,
-            payload.Parameters.TotalDays,
-            windowDays
+            payload.Parameters.TotalDays
         );
-    }
-
-    private IStrategyExecutor ResolveExecutor(StrategyType type)
-    {
-        if (!_executors.TryGetValue(type, out var executor))
-        {
-            throw new InvalidOperationException(
-                $"No executor registered for strategy type '{type}'."
-            );
-        }
-
-        return executor;
     }
 
     public static decimal GetTaxRate(Market market)
     {
         return market.Taxes.Flat?.Rate ?? 0m;
-    }
-
-    public static int DetermineWindowSize(int totalDays)
-    {
-        if (totalDays <= 30)
-        {
-            return 1;
-        }
-
-        if (totalDays <= 90)
-        {
-            return 3;
-        }
-
-        if (totalDays <= 365)
-        {
-            return 7;
-        }
-
-        return 14;
     }
 }

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetMarketForecast.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Database.Querying;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Shared.Application;
 using Ouranos.Pantheon.Modules.Shared.Application.Common;
@@ -94,6 +95,7 @@ public sealed class GetMarketForecastHandler
         var forecasts = await _dbContext
             .Forecasts.AsNoTracking()
             .Where(f => f.MarketId == input.MarketId && f.Predictions.Count >= 7)
+            .WhereLatestPerSymbol()
             .Select(f => new
             {
                 f.Id,
@@ -135,25 +137,27 @@ public sealed class GetMarketForecastHandler
                     p.AveragePrice * p.Volume - f.Latest.AveragePrice * f.Latest.Volume
                 )),
             })
-            .Select(x => new GetMarketForecastResponse(
-                x.Id,
-                x.MarketId,
-                x.SymbolId,
-                x.SymbolName,
-                x.SymbolSubcode,
-                x.Latest,
-                x.Predictions.ElementAt(0),
-                x.Predictions.ElementAt(1),
-                x.Predictions.ElementAt(2),
-                x.Predictions.ElementAt(3),
-                x.Predictions.ElementAt(4),
-                x.Predictions.ElementAt(5),
-                x.Predictions.ElementAt(6)
-            ))
             .ToListAsync(cancellationToken);
 
-        var filtered = forecasts.AsQueryable().FilterBy(input.Filter, FilterBuilder);
+        var responses = forecasts
+            .Select(f => new GetMarketForecastResponse(
+                f.Id,
+                f.MarketId,
+                f.SymbolId,
+                f.SymbolName,
+                f.SymbolSubcode,
+                f.Latest,
+                f.Predictions.ElementAt(0),
+                f.Predictions.ElementAt(1),
+                f.Predictions.ElementAt(2),
+                f.Predictions.ElementAt(3),
+                f.Predictions.ElementAt(4),
+                f.Predictions.ElementAt(5),
+                f.Predictions.ElementAt(6)
+            ))
+            .ToList();
 
+        var filtered = responses.AsQueryable().FilterBy(input.Filter, FilterBuilder);
         var totalCount = filtered.Count();
 
         var page = filtered
