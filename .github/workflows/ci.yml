@@ -8,8 +8,6 @@ on:
 
 env:
   DOTNET_INSTALL_DIR: "./.dotnet"
-  REGISTRY: codeberg.org
-  REGISTRY_PREFIX: codeberg.org/${{ github.repository_owner }}/pantheon
 
 jobs:
   lint:
@@ -67,7 +65,7 @@ jobs:
       - run: dotnet test --collect:"XPlat Code Coverage"
       - run: dotnet tool run reportgenerator -reports:"**/TestResults/**/coverage.cobertura.xml" -targetdir:coverage-merged -reporttypes:Cobertura
       - name: code coverage
-        uses: https://github.com/irongut/CodeCoverageSummary@v1.3.0
+        uses: irongut/CodeCoverageSummary@v1.3.0
         with:
           filename: "coverage-merged/Cobertura.xml"
           fail_below_min: true
@@ -78,6 +76,9 @@ jobs:
     needs: test
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     strategy:
       matrix:
         include:
@@ -87,16 +88,18 @@ jobs:
             dockerfile: src/apps/interface/Dockerfile
     steps:
       - uses: actions/checkout@v4
+      - name: Lowercase repository
+        run: echo "IMAGE_BASE=ghcr.io/${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
       - uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - uses: docker/build-push-action@v6
         with:
           context: .
           file: ${{ matrix.dockerfile }}
           push: true
-          tags: ${{ env.REGISTRY_PREFIX }}-${{ matrix.name }}
-          cache-from: type=registry,ref=${{ env.REGISTRY_PREFIX }}-${{ matrix.name }}:cache
-          cache-to: type=registry,ref=${{ env.REGISTRY_PREFIX }}-${{ matrix.name }}:cache,mode=max
+          tags: ${{ env.IMAGE_BASE }}/${{ matrix.name }}
+          cache-from: type=registry,ref=${{ env.IMAGE_BASE }}/${{ matrix.name }}:cache
+          cache-to: type=registry,ref=${{ env.IMAGE_BASE }}/${{ matrix.name }}:cache,mode=max
