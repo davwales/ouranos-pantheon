@@ -13,7 +13,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: "10.0.x"
@@ -22,7 +22,7 @@ jobs:
       - run: dotnet csharpier check .
       - run: dotnet format style --verify-no-changes --no-restore
       - run: dotnet format analyzers --verify-no-changes --no-restore
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: "20"
           cache: "npm"
@@ -36,13 +36,13 @@ jobs:
     needs: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: "10.0.x"
       - run: dotnet restore --verbosity quiet
       - run: dotnet build Ouranos.Pantheon.sln --no-restore
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: "20"
           cache: "npm"
@@ -56,7 +56,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: "10.0.x"
@@ -87,7 +87,7 @@ jobs:
           - name: interface
             dockerfile: src/apps/interface/Dockerfile
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Lowercase repository
         run: echo "IMAGE_BASE=ghcr.io/${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
       - uses: docker/login-action@v3
@@ -95,6 +95,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v3
       - uses: docker/build-push-action@v6
         with:
           context: .
