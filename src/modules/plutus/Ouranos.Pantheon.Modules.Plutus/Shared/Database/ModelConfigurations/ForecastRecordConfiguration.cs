@@ -27,21 +27,10 @@ public sealed class ForecastRecordConfiguration : IEntityTypeConfiguration<Forec
             }
         );
 
-        builder.OwnsOne(
-            r => r.Actual,
-            x =>
-            {
-                x.Property(f => f.AveragePrice);
-                x.Property(f => f.MinPrice);
-                x.Property(f => f.MaxPrice);
-                x.Property(f => f.Volume);
-            }
-        );
-
         builder.HasOne(r => r.Run).WithMany().HasForeignKey(r => r.RunId);
         builder.HasOne(r => r.Symbol).WithMany().HasForeignKey(r => r.SymbolId);
 
-        builder.HasIndex(r => new { r.TargetAt, r.EvaluatedAt });
+        builder.HasIndex(r => new { r.SymbolId, r.TargetAt });
         builder.HasIndex(r => new { r.SymbolId, r.GeneratedAt });
     }
 }

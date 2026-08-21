@@ -5,8 +5,7 @@ public sealed record ForecastingOptions(
     int NumPredictions,
     int HistoryDays,
     int BatchSize,
-    string ModelName,
-    int MaxEvaluationAgeDays
+    string ModelName
 )
 {
     public ForecastingOptions()
@@ -15,7 +14,6 @@ public sealed record ForecastingOptions(
             NumPredictions: 7,
             HistoryDays: 30,
             BatchSize: 500,
-            ModelName: "plutus-forecasting-v1",
-            MaxEvaluationAgeDays: 90
+            ModelName: "plutus-forecasting-v1"
         ) { }
 }

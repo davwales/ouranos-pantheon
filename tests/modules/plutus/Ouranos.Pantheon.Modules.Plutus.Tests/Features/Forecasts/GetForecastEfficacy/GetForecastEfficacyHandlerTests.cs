@@ -113,16 +113,20 @@ public sealed class GetForecastEfficacyHandlerTests
     {
         // Arrange
         var (market, symbol, run) = await SeedBaseEntitiesAsync();
-        var unevaluated = ForecastRecord.Create(
-            new Id<ForecastRecord>(Guid.NewGuid().ToString()),
-            run.Id,
-            market.Id,
-            symbol.Id,
-            "plutus-forecasting-v1",
-            DateTimeOffset.UtcNow.AddDays(-2),
-            DateTimeOffset.UtcNow.AddDays(-1),
-            1,
-            new ForecastPoint(110m, 100m, 120m, 50m)
+        var unevaluated = new ForecastRecordWithActual(
+            Id: new Id<ForecastRecord>(Guid.NewGuid().ToString()),
+            RunId: run.Id,
+            MarketId: market.Id,
+            SymbolId: symbol.Id,
+            ModelName: "plutus-forecasting-v1",
+            GeneratedAt: DateTimeOffset.UtcNow.AddDays(-2),
+            TargetAt: DateTimeOffset.UtcNow.AddDays(-1),
+            HorizonDays: 1,
+            PredictedAveragePrice: 110m,
+            ActualAveragePrice: null,
+            ActualMinPrice: null,
+            ActualMaxPrice: null,
+            ActualVolume: null
         );
         await _dbContext.SeedData(unevaluated);
 
@@ -316,7 +320,7 @@ public sealed class GetForecastEfficacyHandlerTests
         return symbol;
     }
 
-    private static ForecastRecord CreateEvaluatedRecord(
+    private static ForecastRecordWithActual CreateEvaluatedRecord(
         Id<ForecastRun> runId,
         Id<Market> marketId,
         Id<Symbol> symbolId,
@@ -327,21 +331,20 @@ public sealed class GetForecastEfficacyHandlerTests
         DateTimeOffset? generatedAt = null
     )
     {
-        var record = ForecastRecord.Create(
-            new Id<ForecastRecord>(Guid.NewGuid().ToString()),
-            runId,
-            marketId,
-            symbolId,
-            modelName,
-            generatedAt ?? DateTimeOffset.UtcNow.AddDays(-2),
-            DateTimeOffset.UtcNow.AddDays(-1),
-            horizonDays,
-            new ForecastPoint(predicted, predicted * 0.9m, predicted * 1.1m, 50m)
+        return new ForecastRecordWithActual(
+            Id: new Id<ForecastRecord>(Guid.NewGuid().ToString()),
+            RunId: runId,
+            MarketId: marketId,
+            SymbolId: symbolId,
+            ModelName: modelName,
+            GeneratedAt: generatedAt ?? DateTimeOffset.UtcNow.AddDays(-2),
+            TargetAt: DateTimeOffset.UtcNow.AddDays(-1),
+            HorizonDays: horizonDays,
+            PredictedAveragePrice: predicted,
+            ActualAveragePrice: actual,
+            ActualMinPrice: actual * 0.9m,
+            ActualMaxPrice: actual * 1.1m,
+            ActualVolume: 50m
         );
-        record.RecordActual(
-            new ForecastPoint(actual, actual * 0.9m, actual * 1.1m, 50m),
-            DateTimeOffset.UtcNow
-        );
-        return record;
     }
 }
