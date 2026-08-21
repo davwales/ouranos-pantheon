@@ -22,6 +22,9 @@ public class PlutusDbContext(DbContextOptions<PlutusDbContext> options)
 
     public DbSet<ForecastRecord> ForecastRecords { get; set; }
 
+    public DbSet<ForecastRecordWithActual> ForecastRecordsWithActuals =>
+        Set<ForecastRecordWithActual>();
+
     public DbSet<ForecastRun> ForecastRuns { get; set; }
 
     public DbSet<Market> Markets { get; set; }
@@ -57,6 +60,7 @@ public class PlutusDbContext(DbContextOptions<PlutusDbContext> options)
         modelBuilder.Entity<OsrsDataLoaderState>();
         modelBuilder.Entity<Forecast>();
         modelBuilder.Entity<ForecastRecord>();
+        modelBuilder.Entity<ForecastRecordWithActual>();
         modelBuilder.Entity<ForecastRun>();
         modelBuilder.Entity<Market>();
         modelBuilder.Entity<Recipe>();

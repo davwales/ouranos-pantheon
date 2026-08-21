@@ -16,6 +16,5 @@ public sealed class ForecastingOptionsTests
         options.HistoryDays.ShouldBe(30);
         options.BatchSize.ShouldBe(500);
         options.ModelName.ShouldBe("plutus-forecasting-v1");
-        options.MaxEvaluationAgeDays.ShouldBe(90);
     }
 }

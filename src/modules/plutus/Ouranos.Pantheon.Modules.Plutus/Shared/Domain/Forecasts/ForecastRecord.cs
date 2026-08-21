@@ -29,10 +29,6 @@ public sealed class ForecastRecord : BaseEntity<Id<ForecastRecord>>
 
     public ForecastPoint Predicted { get; init; }
 
-    public ForecastPoint? Actual { get; private set; }
-
-    public DateTimeOffset? EvaluatedAt { get; private set; }
-
     public ForecastRun? Run { get; private set; }
 
     public Symbol? Symbol { get; private set; }
@@ -64,14 +60,5 @@ public sealed class ForecastRecord : BaseEntity<Id<ForecastRecord>>
             HorizonDays = horizonDays,
             Predicted = predicted,
         };
-    }
-
-    public void RecordActual(ForecastPoint actual, DateTimeOffset evaluatedAt)
-    {
-        Guard.Against.Null(actual);
-
-        Actual = actual;
-        EvaluatedAt = evaluatedAt;
-        Update();
     }
 }

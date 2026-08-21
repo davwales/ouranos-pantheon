@@ -45,8 +45,7 @@ public sealed class ForecastGeneratorJobTests
                         NumPredictions: 7,
                         HistoryDays: 30,
                         BatchSize: 500,
-                        ModelName: "plutus-forecasting-v1",
-                        MaxEvaluationAgeDays: 90
+                        ModelName: "plutus-forecasting-v1"
                     ),
                 }
             )
