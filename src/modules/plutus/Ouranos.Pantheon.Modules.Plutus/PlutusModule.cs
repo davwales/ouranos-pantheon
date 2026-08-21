@@ -65,7 +65,6 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketTrades;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetRecipeTrades;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetSymbolTrades;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetVolumeHeatmap;
-using Ouranos.Pantheon.Modules.Plutus.Features.Trades.MarketOverviewBucket;
 using Ouranos.Pantheon.Modules.Plutus.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
@@ -292,9 +291,6 @@ public sealed class PlutusModule : IPantheonModule
 
         builder
             .Services.Configure<PlutusOptions>(plutusOptionsSection)
-            .Configure<MarketOverviewBucketOptions>(
-                plutusOptionsSection.GetSection(MarketOverviewBucketOptions.SectionName)
-            )
             .Configure<DataLoadersOptions>(dataLoadersSection)
             .Configure<FfxivDataLoaderOptions>(
                 dataLoadersSection.GetSection(FfxivDataLoaderOptions.SectionName)
