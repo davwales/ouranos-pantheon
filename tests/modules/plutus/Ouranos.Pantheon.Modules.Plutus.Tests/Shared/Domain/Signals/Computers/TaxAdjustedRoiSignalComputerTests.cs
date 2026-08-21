@@ -27,7 +27,7 @@ public sealed class TaxAdjustedRoiSignalComputerTests
         decimal taxRate = 0m
     )
     {
-        var snapshot = MarketTradeSnapshot.Create(
+        var snapshot = new MarketTradeSnapshot(
             MarketId,
             SymbolId,
             TimeFrame.OneWeek,

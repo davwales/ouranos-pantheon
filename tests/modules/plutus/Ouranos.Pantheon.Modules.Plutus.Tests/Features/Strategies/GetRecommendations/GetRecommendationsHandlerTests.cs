@@ -174,17 +174,17 @@ public sealed class GetRecommendationsHandlerTests
         await _dbContext.Symbols.AddAsync(symbol);
         await _dbContext.SaveChangesAsync();
 
-        var snapshot = MarketTradeSnapshot.Create(
+        var snapshot = new MarketTradeSnapshot(
             marketId,
             symbolId,
             TimeFrame.OneHour,
-            totalSpent: 1000m,
-            minPrice: 5m,
-            maxPrice: 15m,
-            totalVolume: 100m,
-            numTransactions: 10,
-            limit: decimal.MaxValue,
-            tax: 0m
+            TotalSpent: 1000m,
+            MinPrice: 5m,
+            MaxPrice: 15m,
+            TotalVolume: 100m,
+            NumTransactions: 10,
+            Limit: decimal.MaxValue,
+            Tax: 0m
         );
         await _dbContext.MarketTradeSnapshots.AddAsync(snapshot);
         await _dbContext.SaveChangesAsync();
@@ -255,17 +255,17 @@ public sealed class GetRecommendationsHandlerTests
         await _dbContext.Symbols.AddAsync(symbol);
         await _dbContext.SaveChangesAsync();
 
-        var snapshot = MarketTradeSnapshot.Create(
+        var snapshot = new MarketTradeSnapshot(
             marketId,
             symbolId,
             TimeFrame.OneHour,
-            totalSpent: 1000m,
-            minPrice: 5m,
-            maxPrice: 15m,
-            totalVolume: 100m,
-            numTransactions: 10,
-            limit: decimal.MaxValue,
-            tax: 0m
+            TotalSpent: 1000m,
+            MinPrice: 5m,
+            MaxPrice: 15m,
+            TotalVolume: 100m,
+            NumTransactions: 10,
+            Limit: decimal.MaxValue,
+            Tax: 0m
         );
         await _dbContext.MarketTradeSnapshots.AddAsync(snapshot);
         await _dbContext.SaveChangesAsync();
@@ -316,17 +316,17 @@ public sealed class GetRecommendationsHandlerTests
         await _dbContext.Symbols.AddAsync(symbol);
         await _dbContext.SaveChangesAsync();
 
-        var oneDaySnapshot = MarketTradeSnapshot.Create(
+        var oneDaySnapshot = new MarketTradeSnapshot(
             marketId,
             symbolId,
             TimeFrame.OneDay,
-            totalSpent: 1000m,
-            minPrice: 5m,
-            maxPrice: 15m,
-            totalVolume: 100m,
-            numTransactions: 10,
-            limit: decimal.MaxValue,
-            tax: 0m
+            TotalSpent: 1000m,
+            MinPrice: 5m,
+            MaxPrice: 15m,
+            TotalVolume: 100m,
+            NumTransactions: 10,
+            Limit: decimal.MaxValue,
+            Tax: 0m
         );
         await _dbContext.MarketTradeSnapshots.AddAsync(oneDaySnapshot);
         await _dbContext.SaveChangesAsync();
@@ -378,17 +378,17 @@ public sealed class GetRecommendationsHandlerTests
         await _dbContext.Symbols.AddAsync(symbol);
         await _dbContext.SaveChangesAsync();
 
-        var zeroSnapshot = MarketTradeSnapshot.Create(
+        var zeroSnapshot = new MarketTradeSnapshot(
             marketId,
             symbolId,
             TimeFrame.OneHour,
-            totalSpent: 0m,
-            minPrice: 5m,
-            maxPrice: 15m,
-            totalVolume: 0m,
-            numTransactions: 0,
-            limit: decimal.MaxValue,
-            tax: 0m
+            TotalSpent: 0m,
+            MinPrice: 5m,
+            MaxPrice: 15m,
+            TotalVolume: 0m,
+            NumTransactions: 0,
+            Limit: decimal.MaxValue,
+            Tax: 0m
         );
         await _dbContext.MarketTradeSnapshots.AddAsync(zeroSnapshot);
         await _dbContext.SaveChangesAsync();

@@ -161,7 +161,7 @@ public sealed class TradeTests
         // Arrange
         var symbolId = new Id<Symbol>(_fixture.Create<string>());
         var marketId = new Id<Market>(_fixture.Create<string>());
-        var snapshot = MarketTradeSnapshot.Create(
+        var snapshot = new MarketTradeSnapshot(
             marketId,
             symbolId,
             TimeFrame.OneDay,

@@ -26,7 +26,7 @@ public sealed class VolumeAnomalySignalComputerTests
         var windowMinutes = (decimal)(frame.ToTimeSpan()?.TotalMinutes ?? 0);
         var totalVolume = ratePerMinute * windowMinutes;
 
-        return MarketTradeSnapshot.Create(
+        return new MarketTradeSnapshot(
             MarketId,
             SymbolId,
             frame,

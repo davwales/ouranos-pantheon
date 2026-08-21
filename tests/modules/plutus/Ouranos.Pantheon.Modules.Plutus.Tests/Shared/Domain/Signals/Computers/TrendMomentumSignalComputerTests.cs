@@ -27,7 +27,7 @@ public sealed class TrendMomentumSignalComputerTests
         decimal volume = 1000m
     )
     {
-        return MarketTradeSnapshot.Create(
+        return new MarketTradeSnapshot(
             MarketId,
             SymbolId,
             frame,
