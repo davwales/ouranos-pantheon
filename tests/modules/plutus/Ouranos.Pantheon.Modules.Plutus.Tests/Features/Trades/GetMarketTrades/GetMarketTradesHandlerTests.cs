@@ -55,17 +55,17 @@ public sealed class GetMarketTradesHandlerTests
             new AdditionalFields()
         );
 
-        var snapshot = Snapshot.Create(
+        var snapshot = new Snapshot(
             market.Id,
             symbol.Id,
             TimeFrame.OneDay,
-            totalSpent: 1000m,
-            minPrice: 90m,
-            maxPrice: 110m,
-            totalVolume: 10m,
-            numTransactions: 5,
-            limit: 100m,
-            tax: 1m
+            TotalSpent: 1000m,
+            MinPrice: 90m,
+            MaxPrice: 110m,
+            TotalVolume: 10m,
+            NumTransactions: 5,
+            Limit: 100m,
+            Tax: 1m
         );
 
         await _dbContext.SeedData(market);

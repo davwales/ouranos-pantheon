@@ -9,14 +9,10 @@ public sealed class MarketTradeSnapshotConfiguration : IEntityTypeConfiguration<
 {
     public void Configure(EntityTypeBuilder<MarketTradeSnapshot> builder)
     {
-        builder.HasKey(s => s.Id);
-        builder.Property(s => s.Id).HasIdConversion();
-        builder.Property(s => s.MarketId).HasIdConversion();
+        builder.HasKey(s => new { s.SymbolId, s.TimeFrame });
+        builder.ToView("market_trade_snapshots");
         builder.Property(s => s.SymbolId).HasIdConversion();
+        builder.Property(s => s.MarketId).HasIdConversion();
         builder.Property(s => s.TimeFrame).HasConversion<string>();
-        builder.HasIndex(s => new { s.SymbolId, s.TimeFrame }).IsUnique();
-        builder.HasIndex(s => new { s.MarketId, s.TimeFrame });
-        builder.HasOne(s => s.Symbol).WithMany().HasForeignKey(s => s.SymbolId);
-        builder.HasOne(s => s.Market).WithMany().HasForeignKey(s => s.MarketId);
     }
 }

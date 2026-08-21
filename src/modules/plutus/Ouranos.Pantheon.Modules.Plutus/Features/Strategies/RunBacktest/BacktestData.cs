@@ -203,7 +203,7 @@ public sealed class BacktestData
 
         // Reconstructed snapshots carry no real transaction count; pass 0 so
         // NumTransactions isn't mistaken for one.
-        return MarketTradeSnapshot.Create(
+        return new MarketTradeSnapshot(
             Market.Id,
             symbolId,
             timeframe,

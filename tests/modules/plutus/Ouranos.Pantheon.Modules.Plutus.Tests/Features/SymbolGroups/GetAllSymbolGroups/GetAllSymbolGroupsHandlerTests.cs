@@ -120,17 +120,17 @@ public sealed class GetAllSymbolGroupsHandlerTests
             members: [member]
         );
 
-        var snapshot = MarketTradeSnapshot.Create(
+        var snapshot = new MarketTradeSnapshot(
             market.Id,
             symbol.Id,
             TimeFrame.OneDay,
-            totalSpent: 10000m,
-            minPrice: 90m,
-            maxPrice: 110m,
-            totalVolume: 100m,
-            numTransactions: 50,
-            limit: 200m,
-            tax: 1m
+            TotalSpent: 10000m,
+            MinPrice: 90m,
+            MaxPrice: 110m,
+            TotalVolume: 100m,
+            NumTransactions: 50,
+            Limit: 200m,
+            Tax: 1m
         );
 
         await _dbContext.SeedData(market);
