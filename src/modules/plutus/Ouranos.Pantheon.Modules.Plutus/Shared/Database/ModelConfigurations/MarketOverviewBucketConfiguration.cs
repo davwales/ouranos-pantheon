@@ -10,11 +10,14 @@ public sealed class MarketOverviewBucketConfiguration
 {
     public void Configure(EntityTypeBuilder<MarketOverviewBucket> builder)
     {
-        builder.HasKey(b => b.Id);
-        builder.Property(b => b.Id).HasIdConversion();
+        builder.HasKey(b => new
+        {
+            b.MarketId,
+            b.TimeFrame,
+            b.BucketStart,
+        });
+        builder.ToView("market_overview_buckets");
         builder.Property(b => b.MarketId).HasIdConversion();
         builder.Property(b => b.TimeFrame).HasConversion<string>();
-        builder.HasIndex(b => new { b.MarketId, b.TimeFrame });
-        builder.HasOne(b => b.Market).WithMany().HasForeignKey(b => b.MarketId);
     }
 }
