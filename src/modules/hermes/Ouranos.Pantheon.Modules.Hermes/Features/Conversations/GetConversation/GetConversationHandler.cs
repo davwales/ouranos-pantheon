@@ -6,7 +6,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GetConversation.Sch
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
-using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GetConversation;
 

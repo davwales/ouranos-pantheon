@@ -5,7 +5,7 @@ using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetRecipe.Schemas;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Database;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes.ValueTypes;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 
 namespace Ouranos.Pantheon.Modules.Hestia.Tests.Features.Recipes.GetRecipe;
 

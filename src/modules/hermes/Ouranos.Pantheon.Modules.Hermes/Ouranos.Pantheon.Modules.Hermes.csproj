@@ -8,6 +8,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Flagsmith" />
+    <PackageReference Include="TickerQ" />
     <PackageReference Include="WolverineFx" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
@@ -17,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Ouranos.Pantheon.Modules.Shared\Ouranos.Pantheon.Modules.Shared.csproj" />
+    <ProjectReference Include="..\..\shared\Ouranos.Pantheon.Modules.Shared.Contract\Ouranos.Pantheon.Modules.Shared.Contract.csproj" />
   </ItemGroup>
 
   <ItemGroup>

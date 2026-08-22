@@ -10,7 +10,7 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Execu
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Inputs;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
 

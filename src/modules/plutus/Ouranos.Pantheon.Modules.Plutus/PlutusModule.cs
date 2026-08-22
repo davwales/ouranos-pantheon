@@ -75,16 +75,16 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Execu
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Scorers;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization;
-using Ouranos.Pantheon.Modules.Shared;
-using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
-using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres;
-using Ouranos.Pantheon.Modules.Shared.WebSockets;
-using Ouranos.Pantheon.Modules.Shared.WebSockets.Listeners;
-using Ouranos.Pantheon.Modules.Shared.WebSockets.Serializers;
-using Ouranos.Pantheon.Modules.Shared.WebSockets.Serializers.Converters;
-using Ouranos.Pantheon.Modules.Shared.WebSockets.Serializers.TypeResolvers;
-using Ouranos.Pantheon.Modules.Shared.WebSockets.WebSocketClients;
+using Ouranos.Pantheon.Modules.Shared.Contract;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Pipeline;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres;
+using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets;
+using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.Listeners;
+using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.Serializers;
+using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.Serializers.Converters;
+using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.Serializers.TypeResolvers;
+using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.WebSocketClients;
 using Wolverine;
 using Wolverine.RabbitMQ;
 

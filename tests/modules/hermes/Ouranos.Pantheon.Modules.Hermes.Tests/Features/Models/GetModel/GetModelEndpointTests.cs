@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.GetModel;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.GetModel.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
-using Ouranos.Pantheon.Modules.Shared.Extensions;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.Models.GetModel;

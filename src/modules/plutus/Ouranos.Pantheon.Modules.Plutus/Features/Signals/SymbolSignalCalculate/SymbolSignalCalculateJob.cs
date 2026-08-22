@@ -7,10 +7,10 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Signals.SymbolSignalCalculate.Sch
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
-using Ouranos.Pantheon.Modules.Shared.Domain;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Extensions;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Functions;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Querying;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres.Extensions;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres.Functions;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres.Querying;
 using TickerQ.Utilities.Base;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Signals.SymbolSignalCalculate;

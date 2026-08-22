@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Hermes.Features.Traits.GetTrait.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
-using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application;
 using Trait = Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits.Trait;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Traits.GetTrait;

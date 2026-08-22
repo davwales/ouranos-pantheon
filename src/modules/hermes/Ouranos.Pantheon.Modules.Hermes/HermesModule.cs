@@ -32,9 +32,9 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Traits.GetTrait;
 using Ouranos.Pantheon.Modules.Hermes.Features.Traits.UpdateTrait;
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
-using Ouranos.Pantheon.Modules.Shared;
-using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres;
+using Ouranos.Pantheon.Modules.Shared.Contract;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Hermes;

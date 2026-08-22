@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres;
 
 namespace Ouranos.Pantheon.Modules.Hestia.Shared.Database;
 

@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Ouranos.Pantheon.Modules.Hermes.Features.Personas.GetPersona;
 using Ouranos.Pantheon.Modules.Hermes.Features.Personas.GetPersona.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.Personas.GetPersona;
