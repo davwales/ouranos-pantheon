@@ -2,21 +2,32 @@
 
 import { hestiaApi } from "@/lib/api/hestia";
 import { ApiError } from "@/lib/api-client";
-import { useRouter } from "next/navigation";
+import type { Recipe } from "@/lib/api/hestia-types";
 import type { RecipeFormState } from "./recipe-form-types";
 import { useRecipeFormState } from "./use-recipe-form-state";
 import { validateRecipeForm } from "./validate-recipe-form";
 
-const initialState: RecipeFormState = {
-  title: "",
-  sourceUrl: "",
-  ingredients: [{ quantity: "", unit: "", name: "" }],
-  steps: [{ id: crypto.randomUUID(), text: "" }],
-  notes: "",
-};
+function toFormState(data: Recipe): RecipeFormState {
+  return {
+    title: data.title,
+    sourceUrl: data.sourceUrl ?? "",
+    ingredients: data.ingredients.map((ingredient) => ({
+      quantity: String(ingredient.quantity),
+      unit: ingredient.unit,
+      name: ingredient.name,
+    })),
+    steps: data.steps.map((step) => ({ id: crypto.randomUUID(), text: step.text })),
+    notes: data.notes,
+  };
+}
 
-export function useRecipeForm() {
-  const router = useRouter();
+export function useRecipeEditForm({
+  data,
+  onSaved,
+}: {
+  data: Recipe;
+  onSaved: () => void;
+}) {
   const {
     form,
     errors,
@@ -34,7 +45,7 @@ export function useRecipeForm() {
     removeStep,
     moveStepUp,
     moveStepDown,
-  } = useRecipeFormState(initialState);
+  } = useRecipeFormState(toFormState(data));
 
   const submit = async () => {
     setGenericError(null);
@@ -64,14 +75,14 @@ export function useRecipeForm() {
         .filter((s) => s.text.trim() !== "")
         .map((s) => ({ text: s.text.trim() }));
 
-      await hestiaApi.createRecipe({
+      await hestiaApi.updateRecipe(data.id, {
         title: form.title.trim(),
         sourceUrl: form.sourceUrl.trim() || null,
         steps,
         ingredients,
         notes: form.notes.trim(),
       });
-      router.push("/hestia/recipes");
+      onSaved();
     } catch (error) {
       if (error instanceof ApiError) {
         setGenericError(error.message);

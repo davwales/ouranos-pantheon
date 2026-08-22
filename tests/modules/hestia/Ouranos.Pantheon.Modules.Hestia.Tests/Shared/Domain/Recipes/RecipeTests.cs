@@ -331,4 +331,285 @@ public sealed class RecipeTests
         result.State.SourceUrl.ShouldBe(sourceUrl);
         result.Events[0].ShouldBeOfType<RecipeCreated>().SourceUrl.ShouldBe(sourceUrl);
     }
+
+    private static Recipe ValidCurrent()
+    {
+        return Recipe
+            .Create(
+                Guid.NewGuid(),
+                "Original Title",
+                "https://example.com/original",
+                [new Step("Mix.")],
+                [new Ingredient(0m, "cup", "flour")],
+                "Original notes."
+            )
+            .State;
+    }
+
+    [Fact]
+    public void Update_WhenAllFieldsChanged_ShouldEmitEveryPerFieldEvent()
+    {
+        // Arrange
+        var current = ValidCurrent();
+        var newSteps = new List<Step> { new("Bake at 180°C."), new("Cool before serving.") };
+        var newIngredients = new List<Ingredient>
+        {
+            new(4m, "tablespoons", "granulated sugar"),
+            new(1m, "tablespoon", "ground cinnamon"),
+        };
+
+        // Act
+        var result = current.Update(
+            "Updated Title",
+            "https://example.com/updated",
+            newSteps,
+            newIngredients,
+            "Updated notes."
+        );
+
+        // Assert
+        result.State.Id.ShouldBe(current.Id);
+        result.State.RecipeId.ShouldBe(current.RecipeId);
+        result.State.CreatedAt.ShouldBe(current.CreatedAt);
+        result.State.Title.ShouldBe("Updated Title");
+        result.State.SourceUrl.ShouldBe("https://example.com/updated");
+        result.State.Steps.ShouldBe(newSteps);
+        result.State.Ingredients.ShouldBe(newIngredients);
+        result.State.Notes.ShouldBe("Updated notes.");
+
+        result.Events.Count.ShouldBe(5);
+
+        var titleChanged = result.Events[0].ShouldBeOfType<RecipeTitleChanged>();
+        titleChanged.Title.ShouldBe("Updated Title");
+
+        var sourceUrlChanged = result.Events[1].ShouldBeOfType<RecipeSourceUrlChanged>();
+        sourceUrlChanged.SourceUrl.ShouldBe("https://example.com/updated");
+
+        var stepsChanged = result.Events[2].ShouldBeOfType<RecipeStepsChanged>();
+        stepsChanged.Steps.ShouldBe(newSteps);
+
+        var ingredientsChanged = result.Events[3].ShouldBeOfType<RecipeIngredientsChanged>();
+        ingredientsChanged.Ingredients.ShouldBe(newIngredients);
+
+        var notesChanged = result.Events[4].ShouldBeOfType<RecipeNotesChanged>();
+        notesChanged.Notes.ShouldBe("Updated notes.");
+    }
+
+    [Fact]
+    public void Update_WhenOnlyTitleChanged_ShouldEmitSingleTitleChangedEvent()
+    {
+        // Arrange
+        var current = ValidCurrent();
+
+        // Act
+        var result = current.Update(
+            "Current Title",
+            current.SourceUrl,
+            current.Steps,
+            current.Ingredients,
+            current.Notes
+        );
+
+        // Assert
+        result.Events.Count.ShouldBe(1);
+        var @event = result.Events[0].ShouldBeOfType<RecipeTitleChanged>();
+        @event.Title.ShouldBe("Current Title");
+        result.State.Title.ShouldBe("Current Title");
+        result.State.Steps.ShouldBe(current.Steps);
+        result.State.Ingredients.ShouldBe(current.Ingredients);
+    }
+
+    [Fact]
+    public void Update_WhenNoFieldsChanged_ShouldNotEmitAnyEvents()
+    {
+        // Arrange
+        var current = ValidCurrent();
+
+        // Act
+        var result = current.Update(
+            current.Title,
+            current.SourceUrl,
+            current.Steps,
+            current.Ingredients,
+            current.Notes
+        );
+
+        // Assert
+        result.Events.ShouldBeEmpty();
+        result.State.ShouldBe(current);
+    }
+
+    [Fact]
+    public void Apply_WhenApplyingRecipeTitleChangedEvent_ShouldReturnUpdatedTitle()
+    {
+        // Arrange
+        var created = new RecipeCreated(
+            Guid.NewGuid(),
+            "Original Title",
+            null,
+            ValidSteps(),
+            ValidIngredients(),
+            "Original notes.",
+            DateTimeOffset.UtcNow
+        );
+        var current = Recipe.Create(created);
+        var @event = new RecipeTitleChanged("Updated Title");
+
+        // Act
+        var result = Recipe.Apply(@event, current);
+
+        // Assert
+        result.Id.ShouldBe(current.Id);
+        result.RecipeId.ShouldBe(current.RecipeId);
+        result.CreatedAt.ShouldBe(current.CreatedAt);
+        result.Title.ShouldBe("Updated Title");
+        result.SourceUrl.ShouldBe(current.SourceUrl);
+        result.Steps.ShouldBe(current.Steps);
+        result.Ingredients.ShouldBe(current.Ingredients);
+        result.Notes.ShouldBe(current.Notes);
+    }
+
+    [Fact]
+    public void Apply_WhenApplyingRecipeIngredientsChangedEvent_ShouldReturnUpdatedIngredients()
+    {
+        // Arrange
+        var created = new RecipeCreated(
+            Guid.NewGuid(),
+            "Original Title",
+            null,
+            ValidSteps(),
+            ValidIngredients(),
+            "Original notes.",
+            DateTimeOffset.UtcNow
+        );
+        var current = Recipe.Create(created);
+        var newIngredients = new List<Ingredient> { new(4m, "tablespoons", "granulated sugar") };
+        var @event = new RecipeIngredientsChanged(newIngredients);
+
+        // Act
+        var result = Recipe.Apply(@event, current);
+
+        // Assert
+        result.Id.ShouldBe(current.Id);
+        result.Ingredients.ShouldBe(newIngredients);
+        result.Title.ShouldBe(current.Title);
+        result.Steps.ShouldBe(current.Steps);
+        result.Notes.ShouldBe(current.Notes);
+    }
+
+    [Theory]
+    [InlineData(null!)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Update_WhenTitleIsNullOrWhitespace_ShouldThrowArgumentException(string? title)
+    {
+        // Arrange
+        var current = ValidCurrent();
+
+        // Act
+        Action act = () =>
+            current.Update(title!, "https://example.com", ValidSteps(), ValidIngredients(), "");
+
+        // Assert
+        act.ShouldThrow<ArgumentException>();
+    }
+
+    [Fact]
+    public void Update_WhenTitleExceedsMaxLength_ShouldThrowArgumentOutOfRangeException()
+    {
+        // Arrange
+        var current = ValidCurrent();
+        var title = new string('a', 201);
+
+        // Act
+        Action act = () => current.Update(title, null, ValidSteps(), ValidIngredients(), "");
+
+        // Assert
+        act.ShouldThrow<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
+    public void Update_WhenStepsIsNull_ShouldThrowArgumentNullException()
+    {
+        // Arrange
+        var current = ValidCurrent();
+
+        // Act
+        Action act = () => current.Update("Title", null, null!, ValidIngredients(), "");
+
+        // Assert
+        act.ShouldThrow<ArgumentNullException>();
+    }
+
+    [Fact]
+    public void Update_WhenStepsExceedsMaxCount_ShouldThrowArgumentOutOfRangeException()
+    {
+        // Arrange
+        var current = ValidCurrent();
+        var steps = Enumerable.Range(0, 101).Select(_ => new Step("Mix.")).ToList();
+
+        // Act
+        Action act = () => current.Update("Title", null, steps, ValidIngredients(), "");
+
+        // Assert
+        act.ShouldThrow<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
+    public void Update_WhenIngredientsIsNull_ShouldThrowArgumentNullException()
+    {
+        // Arrange
+        var current = ValidCurrent();
+
+        // Act
+        Action act = () => current.Update("Title", null, ValidSteps(), null!, "");
+
+        // Assert
+        act.ShouldThrow<ArgumentNullException>();
+    }
+
+    [Fact]
+    public void Update_WhenIngredientsExceedsMaxCount_ShouldThrowArgumentOutOfRangeException()
+    {
+        // Arrange
+        var current = ValidCurrent();
+        var ingredients = Enumerable
+            .Range(0, 101)
+            .Select(_ => new Ingredient(0m, "cups", "flour"))
+            .ToList();
+
+        // Act
+        Action act = () => current.Update("Title", null, ValidSteps(), ingredients, "");
+
+        // Assert
+        act.ShouldThrow<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
+    public void Update_WhenSourceUrlExceedsMaxLength_ShouldThrowArgumentOutOfRangeException()
+    {
+        // Arrange
+        var current = ValidCurrent();
+        var sourceUrl = new string('a', 2_001);
+
+        // Act
+        Action act = () => current.Update("Title", sourceUrl, ValidSteps(), ValidIngredients(), "");
+
+        // Assert
+        act.ShouldThrow<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
+    public void Update_WhenNotesExceedsMaxLength_ShouldThrowArgumentOutOfRangeException()
+    {
+        // Arrange
+        var current = ValidCurrent();
+        var notes = new string('a', 10_001);
+
+        // Act
+        Action act = () => current.Update("Title", null, ValidSteps(), ValidIngredients(), notes);
+
+        // Assert
+        act.ShouldThrow<ArgumentOutOfRangeException>();
+    }
 }

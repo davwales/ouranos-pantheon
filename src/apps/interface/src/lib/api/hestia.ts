@@ -5,6 +5,8 @@ import type {
   CreateRecipeResponse,
   Recipe,
   RecipeSummary,
+  UpdateRecipeInput,
+  UpdateRecipeResponse,
 } from "./hestia-types";
 
 export type {
@@ -14,6 +16,8 @@ export type {
   Recipe,
   RecipeSummary,
   Step,
+  UpdateRecipeInput,
+  UpdateRecipeResponse,
 } from "./hestia-types";
 
 export type GetAllRecipesParams = {
@@ -33,4 +37,7 @@ export const hestiaApi = {
 
   createRecipe: (input: CreateRecipeInput) =>
     api.post<CreateRecipeResponse>("/api/hestia/recipes", input),
+
+  updateRecipe: (recipeId: string, input: UpdateRecipeInput) =>
+    api.put<UpdateRecipeResponse>(`/api/hestia/recipes/${recipeId}`, input),
 };

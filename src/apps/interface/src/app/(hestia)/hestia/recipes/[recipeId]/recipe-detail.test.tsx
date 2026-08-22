@@ -12,6 +12,7 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/lib/api/hestia", () => ({
   hestiaApi: {
     getRecipe: vi.fn(),
+    updateRecipe: vi.fn(),
   },
 }));
 
@@ -80,7 +81,7 @@ describe("RecipeDetailPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("toggles edit mode when Edit button clicked", async () => {
+  it("toggles edit mode and shows the pre-filled edit form when Edit button clicked", async () => {
     vi.mocked(hestiaApi.getRecipe).mockResolvedValueOnce(mockRecipe());
 
     render(<RecipeDetailPage />);
@@ -90,8 +91,13 @@ describe("RecipeDetailPage", () => {
     fireEvent.click(screen.getByRole("button", { name: /^edit$/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/is not yet available/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/title/i)).toHaveValue("Chocolate Cake");
     });
+
+    expect(
+      screen.getByLabelText(/name for ingredient 1/i),
+    ).toHaveValue("granulated sugar");
+    expect(screen.getByRole("button", { name: /^save$/i })).toBeInTheDocument();
   });
 
   it("opens Version History dialog when button clicked", async () => {

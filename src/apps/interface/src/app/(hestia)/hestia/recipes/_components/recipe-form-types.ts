@@ -5,6 +5,7 @@ export type IngredientFormRow = {
 };
 
 export type InstructionStepFormRow = {
+  id: string;
   text: string;
 };
 
