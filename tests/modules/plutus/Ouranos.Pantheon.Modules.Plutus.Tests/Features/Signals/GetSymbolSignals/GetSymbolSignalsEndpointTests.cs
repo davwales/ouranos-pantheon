@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSymbolSignals;
 using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSymbolSignals.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Signals.GetSymbolSignals;

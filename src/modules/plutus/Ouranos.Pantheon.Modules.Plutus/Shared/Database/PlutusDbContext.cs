@@ -9,7 +9,7 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.SymbolGroups;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 

@@ -5,7 +5,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Ffxiv.Models;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Ffxiv.XivApi;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
-using Ouranos.Pantheon.Modules.Shared.WebSockets.WebSocketClients;
+using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.WebSocketClients;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.DataLoaders.Ffxiv;
 

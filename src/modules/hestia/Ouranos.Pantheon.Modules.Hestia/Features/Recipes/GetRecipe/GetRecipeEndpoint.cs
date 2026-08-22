@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetRecipe.Schemas;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetRecipe;

@@ -9,13 +9,13 @@ using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits;
-using Ouranos.Pantheon.Modules.Shared.Domain;
-using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
-using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning.Dtos;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
-using MessageDto = Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning.Dtos.MessageDto;
+using MessageDto = Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos.MessageDto;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.Conversations.CreateConversation;
 

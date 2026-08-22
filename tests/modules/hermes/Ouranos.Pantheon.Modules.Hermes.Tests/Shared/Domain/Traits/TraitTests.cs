@@ -1,5 +1,5 @@
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Tests.Shared.Domain.Traits;

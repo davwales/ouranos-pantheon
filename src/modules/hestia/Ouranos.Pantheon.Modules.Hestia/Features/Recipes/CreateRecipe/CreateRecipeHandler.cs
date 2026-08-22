@@ -4,8 +4,8 @@ using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.CreateRecipe.Schemas;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Database;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes.ValueTypes;
-using Ouranos.Pantheon.Modules.Shared.Application;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
 
 namespace Ouranos.Pantheon.Modules.Hestia.Features.Recipes.CreateRecipe;
 

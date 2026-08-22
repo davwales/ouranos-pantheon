@@ -3,8 +3,8 @@ using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetRecipe.Schemas;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Database;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes;
-using Ouranos.Pantheon.Modules.Shared.Application;
-using Ouranos.Pantheon.Modules.Shared.Extensions;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetRecipe;
 

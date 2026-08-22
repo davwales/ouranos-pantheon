@@ -13,6 +13,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="CsvHelper" />
+    <PackageReference Include="TickerQ" />
     <PackageReference Include="WolverineFx" />
     <PackageReference Include="WolverineFx.RabbitMq" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
@@ -21,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Ouranos.Pantheon.Modules.Shared\Ouranos.Pantheon.Modules.Shared.csproj" />
+    <ProjectReference Include="..\..\shared\Ouranos.Pantheon.Modules.Shared.Contract\Ouranos.Pantheon.Modules.Shared.Contract.csproj" />
   </ItemGroup>
 
   <ItemGroup>

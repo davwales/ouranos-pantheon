@@ -2,9 +2,9 @@ using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetVolumeHeatmap.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
-using Ouranos.Pantheon.Modules.Shared.Application;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Extensions;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Querying;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres.Extensions;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres.Querying;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetVolumeHeatmap;
 

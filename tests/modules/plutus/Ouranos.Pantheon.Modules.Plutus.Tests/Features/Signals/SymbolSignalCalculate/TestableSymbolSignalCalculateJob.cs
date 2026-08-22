@@ -6,7 +6,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Signals.SymbolSignalCalculate;
 using Ouranos.Pantheon.Modules.Plutus.Features.Signals.SymbolSignalCalculate.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Functions;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres.Functions;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Signals.SymbolSignalCalculate;
 

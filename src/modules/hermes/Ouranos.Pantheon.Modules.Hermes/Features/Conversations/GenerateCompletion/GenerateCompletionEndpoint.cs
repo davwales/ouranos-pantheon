@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion.Schemas;
-using Ouranos.Pantheon.Modules.Shared.API;
+using Ouranos.Pantheon.Modules.Shared.Contract.API;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion;

@@ -3,7 +3,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Models.GetAvailableModels;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.GetAvailableModels.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.AvailableModels;
-using Ouranos.Pantheon.Modules.Shared.Extensions;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetAllRecipes;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetAllRecipes.Schemas;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Hestia.Tests.Features.Recipes.GetAllRecipes;

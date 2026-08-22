@@ -2,8 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Positions;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Converters;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Extensions;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres.Converters;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Database.ModelConfigurations;
 

@@ -1,6 +1,6 @@
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Inputs;
-using Ouranos.Pantheon.Modules.Shared.Algorithms.Genetic;
+using Ouranos.Pantheon.Modules.Shared.Contract.Algorithms.Genetic;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization.Chromosomes;
 

@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Stocks;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Stocks.Messages;
-using Ouranos.Pantheon.Modules.Shared.WebSockets.WebSocketClients;
+using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.WebSocketClients;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.DataLoaders.Stocks;
 

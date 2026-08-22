@@ -3,8 +3,8 @@ using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Ffxiv;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Ffxiv.Messages;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Ffxiv.XivApi;
-using Ouranos.Pantheon.Modules.Shared.WebSockets;
-using Ouranos.Pantheon.Modules.Shared.WebSockets.WebSocketClients;
+using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets;
+using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.WebSocketClients;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.DataLoaders.Ffxiv;
 

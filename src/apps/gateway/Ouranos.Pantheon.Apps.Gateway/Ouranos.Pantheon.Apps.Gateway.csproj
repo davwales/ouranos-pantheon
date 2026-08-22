@@ -20,5 +20,6 @@
     <ProjectReference Include="..\..\..\modules\hermes\Ouranos.Pantheon.Modules.Hermes\Ouranos.Pantheon.Modules.Hermes.csproj" />
     <ProjectReference Include="..\..\..\modules\hestia\Ouranos.Pantheon.Modules.Hestia\Ouranos.Pantheon.Modules.Hestia.csproj" />
     <ProjectReference Include="..\..\..\modules\plutus\Ouranos.Pantheon.Modules.Plutus\Ouranos.Pantheon.Modules.Plutus.csproj" />
+    <ProjectReference Include="..\..\..\modules\shared\Ouranos.Pantheon.Modules.Shared\Ouranos.Pantheon.Modules.Shared.csproj" />
   </ItemGroup>
 </Project>

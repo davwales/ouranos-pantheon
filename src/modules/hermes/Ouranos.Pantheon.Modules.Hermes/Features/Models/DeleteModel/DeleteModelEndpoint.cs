@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.DeleteModel.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Models.DeleteModel;

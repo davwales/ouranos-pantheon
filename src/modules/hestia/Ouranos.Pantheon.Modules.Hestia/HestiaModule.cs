@@ -6,8 +6,8 @@ using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetAllRecipes;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetRecipe;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Database;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes;
-using Ouranos.Pantheon.Modules.Shared;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres;
+using Ouranos.Pantheon.Modules.Shared.Contract;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres;
 
 namespace Ouranos.Pantheon.Modules.Hestia;
 

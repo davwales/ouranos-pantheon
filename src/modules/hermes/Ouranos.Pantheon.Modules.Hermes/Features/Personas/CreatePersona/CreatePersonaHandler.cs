@@ -4,8 +4,8 @@ using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Hermes.Features.Personas.CreatePersona.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
-using Ouranos.Pantheon.Modules.Shared.Application;
-using Ouranos.Pantheon.Modules.Shared.Extensions;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Personas.CreatePersona;
 
