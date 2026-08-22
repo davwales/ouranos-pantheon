@@ -41,3 +41,15 @@ export type CreateRecipeInput = {
 export type CreateRecipeResponse = {
   id: string;
 };
+
+export type UpdateRecipeInput = {
+  title: string;
+  sourceUrl: string | null;
+  steps: Step[];
+  ingredients: IngredientInput[];
+  notes: string;
+};
+
+export type UpdateRecipeResponse = {
+  id: string;
+};
