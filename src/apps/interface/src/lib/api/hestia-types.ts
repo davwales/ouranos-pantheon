@@ -53,3 +53,22 @@ export type UpdateRecipeInput = {
 export type UpdateRecipeResponse = {
   id: string;
 };
+
+export type RecipeHistoryEvent = {
+  version: number;
+  eventType: string;
+  timestamp: string;
+};
+
+export type RecipeHistoryResponse = {
+  recipeId: string;
+  events: RecipeHistoryEvent[];
+};
+
+export type RevertRecipeInput = {
+  targetVersion: number;
+};
+
+export type RevertRecipeResponse = {
+  id: string;
+};

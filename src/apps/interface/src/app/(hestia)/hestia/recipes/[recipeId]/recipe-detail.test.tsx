@@ -13,6 +13,11 @@ vi.mock("@/lib/api/hestia", () => ({
   hestiaApi: {
     getRecipe: vi.fn(),
     updateRecipe: vi.fn(),
+    getRecipeHistory: vi.fn().mockResolvedValue({
+      recipeId: "test-recipe-1",
+      events: [],
+    }),
+    revertRecipe: vi.fn(),
   },
 }));
 
@@ -100,6 +105,22 @@ describe("RecipeDetailPage", () => {
     expect(screen.getByRole("button", { name: /^save$/i })).toBeInTheDocument();
   });
 
+  it("does not fetch version history until the dialog is opened", async () => {
+    vi.mocked(hestiaApi.getRecipe).mockResolvedValueOnce(mockRecipe());
+
+    render(<RecipeDetailPage />);
+
+    await screen.findByText("Chocolate Cake");
+
+    expect(hestiaApi.getRecipeHistory).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: /version history/i }));
+
+    await waitFor(() => {
+      expect(hestiaApi.getRecipeHistory).toHaveBeenCalledTimes(1);
+    });
+  });
+
   it("opens Version History dialog when button clicked", async () => {
     vi.mocked(hestiaApi.getRecipe).mockResolvedValueOnce(mockRecipe());
 
@@ -112,7 +133,7 @@ describe("RecipeDetailPage", () => {
     await waitFor(() => {
       expect(screen.getByTestId("dialog-content")).toBeInTheDocument();
       expect(
-        screen.getByText(/version history timeline/i),
+        screen.getByText(/no version history yet/i),
       ).toBeInTheDocument();
     });
   });

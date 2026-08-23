@@ -4,7 +4,10 @@ import type {
   CreateRecipeInput,
   CreateRecipeResponse,
   Recipe,
+  RecipeHistoryResponse,
   RecipeSummary,
+  RevertRecipeInput,
+  RevertRecipeResponse,
   UpdateRecipeInput,
   UpdateRecipeResponse,
 } from "./hestia-types";
@@ -14,7 +17,11 @@ export type {
   CreateRecipeResponse,
   Ingredient,
   Recipe,
+  RecipeHistoryEvent,
+  RecipeHistoryResponse,
   RecipeSummary,
+  RevertRecipeInput,
+  RevertRecipeResponse,
   Step,
   UpdateRecipeInput,
   UpdateRecipeResponse,
@@ -40,4 +47,10 @@ export const hestiaApi = {
 
   updateRecipe: (recipeId: string, input: UpdateRecipeInput) =>
     api.put<UpdateRecipeResponse>(`/api/hestia/recipes/${recipeId}`, input),
+
+  getRecipeHistory: (recipeId: string) =>
+    api.get<RecipeHistoryResponse>(`/api/hestia/recipes/${recipeId}/history`),
+
+  revertRecipe: (recipeId: string, input: RevertRecipeInput) =>
+    api.post<RevertRecipeResponse>(`/api/hestia/recipes/${recipeId}/revert`, input),
 };

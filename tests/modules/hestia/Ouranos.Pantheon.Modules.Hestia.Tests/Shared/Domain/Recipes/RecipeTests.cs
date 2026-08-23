@@ -612,4 +612,91 @@ public sealed class RecipeTests
         // Assert
         act.ShouldThrow<ArgumentOutOfRangeException>();
     }
+
+    [Fact]
+    public void Apply_WhenApplyingRecipeRevertedEvent_ShouldRestoreHistoricalState()
+    {
+        // Arrange
+        var created = new RecipeCreated(
+            Guid.NewGuid(),
+            "Original Title",
+            "https://example.com/original",
+            ValidSteps(),
+            ValidIngredients(),
+            "Original notes.",
+            DateTimeOffset.UtcNow
+        );
+        var current = Recipe.Apply(new RecipeTitleChanged("Updated Title"), Recipe.Create(created));
+        var @event = new RecipeReverted(
+            2L,
+            "Original Title",
+            "https://example.com/original",
+            ValidSteps(),
+            ValidIngredients(),
+            "Original notes.",
+            DateTimeOffset.UtcNow
+        );
+
+        // Act
+        var result = Recipe.Apply(@event, current);
+
+        // Assert
+        result.Id.ShouldBe(current.Id);
+        result.RecipeId.ShouldBe(current.RecipeId);
+        result.CreatedAt.ShouldBe(current.CreatedAt);
+        result.Title.ShouldBe("Original Title");
+        result.SourceUrl.ShouldBe("https://example.com/original");
+        result.Steps.ShouldBe(ValidSteps());
+        result.Ingredients.ShouldBe(ValidIngredients());
+        result.Notes.ShouldBe("Original notes.");
+    }
+
+    [Fact]
+    public void Revert_WhenRevertingToHistoricalState_ShouldEmitRecipeRevertedEvent()
+    {
+        // Arrange
+        var current = Recipe
+            .Create(
+                Guid.NewGuid(),
+                "Current Title",
+                "https://example.com/current",
+                ValidSteps(),
+                ValidIngredients(),
+                "Current notes."
+            )
+            .State;
+        var historical = Recipe
+            .Create(
+                Guid.NewGuid(),
+                "Old Title",
+                null,
+                ValidSteps(),
+                ValidIngredients(),
+                "Old notes."
+            )
+            .State;
+        var targetVersion = 2L;
+
+        // Act
+        var result = current.Revert(targetVersion, historical, DateTimeOffset.UtcNow);
+
+        // Assert
+        result.State.Id.ShouldBe(current.Id);
+        result.State.RecipeId.ShouldBe(current.RecipeId);
+        result.State.CreatedAt.ShouldBe(current.CreatedAt);
+        result.State.Title.ShouldBe("Old Title");
+        result.State.SourceUrl.ShouldBeNull();
+        result.State.Steps.ShouldBe(historical.Steps);
+        result.State.Ingredients.ShouldBe(historical.Ingredients);
+        result.State.Notes.ShouldBe("Old notes.");
+
+        var @event = result.Events.ShouldHaveSingleItem().ShouldBeOfType<RecipeReverted>();
+        @event.TargetVersion.ShouldBe(targetVersion);
+        @event.Title.ShouldBe("Old Title");
+        @event.SourceUrl.ShouldBeNull();
+        @event.Steps.ShouldBe(historical.Steps);
+        @event.Ingredients.ShouldBe(historical.Ingredients);
+        @event.Notes.ShouldBe("Old notes.");
+        @event.RevertedAt.ShouldBeGreaterThan(DateTimeOffset.MinValue);
+    }
 }

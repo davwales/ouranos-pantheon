@@ -12,6 +12,7 @@ export type RecipeHeaderProps = {
   isEditing: boolean;
   onEdit: () => void;
   onCancel: () => void;
+  onReverted: () => void;
 };
 
 export function RecipeHeader({
@@ -19,6 +20,7 @@ export function RecipeHeader({
   isEditing,
   onEdit,
   onCancel,
+  onReverted,
 }: RecipeHeaderProps) {
   const [historyOpen, setHistoryOpen] = useState(false);
 
@@ -68,11 +70,14 @@ export function RecipeHeader({
         )}
       </div>
     </div>
-    <VersionHistoryDialog
-      recipeId={data.id}
-      open={historyOpen}
-      onOpenChange={setHistoryOpen}
-    />
+    {historyOpen ? (
+      <VersionHistoryDialog
+        recipeId={data.id}
+        open={historyOpen}
+        onOpenChange={setHistoryOpen}
+        onReverted={onReverted}
+      />
+    ) : null}
     </>
   );
 }
