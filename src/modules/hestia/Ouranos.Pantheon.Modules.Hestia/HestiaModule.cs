@@ -1,16 +1,21 @@
 using JasperFx.Events.Projections;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.CreateRecipe;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetAllRecipes;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetRecipe;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetRecipeHistory;
+using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.ImportRecipe;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.RevertRecipe;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.UpdateRecipe;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Database;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes;
+using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes.Events;
 using Ouranos.Pantheon.Modules.Shared.Contract;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres;
+using Wolverine;
+using Wolverine.RabbitMQ;
 
 namespace Ouranos.Pantheon.Modules.Hestia;
 
@@ -50,5 +55,21 @@ public sealed class HestiaModule : IPantheonModule
         UpdateRecipeEndpoint.Map(app);
         GetRecipeHistoryEndpoint.Map(app);
         RevertRecipeEndpoint.Map(app);
+        ImportRecipeEndpoint.Map(app);
+    }
+
+    public void ConfigureWolverine(WolverineOptions opts, IConfiguration configuration)
+    {
+        opts.PublishMessage<ImportRecipeRequested>()
+            .ToRabbitExchange(
+                ImportRecipeRequested.Exchange,
+                e =>
+                {
+                    e.BindQueue(ImportRecipeRequested.Queue);
+                }
+            );
+
+        opts.ListenToRabbitQueue(ImportRecipeRequested.Queue)
+            .DeadLetterQueueing(new DeadLetterQueue(ImportRecipeRequested.DeadLetterQueue));
     }
 }
