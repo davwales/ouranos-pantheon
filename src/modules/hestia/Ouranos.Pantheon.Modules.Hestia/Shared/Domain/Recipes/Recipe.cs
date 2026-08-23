@@ -155,6 +155,31 @@ public sealed record Recipe : BaseEventSourcedEntity
     }
 
     /// <summary>
+    /// Command factory: reverts the recipe to a historical state by emitting a
+    /// <see cref="RecipeReverted"/> event carrying the state to restore. The
+    /// historical state originates from a Marten live aggregation at the target
+    /// version, so it was already valid when first written and is not re-validated.
+    /// </summary>
+    public OperationResult<Recipe> Revert(
+        long targetVersion,
+        Recipe historical,
+        DateTimeOffset revertedAt
+    )
+    {
+        var @event = new RecipeReverted(
+            targetVersion,
+            historical.Title,
+            historical.SourceUrl,
+            historical.Steps,
+            historical.Ingredients,
+            historical.Notes,
+            revertedAt
+        );
+
+        return OperationResult<Recipe>.Of(Apply(@event, this), @event);
+    }
+
+    /// <summary>
     /// Marten convention: evolve the aggregate by applying a
     /// <see cref="RecipeCreated"/> event to the current state (functional fold).
     /// </summary>
@@ -220,5 +245,22 @@ public sealed record Recipe : BaseEventSourcedEntity
     public static Recipe Apply(RecipeNotesChanged @event, Recipe current)
     {
         return current with { Notes = @event.Notes };
+    }
+
+    /// <summary>
+    /// Marten convention: evolve the aggregate by applying a
+    /// <see cref="RecipeReverted"/> event to the current state
+    /// (functional fold). No validation - events are historical truth.
+    /// </summary>
+    public static Recipe Apply(RecipeReverted @event, Recipe current)
+    {
+        return current with
+        {
+            Title = @event.Title,
+            SourceUrl = @event.SourceUrl,
+            Steps = @event.Steps,
+            Ingredients = @event.Ingredients,
+            Notes = @event.Notes,
+        };
     }
 }

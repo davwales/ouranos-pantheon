@@ -43,6 +43,10 @@ export default function RecipeDetailPage() {
         isEditing={isEditing}
         onEdit={() => setIsEditing(true)}
         onCancel={() => setIsEditing(false)}
+        onReverted={() => {
+          reexecute();
+          setIsEditing(false);
+        }}
       />
       {isEditing ? (
         <RecipeEditView

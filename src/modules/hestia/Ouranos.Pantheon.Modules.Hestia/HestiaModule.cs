@@ -4,6 +4,8 @@ using Microsoft.Extensions.Hosting;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.CreateRecipe;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetAllRecipes;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetRecipe;
+using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetRecipeHistory;
+using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.RevertRecipe;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.UpdateRecipe;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Database;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes;
@@ -46,5 +48,7 @@ public sealed class HestiaModule : IPantheonModule
         CreateRecipeEndpoint.Map(app);
         GetRecipeEndpoint.Map(app);
         UpdateRecipeEndpoint.Map(app);
+        GetRecipeHistoryEndpoint.Map(app);
+        RevertRecipeEndpoint.Map(app);
     }
 }
