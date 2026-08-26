@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/shared/typography";
-import { History, Pencil, X } from "lucide-react";
+import { History, Pencil, RefreshCw, X } from "lucide-react";
 import type { Recipe } from "@/lib/api/hestia-types";
 import { useState } from "react";
 import { VersionHistoryDialog } from "./version-history-dialog";
@@ -13,6 +13,8 @@ export type RecipeHeaderProps = {
   onEdit: () => void;
   onCancel: () => void;
   onReverted: () => void;
+  onReimport?: () => void;
+  isReimporting?: boolean;
 };
 
 export function RecipeHeader({
@@ -21,8 +23,16 @@ export function RecipeHeader({
   onEdit,
   onCancel,
   onReverted,
+  onReimport,
+  isReimporting = false,
 }: RecipeHeaderProps) {
   const [historyOpen, setHistoryOpen] = useState(false);
+  const reimportDisabled =
+    isReimporting || data.importStatus === "Importing";
+  const editDisabled =
+    isReimporting ||
+    data.importStatus === "Importing" ||
+    data.importStatus === "Failed";
 
   return (
     <>
@@ -52,6 +62,18 @@ export function RecipeHeader({
           <History className="size-4" />
           Version History
         </Button>
+        {data.sourceUrl && onReimport && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full sm:w-auto"
+            onClick={onReimport}
+            disabled={reimportDisabled}
+          >
+            <RefreshCw className="size-4" />
+            {isReimporting ? "Reimporting..." : "Reimport"}
+          </Button>
+        )}
         {isEditing ? (
           <Button
             variant="outline"
@@ -63,7 +85,12 @@ export function RecipeHeader({
             Cancel
           </Button>
         ) : (
-          <Button size="sm" className="w-full sm:w-auto" onClick={onEdit}>
+          <Button
+            size="sm"
+            className="w-full sm:w-auto"
+            onClick={onEdit}
+            disabled={editDisabled}
+          >
             <Pencil className="size-4" />
             Edit
           </Button>

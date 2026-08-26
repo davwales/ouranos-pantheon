@@ -2,13 +2,16 @@
 
 import { NotFoundCard } from "@/components/shared/not-found-card";
 import { useApi } from "@/hooks/use-api";
+import useInterval from "@/hooks/use-interval";
 import { hestiaApi } from "@/lib/api/hestia";
 import type { Recipe } from "@/lib/api/hestia-types";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { RecipeDetailSkeleton } from "./_components/recipe-detail-skeleton";
 import { RecipeEditView } from "./_components/recipe-edit-view";
 import { RecipeHeader } from "./_components/recipe-header";
+import { RecipeImportFailedView } from "./_components/recipe-import-failed-view";
+import { RecipeImportingView } from "./_components/recipe-importing-view";
 import { RecipeReadOnlyView } from "./_components/recipe-read-only-view";
 
 export default function RecipeDetailPage() {
@@ -18,6 +21,30 @@ export default function RecipeDetailPage() {
     [recipeId],
   );
   const [isEditing, setIsEditing] = useState(false);
+  const [isReimporting, setIsReimporting] = useState(false);
+  const [reimportError, setReimportError] = useState<string | null>(null);
+
+  const isImporting = recipe.data?.importStatus === "Importing";
+  useInterval(
+    useCallback(() => reexecute(), [reexecute]),
+    isImporting ? 3000 : null,
+  );
+
+  const handleReimport = async () => {
+    setIsReimporting(true);
+    setReimportError(null);
+    try {
+      await hestiaApi.reimportRecipe(recipeId);
+      setIsEditing(false);
+      reexecute();
+    } catch (err) {
+      setReimportError(
+        err instanceof Error ? err.message : "Failed to reimport recipe",
+      );
+    } finally {
+      setIsReimporting(false);
+    }
+  };
 
   if (recipe.status === "error" && !recipe.data) {
     return (
@@ -47,8 +74,26 @@ export default function RecipeDetailPage() {
           reexecute();
           setIsEditing(false);
         }}
+        onReimport={handleReimport}
+        isReimporting={isReimporting}
       />
-      {isEditing ? (
+      {reimportError && (
+        <div
+          role="alert"
+          className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
+        >
+          {reimportError}
+        </div>
+      )}
+      {data.importStatus === "Importing" ? (
+        <RecipeImportingView />
+      ) : data.importStatus === "Failed" ? (
+        <RecipeImportFailedView
+          errorMessage={data.importFailureReason}
+          onReimport={handleReimport}
+          isReimporting={isReimporting}
+        />
+      ) : isEditing ? (
         <RecipeEditView
           data={data}
           onCancel={() => setIsEditing(false)}

@@ -3,9 +3,12 @@ import type { PagedResponse } from "@/lib/api-client";
 import type {
   CreateRecipeInput,
   CreateRecipeResponse,
+  ImportRecipeInput,
+  ImportRecipeResponse,
   Recipe,
   RecipeHistoryResponse,
   RecipeSummary,
+  ReimportRecipeResponse,
   RevertRecipeInput,
   RevertRecipeResponse,
   UpdateRecipeInput,
@@ -15,11 +18,15 @@ import type {
 export type {
   CreateRecipeInput,
   CreateRecipeResponse,
+  ImportRecipeInput,
+  ImportRecipeResponse,
   Ingredient,
   Recipe,
   RecipeHistoryEvent,
   RecipeHistoryResponse,
+  RecipeImportStatus,
   RecipeSummary,
+  ReimportRecipeResponse,
   RevertRecipeInput,
   RevertRecipeResponse,
   Step,
@@ -44,6 +51,14 @@ export const hestiaApi = {
 
   createRecipe: (input: CreateRecipeInput) =>
     api.post<CreateRecipeResponse>("/api/hestia/recipes", input),
+
+  importRecipe: (input: ImportRecipeInput) =>
+    api.post<ImportRecipeResponse>("/api/hestia/recipes/import", input),
+
+  reimportRecipe: (recipeId: string) =>
+    api.post<ReimportRecipeResponse>(
+      `/api/hestia/recipes/${recipeId}/reimport`,
+    ),
 
   updateRecipe: (recipeId: string, input: UpdateRecipeInput) =>
     api.put<UpdateRecipeResponse>(`/api/hestia/recipes/${recipeId}`, input),

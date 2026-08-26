@@ -23,6 +23,8 @@ function mockRecipe(overrides: Partial<Recipe> = {}): Recipe {
     ],
     notes: "Best served warm.",
     createdAt: "2025-01-01T00:00:00.000Z",
+    importStatus: "None",
+    importFailureReason: null,
     ...overrides,
   };
 }
