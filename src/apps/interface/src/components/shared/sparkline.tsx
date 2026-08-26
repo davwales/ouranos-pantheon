@@ -21,6 +21,18 @@ export type SparklineProps = {
   colorNegative?: string;
 };
 
+const CHART_HEIGHT = 48;
+const PLOT_INSET = 4;
+
+export function resolveValueColor(
+  value: number,
+  colorPositive: string,
+  colorZero: string,
+  colorNegative: string,
+) {
+  return value > 0 ? colorPositive : value < 0 ? colorNegative : colorZero;
+}
+
 export function Sparkline({
   data: rawData,
   domain = [-1, 1],
@@ -66,19 +78,21 @@ function SparklineChart({
   const lastIndex = data.length - 1;
 
   return (
-    <ResponsiveContainer width="100%" height={48}>
+    <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
       <LineChart
         data={data}
-        margin={{ top: 4, right: 2, left: 2, bottom: 4 }}
+        margin={{ top: PLOT_INSET, right: 2, left: 2, bottom: PLOT_INSET }}
       >
         <defs>
+          {/* userSpaceOnUse pins the gradient to the plot area so colors follow
+              the value domain instead of the line's own bounding box. */}
           <linearGradient
             id={gradientId}
             gradientUnits="userSpaceOnUse"
             x1="0"
             x2="0"
-            y1="4"
-            y2="44"
+            y1={PLOT_INSET}
+            y2={CHART_HEIGHT - PLOT_INSET}
           >
             <stop offset="0%" stopColor={colorPositive} />
             <stop offset="50%" stopColor={colorZero} />
@@ -146,12 +160,12 @@ function SparklineDot({
     return null;
   }
 
-  const fill =
-    payload.value > 0
-      ? colorPositive
-      : payload.value < 0
-        ? colorNegative
-        : colorZero;
+  const fill = resolveValueColor(
+    payload.value,
+    colorPositive,
+    colorZero,
+    colorNegative,
+  );
 
   return (
     <circle
@@ -184,12 +198,12 @@ function SparklineTooltip({
 
   const point = payload[0].payload;
   const date = new Date(point.timestamp);
-  const valueColor =
-    point.value > 0
-      ? colorPositive
-      : point.value < 0
-        ? colorNegative
-        : colorZero;
+  const valueColor = resolveValueColor(
+    point.value,
+    colorPositive,
+    colorZero,
+    colorNegative,
+  );
 
   return (
     <div className="rounded-lg border border-border/50 bg-background px-2 py-1 text-xs shadow-xl">
