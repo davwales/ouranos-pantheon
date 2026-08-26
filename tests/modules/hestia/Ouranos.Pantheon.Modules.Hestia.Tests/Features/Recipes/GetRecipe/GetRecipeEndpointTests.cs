@@ -25,7 +25,9 @@ public sealed class GetRecipeEndpointTests
             [new StepResponse("Mix and bake.")],
             [new IngredientResponse(4m, "tablespoons", "granulated sugar")],
             "Best served warm.",
-            DateTimeOffset.UtcNow
+            DateTimeOffset.UtcNow,
+            RecipeImportStatus.Imported,
+            null
         );
 
         _bus.InvokeAsync<GetRecipeResponse>(Arg.Any<object>(), Arg.Any<CancellationToken>())

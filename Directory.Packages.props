@@ -37,6 +37,7 @@
       Version="10.0.5"
     />
     <PackageVersion Include="Marten" Version="9.9.1" />
+    <PackageVersion Include="Microsoft.Security.AntiSSRF" Version="1.0.0" />
     <PackageVersion Include="MongoDB.Bson" Version="3.8.0" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />

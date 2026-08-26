@@ -10,5 +10,7 @@ public sealed record GetRecipeResponse(
     IReadOnlyList<StepResponse> Steps,
     IReadOnlyList<IngredientResponse> Ingredients,
     string Notes,
-    DateTimeOffset CreatedAt
+    DateTimeOffset CreatedAt,
+    RecipeImportStatus ImportStatus,
+    string? ImportFailureReason
 );

@@ -4,6 +4,7 @@ using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetRecipe;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetRecipe.Schemas;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Database;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes;
+using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes.Events;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes.ValueTypes;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 
@@ -64,6 +65,8 @@ public sealed class GetRecipeHandlerTests
         result.Steps[0].Text.ShouldBe("Mix and bake.");
         result.Notes.ShouldBe(recipe.Notes);
         result.CreatedAt.ShouldBe(recipe.CreatedAt);
+        result.ImportStatus.ShouldBe(recipe.ImportStatus);
+        result.ImportFailureReason.ShouldBe(recipe.ImportFailureReason);
         result.Ingredients.Count.ShouldBe(2);
         result.Ingredients[0].Quantity.ShouldBe(4m);
         result.Ingredients[0].Unit.ShouldBe("tablespoons");
@@ -71,6 +74,33 @@ public sealed class GetRecipeHandlerTests
         result.Ingredients[1].Quantity.ShouldBe(1m);
         result.Ingredients[1].Unit.ShouldBe("tablespoon");
         result.Ingredients[1].Name.ShouldBe("ground cinnamon");
+    }
+
+    [Fact]
+    public async Task Handle_WhenImportFailed_ShouldReturnFailedStatusAndReason()
+    {
+        // Arrange
+        var id = Guid.NewGuid();
+        var recipe = Recipe.Apply(
+            new RecipeImportFailed(
+                "The page contains no usable recipe metadata.",
+                DateTimeOffset.UtcNow
+            ),
+            BuildRecipe(id)
+        );
+        _session
+            .LoadAsync<Recipe>(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<Recipe?>(recipe));
+
+        var query = new GetRecipeInput(new Id<Recipe>(id.ToString()));
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.ImportStatus.ShouldBe(RecipeImportStatus.Failed);
+        result.ImportFailureReason.ShouldBe("The page contains no usable recipe metadata.");
     }
 
     [Fact]

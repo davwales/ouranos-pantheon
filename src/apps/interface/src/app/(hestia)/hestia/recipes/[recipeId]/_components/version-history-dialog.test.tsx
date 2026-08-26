@@ -93,16 +93,16 @@ describe("VersionHistoryDialog", () => {
 
     renderDialog();
 
-    await screen.findByText("Title Updated");
+    await screen.findByText("Title Changed");
 
     const rows = screen.getAllByRole("listitem");
     expect(rows).toHaveLength(2);
 
-    expect(within(rows[0]).getByText("Title Updated")).toBeInTheDocument();
+    expect(within(rows[0]).getByText("Title Changed")).toBeInTheDocument();
     expect(within(rows[0]).getByText("v2")).toBeInTheDocument();
     expect(within(rows[0]).getByText("Current")).toBeInTheDocument();
 
-    expect(within(rows[1]).getByText("Recipe Created")).toBeInTheDocument();
+    expect(within(rows[1]).getByText("Created")).toBeInTheDocument();
     expect(within(rows[1]).getByText("v1")).toBeInTheDocument();
   });
 
@@ -136,7 +136,7 @@ describe("VersionHistoryDialog", () => {
     vi.mocked(hestiaApi.revertRecipe).mockResolvedValue({ id: "test-recipe-1" });
     const onReverted = renderDialog();
 
-    await screen.findByText("Title Updated");
+    await screen.findByText("Title Changed");
 
     const oldestRow = rowFor("v1");
     fireEvent.click(within(oldestRow).getByRole("button", { name: /^revert$/i }));
@@ -165,7 +165,7 @@ describe("VersionHistoryDialog", () => {
     );
     const onReverted = renderDialog();
 
-    await screen.findByText("Title Updated");
+    await screen.findByText("Title Changed");
 
     const oldestRow = rowFor("v1");
     fireEvent.click(within(oldestRow).getByRole("button", { name: /^revert$/i }));
@@ -182,7 +182,7 @@ describe("VersionHistoryDialog", () => {
 
     renderDialog();
 
-    await screen.findByText("Title Updated");
+    await screen.findByText("Title Changed");
 
     expect(
       screen.getAllByRole("button", { name: /^revert$/i }),

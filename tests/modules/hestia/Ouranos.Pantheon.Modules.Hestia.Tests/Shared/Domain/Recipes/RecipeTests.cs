@@ -80,6 +80,7 @@ public sealed class RecipeTests
         recipe.Ingredients.ShouldBe(@event.Ingredients);
         recipe.Notes.ShouldBe(@event.Notes);
         recipe.CreatedAt.ShouldBe(@event.CreatedAt);
+        recipe.ImportStatus.ShouldBe(RecipeImportStatus.None);
     }
 
     [Fact]
@@ -698,5 +699,264 @@ public sealed class RecipeTests
         @event.Ingredients.ShouldBe(historical.Ingredients);
         @event.Notes.ShouldBe("Old notes.");
         @event.RevertedAt.ShouldBeGreaterThan(DateTimeOffset.MinValue);
+    }
+
+    [Fact]
+    public void CreateImport_WhenHappyPath_ShouldEmitRecipeCreatedWithPlaceholderContentAndImportingStatus()
+    {
+        // Arrange
+        var id = Guid.NewGuid();
+        var sourceUrl = "https://example.com/cake";
+        var startedAt = DateTimeOffset.UtcNow;
+
+        // Act
+        var result = Recipe.CreateImport(id, sourceUrl, startedAt);
+
+        // Assert
+        result.State.Id.ShouldBe(id);
+        result.State.RecipeId.ShouldBe(new Id<Recipe>(id.ToString()));
+        result.State.Title.ShouldBe("New Recipe");
+        result.State.SourceUrl.ShouldBe(sourceUrl);
+        result.State.Steps.ShouldBeEmpty();
+        result.State.Ingredients.ShouldBeEmpty();
+        result.State.Notes.ShouldBe(string.Empty);
+        result.State.CreatedAt.ShouldBe(startedAt);
+        result.State.ImportStatus.ShouldBe(RecipeImportStatus.Importing);
+
+        result.Events.Count.ShouldBe(2);
+
+        var created = result.Events[0].ShouldBeOfType<RecipeCreated>();
+        created.Id.ShouldBe(id);
+        created.Title.ShouldBe("New Recipe");
+        created.SourceUrl.ShouldBe(sourceUrl);
+        created.Steps.ShouldBeEmpty();
+        created.Ingredients.ShouldBeEmpty();
+        created.Notes.ShouldBe(string.Empty);
+        created.CreatedAt.ShouldBe(startedAt);
+
+        var started = result.Events[1].ShouldBeOfType<RecipeImportStarted>();
+        started.StartedAt.ShouldBe(startedAt);
+    }
+
+    [Theory]
+    [InlineData(null!)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void CreateImport_WhenSourceUrlIsNullOrWhitespace_ShouldThrowArgumentException(
+        string? sourceUrl
+    )
+    {
+        // Arrange
+        var id = Guid.NewGuid();
+
+        // Act
+        Action act = () => Recipe.CreateImport(id, sourceUrl!, DateTimeOffset.UtcNow);
+
+        // Assert
+        act.ShouldThrow<ArgumentException>();
+    }
+
+    [Fact]
+    public void CreateImport_WhenSourceUrlExceedsMaxLength_ShouldThrowArgumentOutOfRangeException()
+    {
+        // Arrange
+        var id = Guid.NewGuid();
+        var sourceUrl = new string('a', 2_001);
+
+        // Act
+        Action act = () => Recipe.CreateImport(id, sourceUrl, DateTimeOffset.UtcNow);
+
+        // Assert
+        act.ShouldThrow<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
+    public void CompleteImport_WhenHappyPath_ShouldEmitRecipeImportSucceededEventAndApplyState()
+    {
+        // Arrange
+        var current = Recipe
+            .CreateImport(Guid.NewGuid(), "https://example.com/cake", DateTimeOffset.UtcNow)
+            .State;
+        var title = "Chocolate Cake";
+        var steps = ValidSteps();
+        var ingredients = ValidIngredients();
+
+        // Act
+        var result = current.CompleteImport(title, steps, ingredients, "Best served warm.");
+
+        // Assert
+        result.State.Id.ShouldBe(current.Id);
+        result.State.RecipeId.ShouldBe(current.RecipeId);
+        result.State.Title.ShouldBe(title);
+        result.State.Steps.ShouldBe(steps);
+        result.State.Ingredients.ShouldBe(ingredients);
+        result.State.Notes.ShouldBe("Best served warm.");
+        result.State.ImportStatus.ShouldBe(RecipeImportStatus.Imported);
+        result.State.ImportFailureReason.ShouldBeNull();
+
+        var @event = result.Events.ShouldHaveSingleItem().ShouldBeOfType<RecipeImportSucceeded>();
+        @event.Title.ShouldBe(title);
+        @event.Steps.ShouldBe(steps);
+        @event.Ingredients.ShouldBe(ingredients);
+        @event.Notes.ShouldBe("Best served warm.");
+        @event.ImportedAt.ShouldBeGreaterThan(DateTimeOffset.MinValue);
+    }
+
+    [Fact]
+    public void CompleteImport_WhenTitleIsNullOrWhitespace_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var current = Recipe
+            .CreateImport(Guid.NewGuid(), "https://example.com/cake", DateTimeOffset.UtcNow)
+            .State;
+
+        // Act
+        Action act = () => current.CompleteImport("  ", ValidSteps(), ValidIngredients(), "");
+
+        // Assert
+        act.ShouldThrow<ArgumentException>();
+    }
+
+    [Fact]
+    public void FailImport_WhenHappyPath_ShouldEmitRecipeImportFailedEventAndApplyState()
+    {
+        // Arrange
+        var current = Recipe
+            .CreateImport(Guid.NewGuid(), "https://example.com/cake", DateTimeOffset.UtcNow)
+            .State;
+
+        // Act
+        var result = current.FailImport("The page contains no usable recipe metadata.");
+
+        // Assert
+        result.State.Id.ShouldBe(current.Id);
+        result.State.ImportStatus.ShouldBe(RecipeImportStatus.Failed);
+        result.State.ImportFailureReason.ShouldBe("The page contains no usable recipe metadata.");
+
+        var @event = result.Events.ShouldHaveSingleItem().ShouldBeOfType<RecipeImportFailed>();
+        @event.Reason.ShouldBe("The page contains no usable recipe metadata.");
+        @event.FailedAt.ShouldBeGreaterThan(DateTimeOffset.MinValue);
+    }
+
+    [Theory]
+    [InlineData(null!)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void FailImport_WhenReasonIsNullOrWhitespace_ShouldThrowArgumentException(string? reason)
+    {
+        // Arrange
+        var current = Recipe
+            .CreateImport(Guid.NewGuid(), "https://example.com/cake", DateTimeOffset.UtcNow)
+            .State;
+
+        // Act
+        Action act = () => current.FailImport(reason!);
+
+        // Assert
+        act.ShouldThrow<ArgumentException>();
+    }
+
+    [Fact]
+    public void Reimport_WhenHappyPath_ShouldEmitRecipeImportStartedEventAndResetStatus()
+    {
+        // Arrange
+        var current = Recipe
+            .CreateImport(Guid.NewGuid(), "https://example.com/cake", DateTimeOffset.UtcNow)
+            .State;
+        var failed = Recipe.Apply(new RecipeImportFailed("boom", DateTimeOffset.UtcNow), current);
+
+        // Act
+        var result = failed.Reimport(DateTimeOffset.UtcNow);
+
+        // Assert
+        result.State.Id.ShouldBe(current.Id);
+        result.State.ImportStatus.ShouldBe(RecipeImportStatus.Importing);
+        result.State.ImportFailureReason.ShouldBeNull();
+
+        var @event = result.Events.ShouldHaveSingleItem().ShouldBeOfType<RecipeImportStarted>();
+        @event.StartedAt.ShouldBeGreaterThan(DateTimeOffset.MinValue);
+    }
+
+    [Fact]
+    public void Reimport_WhenNoSourceUrl_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var current = Recipe
+            .Create(Guid.NewGuid(), "Chocolate Cake", null, ValidSteps(), ValidIngredients(), "")
+            .State;
+
+        // Act
+        Action act = () => current.Reimport(DateTimeOffset.UtcNow);
+
+        // Assert
+        act.ShouldThrow<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void Apply_WhenApplyingRecipeImportStartedEvent_ShouldSetImportingStatus()
+    {
+        // Arrange
+        var current = Recipe
+            .CreateImport(Guid.NewGuid(), "https://example.com/cake", DateTimeOffset.UtcNow)
+            .State;
+        var failed = Recipe.Apply(new RecipeImportFailed("boom", DateTimeOffset.UtcNow), current);
+        var @event = new RecipeImportStarted(DateTimeOffset.UtcNow);
+
+        // Act
+        var result = Recipe.Apply(@event, failed);
+
+        // Assert
+        result.Id.ShouldBe(current.Id);
+        result.ImportStatus.ShouldBe(RecipeImportStatus.Importing);
+        result.ImportFailureReason.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Apply_WhenApplyingRecipeImportSucceededEvent_ShouldSetContentAndImportedStatus()
+    {
+        // Arrange
+        var current = Recipe
+            .CreateImport(Guid.NewGuid(), "https://example.com/cake", DateTimeOffset.UtcNow)
+            .State;
+        var @event = new RecipeImportSucceeded(
+            "Chocolate Cake",
+            ValidSteps(),
+            ValidIngredients(),
+            "Best served warm.",
+            DateTimeOffset.UtcNow
+        );
+
+        // Act
+        var result = Recipe.Apply(@event, current);
+
+        // Assert
+        result.Id.ShouldBe(current.Id);
+        result.Title.ShouldBe("Chocolate Cake");
+        result.Steps.ShouldBe(ValidSteps());
+        result.Ingredients.ShouldBe(ValidIngredients());
+        result.Notes.ShouldBe("Best served warm.");
+        result.ImportStatus.ShouldBe(RecipeImportStatus.Imported);
+        result.ImportFailureReason.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Apply_WhenApplyingRecipeImportFailedEvent_ShouldSetFailedStatusAndReason()
+    {
+        // Arrange
+        var current = Recipe
+            .CreateImport(Guid.NewGuid(), "https://example.com/cake", DateTimeOffset.UtcNow)
+            .State;
+        var @event = new RecipeImportFailed(
+            "The page contains no usable recipe metadata.",
+            DateTimeOffset.UtcNow
+        );
+
+        // Act
+        var result = Recipe.Apply(@event, current);
+
+        // Assert
+        result.Id.ShouldBe(current.Id);
+        result.ImportStatus.ShouldBe(RecipeImportStatus.Failed);
+        result.ImportFailureReason.ShouldBe("The page contains no usable recipe metadata.");
     }
 }

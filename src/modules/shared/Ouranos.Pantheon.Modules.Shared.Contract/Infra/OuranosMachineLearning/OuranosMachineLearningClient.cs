@@ -116,20 +116,41 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
         var options = BuildOptions(temperature, maxTokens, frequencyPenalty);
 
         var result = await chatClient.CompleteChatAsync(chatMessages, options, cancellationToken);
-        var content = result.Value.Content.Count > 0 ? result.Value.Content[0].Text : string.Empty;
-
-        ChatCompletionUsage? usage = null;
-        if (result.Value.Usage is not null)
-        {
-            usage = new ChatCompletionUsage(
-                result.Value.Usage.InputTokenCount,
-                result.Value.Usage.OutputTokenCount,
-                result.Value.Usage.TotalTokenCount
-            );
-        }
 
         _logger.LogDebug("Successfully completed chat using model '{Model}'.", model);
-        return new ChatCompletionResult(content, usage);
+        return MapResult(result.Value);
+    }
+
+    public async Task<T?> GenerateStructuredChatCompletionAsync<T>(
+        string model,
+        List<MessageDto> messages,
+        float? temperature = null,
+        int? maxTokens = null,
+        CancellationToken cancellationToken = default
+    )
+        where T : class
+    {
+        _logger.LogTrace(
+            "Attempting to complete structured chat using model '{Model}' with {Count} messages.",
+            model,
+            messages.Count
+        );
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var chatClient = _openAiClient.GetChatClient(model);
+        var chatMessages = messages.Select(MapMessage).ToList();
+        var options = BuildOptions(temperature, maxTokens, null);
+        options.ResponseFormat = ChatResponseFormat.CreateJsonSchemaFormat(
+            typeof(T).Name,
+            StructuredOutputSchema.For<T>(),
+            jsonSchemaFormatDescription: null,
+            jsonSchemaIsStrict: true
+        );
+
+        var result = await chatClient.CompleteChatAsync(chatMessages, options, cancellationToken);
+
+        _logger.LogDebug("Successfully completed structured chat using model '{Model}'.", model);
+        return StructuredCompletionParser.Parse<T>(MapResult(result.Value).Content);
     }
 
     public async Task<List<List<ForecastPoint>>> GetPlutusForecasts(
@@ -189,6 +210,23 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
             RoleDto.Assistant => ChatMessage.CreateAssistantMessage(message.Content),
             _ => throw new InvalidOperationException($"Unknown role: {message.Role}"),
         };
+    }
+
+    private static ChatCompletionResult MapResult(ChatCompletion completion)
+    {
+        var content = completion.Content.Count > 0 ? completion.Content[0].Text : string.Empty;
+
+        ChatCompletionUsage? usage = null;
+        if (completion.Usage is not null)
+        {
+            usage = new ChatCompletionUsage(
+                completion.Usage.InputTokenCount,
+                completion.Usage.OutputTokenCount,
+                completion.Usage.TotalTokenCount
+            );
+        }
+
+        return new ChatCompletionResult(content, usage);
     }
 
     private static ChatCompletionOptions BuildOptions(
