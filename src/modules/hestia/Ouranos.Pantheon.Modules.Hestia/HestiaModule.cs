@@ -1,18 +1,25 @@
 using JasperFx.Events.Projections;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Security.AntiSSRF;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.CreateRecipe;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetAllRecipes;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetRecipe;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetRecipeHistory;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.ImportRecipe;
+using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.ImportRecipe.Extraction;
+using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.ImportRecipe.Scraping;
+using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.ReimportRecipe;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.RevertRecipe;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.UpdateRecipe;
+using Ouranos.Pantheon.Modules.Hestia.Shared;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Database;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes.Events;
 using Ouranos.Pantheon.Modules.Shared.Contract;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres;
 using Wolverine;
 using Wolverine.RabbitMQ;
@@ -23,6 +30,11 @@ public sealed class HestiaModule : IPantheonModule
 {
     public IHostApplicationBuilder Build(IHostApplicationBuilder builder)
     {
+        builder
+            .Services.AddCoreOuranosMachineLearningModule(builder.Configuration)
+            .Configure<HestiaOptions>(builder.Configuration.GetSection(HestiaOptions.SectionName))
+            .AddScoped<IRecipeExtractor, RecipeExtractor>();
+
         builder
             .Services.AddCorePostgresModule<HestiaDbContext>(
                 builder.Configuration,
@@ -37,6 +49,21 @@ public sealed class HestiaModule : IPantheonModule
                 },
                 initialData: [new HestiaRecipeSeedData()]
             );
+
+        builder
+            .Services.AddHttpClient<IRecipeScraper, RecipeScraper>(static client =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(30);
+                client.DefaultRequestHeaders.UserAgent.ParseAdd("OuranosHestiaRecipeImporter/1.0");
+                client.DefaultRequestHeaders.Accept.ParseAdd("text/html, application/xhtml+xml");
+            })
+            .ConfigurePrimaryHttpMessageHandler(static () =>
+            {
+                var policy = new AntiSSRFPolicy(PolicyConfigOptions.ExternalOnlyLatest);
+                var handler = policy.GetHandler();
+                handler.MaxAutomaticRedirections = 5;
+                return handler;
+            });
 
         return builder;
     }
@@ -56,10 +83,15 @@ public sealed class HestiaModule : IPantheonModule
         GetRecipeHistoryEndpoint.Map(app);
         RevertRecipeEndpoint.Map(app);
         ImportRecipeEndpoint.Map(app);
+        ReimportRecipeEndpoint.Map(app);
     }
 
     public void ConfigureWolverine(WolverineOptions opts, IConfiguration configuration)
     {
+        // IRecipeScraper is registered via AddHttpClient<TInterface,TImpl>(lambda),
+        // which is an opaque factory Wolverine 6 cannot inline. Allowlist it for service location.
+        opts.CodeGeneration.AlwaysUseServiceLocationFor<IRecipeScraper>();
+
         opts.PublishMessage<ImportRecipeRequested>()
             .ToRabbitExchange(
                 ImportRecipeRequested.Exchange,

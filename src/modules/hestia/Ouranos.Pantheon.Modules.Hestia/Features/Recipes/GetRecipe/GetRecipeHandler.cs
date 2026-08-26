@@ -42,7 +42,9 @@ public sealed class GetRecipeHandler(ILogger<GetRecipeHandler> logger, IHestiaMa
             [.. recipe.Steps.Select(s => new StepResponse(s.Text))],
             [.. recipe.Ingredients.Select(i => new IngredientResponse(i.Quantity, i.Unit, i.Name))],
             recipe.Notes,
-            recipe.CreatedAt
+            recipe.CreatedAt,
+            recipe.ImportStatus,
+            recipe.ImportFailureReason
         );
     }
 }

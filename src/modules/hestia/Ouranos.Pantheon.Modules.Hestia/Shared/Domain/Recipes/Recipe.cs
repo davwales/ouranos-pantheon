@@ -18,6 +18,8 @@ public sealed record Recipe : BaseEventSourcedEntity
     public List<Ingredient> Ingredients { get; init; } = [];
     public string Notes { get; init; } = string.Empty;
     public DateTimeOffset CreatedAt { get; init; }
+    public RecipeImportStatus ImportStatus { get; init; }
+    public string? ImportFailureReason { get; init; }
 
     /// <summary>
     /// Marten convention: project a <see cref="RecipeCreated"/> event into the
@@ -35,6 +37,7 @@ public sealed record Recipe : BaseEventSourcedEntity
             Ingredients = @event.Ingredients,
             Notes = @event.Notes,
             CreatedAt = @event.CreatedAt,
+            ImportStatus = RecipeImportStatus.None,
         };
     }
 
@@ -52,22 +55,7 @@ public sealed record Recipe : BaseEventSourcedEntity
         string notes
     )
     {
-        Guard.Against.NullOrWhiteSpace(title);
-        Guard.Against.OutOfRange(title.Length, nameof(title), 1, 200);
-        Guard.Against.Null(steps);
-        Guard.Against.OutOfRange(steps.Count, nameof(steps), 1, 100);
-        Guard.Against.Null(ingredients);
-        Guard.Against.OutOfRange(ingredients.Count, nameof(ingredients), 1, 100);
-
-        if (!string.IsNullOrWhiteSpace(sourceUrl))
-        {
-            Guard.Against.OutOfRange(sourceUrl.Length, nameof(sourceUrl), 1, 2_000);
-        }
-
-        if (!string.IsNullOrWhiteSpace(notes))
-        {
-            Guard.Against.OutOfRange(notes.Length, nameof(notes), 1, 10_000);
-        }
+        GuardValidFields(title, sourceUrl, steps, ingredients, notes);
 
         var @event = new RecipeCreated(
             id,
@@ -80,6 +68,35 @@ public sealed record Recipe : BaseEventSourcedEntity
         );
 
         return OperationResult<Recipe>.Of(Create(@event), @event);
+    }
+
+    /// <summary>
+    /// Command factory: creates a recipe that is pending import from an external
+    /// source. Emits a <see cref="RecipeCreated"/> event with placeholder content;
+    /// the import pipeline later appends a <see cref="RecipeImportSucceeded"/> or
+    /// <see cref="RecipeImportFailed"/> event.
+    /// </summary>
+    public static OperationResult<Recipe> CreateImport(
+        Guid id,
+        string sourceUrl,
+        DateTimeOffset startedAt
+    )
+    {
+        Guard.Against.NullOrWhiteSpace(sourceUrl);
+        Guard.Against.OutOfRange(sourceUrl.Length, nameof(sourceUrl), 1, 2_000);
+
+        var created = new RecipeCreated(
+            id,
+            "New Recipe",
+            sourceUrl,
+            [],
+            [],
+            string.Empty,
+            startedAt
+        );
+        var started = new RecipeImportStarted(startedAt);
+
+        return OperationResult<Recipe>.Of(Apply(started, Create(created)), created, started);
     }
 
     /// <summary>
@@ -96,22 +113,7 @@ public sealed record Recipe : BaseEventSourcedEntity
         string notes
     )
     {
-        Guard.Against.NullOrWhiteSpace(title);
-        Guard.Against.OutOfRange(title.Length, nameof(title), 1, 200);
-        Guard.Against.Null(steps);
-        Guard.Against.OutOfRange(steps.Count, nameof(steps), 1, 100);
-        Guard.Against.Null(ingredients);
-        Guard.Against.OutOfRange(ingredients.Count, nameof(ingredients), 1, 100);
-
-        if (!string.IsNullOrWhiteSpace(sourceUrl))
-        {
-            Guard.Against.OutOfRange(sourceUrl.Length, nameof(sourceUrl), 1, 2_000);
-        }
-
-        if (!string.IsNullOrWhiteSpace(notes))
-        {
-            Guard.Against.OutOfRange(notes.Length, nameof(notes), 1, 10_000);
-        }
+        GuardValidFields(title, sourceUrl, steps, ingredients, notes);
 
         var events = new List<IDomainEvent>();
         var state = this;
@@ -154,6 +156,32 @@ public sealed record Recipe : BaseEventSourcedEntity
         return OperationResult<Recipe>.Of(state, [.. events]);
     }
 
+    private static void GuardValidFields(
+        string title,
+        string? sourceUrl,
+        List<Step> steps,
+        List<Ingredient> ingredients,
+        string notes
+    )
+    {
+        Guard.Against.NullOrWhiteSpace(title);
+        Guard.Against.OutOfRange(title.Length, nameof(title), 1, 200);
+        Guard.Against.Null(steps);
+        Guard.Against.OutOfRange(steps.Count, nameof(steps), 1, 100);
+        Guard.Against.Null(ingredients);
+        Guard.Against.OutOfRange(ingredients.Count, nameof(ingredients), 1, 100);
+
+        if (!string.IsNullOrWhiteSpace(sourceUrl))
+        {
+            Guard.Against.OutOfRange(sourceUrl.Length, nameof(sourceUrl), 1, 2_000);
+        }
+
+        if (!string.IsNullOrWhiteSpace(notes))
+        {
+            Guard.Against.OutOfRange(notes.Length, nameof(notes), 1, 10_000);
+        }
+    }
+
     /// <summary>
     /// Command factory: reverts the recipe to a historical state by emitting a
     /// <see cref="RecipeReverted"/> event carrying the state to restore. The
@@ -175,6 +203,60 @@ public sealed record Recipe : BaseEventSourcedEntity
             historical.Notes,
             revertedAt
         );
+
+        return OperationResult<Recipe>.Of(Apply(@event, this), @event);
+    }
+
+    /// <summary>
+    /// Command factory: records a successful import by emitting a
+    /// <see cref="RecipeImportSucceeded"/> event carrying the imported content.
+    /// </summary>
+    public OperationResult<Recipe> CompleteImport(
+        string title,
+        List<Step> steps,
+        List<Ingredient> ingredients,
+        string notes
+    )
+    {
+        GuardValidFields(title, null, steps, ingredients, notes);
+
+        var @event = new RecipeImportSucceeded(
+            title,
+            steps,
+            ingredients,
+            notes,
+            DateTimeOffset.UtcNow
+        );
+
+        return OperationResult<Recipe>.Of(Apply(@event, this), @event);
+    }
+
+    /// <summary>
+    /// Command factory: records a failed import by emitting a
+    /// <see cref="RecipeImportFailed"/> event carrying the failure reason.
+    /// </summary>
+    public OperationResult<Recipe> FailImport(string reason)
+    {
+        Guard.Against.NullOrWhiteSpace(reason);
+
+        var @event = new RecipeImportFailed(reason, DateTimeOffset.UtcNow);
+
+        return OperationResult<Recipe>.Of(Apply(@event, this), @event);
+    }
+
+    /// <summary>
+    /// Command factory: re-imports the recipe from its source URL by emitting a
+    /// <see cref="RecipeImportStarted"/> event, resetting the import status to
+    /// importing. Requires the recipe to have a source URL.
+    /// </summary>
+    public OperationResult<Recipe> Reimport(DateTimeOffset startedAt)
+    {
+        if (string.IsNullOrWhiteSpace(SourceUrl))
+        {
+            throw new InvalidOperationException("Recipe has no source URL to reimport from.");
+        }
+
+        var @event = new RecipeImportStarted(startedAt);
 
         return OperationResult<Recipe>.Of(Apply(@event, this), @event);
     }
@@ -261,6 +343,52 @@ public sealed record Recipe : BaseEventSourcedEntity
             Steps = @event.Steps,
             Ingredients = @event.Ingredients,
             Notes = @event.Notes,
+        };
+    }
+
+    /// <summary>
+    /// Marten convention: evolve the aggregate by applying a
+    /// <see cref="RecipeImportStarted"/> event to the current state
+    /// (functional fold).
+    /// </summary>
+    public static Recipe Apply(RecipeImportStarted _, Recipe current)
+    {
+        return current with
+        {
+            ImportStatus = RecipeImportStatus.Importing,
+            ImportFailureReason = null,
+        };
+    }
+
+    /// <summary>
+    /// Marten convention: evolve the aggregate by applying a
+    /// <see cref="RecipeImportSucceeded"/> event to the current state
+    /// (functional fold).
+    /// </summary>
+    public static Recipe Apply(RecipeImportSucceeded @event, Recipe current)
+    {
+        return current with
+        {
+            Title = @event.Title,
+            Steps = @event.Steps,
+            Ingredients = @event.Ingredients,
+            Notes = @event.Notes,
+            ImportStatus = RecipeImportStatus.Imported,
+            ImportFailureReason = null,
+        };
+    }
+
+    /// <summary>
+    /// Marten convention: evolve the aggregate by applying a
+    /// <see cref="RecipeImportFailed"/> event to the current state
+    /// (functional fold).
+    /// </summary>
+    public static Recipe Apply(RecipeImportFailed @event, Recipe current)
+    {
+        return current with
+        {
+            ImportStatus = RecipeImportStatus.Failed,
+            ImportFailureReason = @event.Reason,
         };
     }
 }

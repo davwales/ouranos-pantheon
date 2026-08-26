@@ -23,6 +23,15 @@ public interface IOuranosMachineLearningClient
         CancellationToken cancellationToken = default
     );
 
+    Task<T?> GenerateStructuredChatCompletionAsync<T>(
+        string model,
+        List<MessageDto> messages,
+        float? temperature = null,
+        int? maxTokens = null,
+        CancellationToken cancellationToken = default
+    )
+        where T : class;
+
     Task<List<List<ForecastPoint>>> GetPlutusForecasts(
         GetPlutusForecastsRequest payload,
         CancellationToken cancellationToken = default
