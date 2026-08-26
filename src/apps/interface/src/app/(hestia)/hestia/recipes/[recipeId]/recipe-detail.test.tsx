@@ -18,6 +18,7 @@ vi.mock("@/lib/api/hestia", () => ({
       events: [],
     }),
     revertRecipe: vi.fn(),
+    reimportRecipe: vi.fn(),
   },
 }));
 
@@ -51,6 +52,8 @@ function mockRecipe(overrides: Partial<Recipe> = {}): Recipe {
     ],
     notes: "Best served warm.",
     createdAt: "2025-01-01T00:00:00.000Z",
+    importStatus: "None",
+    importFailureReason: null,
     ...overrides,
   };
 }
@@ -136,5 +139,112 @@ describe("RecipeDetailPage", () => {
         screen.getByText(/no version history yet/i),
       ).toBeInTheDocument();
     });
+  });
+
+  it("renders the importing view while the recipe is being imported", async () => {
+    vi.mocked(hestiaApi.getRecipe).mockResolvedValueOnce(
+      mockRecipe({ importStatus: "Importing" }),
+    );
+
+    render(<RecipeDetailPage />);
+
+    expect(await screen.findByText("Importing recipe...")).toBeInTheDocument();
+    expect(screen.queryByText("granulated sugar")).not.toBeInTheDocument();
+  });
+
+  it("renders the import failure reason when the import failed", async () => {
+    vi.mocked(hestiaApi.getRecipe).mockResolvedValueOnce(
+      mockRecipe({
+        importStatus: "Failed",
+        importFailureReason: "The page contains no usable recipe metadata.",
+      }),
+    );
+
+    render(<RecipeDetailPage />);
+
+    expect(await screen.findByText("Import Failed")).toBeInTheDocument();
+    expect(
+      screen.getByText("The page contains no usable recipe metadata."),
+    ).toBeInTheDocument();
+  });
+
+  it("reimports the recipe and shows the importing view when Reimport clicked", async () => {
+    vi.mocked(hestiaApi.getRecipe)
+      .mockResolvedValueOnce(mockRecipe())
+      .mockResolvedValue(mockRecipe({ importStatus: "Importing" }));
+    vi.mocked(hestiaApi.reimportRecipe).mockResolvedValueOnce({
+      id: "test-recipe-1",
+    });
+
+    render(<RecipeDetailPage />);
+
+    await screen.findByText("Chocolate Cake");
+
+    fireEvent.click(screen.getByRole("button", { name: /reimport/i }));
+
+    await waitFor(() => {
+      expect(hestiaApi.reimportRecipe).toHaveBeenCalledWith("test-recipe-1");
+    });
+
+    expect(await screen.findByText("Importing recipe...")).toBeInTheDocument();
+  });
+
+  it("retries the import from the failed view", async () => {
+    vi.mocked(hestiaApi.getRecipe)
+      .mockResolvedValueOnce(
+        mockRecipe({
+          importStatus: "Failed",
+          importFailureReason: "The page contains no usable recipe metadata.",
+        }),
+      )
+      .mockResolvedValue(mockRecipe({ importStatus: "Importing" }));
+    vi.mocked(hestiaApi.reimportRecipe).mockResolvedValueOnce({
+      id: "test-recipe-1",
+    });
+
+    render(<RecipeDetailPage />);
+
+    await screen.findByText("Import Failed");
+
+    fireEvent.click(screen.getByRole("button", { name: /retry import/i }));
+
+    await waitFor(() => {
+      expect(hestiaApi.reimportRecipe).toHaveBeenCalledWith("test-recipe-1");
+    });
+
+    expect(await screen.findByText("Importing recipe...")).toBeInTheDocument();
+  });
+
+  it("renders an error banner when reimport fails", async () => {
+    vi.mocked(hestiaApi.getRecipe).mockResolvedValueOnce(mockRecipe());
+    vi.mocked(hestiaApi.reimportRecipe).mockRejectedValueOnce(
+      new ApiError(500, "Internal server error"),
+    );
+
+    render(<RecipeDetailPage />);
+
+    await screen.findByText("Chocolate Cake");
+
+    fireEvent.click(screen.getByRole("button", { name: /reimport/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Internal server error",
+      );
+    });
+  });
+
+  it("hides the Reimport button when the recipe has no source URL", async () => {
+    vi.mocked(hestiaApi.getRecipe).mockResolvedValueOnce(
+      mockRecipe({ sourceUrl: null }),
+    );
+
+    render(<RecipeDetailPage />);
+
+    await screen.findByText("Chocolate Cake");
+
+    expect(
+      screen.queryByRole("button", { name: /reimport/i }),
+    ).not.toBeInTheDocument();
   });
 });

@@ -6,10 +6,13 @@ import { Typography } from "@/components/shared/typography";
 import { useApi } from "@/hooks/use-api";
 import { hestiaApi } from "@/lib/api/hestia";
 import Link from "next/link";
+import { useState } from "react";
+import { ImportRecipeDialog } from "./_components/import-recipe-dialog";
 import { RecipesView } from "./recipes-view";
 
 export default function RecipesPage() {
   const [state] = useApi(() => hestiaApi.getAllRecipes({ take: 50 }));
+  const [importOpen, setImportOpen] = useState(false);
 
   if (state.status === "loading" && !state.data) {
     return <InfoCardGridSkeleton />;
@@ -29,11 +32,17 @@ export default function RecipesPage() {
         <Typography variant="h2" className="border-b-0">
           Recipes
         </Typography>
-        <Button asChild>
-          <Link href="/hestia/recipes/create">New Recipe</Link>
-        </Button>
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={() => setImportOpen(true)}>
+            Import from Link
+          </Button>
+          <Button asChild>
+            <Link href="/hestia/recipes/create">New Recipe</Link>
+          </Button>
+        </div>
       </div>
       <RecipesView recipes={state.data?.items ?? []} />
+      <ImportRecipeDialog open={importOpen} onOpenChange={setImportOpen} />
     </div>
   );
 }

@@ -20,6 +20,8 @@ export type Step = {
   text: string;
 };
 
+export type RecipeImportStatus = "None" | "Importing" | "Imported" | "Failed";
+
 export type Recipe = {
   id: string;
   title: string;
@@ -28,6 +30,20 @@ export type Recipe = {
   ingredients: Ingredient[];
   notes: string;
   createdAt: string;
+  importStatus: RecipeImportStatus;
+  importFailureReason: string | null;
+};
+
+export type ImportRecipeInput = {
+  url: string;
+};
+
+export type ImportRecipeResponse = {
+  id: string;
+};
+
+export type ReimportRecipeResponse = {
+  id: string;
 };
 
 export type CreateRecipeInput = {

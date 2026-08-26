@@ -86,8 +86,11 @@ export const api = {
     const qstr = qs.toString();
     return apiFetch<T>(qstr ? `${path}?${qstr}` : path, { headers });
   },
-  post: <T>(path: string, body: unknown) =>
-    apiFetch<T>(path, { method: "POST", body: JSON.stringify(body) }),
+  post: <T>(path: string, body?: unknown) =>
+    apiFetch<T>(path, {
+      method: "POST",
+      body: body === undefined ? undefined : JSON.stringify(body),
+    }),
   put: <T>(path: string, body: unknown) =>
     apiFetch<T>(path, { method: "PUT", body: JSON.stringify(body) }),
   patch: <T>(path: string, body: unknown) =>
