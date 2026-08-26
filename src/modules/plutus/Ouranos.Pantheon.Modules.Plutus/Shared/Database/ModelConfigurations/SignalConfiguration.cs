@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Extensions;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Database.ModelConfigurations;
 
@@ -9,7 +9,7 @@ public sealed class SignalConfiguration : IEntityTypeConfiguration<Signal>
 {
     public void Configure(EntityTypeBuilder<Signal> builder)
     {
-        builder.HasKey(s => s.Id);
+        builder.HasKey(s => new { s.Id, s.ComputedAt });
         builder.Property(s => s.Id).HasIdConversion();
         builder.Property(s => s.MarketId).HasIdConversion();
         builder.Property(s => s.SymbolId).HasIdConversion();

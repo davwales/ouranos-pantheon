@@ -1,35 +1,36 @@
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
-using Ouranos.Pantheon.Modules.Shared.Algorithms.Genetic;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Inputs;
+using Ouranos.Pantheon.Modules.Shared.Contract.Algorithms.Genetic;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization.Chromosomes;
 
-public abstract class StrategyChromosome(TradingConfiguration configuration) : IChromosome<double>
+/// <summary>
+///     Chromosome for the signals-only strategy model. Genes encode the three common
+///     <see cref="TradingConfiguration" /> fields, all seven <see cref="InputKind" />
+///     weights (in enum order, zero-filled), and the buy/sell thresholds. Mutation is
+///     feature-grouped: a single mutation roll picks one of {one common field, one
+///     input weight, one threshold} and jitters only that, which keeps the search
+///     local and complements the L1 regularization in the fitness function by letting
+///     the GA explore dropping individual inputs.
+/// </summary>
+public sealed class StrategyChromosome(
+    TradingConfiguration configuration,
+    List<InputWeight> inputWeights,
+    InputThresholds thresholds
+) : IChromosome<double>
 {
+    private const int InputWeightCount = 7;
+    private const int ThresholdCount = 2;
+
     public TradingConfiguration Configuration { get; private set; } = configuration;
+
+    public List<InputWeight> InputWeights { get; private set; } = NormalizeWeights(inputWeights);
+
+    public InputThresholds Thresholds { get; private set; } = thresholds;
 
     public double[] Genes => ToGenes();
 
-    public abstract void Mutate(double mutationRate);
-    public abstract IChromosome<double> Crossover(IChromosome<double> other);
-    public abstract BacktestParameters ApplyConfigOverrides(BacktestParameters parameters);
-    protected abstract void AddStrategySpecificGenes(List<double> genes);
-
-    public static StrategyChromosome Create(
-        StrategyType strategyType,
-        TradingConfiguration configuration
-    )
-    {
-        return strategyType switch
-        {
-            StrategyType.SignalWeighted => new SignalWeightedChromosome(configuration),
-            StrategyType.ForecastMomentum => new ForecastMomentumChromosome(configuration),
-            StrategyType.MeanReversion => new MeanReversionChromosome(configuration),
-            StrategyType.RecipeArbitrage => new RecipeArbitrageChromosome(configuration),
-            _ => new CompositeChromosome(configuration),
-        };
-    }
-
-    public static StrategyChromosome CreateRandom(StrategyType strategyType)
+    public static StrategyChromosome CreateRandom()
     {
         var random = Random.Shared;
         var configuration = new TradingConfiguration
@@ -39,29 +40,117 @@ public abstract class StrategyChromosome(TradingConfiguration configuration) : I
             HoldPeriodDays = random.Next(1, 30),
         };
 
-        return strategyType switch
+        var weights = new List<InputWeight>(InputWeightCount);
+        foreach (InputKind kind in Enum.GetValues<InputKind>())
         {
-            StrategyType.SignalWeighted => new SignalWeightedChromosome(
-                configuration,
-                CreateRandomSignalWeighted(random)
-            ),
-            StrategyType.ForecastMomentum => new ForecastMomentumChromosome(
-                configuration,
-                CreateRandomForecastMomentum(random)
-            ),
-            StrategyType.MeanReversion => new MeanReversionChromosome(
-                configuration,
-                CreateRandomMeanReversion(random)
-            ),
-            StrategyType.RecipeArbitrage => new RecipeArbitrageChromosome(
-                configuration,
-                CreateRandomRecipeArbitrage(random)
-            ),
-            _ => new CompositeChromosome(configuration),
+            weights.Add(new InputWeight(kind, (decimal)random.NextDouble() * 2m));
+        }
+
+        var thresholds = new InputThresholds
+        {
+            BuyThreshold = (decimal)random.NextDouble() * 0.5m,
+            SellThreshold = -(decimal)random.NextDouble() * 0.5m,
+        };
+
+        return new StrategyChromosome(configuration, weights, thresholds);
+    }
+
+    public BacktestParameters ApplyConfigOverrides(BacktestParameters parameters)
+    {
+        return parameters with
+        {
+            InputWeightsOverride = InputWeights,
+            ThresholdsOverride = Thresholds,
         };
     }
 
-    protected void MutateCommonFields(Random random, double mutationRate)
+    public void Mutate(double mutationRate)
+    {
+        var random = Random.Shared;
+        if (random.NextDouble() >= mutationRate)
+        {
+            return;
+        }
+
+        var group = random.Next(3);
+        switch (group)
+        {
+            case 0:
+                MutateCommonFields(random, mutationRate);
+                break;
+            case 1:
+                MutateOneWeight(random);
+                break;
+            case 2:
+                MutateOneThreshold(random);
+                break;
+        }
+    }
+
+    public IChromosome<double> Crossover(IChromosome<double> other)
+    {
+        if (other is not StrategyChromosome otherChromosome)
+        {
+            throw new InvalidOperationException(
+                $"Crossover partner must be a {nameof(StrategyChromosome)}."
+            );
+        }
+
+        var random = Random.Shared;
+        var childConfig = CrossoverCommonFields(
+            Configuration,
+            otherChromosome.Configuration,
+            random
+        );
+
+        var childWeights = new List<InputWeight>(InputWeightCount);
+        foreach (InputKind kind in Enum.GetValues<InputKind>())
+        {
+            var parent1Weight = GetWeight(InputWeights, kind);
+            var parent2Weight = GetWeight(otherChromosome.InputWeights, kind);
+            var childWeight = random.NextDouble() < 0.5 ? parent1Weight : parent2Weight;
+            childWeights.Add(new InputWeight(kind, childWeight));
+        }
+
+        var childThresholds = new InputThresholds
+        {
+            BuyThreshold =
+                random.NextDouble() < 0.5
+                    ? Thresholds.BuyThreshold
+                    : otherChromosome.Thresholds.BuyThreshold,
+            SellThreshold =
+                random.NextDouble() < 0.5
+                    ? Thresholds.SellThreshold
+                    : otherChromosome.Thresholds.SellThreshold,
+        };
+
+        return new StrategyChromosome(childConfig, childWeights, childThresholds);
+    }
+
+    private void AddStrategySpecificGenes(List<double> genes)
+    {
+        foreach (InputKind kind in Enum.GetValues<InputKind>())
+        {
+            genes.Add((double)GetWeight(InputWeights, kind));
+        }
+
+        genes.Add((double)(Thresholds.BuyThreshold ?? 0m));
+        genes.Add((double)(Thresholds.SellThreshold ?? 0m));
+    }
+
+    private double[] ToGenes()
+    {
+        var genes = new List<double>();
+
+        AddGeneIfHasValue(genes, Configuration.MaxPositions);
+        AddGeneIfHasValue(genes, Configuration.MaxPositionPercent, v => (double)v);
+        AddGeneIfHasValue(genes, Configuration.HoldPeriodDays, v => v);
+        AddStrategySpecificGenes(genes);
+
+        return [.. genes];
+    }
+
+    private void MutateCommonFields(Random random, double mutationRate)
     {
         if (random.NextDouble() >= mutationRate)
         {
@@ -101,7 +190,7 @@ public abstract class StrategyChromosome(TradingConfiguration configuration) : I
         }
     }
 
-    protected TradingConfiguration CrossoverCommonFields(
+    private static TradingConfiguration CrossoverCommonFields(
         TradingConfiguration parent1,
         TradingConfiguration parent2,
         Random random
@@ -117,7 +206,7 @@ public abstract class StrategyChromosome(TradingConfiguration configuration) : I
         };
     }
 
-    protected static decimal MutateWeight(decimal current, Random random, double mutationRate)
+    private static decimal MutateWeight(decimal current, Random random, double mutationRate)
     {
         return Math.Clamp(
             current
@@ -131,23 +220,101 @@ public abstract class StrategyChromosome(TradingConfiguration configuration) : I
         );
     }
 
-    private double[] ToGenes()
+    private static decimal MutateThreshold(
+        decimal? current,
+        Random random,
+        double mutationRate,
+        decimal min,
+        decimal max
+    )
     {
-        var genes = new List<double>();
-
-        AddGeneIfHasValue(genes, Configuration.MaxPositions);
-        AddGeneIfHasValue(genes, Configuration.MaxPositionPercent, v => (double)v);
-        AddGeneIfHasValue(genes, Configuration.HoldPeriodDays, v => v);
-        AddStrategySpecificGenes(genes);
-
-        return [.. genes];
+        var value = current ?? 0m;
+        return Math.Clamp(
+            value
+                + (
+                    random.NextDouble() < mutationRate
+                        ? (decimal)(random.NextDouble() - 0.5) * 0.2m
+                        : 0m
+                ),
+            min,
+            max
+        );
     }
 
-    protected static void AddGeneIfHasValue<T>(
-        List<double> genes,
-        T? value,
-        Func<T, double> convert
+    private void MutateOneWeight(Random random)
+    {
+        var kinds = Enum.GetValues<InputKind>();
+        var kind = kinds[random.Next(kinds.Length)];
+        var current = GetWeight(InputWeights, kind);
+        var mutated = MutateWeight(current, random, mutationRate: 1.0);
+        InputWeights = WithWeight(InputWeights, kind, mutated);
+    }
+
+    private void MutateOneThreshold(Random random)
+    {
+        var field = random.Next(ThresholdCount);
+        switch (field)
+        {
+            case 0:
+                Thresholds = Thresholds with
+                {
+                    BuyThreshold = MutateThreshold(
+                        Thresholds.BuyThreshold,
+                        random,
+                        mutationRate: 1.0,
+                        min: 0m,
+                        max: 0.5m
+                    ),
+                };
+                break;
+            case 1:
+                Thresholds = Thresholds with
+                {
+                    SellThreshold = MutateThreshold(
+                        Thresholds.SellThreshold,
+                        random,
+                        mutationRate: 1.0,
+                        min: -0.5m,
+                        max: 0m
+                    ),
+                };
+                break;
+        }
+    }
+
+    /// <summary>
+    ///     Ensures the weight list has exactly one entry per <see cref="InputKind" /> in
+    ///     enum order, zero-filling any missing kinds. Required for deterministic gene
+    ///     vectors and crossover.
+    /// </summary>
+    private static List<InputWeight> NormalizeWeights(List<InputWeight> weights)
+    {
+        var byKind = weights.GroupBy(w => w.Kind).ToDictionary(g => g.Key, g => g.First().Weight);
+
+        var result = new List<InputWeight>(InputWeightCount);
+        foreach (InputKind kind in Enum.GetValues<InputKind>())
+        {
+            result.Add(new InputWeight(kind, byKind.TryGetValue(kind, out var w) ? w : 0m));
+        }
+
+        return result;
+    }
+
+    private static decimal GetWeight(List<InputWeight> weights, InputKind kind)
+    {
+        return weights.FirstOrDefault(w => w.Kind == kind)?.Weight ?? 0m;
+    }
+
+    private static List<InputWeight> WithWeight(
+        List<InputWeight> weights,
+        InputKind kind,
+        decimal newWeight
     )
+    {
+        return [.. weights.Select(w => w.Kind == kind ? w with { Weight = newWeight } : w)];
+    }
+
+    private static void AddGeneIfHasValue<T>(List<double> genes, T? value, Func<T, double> convert)
         where T : struct
     {
         if (value.HasValue)
@@ -156,44 +323,11 @@ public abstract class StrategyChromosome(TradingConfiguration configuration) : I
         }
     }
 
-    protected static void AddGeneIfHasValue(List<double> genes, int? value)
+    private static void AddGeneIfHasValue(List<double> genes, int? value)
     {
         if (value.HasValue)
         {
             genes.Add(value.Value);
         }
-    }
-
-    private static SignalWeightedConfig CreateRandomSignalWeighted(Random random)
-    {
-        return new SignalWeightedConfig(
-            (decimal)random.NextDouble() * 100,
-            (decimal)random.NextDouble() * 100,
-            (decimal)random.NextDouble() * 2,
-            (decimal)random.NextDouble() * 2,
-            (decimal)random.NextDouble() * 2,
-            (decimal)random.NextDouble() * 2,
-            (decimal)random.NextDouble() * 2,
-            (decimal)random.NextDouble() * 2,
-            (decimal)random.NextDouble() * 2
-        );
-    }
-
-    private static ForecastMomentumConfig CreateRandomForecastMomentum(Random random)
-    {
-        return new ForecastMomentumConfig((decimal)random.NextDouble() * 2, random.Next(1, 30));
-    }
-
-    private static MeanReversionConfig CreateRandomMeanReversion(Random random)
-    {
-        return new MeanReversionConfig(
-            (decimal)(random.NextDouble() * 2 + 0.5),
-            random.Next(1, 30)
-        );
-    }
-
-    private static RecipeArbitrageConfig CreateRandomRecipeArbitrage(Random random)
-    {
-        return new RecipeArbitrageConfig((decimal)(random.NextDouble() * 0.5 + 0.01));
     }
 }

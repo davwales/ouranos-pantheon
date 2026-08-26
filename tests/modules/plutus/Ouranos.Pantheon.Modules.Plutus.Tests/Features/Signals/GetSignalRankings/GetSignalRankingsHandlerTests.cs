@@ -6,8 +6,8 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
@@ -31,6 +31,16 @@ public sealed class GetSignalRankingsHandlerTests
     private GetSignalRankingsHandler BuildHandler(IEnumerable<ISignalComputer>? computers = null)
     {
         return new(_logger, _dbContext, Options.Create(new QueryOptions()), computers ?? []);
+    }
+
+    private async Task SeedLatestSignals(
+        params (Id<Symbol> SymbolId, SignalType Type, decimal Value)[] rows
+    )
+    {
+        await _dbContext.LatestSignals.AddRangeAsync(
+            rows.Select(r => new LatestSignal(r.SymbolId, r.Type, r.Value))
+        );
+        await _dbContext.SaveChangesAsync();
     }
 
     [Fact]
@@ -68,18 +78,9 @@ public sealed class GetSignalRankingsHandlerTests
             new AdditionalFields()
         );
 
-        var signal = Signal.Create(
-            market.Id,
-            symbol.Id,
-            SignalType.BollingerBands,
-            0.5m,
-            market,
-            symbol
-        );
-
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(symbol);
-        await _dbContext.SeedData(signal);
+        await SeedLatestSignals((symbol.Id, SignalType.BollingerBands, 0.5m));
 
         var handler = BuildHandler();
         var query = new GetSignalRankingsInput(market.Id, Take: 10);

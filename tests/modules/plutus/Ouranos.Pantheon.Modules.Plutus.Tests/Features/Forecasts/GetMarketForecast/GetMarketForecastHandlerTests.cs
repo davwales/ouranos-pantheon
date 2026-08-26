@@ -6,8 +6,8 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
@@ -202,5 +202,63 @@ public sealed class GetMarketForecastHandlerTests
         response.DayFive.ShouldNotBeNull();
         response.DaySix.ShouldNotBeNull();
         response.DaySeven.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task Handle_WhenMultipleForecastsForSameSymbol_ShouldReturnOnlyLatest()
+    {
+        // Arrange
+        var market = Market.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            new Taxes(null)
+        );
+
+        var symbol = Symbol.Create(
+            new Id<Symbol>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            null,
+            _fixture.Create<string>(),
+            market.Id,
+            new AdditionalFields()
+        );
+
+        var baseTime = DateTimeOffset.UtcNow;
+        static List<ForecastPoint> MakePredictions() =>
+            [.. Enumerable.Range(0, 7).Select(_ => new ForecastPoint(105m, 95m, 115m, 520m))];
+
+        var olderForecast = Forecast
+            .Create(
+                new Id<Forecast>(Guid.NewGuid().ToString()),
+                market.Id,
+                symbol.Id,
+                new ForecastPoint(100m, 90m, 110m, 500m),
+                MakePredictions()
+            )
+            .WithCreatedAt(baseTime.AddDays(-5));
+
+        var latestForecast = Forecast
+            .Create(
+                new Id<Forecast>(Guid.NewGuid().ToString()),
+                market.Id,
+                symbol.Id,
+                new ForecastPoint(102m, 92m, 112m, 510m),
+                MakePredictions()
+            )
+            .WithCreatedAt(baseTime);
+
+        await _dbContext.SeedData(market);
+        await _dbContext.SeedData(symbol);
+        await _dbContext.SeedData(olderForecast);
+        await _dbContext.SeedData(latestForecast);
+
+        var query = new GetMarketForecastInput(market.Id, Take: 10);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.TotalCount.ShouldBe(1);
+        result.Items.Single().Id.ShouldBe(latestForecast.Id);
     }
 }

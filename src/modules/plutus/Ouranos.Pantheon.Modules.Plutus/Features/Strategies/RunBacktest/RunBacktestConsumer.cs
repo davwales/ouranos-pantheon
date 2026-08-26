@@ -7,8 +7,8 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Steps;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
-using Ouranos.Pantheon.Modules.Shared.Application;
-using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Pipeline;
 using Wolverine.Attributes;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest;
@@ -74,7 +74,18 @@ public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
         }
 
         backtest.MarkRunning();
-        await dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            _logger.LogWarning(
+                "Backtest '{backtestId}' was claimed by a concurrent delivery. Skipping.",
+                message.BacktestId
+            );
+            return;
+        }
 
         try
         {
@@ -116,8 +127,8 @@ public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
                 .AddNestedPipeline(builder =>
                     builder
                         .AddStep<IterationSetupStep>()
-                        .AddStep<CloseExitsStep>()
                         .AddStep<ScoreSymbolsStep>()
+                        .AddStep<CloseExitsStep>()
                         .AddStep<BuyCandidatesStep>()
                         .AddStep<TrackMetricsStep>()
                         .WithIterations(totalDays + 1)

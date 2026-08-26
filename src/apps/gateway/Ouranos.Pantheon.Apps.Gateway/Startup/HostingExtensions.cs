@@ -1,7 +1,9 @@
 using Ouranos.Pantheon.Modules.Hermes;
+using Ouranos.Pantheon.Modules.Hestia;
 using Ouranos.Pantheon.Modules.Plutus;
 using Ouranos.Pantheon.Modules.Shared;
 using Ouranos.Pantheon.Modules.Shared.API.Extensions;
+using Ouranos.Pantheon.Modules.Shared.Contract;
 
 namespace Ouranos.Pantheon.Apps.Gateway.Startup;
 
@@ -13,6 +15,7 @@ public static class HostingExtensions
         new SharedModule(),
         new HermesModule(),
         new PlutusModule(),
+        new HestiaModule(),
     ];
 
     public static WebApplication ConfigureBuilder(this WebApplicationBuilder builder)

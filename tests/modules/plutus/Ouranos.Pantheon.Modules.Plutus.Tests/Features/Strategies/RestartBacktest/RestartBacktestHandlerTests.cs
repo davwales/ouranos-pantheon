@@ -5,7 +5,7 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
 using Wolverine;
@@ -39,9 +39,9 @@ public sealed class RestartBacktestHandlerTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var backtest = Backtest.Create(
             strategy.Id,
@@ -88,9 +88,9 @@ public sealed class RestartBacktestHandlerTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var backtest = Backtest.Create(
             strategy.Id,
@@ -138,9 +138,9 @@ public sealed class RestartBacktestHandlerTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var backtest = Backtest.Create(
             strategy.Id,
@@ -187,9 +187,9 @@ public sealed class RestartBacktestHandlerTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var backtest = Backtest.Create(
             strategy.Id,

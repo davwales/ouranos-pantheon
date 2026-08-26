@@ -5,8 +5,8 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetAllBacktests.Schema
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
 
@@ -48,9 +48,9 @@ public sealed class GetAllBacktestsHandlerTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         await _dbContext.Strategies.AddAsync(strategy);
         await _dbContext.SaveChangesAsync();
@@ -95,9 +95,9 @@ public sealed class GetAllBacktestsHandlerTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         await _dbContext.Strategies.AddAsync(strategy);
         await _dbContext.SaveChangesAsync();

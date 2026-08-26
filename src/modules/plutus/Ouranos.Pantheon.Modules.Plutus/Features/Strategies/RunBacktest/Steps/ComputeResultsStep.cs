@@ -1,11 +1,13 @@
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
-using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Pipeline;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Steps;
 
 public sealed class ComputeResultsStep : IStep<BacktestPayload>
 {
+    private const decimal MaxRatio = 1_000_000_000m;
+
     public async Task ExecuteAsync(PipelineContext context, BacktestPayload payload)
     {
         context.CancellationToken.ThrowIfCancellationRequested();
@@ -43,14 +45,14 @@ public sealed class ComputeResultsStep : IStep<BacktestPayload>
         var sortinoRatio = ComputeSortinoRatio(portfolioValues);
         var maxDrawdownAbsolute = maxDrawdown * peakPortfolioValue;
         var cagr = ComputeCagr(totalReturnPercent, totalDays);
-        var calmarRatio = maxDrawdown != 0 ? cagr / maxDrawdown : 0;
+        var calmarRatio = maxDrawdown != 0 ? Math.Min(cagr / maxDrawdown, MaxRatio) : 0;
         var grossProfit = closedPositions.Where(p => p.ProfitLoss > 0).Sum(p => p.ProfitLoss);
         var grossLoss = Math.Abs(
             closedPositions.Where(p => p.ProfitLoss < 0).Sum(p => p.ProfitLoss)
         );
         var profitFactor =
             grossLoss > 0 ? grossProfit / grossLoss
-            : grossProfit > 0 ? decimal.MaxValue
+            : grossProfit > 0 ? MaxRatio
             : 0;
         var avgWin = winningTrades > 0 ? grossProfit / winningTrades : 0;
         var avgLoss = losingTrades > 0 ? grossLoss / losingTrades : 0;
@@ -77,6 +79,12 @@ public sealed class ComputeResultsStep : IStep<BacktestPayload>
             BestTrade = closedPositions.Count > 0 ? closedPositions.Max(p => p.ReturnPercent) : 0,
             WorstTrade = closedPositions.Count > 0 ? closedPositions.Min(p => p.ReturnPercent) : 0,
             FinalBalance = balance,
+            TurnoverRate = totalDays > 0 ? (decimal)closedPositions.Count / totalDays : 0m,
+            IsValidated = false,
+            OutSampleResults = null,
+            OptimizedInputWeights = null,
+            OptimizedThresholds = null,
+            OptimizedConfiguration = null,
         };
     }
 
@@ -105,7 +113,7 @@ public sealed class ComputeResultsStep : IStep<BacktestPayload>
         var sampleVariance =
             returns.Sum(r => (r - avgReturn) * (r - avgReturn)) / (returns.Count - 1);
         var stdDev = (decimal)Math.Sqrt((double)sampleVariance);
-        return stdDev > 0 ? avgReturn / stdDev * (decimal)Math.Sqrt(365) : 0;
+        return stdDev > 0 ? Math.Min(avgReturn / stdDev * (decimal)Math.Sqrt(365), MaxRatio) : 0;
     }
 
     public static decimal ComputeSortinoRatio(List<decimal> portfolioValues)
@@ -134,12 +142,14 @@ public sealed class ComputeResultsStep : IStep<BacktestPayload>
 
         if (downsideReturns.Count == 0)
         {
-            return avgReturn > 0 ? decimal.MaxValue : 0;
+            return avgReturn > 0 ? MaxRatio : 0;
         }
 
         var downsideVariance = downsideReturns.Sum(r => r * r) / downsideReturns.Count;
         var downsideDeviation = (decimal)Math.Sqrt((double)downsideVariance);
-        return downsideDeviation > 0 ? avgReturn / downsideDeviation * (decimal)Math.Sqrt(365) : 0;
+        return downsideDeviation > 0
+            ? Math.Min(avgReturn / downsideDeviation * (decimal)Math.Sqrt(365), MaxRatio)
+            : 0;
     }
 
     public static decimal ComputeCagr(decimal totalReturnPercent, int totalDays)
@@ -156,7 +166,12 @@ public sealed class ComputeResultsStep : IStep<BacktestPayload>
         }
 
         var years = totalDays / 365.0;
-        var cagr = (decimal)(Math.Pow((double)finalMultiplier, 1.0 / years) - 1.0);
-        return cagr;
+        var cagrDouble = Math.Pow((double)finalMultiplier, 1.0 / years) - 1.0;
+        if (double.IsNaN(cagrDouble) || cagrDouble > (double)MaxRatio)
+        {
+            return MaxRatio;
+        }
+        var cagr = (decimal)cagrDouble;
+        return Math.Min(cagr, MaxRatio);
     }
 }

@@ -74,7 +74,7 @@ automation/           # Git hooks (pre-commit formatting, pre-push build)
 
 - .NET SDK
 - Node.js
-- Infrastructure: PostgreSQL, RabbitMQ - the recommended setup is the Docker Compose configuration in the [ouranos-docker-infrastructure](https://github.com/ouranos-labs/ouranos-docker-infrastructure) repository
+- Infrastructure: PostgreSQL, RabbitMQ - the recommended setup is the Docker Compose configuration in the [ouranos-infrastructure](https://github.com/davwales/ouranos-infrastructure) repository
 
 ### Backend
 

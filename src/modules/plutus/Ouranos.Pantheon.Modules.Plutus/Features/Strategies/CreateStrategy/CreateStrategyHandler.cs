@@ -3,8 +3,8 @@ using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.CreateStrategy.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
-using Ouranos.Pantheon.Modules.Shared.Application;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.CreateStrategy;
 
@@ -35,12 +35,9 @@ public sealed class CreateStrategyHandler
             command.MarketId,
             command.Name,
             command.Description,
-            command.Type,
             command.Configuration,
-            command.SignalWeightedConfig,
-            command.ForecastMomentumConfig,
-            command.MeanReversionConfig,
-            command.RecipeArbitrageConfig
+            command.InputWeights,
+            command.Thresholds
         );
 
         await _dbContext.Strategies.AddAsync(strategy, cancellationToken);

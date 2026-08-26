@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\modules\Ouranos.Pantheon.Modules.Shared\Ouranos.Pantheon.Modules.Shared.csproj" />
+    <ProjectReference Include="..\..\src\modules\shared\Ouranos.Pantheon.Modules.Shared.Contract\Ouranos.Pantheon.Modules.Shared.Contract.csproj" />
   </ItemGroup>
 
   <ItemGroup>

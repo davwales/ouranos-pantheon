@@ -424,3 +424,4 @@ appsettings.Development.Migration.json
 dev/
 coverage-report/
 coverage-merged/
+.local/

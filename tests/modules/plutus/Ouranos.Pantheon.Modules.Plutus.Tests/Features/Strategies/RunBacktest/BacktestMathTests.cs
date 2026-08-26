@@ -1,9 +1,8 @@
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Strategies.RunBacktest;
@@ -221,102 +220,6 @@ public sealed class BacktestMathTests
         // Assert
         netProceeds.ShouldBe(1200m);
         netPnl.ShouldBe(200m);
-    }
-
-    [Fact]
-    public void GetForecastData_WhenForecastIsNull_ReturnsNulls()
-    {
-        // Arrange
-        const decimal currentPrice = 100m;
-
-        // Act
-        var (price, change) = BacktestMath.GetForecastData(null, currentPrice);
-
-        // Assert
-        price.ShouldBeNull();
-        change.ShouldBeNull();
-    }
-
-    [Fact]
-    public void GetForecastData_WhenCurrentPriceIsZero_ReturnsNulls()
-    {
-        // Arrange
-        var forecast = Forecast.Create(
-            _fixture.Create<Id<Forecast>>(),
-            _fixture.Create<Id<Market>>(),
-            _fixture.Create<Id<Symbol>>(),
-            new ForecastPoint(110m, 100m, 120m, 500m),
-            [new ForecastPoint(105m, 95m, 115m, 400m)]
-        );
-
-        // Act
-        var (price, change) = BacktestMath.GetForecastData(forecast, 0m);
-
-        // Assert
-        price.ShouldBeNull();
-        change.ShouldBeNull();
-    }
-
-    [Fact]
-    public void GetForecastData_WhenForecastedPriceIsZero_ReturnsPriceWithNullChange()
-    {
-        // Arrange
-        var forecast = Forecast.Create(
-            _fixture.Create<Id<Forecast>>(),
-            _fixture.Create<Id<Market>>(),
-            _fixture.Create<Id<Symbol>>(),
-            new ForecastPoint(0m, 0m, 0m, 0m),
-            [new ForecastPoint(0m, 0m, 0m, 0m)]
-        );
-
-        // Act
-        var (price, change) = BacktestMath.GetForecastData(forecast, 100m);
-
-        // Assert
-        price.ShouldBe(0m);
-        change.ShouldBeNull();
-    }
-
-    [Fact]
-    public void GetForecastData_WhenValidForecast_ReturnsPriceAndChange()
-    {
-        // Arrange
-        var forecast = Forecast.Create(
-            _fixture.Create<Id<Forecast>>(),
-            _fixture.Create<Id<Market>>(),
-            _fixture.Create<Id<Symbol>>(),
-            new ForecastPoint(110m, 100m, 120m, 500m),
-            [new ForecastPoint(105m, 95m, 115m, 400m)]
-        );
-        const decimal currentPrice = 100m;
-
-        // Act
-        var (price, change) = BacktestMath.GetForecastData(forecast, currentPrice);
-
-        // Assert
-        price.ShouldBe(110m);
-        change.ShouldBe(0.1m); // (110 - 100) / 100
-    }
-
-    [Fact]
-    public void GetForecastData_WhenForecastedPriceDeclines_ReturnsNegativeChange()
-    {
-        // Arrange
-        var forecast = Forecast.Create(
-            _fixture.Create<Id<Forecast>>(),
-            _fixture.Create<Id<Market>>(),
-            _fixture.Create<Id<Symbol>>(),
-            new ForecastPoint(90m, 80m, 100m, 500m),
-            [new ForecastPoint(95m, 85m, 105m, 400m)]
-        );
-        const decimal currentPrice = 100m;
-
-        // Act
-        var (price, change) = BacktestMath.GetForecastData(forecast, currentPrice);
-
-        // Assert
-        price.ShouldBe(90m);
-        change.ShouldBe(-0.1m); // (90 - 100) / 100
     }
 
     [Fact]

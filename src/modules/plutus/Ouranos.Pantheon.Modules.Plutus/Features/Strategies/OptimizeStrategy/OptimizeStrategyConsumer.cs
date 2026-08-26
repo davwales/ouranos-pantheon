@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -9,12 +10,13 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Inputs;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization.Chromosomes;
-using Ouranos.Pantheon.Modules.Shared.Algorithms.Genetic;
-using Ouranos.Pantheon.Modules.Shared.Application;
-using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Algorithms.Genetic;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Pipeline;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Wolverine.Attributes;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.OptimizeStrategy;
@@ -27,6 +29,10 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
     private readonly IOptions<OptimizationOptions> _options;
     private readonly IOptions<BacktestDataOptions> _backtestDataOptions;
     private readonly IStepRegistry<BacktestPayload> _stepRegistry;
+
+    private const double UnderTradingPenaltyPerMissingTrade = 0.1;
+
+    private const double ValidationSharpeRatio = 0.5;
 
     public OptimizeStrategyConsumer(
         ILogger<OptimizeStrategyConsumer> logger,
@@ -90,79 +96,22 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
         }
 
         backtest.MarkRunning();
-        await dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            _logger.LogWarning(
+                "Backtest '{backtestId}' was claimed by a concurrent delivery. Skipping.",
+                message.BacktestId
+            );
+            return;
+        }
 
         try
         {
-            var data = await _dataService.LoadDataAsync(
-                backtest.MarketId,
-                backtest.StartDate,
-                backtest.EndDate,
-                cancellationToken,
-                lookbackDays: _backtestDataOptions.Value.LookbackDays
-            );
-
-            backtest.UpdateProgress(2, "Market data loaded, starting optimization...");
-            await dbContext.SaveChangesAsync(cancellationToken);
-
-            var bestChromosome = await RunOptimizationAsync(
-                backtest,
-                message,
-                data,
-                dbContext,
-                cancellationToken
-            );
-
-            backtest.UpdateProgress(92, "Running final backtest with optimized configuration...");
-            await dbContext.SaveChangesAsync(cancellationToken);
-
-            var (pipelineResults, pipelinePositions) = await RunPipelineAsync(
-                backtest.Strategy,
-                backtest.MarketId,
-                backtest.StartDate,
-                backtest.EndDate,
-                backtest.Budget,
-                cancellationToken,
-                bestChromosome.Configuration,
-                data,
-                message.VolumeParticipationRate,
-                message.SlippageMultiplier,
-                bestChromosome
-            );
-
-            var finalResults = pipelineResults with
-            {
-                OptimizedConfiguration = bestChromosome.Configuration,
-                OptimizedSignalWeightedConfig = bestChromosome switch
-                {
-                    SignalWeightedChromosome sw => sw.SignalWeightedConfig,
-                    _ => null,
-                },
-                OptimizedForecastMomentumConfig = bestChromosome switch
-                {
-                    ForecastMomentumChromosome fm => fm.ForecastMomentumConfig,
-                    _ => null,
-                },
-                OptimizedMeanReversionConfig = bestChromosome switch
-                {
-                    MeanReversionChromosome mr => mr.MeanReversionConfig,
-                    _ => null,
-                },
-                OptimizedRecipeArbitrageConfig = bestChromosome switch
-                {
-                    RecipeArbitrageChromosome ra => ra.RecipeArbitrageConfig,
-                    _ => null,
-                },
-            };
-
-            backtest.Complete(finalResults);
-            backtest.Positions = pipelinePositions;
-            await dbContext.SaveChangesAsync(cancellationToken);
-
-            _logger.LogDebug(
-                "Optimization for backtest '{backtestId}' completed successfully.",
-                message.BacktestId
-            );
+            await RunOptimizationFlowAsync(backtest, message, dbContext, cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -191,51 +140,142 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
         }
     }
 
+    private async Task RunOptimizationFlowAsync(
+        Backtest backtest,
+        OptimizeStrategyMessage message,
+        PlutusDbContext dbContext,
+        CancellationToken cancellationToken
+    )
+    {
+        var data = await _dataService.LoadDataAsync(
+            backtest.MarketId,
+            backtest.StartDate,
+            backtest.EndDate,
+            cancellationToken,
+            lookbackDays: _backtestDataOptions.Value.LookbackDays
+        );
+
+        backtest.UpdateProgress(2, "Market data loaded, starting optimization...");
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        var outSampleRatio = Math.Clamp(message.OutSampleRatio, 0.05, 0.5);
+        var totalSpan = backtest.EndDate - backtest.StartDate;
+        var inSampleEnd = backtest.StartDate + totalSpan * (1.0 - outSampleRatio);
+
+        var bestChromosome = await RunOptimizationAsync(
+            backtest,
+            message,
+            data,
+            inSampleEnd,
+            dbContext,
+            cancellationToken
+        );
+
+        backtest.UpdateProgress(92, "Running final backtest with optimized configuration...");
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        var (inSampleResults, inSamplePositions) = await RunPipelineAsync(
+            backtest.Strategy,
+            backtest.MarketId,
+            backtest.StartDate,
+            inSampleEnd,
+            backtest.Budget,
+            bestChromosome.Configuration,
+            data,
+            message.VolumeParticipationRate,
+            message.SlippageMultiplier,
+            bestChromosome,
+            cancellationToken
+        );
+        var (outSampleResults, _) = await RunPipelineAsync(
+            backtest.Strategy,
+            backtest.MarketId,
+            inSampleEnd,
+            backtest.EndDate,
+            backtest.Budget,
+            bestChromosome.Configuration,
+            data,
+            message.VolumeParticipationRate,
+            message.SlippageMultiplier,
+            bestChromosome,
+            cancellationToken
+        );
+
+        var isValidated = ComputeIsValidated(inSampleResults, outSampleResults);
+
+        var finalResults = WithOptimizedConfigs(
+            inSampleResults,
+            bestChromosome,
+            outSampleResults,
+            isValidated
+        );
+
+        backtest.Complete(finalResults);
+        backtest.Positions = inSamplePositions;
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        _logger.LogDebug(
+            "Optimization for backtest '{backtestId}' completed. In-sample Sharpe={isSharpe:F3}, OOS Sharpe={oosSharpe:F3}, validated={isValidated}.",
+            message.BacktestId,
+            inSampleResults.SharpeRatio,
+            outSampleResults.SharpeRatio,
+            isValidated
+        );
+    }
+
+    private static BacktestResults WithOptimizedConfigs(
+        BacktestResults results,
+        StrategyChromosome chromosome,
+        BacktestResults outSampleResults,
+        bool isValidated
+    )
+    {
+        return results with
+        {
+            OptimizedConfiguration = chromosome.Configuration,
+            OptimizedInputWeights = NormalizeInputWeights(chromosome.InputWeights),
+            OptimizedThresholds = chromosome.Thresholds,
+            IsValidated = isValidated,
+            OutSampleResults = outSampleResults,
+        };
+    }
+
+    internal static List<InputWeight> NormalizeInputWeights(List<InputWeight> inputWeights)
+    {
+        return [.. inputWeights.GroupBy(w => w.Kind).Select(g => g.First()).OrderBy(w => w.Kind)];
+    }
+
     private async Task<StrategyChromosome> RunOptimizationAsync(
         Backtest backtest,
         OptimizeStrategyMessage message,
         BacktestData data,
+        DateTimeOffset inSampleEnd,
         PlutusDbContext dbContext,
         CancellationToken cancellationToken
     )
     {
         var population = Enumerable
             .Range(0, (int)message.PopulationSize)
-            .Select(_ => StrategyChromosome.CreateRandom(backtest.Strategy.Type))
+            .Select(_ => StrategyChromosome.CreateRandom())
             .ToList();
+
+        var fitnessCache = new ConcurrentDictionary<string, double>();
 
         var engine = new GeneticAlgorithmBuilder<double>()
             .SetElitismRate(_options.Value.ElitismRate)
             .SetMutationRate(_options.Value.MutationRate)
             .SetPopulationSize(message.PopulationSize)
-            .AddFitnessComponent(async chromosome =>
-            {
-                var strategyChromosome = ExtractStrategyChromosome(chromosome);
-                var pipelineResult = await RunBacktestSafelyAsync(
-                    backtest.Strategy,
-                    backtest.MarketId,
-                    backtest.StartDate,
-                    backtest.EndDate,
-                    backtest.Budget,
-                    strategyChromosome.Configuration,
+            .AddFitnessComponent(chromosome =>
+                ComputeFitnessAsync(
+                    chromosome,
+                    backtest,
                     data,
-                    message.VolumeParticipationRate,
-                    message.SlippageMultiplier,
-                    strategyChromosome,
+                    inSampleEnd,
+                    message,
+                    fitnessCache,
                     cancellationToken
-                );
-
-                if (pipelineResult is null)
-                {
-                    return double.MinValue;
-                }
-
-                return message.SharpeRatioWeight * (double)pipelineResult.Value.Results.SharpeRatio
-                    + message.TotalReturnWeight
-                        * (double)pipelineResult.Value.Results.TotalReturnPercent
-                    + message.MaxDrawdownWeight
-                        * (double)pipelineResult.Value.Results.MaxDrawdownPercent;
-            })
+                )
+            )
             .Build();
 
         var bestChromosome = await engine.EvolveAsync(
@@ -276,9 +316,10 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
             _logger.LogWarning(
                 "Optimization found no viable configuration. Falling back to original strategy configuration."
             );
-            return StrategyChromosome.Create(
-                backtest.Strategy.Type,
-                backtest.Strategy.TradingConfiguration
+            return new StrategyChromosome(
+                backtest.Strategy.TradingConfiguration,
+                backtest.Strategy.InputWeights,
+                backtest.Strategy.Thresholds
             );
         }
 
@@ -300,12 +341,12 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
         DateTimeOffset startDate,
         DateTimeOffset endDate,
         decimal budget,
-        CancellationToken cancellationToken,
         TradingConfiguration configurationOverride,
         BacktestData data,
         decimal volumeParticipationRate,
         decimal slippageMultiplier,
-        StrategyChromosome chromosome
+        StrategyChromosome chromosome,
+        CancellationToken cancellationToken
     )
     {
         var parameters = new BacktestParameters(
@@ -325,8 +366,9 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
             .AddStep<InitializeStep>()
             .AddNestedPipeline(builder =>
                 builder
-                    .AddStep<CloseExitsStep>()
+                    .AddStep<IterationSetupStep>()
                     .AddStep<ScoreSymbolsStep>()
+                    .AddStep<CloseExitsStep>()
                     .AddStep<BuyCandidatesStep>()
                     .AddStep<TrackMetricsStep>()
                     .WithIterations((int)(endDate - startDate).TotalDays + 1)
@@ -374,12 +416,12 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
                 startDate,
                 endDate,
                 budget,
-                cancellationToken,
                 configuration,
                 data,
                 volumeParticipationRate,
                 slippageMultiplier,
-                chromosome
+                chromosome,
+                cancellationToken
             );
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
@@ -392,6 +434,57 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
         }
     }
 
+    /// <summary>
+    ///     Fitness callback for the genetic engine. Returns the cached fitness for an
+    ///     already-evaluated gene signature; otherwise runs the backtest pipeline with
+    ///     the chromosome's config, derives the fitness from the result, and caches it
+    ///     so repeated gene vectors across generations are scored once. Separated from
+    ///     <see cref="RunOptimizationAsync" /> to keep that method readable and to give
+    ///     the test layer a direct seam into the cache-backed fitness path.
+    /// </summary>
+    internal async Task<double> ComputeFitnessAsync(
+        IChromosome<double> chromosome,
+        Backtest backtest,
+        BacktestData data,
+        DateTimeOffset inSampleEnd,
+        OptimizeStrategyMessage message,
+        ConcurrentDictionary<string, double> fitnessCache,
+        CancellationToken cancellationToken
+    )
+    {
+        var geneSignature = string.Join(",", chromosome.Genes.Select(g => g.ToString("R")));
+        if (fitnessCache.TryGetValue(geneSignature, out var cachedFitness))
+        {
+            return cachedFitness;
+        }
+
+        var strategyChromosome = ExtractStrategyChromosome(chromosome);
+        var pipelineResult = await RunBacktestSafelyAsync(
+            backtest.Strategy,
+            backtest.MarketId,
+            backtest.StartDate,
+            inSampleEnd,
+            backtest.Budget,
+            strategyChromosome.Configuration,
+            data,
+            message.VolumeParticipationRate,
+            message.SlippageMultiplier,
+            strategyChromosome,
+            cancellationToken
+        );
+
+        var fitness = pipelineResult is null
+            ? double.MinValue
+            : ComputeFitness(
+                pipelineResult.Value.Results,
+                message,
+                strategyChromosome.InputWeights
+            );
+
+        fitnessCache[geneSignature] = fitness;
+        return fitness;
+    }
+
     internal static StrategyChromosome ExtractStrategyChromosome(IChromosome<double> chromosome)
     {
         if (chromosome is StrategyChromosome strategyChromosome)
@@ -402,5 +495,37 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
         throw new InvalidOperationException(
             $"Expected {nameof(StrategyChromosome)} but got {chromosome.GetType().Name}."
         );
+    }
+
+    internal static double ComputeFitness(
+        BacktestResults results,
+        OptimizeStrategyMessage message,
+        IReadOnlyList<InputWeight> weights
+    )
+    {
+        var sortino = (double)(results.SortinoRatio ?? results.SharpeRatio);
+        var cagr = (double)(results.Cagr ?? results.TotalReturnPercent);
+
+        var baseFitness =
+            message.SortinoWeight * sortino
+            + message.CagrWeight * cagr
+            - message.DrawdownWeight * (double)results.MaxDrawdownPercent
+            - message.TurnoverWeight * (double)results.TurnoverRate
+            - message.L1RegularizationWeight * weights.Sum(w => Math.Abs((double)w.Weight));
+
+        var tradeShortfall = Math.Max(0, message.MinTrades - results.TotalTrades);
+        var underTradingPenalty = tradeShortfall * UnderTradingPenaltyPerMissingTrade;
+        return baseFitness - underTradingPenalty;
+    }
+
+    internal static bool ComputeIsValidated(BacktestResults inSample, BacktestResults outSample)
+    {
+        if (inSample.SharpeRatio == 0m || outSample.SharpeRatio == 0m)
+        {
+            return false;
+        }
+
+        return (double)outSample.SharpeRatio
+            >= ValidationSharpeRatio * (double)inSample.SharpeRatio;
     }
 }

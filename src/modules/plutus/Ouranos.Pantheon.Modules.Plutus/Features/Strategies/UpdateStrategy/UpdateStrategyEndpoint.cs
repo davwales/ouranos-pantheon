@@ -2,8 +2,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.UpdateStrategy.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.UpdateStrategy;
@@ -27,10 +27,8 @@ public static class UpdateStrategyEndpoint
             body.Name,
             body.Description,
             body.Configuration,
-            body.SignalWeightedConfig,
-            body.ForecastMomentumConfig,
-            body.MeanReversionConfig,
-            body.RecipeArbitrageConfig
+            body.InputWeights,
+            body.Thresholds
         );
         return Results.Ok(await bus.InvokeAsync<IdResponse<Strategy>>(input, ct));
     }

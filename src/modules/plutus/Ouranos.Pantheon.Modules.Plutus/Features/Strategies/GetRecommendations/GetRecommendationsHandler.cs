@@ -2,15 +2,17 @@ using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetRecommendations.Schemas;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Steps;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Executors;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
-using Ouranos.Pantheon.Modules.Shared.Application;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres.Extensions;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres.Querying;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetRecommendations;
 
@@ -19,23 +21,21 @@ public sealed class GetRecommendationsHandler
 {
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<GetRecommendationsHandler> _logger;
-    private readonly Dictionary<StrategyType, IStrategyExecutor> _executors;
+    private readonly IStrategyExecutor _executor;
 
     public GetRecommendationsHandler(
         ILogger<GetRecommendationsHandler> logger,
         PlutusDbContext dbContext,
-        IEnumerable<IStrategyExecutor> executors,
-        CompositeExecutor compositeExecutor
+        IStrategyExecutor executor
     )
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(dbContext);
-        Guard.Against.Null(compositeExecutor);
+        Guard.Against.Null(executor);
 
         _logger = logger;
         _dbContext = dbContext;
-        _executors = executors.ToDictionary(e => e.SupportedType);
-        _executors[StrategyType.Composite] = compositeExecutor;
+        _executor = executor;
     }
 
     public async Task<GetRecommendationsResponse> Handle(
@@ -48,139 +48,43 @@ public sealed class GetRecommendationsHandler
 
         Guard.Against.NegativeOrZero(query.Budget, nameof(query.Budget));
 
-        var strategy = await _dbContext.Strategies.FirstOrDefaultAsync(
-            s => s.Id == query.StrategyId,
-            cancellationToken
-        );
-        Guard.Against.NotFound(query.StrategyId, strategy);
+        var data = await LoadRecommendationDataAsync(query, cancellationToken);
 
-        var market = await _dbContext.Markets.FirstOrDefaultAsync(
-            m => m.Id == query.MarketId,
-            cancellationToken
-        );
-        Guard.Against.NotFound(query.MarketId, market);
-
-        Guard.Against.InvalidInput(
-            query.MarketId,
-            nameof(query.MarketId),
-            m => m == strategy.MarketId,
-            $"Strategy '{strategy.Id}' does not belong to market '{query.MarketId}'."
-        );
-
-        var symbols = await _dbContext
-            .Symbols.AsNoTracking()
-            .Where(s => s.MarketId == query.MarketId)
-            .ToListAsync(cancellationToken);
-
-        if (symbols.Count == 0)
+        if (data.Symbols.Count == 0)
         {
             return new GetRecommendationsResponse([]);
         }
 
-        var symbolIds = symbols.Select(s => s.Id).ToList();
-        var snapshots = await _dbContext
-            .MarketTradeSnapshots.AsNoTracking()
-            .Where(s => symbolIds.Contains(s.SymbolId) && s.MarketId == query.MarketId)
-            .ToListAsync(cancellationToken);
-
-        var signals = await _dbContext
-            .Signals.AsNoTracking()
-            .Where(s => symbolIds.Contains(s.SymbolId))
-            .ToListAsync(cancellationToken);
-
-        var forecasts = await _dbContext
-            .Forecasts.AsNoTracking()
-            .Include(f => f.Predictions)
-            .Where(f => symbolIds.Contains(f.SymbolId) && f.MarketId == query.MarketId)
-            .ToListAsync(cancellationToken);
-
-        if (!_executors.TryGetValue(strategy.Type, out var executor))
-        {
-            throw new InvalidOperationException(
-                $"No executor registered for strategy type '{strategy.Type}'."
-            );
-        }
-
-        var taxRate = market.Taxes.Flat?.Rate ?? 0m;
-        var buyThreshold = strategy.SignalWeightedConfig?.BuyThreshold ?? 0.1m;
-        var maxPositions = strategy.TradingConfiguration.MaxPositions ?? int.MaxValue;
-        var maxPositionPercent = strategy.TradingConfiguration.MaxPositionPercent ?? 1m;
+        var taxRate = data.Market.Taxes.Flat?.Rate ?? 0m;
+        var limit = data.Market.Taxes.Flat?.Maximum ?? decimal.MaxValue;
+        var buyThreshold = data.Strategy.Thresholds.BuyThreshold ?? 0m;
+        var maxPositions = data.Strategy.TradingConfiguration.MaxPositions ?? int.MaxValue;
+        var maxPositionPercent = data.Strategy.TradingConfiguration.MaxPositionPercent ?? 1m;
 
         var recommendations = new List<StrategyRecommendation>();
+        var buildContext = new RecommendationBuildContext(
+            data.Snapshots,
+            data.Signals,
+            data.SignalHistory,
+            data.Strategy,
+            query.MarketId,
+            taxRate,
+            limit,
+            buyThreshold,
+            query.Budget,
+            maxPositionPercent,
+            _executor
+        );
 
-        foreach (var symbol in symbols)
+        foreach (var symbol in data.Symbols)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var symbolShort = snapshots.FirstOrDefault(s =>
-                s.SymbolId == symbol.Id && s.TimeFrame == TimeFrame.OneHour
-            );
-            var symbolMedium = snapshots.FirstOrDefault(s =>
-                s.SymbolId == symbol.Id && s.TimeFrame == TimeFrame.OneWeek
-            );
-            var symbolLong = snapshots.FirstOrDefault(s =>
-                s.SymbolId == symbol.Id && s.TimeFrame == TimeFrame.OneMonth
-            );
-            var currentPrice =
-                symbolShort?.TotalSpent > 0 && symbolShort.TotalVolume > 0
-                    ? symbolShort.TotalSpent / symbolShort.TotalVolume
-                    : 0m;
-
-            if (currentPrice == 0 || symbolShort is null)
+            var recommendation = TryBuildRecommendation(buildContext, symbol);
+            if (recommendation is not null)
             {
-                continue;
+                recommendations.Add(recommendation);
             }
-
-            var symbolSignals = signals.Where(s => s.SymbolId == symbol.Id).ToList();
-            var forecast = forecasts.FirstOrDefault(f => f.SymbolId == symbol.Id);
-            var (forecastedPrice, forecastedChange) = GetForecastData(forecast, currentPrice);
-
-            var limit = market.Taxes.Flat?.Maximum ?? decimal.MaxValue;
-
-            var context = new StrategyScoreContext(
-                symbol.Id,
-                query.MarketId,
-                symbol.Name,
-                symbol.Subcode,
-                currentPrice,
-                taxRate,
-                limit,
-                symbolShort,
-                symbolMedium,
-                symbolLong,
-                [],
-                symbolSignals,
-                forecastedPrice,
-                forecastedChange,
-                SignalWeightedConfig: strategy.SignalWeightedConfig,
-                ForecastMomentumConfig: strategy.ForecastMomentumConfig,
-                MeanReversionConfig: strategy.MeanReversionConfig,
-                RecipeArbitrageConfig: strategy.RecipeArbitrageConfig,
-                Components: strategy.Components
-            );
-
-            var score = executor.Score(context, strategy.TradingConfiguration);
-            if (score is null || score.Value <= buyThreshold)
-            {
-                continue;
-            }
-
-            var positionBudget = query.Budget * maxPositionPercent;
-            var volume = Math.Max(1, Math.Floor(positionBudget / currentPrice));
-            var allocation = volume * currentPrice;
-
-            recommendations.Add(
-                new StrategyRecommendation(
-                    symbol.Id.ToString(),
-                    symbol.Name,
-                    symbol.Subcode,
-                    score.Value,
-                    allocation,
-                    currentPrice,
-                    volume,
-                    BuildRationale(score.Value, symbolSignals, symbolMedium, context)
-                )
-            );
         }
 
         var sorted = recommendations.OrderByDescending(r => r.Score).Take(maxPositions).ToList();
@@ -192,30 +96,106 @@ public sealed class GetRecommendationsHandler
         return new GetRecommendationsResponse(sorted);
     }
 
-    private static (decimal? Price, decimal? Change) GetForecastData(
-        Forecast? forecast,
-        decimal currentPrice
+    private static StrategyRecommendation? TryBuildRecommendation(
+        RecommendationBuildContext buildContext,
+        Symbol symbol
     )
     {
-        if (forecast is null || currentPrice == 0)
+        var symbolShort = buildContext.Snapshots.FirstOrDefault(s =>
+            s.SymbolId == symbol.Id && s.TimeFrame == TimeFrame.OneHour
+        );
+        var symbolMedium = buildContext.Snapshots.FirstOrDefault(s =>
+            s.SymbolId == symbol.Id && s.TimeFrame == TimeFrame.OneWeek
+        );
+        var symbolLong = buildContext.Snapshots.FirstOrDefault(s =>
+            s.SymbolId == symbol.Id && s.TimeFrame == TimeFrame.OneMonth
+        );
+
+        var priceSnapshot = FindPriceSnapshot(buildContext.Snapshots, symbol.Id);
+        if (priceSnapshot is null)
         {
-            return (null, null);
+            return null;
         }
 
-        var forecastedPrice = forecast.Latest.AveragePrice;
-        if (forecastedPrice == 0)
+        var currentPrice = priceSnapshot.TotalSpent / priceSnapshot.TotalVolume;
+
+        var symbolSignals = buildContext.Signals.Where(s => s.SymbolId == symbol.Id).ToList();
+        var symbolHistory = buildContext.SignalHistory.GetValueOrDefault(symbol.Id);
+
+        var context = new StrategyScoreContext(
+            symbol.Id,
+            buildContext.MarketId,
+            symbol.Name,
+            symbol.Subcode,
+            currentPrice,
+            buildContext.TaxRate,
+            buildContext.Limit,
+            priceSnapshot,
+            symbolMedium,
+            symbolLong,
+            [],
+            symbolSignals,
+            buildContext.Strategy.InputWeights,
+            buildContext.Strategy.Thresholds,
+            symbolHistory
+        );
+
+        var score = buildContext.Executor.Score(
+            context,
+            buildContext.Strategy.TradingConfiguration
+        );
+        if (score is null || score.Value <= buildContext.BuyThreshold)
         {
-            return (forecastedPrice, null);
+            return null;
         }
 
-        return (forecastedPrice, (forecastedPrice - currentPrice) / currentPrice);
+        var positionBudget = buildContext.Budget * buildContext.MaxPositionPercent;
+        var volume = Math.Max(1, Math.Floor(positionBudget / currentPrice));
+        var allocation = volume * currentPrice;
+
+        return new StrategyRecommendation(
+            symbol.Id.ToString(),
+            symbol.Name,
+            symbol.Subcode,
+            score.Value,
+            allocation,
+            currentPrice,
+            volume,
+            BuildRationale(score.Value, symbolSignals, symbolMedium)
+        );
+    }
+
+    private static MarketTradeSnapshot? FindPriceSnapshot(
+        List<MarketTradeSnapshot> snapshots,
+        Id<Symbol> symbolId
+    )
+    {
+        TimeFrame[] priceTimeframes =
+        [
+            TimeFrame.OneHour,
+            TimeFrame.OneDay,
+            TimeFrame.OneWeek,
+            TimeFrame.OneMonth,
+        ];
+
+        foreach (var timeframe in priceTimeframes)
+        {
+            var snapshot = snapshots.FirstOrDefault(s =>
+                s.SymbolId == symbolId && s.TimeFrame == timeframe
+            );
+            if (snapshot is { TotalSpent: > 0, TotalVolume: > 0 })
+            {
+                return snapshot;
+            }
+        }
+
+        return null;
     }
 
     private static string BuildRationale(
         decimal score,
         List<Signal> signals,
-        MarketTradeSnapshot? snap,
-        StrategyScoreContext context
+        MarketTradeSnapshot? snap
     )
     {
         var parts = new List<string> { $"Score: {score:F3}" };
@@ -233,11 +213,136 @@ public sealed class GetRecommendationsHandler
             parts.Add($"Price range: {snap.MinPrice:F2}-{snap.MaxPrice:F2}");
         }
 
-        if (context.ForecastedPriceChange.HasValue)
+        return string.Join("; ", parts);
+    }
+
+    /// <summary>
+    ///     Loads every input the recommendation loop needs - strategy, market, symbols,
+    ///     trade snapshots, and latest signals (plus reconstructed history) - in one
+    ///     place so <see cref="Handle" /> is a plain validate -&gt; load -&gt; loop -&gt; sort
+    ///     flow. Read-only path: all queries use <c>AsNoTracking</c>.
+    /// </summary>
+    private async Task<RecommendationData> LoadRecommendationDataAsync(
+        GetRecommendationsInput query,
+        CancellationToken cancellationToken
+    )
+    {
+        var strategy = await _dbContext
+            .Strategies.AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Id == query.StrategyId, cancellationToken);
+        Guard.Against.NotFound(query.StrategyId, strategy);
+
+        var market = await _dbContext
+            .Markets.AsNoTracking()
+            .FirstOrDefaultAsync(m => m.Id == query.MarketId, cancellationToken);
+        Guard.Against.NotFound(query.MarketId, market);
+
+        Guard.Against.InvalidInput(
+            query.MarketId,
+            nameof(query.MarketId),
+            m => m == strategy.MarketId,
+            $"Strategy '{strategy.Id}' does not belong to market '{query.MarketId}'."
+        );
+
+        var symbols = await _dbContext
+            .Symbols.AsNoTracking()
+            .Where(s => s.MarketId == query.MarketId)
+            .ToListAsync(cancellationToken);
+
+        var symbolIds = symbols.Select(s => s.Id).ToList();
+
+        var snapshots = await _dbContext
+            .MarketTradeSnapshots.AsNoTracking()
+            .Where(s => symbolIds.Contains(s.SymbolId) && s.MarketId == query.MarketId)
+            .ToListAsync(cancellationToken);
+
+        var latestRows = await _dbContext
+            .LatestSignals.AsNoTracking()
+            .Where(s => symbolIds.Contains(s.SymbolId))
+            .ToListAsync(cancellationToken);
+
+        var signals = latestRows
+            .Select(ls => Signal.Create(query.MarketId, ls.SymbolId, ls.SignalType, ls.LastValue))
+            .ToList();
+
+        var signalHistory = await TryLoadSignalHistoryAsync(symbolIds, cancellationToken);
+
+        return new RecommendationData(strategy, market, symbols, snapshots, signals, signalHistory);
+    }
+
+    private async Task<
+        Dictionary<Id<Symbol>, Dictionary<SignalType, IReadOnlyList<decimal>>>
+    > TryLoadSignalHistoryAsync(List<Id<Symbol>> symbolIds, CancellationToken cancellationToken)
+    {
+        try
         {
-            parts.Add($"Forecast change: {context.ForecastedPriceChange.Value:P1}");
+            return await LoadSignalHistoryAsync(symbolIds, cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogDebug(
+                ex,
+                "Signal history query failed; falling back to latest-value-only scoring."
+            );
+            return [];
+        }
+    }
+
+    /// <summary>
+    ///     Loads the most recent <see cref="ScoreSymbolsStep.SignalHistoryWindowSize" />
+    ///     daily signal values per (symbol, signal type) from the
+    ///     <c>signal_history_30m</c> continuous aggregate, collapsing its 30-minute
+    ///     buckets into one value per day via <c>time_bucket('1 day', bucket)</c>.
+    ///     This matches the backtest path (<see cref="ScoreSymbolsStep" />), which
+    ///     reconstructs one signal value per day and keeps a rolling buffer of the
+    ///     same size, so the 70/30 latest/trend blend applied live is the same blend
+    ///     the optimizer trained against.
+    /// </summary>
+    private async Task<
+        Dictionary<Id<Symbol>, Dictionary<SignalType, IReadOnlyList<decimal>>>
+    > LoadSignalHistoryAsync(List<Id<Symbol>> symbolIds, CancellationToken cancellationToken)
+    {
+        if (symbolIds.Count == 0)
+        {
+            return [];
         }
 
-        return string.Join("; ", parts);
+        var command = RawSqlCommand
+            .FromSql(
+                """
+                SELECT
+                    symbol_id,
+                    signal_type,
+                    time_bucket('1 day', bucket) AS bucket,
+                    LAST(last_value, bucket) AS last_value
+                FROM plutus.signal_history_30m
+                WHERE symbol_id = ANY(@symbolIds)
+                  AND bucket >= now() - INTERVAL '7 days'
+                GROUP BY symbol_id, signal_type, time_bucket('1 day', bucket)
+                ORDER BY symbol_id, signal_type, bucket
+                """
+            )
+            .WithIds("@symbolIds", symbolIds);
+
+        var rows = await _dbContext.Database.ExecuteQueryAsync<SignalHistoryRow>(
+            command,
+            cancellationToken
+        );
+
+        return rows.GroupBy(r => new Id<Symbol>(r.SymbolId.ToString()))
+            .ToDictionary(
+                g => g.Key,
+                g =>
+                    g.GroupBy(r => (SignalType)r.SignalType)
+                        .ToDictionary(
+                            sg => sg.Key,
+                            sg =>
+                                (IReadOnlyList<decimal>)
+                                    [
+                                        .. sg.TakeLast(ScoreSymbolsStep.SignalHistoryWindowSize)
+                                            .Select(r => r.LastValue ?? 0m),
+                                    ]
+                        )
+            );
     }
 }

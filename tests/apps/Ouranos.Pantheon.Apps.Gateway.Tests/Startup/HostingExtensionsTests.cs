@@ -5,8 +5,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Apps.Gateway.Startup;
 using Ouranos.Pantheon.Modules.Hermes;
+using Ouranos.Pantheon.Modules.Hestia;
 using Ouranos.Pantheon.Modules.Plutus;
-using Ouranos.Pantheon.Modules.Shared;
+using Ouranos.Pantheon.Modules.Shared.Contract;
 
 namespace Ouranos.Pantheon.Apps.Gateway.Tests.Startup;
 
@@ -89,5 +90,21 @@ public sealed class HostingExtensionsTests
         // Assert
         modules.ShouldContain(m => m is HermesModule);
         modules.ShouldContain(m => m is PlutusModule);
+    }
+
+    [Fact]
+    public void Modules_ShouldContainHestia()
+    {
+        // Arrange
+        var field = typeof(HostingExtensions).GetField(
+            "Modules",
+            BindingFlags.NonPublic | BindingFlags.Static
+        )!;
+
+        // Act
+        var modules = (IReadOnlyList<IPantheonModule>)field.GetValue(null)!;
+
+        // Assert
+        modules.ShouldContain(m => m is HestiaModule);
     }
 }

@@ -1,5 +1,5 @@
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
-using Ouranos.Pantheon.Modules.Shared.Extensions;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Tests.Shared.Domain.Folders;

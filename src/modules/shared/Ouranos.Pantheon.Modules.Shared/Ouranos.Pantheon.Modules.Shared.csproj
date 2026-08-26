@@ -1,0 +1,60 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Ouranos.Pantheon.Modules.Shared.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EFCore.NamingConventions" />
+    <PackageReference Include="Flagsmith" />
+    <PackageReference Include="TickerQ" />
+    <PackageReference Include="TickerQ.EntityFrameworkCore" />
+    <PackageReference Include="TickerQ.Dashboard" />
+    <PackageReference Include="Marten" />
+    <PackageReference Include="WolverineFx" />
+    <PackageReference Include="WolverineFx.Marten" />
+    <PackageReference Include="WolverineFx.RabbitMq" />
+    <PackageReference Include="WolverineFx.RuntimeCompilation" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Configuration" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="Microsoft.Extensions.Http" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Serilog.AspNetCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ouranos.Pantheon.Modules.Shared.Contract\Ouranos.Pantheon.Modules.Shared.Contract.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content
+      Include="..\..\..\apps\gateway\Ouranos.Pantheon.Apps.Gateway\appsettings.json"
+      Condition="Exists('..\..\..\apps\gateway\Ouranos.Pantheon.Apps.Gateway\appsettings.json')"
+    >
+      <Link>appsettings.json</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </Content>
+
+    <Content
+      Include="..\..\..\apps\gateway\Ouranos.Pantheon.Apps.Gateway\appsettings.Development.json"
+      Condition="Exists('..\..\..\apps\gateway\Ouranos.Pantheon.Apps.Gateway\appsettings.Development.json')"
+    >
+      <Link>appsettings.Development.json</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+</Project>

@@ -89,16 +89,22 @@ export function RunBacktestDialog({
           </div>
         )}
         <div className="space-y-1">
-          <label className="text-sm font-medium block">Start Date</label>
+          <label htmlFor="backtest-start-date" className="text-sm font-medium block">
+            Start Date
+          </label>
           <Input
+            id="backtest-start-date"
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
           />
         </div>
         <div className="space-y-1">
-          <label className="text-sm font-medium block">End Date</label>
+          <label htmlFor="backtest-end-date" className="text-sm font-medium block">
+            End Date
+          </label>
           <Input
+            id="backtest-end-date"
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
@@ -117,13 +123,14 @@ export function RunBacktestDialog({
           min={1}
         />
         <div className="pt-1">
-          <button
+          <Button
             type="button"
+            variant="link"
             onClick={() => setShowAdvanced(!showAdvanced)}
             className="text-sm text-muted-foreground hover:text-foreground underline"
           >
             {showAdvanced ? "Hide" : "Show"} Advanced Options
-          </button>
+          </Button>
         </div>
         {showAdvanced && (
           <div className="space-y-4 border rounded-lg p-3 bg-muted/30">

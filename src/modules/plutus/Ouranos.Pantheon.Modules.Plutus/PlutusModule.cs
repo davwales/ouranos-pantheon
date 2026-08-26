@@ -65,8 +65,6 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketTrades;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetRecipeTrades;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetSymbolTrades;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetVolumeHeatmap;
-using Ouranos.Pantheon.Modules.Plutus.Features.Trades.MarketOverviewBucket;
-using Ouranos.Pantheon.Modules.Plutus.Features.Trades.MarketTradeSnapshot;
 using Ouranos.Pantheon.Modules.Plutus.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
@@ -74,18 +72,19 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals.Computers;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Executors;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Scorers;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization;
-using Ouranos.Pantheon.Modules.Shared;
-using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
-using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres;
-using Ouranos.Pantheon.Modules.Shared.WebSockets;
-using Ouranos.Pantheon.Modules.Shared.WebSockets.Listeners;
-using Ouranos.Pantheon.Modules.Shared.WebSockets.Serializers;
-using Ouranos.Pantheon.Modules.Shared.WebSockets.Serializers.Converters;
-using Ouranos.Pantheon.Modules.Shared.WebSockets.Serializers.TypeResolvers;
-using Ouranos.Pantheon.Modules.Shared.WebSockets.WebSocketClients;
+using Ouranos.Pantheon.Modules.Shared.Contract;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Pipeline;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres;
+using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets;
+using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.Listeners;
+using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.Serializers;
+using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.Serializers.Converters;
+using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.Serializers.TypeResolvers;
+using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.WebSocketClients;
 using Wolverine;
 using Wolverine.RabbitMQ;
 
@@ -186,6 +185,8 @@ public sealed class PlutusModule : IPantheonModule
 
     public void ConfigureWolverine(WolverineOptions opts, IConfiguration configuration)
     {
+        opts.CodeGeneration.AlwaysUseServiceLocationFor<PlutusDbContext>();
+
         opts.PublishMessage<RunBacktestMessage>()
             .ToRabbitExchange(
                 RunBacktestMessage.Exchange,
@@ -262,11 +263,15 @@ public sealed class PlutusModule : IPantheonModule
     private static void ConfigureStrategyExecutors(IHostApplicationBuilder builder)
     {
         builder
-            .Services.AddSingleton<IStrategyExecutor, SignalWeightedExecutor>()
-            .AddSingleton<IStrategyExecutor, ForecastMomentumExecutor>()
-            .AddSingleton<IStrategyExecutor, MeanReversionExecutor>()
-            .AddSingleton<IStrategyExecutor, RecipeArbitrageExecutor>()
-            .AddSingleton<CompositeExecutor>()
+            .Services.AddSingleton<IStrategyExecutor, StrategyExecutor>()
+            .AddSingleton<ISignalScoringService, SignalScoringService>()
+            .AddSingleton<IInputScorer, TaxAdjustedRoiInputScorer>()
+            .AddSingleton<IInputScorer, VolumeAnomalyInputScorer>()
+            .AddSingleton<IInputScorer, TrendMomentumInputScorer>()
+            .AddSingleton<IInputScorer, BollingerBandsInputScorer>()
+            .AddSingleton<IInputScorer, RsiInputScorer>()
+            .AddSingleton<IInputScorer, MovingAverageCrossoverInputScorer>()
+            .AddSingleton<IInputScorer, PriceVelocityInputScorer>()
             .AddSingleton<IBacktestDataQueryService, BacktestDataQueryService>()
             .AddScoped<IStep<BacktestPayload>, InitializeStep>()
             .AddScoped<IStep<BacktestPayload>, CloseExitsStep>()
@@ -286,12 +291,6 @@ public sealed class PlutusModule : IPantheonModule
 
         builder
             .Services.Configure<PlutusOptions>(plutusOptionsSection)
-            .Configure<MarketTradeSnapshotOptions>(
-                plutusOptionsSection.GetSection(MarketTradeSnapshotOptions.SectionName)
-            )
-            .Configure<MarketOverviewBucketOptions>(
-                plutusOptionsSection.GetSection(MarketOverviewBucketOptions.SectionName)
-            )
             .Configure<DataLoadersOptions>(dataLoadersSection)
             .Configure<FfxivDataLoaderOptions>(
                 dataLoadersSection.GetSection(FfxivDataLoaderOptions.SectionName)

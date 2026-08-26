@@ -9,8 +9,8 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.SymbolGroups;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
@@ -36,6 +36,16 @@ public sealed class GetAllSymbolGroupsHandlerTests
             _dbContext,
             Options.Create(new QueryOptions())
         );
+    }
+
+    private async Task SeedLatestSignals(
+        params (Id<Symbol> SymbolId, SignalType Type, decimal Value)[] rows
+    )
+    {
+        await _dbContext.LatestSignals.AddRangeAsync(
+            rows.Select(r => new LatestSignal(r.SymbolId, r.Type, r.Value))
+        );
+        await _dbContext.SaveChangesAsync();
     }
 
     [Fact]
@@ -110,17 +120,17 @@ public sealed class GetAllSymbolGroupsHandlerTests
             members: [member]
         );
 
-        var snapshot = MarketTradeSnapshot.Create(
+        var snapshot = new MarketTradeSnapshot(
             market.Id,
             symbol.Id,
             TimeFrame.OneDay,
-            totalSpent: 10000m,
-            minPrice: 90m,
-            maxPrice: 110m,
-            totalVolume: 100m,
-            numTransactions: 50,
-            limit: 200m,
-            tax: 1m
+            TotalSpent: 10000m,
+            MinPrice: 90m,
+            MaxPrice: 110m,
+            TotalVolume: 100m,
+            NumTransactions: 50,
+            Limit: 200m,
+            Tax: 1m
         );
 
         await _dbContext.SeedData(market);
@@ -189,13 +199,13 @@ public sealed class GetAllSymbolGroupsHandlerTests
             members: [member]
         );
 
-        var bullishSignal = Signal.Create(market.Id, symbol.Id, SignalType.BollingerBands, 0.8m);
-        var bearishSignal = Signal.Create(market.Id, symbol.Id, SignalType.Rsi, -0.4m);
-
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(symbol);
         await _dbContext.SeedData(group);
-        await _dbContext.SeedData(bullishSignal, bearishSignal);
+        await SeedLatestSignals(
+            (symbol.Id, SignalType.BollingerBands, 0.8m),
+            (symbol.Id, SignalType.Rsi, -0.4m)
+        );
 
         var query = new GetAllSymbolGroupsInput(market.Id, Take: 10);
 
@@ -207,6 +217,7 @@ public sealed class GetAllSymbolGroupsHandlerTests
         result.Items.Count().ShouldBe(1);
         var item = result.Items.First();
         item.AverageOverallScore.ShouldNotBeNull();
+        item.AverageOverallScore.ShouldBe((0.8m + -0.4m) / 2m);
         item.BullishCount.ShouldBe(1);
         item.BearishCount.ShouldBe(0);
     }

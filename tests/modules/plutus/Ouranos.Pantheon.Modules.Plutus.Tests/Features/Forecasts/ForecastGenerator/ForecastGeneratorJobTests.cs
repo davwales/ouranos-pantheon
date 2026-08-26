@@ -7,13 +7,13 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
-using Ouranos.Pantheon.Modules.Shared.Domain;
-using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
-using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning.Requests;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Requests;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
 using TickerQ.Utilities.Base;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
-using MlForecastPoint = Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning.Dtos.ForecastPoint;
+using MlForecastPoint = Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos.ForecastPoint;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Forecasts.ForecastGenerator;
 
@@ -42,12 +42,10 @@ public sealed class ForecastGeneratorJobTests
                 {
                     Forecasting = new ForecastingOptions(
                         IsEnabled: true,
-                        RemoveOutdatedForecasts: false,
                         NumPredictions: 7,
                         HistoryDays: 30,
                         BatchSize: 500,
-                        ModelName: "plutus-forecasting-v1",
-                        MaxEvaluationAgeDays: 90
+                        ModelName: "plutus-forecasting-v1"
                     ),
                 }
             )
@@ -204,7 +202,7 @@ public sealed class ForecastGeneratorJobTests
     }
 
     [Fact]
-    public async Task Execute_WhenExistingForecastsExist_ShouldReplaceThemWithNew()
+    public async Task Execute_WhenExistingForecastsExist_ShouldRetainThemAndAddNew()
     {
         // Arrange
         var market = CreateMarket(isForecastingEnabled: true);
@@ -233,8 +231,9 @@ public sealed class ForecastGeneratorJobTests
         await _job.Execute(_tickerFunctionContext, CancellationToken.None);
 
         // Assert
-        _dbContext.Forecasts.Count().ShouldBe(1);
-        _dbContext.Forecasts.Single().Id.ShouldNotBe(existingForecast.Id);
+        _dbContext.Forecasts.Count().ShouldBe(2);
+        _dbContext.Forecasts.ShouldContain(f => f.Id == existingForecast.Id);
+        _dbContext.Forecasts.ShouldContain(f => f.Id != existingForecast.Id);
     }
 
     private static Market CreateMarket(bool isForecastingEnabled)

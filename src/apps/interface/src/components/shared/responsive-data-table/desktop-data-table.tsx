@@ -6,6 +6,7 @@ import {
   ExtendedColumnDef,
   PaginationArgs,
   SortArgs,
+  withDefaultState,
 } from "@/components/shared/responsive-data-table/types";
 import {
   Table,
@@ -50,15 +51,9 @@ export default function DesktopDataTable<TData>({
     },
   });
 
-  const handleFilterChange = (filter: Record<string, any>) => {
-    if (onStateChange) {
-      onStateChange({ ...state, filter });
-    }
-  };
-
   const handleSortChange = (sort: SortArgs) => {
     if (onStateChange) {
-      onStateChange({ ...state, sort });
+      onStateChange(withDefaultState(state, { sort }));
     }
   };
 
@@ -66,10 +61,7 @@ export default function DesktopDataTable<TData>({
     updatedPaginationArgs: PaginationArgs,
   ) => {
     if (onStateChange) {
-      onStateChange({
-        ...state,
-        pagination: updatedPaginationArgs,
-      });
+      onStateChange(withDefaultState(state, { pagination: updatedPaginationArgs }));
     }
   };
 
@@ -78,8 +70,8 @@ export default function DesktopDataTable<TData>({
       {!disableFiltering && (
         <DataTableFiltering
           columns={columns}
-          filter={state?.filter ?? {}}
-          onFilterChange={handleFilterChange}
+          state={state}
+          onStateChange={onStateChange}
         />
       )}
 

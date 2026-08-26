@@ -1,4 +1,4 @@
-using Ouranos.Pantheon.Modules.Shared.WebSockets;
+using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Stocks;
 

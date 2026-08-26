@@ -5,8 +5,9 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.UpdateStrategy.Schemas
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Inputs;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
 
@@ -36,20 +37,26 @@ public sealed class UpdateStrategyHandlerTests
             _fixture.Create<Id<Market>>(),
             "Original",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         await _dbContext.Strategies.AddAsync(strategy);
         await _dbContext.SaveChangesAsync();
 
         var newConfig = new TradingConfiguration();
+        var newWeights = new List<InputWeight>
+        {
+            new(InputKind.SignalRsi, 1m),
+            new(InputKind.SignalTrendMomentum, 0.5m),
+        };
         var command = new UpdateStrategyInput(
             strategy.Id,
             "Updated",
             "New description",
             newConfig,
-            new SignalWeightedConfig()
+            newWeights,
+            new InputThresholds(BuyThreshold: 0.15m)
         );
 
         // Act
@@ -63,30 +70,48 @@ public sealed class UpdateStrategyHandlerTests
         updated.ShouldNotBeNull();
         updated.Name.ShouldBe("Updated");
         updated.Description.ShouldBe("New description");
+        updated.TradingConfiguration.ShouldBe(newConfig);
+        updated.InputWeights.Count.ShouldBe(2);
+        updated.InputWeights.ShouldContain(w => w.Kind == InputKind.SignalRsi && w.Weight == 1m);
+        updated.InputWeights.ShouldContain(w =>
+            w.Kind == InputKind.SignalTrendMomentum && w.Weight == 0.5m
+        );
+        updated.Thresholds.BuyThreshold.ShouldBe(0.15m);
     }
 
     [Fact]
-    public async Task Handle_WhenUpdatingSignalWeightedConfig_ShouldReplaceNotDuplicate()
+    public async Task Handle_WhenUpdatingInputWeights_ShouldReplaceNotDuplicate()
     {
         // Arrange
+        var originalWeights = new List<InputWeight>
+        {
+            new(InputKind.SignalTaxAdjustedRoi, 1m),
+            new(InputKind.SignalVolumeAnomaly, 1m),
+        };
         var strategy = Strategy.Create(
             _fixture.Create<Id<Market>>(),
             "Original",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig(TaxAdjustedRoiWeight: 1m, VolumeAnomalyWeight: 1m)
+            originalWeights,
+            null
         );
         await _dbContext.Strategies.AddAsync(strategy);
         await _dbContext.SaveChangesAsync();
 
         var newConfig = new TradingConfiguration();
+        var newWeights = new List<InputWeight>
+        {
+            new(InputKind.SignalTaxAdjustedRoi, 2.5m),
+            new(InputKind.SignalVolumeAnomaly, 0.8m),
+        };
         var command = new UpdateStrategyInput(
             strategy.Id,
             "Updated",
             null,
             newConfig,
-            new SignalWeightedConfig(TaxAdjustedRoiWeight: 2.5m, VolumeAnomalyWeight: 0.8m)
+            newWeights,
+            null
         );
 
         // Act
@@ -98,9 +123,13 @@ public sealed class UpdateStrategyHandlerTests
 
         var updated = await _dbContext.Strategies.FirstOrDefaultAsync(s => s.Id == strategy.Id);
         updated.ShouldNotBeNull();
-        updated.SignalWeightedConfig.ShouldNotBeNull();
-        updated.SignalWeightedConfig.TaxAdjustedRoiWeight.ShouldBe(2.5m);
-        updated.SignalWeightedConfig.VolumeAnomalyWeight.ShouldBe(0.8m);
+        updated.InputWeights.Count.ShouldBe(2);
+        updated.InputWeights.ShouldContain(w =>
+            w.Kind == InputKind.SignalTaxAdjustedRoi && w.Weight == 2.5m
+        );
+        updated.InputWeights.ShouldContain(w =>
+            w.Kind == InputKind.SignalVolumeAnomaly && w.Weight == 0.8m
+        );
     }
 
     [Fact]
@@ -111,7 +140,8 @@ public sealed class UpdateStrategyHandlerTests
             _fixture.Create<Id<Strategy>>(),
             "Updated",
             null,
-            new TradingConfiguration()
+            new TradingConfiguration(),
+            StrategyTestFactory.DefaultWeights()
         );
 
         // Act
@@ -129,7 +159,8 @@ public sealed class UpdateStrategyHandlerTests
             _fixture.Create<Id<Strategy>>(),
             "Updated",
             null,
-            new TradingConfiguration()
+            new TradingConfiguration(),
+            StrategyTestFactory.DefaultWeights()
         );
         var cancellationToken = new CancellationToken(true);
 

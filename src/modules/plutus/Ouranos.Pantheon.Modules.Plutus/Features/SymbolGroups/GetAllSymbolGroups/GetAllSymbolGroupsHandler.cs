@@ -6,12 +6,12 @@ using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetAllSymbolGroups.S
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.SymbolGroups;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
-using Ouranos.Pantheon.Modules.Shared.Application;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
-using Ouranos.Pantheon.Modules.Shared.Application.Common.Pagination;
-using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Filtering;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Pagination;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Sorting;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetAllSymbolGroups;
 
@@ -140,17 +140,16 @@ public sealed class GetAllSymbolGroupsHandler
             ))
             .ToListAsync(cancellationToken);
 
-        var signalData = await _dbContext
-            .Signals.AsNoTracking()
+        var signalRows = await _dbContext
+            .LatestSignals.AsNoTracking()
             .Where(s => symbolIds.Contains(s.SymbolId))
-            .GroupBy(s => s.SymbolId)
-            .Select(g => new { SymbolId = g.Key, AverageScore = g.Average(s => s.Value) })
             .ToListAsync(cancellationToken);
 
-        return (
-            snapshots.ToDictionary(s => s.SymbolId),
-            signalData.ToDictionary(s => s.SymbolId, s => s.AverageScore)
-        );
+        var signalData = signalRows
+            .GroupBy(r => r.SymbolId)
+            .ToDictionary(g => g.Key, g => g.Average(r => r.LastValue));
+
+        return (snapshots.ToDictionary(s => s.SymbolId), signalData);
     }
 
     private static GetAllSymbolGroupsResponse ProjectGroup(

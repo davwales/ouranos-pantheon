@@ -4,8 +4,8 @@ using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.UpdateStrategy.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
-using Ouranos.Pantheon.Modules.Shared.Application;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.UpdateStrategy;
 
@@ -43,10 +43,8 @@ public sealed class UpdateStrategyHandler
             command.Name,
             command.Description,
             command.Configuration,
-            command.SignalWeightedConfig,
-            command.ForecastMomentumConfig,
-            command.MeanReversionConfig,
-            command.RecipeArbitrageConfig
+            command.InputWeights,
+            command.Thresholds
         );
 
         await _dbContext.SaveChangesAsync(cancellationToken);

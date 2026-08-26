@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 export type NumericInputProps = {
   label?: string;
   hint?: string;
+  placeholder?: string;
   value: number | null | undefined;
   onChange: (v: number | null) => void;
   min?: number;
@@ -13,6 +14,9 @@ export type NumericInputProps = {
   step?: number;
   id?: string;
   className?: string;
+  "aria-label"?: string;
+  "aria-describedby"?: string;
+  "aria-invalid"?: boolean;
 };
 
 function formatWithCommas(value: number): string {
@@ -41,6 +45,7 @@ function isValidNumericPattern(value: string): boolean {
   if (value === "" || value === "-" || value === "-." || value === ".") return true;
   const hasMinus = value.startsWith("-");
   const core = hasMinus ? value.slice(1) : value;
+  if (core.includes("-")) return false;
   const parts = core.split(".");
   if (parts.length > 2) return false;
   return parts.every((p) => !isNaN(parseFloat(p)) || p === "");
@@ -60,6 +65,7 @@ function clamp(value: number, min?: number, max?: number): number {
 export function NumericInput({
   label,
   hint,
+  placeholder,
   value,
   onChange,
   min,
@@ -67,6 +73,9 @@ export function NumericInput({
   step,
   id,
   className,
+  "aria-label": ariaLabel,
+  "aria-describedby": ariaDescribedBy,
+  "aria-invalid": ariaInvalid,
 }: NumericInputProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [rawValue, setRawValue] = useState<string>("");
@@ -143,7 +152,11 @@ export function NumericInput({
         min={min}
         max={max}
         step={step}
+        placeholder={placeholder}
         className={className}
+        aria-label={ariaLabel}
+        aria-describedby={ariaDescribedBy}
+        aria-invalid={ariaInvalid}
       />
     </div>
   );

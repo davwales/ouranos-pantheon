@@ -7,10 +7,10 @@ using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
-using Ouranos.Pantheon.Modules.Shared.Application;
-using Ouranos.Pantheon.Modules.Shared.Extensions;
-using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
-using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning.Dtos;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.CreateConversation;
 

@@ -68,6 +68,16 @@ const navigationItems: NavigationBarItem[] = [
       },
     ],
   },
+  {
+    label: "Hestia",
+    options: [
+      {
+        label: "Recipes",
+        description: "Browse your saved recipes.",
+        href: "/hestia/recipes",
+      },
+    ],
+  },
 ];
 
 export default function RootLayout({ children }: React.PropsWithChildren) {

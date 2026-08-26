@@ -5,8 +5,8 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
-using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Pipeline;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Strategies.RunBacktest.Steps;
@@ -31,9 +31,9 @@ public sealed class TrackMetricsStepTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var parameters = new BacktestParameters(
@@ -44,8 +44,15 @@ public sealed class TrackMetricsStepTests
             10000m
         );
         var payload = new BacktestPayload(parameters);
-        var data = BacktestData.FromRaw(market, [], [], [], [], []);
-        payload.Context = new BacktestContext(data, executor, 0m, 7, startDate);
+        var data = BacktestData.FromRaw(market, [], []);
+        payload.Context = new BacktestContext(
+            data,
+            executor,
+            0m,
+            startDate,
+            parameters.InputWeights,
+            parameters.Thresholds
+        );
         payload.Portfolio.Balance = 8000m;
 
         var context = new PipelineContext(CancellationToken.None);
@@ -70,9 +77,9 @@ public sealed class TrackMetricsStepTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var parameters = new BacktestParameters(
@@ -83,8 +90,15 @@ public sealed class TrackMetricsStepTests
             10000m
         );
         var payload = new BacktestPayload(parameters);
-        var data = BacktestData.FromRaw(market, [], [], [], [], []);
-        payload.Context = new BacktestContext(data, executor, 0m, 7, startDate);
+        var data = BacktestData.FromRaw(market, [], []);
+        payload.Context = new BacktestContext(
+            data,
+            executor,
+            0m,
+            startDate,
+            parameters.InputWeights,
+            parameters.Thresholds
+        );
         payload.Portfolio.Balance = 12000m;
         payload.Portfolio.PeakPortfolioValue = 10000m;
 
@@ -110,9 +124,9 @@ public sealed class TrackMetricsStepTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var parameters = new BacktestParameters(
@@ -123,8 +137,15 @@ public sealed class TrackMetricsStepTests
             10000m
         );
         var payload = new BacktestPayload(parameters);
-        var data = BacktestData.FromRaw(market, [], [], [], [], []);
-        payload.Context = new BacktestContext(data, executor, 0m, 7, startDate);
+        var data = BacktestData.FromRaw(market, [], []);
+        payload.Context = new BacktestContext(
+            data,
+            executor,
+            0m,
+            startDate,
+            parameters.InputWeights,
+            parameters.Thresholds
+        );
         payload.Portfolio.Balance = 8000m;
         payload.Portfolio.PeakPortfolioValue = 10000m;
 
@@ -151,9 +172,9 @@ public sealed class TrackMetricsStepTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var parameters = new BacktestParameters(
@@ -171,8 +192,15 @@ public sealed class TrackMetricsStepTests
         {
             new(symbolId, dateOnly, 200m, 200m, 200m, 1000m),
         };
-        var data = BacktestData.FromRaw(market, [], [], [], [], dailyAggregates);
-        payload.Context = new BacktestContext(data, executor, 0m, 7, startDate);
+        var data = BacktestData.FromRaw(market, [], dailyAggregates);
+        payload.Context = new BacktestContext(
+            data,
+            executor,
+            0m,
+            startDate,
+            parameters.InputWeights,
+            parameters.Thresholds
+        );
         payload.Portfolio.Balance = 5000m;
         payload.Portfolio.OpenPositions[symbolId] = new OpenPosition(
             symbolId,

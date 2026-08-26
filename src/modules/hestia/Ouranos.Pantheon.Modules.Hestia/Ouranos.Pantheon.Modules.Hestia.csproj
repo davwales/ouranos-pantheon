@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Ouranos.Pantheon.Modules.Hestia.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Marten" />
+    <PackageReference Include="Microsoft.Security.AntiSSRF" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Http" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
+    <PackageReference Include="WolverineFx.RabbitMq" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\shared\Ouranos.Pantheon.Modules.Shared.Contract\Ouranos.Pantheon.Modules.Shared.Contract.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content
+      Include="..\..\..\apps\gateway\Ouranos.Pantheon.Apps.Gateway\appsettings.json"
+      Condition="Exists('..\..\..\apps\gateway\Ouranos.Pantheon.Apps.Gateway\appsettings.json')"
+    >
+      <Link>appsettings.json</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </Content>
+
+    <Content
+      Include="..\..\..\apps\gateway\Ouranos.Pantheon.Apps.Gateway\appsettings.Development.json"
+      Condition="Exists('..\..\..\apps\gateway\Ouranos.Pantheon.Apps.Gateway\appsettings.Development.json')"
+    >
+      <Link>appsettings.Development.json</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+</Project>

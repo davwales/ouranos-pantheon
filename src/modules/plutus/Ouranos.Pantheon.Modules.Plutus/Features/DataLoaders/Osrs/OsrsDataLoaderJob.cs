@@ -7,7 +7,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.DataLoaders;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
-using Ouranos.Pantheon.Modules.Shared.Utilities;
+using Ouranos.Pantheon.Modules.Shared.Contract.Utilities;
 using TickerQ.Utilities.Base;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Osrs;

@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Extensions;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Database.ModelConfigurations;
 
@@ -27,21 +27,10 @@ public sealed class ForecastRecordConfiguration : IEntityTypeConfiguration<Forec
             }
         );
 
-        builder.OwnsOne(
-            r => r.Actual,
-            x =>
-            {
-                x.Property(f => f.AveragePrice);
-                x.Property(f => f.MinPrice);
-                x.Property(f => f.MaxPrice);
-                x.Property(f => f.Volume);
-            }
-        );
-
         builder.HasOne(r => r.Run).WithMany().HasForeignKey(r => r.RunId);
         builder.HasOne(r => r.Symbol).WithMany().HasForeignKey(r => r.SymbolId);
 
-        builder.HasIndex(r => new { r.TargetAt, r.EvaluatedAt });
+        builder.HasIndex(r => new { r.SymbolId, r.TargetAt });
         builder.HasIndex(r => new { r.SymbolId, r.GeneratedAt });
     }
 }

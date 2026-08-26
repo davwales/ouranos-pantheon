@@ -4,11 +4,11 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketTrades.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
-using Ouranos.Pantheon.Modules.Shared.Application;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
-using Ouranos.Pantheon.Modules.Shared.Application.Common.Pagination;
-using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Filtering;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Pagination;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Sorting;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketTrades;
 
@@ -82,13 +82,14 @@ public sealed class GetMarketTradesHandler
             limits.MaxPageSize
         );
 
-        var snapshots = await _dbContext
-            .MarketTradeSnapshots.AsNoTracking()
-            .Where(s => s.MarketId == input.MarketId && s.TimeFrame == input.TimeFrame)
-            .Select(s => new GetMarketTradesResponse(
-                s.Symbol.Id,
-                s.Symbol.Name,
-                s.Symbol.Subcode,
+        var snapshots = await (
+            from s in _dbContext.MarketTradeSnapshots.AsNoTracking()
+            where s.MarketId == input.MarketId && s.TimeFrame == input.TimeFrame
+            join sym in _dbContext.Symbols on s.SymbolId equals sym.Id
+            select new GetMarketTradesResponse(
+                sym.Id,
+                sym.Name,
+                sym.Subcode,
                 s.TotalSpent,
                 s.MinPrice,
                 s.MaxPrice,
@@ -96,8 +97,8 @@ public sealed class GetMarketTradesHandler
                 s.NumTransactions,
                 s.Limit,
                 s.Tax
-            ))
-            .ToListAsync(cancellationToken);
+            )
+        ).ToListAsync(cancellationToken);
 
         if (snapshots.Count == 0)
         {

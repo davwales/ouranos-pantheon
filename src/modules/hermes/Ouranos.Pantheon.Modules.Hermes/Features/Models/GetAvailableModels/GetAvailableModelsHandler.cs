@@ -4,9 +4,9 @@ using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.GetAvailableModels.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.AvailableModels;
-using Ouranos.Pantheon.Modules.Shared.Application;
-using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
-using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Filtering;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Sorting;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Models.GetAvailableModels;
 

@@ -2,8 +2,8 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetAllSymbolGroups;
 using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetAllSymbolGroups.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.SymbolGroups.GetAllSymbolGroups;

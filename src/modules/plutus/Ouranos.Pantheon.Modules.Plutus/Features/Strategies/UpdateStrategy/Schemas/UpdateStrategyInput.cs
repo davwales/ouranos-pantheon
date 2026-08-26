@@ -1,5 +1,6 @@
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Inputs;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.UpdateStrategy.Schemas;
 
@@ -8,8 +9,6 @@ public sealed record UpdateStrategyInput(
     string Name,
     string? Description,
     TradingConfiguration Configuration,
-    SignalWeightedConfig? SignalWeightedConfig = null,
-    ForecastMomentumConfig? ForecastMomentumConfig = null,
-    MeanReversionConfig? MeanReversionConfig = null,
-    RecipeArbitrageConfig? RecipeArbitrageConfig = null
+    List<InputWeight> InputWeights,
+    InputThresholds? Thresholds = null
 );

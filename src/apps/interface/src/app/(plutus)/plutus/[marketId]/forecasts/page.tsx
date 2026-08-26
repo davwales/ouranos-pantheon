@@ -29,10 +29,8 @@ export default function RecentMarketTrades() {
   );
 
   const { sortField, sortDirection } = extractSort(tableState.sort);
-  const filter = useMemo(
-    () => extractFilter(tableState.filter),
-    [tableState.filter],
-  );
+
+  const filter = useMemo(() => extractFilter(tableState), [tableState]);
 
   const [state, reexecute] = useApi(
     () =>

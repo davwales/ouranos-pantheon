@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetForecastEfficacy;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetForecastEfficacy.Schemas;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Forecasts.GetForecastEfficacy;

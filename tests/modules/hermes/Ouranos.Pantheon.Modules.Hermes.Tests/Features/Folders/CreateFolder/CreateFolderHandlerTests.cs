@@ -3,7 +3,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Folders.CreateFolder;
 using Ouranos.Pantheon.Modules.Hermes.Features.Folders.CreateFolder.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
-using Ouranos.Pantheon.Modules.Shared.Extensions;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;

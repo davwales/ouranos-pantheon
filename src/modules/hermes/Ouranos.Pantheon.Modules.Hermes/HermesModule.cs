@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.CompactConversation;
@@ -31,9 +32,10 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Traits.GetTrait;
 using Ouranos.Pantheon.Modules.Hermes.Features.Traits.UpdateTrait;
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
-using Ouranos.Pantheon.Modules.Shared;
-using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres;
+using Ouranos.Pantheon.Modules.Shared.Contract;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres;
+using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Hermes;
 
@@ -58,6 +60,11 @@ public sealed class HermesModule : IPantheonModule
     {
         await host.Services.ApplyCorePostgresMigrations<HermesDbContext>();
         return host;
+    }
+
+    public void ConfigureWolverine(WolverineOptions opts, IConfiguration configuration)
+    {
+        opts.CodeGeneration.AlwaysUseServiceLocationFor<HermesDbContext>();
     }
 
     public void MapEndpoints(WebApplication app)

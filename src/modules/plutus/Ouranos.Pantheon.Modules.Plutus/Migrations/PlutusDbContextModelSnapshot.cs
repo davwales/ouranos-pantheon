@@ -68,11 +68,11 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
-                    b.HasKey("Id")
+                    b.HasKey("Id", "CreatedAt")
                         .HasName("pk_forecasts");
 
-                    b.HasIndex("SymbolId")
-                        .HasDatabaseName("ix_forecasts_symbol_id");
+                    b.HasIndex("SymbolId", "CreatedAt")
+                        .HasDatabaseName("ix_forecasts_symbol_id_created_at");
 
                     b.ToTable("forecasts", "plutus");
                 });
@@ -86,10 +86,6 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
-
-                    b.Property<DateTimeOffset?>("EvaluatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("evaluated_at");
 
                     b.Property<DateTimeOffset>("GeneratedAt")
                         .HasColumnType("timestamp with time zone")
@@ -133,10 +129,78 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                     b.HasIndex("SymbolId", "GeneratedAt")
                         .HasDatabaseName("ix_forecast_records_symbol_id_generated_at");
 
-                    b.HasIndex("TargetAt", "EvaluatedAt")
-                        .HasDatabaseName("ix_forecast_records_target_at_evaluated_at");
+                    b.HasIndex("SymbolId", "TargetAt")
+                        .HasDatabaseName("ix_forecast_records_symbol_id_target_at");
 
                     b.ToTable("forecast_records", "plutus");
+                });
+
+            modelBuilder.Entity("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts.ForecastRecordWithActual", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal?>("ActualAveragePrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("actual_average_price");
+
+                    b.Property<decimal?>("ActualMaxPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("actual_max_price");
+
+                    b.Property<decimal?>("ActualMinPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("actual_min_price");
+
+                    b.Property<decimal?>("ActualVolume")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("actual_volume");
+
+                    b.Property<DateTimeOffset>("GeneratedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("generated_at");
+
+                    b.Property<int>("HorizonDays")
+                        .HasColumnType("integer")
+                        .HasColumnName("horizon_days");
+
+                    b.Property<Guid>("MarketId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("market_id");
+
+                    b.Property<string>("ModelName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("model_name");
+
+                    b.Property<decimal>("PredictedAveragePrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("predicted_average_price");
+
+                    b.Property<Guid>("RunId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("run_id");
+
+                    b.Property<Guid>("SymbolId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("symbol_id");
+
+                    b.Property<DateTimeOffset>("TargetAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("target_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_forecast_records_with_actuals");
+
+                    b.ToTable((string)null);
+
+                    b.ToView("forecast_records_with_actuals", "plutus");
                 });
 
             modelBuilder.Entity("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts.ForecastRun", b =>
@@ -316,6 +380,29 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                     b.ToTable("recipes", "plutus");
                 });
 
+            modelBuilder.Entity("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals.LatestSignal", b =>
+                {
+                    b.Property<Guid>("SymbolId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("symbol_id");
+
+                    b.Property<int>("SignalType")
+                        .HasColumnType("integer")
+                        .HasColumnName("signal_type");
+
+                    b.Property<decimal>("LastValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("last_value");
+
+                    b.HasKey("SymbolId", "SignalType")
+                        .HasName("pk_latest_signals");
+
+                    b.ToTable((string)null);
+
+                    b.ToView("latest_signals", "plutus");
+                });
+
             modelBuilder.Entity("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals.Signal", b =>
                 {
                     b.Property<Guid>("Id")
@@ -351,11 +438,11 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("value");
 
-                    b.HasKey("Id")
+                    b.HasKey("Id", "ComputedAt")
                         .HasName("pk_signals");
 
                     b.HasIndex("ComputedAt")
-                        .IsDescending(true)
+                        .IsDescending()
                         .HasDatabaseName("ix_signals_computed_at");
 
                     b.HasIndex("MarketId")
@@ -429,6 +516,7 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                         .HasColumnName("strategy_id");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
+                        .IsConcurrencyToken()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
@@ -470,10 +558,6 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("name");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("integer")
-                        .HasColumnName("type");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -594,68 +678,54 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
 
             modelBuilder.Entity("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades.MarketOverviewBucket", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("MarketId")
                         .HasColumnType("uuid")
-                        .HasColumnName("id");
+                        .HasColumnName("market_id");
+
+                    b.Property<string>("TimeFrame")
+                        .HasColumnType("text")
+                        .HasColumnName("time_frame");
+
+                    b.Property<DateTimeOffset>("BucketStart")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("bucket_start");
 
                     b.Property<decimal>("AveragePrice")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("average_price");
 
-                    b.Property<DateTimeOffset>("BucketStart")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("bucket_start");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid>("MarketId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("market_id");
-
                     b.Property<int>("NumTransactions")
                         .HasColumnType("integer")
                         .HasColumnName("num_transactions");
-
-                    b.Property<string>("TimeFrame")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("time_frame");
 
                     b.Property<decimal>("TotalSpent")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("total_spent");
 
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
                     b.Property<decimal>("Volume")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("volume");
 
-                    b.HasKey("Id")
+                    b.HasKey("MarketId", "TimeFrame", "BucketStart")
                         .HasName("pk_market_overview_buckets");
 
-                    b.HasIndex("MarketId", "TimeFrame")
-                        .HasDatabaseName("ix_market_overview_buckets_market_id_time_frame");
+                    b.ToTable((string)null);
 
-                    b.ToTable("market_overview_buckets", "plutus");
+                    b.ToView("market_overview_buckets", "plutus");
                 });
 
             modelBuilder.Entity("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades.MarketTradeSnapshot", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("SymbolId")
                         .HasColumnType("uuid")
-                        .HasColumnName("id");
+                        .HasColumnName("symbol_id");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
+                    b.Property<string>("TimeFrame")
+                        .HasColumnType("text")
+                        .HasColumnName("time_frame");
 
                     b.Property<decimal>("Limit")
                         .HasPrecision(18, 2)
@@ -680,19 +750,10 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("num_transactions");
 
-                    b.Property<Guid>("SymbolId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("symbol_id");
-
                     b.Property<decimal>("Tax")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("tax");
-
-                    b.Property<string>("TimeFrame")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("time_frame");
 
                     b.Property<decimal>("TotalSpent")
                         .HasPrecision(18, 2)
@@ -704,21 +765,12 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("total_volume");
 
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.HasKey("Id")
+                    b.HasKey("SymbolId", "TimeFrame")
                         .HasName("pk_market_trade_snapshots");
 
-                    b.HasIndex("MarketId", "TimeFrame")
-                        .HasDatabaseName("ix_market_trade_snapshots_market_id_time_frame");
+                    b.ToTable((string)null);
 
-                    b.HasIndex("SymbolId", "TimeFrame")
-                        .IsUnique()
-                        .HasDatabaseName("ix_market_trade_snapshots_symbol_id_time_frame");
-
-                    b.ToTable("market_trade_snapshots", "plutus");
+                    b.ToView("market_trade_snapshots", "plutus");
                 });
 
             modelBuilder.Entity("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades.Trade", b =>
@@ -777,6 +829,10 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                                 .HasColumnType("uuid")
                                 .HasColumnName("id");
 
+                            b1.Property<DateTimeOffset>("ForecastCreatedAt")
+                                .HasColumnType("timestamp with time zone")
+                                .HasColumnName("created_at");
+
                             b1.Property<decimal>("AveragePrice")
                                 .HasPrecision(18, 2)
                                 .HasColumnType("numeric(18,2)")
@@ -797,56 +853,47 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                                 .HasColumnType("numeric(18,2)")
                                 .HasColumnName("latest_volume");
 
-                            b1.HasKey("ForecastId");
+                            b1.HasKey("ForecastId", "ForecastCreatedAt");
 
                             b1.ToTable("forecasts", "plutus");
 
                             b1.WithOwner()
-                                .HasForeignKey("ForecastId")
-                                .HasConstraintName("fk_forecasts_forecasts_id");
+                                .HasForeignKey("ForecastId", "ForecastCreatedAt")
+                                .HasConstraintName("fk_forecasts_forecasts_id_created_at");
                         });
 
                     b.OwnsMany("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts.ForecastPoint", "Predictions", b1 =>
                         {
-                            b1.Property<Guid>("ForecastId")
-                                .HasColumnType("uuid")
-                                .HasColumnName("forecast_id");
+                            b1.Property<Guid>("ForecastId");
 
-                            b1.Property<int>("Id")
-                                .ValueGeneratedOnAdd()
-                                .HasColumnType("integer")
-                                .HasColumnName("id");
+                            b1.Property<DateTimeOffset>("ForecastCreatedAt");
 
-                            NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b1.Property<int>("Id"));
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
 
                             b1.Property<decimal>("AveragePrice")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("average_price");
+                                .HasPrecision(18, 2);
 
                             b1.Property<decimal>("MaxPrice")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("max_price");
+                                .HasPrecision(18, 2);
 
                             b1.Property<decimal>("MinPrice")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("min_price");
+                                .HasPrecision(18, 2);
 
                             b1.Property<decimal>("Volume")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("volume");
+                                .HasPrecision(18, 2);
 
-                            b1.HasKey("ForecastId", "Id")
-                                .HasName("pk_forecasts_predictions");
+                            b1.HasKey("ForecastId", "ForecastCreatedAt", "__synthesizedOrdinal");
 
-                            b1.ToTable("forecasts_predictions", "plutus");
+                            b1.ToTable("forecasts", "plutus");
+
+                            b1
+                                .ToJson("predictions")
+                                .HasColumnType("jsonb");
 
                             b1.WithOwner()
-                                .HasForeignKey("ForecastId")
-                                .HasConstraintName("fk_forecasts_predictions_forecasts_forecast_id");
+                                .HasForeignKey("ForecastId", "ForecastCreatedAt")
+                                .HasConstraintName("fk_forecasts_forecasts_forecast_id_forecast_created_at");
                         });
 
                     b.Navigation("Latest")
@@ -872,41 +919,6 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_forecast_records_symbols_symbol_id");
-
-                    b.OwnsOne("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts.ForecastPoint", "Actual", b1 =>
-                        {
-                            b1.Property<Guid>("ForecastRecordId")
-                                .HasColumnType("uuid")
-                                .HasColumnName("id");
-
-                            b1.Property<decimal>("AveragePrice")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("actual_average_price");
-
-                            b1.Property<decimal>("MaxPrice")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("actual_max_price");
-
-                            b1.Property<decimal>("MinPrice")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("actual_min_price");
-
-                            b1.Property<decimal>("Volume")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("actual_volume");
-
-                            b1.HasKey("ForecastRecordId");
-
-                            b1.ToTable("forecast_records", "plutus");
-
-                            b1.WithOwner()
-                                .HasForeignKey("ForecastRecordId")
-                                .HasConstraintName("fk_forecast_records_forecast_records_id");
-                        });
 
                     b.OwnsOne("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts.ForecastPoint", "Predicted", b1 =>
                         {
@@ -942,8 +954,6 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                                 .HasForeignKey("ForecastRecordId")
                                 .HasConstraintName("fk_forecast_records_forecast_records_id");
                         });
-
-                    b.Navigation("Actual");
 
                     b.Navigation("Predicted")
                         .IsRequired();
@@ -1144,6 +1154,316 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_backtests_strategies_strategy_id");
 
+                    b.OwnsOne("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.BacktestResults", "Results", b1 =>
+                        {
+                            b1.Property<Guid>("BacktestId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("id");
+
+                            b1.Property<decimal>("AverageTradeReturn")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("results_average_trade_return");
+
+                            b1.Property<decimal>("BestTrade")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("results_best_trade");
+
+                            b1.Property<decimal?>("Cagr")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("results_cagr");
+
+                            b1.Property<decimal?>("CalmarRatio")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("results_calmar_ratio");
+
+                            b1.Property<decimal?>("Expectancy")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("results_expectancy");
+
+                            b1.Property<decimal>("FinalBalance")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("results_final_balance");
+
+                            b1.Property<bool>("IsValidated")
+                                .HasColumnType("boolean")
+                                .HasColumnName("results_is_validated");
+
+                            b1.Property<int>("LosingTrades")
+                                .HasColumnType("integer")
+                                .HasColumnName("results_losing_trades");
+
+                            b1.Property<decimal>("MaxDrawdown")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("results_max_drawdown");
+
+                            b1.Property<decimal>("MaxDrawdownPercent")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("results_max_drawdown_percent");
+
+                            b1.Property<decimal?>("ProfitFactor")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("results_profit_factor");
+
+                            b1.Property<decimal>("SharpeRatio")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("results_sharpe_ratio");
+
+                            b1.Property<decimal?>("SortinoRatio")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("results_sortino_ratio");
+
+                            b1.Property<decimal>("TotalReturn")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("results_total_return");
+
+                            b1.Property<decimal>("TotalReturnPercent")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("results_total_return_percent");
+
+                            b1.Property<int>("TotalTrades")
+                                .HasColumnType("integer")
+                                .HasColumnName("results_total_trades");
+
+                            b1.Property<decimal>("TurnoverRate")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("results_turnover_rate");
+
+                            b1.Property<decimal>("WinRate")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("results_win_rate");
+
+                            b1.Property<int>("WinningTrades")
+                                .HasColumnType("integer")
+                                .HasColumnName("results_winning_trades");
+
+                            b1.Property<decimal>("WorstTrade")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("results_worst_trade");
+
+                            b1.HasKey("BacktestId");
+
+                            b1.ToTable("backtests", "plutus");
+
+                            b1.WithOwner()
+                                .HasForeignKey("BacktestId")
+                                .HasConstraintName("fk_backtests_backtests_id");
+
+                            b1.OwnsOne("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.TradingConfiguration", "OptimizedConfiguration", b2 =>
+                                {
+                                    b2.Property<Guid>("BacktestResultsBacktestId")
+                                        .HasColumnType("uuid")
+                                        .HasColumnName("id");
+
+                                    b2.Property<int?>("HoldPeriodDays")
+                                        .HasColumnType("integer")
+                                        .HasColumnName("results_optimized_configuration_hold_period_days");
+
+                                    b2.Property<decimal?>("MaxPositionPercent")
+                                        .HasPrecision(18, 2)
+                                        .HasColumnType("numeric(18,2)")
+                                        .HasColumnName("results_optimized_configuration_max_position_percent");
+
+                                    b2.Property<int?>("MaxPositions")
+                                        .HasColumnType("integer")
+                                        .HasColumnName("results_optimized_configuration_max_positions");
+
+                                    b2.HasKey("BacktestResultsBacktestId");
+
+                                    b2.ToTable("backtests", "plutus");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("BacktestResultsBacktestId")
+                                        .HasConstraintName("fk_backtests_backtests_id");
+                                });
+
+                            b1.OwnsMany("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Inputs.InputWeight", "OptimizedInputWeights", b2 =>
+                                {
+                                    b2.Property<Guid>("BacktestResultsBacktestId")
+                                        .HasColumnType("uuid")
+                                        .HasColumnName("backtest_results_backtest_id");
+
+                                    b2.Property<int>("Id")
+                                        .ValueGeneratedOnAdd()
+                                        .HasColumnType("integer")
+                                        .HasColumnName("id");
+
+                                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b2.Property<int>("Id"));
+
+                                    b2.Property<int>("Kind")
+                                        .HasColumnType("integer")
+                                        .HasColumnName("kind");
+
+                                    b2.Property<decimal>("Weight")
+                                        .HasPrecision(18, 2)
+                                        .HasColumnType("numeric(18,2)")
+                                        .HasColumnName("weight");
+
+                                    b2.HasKey("BacktestResultsBacktestId", "Id")
+                                        .HasName("pk_backtests_optimized_input_weights");
+
+                                    b2.HasIndex("BacktestResultsBacktestId", "Kind")
+                                        .IsUnique()
+                                        .HasDatabaseName("ix_backtests_optimized_input_weights_backtest_results_backtest");
+
+                                    b2.ToTable("backtests_optimized_input_weights", "plutus");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("BacktestResultsBacktestId")
+                                        .HasConstraintName("fk_backtests_optimized_input_weights_backtests_backtest_result");
+                                });
+
+                            b1.OwnsOne("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Inputs.InputThresholds", "OptimizedThresholds", b2 =>
+                                {
+                                    b2.Property<Guid>("BacktestResultsBacktestId")
+                                        .HasColumnType("uuid")
+                                        .HasColumnName("id");
+
+                                    b2.Property<decimal?>("BuyThreshold")
+                                        .HasPrecision(18, 2)
+                                        .HasColumnType("numeric(18,2)")
+                                        .HasColumnName("results_optimized_thresholds_buy_threshold");
+
+                                    b2.Property<decimal?>("SellThreshold")
+                                        .HasPrecision(18, 2)
+                                        .HasColumnType("numeric(18,2)")
+                                        .HasColumnName("results_optimized_thresholds_sell_threshold");
+
+                                    b2.HasKey("BacktestResultsBacktestId");
+
+                                    b2.ToTable("backtests", "plutus");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("BacktestResultsBacktestId")
+                                        .HasConstraintName("fk_backtests_backtests_id");
+                                });
+
+                            b1.OwnsOne("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.BacktestResults.OutSampleResults#BacktestResults", "OutSampleResults", b2 =>
+                                {
+                                    b2.Property<Guid>("BacktestResultsBacktestId")
+                                        .HasColumnType("uuid")
+                                        .HasColumnName("id");
+
+                                    b2.Property<decimal>("AverageTradeReturn")
+                                        .HasPrecision(18, 2)
+                                        .HasColumnType("numeric(18,2)")
+                                        .HasColumnName("results_out_sample_results_average_trade_return");
+
+                                    b2.Property<decimal>("BestTrade")
+                                        .HasPrecision(18, 2)
+                                        .HasColumnType("numeric(18,2)")
+                                        .HasColumnName("results_out_sample_results_best_trade");
+
+                                    b2.Property<decimal?>("Cagr")
+                                        .HasPrecision(18, 2)
+                                        .HasColumnType("numeric(18,2)")
+                                        .HasColumnName("results_out_sample_results_cagr");
+
+                                    b2.Property<decimal?>("CalmarRatio")
+                                        .HasPrecision(18, 2)
+                                        .HasColumnType("numeric(18,2)")
+                                        .HasColumnName("results_out_sample_results_calmar_ratio");
+
+                                    b2.Property<decimal?>("Expectancy")
+                                        .HasPrecision(18, 2)
+                                        .HasColumnType("numeric(18,2)")
+                                        .HasColumnName("results_out_sample_results_expectancy");
+
+                                    b2.Property<decimal>("FinalBalance")
+                                        .HasPrecision(18, 2)
+                                        .HasColumnType("numeric(18,2)")
+                                        .HasColumnName("results_out_sample_results_final_balance");
+
+                                    b2.Property<int>("LosingTrades")
+                                        .HasColumnType("integer")
+                                        .HasColumnName("results_out_sample_results_losing_trades");
+
+                                    b2.Property<decimal>("MaxDrawdown")
+                                        .HasPrecision(18, 2)
+                                        .HasColumnType("numeric(18,2)")
+                                        .HasColumnName("results_out_sample_results_max_drawdown");
+
+                                    b2.Property<decimal>("MaxDrawdownPercent")
+                                        .HasPrecision(18, 2)
+                                        .HasColumnType("numeric(18,2)")
+                                        .HasColumnName("results_out_sample_results_max_drawdown_percent");
+
+                                    b2.Property<decimal?>("ProfitFactor")
+                                        .HasPrecision(18, 2)
+                                        .HasColumnType("numeric(18,2)")
+                                        .HasColumnName("results_out_sample_results_profit_factor");
+
+                                    b2.Property<decimal>("SharpeRatio")
+                                        .HasPrecision(18, 2)
+                                        .HasColumnType("numeric(18,2)")
+                                        .HasColumnName("results_out_sample_results_sharpe_ratio");
+
+                                    b2.Property<decimal?>("SortinoRatio")
+                                        .HasPrecision(18, 2)
+                                        .HasColumnType("numeric(18,2)")
+                                        .HasColumnName("results_out_sample_results_sortino_ratio");
+
+                                    b2.Property<decimal>("TotalReturn")
+                                        .HasPrecision(18, 2)
+                                        .HasColumnType("numeric(18,2)")
+                                        .HasColumnName("results_out_sample_results_total_return");
+
+                                    b2.Property<decimal>("TotalReturnPercent")
+                                        .HasPrecision(18, 2)
+                                        .HasColumnType("numeric(18,2)")
+                                        .HasColumnName("results_out_sample_results_total_return_percent");
+
+                                    b2.Property<int>("TotalTrades")
+                                        .HasColumnType("integer")
+                                        .HasColumnName("results_out_sample_results_total_trades");
+
+                                    b2.Property<decimal>("WinRate")
+                                        .HasPrecision(18, 2)
+                                        .HasColumnType("numeric(18,2)")
+                                        .HasColumnName("results_out_sample_results_win_rate");
+
+                                    b2.Property<int>("WinningTrades")
+                                        .HasColumnType("integer")
+                                        .HasColumnName("results_out_sample_results_winning_trades");
+
+                                    b2.Property<decimal>("WorstTrade")
+                                        .HasPrecision(18, 2)
+                                        .HasColumnType("numeric(18,2)")
+                                        .HasColumnName("results_out_sample_results_worst_trade");
+
+                                    b2.HasKey("BacktestResultsBacktestId");
+
+                                    b2.ToTable("backtests", "plutus");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("BacktestResultsBacktestId")
+                                        .HasConstraintName("fk_backtests_backtests_id");
+                                });
+
+                            b1.Navigation("OptimizedConfiguration");
+
+                            b1.Navigation("OptimizedInputWeights");
+
+                            b1.Navigation("OptimizedThresholds");
+
+                            b1.Navigation("OutSampleResults");
+                        });
+
                     b.OwnsMany("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.BacktestPosition", "Positions", b1 =>
                         {
                             b1.Property<Guid>("BacktestId")
@@ -1210,274 +1530,6 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                                 .HasConstraintName("fk_backtest_position_backtests_backtest_id");
                         });
 
-                    b.OwnsOne("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.BacktestResults", "Results", b1 =>
-                        {
-                            b1.Property<Guid>("BacktestId")
-                                .HasColumnType("uuid")
-                                .HasColumnName("id");
-
-                            b1.Property<decimal>("AverageTradeReturn")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("results_average_trade_return");
-
-                            b1.Property<decimal>("BestTrade")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("results_best_trade");
-
-                            b1.Property<decimal?>("Cagr")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("results_cagr");
-
-                            b1.Property<decimal?>("CalmarRatio")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("results_calmar_ratio");
-
-                            b1.Property<decimal?>("Expectancy")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("results_expectancy");
-
-                            b1.Property<decimal>("FinalBalance")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("results_final_balance");
-
-                            b1.Property<int>("LosingTrades")
-                                .HasColumnType("integer")
-                                .HasColumnName("results_losing_trades");
-
-                            b1.Property<decimal>("MaxDrawdown")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("results_max_drawdown");
-
-                            b1.Property<decimal>("MaxDrawdownPercent")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("results_max_drawdown_percent");
-
-                            b1.Property<decimal?>("ProfitFactor")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("results_profit_factor");
-
-                            b1.Property<decimal>("SharpeRatio")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("results_sharpe_ratio");
-
-                            b1.Property<decimal?>("SortinoRatio")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("results_sortino_ratio");
-
-                            b1.Property<decimal>("TotalReturn")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("results_total_return");
-
-                            b1.Property<decimal>("TotalReturnPercent")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("results_total_return_percent");
-
-                            b1.Property<int>("TotalTrades")
-                                .HasColumnType("integer")
-                                .HasColumnName("results_total_trades");
-
-                            b1.Property<decimal>("WinRate")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("results_win_rate");
-
-                            b1.Property<int>("WinningTrades")
-                                .HasColumnType("integer")
-                                .HasColumnName("results_winning_trades");
-
-                            b1.Property<decimal>("WorstTrade")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("results_worst_trade");
-
-                            b1.HasKey("BacktestId");
-
-                            b1.ToTable("backtests", "plutus");
-
-                            b1.WithOwner()
-                                .HasForeignKey("BacktestId")
-                                .HasConstraintName("fk_backtests_backtests_id");
-
-                            b1.OwnsOne("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.TradingConfiguration", "OptimizedConfiguration", b2 =>
-                                {
-                                    b2.Property<Guid>("BacktestResultsBacktestId")
-                                        .HasColumnType("uuid")
-                                        .HasColumnName("id");
-
-                                    b2.Property<int?>("HoldPeriodDays")
-                                        .HasColumnType("integer")
-                                        .HasColumnName("results_optimized_configuration_hold_period_days");
-
-                                    b2.Property<decimal?>("MaxPositionPercent")
-                                        .HasPrecision(18, 2)
-                                        .HasColumnType("numeric(18,2)")
-                                        .HasColumnName("results_optimized_configuration_max_position_percent");
-
-                                    b2.Property<int?>("MaxPositions")
-                                        .HasColumnType("integer")
-                                        .HasColumnName("results_optimized_configuration_max_positions");
-
-                                    b2.HasKey("BacktestResultsBacktestId");
-
-                                    b2.ToTable("backtests", "plutus");
-
-                                    b2.WithOwner()
-                                        .HasForeignKey("BacktestResultsBacktestId")
-                                        .HasConstraintName("fk_backtests_backtests_id");
-                                });
-
-                            b1.OwnsOne("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.ForecastMomentumConfig", "OptimizedForecastMomentumConfig", b2 =>
-                                {
-                                    b2.Property<Guid>("BacktestResultsBacktestId")
-                                        .HasColumnType("uuid")
-                                        .HasColumnName("id");
-
-                                    b2.Property<int?>("ForecastHorizonDays")
-                                        .HasColumnType("integer")
-                                        .HasColumnName("results_optimized_forecast_momentum_config_forecast_horizon_days");
-
-                                    b2.Property<decimal?>("ForecastMovementThreshold")
-                                        .HasPrecision(18, 2)
-                                        .HasColumnType("numeric(18,2)")
-                                        .HasColumnName("results_optimized_forecast_momentum_config_forecast_movement_thresh");
-
-                                    b2.HasKey("BacktestResultsBacktestId");
-
-                                    b2.ToTable("backtests", "plutus");
-
-                                    b2.WithOwner()
-                                        .HasForeignKey("BacktestResultsBacktestId")
-                                        .HasConstraintName("fk_backtests_backtests_id");
-                                });
-
-                            b1.OwnsOne("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.MeanReversionConfig", "OptimizedMeanReversionConfig", b2 =>
-                                {
-                                    b2.Property<Guid>("BacktestResultsBacktestId")
-                                        .HasColumnType("uuid")
-                                        .HasColumnName("id");
-
-                                    b2.Property<decimal?>("DeviationMultiplier")
-                                        .HasPrecision(18, 2)
-                                        .HasColumnType("numeric(18,2)")
-                                        .HasColumnName("results_optimized_mean_reversion_config_deviation_multiplier");
-
-                                    b2.Property<int?>("MeanTimeFrameValue")
-                                        .HasColumnType("integer")
-                                        .HasColumnName("results_optimized_mean_reversion_config_mean_time_frame_value");
-
-                                    b2.HasKey("BacktestResultsBacktestId");
-
-                                    b2.ToTable("backtests", "plutus");
-
-                                    b2.WithOwner()
-                                        .HasForeignKey("BacktestResultsBacktestId")
-                                        .HasConstraintName("fk_backtests_backtests_id");
-                                });
-
-                            b1.OwnsOne("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.RecipeArbitrageConfig", "OptimizedRecipeArbitrageConfig", b2 =>
-                                {
-                                    b2.Property<Guid>("BacktestResultsBacktestId")
-                                        .HasColumnType("uuid")
-                                        .HasColumnName("id");
-
-                                    b2.Property<decimal?>("MinMarginPercent")
-                                        .HasPrecision(18, 2)
-                                        .HasColumnType("numeric(18,2)")
-                                        .HasColumnName("results_optimized_recipe_arbitrage_config_min_margin_percent");
-
-                                    b2.HasKey("BacktestResultsBacktestId");
-
-                                    b2.ToTable("backtests", "plutus");
-
-                                    b2.WithOwner()
-                                        .HasForeignKey("BacktestResultsBacktestId")
-                                        .HasConstraintName("fk_backtests_backtests_id");
-                                });
-
-                            b1.OwnsOne("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.SignalWeightedConfig", "OptimizedSignalWeightedConfig", b2 =>
-                                {
-                                    b2.Property<Guid>("BacktestResultsBacktestId")
-                                        .HasColumnType("uuid")
-                                        .HasColumnName("id");
-
-                                    b2.Property<decimal?>("BollingerBandsWeight")
-                                        .HasPrecision(18, 2)
-                                        .HasColumnType("numeric(18,2)")
-                                        .HasColumnName("results_optimized_signal_weighted_config_bollinger_bands_weight");
-
-                                    b2.Property<decimal?>("BuyThreshold")
-                                        .HasPrecision(18, 2)
-                                        .HasColumnType("numeric(18,2)")
-                                        .HasColumnName("results_optimized_signal_weighted_config_buy_threshold");
-
-                                    b2.Property<decimal?>("MovingAverageCrossoverWeight")
-                                        .HasPrecision(18, 2)
-                                        .HasColumnType("numeric(18,2)")
-                                        .HasColumnName("results_optimized_signal_weighted_config_moving_average_crossover_we");
-
-                                    b2.Property<decimal?>("PriceVelocityWeight")
-                                        .HasPrecision(18, 2)
-                                        .HasColumnType("numeric(18,2)")
-                                        .HasColumnName("results_optimized_signal_weighted_config_price_velocity_weight");
-
-                                    b2.Property<decimal?>("RsiWeight")
-                                        .HasPrecision(18, 2)
-                                        .HasColumnType("numeric(18,2)")
-                                        .HasColumnName("results_optimized_signal_weighted_config_rsi_weight");
-
-                                    b2.Property<decimal?>("SellThreshold")
-                                        .HasPrecision(18, 2)
-                                        .HasColumnType("numeric(18,2)")
-                                        .HasColumnName("results_optimized_signal_weighted_config_sell_threshold");
-
-                                    b2.Property<decimal?>("TaxAdjustedRoiWeight")
-                                        .HasPrecision(18, 2)
-                                        .HasColumnType("numeric(18,2)")
-                                        .HasColumnName("results_optimized_signal_weighted_config_tax_adjusted_roi_weight");
-
-                                    b2.Property<decimal?>("TrendMomentumWeight")
-                                        .HasPrecision(18, 2)
-                                        .HasColumnType("numeric(18,2)")
-                                        .HasColumnName("results_optimized_signal_weighted_config_trend_momentum_weight");
-
-                                    b2.Property<decimal?>("VolumeAnomalyWeight")
-                                        .HasPrecision(18, 2)
-                                        .HasColumnType("numeric(18,2)")
-                                        .HasColumnName("results_optimized_signal_weighted_config_volume_anomaly_weight");
-
-                                    b2.HasKey("BacktestResultsBacktestId");
-
-                                    b2.ToTable("backtests", "plutus");
-
-                                    b2.WithOwner()
-                                        .HasForeignKey("BacktestResultsBacktestId")
-                                        .HasConstraintName("fk_backtests_backtests_id");
-                                });
-
-                            b1.Navigation("OptimizedConfiguration");
-
-                            b1.Navigation("OptimizedForecastMomentumConfig");
-
-                            b1.Navigation("OptimizedMeanReversionConfig");
-
-                            b1.Navigation("OptimizedRecipeArbitrageConfig");
-
-                            b1.Navigation("OptimizedSignalWeightedConfig");
-                        });
-
                     b.Navigation("Positions");
 
                     b.Navigation("Results");
@@ -1494,7 +1546,7 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_strategies_markets_market_id");
 
-                    b.OwnsMany("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.CompositeComponent", "Components", b1 =>
+                    b.OwnsMany("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Inputs.InputWeight", "InputWeights", b1 =>
                         {
                             b1.Property<Guid>("StrategyId")
                                 .HasColumnType("uuid")
@@ -1507,9 +1559,9 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
 
                             NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b1.Property<int>("Id"));
 
-                            b1.Property<int>("Type")
+                            b1.Property<int>("Kind")
                                 .HasColumnType("integer")
-                                .HasColumnName("type");
+                                .HasColumnName("kind");
 
                             b1.Property<decimal>("Weight")
                                 .HasPrecision(18, 2)
@@ -1517,133 +1569,34 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                                 .HasColumnName("weight");
 
                             b1.HasKey("StrategyId", "Id")
-                                .HasName("pk_composite_component");
+                                .HasName("pk_strategies_input_weights");
 
-                            b1.ToTable("composite_component", "plutus");
+                            b1.HasIndex("StrategyId", "Kind")
+                                .IsUnique()
+                                .HasDatabaseName("ix_strategies_input_weights_strategy_id_kind");
+
+                            b1.ToTable("strategies_input_weights", "plutus");
 
                             b1.WithOwner()
                                 .HasForeignKey("StrategyId")
-                                .HasConstraintName("fk_composite_component_strategies_strategy_id");
+                                .HasConstraintName("fk_strategies_input_weights_strategies_strategy_id");
                         });
 
-                    b.OwnsOne("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.ForecastMomentumConfig", "ForecastMomentumConfig", b1 =>
+                    b.OwnsOne("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Inputs.InputThresholds", "Thresholds", b1 =>
                         {
                             b1.Property<Guid>("StrategyId")
                                 .HasColumnType("uuid")
                                 .HasColumnName("id");
-
-                            b1.Property<int?>("ForecastHorizonDays")
-                                .HasColumnType("integer")
-                                .HasColumnName("forecast_momentum_config_forecast_horizon_days");
-
-                            b1.Property<decimal?>("ForecastMovementThreshold")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("forecast_momentum_config_forecast_movement_threshold");
-
-                            b1.HasKey("StrategyId");
-
-                            b1.ToTable("strategies", "plutus");
-
-                            b1.WithOwner()
-                                .HasForeignKey("StrategyId")
-                                .HasConstraintName("fk_strategies_strategies_id");
-                        });
-
-                    b.OwnsOne("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.MeanReversionConfig", "MeanReversionConfig", b1 =>
-                        {
-                            b1.Property<Guid>("StrategyId")
-                                .HasColumnType("uuid")
-                                .HasColumnName("id");
-
-                            b1.Property<decimal?>("DeviationMultiplier")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("mean_reversion_config_deviation_multiplier");
-
-                            b1.Property<int?>("MeanTimeFrameValue")
-                                .HasColumnType("integer")
-                                .HasColumnName("mean_reversion_config_mean_time_frame_value");
-
-                            b1.HasKey("StrategyId");
-
-                            b1.ToTable("strategies", "plutus");
-
-                            b1.WithOwner()
-                                .HasForeignKey("StrategyId")
-                                .HasConstraintName("fk_strategies_strategies_id");
-                        });
-
-                    b.OwnsOne("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.RecipeArbitrageConfig", "RecipeArbitrageConfig", b1 =>
-                        {
-                            b1.Property<Guid>("StrategyId")
-                                .HasColumnType("uuid")
-                                .HasColumnName("id");
-
-                            b1.Property<decimal?>("MinMarginPercent")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("recipe_arbitrage_config_min_margin_percent");
-
-                            b1.HasKey("StrategyId");
-
-                            b1.ToTable("strategies", "plutus");
-
-                            b1.WithOwner()
-                                .HasForeignKey("StrategyId")
-                                .HasConstraintName("fk_strategies_strategies_id");
-                        });
-
-                    b.OwnsOne("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.SignalWeightedConfig", "SignalWeightedConfig", b1 =>
-                        {
-                            b1.Property<Guid>("StrategyId")
-                                .HasColumnType("uuid")
-                                .HasColumnName("id");
-
-                            b1.Property<decimal?>("BollingerBandsWeight")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("signal_weighted_config_bollinger_bands_weight");
 
                             b1.Property<decimal?>("BuyThreshold")
                                 .HasPrecision(18, 2)
                                 .HasColumnType("numeric(18,2)")
-                                .HasColumnName("signal_weighted_config_buy_threshold");
-
-                            b1.Property<decimal?>("MovingAverageCrossoverWeight")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("signal_weighted_config_moving_average_crossover_weight");
-
-                            b1.Property<decimal?>("PriceVelocityWeight")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("signal_weighted_config_price_velocity_weight");
-
-                            b1.Property<decimal?>("RsiWeight")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("signal_weighted_config_rsi_weight");
+                                .HasColumnName("thresholds_buy_threshold");
 
                             b1.Property<decimal?>("SellThreshold")
                                 .HasPrecision(18, 2)
                                 .HasColumnType("numeric(18,2)")
-                                .HasColumnName("signal_weighted_config_sell_threshold");
-
-                            b1.Property<decimal?>("TaxAdjustedRoiWeight")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("signal_weighted_config_tax_adjusted_roi_weight");
-
-                            b1.Property<decimal?>("TrendMomentumWeight")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("signal_weighted_config_trend_momentum_weight");
-
-                            b1.Property<decimal?>("VolumeAnomalyWeight")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("signal_weighted_config_volume_anomaly_weight");
+                                .HasColumnName("thresholds_sell_threshold");
 
                             b1.HasKey("StrategyId");
 
@@ -1682,17 +1635,12 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                                 .HasConstraintName("fk_strategies_strategies_id");
                         });
 
-                    b.Navigation("Components");
-
-                    b.Navigation("ForecastMomentumConfig");
+                    b.Navigation("InputWeights");
 
                     b.Navigation("Market");
 
-                    b.Navigation("MeanReversionConfig");
-
-                    b.Navigation("RecipeArbitrageConfig");
-
-                    b.Navigation("SignalWeightedConfig");
+                    b.Navigation("Thresholds")
+                        .IsRequired();
 
                     b.Navigation("TradingConfiguration")
                         .IsRequired();
@@ -1782,39 +1730,6 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                         .IsRequired();
 
                     b.Navigation("Market");
-                });
-
-            modelBuilder.Entity("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades.MarketOverviewBucket", b =>
-                {
-                    b.HasOne("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets.Market", "Market")
-                        .WithMany()
-                        .HasForeignKey("MarketId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_market_overview_buckets_markets_market_id");
-
-                    b.Navigation("Market");
-                });
-
-            modelBuilder.Entity("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades.MarketTradeSnapshot", b =>
-                {
-                    b.HasOne("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets.Market", "Market")
-                        .WithMany()
-                        .HasForeignKey("MarketId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_market_trade_snapshots_markets_market_id");
-
-                    b.HasOne("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols.Symbol", "Symbol")
-                        .WithMany()
-                        .HasForeignKey("SymbolId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_market_trade_snapshots_symbols_symbol_id");
-
-                    b.Navigation("Market");
-
-                    b.Navigation("Symbol");
                 });
 
             modelBuilder.Entity("Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades.Trade", b =>

@@ -117,7 +117,7 @@ export default function VolumeHeatmap({ marketId }: { marketId: string }) {
       <CardHeader>
         <CardTitle>Volume Heatmap</CardTitle>
         <CardDescription>
-          Percentage of each day&apos;s trades — last {lookbackDays} days
+          Percentage of each day&apos;s trades - last {lookbackDays} days
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

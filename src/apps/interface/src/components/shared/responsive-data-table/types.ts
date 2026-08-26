@@ -1,4 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table";
+export type FilterMode = "builder" | "smart";
+
+export const DEFAULT_FILTER_MODE: FilterMode = "builder";
 
 export type SortDirection = "ASC" | "DESC";
 
@@ -46,6 +49,13 @@ export interface FilterCondition {
   value: any;
 }
 
+export type FilterGroup = {
+  logic: "and" | "or";
+  items: FilterGroupItem[];
+};
+
+export type FilterGroupItem = FilterCondition | FilterGroup;
+
 export type FilterType = "string" | "number" | "boolean" | "date" | "enum";
 
 export interface FilterConfig {
@@ -79,12 +89,14 @@ export interface DataTableProps<TData> {
 
 export interface DataTableState {
   pagination?: PaginationArgs;
-  filter?: Record<string, any>;
+  filter?: FilterGroup;
   sort?: SortArgs;
+  filterMode: FilterMode;
+  smartQuery?: string;
 }
 
 /** Maps frontend FilterOperator values to the backend filter operator strings */
-const BACKEND_OPERATOR: Record<FilterOperator, string> = {
+export const BACKEND_OPERATOR: Record<FilterOperator, string> = {
   eq: "eq",
   neq: "neq",
   gt: "gt",
@@ -96,50 +108,62 @@ const BACKEND_OPERATOR: Record<FilterOperator, string> = {
   endsWith: "endswith",
 };
 
-/**
- * Converts a DataTableState filter object into an array of backend filter strings.
- * Each condition becomes `field:op:value` (e.g. `symbolName:like:gold`).
- * Returns undefined when there are no active conditions.
- */
-export function extractFilter(
-  filter?: Record<string, any>,
-): string[] | undefined {
-  if (!filter || Object.keys(filter).length === 0) return undefined;
+export const EMPTY_FILTER: FilterGroup = { logic: "and", items: [] };
 
-  const result: string[] = [];
+export function isFilterCondition(item: FilterGroupItem): item is FilterCondition {
+  return "field" in item && "operator" in item;
+}
 
-  const walk = (obj: Record<string, any>, path: string[]) => {
-    for (const [key, value] of Object.entries(obj)) {
-      if (
-        typeof value === "object" &&
-        value !== null &&
-        !Array.isArray(value)
-      ) {
-        if (Object.keys(value).some((k) => k in OPERATOR_LABELS)) {
-          // Leaf: { eq: "sword" } or { gt: 100 }
-          for (const [op, opValue] of Object.entries(value)) {
-            if (
-              op in OPERATOR_LABELS &&
-              opValue !== "" &&
-              opValue !== undefined &&
-              opValue !== null &&
-              !Number.isNaN(opValue)
-            ) {
-              const field = [...path, key].join(".");
-              result.push(
-                `${field}:${BACKEND_OPERATOR[op as FilterOperator]}:${opValue}`,
-              );
-            }
-          }
-        } else {
-          walk(value as Record<string, any>, [...path, key]);
-        }
-      }
+export function isFilterGroup(item: FilterGroupItem): item is FilterGroup {
+  return "logic" in item && "items" in item;
+}
+
+function serializeFilterGroupItem(item: FilterGroupItem): string {
+  if (isFilterCondition(item)) {
+    if (item.value === null) {
+      return item.operator === "eq"
+        ? `${item.field}:null`
+        : `${item.field}:${BACKEND_OPERATOR[item.operator]}:null`;
     }
-  };
 
-  walk(filter, []);
-  return result.length > 0 ? result : undefined;
+    return `${item.field}:${BACKEND_OPERATOR[item.operator]}:${item.value}`;
+  }
+
+  const parts = item.items.map(serializeFilterGroupItem).filter(Boolean);
+  if (parts.length === 0) return "";
+  if (parts.length === 1) return parts[0];
+  return item.logic === "and"
+    ? `and(${parts.join("|")})`
+    : `or(${parts.join("|")})`;
+}
+
+export function serializeFilterGroup(group: FilterGroup): string[] {
+  if (group.items.length === 0) return [];
+
+  if (group.logic === "and") {
+    return group.items.map(serializeFilterGroupItem).filter(Boolean);
+  }
+
+  const serialized = serializeFilterGroupItem(group);
+  return serialized ? [serialized] : [];
+}
+
+/**
+ * Extracts active backend filter strings from a DataTableState.
+ * The filter group is the source of truth regardless of the active filterMode.
+ */
+export function extractFilter(state?: DataTableState): string[] | undefined {
+  const filter = state?.filter;
+  if (!filter) return undefined;
+  if (filter.items.length === 0) return undefined;
+  return serializeFilterGroup(filter);
+}
+
+export function withDefaultState(
+  state: DataTableState | undefined,
+  overrides: Partial<DataTableState>,
+): DataTableState {
+  return { ...(state ?? { filterMode: DEFAULT_FILTER_MODE }), ...overrides };
 }
 
 /** Extract a flat sortField + sortDirection from a SortArgs object */

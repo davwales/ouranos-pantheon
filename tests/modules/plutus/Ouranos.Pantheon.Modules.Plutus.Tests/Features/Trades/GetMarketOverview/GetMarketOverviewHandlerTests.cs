@@ -4,7 +4,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketOverview.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
 using Bucket = Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades.MarketOverviewBucket;
@@ -36,34 +36,10 @@ public sealed class GetMarketOverviewHandlerTests
         var otherMarketId = new Id<Market>(Guid.NewGuid().ToString());
         var now = DateTimeOffset.UtcNow;
 
-        var bucket1 = Bucket.Create(
-            marketId,
-            TimeFrame.OneHour,
-            now.AddHours(-2),
-            100m,
-            5m,
-            500m,
-            10
-        );
-        var bucket2 = Bucket.Create(
-            marketId,
-            TimeFrame.OneHour,
-            now.AddHours(-1),
-            120m,
-            8m,
-            960m,
-            15
-        );
-        var wrongFrame = Bucket.Create(
-            marketId,
-            TimeFrame.OneDay,
-            now.AddDays(-1),
-            50m,
-            3m,
-            150m,
-            5
-        );
-        var wrongMarket = Bucket.Create(
+        var bucket1 = new Bucket(marketId, TimeFrame.OneHour, now.AddHours(-2), 100m, 5m, 500m, 10);
+        var bucket2 = new Bucket(marketId, TimeFrame.OneHour, now.AddHours(-1), 120m, 8m, 960m, 15);
+        var wrongFrame = new Bucket(marketId, TimeFrame.OneDay, now.AddDays(-1), 50m, 3m, 150m, 5);
+        var wrongMarket = new Bucket(
             otherMarketId,
             TimeFrame.OneHour,
             now.AddHours(-1),
@@ -92,24 +68,8 @@ public sealed class GetMarketOverviewHandlerTests
         // Arrange
         var marketId = new Id<Market>(Guid.NewGuid().ToString());
         var now = DateTimeOffset.UtcNow;
-        var bucket1 = Bucket.Create(
-            marketId,
-            TimeFrame.AllTime,
-            now.AddDays(-2),
-            100m,
-            4m,
-            400m,
-            8
-        );
-        var bucket2 = Bucket.Create(
-            marketId,
-            TimeFrame.AllTime,
-            now.AddDays(-1),
-            200m,
-            1m,
-            200m,
-            2
-        );
+        var bucket1 = new Bucket(marketId, TimeFrame.AllTime, now.AddDays(-2), 100m, 4m, 400m, 8);
+        var bucket2 = new Bucket(marketId, TimeFrame.AllTime, now.AddDays(-1), 200m, 1m, 200m, 2);
 
         await _dbContext.SeedData(bucket1, bucket2);
 

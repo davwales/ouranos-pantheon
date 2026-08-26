@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Ouranos.Pantheon.Modules.Hermes.Features.Traits.GetTrait;
 using Ouranos.Pantheon.Modules.Hermes.Features.Traits.GetTrait.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.Traits.GetTrait;

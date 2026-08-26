@@ -12,7 +12,6 @@ public sealed class PlutusOptionsTests
 
         // Assert
         options.DataLoaders.ShouldNotBeNull();
-        options.MarketTradeSnapshot.ShouldNotBeNull();
         options.Forecasting.ShouldNotBeNull();
         PlutusOptions.SectionName.ShouldBe("Ouranos:Plutus");
     }

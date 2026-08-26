@@ -9,7 +9,7 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.SymbolGroups;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 
@@ -21,6 +21,9 @@ public class PlutusDbContext(DbContextOptions<PlutusDbContext> options)
     public DbSet<Forecast> Forecasts { get; set; }
 
     public DbSet<ForecastRecord> ForecastRecords { get; set; }
+
+    public DbSet<ForecastRecordWithActual> ForecastRecordsWithActuals =>
+        Set<ForecastRecordWithActual>();
 
     public DbSet<ForecastRun> ForecastRuns { get; set; }
 
@@ -37,6 +40,8 @@ public class PlutusDbContext(DbContextOptions<PlutusDbContext> options)
     public DbSet<MarketOverviewBucket> MarketOverviewBuckets => Set<MarketOverviewBucket>();
 
     public DbSet<Signal> Signals => Set<Signal>();
+
+    public DbSet<LatestSignal> LatestSignals => Set<LatestSignal>();
 
     public DbSet<SymbolGroup> SymbolGroups { get; set; }
 
@@ -55,6 +60,7 @@ public class PlutusDbContext(DbContextOptions<PlutusDbContext> options)
         modelBuilder.Entity<OsrsDataLoaderState>();
         modelBuilder.Entity<Forecast>();
         modelBuilder.Entity<ForecastRecord>();
+        modelBuilder.Entity<ForecastRecordWithActual>();
         modelBuilder.Entity<ForecastRun>();
         modelBuilder.Entity<Market>();
         modelBuilder.Entity<Recipe>();
@@ -63,6 +69,7 @@ public class PlutusDbContext(DbContextOptions<PlutusDbContext> options)
         modelBuilder.Entity<MarketTradeSnapshot>();
         modelBuilder.Entity<MarketOverviewBucket>();
         modelBuilder.Entity<Signal>();
+        modelBuilder.Entity<LatestSignal>();
         modelBuilder.Entity<SymbolGroup>();
         modelBuilder.Entity<SymbolGroupMember>();
         modelBuilder.Entity<Position>();

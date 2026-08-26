@@ -6,7 +6,7 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals.Computers;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Tests.Shared.Domain.Signals.Computers;
 
@@ -27,7 +27,7 @@ public sealed class TrendMomentumSignalComputerTests
         decimal volume = 1000m
     )
     {
-        return MarketTradeSnapshot.Create(
+        return new MarketTradeSnapshot(
             MarketId,
             SymbolId,
             frame,

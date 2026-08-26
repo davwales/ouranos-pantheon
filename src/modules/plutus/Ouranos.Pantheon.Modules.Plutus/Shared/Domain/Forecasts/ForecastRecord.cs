@@ -1,7 +1,7 @@
 using Ardalis.GuardClauses;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
 
@@ -28,10 +28,6 @@ public sealed class ForecastRecord : BaseEntity<Id<ForecastRecord>>
     public int HorizonDays { get; init; }
 
     public ForecastPoint Predicted { get; init; }
-
-    public ForecastPoint? Actual { get; private set; }
-
-    public DateTimeOffset? EvaluatedAt { get; private set; }
 
     public ForecastRun? Run { get; private set; }
 
@@ -64,14 +60,5 @@ public sealed class ForecastRecord : BaseEntity<Id<ForecastRecord>>
             HorizonDays = horizonDays,
             Predicted = predicted,
         };
-    }
-
-    public void RecordActual(ForecastPoint actual, DateTimeOffset evaluatedAt)
-    {
-        Guard.Against.Null(actual);
-
-        Actual = actual;
-        EvaluatedAt = evaluatedAt;
-        Update();
     }
 }

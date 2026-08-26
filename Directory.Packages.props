@@ -14,8 +14,10 @@
     <PackageVersion Include="CsvHelper" Version="33.1.0" />
     <PackageVersion Include="Flagsmith" Version="9.0.0" />
     <PackageVersion Include="EFCore.NamingConventions" Version="10.0.1" />
-    <PackageVersion Include="WolverineFx" Version="5.21.0" />
-    <PackageVersion Include="WolverineFx.RabbitMq" Version="5.21.0" />
+    <PackageVersion Include="WolverineFx" Version="6.13.1" />
+    <PackageVersion Include="WolverineFx.Marten" Version="6.13.1" />
+    <PackageVersion Include="WolverineFx.RabbitMq" Version="6.13.1" />
+    <PackageVersion Include="WolverineFx.RuntimeCompilation" Version="6.13.1" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.4" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.4" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.4" />
@@ -34,6 +36,8 @@
       Include="Microsoft.Extensions.Options.ConfigurationExtensions"
       Version="10.0.5"
     />
+    <PackageVersion Include="Marten" Version="9.9.1" />
+    <PackageVersion Include="Microsoft.Security.AntiSSRF" Version="1.0.0" />
     <PackageVersion Include="MongoDB.Bson" Version="3.8.0" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />

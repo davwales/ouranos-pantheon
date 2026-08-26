@@ -1,68 +1,44 @@
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest;
 
 /// <summary>
 ///     Pre-indexed backtest data optimized for O(1) lookups in the hot loop.
-///     Replaces flat List lookups with Dictionary lookups by SymbolId,
-///     and replaces raw Trade materialization with pre-aggregated daily prices and trade aggregates.
+///     All collections are indexed by SymbolId.
 /// </summary>
 public sealed class BacktestData
 {
+    /// <summary>OneHour snapshots are approximated from 1 day of daily aggregates (no sub-daily data available).</summary>
+    private const int ShortSnapshotDays = 1;
+
+    private const int MediumSnapshotDays = 7;
+
+    private const int LongSnapshotDays = 30;
+
+    private const decimal MinutesPerDay = 1440m;
+
     public Market Market { get; }
     public List<Symbol> Symbols { get; }
-    public List<MarketTradeSnapshot> Snapshots { get; }
-    public List<Forecast> Forecasts { get; }
 
-    /// <summary>
-    ///     Daily closing prices indexed by (SymbolId, Date).
-    ///     Available for diagnostics; price resolution in the engine
-    ///     uses GetLatestPrice (average price) to avoid outlier trades.
-    /// </summary>
-    public Dictionary<(Id<Symbol> SymbolId, DateOnly Date), decimal> DailyPricesByDate { get; }
-
-    /// <summary>
-    ///     Daily trade aggregates indexed by SymbolId.
-    ///     Each symbol's aggregates are sorted by date for efficient window slicing.
-    ///     Used to build PriceBuckets without loading raw trades.
-    /// </summary>
     public Dictionary<Id<Symbol>, List<DailyTradeAggregate>> AggregatesBySymbol { get; }
 
-    /// <summary>
-    ///     Snapshots indexed by SymbolId for O(1) lookup.
-    /// </summary>
-    public Dictionary<Id<Symbol>, List<MarketTradeSnapshot>> SnapshotsBySymbol { get; }
-
-    /// <summary>
-    ///     Forecasts indexed by SymbolId for O(1) lookup.
-    /// </summary>
-    public Dictionary<Id<Symbol>, Forecast> ForecastBySymbol { get; }
+    private readonly Dictionary<Id<Symbol>, Symbol> _symbolsById;
 
     private BacktestData(
         Market market,
         List<Symbol> symbols,
-        Dictionary<Id<Symbol>, List<MarketTradeSnapshot>> snapshotsBySymbol,
-        Dictionary<Id<Symbol>, Forecast> forecastBySymbol,
-        Dictionary<(Id<Symbol> SymbolId, DateOnly Date), decimal> dailyPricesByDate,
         Dictionary<Id<Symbol>, List<DailyTradeAggregate>> aggregatesBySymbol
     )
     {
         Market = market;
         Symbols = symbols;
-        SnapshotsBySymbol = snapshotsBySymbol;
-        ForecastBySymbol = forecastBySymbol;
-        DailyPricesByDate = dailyPricesByDate;
         AggregatesBySymbol = aggregatesBySymbol;
-
-        // Keep flat lists for backward compatibility with methods that iterate all items
-        Snapshots = snapshotsBySymbol.SelectMany(kvp => kvp.Value).ToList();
-        Forecasts = forecastBySymbol.Values.ToList();
+        _symbolsById = symbols.ToDictionary(s => s.Id);
     }
 
     /// <summary>
@@ -72,37 +48,14 @@ public sealed class BacktestData
     public static BacktestData FromRaw(
         Market market,
         List<Symbol> symbols,
-        List<MarketTradeSnapshot> snapshots,
-        List<Forecast> forecasts,
-        List<DailyPrice> dailyPrices,
         List<DailyTradeAggregate> dailyAggregates
     )
     {
-        var snapshotsBySymbol = snapshots
-            .GroupBy(s => s.SymbolId)
-            .ToDictionary(g => g.Key, g => g.ToList());
-
-        var forecastBySymbol = forecasts
-            .GroupBy(f => f.SymbolId)
-            .ToDictionary(g => g.Key, g => g.First());
-
-        var dailyPricesByDate = dailyPrices.ToDictionary(
-            dp => (dp.SymbolId, dp.Date),
-            dp => dp.ClosePrice
-        );
-
         var aggregatesBySymbol = dailyAggregates
             .GroupBy(a => a.SymbolId)
             .ToDictionary(g => g.Key, g => g.OrderBy(a => a.Date).ToList());
 
-        return new BacktestData(
-            market,
-            symbols,
-            snapshotsBySymbol,
-            forecastBySymbol,
-            dailyPricesByDate,
-            aggregatesBySymbol
-        );
+        return new BacktestData(market, symbols, aggregatesBySymbol);
     }
 
     /// <summary>
@@ -120,8 +73,7 @@ public sealed class BacktestData
 
         var dateOnly = DateOnly.FromDateTime(date.UtcDateTime);
 
-        // Binary search for the last aggregate on or before the given date
-        var idx = aggregates.FindLastIndex(a => a.Date <= dateOnly);
+        var idx = FindLastIndex(aggregates, a => a.Date <= dateOnly);
         if (idx < 0)
         {
             return 0m;
@@ -130,14 +82,11 @@ public sealed class BacktestData
         return aggregates[idx].AveragePrice;
     }
 
-    /// <summary>
-    ///     Gets daily trade aggregates for a symbol within a date window.
-    ///     Uses the pre-indexed aggregates by symbol for efficient range lookup.
-    /// </summary>
     public List<DailyTradeAggregate> GetWindowAggregates(
         Id<Symbol> symbolId,
         DateTimeOffset windowStart,
-        DateTimeOffset windowEnd
+        DateTimeOffset windowEnd,
+        int? windowDays = null
     )
     {
         if (!AggregatesBySymbol.TryGetValue(symbolId, out var aggregates))
@@ -145,48 +94,46 @@ public sealed class BacktestData
             return [];
         }
 
-        var startDate = DateOnly.FromDateTime(windowStart.UtcDateTime);
         var endDate = DateOnly.FromDateTime(windowEnd.UtcDateTime);
 
-        return aggregates.Where(a => a.Date >= startDate && a.Date <= endDate).ToList();
+        if (windowDays.HasValue)
+        {
+            var startDate = DateOnly
+                .FromDateTime(windowEnd.UtcDateTime)
+                .AddDays(-(windowDays.Value - 1));
+            return SliceAggregates(aggregates, startDate, endDate);
+        }
+
+        var legacyStartDate = DateOnly.FromDateTime(windowStart.UtcDateTime);
+        return SliceAggregates(aggregates, legacyStartDate, endDate);
     }
 
-    /// <summary>
-    ///     Gets snapshots for a symbol that were available on or before the given date,
-    ///     preventing lookahead bias. Uses each snapshot's CreatedAt to filter.
-    /// </summary>
     public (
         MarketTradeSnapshot? Short,
         MarketTradeSnapshot? Medium,
         MarketTradeSnapshot? Long
     ) GetSnapshotsForSymbol(Id<Symbol> symbolId, DateTimeOffset asOfDate)
     {
-        if (!SnapshotsBySymbol.TryGetValue(symbolId, out var symbolSnaps))
-        {
-            return (null, null, null);
-        }
-
-        var availableSnaps = symbolSnaps.Where(s => s.CreatedAt <= asOfDate).ToList();
-
-        return (
-            availableSnaps.LastOrDefault(s => s.TimeFrame == TimeFrame.OneHour),
-            availableSnaps.LastOrDefault(s => s.TimeFrame == TimeFrame.OneWeek),
-            availableSnaps.LastOrDefault(s => s.TimeFrame == TimeFrame.OneMonth)
+        var shortSnap = ReconstructSnapshot(
+            symbolId,
+            TimeFrame.OneHour,
+            ShortSnapshotDays,
+            asOfDate
         );
-    }
+        var mediumSnap = ReconstructSnapshot(
+            symbolId,
+            TimeFrame.OneWeek,
+            MediumSnapshotDays,
+            asOfDate
+        );
+        var longSnap = ReconstructSnapshot(
+            symbolId,
+            TimeFrame.OneMonth,
+            LongSnapshotDays,
+            asOfDate
+        );
 
-    /// <summary>
-    ///     Gets the forecast for a symbol that was available on or before the given date,
-    ///     preventing lookahead bias. Uses the forecast's CreatedAt to filter.
-    /// </summary>
-    public Forecast? GetForecastForSymbol(Id<Symbol> symbolId, DateTimeOffset asOfDate)
-    {
-        if (!ForecastBySymbol.TryGetValue(symbolId, out var forecast))
-        {
-            return null;
-        }
-
-        return forecast.CreatedAt <= asOfDate ? forecast : null;
+        return (shortSnap, mediumSnap, longSnap);
     }
 
     /// <summary>
@@ -202,7 +149,144 @@ public sealed class BacktestData
             return 0m;
         }
 
-        var aggregate = aggregates.Find(a => a.Date == dateOnly);
-        return aggregate?.TotalVolume ?? 0m;
+        var idx = FindFirstIndex(aggregates, a => a.Date >= dateOnly);
+        return idx >= 0 && aggregates[idx].Date == dateOnly ? aggregates[idx].TotalVolume : 0m;
+    }
+
+    /// <summary>
+    ///     Reconstructs a snapshot by aggregating daily trades over the trailing
+    ///     window; scales volumes to the target timeframe.
+    /// </summary>
+    private MarketTradeSnapshot? ReconstructSnapshot(
+        Id<Symbol> symbolId,
+        TimeFrame timeframe,
+        int windowDays,
+        DateTimeOffset asOfDate
+    )
+    {
+        if (!AggregatesBySymbol.TryGetValue(symbolId, out var aggregates) || aggregates.Count == 0)
+        {
+            return null;
+        }
+
+        var asOfDateOnly = DateOnly.FromDateTime(asOfDate.UtcDateTime);
+        var startDate = asOfDateOnly.AddDays(-(windowDays - 1));
+        var window = SliceAggregates(aggregates, startDate, asOfDateOnly);
+        if (window.Count == 0)
+        {
+            return null;
+        }
+
+        var totalVolume = window.Sum(a => a.TotalVolume);
+        var totalSpent = window.Sum(a => a.AveragePrice * a.TotalVolume);
+        var minPrice = window.Min(a => a.MinPrice);
+        var maxPrice = window.Max(a => a.MaxPrice);
+
+        var timeframeSpan = timeframe.ToTimeSpan();
+        if (timeframeSpan is null)
+        {
+            return null;
+        }
+
+        var timeframeMinutes = (decimal)timeframeSpan.Value.TotalMinutes;
+        var actualWindowMinutes = window.Count * MinutesPerDay;
+        var volumeScale = actualWindowMinutes > 0 ? timeframeMinutes / actualWindowMinutes : 1m;
+
+        var scaledVolume = totalVolume * volumeScale;
+        var scaledSpent = totalSpent * volumeScale;
+
+        var taxRate = Market.Taxes.Flat?.Rate ?? 0m;
+        var tax = maxPrice * taxRate;
+
+        _symbolsById.TryGetValue(symbolId, out var symbol);
+        var limit = symbol?.AdditionalFields.Limit ?? totalVolume;
+
+        // Reconstructed snapshots carry no real transaction count; pass 0 so
+        // NumTransactions isn't mistaken for one.
+        return new MarketTradeSnapshot(
+            Market.Id,
+            symbolId,
+            timeframe,
+            scaledSpent,
+            minPrice,
+            maxPrice,
+            scaledVolume,
+            0,
+            limit,
+            tax
+        );
+    }
+
+    private static List<DailyTradeAggregate> SliceAggregates(
+        List<DailyTradeAggregate> aggregates,
+        DateOnly startDate,
+        DateOnly endDate
+    )
+    {
+        if (aggregates.Count == 0 || startDate > endDate)
+        {
+            return [];
+        }
+
+        var startIdx = FindFirstIndex(aggregates, a => a.Date >= startDate);
+        if (startIdx < 0)
+        {
+            return [];
+        }
+
+        var endIdx = FindLastIndex(aggregates, a => a.Date <= endDate);
+        if (endIdx < 0 || endIdx < startIdx)
+        {
+            return [];
+        }
+
+        var count = endIdx - startIdx + 1;
+        return aggregates.GetRange(startIdx, count);
+    }
+
+    private static int FindFirstIndex<T>(IList<T> list, Func<T, bool> predicate)
+    {
+        var lo = 0;
+        var hi = list.Count - 1;
+        var result = -1;
+
+        while (lo <= hi)
+        {
+            var mid = lo + (hi - lo) / 2;
+            if (predicate(list[mid]))
+            {
+                result = mid;
+                hi = mid - 1;
+            }
+            else
+            {
+                lo = mid + 1;
+            }
+        }
+
+        return result;
+    }
+
+    private static int FindLastIndex<T>(IList<T> list, Func<T, bool> predicate)
+    {
+        var lo = 0;
+        var hi = list.Count - 1;
+        var result = -1;
+
+        while (lo <= hi)
+        {
+            var mid = lo + (hi - lo) / 2;
+            if (predicate(list[mid]))
+            {
+                result = mid;
+                lo = mid + 1;
+            }
+            else
+            {
+                hi = mid - 1;
+            }
+        }
+
+        return result;
     }
 }

@@ -6,9 +6,9 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GetAllConversations
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
-using Ouranos.Pantheon.Modules.Shared.Application;
-using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
-using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Filtering;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Sorting;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GetAllConversations;
 

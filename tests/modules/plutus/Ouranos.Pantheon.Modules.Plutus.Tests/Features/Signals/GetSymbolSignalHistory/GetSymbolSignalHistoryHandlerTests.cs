@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSymbolSignalHistory;
 using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSymbolSignalHistory.Schemas;
@@ -6,7 +7,7 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
@@ -67,7 +68,7 @@ public sealed class GetSymbolSignalHistoryHandlerTests
     public async Task Handle_WhenSymbolNotFound_ShouldThrowNotFoundException()
     {
         // Arrange
-        var handler = new GetSymbolSignalHistoryHandler(_logger, _dbContext, _computers);
+        var handler = new TestableGetSymbolSignalHistoryHandler(_logger, _dbContext, _computers);
         var query = new GetSymbolSignalHistoryInput(new Id<Symbol>(_fixture.Create<string>()));
 
         // Act
@@ -99,7 +100,7 @@ public sealed class GetSymbolSignalHistoryHandlerTests
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(symbol);
 
-        var handler = new GetSymbolSignalHistoryHandler(_logger, _dbContext, _computers);
+        var handler = new TestableGetSymbolSignalHistoryHandler(_logger, _dbContext, _computers);
         var query = new GetSymbolSignalHistoryInput(symbol.Id);
 
         // Act
@@ -143,7 +144,7 @@ public sealed class GetSymbolSignalHistoryHandlerTests
         await _dbContext.SeedData(symbol);
         await _dbContext.SeedData(signals);
 
-        var handler = new GetSymbolSignalHistoryHandler(_logger, _dbContext, _computers);
+        var handler = new TestableGetSymbolSignalHistoryHandler(_logger, _dbContext, _computers);
         var query = new GetSymbolSignalHistoryInput(symbol.Id);
 
         // Act
@@ -189,7 +190,7 @@ public sealed class GetSymbolSignalHistoryHandlerTests
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(symbol);
 
-        var handler = new GetSymbolSignalHistoryHandler(_logger, _dbContext, _computers);
+        var handler = new TestableGetSymbolSignalHistoryHandler(_logger, _dbContext, _computers);
         var query = new GetSymbolSignalHistoryInput(
             symbol.Id,
             From: DateTimeOffset.UtcNow,
@@ -225,7 +226,7 @@ public sealed class GetSymbolSignalHistoryHandlerTests
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(symbol);
 
-        var handler = new GetSymbolSignalHistoryHandler(_logger, _dbContext, _computers);
+        var handler = new TestableGetSymbolSignalHistoryHandler(_logger, _dbContext, _computers);
         var query = new GetSymbolSignalHistoryInput(symbol.Id, Types: "InvalidType");
 
         // Act
@@ -265,7 +266,7 @@ public sealed class GetSymbolSignalHistoryHandlerTests
         await _dbContext.SeedData(symbol);
         await _dbContext.SeedData(signals);
 
-        var handler = new GetSymbolSignalHistoryHandler(_logger, _dbContext, _computers);
+        var handler = new TestableGetSymbolSignalHistoryHandler(_logger, _dbContext, _computers);
         var query = new GetSymbolSignalHistoryInput(symbol.Id, Types: "Rsi,BollingerBands");
 
         // Act
@@ -305,7 +306,7 @@ public sealed class GetSymbolSignalHistoryHandlerTests
         await _dbContext.SeedData(symbol);
         await _dbContext.SeedData(inRangeSignal, outOfRangeSignal);
 
-        var handler = new GetSymbolSignalHistoryHandler(_logger, _dbContext, _computers);
+        var handler = new TestableGetSymbolSignalHistoryHandler(_logger, _dbContext, _computers);
 
         var from = now.AddDays(-3);
         var to = now.AddDays(-1);
@@ -325,7 +326,7 @@ public sealed class GetSymbolSignalHistoryHandlerTests
     public async Task Handle_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange
-        var handler = new GetSymbolSignalHistoryHandler(_logger, _dbContext, _computers);
+        var handler = new TestableGetSymbolSignalHistoryHandler(_logger, _dbContext, _computers);
         var query = new GetSymbolSignalHistoryInput(new Id<Symbol>(_fixture.Create<string>()));
         var cancellationToken = new CancellationToken(true);
 
@@ -334,6 +335,54 @@ public sealed class GetSymbolSignalHistoryHandlerTests
 
         // Assert
         await get.ShouldThrowAsync<OperationCanceledException>();
+    }
+
+    private sealed class TestableGetSymbolSignalHistoryHandler(
+        ILogger<GetSymbolSignalHistoryHandler> logger,
+        PlutusDbContext dbContext,
+        IEnumerable<ISignalComputer> computers
+#pragma warning disable CS9107 // Parameter is captured into the state of the enclosing type and its value is also passed to the base constructor. The value might be captured by the base class as well.
+    ) : GetSymbolSignalHistoryHandler(logger, dbContext, computers)
+#pragma warning restore CS9107 // Parameter is captured into the state of the enclosing type and its value is also passed to the base constructor. The value might be captured by the base class as well.
+    {
+        protected internal override async Task<
+            Dictionary<SignalType, List<RawSignalPoint>>
+        > FetchSignalGroups(
+            Id<Symbol> symbolId,
+            DateTimeOffset from,
+            DateTimeOffset to,
+            HashSet<SignalType>? requestedTypes,
+            HashSet<SignalType>? typesForIntent,
+            CancellationToken ct
+        )
+        {
+            var query = dbContext
+                .Signals.AsNoTracking()
+                .Where(s => s.SymbolId == symbolId)
+                .Where(s => s.ComputedAt >= from && s.ComputedAt <= to);
+
+            if (requestedTypes is { Count: > 0 })
+            {
+                query = query.Where(s => requestedTypes.Contains(s.Type));
+            }
+
+            if (typesForIntent is { Count: > 0 })
+            {
+                query = query.Where(s => typesForIntent.Contains(s.Type));
+            }
+
+            var raw = await query
+                .OrderBy(s => s.Type)
+                .ThenBy(s => s.ComputedAt)
+                .Select(s => new GetSymbolSignalHistoryHandler.RawSignalPoint(
+                    s.Type,
+                    s.Value,
+                    s.ComputedAt
+                ))
+                .ToListAsync(ct);
+
+            return raw.GroupBy(s => s.Type).ToDictionary(g => g.Key, g => g.ToList());
+        }
     }
 
     private sealed class StubSignalComputer(

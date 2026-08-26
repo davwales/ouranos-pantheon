@@ -2,8 +2,8 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Ouranos.Pantheon.Modules.Hermes.Features.Folders.UpdateFolder;
 using Ouranos.Pantheon.Modules.Hermes.Features.Folders.UpdateFolder.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.Folders.UpdateFolder;

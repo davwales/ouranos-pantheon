@@ -6,9 +6,9 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetForecastEfficacy.Sch
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
-using Ouranos.Pantheon.Modules.Shared.Application;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetForecastEfficacy;
 
@@ -52,8 +52,8 @@ public sealed class GetForecastEfficacyHandler
         );
 
         var q = _dbContext
-            .ForecastRecords.AsNoTracking()
-            .Where(r => r.EvaluatedAt != null && r.Actual != null && r.Actual.AveragePrice != 0);
+            .ForecastRecordsWithActuals.AsNoTracking()
+            .Where(r => r.ActualAveragePrice != null && r.ActualAveragePrice != 0);
 
         if (input.SymbolId is not null)
         {
@@ -85,17 +85,20 @@ public sealed class GetForecastEfficacyHandler
             q = q.Where(r => r.GeneratedAt <= input.Until);
         }
 
-        var projected = q.Select(r => new
-        {
-            r.SymbolId,
-            SymbolName = r.Symbol!.Name,
-            r.MarketId,
-            r.ModelName,
-            r.HorizonDays,
-            r.GeneratedAt,
-            PredictedAvg = r.Predicted.AveragePrice,
-            ActualAvg = r.Actual!.AveragePrice,
-        });
+        var projected =
+            from r in q
+            join s in _dbContext.Symbols on r.SymbolId equals s.Id
+            select new
+            {
+                r.SymbolId,
+                SymbolName = s.Name,
+                r.MarketId,
+                r.ModelName,
+                r.HorizonDays,
+                r.GeneratedAt,
+                PredictedAvg = r.PredictedAveragePrice,
+                ActualAvg = r.ActualAveragePrice ?? 0m,
+            };
 
         var totalCount = await projected
             .Select(r => new

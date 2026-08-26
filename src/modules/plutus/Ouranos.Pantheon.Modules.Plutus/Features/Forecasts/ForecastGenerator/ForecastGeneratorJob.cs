@@ -7,12 +7,12 @@ using Ouranos.Pantheon.Modules.Plutus.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
-using Ouranos.Pantheon.Modules.Shared.Extensions;
-using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning;
-using Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning.Requests;
-using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Functions;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Requests;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres.Functions;
 using TickerQ.Utilities.Base;
-using MlForecastPoint = Ouranos.Pantheon.Modules.Shared.Infra.OuranosMachineLearning.Dtos.ForecastPoint;
+using MlForecastPoint = Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos.ForecastPoint;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.ForecastGenerator;
 
@@ -55,12 +55,6 @@ public sealed class ForecastGeneratorJob
         {
             _logger.LogInformation("No symbols to process. Skipping execution.");
             return;
-        }
-
-        if (_options.Value.Forecasting.RemoveOutdatedForecasts)
-        {
-            _logger.LogInformation("Removing all outdated forecasts.");
-            await _dbContext.Forecasts.ExecuteDeleteAsync(ct);
         }
 
         var generatedAt = DateTimeOffset.UtcNow;
@@ -143,15 +137,6 @@ public sealed class ForecastGeneratorJob
                         )
                     );
                 }
-            }
-
-            if (!_options.Value.Forecasting.RemoveOutdatedForecasts)
-            {
-                var forecastSymbolIds = forecasts.Select(f => f.SymbolId).ToList();
-                var outdated = await _dbContext
-                    .Forecasts.Where(f => forecastSymbolIds.Contains(f.SymbolId))
-                    .ToListAsync(ct);
-                _dbContext.Forecasts.RemoveRange(outdated);
             }
 
             _dbContext.Forecasts.AddRange(forecasts);

@@ -12,8 +12,8 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Execu
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
-using Ouranos.Pantheon.Modules.Shared.Application.Pipeline;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Pipeline;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
 
@@ -38,18 +38,17 @@ public sealed class RunBacktestConsumerTests
         _dbContextFactory = DbContextExtensions.MockFactory<PlutusDbContext>();
         _dataService = Substitute.For<IBacktestDataQueryService>();
 
-        var executors = new List<IStrategyExecutor> { new SignalWeightedExecutor() };
-        var compositeExecutor = new CompositeExecutor(executors);
+        var executor = new StrategyExecutor(StrategyTestFactory.DefaultScorers());
 
         var initLogger = Substitute.For<ILogger<InitializeStep>>();
         var scoreLogger = Substitute.For<ILogger<ScoreSymbolsStep>>();
 
         var stepRegistry = new StepRegistry<BacktestPayload>([
-            new InitializeStep(initLogger, _dataService, executors, compositeExecutor),
-            new ScoreSymbolsStep(scoreLogger, []),
-            new CloseExitsStep([]),
+            new InitializeStep(initLogger, _dataService, executor),
+            new ScoreSymbolsStep(scoreLogger, new SignalScoringService([])),
+            new CloseExitsStep(new SignalScoringService([])),
             new IterationSetupStep(_dbContextFactory),
-            new BuyCandidatesStep(),
+            new BuyCandidatesStep(Substitute.For<ILogger<BuyCandidatesStep>>()),
             new TrackMetricsStep(),
             new LiquidateStep(),
             new ComputeResultsStep(),
@@ -64,9 +63,9 @@ public sealed class RunBacktestConsumerTests
         );
     }
 
-    private BacktestData CreateBacktestData(Market market, List<Symbol> symbols)
+    private static BacktestData CreateBacktestData(Market market, List<Symbol> symbols)
     {
-        return BacktestData.FromRaw(market, symbols, [], [], [], []);
+        return BacktestData.FromRaw(market, symbols, []);
     }
 
     [Fact]
@@ -110,9 +109,9 @@ public sealed class RunBacktestConsumerTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var backtest = Backtest.Create(
             strategy.Id,
@@ -185,9 +184,9 @@ public sealed class RunBacktestConsumerTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.RecipeArbitrage,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var backtest = Backtest.Create(
             strategy.Id,
@@ -233,9 +232,9 @@ public sealed class RunBacktestConsumerTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var backtest = Backtest.Create(
             strategy.Id,
@@ -300,9 +299,9 @@ public sealed class RunBacktestConsumerTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.RecipeArbitrage,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         var backtest = Backtest.Create(
             strategy.Id,

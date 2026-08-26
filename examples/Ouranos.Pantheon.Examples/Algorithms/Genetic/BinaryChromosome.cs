@@ -1,4 +1,4 @@
-using Ouranos.Pantheon.Modules.Shared.Algorithms.Genetic;
+using Ouranos.Pantheon.Modules.Shared.Contract.Algorithms.Genetic;
 
 namespace Ouranos.Pantheon.Examples.Algorithms.Genetic;
 

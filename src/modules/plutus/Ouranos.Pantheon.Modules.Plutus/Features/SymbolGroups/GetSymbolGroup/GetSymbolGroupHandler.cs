@@ -4,8 +4,8 @@ using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetSymbolGroup.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
-using Ouranos.Pantheon.Modules.Shared.Application;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetSymbolGroup;
 
@@ -108,12 +108,14 @@ public sealed class GetSymbolGroupHandler
                 cancellationToken
             );
 
-        var signals = await _dbContext
-            .Signals.AsNoTracking()
+        var signalRows = await _dbContext
+            .LatestSignals.AsNoTracking()
             .Where(s => memberIds.Contains(s.SymbolId))
-            .GroupBy(s => s.SymbolId)
-            .Select(g => new { SymbolId = g.Key, AverageScore = g.Average(s => s.Value) })
-            .ToDictionaryAsync(s => s.SymbolId, s => s.AverageScore, cancellationToken);
+            .ToListAsync(cancellationToken);
+
+        var signals = signalRows
+            .GroupBy(r => r.SymbolId)
+            .ToDictionary(g => g.Key, g => g.Average(r => r.LastValue));
 
         return (snapshots, signals);
     }

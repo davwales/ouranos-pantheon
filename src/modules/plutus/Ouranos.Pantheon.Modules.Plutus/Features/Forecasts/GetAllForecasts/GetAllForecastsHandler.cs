@@ -4,12 +4,13 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetAllForecasts.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Database.Querying;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
-using Ouranos.Pantheon.Modules.Shared.Application;
-using Ouranos.Pantheon.Modules.Shared.Application.Common;
-using Ouranos.Pantheon.Modules.Shared.Application.Common.Filtering;
-using Ouranos.Pantheon.Modules.Shared.Application.Common.Pagination;
-using Ouranos.Pantheon.Modules.Shared.Application.Common.Sorting;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Filtering;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Pagination;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Sorting;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetAllForecasts;
 
@@ -63,6 +64,7 @@ public sealed class GetAllForecastsHandler
         var q = _dbContext
             .Forecasts.AsQueryable()
             .AsNoTracking()
+            .WhereLatestPerSymbol()
             .FilterBy(input.Filter, FilterBuilder);
 
         var totalCount = await q.CountAsync(cancellationToken);

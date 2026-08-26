@@ -2,11 +2,15 @@ using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetRecommendations;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetRecommendations.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Executors;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Inputs;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
 
@@ -27,11 +31,9 @@ public sealed class GetRecommendationsHandlerTests
 
         _dbContext = DbContextExtensions.Mock<PlutusDbContext>();
 
-        var executor = new SignalWeightedExecutor();
-        var executors = new List<IStrategyExecutor> { executor };
-        var compositeExecutor = new CompositeExecutor(executors);
+        var executor = new StrategyExecutor(StrategyTestFactory.DefaultScorers());
 
-        _handler = new GetRecommendationsHandler(_logger, _dbContext, executors, compositeExecutor);
+        _handler = new GetRecommendationsHandler(_logger, _dbContext, executor);
     }
 
     [Fact]
@@ -59,9 +61,9 @@ public sealed class GetRecommendationsHandlerTests
             _fixture.Create<Id<Market>>(),
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         await _dbContext.Strategies.AddAsync(strategy);
         await _dbContext.SaveChangesAsync();
@@ -88,9 +90,9 @@ public sealed class GetRecommendationsHandlerTests
             marketId,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         await _dbContext.Strategies.AddAsync(strategy);
         await _dbContext.SaveChangesAsync();
@@ -119,9 +121,9 @@ public sealed class GetRecommendationsHandlerTests
             marketId1,
             "Test Strategy",
             null,
-            StrategyType.SignalWeighted,
             new TradingConfiguration(),
-            new SignalWeightedConfig()
+            StrategyTestFactory.DefaultWeights(),
+            null
         );
         await _dbContext.Strategies.AddAsync(strategy);
         await _dbContext.SaveChangesAsync();
@@ -154,6 +156,70 @@ public sealed class GetRecommendationsHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenSignalsAndSnapshotExist_ShouldProduceRecommendation()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var symbol = Symbol.Create(
+            symbolId,
+            "TEST",
+            null,
+            "Test Symbol",
+            marketId,
+            new AdditionalFields()
+        );
+        await _dbContext.Markets.AddAsync(market);
+        await _dbContext.Symbols.AddAsync(symbol);
+        await _dbContext.SaveChangesAsync();
+
+        var snapshot = new MarketTradeSnapshot(
+            marketId,
+            symbolId,
+            TimeFrame.OneHour,
+            TotalSpent: 1000m,
+            MinPrice: 5m,
+            MaxPrice: 15m,
+            TotalVolume: 100m,
+            NumTransactions: 10,
+            Limit: decimal.MaxValue,
+            Tax: 0m
+        );
+        await _dbContext.MarketTradeSnapshots.AddAsync(snapshot);
+        await _dbContext.SaveChangesAsync();
+
+        await _dbContext.LatestSignals.AddRangeAsync(
+            new LatestSignal(symbolId, SignalType.BollingerBands, 0.6m),
+            new LatestSignal(symbolId, SignalType.Rsi, 0.4m)
+        );
+        await _dbContext.SaveChangesAsync();
+
+        var strategy = Strategy.Create(
+            marketId,
+            "Test Strategy",
+            null,
+            new TradingConfiguration(),
+            [new(InputKind.SignalBollingerBands, 1m), new(InputKind.SignalRsi, 1m)],
+            null
+        );
+        await _dbContext.Strategies.AddAsync(strategy);
+        await _dbContext.SaveChangesAsync();
+
+        var query = new GetRecommendationsInput(strategy.Id, marketId, 10000m);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeOfType<GetRecommendationsResponse>();
+        result.Recommendations.Count.ShouldBe(1);
+        var recommendation = result.Recommendations.Single();
+        recommendation.SymbolId.ShouldBe(symbolId.ToString());
+        recommendation.Score.ShouldBe(0.5m);
+    }
+
+    [Fact]
     public async Task Handle_WhenNegativeOrZeroBudget_ShouldThrow()
     {
         // Arrange
@@ -168,5 +234,222 @@ public sealed class GetRecommendationsHandlerTests
 
         // Assert
         await act.ShouldThrowAsync<ArgumentException>();
+    }
+
+    [Fact]
+    public async Task Handle_WhenSignalHistoryQueryFails_FallsBackToLatestValueOnlyScoring()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var symbol = Symbol.Create(
+            symbolId,
+            "TEST",
+            null,
+            "Test Symbol",
+            marketId,
+            new AdditionalFields()
+        );
+        await _dbContext.Markets.AddAsync(market);
+        await _dbContext.Symbols.AddAsync(symbol);
+        await _dbContext.SaveChangesAsync();
+
+        var snapshot = new MarketTradeSnapshot(
+            marketId,
+            symbolId,
+            TimeFrame.OneHour,
+            TotalSpent: 1000m,
+            MinPrice: 5m,
+            MaxPrice: 15m,
+            TotalVolume: 100m,
+            NumTransactions: 10,
+            Limit: decimal.MaxValue,
+            Tax: 0m
+        );
+        await _dbContext.MarketTradeSnapshots.AddAsync(snapshot);
+        await _dbContext.SaveChangesAsync();
+
+        await _dbContext.LatestSignals.AddRangeAsync(
+            new LatestSignal(symbolId, SignalType.BollingerBands, 0.6m),
+            new LatestSignal(symbolId, SignalType.Rsi, 0.4m)
+        );
+        await _dbContext.SaveChangesAsync();
+
+        var strategy = Strategy.Create(
+            marketId,
+            "Test Strategy",
+            null,
+            new TradingConfiguration(),
+            [new(InputKind.SignalBollingerBands, 1m), new(InputKind.SignalRsi, 1m)],
+            null
+        );
+        await _dbContext.Strategies.AddAsync(strategy);
+        await _dbContext.SaveChangesAsync();
+
+        var query = new GetRecommendationsInput(strategy.Id, marketId, 10000m);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Recommendations.Count.ShouldBe(1);
+        result.Recommendations.Single().Score.ShouldBe(0.5m);
+    }
+
+    [Fact]
+    public async Task Handle_WhenNoOneHourSnapshot_ShouldFallBackToCoarserTimeframeForPrice()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var symbol = Symbol.Create(
+            symbolId,
+            "TEST",
+            null,
+            "Test Symbol",
+            marketId,
+            new AdditionalFields()
+        );
+        await _dbContext.Markets.AddAsync(market);
+        await _dbContext.Symbols.AddAsync(symbol);
+        await _dbContext.SaveChangesAsync();
+
+        var oneDaySnapshot = new MarketTradeSnapshot(
+            marketId,
+            symbolId,
+            TimeFrame.OneDay,
+            TotalSpent: 1000m,
+            MinPrice: 5m,
+            MaxPrice: 15m,
+            TotalVolume: 100m,
+            NumTransactions: 10,
+            Limit: decimal.MaxValue,
+            Tax: 0m
+        );
+        await _dbContext.MarketTradeSnapshots.AddAsync(oneDaySnapshot);
+        await _dbContext.SaveChangesAsync();
+
+        await _dbContext.LatestSignals.AddRangeAsync(
+            new LatestSignal(symbolId, SignalType.BollingerBands, 0.6m),
+            new LatestSignal(symbolId, SignalType.Rsi, 0.4m)
+        );
+        await _dbContext.SaveChangesAsync();
+
+        var strategy = Strategy.Create(
+            marketId,
+            "Test Strategy",
+            null,
+            new TradingConfiguration(),
+            [new(InputKind.SignalBollingerBands, 1m), new(InputKind.SignalRsi, 1m)],
+            null
+        );
+        await _dbContext.Strategies.AddAsync(strategy);
+        await _dbContext.SaveChangesAsync();
+
+        var query = new GetRecommendationsInput(strategy.Id, marketId, 10000m);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Recommendations.Count.ShouldBe(1);
+        var recommendation = result.Recommendations.Single();
+        recommendation.CurrentPrice.ShouldBe(10m);
+    }
+
+    [Fact]
+    public async Task Handle_WhenNoSnapshotWithPositiveTotals_ShouldReturnNoRecommendations()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var symbol = Symbol.Create(
+            symbolId,
+            "TEST",
+            null,
+            "Test Symbol",
+            marketId,
+            new AdditionalFields()
+        );
+        await _dbContext.Markets.AddAsync(market);
+        await _dbContext.Symbols.AddAsync(symbol);
+        await _dbContext.SaveChangesAsync();
+
+        var zeroSnapshot = new MarketTradeSnapshot(
+            marketId,
+            symbolId,
+            TimeFrame.OneHour,
+            TotalSpent: 0m,
+            MinPrice: 5m,
+            MaxPrice: 15m,
+            TotalVolume: 0m,
+            NumTransactions: 0,
+            Limit: decimal.MaxValue,
+            Tax: 0m
+        );
+        await _dbContext.MarketTradeSnapshots.AddAsync(zeroSnapshot);
+        await _dbContext.SaveChangesAsync();
+
+        await _dbContext.LatestSignals.AddRangeAsync(
+            new LatestSignal(symbolId, SignalType.BollingerBands, 0.6m),
+            new LatestSignal(symbolId, SignalType.Rsi, 0.4m)
+        );
+        await _dbContext.SaveChangesAsync();
+
+        var strategy = Strategy.Create(
+            marketId,
+            "Test Strategy",
+            null,
+            new TradingConfiguration(),
+            [new(InputKind.SignalBollingerBands, 1m), new(InputKind.SignalRsi, 1m)],
+            null
+        );
+        await _dbContext.Strategies.AddAsync(strategy);
+        await _dbContext.SaveChangesAsync();
+
+        var query = new GetRecommendationsInput(strategy.Id, marketId, 10000m);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Recommendations.Count.ShouldBe(0);
+    }
+
+    private sealed class SpyLogger<TCategory> : ILogger<TCategory>
+    {
+        public List<(LogLevel Level, string Message)> Entries { get; } = [];
+
+        public IDisposable BeginScope<TState>(TState state)
+            where TState : notnull
+        {
+            return NullScope.Instance;
+        }
+
+        public bool IsEnabled(LogLevel logLevel)
+        {
+            return true;
+        }
+
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception? exception,
+            Func<TState, Exception?, string> formatter
+        )
+        {
+            Entries.Add((logLevel, formatter(state, exception)));
+        }
+
+        private sealed class NullScope : IDisposable
+        {
+            public static readonly NullScope Instance = new();
+
+            public void Dispose() { }
+        }
     }
 }

@@ -1,7 +1,7 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
 

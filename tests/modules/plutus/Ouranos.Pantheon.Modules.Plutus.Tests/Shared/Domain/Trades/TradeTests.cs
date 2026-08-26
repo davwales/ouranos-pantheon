@@ -3,7 +3,7 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
-using Ouranos.Pantheon.Modules.Shared.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Tests.Shared.Domain.Trades;
 
@@ -161,7 +161,7 @@ public sealed class TradeTests
         // Arrange
         var symbolId = new Id<Symbol>(_fixture.Create<string>());
         var marketId = new Id<Market>(_fixture.Create<string>());
-        var snapshot = MarketTradeSnapshot.Create(
+        var snapshot = new MarketTradeSnapshot(
             marketId,
             symbolId,
             TimeFrame.OneDay,
