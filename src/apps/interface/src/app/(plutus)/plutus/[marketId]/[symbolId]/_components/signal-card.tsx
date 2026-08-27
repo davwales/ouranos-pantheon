@@ -1,6 +1,6 @@
 import { Typography } from "@/components/shared/typography";
+import { Sparkline } from "@/components/shared/sparkline";
 import { SignalHistoryResponse } from "@/lib/api/plutus";
-import { SignalSparkline } from "./signal-sparkline";
 
 function ValueBar({ value }: { value: number }) {
   const isPositive = value > 0;
@@ -67,7 +67,7 @@ export function SignalCard({ signal }: { signal: SignalHistoryResponse }) {
 
       <ValueBar value={currentValue} />
 
-      <SignalSparkline history={history} />
+      <Sparkline data={history.map((h) => ({ value: h.value, timestamp: h.computedAt }))} />
 
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex gap-1 flex-wrap">
