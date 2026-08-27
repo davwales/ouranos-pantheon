@@ -76,6 +76,20 @@ describe("RecipeDetailPage", () => {
     expect(screen.getByText("Best served warm.")).toBeInTheDocument();
   });
 
+  it("scales ingredient quantities from the page without refetching", async () => {
+    vi.mocked(hestiaApi.getRecipe).mockResolvedValueOnce(mockRecipe());
+
+    render(<RecipeDetailPage />);
+
+    expect(await screen.findByText("4")).toBeInTheDocument();
+    expect(screen.getByText("tablespoons")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /increase scale/i }));
+
+    expect(await screen.findByText("6")).toBeInTheDocument();
+    expect(hestiaApi.getRecipe).toHaveBeenCalledTimes(1);
+  });
+
   it("renders NotFoundCard when API errors", async () => {
     vi.mocked(hestiaApi.getRecipe).mockRejectedValueOnce(
       new ApiError(404, "Not found"),
