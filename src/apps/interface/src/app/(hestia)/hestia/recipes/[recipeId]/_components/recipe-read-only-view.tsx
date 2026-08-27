@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Recipe } from "@/lib/api/hestia-types";
+import { IngredientsView } from "./ingredients-view";
 
 export type RecipeReadOnlyViewProps = {
   data: Recipe;
@@ -8,23 +9,7 @@ export type RecipeReadOnlyViewProps = {
 export function RecipeReadOnlyView({ data }: RecipeReadOnlyViewProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      <Card>
-        <CardHeader>
-          <CardTitle>Ingredients</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-2 text-base">
-            {data.ingredients.map((ingredient, index) => (
-              <li key={index} className="flex gap-2">
-                <span className="font-mono tabular-nums text-muted-foreground">
-                  {ingredient.quantity} {ingredient.unit}
-                </span>
-                <span>{ingredient.name}</span>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
+      <IngredientsView ingredients={data.ingredients} />
 
       <Card>
         <CardHeader>
