@@ -1,0 +1,19 @@
+info:
+  name: Reimport
+  type: http
+  seq: 7
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/hestia/recipes/{{HESTIA_RECIPE_ID}}/reimport"
+  params:
+    - name: ""
+      value: ""
+      type: query
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

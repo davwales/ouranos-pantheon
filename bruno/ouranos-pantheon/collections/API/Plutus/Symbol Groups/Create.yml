@@ -1,0 +1,27 @@
+info:
+  name: Create
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/plutus/symbol-groups"
+  params:
+    - name: ""
+      value: ""
+      type: query
+  body:
+    type: json
+    data: |-
+      {
+        "marketId": "{{MARKET_ID}}",
+        "name": "Bruno Basket",
+        "description": "Symbol group created from Bruno"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

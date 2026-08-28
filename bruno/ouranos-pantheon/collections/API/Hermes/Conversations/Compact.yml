@@ -1,0 +1,39 @@
+info:
+  name: Compact
+  type: http
+  seq: 7
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/hermes/conversations/compact"
+  params:
+    - name: ""
+      value: ""
+      type: query
+  body:
+    type: json
+    data: |-
+      {
+        "conversationId": "{{CONVERSATION_ID}}",
+        "modelIdentifier": "{{MODEL_IDENTIFIER}}",
+        "systemPrompt": "You are a helpful assistant.",
+        "personaName": "Assistant",
+        "personaDescription": "A helpful assistant.",
+        "messages": [
+          {
+            "role": "User",
+            "content": "Hi there!"
+          },
+          {
+            "role": "Assistant",
+            "content": "Hello! How can I help you today?"
+          }
+        ]
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

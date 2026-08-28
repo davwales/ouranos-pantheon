@@ -1,0 +1,23 @@
+info:
+  name: Cancel Backtest
+  type: http
+  seq: 12
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/plutus/backtests/{{BACKTEST_ID}}/cancel"
+  params:
+    - name: ""
+      value: ""
+      type: query
+  body:
+    type: json
+    data: |-
+      {}
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

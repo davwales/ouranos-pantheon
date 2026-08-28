@@ -1,0 +1,27 @@
+info:
+  name: Update
+  type: http
+  seq: 4
+
+http:
+  method: PUT
+  url: "{{BASE_URL}}/api/hermes/folders/{{FOLDER_ID}}"
+  params:
+    - name: ""
+      value: ""
+      type: query
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Bruno Folder",
+        "isPublic": true,
+        "parentFolderId": null
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

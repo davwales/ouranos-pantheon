@@ -1,0 +1,26 @@
+info:
+  name: Recommendations
+  type: http
+  seq: 9
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/plutus/strategies/{{STRATEGY_ID}}/recommendations"
+  params:
+    - name: ""
+      value: ""
+      type: query
+  body:
+    type: json
+    data: |-
+      {
+        "marketId": "{{MARKET_ID}}",
+        "budget": 10000
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -1,0 +1,22 @@
+info:
+  name: Market Overview
+  type: http
+  seq: 4
+
+http:
+  method: GET
+  url: "{{BASE_URL}}/api/plutus/markets/{{MARKET_ID}}/overview?timeFrame=OneHour&numBuckets=100"
+  params:
+    - name: timeFrame
+      value: "OneHour"
+      type: query
+    - name: numBuckets
+      value: "100"
+      type: query
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

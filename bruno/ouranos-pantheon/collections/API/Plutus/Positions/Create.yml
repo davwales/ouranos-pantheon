@@ -1,0 +1,31 @@
+info:
+  name: Create
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/plutus/positions"
+  params:
+    - name: ""
+      value: ""
+      type: query
+  body:
+    type: json
+    data: |-
+      {
+        "side": "Buy",
+        "marketId": "{{MARKET_ID}}",
+        "symbolId": "{{SYMBOL_ID}}",
+        "cost": 100.5,
+        "quantity": 2,
+        "strategyId": null,
+        "notes": "Position created from Bruno"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

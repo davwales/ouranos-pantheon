@@ -1,0 +1,33 @@
+info:
+  name: Update
+  type: http
+  seq: 4
+
+http:
+  method: PUT
+  url: "{{BASE_URL}}/api/plutus/markets/{{MARKET_ID}}"
+  params:
+    - name: ""
+      value: ""
+      type: query
+  body:
+    type: json
+    data: |-
+      {
+        "marketId": "{{MARKET_ID}}",
+        "name": "Bruno Demo Market",
+        "taxes": {
+          "flat": {
+            "minimum": 0,
+            "maximum": 900,
+            "rate": 0.3
+          }
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

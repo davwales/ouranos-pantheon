@@ -1,0 +1,47 @@
+info:
+  name: Create
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/hestia/recipes"
+  params:
+    - name: ""
+      value: ""
+      type: query
+  body:
+    type: json
+    data: |-
+      {
+        "title": "Bruno Tomato Soup",
+        "sourceUrl": null,
+        "steps": [
+          {
+            "text": "Chop the tomatoes."
+          },
+          {
+            "text": "Simmer for 20 minutes."
+          }
+        ],
+        "ingredients": [
+          {
+            "quantity": 4,
+            "unit": "pieces",
+            "name": "Tomato"
+          },
+          {
+            "quantity": 1,
+            "unit": "liter",
+            "name": "Water"
+          }
+        ],
+        "notes": "Season to taste."
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
