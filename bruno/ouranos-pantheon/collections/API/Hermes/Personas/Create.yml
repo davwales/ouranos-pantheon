@@ -1,0 +1,30 @@
+info:
+  name: Create
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/hermes/personas"
+  params:
+    - name: ""
+      value: ""
+      type: query
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Bruno Persona",
+        "description": "Persona created from Bruno",
+        "personality": "Friendly and concise.",
+        "scenario": null,
+        "isDefault": false,
+        "isPublic": true
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

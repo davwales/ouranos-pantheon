@@ -1,0 +1,30 @@
+info:
+  name: Update
+  type: http
+  seq: 4
+
+http:
+  method: PUT
+  url: "{{BASE_URL}}/api/hermes/personas/{{PERSONA_ID}}"
+  params:
+    - name: ""
+      value: ""
+      type: query
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Bruno Persona",
+        "description": "Persona updated from Bruno",
+        "personality": "Friendly and concise.",
+        "scenario": null,
+        "isDefault": false,
+        "isPublic": true
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -1,0 +1,33 @@
+info:
+  name: Update
+  type: http
+  seq: 4
+
+http:
+  method: PUT
+  url: "{{BASE_URL}}/api/hermes/models/{{MODEL_ID}}"
+  params:
+    - name: ""
+      value: ""
+      type: query
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Bruno Test Model",
+        "modelIdentifier": "{{MODEL_IDENTIFIER}}",
+        "systemPrompt": "You are a helpful assistant.",
+        "temperature": 0.7,
+        "maxTokens": 1024,
+        "repeatPenalty": 1.1,
+        "contextWindow": 4096,
+        "isDefault": false,
+        "isPublic": true
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

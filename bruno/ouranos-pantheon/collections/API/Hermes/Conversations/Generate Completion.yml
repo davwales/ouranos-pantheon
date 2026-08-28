@@ -1,0 +1,44 @@
+info:
+  name: Generate Completion
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/hermes/conversations/completions/stream"
+  params:
+    - name: ""
+      value: ""
+      type: query
+  body:
+    type: json
+    data: |-
+      {
+        "conversationId": null,
+        "conversation": {
+          "model": {
+            "modelIdentifier": "{{MODEL_IDENTIFIER}}",
+            "systemPrompt": "You are a helpful assistant.",
+            "temperature": 0.7,
+            "maxTokens": 512
+          },
+          "persona": {
+            "name": "Assistant",
+            "description": "A helpful assistant."
+          },
+          "messages": [
+            {
+              "role": "User",
+              "content": "Tell me a programming joke"
+            }
+          ],
+          "traits": []
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

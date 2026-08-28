@@ -1,0 +1,19 @@
+info:
+  name: Restart Backtest
+  type: http
+  seq: 13
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/plutus/backtests/{{BACKTEST_ID}}/restart"
+  params:
+    - name: ""
+      value: ""
+      type: query
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

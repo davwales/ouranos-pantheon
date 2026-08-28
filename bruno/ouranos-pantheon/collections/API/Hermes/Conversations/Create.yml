@@ -1,0 +1,38 @@
+info:
+  name: Create
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/hermes/conversations"
+  params:
+    - name: ""
+      value: ""
+      type: query
+  body:
+    type: json
+    data: |-
+      {
+        "personaId": "{{PERSONA_ID}}",
+        "modelConfigId": "{{MODEL_ID}}",
+        "traitIds": [
+          "{{TRAIT_ID}}"
+        ],
+        "name": "Bruno chat",
+        "isPublic": true,
+        "folderId": null,
+        "messages": [
+          {
+            "role": "User",
+            "content": "Hello from Bruno"
+          }
+        ]
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

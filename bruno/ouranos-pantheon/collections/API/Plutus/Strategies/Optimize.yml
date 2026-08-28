@@ -1,0 +1,39 @@
+info:
+  name: Optimize
+  type: http
+  seq: 8
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/plutus/strategies/{{STRATEGY_ID}}/optimize"
+  params:
+    - name: ""
+      value: ""
+      type: query
+  body:
+    type: json
+    data: |-
+      {
+        "marketId": "{{MARKET_ID}}",
+        "startDate": "2026-04-01T00:00:00Z",
+        "endDate": "2026-05-01T00:00:00Z",
+        "budget": 10000,
+        "generations": 100,
+        "populationSize": 50,
+        "sortinoWeight": 0.4,
+        "cagrWeight": 0.3,
+        "drawdownWeight": 0.5,
+        "turnoverWeight": 0.1,
+        "l1RegularizationWeight": 0.05,
+        "outSampleRatio": 0.2,
+        "volumeParticipationRate": null,
+        "slippageMultiplier": null,
+        "minTrades": 5
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

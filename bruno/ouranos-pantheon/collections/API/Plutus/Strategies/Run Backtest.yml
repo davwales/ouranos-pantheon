@@ -1,0 +1,30 @@
+info:
+  name: Run Backtest
+  type: http
+  seq: 7
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/plutus/strategies/{{STRATEGY_ID}}/backtest"
+  params:
+    - name: ""
+      value: ""
+      type: query
+  body:
+    type: json
+    data: |-
+      {
+        "marketId": "{{MARKET_ID}}",
+        "startDate": "2026-04-01T00:00:00Z",
+        "endDate": "2026-05-01T00:00:00Z",
+        "budget": 10000,
+        "volumeParticipationRate": 0.25,
+        "slippageMultiplier": 0.1
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -1,0 +1,19 @@
+info:
+  name: List
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{BASE_URL}}/api/plutus/symbol-groups?marketId={{MARKET_ID}}"
+  params:
+    - name: marketId
+      value: "{{MARKET_ID}}"
+      type: query
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

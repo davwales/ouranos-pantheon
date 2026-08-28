@@ -1,0 +1,25 @@
+info:
+  name: Import
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/hestia/recipes/import"
+  params:
+    - name: ""
+      value: ""
+      type: query
+  body:
+    type: json
+    data: |-
+      {
+        "url": "https://www.flavourandsavour.com/pumpkin-peanut-butter-dog-treats/"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
