@@ -1,0 +1,7 @@
+info:
+  name: Shopping List
+  type: folder
+  seq: 2
+
+request:
+  auth: inherit
