@@ -20,9 +20,14 @@ export default function RecipeDetailPage() {
     () => hestiaApi.getRecipe(recipeId),
     [recipeId],
   );
+  const [shoppingList, reexecuteShoppingList] = useApi(
+    () => hestiaApi.getShoppingList(),
+    [],
+  );
   const [isEditing, setIsEditing] = useState(false);
   const [isReimporting, setIsReimporting] = useState(false);
   const [reimportError, setReimportError] = useState<string | null>(null);
+  const [toggleError, setToggleError] = useState<string | null>(null);
 
   const isImporting = recipe.data?.importStatus === "Importing";
   useInterval(
@@ -46,6 +51,18 @@ export default function RecipeDetailPage() {
     }
   };
 
+  const handleToggleInList = async () => {
+    setToggleError(null);
+    try {
+      await hestiaApi.toggleRecipeInShoppingList(recipeId);
+      reexecuteShoppingList();
+    } catch (err) {
+      setToggleError(
+        err instanceof Error ? err.message : "Failed to update shopping list",
+      );
+    }
+  };
+
   if (recipe.status === "error" && !recipe.data) {
     return (
       <NotFoundCard
@@ -62,6 +79,7 @@ export default function RecipeDetailPage() {
   }
 
   const data = recipe.data;
+  const isInList = shoppingList.data?.recipeIds.includes(recipeId) ?? false;
 
   return (
     <div className="m-4 space-y-6">
@@ -76,6 +94,8 @@ export default function RecipeDetailPage() {
         }}
         onReimport={handleReimport}
         isReimporting={isReimporting}
+        isInList={isInList}
+        onToggleInList={handleToggleInList}
       />
       {reimportError && (
         <div
@@ -83,6 +103,14 @@ export default function RecipeDetailPage() {
           className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
         >
           {reimportError}
+        </div>
+      )}
+      {toggleError && (
+        <div
+          role="alert"
+          className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
+        >
+          {toggleError}
         </div>
       )}
       {data.importStatus === "Importing" ? (

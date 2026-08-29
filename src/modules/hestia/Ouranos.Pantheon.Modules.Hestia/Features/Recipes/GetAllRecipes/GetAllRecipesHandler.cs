@@ -52,11 +52,22 @@ public sealed class GetAllRecipesHandler(
         var filtered = session.Query<Recipe>().FilterBy(input.Filter, FilterBuilder);
         var totalCount = await filtered.CountAsync(cancellationToken);
 
-        var items = await filtered
+        var recipes = await filtered
             .SortBy(input.SortField, input.SortDirection, SortBuilder)
             .Paginate(input.Skip, input.Take)
-            .Select(r => new GetAllRecipesResponse(r.RecipeId, r.Title, r.SourceUrl))
             .ToListAsync(cancellationToken);
+
+        var items = recipes
+            .Select(r => new GetAllRecipesResponse(
+                r.RecipeId,
+                r.Title,
+                r.SourceUrl,
+                r.CreatedAt,
+                r.Ingredients.Count,
+                r.Steps.Count,
+                r.ImportStatus
+            ))
+            .ToList();
 
         _logger.LogDebug("Successfully handled get all recipes request.");
         return new PagedResponse<GetAllRecipesResponse>(items, totalCount, input.Skip, input.Take);

@@ -19,6 +19,13 @@ vi.mock("@/lib/api/hestia", () => ({
     }),
     revertRecipe: vi.fn(),
     reimportRecipe: vi.fn(),
+    getShoppingList: vi.fn().mockResolvedValue({
+      recipeIds: [],
+      consolidatedIngredients: [],
+      manualItems: [],
+      checkedItemIds: [],
+    }),
+    toggleRecipeInShoppingList: vi.fn(),
   },
 }));
 
@@ -260,5 +267,86 @@ describe("RecipeDetailPage", () => {
     expect(
       screen.queryByRole("button", { name: /reimport/i }),
     ).not.toBeInTheDocument();
+  });
+
+  it("shows the add-to-list button when the recipe is not in the shopping list", async () => {
+    vi.mocked(hestiaApi.getRecipe).mockResolvedValueOnce(mockRecipe());
+    vi.mocked(hestiaApi.getShoppingList).mockResolvedValueOnce({
+      recipeIds: [],
+      consolidatedIngredients: [],
+      manualItems: [],
+      checkedItemIds: [],
+    });
+
+    render(<RecipeDetailPage />);
+
+    await screen.findByText("Chocolate Cake");
+
+    expect(
+      screen.getByRole("button", { name: /add to shopping list/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("shows the in-list button when the recipe is already in the shopping list", async () => {
+    vi.mocked(hestiaApi.getRecipe).mockResolvedValueOnce(mockRecipe());
+    vi.mocked(hestiaApi.getShoppingList).mockResolvedValueOnce({
+      recipeIds: ["test-recipe-1"],
+      consolidatedIngredients: [],
+      manualItems: [],
+      checkedItemIds: [],
+    });
+
+    render(<RecipeDetailPage />);
+
+    await screen.findByText("Chocolate Cake");
+
+    expect(
+      screen.getByRole("button", { name: /in shopping list/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("toggles the recipe in the shopping list and refetches the list", async () => {
+    vi.mocked(hestiaApi.getRecipe).mockResolvedValueOnce(mockRecipe());
+    vi.mocked(hestiaApi.toggleRecipeInShoppingList).mockResolvedValueOnce({
+      recipeId: "test-recipe-1",
+      isInList: true,
+    });
+
+    render(<RecipeDetailPage />);
+
+    await screen.findByText("Chocolate Cake");
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /add to shopping list/i }),
+    );
+
+    await waitFor(() => {
+      expect(hestiaApi.toggleRecipeInShoppingList).toHaveBeenCalledTimes(1);
+      expect(hestiaApi.toggleRecipeInShoppingList).toHaveBeenCalledWith(
+        "test-recipe-1",
+      );
+      expect(hestiaApi.getShoppingList).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  it("renders an error banner when toggling the shopping list membership fails", async () => {
+    vi.mocked(hestiaApi.getRecipe).mockResolvedValueOnce(mockRecipe());
+    vi.mocked(hestiaApi.toggleRecipeInShoppingList).mockRejectedValueOnce(
+      new ApiError(500, "Failed to update list"),
+    );
+
+    render(<RecipeDetailPage />);
+
+    await screen.findByText("Chocolate Cake");
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /add to shopping list/i }),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Failed to update list",
+      );
+    });
   });
 });
