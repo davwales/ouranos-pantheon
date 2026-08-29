@@ -1,0 +1,15 @@
+info:
+  name: DeleteManualItem
+  type: http
+  seq: 4
+
+http:
+  method: DELETE
+  url: "{{BASE_URL}}/api/hestia/shopping-list/manual-items/{{HESTIA_MANUAL_ITEM_ID}}"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

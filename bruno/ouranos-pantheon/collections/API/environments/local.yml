@@ -30,5 +30,7 @@ variables:
     value: "0836a418-fca3-4e86-b541-7daebffb2a99"
   - name: HESTIA_RECIPE_ID
     value: "992df821-e024-4e40-b5b8-0bf79a45fb80"
+  - name: HESTIA_MANUAL_ITEM_ID
+    value: "00000000-0000-0000-0000-000000000099"
   - name: MODEL_IDENTIFIER
     value: "hf.co/unsloth/gpt-oss-20b-GGUF:latest"
