@@ -1,0 +1,21 @@
+info:
+  name: AddManualItem
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/hestia/shopping-list/manual-items"
+  body:
+    type: json
+    data: |-
+      {
+        "text": "Olive oil"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

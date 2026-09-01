@@ -1,0 +1,24 @@
+info:
+  name: UpdateCheckedItems
+  type: http
+  seq: 5
+
+http:
+  method: PUT
+  url: "{{BASE_URL}}/api/hestia/shopping-list/checked-items"
+  body:
+    type: json
+    data: |-
+      {
+        "checkedItemIds": [
+          "recipe:flour|g",
+          "manual:11111111-1111-1111-1111-111111111111"
+        ]
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
