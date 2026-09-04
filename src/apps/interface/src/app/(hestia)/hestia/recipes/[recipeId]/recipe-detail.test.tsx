@@ -21,6 +21,7 @@ vi.mock("@/lib/api/hestia", () => ({
     reimportRecipe: vi.fn(),
     getShoppingList: vi.fn().mockResolvedValue({
       recipeIds: [],
+      recipes: [],
       consolidatedIngredients: [],
       manualItems: [],
       checkedItemIds: [],
@@ -273,6 +274,7 @@ describe("RecipeDetailPage", () => {
     vi.mocked(hestiaApi.getRecipe).mockResolvedValueOnce(mockRecipe());
     vi.mocked(hestiaApi.getShoppingList).mockResolvedValueOnce({
       recipeIds: [],
+      recipes: [],
       consolidatedIngredients: [],
       manualItems: [],
       checkedItemIds: [],
@@ -291,6 +293,7 @@ describe("RecipeDetailPage", () => {
     vi.mocked(hestiaApi.getRecipe).mockResolvedValueOnce(mockRecipe());
     vi.mocked(hestiaApi.getShoppingList).mockResolvedValueOnce({
       recipeIds: ["test-recipe-1"],
+      recipes: [{ id: "test-recipe-1", title: "Chocolate Cake" }],
       consolidatedIngredients: [],
       manualItems: [],
       checkedItemIds: [],

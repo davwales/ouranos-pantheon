@@ -5,6 +5,7 @@ namespace Ouranos.Pantheon.Modules.Hestia.Features.ShoppingLists.GetShoppingList
 
 public sealed record ShoppingListResponse(
     IReadOnlyList<Id<Recipe>> RecipeIds,
+    IReadOnlyList<ShoppingListRecipeResponse> Recipes,
     IReadOnlyList<ConsolidatedIngredientResponse> ConsolidatedIngredients,
     IReadOnlyList<ManualItemResponse> ManualItems,
     IReadOnlyList<string> CheckedItemIds

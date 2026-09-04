@@ -10,6 +10,7 @@ vi.mock("@/lib/api/hestia", () => ({
     getAllRecipes: vi.fn(),
     getShoppingList: vi.fn().mockResolvedValue({
       recipeIds: [],
+      recipes: [],
       consolidatedIngredients: [],
       manualItems: [],
       checkedItemIds: [],
@@ -46,6 +47,7 @@ function mockPagedRecipes(items: RecipeSummary[], totalCount = items.length) {
 
 const emptyShoppingList = {
   recipeIds: [],
+  recipes: [],
   consolidatedIngredients: [],
   manualItems: [],
   checkedItemIds: [],

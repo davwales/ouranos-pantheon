@@ -14,7 +14,7 @@ public sealed class GetShoppingListEndpointTests
     {
         // Arrange
         var ct = CancellationToken.None;
-        var expected = new ShoppingListResponse([], [], [], []);
+        var expected = new ShoppingListResponse([], [], [], [], []);
 
         _bus.InvokeAsync<ShoppingListResponse>(Arg.Any<object>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expected));

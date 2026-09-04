@@ -67,6 +67,7 @@ public sealed class GetShoppingListHandlerTests
         // Assert
         result.ShouldNotBeNull();
         result.RecipeIds.ShouldBeEmpty();
+        result.Recipes.ShouldBeEmpty();
         result.ConsolidatedIngredients.ShouldBeEmpty();
         result.ManualItems.ShouldBeEmpty();
         result.CheckedItemIds.ShouldBeEmpty();
@@ -240,6 +241,39 @@ public sealed class GetShoppingListHandlerTests
         result.ManualItems[0].Text.ShouldBe("Olive oil");
         result.ManualItems[1].Id.ShouldBe(secondId);
         result.ManualItems[1].Text.ShouldBe("Bread");
+    }
+
+    [Fact]
+    public async Task Handle_WhenRecipesPresent_ShouldReturnRecipeResponsesInListOrder()
+    {
+        // Arrange
+        var missingId = Guid.NewGuid();
+        var firstId = Guid.NewGuid();
+        var secondId = Guid.NewGuid();
+        var list = BuildList([
+            new Id<Recipe>(firstId.ToString()),
+            new Id<Recipe>(missingId.ToString()),
+            new Id<Recipe>(secondId.ToString()),
+        ]);
+        var first = BuildRecipe(firstId, new Ingredient(1m, "g", "Sugar"));
+        var second = BuildRecipe(secondId, new Ingredient(2m, "g", "Salt"));
+
+        _session
+            .LoadAsync<ShoppingList>(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<ShoppingList?>(list));
+        _session
+            .LoadManyAsync<Recipe>(Arg.Any<CancellationToken>(), Arg.Any<Guid[]>())
+            .Returns(Task.FromResult<IReadOnlyList<Recipe>>([first, second]));
+
+        // Act
+        var result = await _handler.Handle(new GetShoppingListInput(), CancellationToken.None);
+
+        // Assert
+        result.Recipes.Count.ShouldBe(2);
+        result.Recipes[0].Id.ShouldBe(new Id<Recipe>(firstId.ToString()));
+        result.Recipes[0].Title.ShouldBe("Recipe " + firstId);
+        result.Recipes[1].Id.ShouldBe(new Id<Recipe>(secondId.ToString()));
+        result.Recipes[1].Title.ShouldBe("Recipe " + secondId);
     }
 
     [Fact]
