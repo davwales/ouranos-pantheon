@@ -2,6 +2,10 @@ export type RecipeSummary = {
   id: string;
   title: string;
   sourceUrl: string | null;
+  createdAt: string;
+  ingredientCount: number;
+  stepCount: number;
+  importStatus: RecipeImportStatus;
 };
 
 export type IngredientInput = {
@@ -87,4 +91,44 @@ export type RevertRecipeInput = {
 
 export type RevertRecipeResponse = {
   id: string;
+};
+
+export type ConsolidatedIngredient = {
+  id: string;
+  name: string;
+  unit: string;
+  quantity: number;
+};
+
+export type ManualItem = {
+  id: string;
+  text: string;
+};
+
+export type ShoppingListResponse = {
+  recipeIds: string[];
+  consolidatedIngredients: ConsolidatedIngredient[];
+  manualItems: ManualItem[];
+  checkedItemIds: string[];
+};
+
+export type ToggleRecipeResponse = {
+  recipeId: string;
+  isInList: boolean;
+};
+
+export type AddManualItemInput = {
+  text: string;
+};
+
+export type DeleteManualItemResponse = {
+  id: string;
+};
+
+export type UpdateCheckedItemsInput = {
+  checkedItemIds: string[];
+};
+
+export type UpdateCheckedItemsResponse = {
+  checkedItemIds: string[];
 };

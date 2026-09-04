@@ -1,26 +1,38 @@
 import { api } from "@/lib/api-client";
 import type { PagedResponse } from "@/lib/api-client";
 import type {
+  AddManualItemInput,
+  ConsolidatedIngredient,
   CreateRecipeInput,
   CreateRecipeResponse,
+  DeleteManualItemResponse,
   ImportRecipeInput,
   ImportRecipeResponse,
+  ManualItem,
   Recipe,
   RecipeHistoryResponse,
   RecipeSummary,
   ReimportRecipeResponse,
   RevertRecipeInput,
   RevertRecipeResponse,
+  ShoppingListResponse,
+  ToggleRecipeResponse,
+  UpdateCheckedItemsInput,
+  UpdateCheckedItemsResponse,
   UpdateRecipeInput,
   UpdateRecipeResponse,
 } from "./hestia-types";
 
 export type {
+  AddManualItemInput,
+  ConsolidatedIngredient,
   CreateRecipeInput,
   CreateRecipeResponse,
+  DeleteManualItemResponse,
   ImportRecipeInput,
   ImportRecipeResponse,
   Ingredient,
+  ManualItem,
   Recipe,
   RecipeHistoryEvent,
   RecipeHistoryResponse,
@@ -29,7 +41,11 @@ export type {
   ReimportRecipeResponse,
   RevertRecipeInput,
   RevertRecipeResponse,
+  ShoppingListResponse,
   Step,
+  ToggleRecipeResponse,
+  UpdateCheckedItemsInput,
+  UpdateCheckedItemsResponse,
   UpdateRecipeInput,
   UpdateRecipeResponse,
 } from "./hestia-types";
@@ -68,4 +84,26 @@ export const hestiaApi = {
 
   revertRecipe: (recipeId: string, input: RevertRecipeInput) =>
     api.post<RevertRecipeResponse>(`/api/hestia/recipes/${recipeId}/revert`, input),
+
+  getShoppingList: () =>
+    api.get<ShoppingListResponse>("/api/hestia/shopping-list"),
+
+  toggleRecipeInShoppingList: (recipeId: string) =>
+    api.post<ToggleRecipeResponse>(
+      `/api/hestia/shopping-list/recipes/${recipeId}`,
+    ),
+
+  addManualItem: (input: AddManualItemInput) =>
+    api.post<ManualItem>("/api/hestia/shopping-list/manual-items", input),
+
+  deleteManualItem: (itemId: string) =>
+    api.del<DeleteManualItemResponse>(
+      `/api/hestia/shopping-list/manual-items/${itemId}`,
+    ),
+
+  updateCheckedItems: (input: UpdateCheckedItemsInput) =>
+    api.put<UpdateCheckedItemsResponse>(
+      "/api/hestia/shopping-list/checked-items",
+      input,
+    ),
 };
