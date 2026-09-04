@@ -76,6 +76,11 @@ const navigationItems: NavigationBarItem[] = [
         description: "Browse your saved recipes.",
         href: "/hestia/recipes",
       },
+      {
+        label: "Shopping List",
+        description: "Build a grocery list from saved recipes.",
+        href: "/hestia/shopping-list",
+      },
     ],
   },
 ];

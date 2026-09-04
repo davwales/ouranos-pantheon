@@ -68,6 +68,67 @@ public sealed class ToggleRecipeHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenAddingRecipe_ShouldPruneCheckedItemsMatchingRecipeLines()
+    {
+        // Arrange
+        var recipeId = Guid.NewGuid();
+        var recipe = BuildRecipe(recipeId);
+        var list = new ShoppingList
+        {
+            CheckedItemIds =
+            [
+                "recipe:granulated sugar|tablespoons",
+                "recipe:unrelated|g",
+                ShoppingListNormalizer.ManualLineKey(Guid.NewGuid()),
+            ],
+        };
+
+        _session
+            .LoadAsync<Recipe>(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<Recipe?>(recipe));
+        _session
+            .LoadAsync<ShoppingList>(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<ShoppingList?>(list));
+
+        // Act
+        var result = await _handler.Handle(Input(recipeId), CancellationToken.None);
+
+        // Assert
+        result.IsInList.ShouldBeTrue();
+        list.CheckedItemIds.ShouldNotContain("recipe:granulated sugar|tablespoons");
+        list.CheckedItemIds.ShouldContain("recipe:unrelated|g");
+        list.CheckedItemIds.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task Handle_WhenRemovingRecipe_ShouldKeepCheckedItems()
+    {
+        // Arrange
+        var recipeId = Guid.NewGuid();
+        var recipe = BuildRecipe(recipeId);
+        var recipeIdValue = new Id<Recipe>(recipeId.ToString());
+        var list = new ShoppingList
+        {
+            RecipeIds = [recipeIdValue],
+            CheckedItemIds = ["recipe:granulated sugar|tablespoons"],
+        };
+
+        _session
+            .LoadAsync<Recipe>(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<Recipe?>(recipe));
+        _session
+            .LoadAsync<ShoppingList>(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<ShoppingList?>(list));
+
+        // Act
+        var result = await _handler.Handle(Input(recipeId), CancellationToken.None);
+
+        // Assert
+        result.IsInList.ShouldBeFalse();
+        list.CheckedItemIds.ShouldContain("recipe:granulated sugar|tablespoons");
+    }
+
+    [Fact]
     public async Task Handle_WhenRecipeAlreadyInList_ShouldRemoveAndReturnFalse()
     {
         // Arrange

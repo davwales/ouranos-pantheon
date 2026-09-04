@@ -46,6 +46,7 @@ public sealed class ToggleRecipeHandler(
         else
         {
             list.RecipeIds.Add(command.RecipeId);
+            list.CheckedItemIds = PruneCheckedItemIdsForRecipe(list.CheckedItemIds, recipe);
         }
 
         session.Store(list);
@@ -57,5 +58,25 @@ public sealed class ToggleRecipeHandler(
             !wasInList
         );
         return new ToggleRecipeResponse(command.RecipeId, !wasInList);
+    }
+
+    private static List<string> PruneCheckedItemIdsForRecipe(
+        List<string> checkedItemIds,
+        Recipe recipe
+    )
+    {
+        // why: line keys are deterministic (name|unit), so re-adding a recipe would
+        // resurrect previously checked lines; a recipe entering the list always
+        // starts its ingredients unchecked.
+        var recipeLineKeys = recipe
+            .Ingredients.Select(i =>
+                ShoppingListNormalizer.RecipeLineKey(
+                    ShoppingListNormalizer.Normalize(i.Name),
+                    ShoppingListNormalizer.Normalize(i.Unit)
+                )
+            )
+            .ToHashSet(StringComparer.Ordinal);
+
+        return [.. checkedItemIds.Where(id => !recipeLineKeys.Contains(id))];
     }
 }

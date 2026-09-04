@@ -105,8 +105,14 @@ export type ManualItem = {
   text: string;
 };
 
+export type ShoppingListRecipe = {
+  id: string;
+  title: string;
+};
+
 export type ShoppingListResponse = {
   recipeIds: string[];
+  recipes: ShoppingListRecipe[];
   consolidatedIngredients: ConsolidatedIngredient[];
   manualItems: ManualItem[];
   checkedItemIds: string[];

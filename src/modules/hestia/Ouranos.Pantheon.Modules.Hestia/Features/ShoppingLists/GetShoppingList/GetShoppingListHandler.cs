@@ -35,6 +35,7 @@ public sealed class GetShoppingListHandler(
         _logger.LogDebug("Successfully handled get shopping list request.");
         return new ShoppingListResponse(
             [.. list.RecipeIds],
+            ProjectRecipes(list, recipes),
             lines,
             [.. list.ManualItems.Select(i => new ManualItemResponse(i.Id, i.Text))],
             checkedItemIds
@@ -113,6 +114,25 @@ public sealed class GetShoppingListHandler(
                 .OrderBy(l => l.Name, StringComparer.Ordinal)
                 .ThenBy(l => l.Unit, StringComparer.Ordinal),
         ];
+    }
+
+    private static List<ShoppingListRecipeResponse> ProjectRecipes(
+        ShoppingList list,
+        IReadOnlyList<Recipe> recipes
+    )
+    {
+        var titles = recipes.Where(r => r is not null).ToDictionary(r => r.Id, r => r.Title);
+
+        var responses = new List<ShoppingListRecipeResponse>();
+        foreach (var recipeId in list.RecipeIds)
+        {
+            if (titles.TryGetValue(recipeId.GetStreamId(), out var title))
+            {
+                responses.Add(new ShoppingListRecipeResponse(recipeId, title));
+            }
+        }
+
+        return responses;
     }
 
     private static List<string> PruneStaleCheckedItemIds(
