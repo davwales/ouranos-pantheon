@@ -47,6 +47,8 @@ Manages cooking recipes with full version history and automated import from the 
 
 Ouranos Pantheon is a **modular monolith** - a single deployable application composed of isolated domain modules. Each module enforces its own boundaries and communicates through explicit contracts rather than shared state.
 
+Full architecture documentation following the [arc42](https://arc42.org) template lives in [`docs/architecture/`](docs/architecture/README.md), with decision records in [`docs/adr/`](docs/adr/README.md).
+
 **Patterns:** Vertical Slice Architecture · Domain-Driven Design · Message-driven data pipelines · Event Sourcing (Marten)
 
 **Module contract:** Every module implements `IPantheonModule`, which provides hooks for service registration, middleware configuration, and endpoint mapping. The gateway composes all registered modules at startup.
