@@ -9,6 +9,7 @@ public sealed record PostgresOptions(
     string? SearchPath,
     bool IncludeErrorDetail,
     int CommandTimeout,
+    int MaxBatchSize,
     int MaxRetries,
     uint MaxRetryDelaySeconds,
     bool EnableSensitiveDataLogging
@@ -26,6 +27,7 @@ public sealed record PostgresOptions(
             null,
             false,
             30,
+            250,
             3,
             5,
             false

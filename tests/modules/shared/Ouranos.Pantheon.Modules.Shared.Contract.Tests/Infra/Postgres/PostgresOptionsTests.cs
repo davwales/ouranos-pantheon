@@ -17,6 +17,7 @@ public sealed class PostgresOptionsTests
             SearchPath: null,
             IncludeErrorDetail: false,
             CommandTimeout: 30,
+            MaxBatchSize: 250,
             MaxRetries: 3,
             MaxRetryDelaySeconds: 5,
             EnableSensitiveDataLogging: false
@@ -47,6 +48,7 @@ public sealed class PostgresOptionsTests
             SearchPath: "public",
             IncludeErrorDetail: false,
             CommandTimeout: 30,
+            MaxBatchSize: 250,
             MaxRetries: 3,
             MaxRetryDelaySeconds: 5,
             EnableSensitiveDataLogging: false
@@ -72,6 +74,7 @@ public sealed class PostgresOptionsTests
             SearchPath: null,
             IncludeErrorDetail: true,
             CommandTimeout: 30,
+            MaxBatchSize: 250,
             MaxRetries: 3,
             MaxRetryDelaySeconds: 5,
             EnableSensitiveDataLogging: false
@@ -93,6 +96,7 @@ public sealed class PostgresOptionsTests
         // Assert
         options.Port.ShouldBe(5432);
         options.CommandTimeout.ShouldBe(30);
+        options.MaxBatchSize.ShouldBe(250);
         options.MaxRetries.ShouldBe(3);
     }
 }

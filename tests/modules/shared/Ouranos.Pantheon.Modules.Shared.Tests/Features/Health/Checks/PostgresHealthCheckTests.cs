@@ -41,6 +41,7 @@ public sealed class PostgresHealthCheckTests
                 SearchPath: null,
                 IncludeErrorDetail: false,
                 CommandTimeout: 1,
+                MaxBatchSize: 250,
                 MaxRetries: 0,
                 MaxRetryDelaySeconds: 1,
                 EnableSensitiveDataLogging: false
