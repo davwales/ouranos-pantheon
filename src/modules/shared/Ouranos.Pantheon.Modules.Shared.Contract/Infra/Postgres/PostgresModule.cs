@@ -35,6 +35,7 @@ public static class PostgresModule
                             {
                                 npgsqlOptions.MigrationsAssembly(migrationAssembly.GetName().Name);
                                 npgsqlOptions.CommandTimeout(postgresOptions.CommandTimeout);
+                                npgsqlOptions.MaxBatchSize(postgresOptions.MaxBatchSize);
 
                                 npgsqlOptions.EnableRetryOnFailure(
                                     postgresOptions.MaxRetries,
