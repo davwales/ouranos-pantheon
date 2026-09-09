@@ -17,6 +17,7 @@ with the widest reach.
 | [0006](../adr/0006-tickerq-for-scheduling.md) | TickerQ for in-process scheduling | All recurring jobs |
 | [0007](../adr/0007-self-hosted-llm-inference-via-ouranosml.md) | Self-hosted LLM inference via OuranosMl | All domains' AI capability |
 | [0008](../adr/0008-no-authentication-single-user.md) | No authentication for the single-user, trusted-network deployment | Gateway surface + frontend |
+| [0009](../adr/0009-opentelemetry-observability-via-otlp.md) | OpenTelemetry traces and metrics exported to Grafana via OTLP | Crosscutting observability |
 
 ## The Decisions That Shape Everything
 

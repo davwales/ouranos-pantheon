@@ -15,7 +15,7 @@ public sealed class WebSocketHealthCheckTests
     public async Task CheckAsync_WhenNoWorkersRegistered_ShouldReturnNotConfigured()
     {
         // Arrange
-        var healthState = new WebSocketHealthState();
+        var healthState = new WebSocketHealthState(new WebSocketTelemetry());
         var check = new WebSocketHealthCheck(healthState, _logger);
 
         // Act
@@ -30,7 +30,7 @@ public sealed class WebSocketHealthCheckTests
     public async Task CheckAsync_WhenAllWorkersConnected_ShouldReturnHealthy()
     {
         // Arrange
-        var healthState = new WebSocketHealthState();
+        var healthState = new WebSocketHealthState(new WebSocketTelemetry());
         healthState.Report("worker1", true);
         healthState.Report("worker2", true);
 
@@ -49,7 +49,7 @@ public sealed class WebSocketHealthCheckTests
     public async Task CheckAsync_WhenSomeWorkersDisconnected_ShouldReturnDegraded()
     {
         // Arrange
-        var healthState = new WebSocketHealthState();
+        var healthState = new WebSocketHealthState(new WebSocketTelemetry());
         healthState.Report("worker1", true);
         healthState.Report("worker2", false);
 
@@ -68,7 +68,7 @@ public sealed class WebSocketHealthCheckTests
     public async Task CheckAsync_WhenAllWorkersDisconnected_ShouldReturnUnhealthy()
     {
         // Arrange
-        var healthState = new WebSocketHealthState();
+        var healthState = new WebSocketHealthState(new WebSocketTelemetry());
         healthState.Report("worker1", false);
         healthState.Report("worker2", false);
 

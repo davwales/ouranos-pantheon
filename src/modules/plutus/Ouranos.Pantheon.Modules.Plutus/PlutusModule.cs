@@ -350,7 +350,10 @@ public sealed class PlutusModule : IPantheonModule
         var converter = new BsonMessageConverter();
         var typeResolver = new ConstantTypeResolver(typeof(SaleMessage));
         var serializer = new MessageSerializer(typeResolver, converter);
-        var registry = new ListenerRegistry(serializer);
+        var registry = new ListenerRegistry(
+            serializer,
+            sp.GetRequiredService<WebSocketTelemetry>()
+        );
 
         var listener = sp.GetRequiredService<FfxivListener>();
         registry.RegisterListener(listener);
@@ -363,7 +366,8 @@ public sealed class PlutusModule : IPantheonModule
             wsOptions.BufferSize,
             serializer,
             [initializer],
-            registry
+            registry,
+            sp.GetRequiredService<WebSocketTelemetry>()
         );
 
         return new WebSocketWorker(
@@ -391,7 +395,10 @@ public sealed class PlutusModule : IPantheonModule
         var converter = new JsonMessageConverter();
         var typeResolver = new JsonTypeResolver("T", typeMap);
         var serializer = new MessageSerializer(typeResolver, converter);
-        var registry = new ListenerRegistry(serializer);
+        var registry = new ListenerRegistry(
+            serializer,
+            sp.GetRequiredService<WebSocketTelemetry>()
+        );
 
         registry.RegisterListener(sp.GetRequiredService<StocksErrorListener>());
         registry.RegisterListener(sp.GetRequiredService<StocksSuccessListener>());
@@ -404,7 +411,8 @@ public sealed class PlutusModule : IPantheonModule
             wsOptions.BufferSize,
             serializer,
             [],
-            registry
+            registry,
+            sp.GetRequiredService<WebSocketTelemetry>()
         );
 
         return new WebSocketWorker(

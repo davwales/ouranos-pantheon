@@ -75,7 +75,7 @@ export function RecipeCard({ recipe, isInList, onToggle }: RecipeCardProps) {
   const isActionDisabled = isShoppingListActionDisabled(recipe.importStatus);
 
   return (
-    <Card className="relative h-full gap-4 py-4 transition-all hover:bg-accent hover:shadow-md has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring">
+    <Card className="relative h-full gap-4 py-4 transition-all hover:bg-accent hover:shadow-md has-focus-visible:ring-2 has-focus-visible:ring-ring">
       <CardHeader className="gap-1.5">
         <CardTitle className="line-clamp-2 text-base">
           <Link

@@ -15,8 +15,8 @@ secrets.
 
 ## 7.2 Environment Topology
 
-Infrastructure (PostgreSQL/TimescaleDB, RabbitMQ, Flagsmith, Loki, OuranosMl) is
-provisioned by the separate [`ouranos-infrastructure`](https://github.com/davwales/ouranos-infrastructure)
+Infrastructure (PostgreSQL/TimescaleDB, RabbitMQ, Flagsmith, Loki, Grafana Alloy,
+OuranosMl) is provisioned by the separate [`ouranos-infrastructure`](https://github.com/davwales/ouranos-infrastructure)
 repository via Docker Compose. This repository assumes those services exist and configures
 connections through `appsettings.*.json`; service hostnames (e.g. the Loki sink target
 `loki-gateway:3100`) come from that compose project's DNS names.
@@ -37,6 +37,7 @@ graph TB
             fs["Flagsmith"]
             ml["OuranosMl<br/>(LLM inference host)"]
             loki["Grafana Loki"]
+            alloy["Grafana Alloy<br/>(OTLP receiver)"]
         end
     end
 
@@ -64,6 +65,7 @@ graph TB
 | Query defaults | `Ouranos:Query` section (`QueryOptions`: paging/sorting limits behind the common query contract) |
 | Data loaders | `Plutus:DataLoaders` enable flags |
 | Feature flags | Flagsmith environments (dev at `ouranos.local:8001`) |
+| Trace and metric export | `Ouranos:Observability` section (`ObservabilityOptions`): endpoint/protocol/sampling, see [ADR 0009](../adr/0009-opentelemetry-observability-via-otlp.md) |
 | Frontend API base | `NEXT_PUBLIC_API_BASE` / `NEXT_PUBLIC_API_HOST` (default `http://localhost:8300`) |
 
 ## 7.4 CI/CD

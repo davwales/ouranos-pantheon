@@ -84,7 +84,9 @@ flag).
 Serilog with configuration-driven setup; `UseSerilogRequestLogging` for HTTP. Convention:
 `LogTrace` at handler entry, `LogDebug` on success, structured message templates with
 named placeholders (`'{paramName}'`). Production ships to Loki; Serilog SelfLog echoes
-configuration problems to stderr.
+configuration problems to stderr. Log events carry `TraceId`/`SpanId` automatically when
+an OpenTelemetry activity is current; the Grafana Loki sink writes them into the JSON log
+body, linking Loki entries to spans (see 8.13).
 
 ## 8.8 API Conventions
 
@@ -123,3 +125,47 @@ single-operator homelab deployment; see
 [Section 11](11-risks-and-technical-debt.md). The only network controls are the CORS
 allow-list (`CorsAllowedHosts`, policy `AllowLocalAndServer`, see 7.3) and the anti-SSRF
 guard on the recipe scraper. Anything that can reach the gateway port has full access.
+
+## 8.13 Observability (OpenTelemetry)
+
+The gateway emits OpenTelemetry traces and metrics, registered centrally in `AddOuranosCore`
+via `AddCoreObservabilityModule` (Shared module, `Infra/Observability/`,
+[ADR 0009](../adr/0009-opentelemetry-observability-via-otlp.md)). Logs stay on the
+Serilog → Loki pipeline.
+
+Tracing:
+
+| Aspect | Configuration |
+|--------|---------------|
+| Sources | ASP.NET Core (excludes `/health` and `/tickerq`), HttpClient, Npgsql, ActivitySources `Wolverine`, `Marten`, `TickerQ` (official `TickerQ.Instrumentation.OpenTelemetry` package), and `Ouranos.Pantheon.WebSockets` (shared `WebSocketTelemetry`) |
+| Sampling | `RootSpanExclusionSampler` → `ParentBasedSampler` → `TraceIdRatioBasedSampler`: root spans (no parent) named in `Ouranos:Observability:ExcludedRootSpanNames` (default `postgresql`, `CONNECT *`, `wolverine_node_assignments`, `rabbitmq connect`; trailing `*` = prefix) are dropped so background infrastructure work starts no traces; ratio from `Ouranos:Observability:SamplingRatio` (default 1.0) governs everything else |
+| Resource | `service.name` from `ObservabilityOptions.ServiceName`, `deployment.environment.name` from the host environment |
+| Exporter | OTLP gRPC to `Ouranos:Observability:OtlpEndpoint` (production: the Grafana stack's Alloy receiver); skipped when unset and `OTEL_EXPORTER_OTLP_ENDPOINT` is not present |
+
+Wolverine injects/extracts trace context on RabbitMQ envelopes, so a request trace spans
+HTTP → message publish → consumer handler → database calls. TickerQ job executions are
+root spans wrapping their own HTTP/DB work. WebSocket loaders emit `websocket connect` /
+`websocket disconnect` spans and one `websocket message` consumer span per received
+message (deserialize + dispatch, tagged with host/message type/size); the message span
+is a trace root by design (the receive loop runs inside the connect span's ambient
+context, and without clearing it every message of a session would parent to that span,
+producing one unbounded megatrace per connection), so `SamplingRatio` also throttles
+feed traces. Publishes from listeners inherit the message span, so socket → RabbitMQ →
+consumer → Postgres is one trace per message.
+
+Metrics (same exporter gating as traces):
+
+- Library meters: ASP.NET Core, HttpClient, Kestrel, `Npgsql`,
+  `Microsoft.EntityFrameworkCore`, `Marten`, `Wolverine*` (wildcard required - the
+  meter name embeds the application name), and runtime metrics via
+  `OpenTelemetry.Instrumentation.Runtime`
+- WebSocket meter (`Ouranos.Pantheon.WebSockets`): messages received/sent, dispatch
+  duration, message size, active connections and reconnects by worker - instrumented
+  once in the shared WebSocket abstractions (`WebSocketTelemetry`,
+  `WebSocketClient`, `ListenerRegistry`, `WebSocketHealthState`); feed code is
+  untouched
+
+Wolverine tracking opt-ins: `HandlerExecutionDiagnosticsEnabled` (handler start/finish
+events, transport-lag tags) and `OutboxDiagnosticsEnabled` (Marten outbox flushing
+spans). `DeserializationSpanEnabled` is deliberately off to keep one span per message
+on the high-frequency trade flow.

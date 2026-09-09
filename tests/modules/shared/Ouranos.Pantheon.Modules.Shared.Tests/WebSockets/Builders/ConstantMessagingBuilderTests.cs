@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets;
 using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.Listeners;
 using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.Serializers;
 using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.Serializers.TypeResolvers;
@@ -72,6 +73,7 @@ public sealed class ConstantMessagingBuilderTests
     {
         // Arrange
         _services.AddScoped<IMessageSerializer>(_ => Substitute.For<IMessageSerializer>());
+        _services.AddSingleton<WebSocketTelemetry>();
         _builder.UseListener<TestListener>();
 
         // Act

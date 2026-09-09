@@ -4,6 +4,8 @@ namespace Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.WebSocketClients;
 
 public interface IWebSocketClient
 {
+    string Host { get; }
+
     WebSocketState State { get; }
 
     bool IsListening { get; }

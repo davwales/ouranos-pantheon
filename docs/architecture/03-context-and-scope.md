@@ -24,6 +24,7 @@ graph LR
     ouranosMl["OuranosMl<br/>(self-hosted LLM inference)"]
     flagsmith["Flagsmith<br/>(feature flags)"]
     loki["Grafana Loki<br/>(log sink)"]
+    alloy["Grafana Alloy<br/>(OTLP traces)"]
 
     owner -- browser / HTTPS --> interface
     interface -- REST / JSON --> gateway
@@ -36,6 +37,7 @@ graph LR
     gateway -- "HTTP (OpenAI-compatible)" --> ouranosMl
     gateway -- HTTP --> flagsmith
     gateway -- HTTP --> loki
+    gateway -- "OTLP (gRPC)" --> alloy
 ```
 
 **Roles:**
@@ -44,7 +46,8 @@ graph LR
 - **Data providers**: supply market data; the system is a pure consumer.
 - **OuranosMl**: a separately hosted inference service used by all three modules
   (chat for Hermes, recipe normalization for Hestia, price forecasting for Plutus).
-- **Flagsmith / Loki**: supporting platform services (feature flags, log aggregation).
+- **Flagsmith / Loki / Grafana Alloy**: supporting platform services (feature flags, log
+  aggregation, trace collection).
 
 ## 3.2 Technical Context
 
@@ -58,6 +61,7 @@ graph LR
 | Flagsmith | Outbound HTTP | REST | Feature flags | `Infra/Flagsmith/` (Shared module) |
 | Recipe websites | Outbound HTTPS | HTML with JSON-LD metadata | Recipe import | `Features/Recipes/ImportRecipe/Scraping/RecipeScraper.cs` (Hestia) |
 | Grafana Loki | Outbound HTTP | Push API | Production log sink | `appsettings.Production.json` (gateway) |
+| Grafana Alloy | Outbound gRPC | OTLP | Trace and metric export (production; see [ADR 0009](../adr/0009-opentelemetry-observability-via-otlp.md)) | `Infra/Observability/` (Shared module) |
 | Browser | Inbound HTTPS | Next.js UI, REST + JSON | Dashboard | `src/apps/interface/` |
 
 Note: MongoDB.Bson is used as a **BSON parser only** for Universalis frames. No MongoDB
@@ -76,7 +80,7 @@ server is involved anywhere in the system.
 **Out of scope:**
 
 - Infrastructure provisioning (PostgreSQL/TimescaleDB, RabbitMQ, Flagsmith, Loki,
-  OuranosMl) are owned by the `ouranos-infrastructure` repository
+  Grafana Alloy, OuranosMl) are owned by the `ouranos-infrastructure` repository
 - The ML models and serving stack behind OuranosMl, a separate system consumed here
   only through its OpenAI-compatible HTTP surface
 - The upstream APIs themselves; the system adapts to their free-tier behavior

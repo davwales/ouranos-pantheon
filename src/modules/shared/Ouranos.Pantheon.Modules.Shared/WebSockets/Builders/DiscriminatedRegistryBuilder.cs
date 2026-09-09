@@ -1,6 +1,7 @@
 ﻿using Ardalis.GuardClauses;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets;
 using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.Listeners;
 using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.Serializers;
 using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.Serializers.TypeResolvers;
@@ -41,7 +42,10 @@ public sealed class DiscriminatedRegistryBuilder : IDiscriminatedRegistryBuilder
 
         _services.TryAddSingleton<IListenerRegistry>(sp =>
         {
-            var registry = new ListenerRegistry(sp.GetRequiredService<IMessageSerializer>());
+            var registry = new ListenerRegistry(
+                sp.GetRequiredService<IMessageSerializer>(),
+                sp.GetRequiredService<WebSocketTelemetry>()
+            );
             foreach (var (_, builder) in _messagingBuilders)
             {
                 builder.RegisterListeners(registry, sp);

@@ -14,6 +14,7 @@ public class WebSocketClient : IDisposable, IWebSocketClient
     private readonly IListenerRegistry _listenerRegistry;
     private readonly ILogger<WebSocketClient> _logger;
     private readonly IMessageSerializer _serializer;
+    private readonly WebSocketTelemetry _telemetry;
     private ClientWebSocket _webSocket = new();
     private Task? _listeningTask;
 
@@ -23,13 +24,15 @@ public class WebSocketClient : IDisposable, IWebSocketClient
         uint bufferSize,
         IMessageSerializer serializer,
         IReadOnlyCollection<IWebSocketInitializer>? initializers,
-        IListenerRegistry listenerRegistry
+        IListenerRegistry listenerRegistry,
+        WebSocketTelemetry telemetry
     )
     {
         Guard.Against.Null(logger);
         Guard.Against.NullOrWhiteSpace(host);
         Guard.Against.Null(serializer);
         Guard.Against.Null(listenerRegistry);
+        Guard.Against.Null(telemetry);
 
         _logger = logger;
         _host = new Uri(host);
@@ -37,12 +40,16 @@ public class WebSocketClient : IDisposable, IWebSocketClient
         _bufferSize = bufferSize;
         _initializers = initializers ?? [];
         _serializer = serializer;
+        _telemetry = telemetry;
     }
 
     public void Dispose()
     {
+        GC.SuppressFinalize(this);
         _webSocket.Dispose();
     }
+
+    public string Host => _host.ToString();
 
     public WebSocketState State => _webSocket.State;
 
@@ -59,8 +66,19 @@ public class WebSocketClient : IDisposable, IWebSocketClient
             _webSocket = new ClientWebSocket();
         }
 
-        await _webSocket.ConnectAsync(_host, cancellationToken);
-        await RunInitializers(cancellationToken);
+        using var span = _telemetry.Connect(Host);
+
+        try
+        {
+            await _webSocket.ConnectAsync(_host, cancellationToken);
+            await RunInitializers(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            span.Fail(ex);
+            throw;
+        }
+
         _listeningTask = Listen(cancellationToken);
 
         _logger.LogDebug("Connected to web socket.");
@@ -70,19 +88,29 @@ public class WebSocketClient : IDisposable, IWebSocketClient
     {
         _logger.LogTrace("Attempting to disconnect from web socket.");
 
-        if (_webSocket.State == WebSocketState.Open)
-        {
-            await _webSocket.CloseAsync(
-                WebSocketCloseStatus.NormalClosure,
-                "Client initiated close",
-                cancellationToken
-            );
-        }
+        using var span = _telemetry.Disconnect(Host);
 
-        if (_listeningTask is not null)
+        try
         {
-            await _listeningTask;
-            _listeningTask = null;
+            if (_webSocket.State == WebSocketState.Open)
+            {
+                await _webSocket.CloseAsync(
+                    WebSocketCloseStatus.NormalClosure,
+                    "Client initiated close",
+                    cancellationToken
+                );
+            }
+
+            if (_listeningTask is not null)
+            {
+                await _listeningTask;
+                _listeningTask = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            span.Fail(ex);
+            throw;
         }
 
         _logger.LogDebug("Disconnected from web socket.");
@@ -106,6 +134,8 @@ public class WebSocketClient : IDisposable, IWebSocketClient
             true,
             cancellationToken
         );
+
+        _telemetry.RecordMessageSent(Host);
 
         _logger.LogDebug("Successfully sent message bytes to web socket.");
     }
