@@ -168,6 +168,9 @@ sequenceDiagram
 ## 6.8 Observability at Runtime
 
 Health is exposed via module-registered checks (Postgres, RabbitMQ, OuranosMl, WebSocket
-connectivity, TickerQ). Structured Serilog logs flow to Loki in production. There is no
-OpenTelemetry instrumentation yet. That gap is recorded as debt in
-[Section 11](11-risks-and-technical-debt.md).
+connectivity, TickerQ). Structured Serilog logs flow to Loki in production. OpenTelemetry
+traces and metrics cover the full request and background-process surface - HTTP,
+Wolverine messaging, TickerQ jobs, websocket loaders, database calls, and the .NET
+runtime - exported over OTLP to the Grafana stack
+([Section 8.13](08-crosscutting-concepts.md#813-observability-opentelemetry),
+[ADR 0009](../adr/0009-opentelemetry-observability-via-otlp.md)).

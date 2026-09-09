@@ -422,6 +422,7 @@ appsettings.Development.Migration.json
 *.graphql
 .aider*
 dev/
+data-alloy/
 coverage-report/
 coverage-merged/
 .local/

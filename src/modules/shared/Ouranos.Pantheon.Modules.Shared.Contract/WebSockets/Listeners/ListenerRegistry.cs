@@ -1,19 +1,16 @@
-﻿using Ardalis.GuardClauses;
+﻿using System.Diagnostics;
+using Ardalis.GuardClauses;
 using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.Serializers;
 using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.WebSocketClients;
 
 namespace Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.Listeners;
 
-public sealed class ListenerRegistry : IListenerRegistry
+public sealed class ListenerRegistry(IMessageSerializer serializer, WebSocketTelemetry telemetry)
+    : IListenerRegistry
 {
-    private readonly Dictionary<Type, List<IListenerDispatcher>> _listeners = new();
-    private readonly IMessageSerializer _serializer;
-
-    public ListenerRegistry(IMessageSerializer serializer)
-    {
-        Guard.Against.Null(serializer);
-        _serializer = serializer;
-    }
+    private readonly Dictionary<Type, List<IListenerDispatcher>> _listeners = [];
+    private readonly IMessageSerializer _serializer = Guard.Against.Null(serializer);
+    private readonly WebSocketTelemetry _telemetry = Guard.Against.Null(telemetry);
 
     public IReadOnlyDictionary<Type, IReadOnlyList<IListenerDispatcher>> Listeners =>
         _listeners.ToDictionary(x => x.Key, IReadOnlyList<IListenerDispatcher> (x) => x.Value);
@@ -38,18 +35,52 @@ public sealed class ListenerRegistry : IListenerRegistry
         CancellationToken cancellationToken = default
     )
     {
-        var message = _serializer.Deserialize<object>(messageData);
+        using var span = _telemetry.MessageDispatch(client.Host, messageData.Length);
+        var startTimestamp = Stopwatch.GetTimestamp();
 
+        try
+        {
+            var message = _serializer.Deserialize<object>(messageData);
+
+            span.SetMessageType(ResolveMessageTypeName(message));
+
+            if (message is IEnumerable<object> messages)
+            {
+                var tasks = messages.SelectMany(m =>
+                    GetTasksForMessage(m, client, cancellationToken)
+                );
+                await Task.WhenAll(tasks);
+            }
+            else
+            {
+                var tasks = GetTasksForMessage(message, client, cancellationToken);
+                await Task.WhenAll(tasks);
+            }
+        }
+        catch (Exception ex)
+        {
+            span.Fail(ex);
+            throw;
+        }
+        finally
+        {
+            _telemetry.RecordMessageReceived(
+                client.Host,
+                messageData.Length,
+                Stopwatch.GetElapsedTime(startTimestamp)
+            );
+        }
+    }
+
+    private static string ResolveMessageTypeName(object message)
+    {
         if (message is IEnumerable<object> messages)
         {
-            var tasks = messages.SelectMany(m => GetTasksForMessage(m, client, cancellationToken));
-            await Task.WhenAll(tasks);
+            var first = messages.FirstOrDefault();
+            return first?.GetType().Name ?? message.GetType().Name;
         }
-        else
-        {
-            var tasks = GetTasksForMessage(message, client, cancellationToken);
-            await Task.WhenAll(tasks);
-        }
+
+        return message.GetType().Name;
     }
 
     private IEnumerable<Task> GetTasksForMessage(

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets;
 using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.Listeners;
 using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.Serializers;
 using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.Serializers.TypeResolvers;
@@ -145,6 +146,7 @@ public sealed class DiscriminatedRegistryBuilderTests
 
         builder.UseDiscriminatorPath("myDiscriminatorPath");
         _services.AddScoped<IMessageSerializer>(_ => serializer);
+        _services.AddSingleton<WebSocketTelemetry>();
 
         // Act
         builder.Build();

@@ -1,6 +1,7 @@
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Infra.Flagsmith;
+using Ouranos.Pantheon.Modules.Shared.Infra.Observability;
 using Ouranos.Pantheon.Modules.Shared.Infra.RabbitMq;
 
 namespace Ouranos.Pantheon.Modules.Shared.Tests.Infra;
@@ -76,5 +77,45 @@ public sealed class OptionsTests
         options.MinPageSize.ShouldBe(5);
         options.MaxPageSize.ShouldBe(50);
         options.MaxSkip.ShouldBe(500);
+    }
+
+    [Fact]
+    public void ObservabilityOptions_DefaultConstructor_ShouldSetSensibleDefaults()
+    {
+        // Act
+        var options = new ObservabilityOptions();
+
+        // Assert
+        options.ServiceName.ShouldBe("ouranos-pantheon-gateway");
+        options.OtlpEndpoint.ShouldBe(string.Empty);
+        options.OtlpProtocol.ShouldBe("grpc");
+        options.SamplingRatio.ShouldBe(1.0);
+        options.ExcludedRootSpanNames.ShouldBe([
+            "postgresql",
+            "CONNECT *",
+            "wolverine_node_assignments",
+            "rabbitmq connect",
+        ]);
+        ObservabilityOptions.SectionName.ShouldBe("Ouranos:Observability");
+    }
+
+    [Fact]
+    public void ObservabilityOptions_WhenConstructedWithValues_ShouldSetProperties()
+    {
+        // Act
+        var options = new ObservabilityOptions(
+            ServiceName: "test-service",
+            OtlpEndpoint: "http://localhost:4317",
+            OtlpProtocol: "http/protobuf",
+            SamplingRatio: 0.5,
+            ExcludedRootSpanNames: ["custom-root"]
+        );
+
+        // Assert
+        options.ServiceName.ShouldBe("test-service");
+        options.OtlpEndpoint.ShouldBe("http://localhost:4317");
+        options.OtlpProtocol.ShouldBe("http/protobuf");
+        options.SamplingRatio.ShouldBe(0.5);
+        options.ExcludedRootSpanNames.ShouldBe(["custom-root"]);
     }
 }

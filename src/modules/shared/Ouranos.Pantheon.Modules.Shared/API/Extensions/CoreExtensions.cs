@@ -13,12 +13,14 @@ using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets;
 using Ouranos.Pantheon.Modules.Shared.Features.Health;
 using Ouranos.Pantheon.Modules.Shared.Features.Health.Checks;
 using Ouranos.Pantheon.Modules.Shared.Infra.Flagsmith;
+using Ouranos.Pantheon.Modules.Shared.Infra.Observability;
 using Ouranos.Pantheon.Modules.Shared.Infra.RabbitMq;
 using Serilog;
 using TickerQ.Dashboard.DependencyInjection;
 using TickerQ.DependencyInjection;
 using TickerQ.EntityFrameworkCore.DbContextFactory;
 using TickerQ.EntityFrameworkCore.DependencyInjection;
+using TickerQ.Instrumentation.OpenTelemetry;
 using Wolverine;
 using Wolverine.ErrorHandling;
 using Wolverine.RabbitMQ;
@@ -47,12 +49,16 @@ public static class CoreExtensions
             configuration.GetSection(QueryOptions.SectionName)
         );
         builder.Services.AddCoreFlagsmithModule(configuration);
+        builder.Services.AddCoreObservabilityModule(configuration, builder.Environment);
 
         var rabbit = configuration.GetSection(RabbitMqOptions.SectionName).Get<RabbitMqOptions>();
 
         builder.UseWolverine(opts =>
         {
             opts.UseRuntimeCompilation();
+
+            opts.Tracking.HandlerExecutionDiagnosticsEnabled = true;
+            opts.Tracking.OutboxDiagnosticsEnabled = true;
 
             // IOuranosMachineLearningClient is registered via AddHttpClient<TInterface,TImpl>(lambda),
             // which is an opaque factory Wolverine 6 cannot inline. Allowlist it for service location.
@@ -114,6 +120,8 @@ public static class CoreExtensions
 
         builder.Services.AddTickerQ(options =>
         {
+            options.AddOpenTelemetryInstrumentation();
+
             options.AddOperationalStore(efOptions =>
             {
                 efOptions.UseTickerQDbContext<TickerQDbContext>(db =>
@@ -133,7 +141,8 @@ public static class CoreExtensions
         builder.Services.AddMemoryCache().AddSerilog();
 
         builder
-            .Services.AddSingleton<WebSocketHealthState>()
+            .Services.AddSingleton<WebSocketTelemetry>()
+            .AddSingleton<WebSocketHealthState>()
             .Configure<HealthOptions>(configuration.GetSection(HealthOptions.SectionName))
             .AddSingleton<IHealthCheck, PostgresHealthCheck>()
             .AddSingleton<IHealthCheck, RabbitMqHealthCheck>()

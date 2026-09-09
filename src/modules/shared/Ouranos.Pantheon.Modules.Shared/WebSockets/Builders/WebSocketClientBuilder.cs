@@ -104,7 +104,8 @@ public sealed class WebSocketClientBuilder : IWebSocketClientBuilder
             BufferSize,
             sp.GetRequiredService<IMessageSerializer>(),
             sp.GetServices<IWebSocketInitializer>().ToList(),
-            sp.GetRequiredService<IListenerRegistry>()
+            sp.GetRequiredService<IListenerRegistry>(),
+            sp.GetRequiredService<WebSocketTelemetry>()
         ));
     }
 

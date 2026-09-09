@@ -1,9 +1,10 @@
-﻿using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.Listeners;
+﻿using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets;
+using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.Listeners;
 using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.Serializers;
 using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.WebSocketClients;
 using Ouranos.Pantheon.Tests.Utils;
 
-namespace Ouranos.Pantheon.Modules.Shared.Tests.WebSockets.Listeners;
+namespace Ouranos.Pantheon.Modules.Shared.Contract.Tests.WebSockets.Listeners;
 
 public sealed class ListenerRegistryTests
 {
@@ -13,7 +14,7 @@ public sealed class ListenerRegistryTests
     public ListenerRegistryTests()
     {
         _serializer = Substitute.For<IMessageSerializer>();
-        _listenerRegistry = new ListenerRegistry(_serializer);
+        _listenerRegistry = new ListenerRegistry(_serializer, new WebSocketTelemetry());
     }
 
     [Fact]
