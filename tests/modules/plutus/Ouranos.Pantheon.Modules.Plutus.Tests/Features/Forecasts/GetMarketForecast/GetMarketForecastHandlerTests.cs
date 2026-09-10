@@ -261,4 +261,130 @@ public sealed class GetMarketForecastHandlerTests
         result.TotalCount.ShouldBe(1);
         result.Items.Single().Id.ShouldBe(latestForecast.Id);
     }
+
+    [Fact]
+    public async Task Handle_WhenSortByDayOneGainAsc_ShouldReturnItemsOrderedByGain()
+    {
+        // Arrange
+        var market = Market.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            new Taxes(null)
+        );
+        await _dbContext.SeedData(market);
+
+        var lowGainForecast = await SeedForecast(market.Id, "Gold", 105m);
+        var highGainForecast = await SeedForecast(market.Id, "Silver", 110m);
+
+        var query = new GetMarketForecastInput(
+            market.Id,
+            SortField: "DayOne.Gain",
+            SortDirection: "asc",
+            Take: 10
+        );
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.TotalCount.ShouldBe(2);
+        var items = result.Items.ToList();
+        items[0].SymbolId.ShouldBe(lowGainForecast.SymbolId);
+        items[0].DayOne.Margin.ShouldBe(5m);
+        items[0].DayOne.Gain.ShouldBe(2000m);
+        items[1].SymbolId.ShouldBe(highGainForecast.SymbolId);
+        items[1].DayOne.Gain.ShouldBe(4000m);
+    }
+
+    [Fact]
+    public async Task Handle_WhenNoSortField_ShouldDefaultToDayOneGainDescending()
+    {
+        // Arrange
+        var market = Market.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            new Taxes(null)
+        );
+        await _dbContext.SeedData(market);
+
+        var lowGainForecast = await SeedForecast(market.Id, "Gold", 105m);
+        var highGainForecast = await SeedForecast(market.Id, "Silver", 110m);
+
+        var query = new GetMarketForecastInput(market.Id, Take: 10);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        var items = result.Items.ToList();
+        items[0].SymbolId.ShouldBe(highGainForecast.SymbolId);
+        items[1].SymbolId.ShouldBe(lowGainForecast.SymbolId);
+    }
+
+    [Fact]
+    public async Task Handle_WhenFilteredBySymbolName_ShouldReturnOnlyMatchingSymbols()
+    {
+        // Arrange
+        var market = Market.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            new Taxes(null)
+        );
+        await _dbContext.SeedData(market);
+
+        await SeedForecast(market.Id, "Gold", 105m);
+        await SeedForecast(market.Id, "Silver", 110m);
+
+        var query = new GetMarketForecastInput(
+            market.Id,
+            Take: 10,
+            Filter: ["SymbolName:like:gold"]
+        );
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.TotalCount.ShouldBe(1);
+        result.Items.Single().SymbolName.ShouldBe("Gold");
+    }
+
+    private async Task<Forecast> SeedForecast(
+        Id<Market> marketId,
+        string symbolName,
+        decimal dayOneAveragePrice
+    )
+    {
+        var symbol = Symbol.Create(
+            new Id<Symbol>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            null,
+            symbolName,
+            marketId,
+            new AdditionalFields()
+        );
+
+        var predictions = Enumerable
+            .Range(0, 7)
+            .Select(_ => new ForecastPoint(
+                dayOneAveragePrice,
+                dayOneAveragePrice - 10m,
+                dayOneAveragePrice + 10m,
+                400m
+            ))
+            .ToList();
+
+        var forecast = Forecast.Create(
+            new Id<Forecast>(Guid.NewGuid().ToString()),
+            marketId,
+            symbol.Id,
+            new ForecastPoint(100m, 90m, 110m, 500m),
+            predictions
+        );
+
+        await _dbContext.SeedData(symbol);
+        await _dbContext.SeedData(forecast);
+
+        return forecast;
+    }
 }

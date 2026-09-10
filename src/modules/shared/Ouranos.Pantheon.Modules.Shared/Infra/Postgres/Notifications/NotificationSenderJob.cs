@@ -35,7 +35,7 @@ public sealed class NotificationSenderJob
         );
     }
 
-    [TickerFunction("NotificationSender", "* * * * * *")]
+    [TickerFunction("NotificationSender", "0 * * * * *")]
     public async Task Execute(TickerFunctionContext _, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();

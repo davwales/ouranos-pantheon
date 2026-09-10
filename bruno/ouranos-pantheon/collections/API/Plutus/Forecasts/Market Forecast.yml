@@ -5,10 +5,16 @@ info:
 
 http:
   method: GET
-  url: "{{BASE_URL}}/api/plutus/markets/{{MARKET_ID}}/forecasts"
+  url: "{{BASE_URL}}/api/plutus/markets/{{MARKET_ID}}/forecasts?filter=symbolId:eq:a01992d2-9638-4f17-8aa9-65706aad8fab&skip=0&take=1"
   params:
-    - name: ""
-      value: ""
+    - name: filter
+      value: symbolId:eq:a01992d2-9638-4f17-8aa9-65706aad8fab
+      type: query
+    - name: skip
+      value: "0"
+      type: query
+    - name: take
+      value: "1"
       type: query
   auth: inherit
 
@@ -17,3 +23,4 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+  forwardAuthorizationHeader: true

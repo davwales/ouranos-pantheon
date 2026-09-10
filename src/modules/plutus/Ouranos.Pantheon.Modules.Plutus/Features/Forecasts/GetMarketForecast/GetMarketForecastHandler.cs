@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetMarketForecast.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database.Querying;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
@@ -17,36 +18,23 @@ namespace Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetMarketForecast;
 public sealed class GetMarketForecastHandler
     : IPantheonHandler<GetMarketForecastInput, PagedResponse<GetMarketForecastResponse>>
 {
-    private static readonly FilterBuilder<GetMarketForecastResponse> FilterBuilder =
-        new FilterBuilder<GetMarketForecastResponse>()
-            .On(nameof(GetMarketForecastResponse.SymbolId), x => x.SymbolId)
-            .On(
-                nameof(GetMarketForecastResponse.SymbolName),
-                x => x.SymbolName,
-                caseInsensitive: true
-            )
-            .On(
-                nameof(GetMarketForecastResponse.SymbolSubcode),
-                x => x.SymbolSubcode,
-                caseInsensitive: true
-            );
+    private static readonly FilterBuilder<Forecast> FilterBuilder = new FilterBuilder<Forecast>()
+        .On(nameof(GetMarketForecastResponse.SymbolId), f => f.SymbolId)
+        .On(nameof(GetMarketForecastResponse.SymbolName), f => f.Symbol.Name, caseInsensitive: true)
+        .On(
+            nameof(GetMarketForecastResponse.SymbolSubcode),
+            f => f.Symbol.Subcode,
+            caseInsensitive: true
+        );
 
-    private static readonly SortBuilder<GetMarketForecastResponse> SortBuilder =
-        new SortBuilder<GetMarketForecastResponse>()
-            .On(nameof(GetMarketForecastResponse.SymbolName), x => x.SymbolName)
-            .On(
-                $"{nameof(GetMarketForecastResponse.DayOne)}.{nameof(GetMarketForecastPredictionResponse.Gain)}",
-                x => x.DayOne.Gain
-            )
-            .On(
-                $"{nameof(GetMarketForecastResponse.DayOne)}.{nameof(GetMarketForecastPredictionResponse.Margin)}",
-                x => x.DayOne.Margin
-            )
-            .On(
-                $"{nameof(GetMarketForecastResponse.DayTwo)}.{nameof(GetMarketForecastPredictionResponse.Gain)}",
-                x => x.DayTwo.Gain
-            )
-            .Default(x => x.DayOne.Gain);
+    private const string DayOneGainField =
+        $"{nameof(GetMarketForecastResponse.DayOne)}.{nameof(GetMarketForecastPredictionResponse.Gain)}";
+
+    private const string DayOneMarginField =
+        $"{nameof(GetMarketForecastResponse.DayOne)}.{nameof(GetMarketForecastPredictionResponse.Margin)}";
+
+    private const string DayTwoGainField =
+        $"{nameof(GetMarketForecastResponse.DayTwo)}.{nameof(GetMarketForecastPredictionResponse.Gain)}";
 
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<GetMarketForecastHandler> _logger;
@@ -90,12 +78,17 @@ public sealed class GetMarketForecastHandler
 
         Guard.Against.NotFound(input.MarketId, market);
 
-        var flatTax = market.Taxes.Flat ?? new FlatTax(0, 0, 0);
+        var taxRate = (market.Taxes.Flat ?? new FlatTax(0, 0, 0)).Rate;
 
-        var forecasts = await _dbContext
+        var forecasts = _dbContext
             .Forecasts.AsNoTracking()
             .Where(f => f.MarketId == input.MarketId && f.Predictions.Count >= 7)
             .WhereLatestPerSymbol()
+            .FilterBy(input.Filter, FilterBuilder);
+
+        var totalCount = await forecasts.CountAsync(cancellationToken);
+
+        var page = await forecasts
             .Select(f => new
             {
                 f.Id,
@@ -104,43 +97,56 @@ public sealed class GetMarketForecastHandler
                 SymbolName = f.Symbol.Name,
                 SymbolSubcode = f.Symbol.Subcode,
                 f.Latest,
-                Predictions = f.Predictions.Select(p => new
-                {
-                    p.AveragePrice,
-                    p.MaxPrice,
-                    p.MinPrice,
-                    p.Volume,
-                    Margin = p.AveragePrice
-                        - (p.AveragePrice * flatTax.Rate > 0 ? 0 : p.AveragePrice * flatTax.Rate)
-                        - f.Latest.AveragePrice,
-                }),
+                DayOneMargin = f.Predictions.First().AveragePrice
+                    - Math.Min(0, f.Predictions.First().AveragePrice * taxRate)
+                    - f.Latest.AveragePrice,
+                DayOneGain = (
+                    f.Predictions.First().AveragePrice
+                    - Math.Min(0, f.Predictions.First().AveragePrice * taxRate)
+                    - f.Latest.AveragePrice
+                ) * f.Predictions.First().Volume,
+                DayTwoGain = (
+                    f.Predictions.Skip(1).First().AveragePrice
+                    - Math.Min(0, f.Predictions.Skip(1).First().AveragePrice * taxRate)
+                    - f.Latest.AveragePrice
+                ) * f.Predictions.Skip(1).First().Volume,
+                Predictions = f
+                    .Predictions.Select(p => new GetMarketForecastPredictionResponse(
+                        p.AveragePrice,
+                        p.MinPrice,
+                        p.MaxPrice,
+                        p.Volume,
+                        p.AveragePrice
+                            - Math.Min(0, p.AveragePrice * taxRate)
+                            - f.Latest.AveragePrice,
+                        (
+                            p.AveragePrice
+                            - Math.Min(0, p.AveragePrice * taxRate)
+                            - f.Latest.AveragePrice
+                        ) * p.Volume,
+                        p.AveragePrice - f.Latest.AveragePrice,
+                        p.MinPrice - f.Latest.MinPrice,
+                        p.MaxPrice - f.Latest.MaxPrice,
+                        p.Volume - f.Latest.Volume,
+                        p.AveragePrice * p.Volume - f.Latest.AveragePrice * f.Latest.Volume
+                    ))
+                    .ToList(),
             })
-            .Select(f => new
-            {
-                f.Id,
-                f.MarketId,
-                f.SymbolId,
-                f.SymbolName,
-                f.SymbolSubcode,
-                f.Latest,
-                Predictions = f.Predictions.Select(p => new GetMarketForecastPredictionResponse(
-                    p.AveragePrice,
-                    p.MinPrice,
-                    p.MaxPrice,
-                    p.Volume,
-                    p.Margin,
-                    p.Margin * p.Volume,
-                    p.AveragePrice - f.Latest.AveragePrice,
-                    p.MinPrice - f.Latest.MinPrice,
-                    p.MaxPrice - f.Latest.MaxPrice,
-                    p.Volume - f.Latest.Volume,
-                    p.AveragePrice * p.Volume - f.Latest.AveragePrice * f.Latest.Volume
-                )),
-            })
+            .SortBy(
+                input.SortField,
+                input.SortDirection,
+                builder =>
+                    builder
+                        .On(nameof(GetMarketForecastResponse.SymbolName), x => x.SymbolName)
+                        .On(DayOneMarginField, x => x.DayOneMargin)
+                        .On(DayOneGainField, x => x.DayOneGain)
+                        .On(DayTwoGainField, x => x.DayTwoGain)
+                        .Default(x => x.DayOneGain)
+            )
+            .Paginate(input.Skip, input.Take)
             .ToListAsync(cancellationToken);
 
-        var responses = forecasts
-            .Select(f => new GetMarketForecastResponse(
+        var items = page.Select(f => new GetMarketForecastResponse(
                 f.Id,
                 f.MarketId,
                 f.SymbolId,
@@ -157,17 +163,9 @@ public sealed class GetMarketForecastHandler
             ))
             .ToList();
 
-        var filtered = responses.AsQueryable().FilterBy(input.Filter, FilterBuilder);
-        var totalCount = filtered.Count();
-
-        var page = filtered
-            .SortBy(input.SortField, input.SortDirection, SortBuilder)
-            .Paginate(input.Skip, input.Take)
-            .ToList();
-
         _logger.LogDebug("Successfully handled get market forecast query.");
         return new PagedResponse<GetMarketForecastResponse>(
-            page,
+            items,
             totalCount,
             input.Skip,
             input.Take
