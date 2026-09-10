@@ -15,7 +15,7 @@ store, dashboard at `/tickerq/dashboard`):
 | `SymbolSignalCalculateJob` | Plutus | every 5 min | Recompute signals for all symbols |
 | `ForecastGeneratorJob` | Plutus | daily | Generate price forecasts via OuranosMl |
 | `SyncModelsJob` | Hermes | hourly | Sync available LLM models from OuranosMl |
-| `NotificationSenderJob` | Shared | every second | Dispatch pending notifications |
+| `NotificationSenderJob` | Shared | every minute | Dispatch pending notifications |
 
 ## 6.2 Scenario: Plain Query Request
 
