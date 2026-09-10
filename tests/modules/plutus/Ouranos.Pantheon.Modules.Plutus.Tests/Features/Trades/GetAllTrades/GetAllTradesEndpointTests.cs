@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetAllTrades;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetAllTrades.Schemas;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Trades.GetAllTrades;
@@ -14,7 +15,7 @@ public sealed class GetAllTradesEndpointTests
     {
         // Arrange
         var ct = CancellationToken.None;
-        var input = new GetAllTradesInput(Take: 10);
+        var input = new GetAllTradesInput(TimeFrame.AllTime, Take: 10);
         var expected = new List<GetAllTradesResponse>();
 
         _bus.InvokeAsync<List<GetAllTradesResponse>>(

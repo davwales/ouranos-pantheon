@@ -29,13 +29,16 @@ export default function RecentMarketTrades() {
 
   const [state, reexecute] = useApi(
     () =>
-      plutusApi.getAllTrades({
-        filter: [`MarketId:eq:${marketId}`],
-        sortField: "Timestamp",
-        sortDirection: "desc",
-        skip: 0,
-        take,
-      }),
+      plutusApi.getAllTrades(
+        "OneYear",
+        {
+          filter: [`MarketId:eq:${marketId}`],
+          sortField: "Timestamp",
+          sortDirection: "desc",
+          skip: 0,
+          take,
+        },
+      ),
     [marketId, take],
   );
 

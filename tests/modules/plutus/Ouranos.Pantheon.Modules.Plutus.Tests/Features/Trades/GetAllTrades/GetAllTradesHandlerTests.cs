@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetAllTrades;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetAllTrades.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
@@ -36,7 +37,7 @@ public sealed class GetAllTradesHandlerTests
     public async Task Handle_WhenNoTrades_ShouldReturnEmptyList()
     {
         // Arrange
-        var query = new GetAllTradesInput(Take: 10);
+        var query = new GetAllTradesInput(TimeFrame.AllTime, Take: 10);
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
@@ -50,7 +51,7 @@ public sealed class GetAllTradesHandlerTests
     public async Task Handle_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange
-        var query = new GetAllTradesInput(Take: 10);
+        var query = new GetAllTradesInput(TimeFrame.AllTime, Take: 10);
         var cancellationToken = new CancellationToken(true);
 
         // Act

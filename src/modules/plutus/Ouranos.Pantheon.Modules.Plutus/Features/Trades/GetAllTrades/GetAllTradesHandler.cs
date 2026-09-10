@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetAllTrades.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
@@ -64,9 +65,14 @@ public sealed class GetAllTradesHandler
             limits.MaxPageSize
         );
 
+        DateTimeOffset? since = input.TimeFrame.ToTimeSpan() is { } span
+            ? DateTimeOffset.UtcNow - span
+            : null;
+
         var items = await _dbContext
             .Trades.AsQueryable()
             .AsNoTracking()
+            .Where(t => since == null || t.Timestamp >= since)
             .FilterBy(input.Filter, FilterBuilder)
             .SortBy(input.SortField, input.SortDirection, SortBuilder)
             .Paginate(input.Skip, input.Take)
