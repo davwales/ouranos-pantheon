@@ -159,8 +159,8 @@ export const plutusApi = {
       numBuckets,
     }),
 
-  getAllTrades: (params?: PageParams) =>
-    api.get<Trade[]>("/api/plutus/trades", params),
+  getAllTrades: (timeFrame: TimeFrameKey, params?: PageParams) =>
+    api.get<Trade[]>("/api/plutus/trades", { timeFrame, ...params }),
 
   getAllSymbols: (params?: PageParams) =>
     api.get<PagedResponse<Symbol>>("/api/plutus/symbols", params),

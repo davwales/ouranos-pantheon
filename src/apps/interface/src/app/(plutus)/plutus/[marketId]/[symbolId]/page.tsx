@@ -122,13 +122,16 @@ export default function SymbolDetail() {
         plutusApi.getSymbol(symbolId),
         plutusApi.getSymbolTrades(symbolId, timeFrameKey),
         plutusApi.getDailySymbolSummary(symbolId),
-        plutusApi.getAllTrades({
-          filter: [`symbolId:eq:${symbolId}`],
-          skip: 0,
-          take: 1,
-          sortField: "timestamp",
-          sortDirection: "desc",
-        }),
+        plutusApi.getAllTrades(
+          "OneYear",
+          {
+            filter: [`symbolId:eq:${symbolId}`],
+            skip: 0,
+            take: 1,
+            sortField: "timestamp",
+            sortDirection: "desc",
+          },
+        ),
         plutusApi.getMarketForecasts(marketId, {
           filter: [`symbolId:eq:${symbolId}`],
           skip: 0,
