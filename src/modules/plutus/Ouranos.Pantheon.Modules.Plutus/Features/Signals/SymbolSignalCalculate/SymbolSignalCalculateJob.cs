@@ -115,6 +115,18 @@ public class SymbolSignalCalculateJob
             _dbContext.Signals.AddRange(signals);
             await _dbContext.SaveChangesAsync(ct);
 
+            try
+            {
+                await RefreshLatestSignalsAsync(ct);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "Failed to refresh latest signals materialized view; reads continue against the previous snapshot."
+                );
+            }
+
             _logger.LogInformation(
                 "Computed {Count} signals for {SymbolCount} symbols.",
                 signals.Count,
@@ -164,6 +176,25 @@ public class SymbolSignalCalculateJob
             .WithDateTimeOffset("@since", since);
 
         return await _dbContext.Database.ExecuteQueryAsync<SymbolBucketRow>(command, ct);
+    }
+
+    /// <summary>
+    ///     Refreshes the <c>plutus.latest_signals</c> materialized view after new signals are
+    ///     saved, so signal reads serve the recent snapshot instead of recomputing the
+    ///     <c>DISTINCT ON</c> window over the 30-minute continuous aggregate per request.
+    ///     <c>CONCURRENTLY</c> keeps readers unblocked and leaves the previous snapshot in
+    ///     place when a refresh fails. Overridable so tests can supply an in-memory-safe
+    ///     stub without executing raw SQL (the EF Core in-memory provider cannot run
+    ///     <c>REFRESH MATERIALIZED VIEW</c>).
+    /// </summary>
+    protected internal virtual async Task RefreshLatestSignalsAsync(CancellationToken ct)
+    {
+        await _dbContext.Database.ExecuteSqlRawAsync(
+            """
+            REFRESH MATERIALIZED VIEW CONCURRENTLY plutus.latest_signals;
+            """,
+            ct
+        );
     }
 
     private static Dictionary<Id<Symbol>, List<PriceBucket>> BuildBucketsBySymbol(

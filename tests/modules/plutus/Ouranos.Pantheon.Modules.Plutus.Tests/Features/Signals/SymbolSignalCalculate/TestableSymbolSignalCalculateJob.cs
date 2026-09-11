@@ -28,6 +28,22 @@ internal sealed class TestableSymbolSignalCalculateJob(
 {
     private readonly PlutusDbContext _dbContext = dbContext;
 
+    public bool LatestSignalsRefreshed { get; private set; }
+
+    public Exception? RefreshLatestSignalsException { get; set; }
+
+    protected internal override Task RefreshLatestSignalsAsync(CancellationToken ct)
+    {
+        LatestSignalsRefreshed = true;
+
+        if (RefreshLatestSignalsException is not null)
+        {
+            return Task.FromException(RefreshLatestSignalsException);
+        }
+
+        return Task.CompletedTask;
+    }
+
     protected internal override async Task<List<SymbolBucketRow>> LoadSymbolBucketsAsync(
         DateTimeOffset since,
         TimeSpan bucketInterval,

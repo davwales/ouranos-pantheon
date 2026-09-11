@@ -29,7 +29,9 @@ public sealed class SymbolSignalCalculateJobTests
         _dbContext = DbContextExtensions.Mock<PlutusDbContext>();
     }
 
-    private SymbolSignalCalculateJob CreateJob(IEnumerable<ISignalComputer>? computers = null)
+    private TestableSymbolSignalCalculateJob CreateJob(
+        IEnumerable<ISignalComputer>? computers = null
+    )
     {
         return new TestableSymbolSignalCalculateJob(
             _logger,
@@ -271,5 +273,78 @@ public sealed class SymbolSignalCalculateJobTests
         _dbContext.Signals.Count().ShouldBe(2);
         _dbContext.Signals.Count(s => s.Type == SignalType.TaxAdjustedRoi).ShouldBe(1);
         _dbContext.Signals.Count(s => s.Type == SignalType.Rsi).ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Execute_WhenSignalsSaved_ShouldRefreshLatestSignalsView()
+    {
+        // Arrange
+        var market = Market.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            "Test Market",
+            new Taxes(null)
+        );
+        var symbol = Symbol.Create(
+            new Id<Symbol>(Guid.NewGuid().ToString()),
+            "ITEM1",
+            null,
+            "Item One",
+            market.Id,
+            new AdditionalFields()
+        );
+
+        var computer = Substitute.For<ISignalComputer>();
+        computer.Type.Returns(SignalType.TaxAdjustedRoi);
+        computer
+            .ComputeAsync(Arg.Any<SignalComputeContext>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<decimal?>(0.15m));
+
+        var job = CreateJob([computer]);
+
+        await _dbContext.SeedData(market);
+        await _dbContext.SeedData(symbol);
+
+        // Act
+        await job.Execute(_context, CancellationToken.None);
+
+        // Assert
+        job.LatestSignalsRefreshed.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Execute_WhenRefreshFails_ShouldStillCreateSignals()
+    {
+        // Arrange
+        var market = Market.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            "Test Market",
+            new Taxes(null)
+        );
+        var symbol = Symbol.Create(
+            new Id<Symbol>(Guid.NewGuid().ToString()),
+            "ITEM1",
+            null,
+            "Item One",
+            market.Id,
+            new AdditionalFields()
+        );
+
+        var computer = Substitute.For<ISignalComputer>();
+        computer.Type.Returns(SignalType.TaxAdjustedRoi);
+        computer
+            .ComputeAsync(Arg.Any<SignalComputeContext>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<decimal?>(0.15m));
+
+        var job = CreateJob([computer]);
+        job.RefreshLatestSignalsException = new InvalidOperationException("refresh failed");
+
+        await _dbContext.SeedData(market);
+        await _dbContext.SeedData(symbol);
+
+        // Act
+        await job.Execute(_context, CancellationToken.None);
+
+        // Assert
+        _dbContext.Signals.Count().ShouldBe(1);
     }
 }
