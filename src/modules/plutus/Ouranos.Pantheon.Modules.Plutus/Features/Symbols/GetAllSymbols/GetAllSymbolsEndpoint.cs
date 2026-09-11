@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetAllSymbols.Schemas;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
 using Wolverine;
@@ -10,7 +11,19 @@ public static class GetAllSymbolsEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapGet("/api/plutus/symbols", Handle).WithTags("Plutus.Symbols");
+        app.MapGet("/api/plutus/symbols", Handle)
+            .CacheOutput(policy =>
+                policy
+                    .Expire(TimeSpan.FromSeconds(30))
+                    .SetVaryByQuery(
+                        nameof(GetAllSymbolsInput.SortField),
+                        nameof(GetAllSymbolsInput.SortDirection),
+                        nameof(GetAllSymbolsInput.Skip),
+                        nameof(GetAllSymbolsInput.Take),
+                        nameof(GetAllSymbolsInput.Filter)
+                    )
+            )
+            .WithTags("Plutus.Symbols");
     }
 
     internal static async Task<IResult> Handle(

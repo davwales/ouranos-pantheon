@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetSymbolTrades.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
@@ -12,7 +13,16 @@ public static class GetSymbolTradesEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapGet("/api/plutus/symbols/{symbolId}/trades", Handle).WithTags("Plutus.Trades");
+        app.MapGet("/api/plutus/symbols/{symbolId}/trades", Handle)
+            .CacheOutput(policy =>
+                policy
+                    .Expire(TimeSpan.FromSeconds(30))
+                    .SetVaryByQuery(
+                        nameof(GetSymbolTradesInput.TimeFrame),
+                        nameof(GetSymbolTradesInput.NumBuckets)
+                    )
+            )
+            .WithTags("Plutus.Trades");
     }
 
     internal static async Task<IResult> Handle(

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Net.Http.Headers;
 using Ouranos.Pantheon.Modules.Shared.Contract;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
@@ -140,7 +141,12 @@ public static class CoreExtensions
 
         builder.Services.AddMemoryCache().AddSerilog();
 
-        builder.Services.AddOutputCache();
+        builder.Services.AddOutputCache(options =>
+            options.AddBasePolicy(
+                policy => policy.SetVaryByHeader(HeaderNames.Origin),
+                excludeDefaultPolicy: true
+            )
+        );
 
         builder
             .Services.AddSingleton<WebSocketTelemetry>()

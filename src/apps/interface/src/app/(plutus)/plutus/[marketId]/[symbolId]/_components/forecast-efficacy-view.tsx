@@ -5,7 +5,7 @@ import { Typography } from "@/components/shared/typography";
 import { Button } from "@/components/ui/button";
 import { useApi } from "@/hooks/use-api";
 import { ForecastEfficacyRow, plutusApi } from "@/lib/api/plutus";
-import { subDays } from "date-fns";
+import { startOfDay, subDays } from "date-fns";
 import { useMemo, useState } from "react";
 import { ForecastEfficacySkeleton } from "@/app/(plutus)/plutus/[marketId]/[symbolId]/_components/forecast-efficacy-skeleton";
 
@@ -99,7 +99,7 @@ export function ForecastEfficacyView({
     () =>
       plutusApi.getForecastEfficacy({
         symbolId,
-        since: subDays(new Date(), windowDays).toISOString(),
+        since: startOfDay(subDays(new Date(), windowDays)).toISOString(),
         skip: 0,
         take: 50,
       }),

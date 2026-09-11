@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSymbolSignalHistory.Schemas;
 using Wolverine;
 
@@ -10,6 +11,16 @@ public static class GetSymbolSignalHistoryEndpoint
     public static void Map(WebApplication app)
     {
         app.MapGet("/api/plutus/symbols/{symbolId}/signal-history", Handle)
+            .CacheOutput(policy =>
+                policy
+                    .Expire(TimeSpan.FromSeconds(30))
+                    .SetVaryByQuery(
+                        nameof(GetSymbolSignalHistoryInput.From),
+                        nameof(GetSymbolSignalHistoryInput.To),
+                        nameof(GetSymbolSignalHistoryInput.Types),
+                        nameof(GetSymbolSignalHistoryInput.Intent)
+                    )
+            )
             .WithTags("Plutus.Signals");
     }
 
