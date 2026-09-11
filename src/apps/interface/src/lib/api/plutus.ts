@@ -133,14 +133,10 @@ export const plutusApi = {
       { timeFrame, ...page },
     ),
 
-  getMarketOverview: (
-    marketId: string,
-    timeFrame: TimeFrameKey,
-    numBuckets?: number,
-  ) =>
+  getMarketOverview: (marketId: string, timeFrame: TimeFrameKey) =>
     api.get<GetMarketOverviewResponse>(
       `/api/plutus/markets/${marketId}/overview`,
-      { timeFrame, numBuckets },
+      { timeFrame },
     ),
 
   getVolumeHeatmap: (marketId: string, lookbackWeeks?: number) =>

@@ -6,6 +6,5 @@ namespace Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketOverview.Sche
 
 public sealed record GetMarketOverviewInput(
     Id<Market> MarketId,
-    TimeFrame TimeFrame = TimeFrame.OneHour,
-    int NumBuckets = 100
+    TimeFrame TimeFrame = TimeFrame.OneHour
 );

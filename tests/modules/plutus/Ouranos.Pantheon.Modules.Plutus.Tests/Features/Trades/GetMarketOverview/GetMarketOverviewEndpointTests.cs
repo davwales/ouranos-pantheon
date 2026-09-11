@@ -24,13 +24,7 @@ public sealed class GetMarketOverviewEndpointTests
             .Returns(Task.FromResult(expected));
 
         // Act
-        var result = await GetMarketOverviewEndpoint.Handle(
-            marketId,
-            _bus,
-            TimeFrame.AllTime,
-            100,
-            ct
-        );
+        var result = await GetMarketOverviewEndpoint.Handle(marketId, _bus, TimeFrame.AllTime, ct);
 
         // Assert
         result.ShouldBeOfType<Ok<GetMarketOverviewResponse>>();

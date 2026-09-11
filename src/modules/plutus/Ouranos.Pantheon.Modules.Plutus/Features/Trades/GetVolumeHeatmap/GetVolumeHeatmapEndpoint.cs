@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetVolumeHeatmap.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
@@ -12,6 +13,11 @@ public static class GetVolumeHeatmapEndpoint
     public static void Map(WebApplication app)
     {
         app.MapGet("/api/plutus/markets/{marketId}/volume-heatmap", Handle)
+            .CacheOutput(policy =>
+                policy
+                    .Expire(TimeSpan.FromSeconds(30))
+                    .SetVaryByQuery(nameof(GetVolumeHeatmapInput.LookbackWeeks))
+            )
             .WithTags("Plutus.Trades");
     }
 

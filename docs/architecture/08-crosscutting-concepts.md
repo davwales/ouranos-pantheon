@@ -105,19 +105,35 @@ through typed option classes per section (e.g. `RabbitMqOptions`, `PostgresOptio
 `QueryOptions`, `HealthOptions`). Caching is `IMemoryCache` only, registered centrally in
 `AddOuranosCore`.
 
-## 8.10 Real-Time Infrastructure
+## 8.10 Response Caching (OutputCache)
+
+The Shared module wires the mechanism only (`AddOutputCache()` / `UseOutputCache()` in
+`CoreExtensions`); each endpoint configures its own caching inline at the mapping site
+via `.CacheOutput(policy => ...)`, so route, binding, and cache behavior live together
+in the slice's endpoint file. Use it for endpoints whose response is expensive to
+compute but tolerates bounded staleness (dashboard aggregates, listings behind
+read-heavy UIs), never for user-specific or rapidly-changing data. Policies carry an
+expiry and vary by their query parameters; reference those with
+`nameof(InputSchema.Property)` so the vary-by keys stay strongly typed and track the
+input schemas the endpoints bind from. Consequently identical requests collapse into
+a single computation per TTL window, and caching an endpoint requires no changes
+outside its endpoint file. See
+[ADR 0010](../adr/0010-server-side-output-caching-for-dashboard-aggregates.md) for the
+motivating case.
+
+## 8.11 Real-Time Infrastructure
 
 The kernel's `WebSockets/` package generalizes long-lived connections: listener registry,
 reconnecting client, serializers, and the `WebSocketWorker` hosted service. Plutus hosts
 it twice (FFXIV, Stocks) via factory methods in `PlutusModule.Build`; connection state is
 surfaced to health checks through `WebSocketHealthState`.
 
-## 8.11 Health Checks
+## 8.12 Health Checks
 
 Registered in `AddOuranosCore`: Postgres, RabbitMQ, OuranosMl, WebSocket state, and TickerQ,
 aggregated by the Shared module's health endpoint.
 
-## 8.12 Security
+## 8.13 Security
 
 There is no authentication or authorization anywhere in `src/`. This is by design for a
 single-operator homelab deployment; see
@@ -126,7 +142,7 @@ single-operator homelab deployment; see
 allow-list (`CorsAllowedHosts`, policy `AllowLocalAndServer`, see 7.3) and the anti-SSRF
 guard on the recipe scraper. Anything that can reach the gateway port has full access.
 
-## 8.13 Observability (OpenTelemetry)
+## 8.14 Observability (OpenTelemetry)
 
 The gateway emits OpenTelemetry traces and metrics, registered centrally in `AddOuranosCore`
 via `AddCoreObservabilityModule` (Shared module, `Infra/Observability/`,

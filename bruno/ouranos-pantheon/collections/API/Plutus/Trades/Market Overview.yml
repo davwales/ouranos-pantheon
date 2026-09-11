@@ -5,13 +5,10 @@ info:
 
 http:
   method: GET
-  url: "{{BASE_URL}}/api/plutus/markets/{{MARKET_ID}}/overview?timeFrame=OneHour&numBuckets=100"
+  url: "{{BASE_URL}}/api/plutus/markets/{{MARKET_ID}}/overview?timeFrame=OneHour"
   params:
     - name: timeFrame
       value: "OneHour"
-      type: query
-    - name: numBuckets
-      value: "100"
       type: query
   auth: inherit
 
