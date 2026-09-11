@@ -41,13 +41,12 @@ public sealed class GetVolumeHeatmapHandler
             .FromSql(
                 """
                 SELECT
-                    ((EXTRACT(DOW FROM t.timestamp)::int + 6) % 7) AS day_of_week,
-                    EXTRACT(HOUR FROM t.timestamp)::int AS hour,
-                    COUNT(*)::bigint AS total_trades
-                FROM plutus.trades t
-                JOIN plutus.symbols s ON t.symbol_id = s.id
-                WHERE s.market_id = @marketId
-                  AND t.timestamp >= @since
+                    ((EXTRACT(DOW FROM h.bucket AT TIME ZONE 'UTC')::int + 6) % 7) AS day_of_week,
+                    EXTRACT(HOUR FROM h.bucket AT TIME ZONE 'UTC')::int AS hour,
+                    SUM(h.num_transactions)::bigint AS total_trades
+                FROM plutus.trades_market_hourly h
+                WHERE h.market_id = @marketId
+                  AND h.bucket >= @since
                 GROUP BY 1, 2
                 ORDER BY 1, 2
                 """

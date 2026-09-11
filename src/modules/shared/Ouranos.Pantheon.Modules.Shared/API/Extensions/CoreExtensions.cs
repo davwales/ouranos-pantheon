@@ -140,6 +140,8 @@ public static class CoreExtensions
 
         builder.Services.AddMemoryCache().AddSerilog();
 
+        builder.Services.AddOutputCache();
+
         builder
             .Services.AddSingleton<WebSocketTelemetry>()
             .AddSingleton<WebSocketHealthState>()
@@ -159,6 +161,7 @@ public static class CoreExtensions
     )
     {
         app.UseSerilogRequestLogging();
+        app.UseOutputCache();
 
         var tickerQDbContextFactory = app.Services.GetRequiredService<
             IDbContextFactory<TickerQDbContext>

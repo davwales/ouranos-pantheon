@@ -25,6 +25,7 @@ or deleted. Superseded records stay in place and point at their replacement.
 | [0007](0007-self-hosted-llm-inference-via-ouranosml.md) | Self-hosted LLM inference via OuranosMl | Accepted |
 | [0008](0008-no-authentication-single-user.md) | No authentication for the single-user, trusted-network deployment | Accepted |
 | [0009](0009-opentelemetry-observability-via-otlp.md) | OpenTelemetry traces and metrics exported to Grafana via OTLP | Accepted |
+| [0010](0010-server-side-output-caching-for-dashboard-aggregates.md) | Server-side output caching for hot dashboard aggregates | Accepted |
 
 ## Process
 

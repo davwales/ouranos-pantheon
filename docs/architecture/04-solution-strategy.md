@@ -13,6 +13,7 @@ decision record under [`docs/adr/`](../adr/README.md).
 | **Polyglot persistence on one engine**: TimescaleDB hypertables/continuous aggregates for time-series (Plutus), Marten event sourcing for Hestia | Each module picks the persistence style its domain needs without adding infrastructure (Q3) | [0004](../adr/0004-polyglot-persistence-on-postgresql.md) |
 | **Message-driven ingestion & async work**: Wolverine + RabbitMQ with per-message exchanges, queues, and DLQs | Durability and back-pressure for high-volume trade data; 202-accept-then-poll for long-running backtests | [0005](../adr/0005-wolverine-rabbitmq-for-async-pipelines.md) |
 | **In-process scheduling via TickerQ** | Simplicity (Q3): recurring jobs live with the code and keep their state in the same Postgres | [0006](../adr/0006-tickerq-for-scheduling.md) |
+| **Server-side output caching for hot dashboard aggregates** | Scalability (Q4): repeated reads of expensive aggregate endpoints collapse into one computation per TTL window instead of one Postgres scan per request | [0010](../adr/0010-server-side-output-caching-for-dashboard-aggregates.md) |
 | **Self-hosted AI inference (OuranosMl) behind one client** | All three modules get LLM/ML capability through a single OpenAI-compatible dependency; no cloud AI cost or lock-in | [0007](../adr/0007-self-hosted-llm-inference-via-ouranosml.md) |
 | **No authentication, trusted-network posture** | Simplicity (Q3) for a single-user, private-network system | [0008](../adr/0008-no-authentication-single-user.md) |
 
