@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetAllTrades.Schemas;
 using Wolverine;
 
@@ -9,7 +10,20 @@ public static class GetAllTradesEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapGet("/api/plutus/trades", Handle).WithTags("Plutus.Trades");
+        app.MapGet("/api/plutus/trades", Handle)
+            .CacheOutput(policy =>
+                policy
+                    .Expire(TimeSpan.FromSeconds(30))
+                    .SetVaryByQuery(
+                        nameof(GetAllTradesInput.TimeFrame),
+                        nameof(GetAllTradesInput.SortField),
+                        nameof(GetAllTradesInput.SortDirection),
+                        nameof(GetAllTradesInput.Skip),
+                        nameof(GetAllTradesInput.Take),
+                        nameof(GetAllTradesInput.Filter)
+                    )
+            )
+            .WithTags("Plutus.Trades");
     }
 
     internal static async Task<IResult> Handle(
