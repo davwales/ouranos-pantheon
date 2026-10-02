@@ -86,4 +86,27 @@ public sealed class MappingTests
         mapping.Value.ShouldBe(500);
         mapping.Members.ShouldNotBeNull();
     }
+
+    [Fact]
+    public void Mapping_WhenValuesExceedInt32_ShouldBeAccessible()
+    {
+        // Arrange & Act
+        var mapping = new Mapping(
+            1234,
+            "Test Item",
+            "icon.png",
+            "A test item",
+            true,
+            2_500_000_000,
+            3_000_000_000,
+            1000,
+            5_000_000_000
+        );
+
+        // Assert
+        mapping.LowAlch.ShouldBe(2_500_000_000L);
+        mapping.HighAlch.ShouldBe(3_000_000_000L);
+        mapping.Value.ShouldBe(5_000_000_000L);
+        mapping.Limit.ShouldBe(1000);
+    }
 }

@@ -81,6 +81,54 @@ public sealed class ImportRecipeConsumerTests
     }
 
     [Fact]
+    public async Task Handle_WhenRecipeAlreadyImported_ShouldSkipWithoutScrapingOrAppending()
+    {
+        // Arrange
+        var message = ValidMessage();
+        var recipeId = Guid.Parse(message.RecipeId.Value);
+        var imported = Recipe
+            .CreateImport(recipeId, message.Url, DateTimeOffset.UtcNow)
+            .State.CompleteImport(
+                "Chocolate Cake",
+                [new Step("Mix everything.")],
+                [new Ingredient(2m, "cup", "flour")],
+                string.Empty
+            )
+            .State;
+
+        _session
+            .LoadAsync<Recipe>(recipeId, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<Recipe?>(imported));
+
+        // Act
+        var act = async () => await _consumer.Handle(message, CancellationToken.None);
+
+        // Assert
+        await act.ShouldNotThrowAsync();
+        await _scraper.DidNotReceiveWithAnyArgs().ScrapeAsync(default!, default);
+        await _session.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_WhenRecipeIdIsNotAStreamId_ShouldSkipWithoutScraping()
+    {
+        // Arrange
+        var message = new ImportRecipeRequested(
+            new Id<Recipe>("not-a-guid"),
+            "https://example.com/recipe",
+            DateTimeOffset.UtcNow
+        );
+
+        // Act
+        var act = async () => await _consumer.Handle(message, CancellationToken.None);
+
+        // Assert
+        await act.ShouldNotThrowAsync();
+        await _scraper.DidNotReceiveWithAnyArgs().ScrapeAsync(default!, default);
+        _store.DidNotReceive().LightweightSession();
+    }
+
+    [Fact]
     public async Task Handle_WhenScrapeAndExtractSucceed_ShouldAppendRecipeImportSucceededEvent()
     {
         // Arrange

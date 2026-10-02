@@ -6,10 +6,10 @@ public sealed record Mapping(
     string Icon,
     string Examine,
     object Members,
-    int? LowAlch,
-    int? HighAlch,
+    long? LowAlch,
+    long? HighAlch,
     int? Limit,
-    int Value
+    long Value
 )
 {
     public bool IsMembers =>

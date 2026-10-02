@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Steps;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
@@ -115,18 +116,7 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
         }
         catch (OperationCanceledException)
         {
-            _logger.LogInformation(
-                "Optimization for backtest '{backtestId}' was cancelled.",
-                message.BacktestId
-            );
-
-            if (backtest.Status is BacktestStatus.Pending or BacktestStatus.Running)
-            {
-                backtest.Cancel("Cancelled by user.");
-                await dbContext.SaveChangesAsync(CancellationToken.None);
-            }
-
-            throw;
+            await BacktestCancellation.FinalizeAsync(backtest, dbContext, _logger);
         }
         catch (Exception ex)
         {

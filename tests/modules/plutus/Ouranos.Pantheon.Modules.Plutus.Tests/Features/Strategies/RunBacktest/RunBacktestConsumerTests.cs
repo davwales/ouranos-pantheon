@@ -221,6 +221,70 @@ public sealed class RunBacktestConsumerTests
     }
 
     [Fact]
+    public async Task Handle_WhenCancelledMidRun_ShouldMarkBacktestFailedNotCancelled()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var baseTime = DateTimeOffset.UtcNow;
+
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var strategy = Strategy.Create(
+            marketId,
+            "Test Strategy",
+            null,
+            new TradingConfiguration(),
+            StrategyTestFactory.DefaultWeights(),
+            null
+        );
+        var backtest = Backtest.Create(
+            strategy.Id,
+            marketId,
+            baseTime.AddDays(-5),
+            baseTime.AddDays(-1),
+            10000m,
+            strategy
+        );
+
+        await using (var dbContext = await _dbContextFactory.CreateDbContextAsync())
+        {
+            await dbContext.SeedData(market);
+            await dbContext.SeedData(strategy);
+            await dbContext.SeedData(backtest);
+            await dbContext.SaveChangesAsync();
+        }
+
+        _dataService
+            .LoadDataAsync(
+                marketId,
+                Arg.Any<DateTimeOffset>(),
+                Arg.Any<DateTimeOffset>(),
+                Arg.Any<CancellationToken>(),
+                Arg.Any<int>()
+            )
+            .Returns(
+                Task.FromException<BacktestData>(
+                    new OperationCanceledException("Simulated shutdown")
+                )
+            );
+
+        var message = new RunBacktestMessage(backtest.Id);
+
+        // Act
+        var act = async () => await _consumer.Handle(message, CancellationToken.None);
+
+        // Assert
+        await act.ShouldNotThrowAsync();
+
+        await using var verifyContext = await _dbContextFactory.CreateDbContextAsync();
+        var saved = await verifyContext
+            .Backtests.AsNoTracking()
+            .FirstAsync(b => b.Id == backtest.Id);
+
+        saved.Status.ShouldBe(BacktestStatus.Failed);
+        saved.ErrorMessage!.ShouldContain("Interrupted");
+    }
+
+    [Fact]
     public async Task Handle_WhenBacktestAlreadyCompleted_ShouldSkipWithoutError()
     {
         // Arrange

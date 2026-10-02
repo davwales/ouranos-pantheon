@@ -1,8 +1,11 @@
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Shared;
 
 public sealed record TradeMessage(
+    Id<Trade> TradeId,
     Producer Producer,
     string SymbolCode,
     string? SymbolSubcode,

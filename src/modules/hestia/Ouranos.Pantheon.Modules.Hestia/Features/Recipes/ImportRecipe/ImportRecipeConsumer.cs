@@ -7,6 +7,7 @@ using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes.Events;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Hestia.Features.Recipes.ImportRecipe;
 
@@ -30,7 +31,15 @@ public sealed class ImportRecipeConsumer(
         _logger.LogTrace("Processing import recipe request '{@message}'.", message);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var recipeId = Guid.Parse(message.RecipeId.Value);
+        if (!message.RecipeId.TryGetStreamId(out var recipeId))
+        {
+            _logger.LogWarning(
+                "Skipped importing recipe '{recipeId}' from '{url}': the recipe id is not a valid stream id.",
+                message.RecipeId,
+                message.Url
+            );
+            return;
+        }
 
         using var session = _store.LightweightSession();
         var recipe = await session.LoadAsync<Recipe>(recipeId, cancellationToken);
@@ -38,6 +47,16 @@ public sealed class ImportRecipeConsumer(
         {
             _logger.LogWarning(
                 "Skipped importing recipe '{recipeId}' from '{url}': the recipe does not exist.",
+                message.RecipeId,
+                message.Url
+            );
+            return;
+        }
+
+        if (recipe.ImportStatus == RecipeImportStatus.Imported)
+        {
+            _logger.LogDebug(
+                "Skipped importing recipe '{recipeId}' from '{url}': the recipe is already imported.",
                 message.RecipeId,
                 message.Url
             );

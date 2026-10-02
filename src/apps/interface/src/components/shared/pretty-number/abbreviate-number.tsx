@@ -1,5 +1,13 @@
 const abbreviationMapping: { threshold: number, abbreviation: string }[] = [
     {
+        threshold: 1000000000000000,
+        abbreviation: "Q"
+    },
+    {
+        threshold: 1000000000000,
+        abbreviation: "T"
+    },
+    {
         threshold: 1000000000,
         abbreviation: "B"
     },

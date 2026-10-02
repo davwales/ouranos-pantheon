@@ -33,4 +33,4 @@ variables:
   - name: HESTIA_MANUAL_ITEM_ID
     value: 00000000-0000-0000-0000-000000000099
   - name: MODEL_IDENTIFIER
-    value: hf.co/unsloth/gpt-oss-20b-GGUF:latest
+    value: hf.co/nvidia/NVIDIA-Nemotron-3-Nano-4B-GGUF:latest

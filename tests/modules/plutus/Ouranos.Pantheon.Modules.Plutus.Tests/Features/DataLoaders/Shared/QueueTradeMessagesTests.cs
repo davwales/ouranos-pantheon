@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Wolverine.Runtime;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.DataLoaders.Shared;
@@ -36,6 +38,7 @@ public sealed class QueueTradeMessagesTests
         var messages = new List<TradeMessage>
         {
             new(
+                DatabaseExtensions.CreateId<Trade>(),
                 Producer.Osrs,
                 "1234",
                 null,
