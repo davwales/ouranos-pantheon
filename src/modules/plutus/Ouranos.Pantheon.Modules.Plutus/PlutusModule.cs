@@ -50,6 +50,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Steps;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.SetStrategyActive;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.UpdateStrategy;
 using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.CreateSymbolGroup;
 using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.DeleteSymbolGroup;
@@ -118,6 +119,9 @@ public sealed class PlutusModule : IPantheonModule
     public async Task<IHost> Configure(IHost host)
     {
         await host.Services.ApplyCorePostgresMigrations<PlutusDbContext>();
+        await host
+            .Services.GetRequiredService<BacktestRecovery>()
+            .RecoverInterruptedBacktestsAsync();
         return host;
     }
 
@@ -239,6 +243,7 @@ public sealed class PlutusModule : IPantheonModule
         if (loaders.Consumer.IsEnabled)
         {
             opts.ListenToRabbitQueue(TradeMessage.Queue)
+                .ListenerCount(4)
                 .DeadLetterQueueing(new DeadLetterQueue(TradeMessage.DeadLetterQueue));
         }
     }
@@ -273,6 +278,7 @@ public sealed class PlutusModule : IPantheonModule
             .AddSingleton<IInputScorer, MovingAverageCrossoverInputScorer>()
             .AddSingleton<IInputScorer, PriceVelocityInputScorer>()
             .AddSingleton<IBacktestDataQueryService, BacktestDataQueryService>()
+            .AddSingleton<BacktestRecovery>()
             .AddScoped<IStep<BacktestPayload>, InitializeStep>()
             .AddScoped<IStep<BacktestPayload>, CloseExitsStep>()
             .AddScoped<IStep<BacktestPayload>, ScoreSymbolsStep>()

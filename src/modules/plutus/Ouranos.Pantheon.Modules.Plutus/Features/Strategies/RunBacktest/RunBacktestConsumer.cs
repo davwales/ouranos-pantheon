@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Steps;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
@@ -156,13 +157,7 @@ public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
         }
         catch (OperationCanceledException)
         {
-            _logger.LogInformation("Backtest '{backtestId}' was cancelled.", message.BacktestId);
-
-            if (backtest.Status is BacktestStatus.Pending or BacktestStatus.Running)
-            {
-                backtest.Cancel("Cancelled by user.");
-                await dbContext.SaveChangesAsync(CancellationToken.None);
-            }
+            await BacktestCancellation.FinalizeAsync(backtest, dbContext, _logger);
         }
         catch (Exception ex)
         {

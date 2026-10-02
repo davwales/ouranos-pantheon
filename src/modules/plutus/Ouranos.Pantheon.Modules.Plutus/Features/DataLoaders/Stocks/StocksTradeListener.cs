@@ -3,6 +3,8 @@ using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Stocks.Messages;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.Listeners;
 using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.WebSocketClients;
 
@@ -35,6 +37,7 @@ public sealed class StocksTradeListener : IListener<AlpacaTradeMessage>
         cancellationToken.ThrowIfCancellationRequested();
 
         var tradeMessage = new TradeMessage(
+            DatabaseExtensions.CreateId<Trade>(),
             Producer.Stocks,
             message.SymbolCode,
             null,

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Npgsql;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
@@ -45,10 +46,26 @@ public sealed class TradeConsumer : IPantheonHandler<TradeMessage>
             message.SymbolCode
         );
 
+        var existingTrade = await _dbContext.Trades.FindAsync(
+            [message.TradeId, message.Timestamp],
+            cancellationToken
+        );
+
+        if (existingTrade is not null)
+        {
+            _logger.LogDebug(
+                "Duplicate trade message for symbol '{symbolCode}' at '{timestamp}' ignored.",
+                message.SymbolCode,
+                message.Timestamp
+            );
+
+            return;
+        }
+
         var symbol = await UpsertSymbol(message, cancellationToken);
 
         var trade = Trade.Create(
-            new Id<Trade>(Guid.NewGuid().ToString()),
+            message.TradeId,
             symbol.Id,
             message.Price,
             message.Volume,
@@ -56,12 +73,31 @@ public sealed class TradeConsumer : IPantheonHandler<TradeMessage>
         );
 
         await _dbContext.Trades.AddAsync(trade, cancellationToken);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (IsDuplicateTradeInsert(ex))
+        {
+            _logger.LogDebug(
+                "Duplicate trade message for symbol '{symbolCode}' at '{timestamp}' ignored.",
+                message.SymbolCode,
+                message.Timestamp
+            );
+            return;
+        }
 
         _logger.LogInformation(
             "Successfully consumed trade message for symbol '{symbolCode}'.",
             message.SymbolCode
         );
+    }
+
+    private static bool IsDuplicateTradeInsert(DbUpdateException exception)
+    {
+        return exception.InnerException
+            is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation };
     }
 
     private async Task<Symbol> UpsertSymbol(
@@ -87,10 +123,15 @@ public sealed class TradeConsumer : IPantheonHandler<TradeMessage>
 
         if (existingSymbol is not null)
         {
-            existingSymbol.Update(message.SymbolName, message.AdditionalFields);
-            _dbContext.Symbols.Update(existingSymbol);
+            if (
+                existingSymbol.Name != message.SymbolName
+                || existingSymbol.AdditionalFields != message.AdditionalFields
+            )
+            {
+                existingSymbol.Update(message.SymbolName, message.AdditionalFields);
+                _logger.LogDebug("Successfully updated symbol '{symbolId}'.", existingSymbol.Id);
+            }
 
-            _logger.LogDebug("Successfully updated symbol '{symbolId}'.", existingSymbol.Id);
             return existingSymbol;
         }
 
@@ -111,7 +152,6 @@ public sealed class TradeConsumer : IPantheonHandler<TradeMessage>
     {
         if (_memoryCache.TryGetValue(marketId, out Market? cached) && cached is not null)
         {
-            _dbContext.Markets.Attach(cached);
             return cached;
         }
 
@@ -121,7 +161,7 @@ public sealed class TradeConsumer : IPantheonHandler<TradeMessage>
 
         Guard.Against.NotFound(marketId, market);
 
-        _memoryCache.Set(marketId, market);
+        _memoryCache.Set(marketId, market, TimeSpan.FromHours(1));
         return market;
     }
 }

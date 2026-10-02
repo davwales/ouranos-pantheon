@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -6,7 +7,9 @@ using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
 
@@ -41,13 +44,14 @@ public sealed class TradeConsumerTests
         return new(_logger, Options.Create(_options), _dbContext, _cache);
     }
 
-    private TradeMessage CreateMessage(string symbolCode)
+    private TradeMessage CreateMessage(string symbolCode, string? symbolName = "Test Item")
     {
         return new(
+            DatabaseExtensions.CreateId<Trade>(),
             Producer: Producer.Osrs,
             SymbolCode: symbolCode,
             SymbolSubcode: "p2p",
-            SymbolName: "Test Item",
+            SymbolName: symbolName ?? string.Empty,
             Price: 1000m,
             Volume: 5m,
             Timestamp: DateTimeOffset.UtcNow,
@@ -97,6 +101,70 @@ public sealed class TradeConsumerTests
         // Assert
         _dbContext.Symbols.Count().ShouldBe(1);
         _dbContext.Trades.Count().ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Handle_WhenSameMessageDeliveredTwice_ShouldStoreSingleTrade()
+    {
+        // Arrange
+        await _dbContext.SeedData(_market);
+        var consumer = CreateConsumer();
+        var message = CreateMessage("1234");
+
+        // Act
+        await consumer.Handle(message, CancellationToken.None);
+        await consumer.Handle(message, CancellationToken.None);
+
+        // Assert
+        _dbContext.Symbols.Count().ShouldBe(1);
+        _dbContext.Trades.Count().ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Handle_WhenSymbolNameChanges_ShouldUpdateSymbol()
+    {
+        // Arrange
+        await _dbContext.SeedData(_market);
+
+        var existing = Symbol.Create(
+            new Id<Symbol>(Guid.NewGuid().ToString()),
+            "1234",
+            "p2p",
+            "Old Name",
+            _market.Id,
+            new AdditionalFields()
+        );
+
+        await _dbContext.SeedData(existing);
+
+        var consumer = CreateConsumer();
+        var message = CreateMessage("1234", "New Name");
+
+        // Act
+        await consumer.Handle(message, CancellationToken.None);
+
+        // Assert
+        var saved = await _dbContext.Symbols.SingleAsync();
+        saved.Name.ShouldBe("New Name");
+        _dbContext.Trades.Count().ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Handle_WhenDistinctTradeIdsAtSameTick_ShouldStoreBothTrades()
+    {
+        // Arrange
+        await _dbContext.SeedData(_market);
+        var consumer = CreateConsumer();
+        var first = CreateMessage("1234");
+        var second = first with { TradeId = new Id<Trade>(Guid.NewGuid().ToString()) };
+
+        // Act
+        await consumer.Handle(first, CancellationToken.None);
+        await consumer.Handle(second, CancellationToken.None);
+
+        // Assert
+        _dbContext.Symbols.Count().ShouldBe(1);
+        _dbContext.Trades.Count().ShouldBe(2);
     }
 
     [Fact]

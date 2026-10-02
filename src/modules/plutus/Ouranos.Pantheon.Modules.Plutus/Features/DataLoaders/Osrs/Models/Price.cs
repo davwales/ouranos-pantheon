@@ -1,8 +1,8 @@
 namespace Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Osrs.Models;
 
 public sealed record Price(
-    int? AvgHighPrice,
-    int HighPriceVolume,
-    int? AvgLowPrice,
-    int LowPriceVolume
+    long? AvgHighPrice,
+    long HighPriceVolume,
+    long? AvgLowPrice,
+    long LowPriceVolume
 );

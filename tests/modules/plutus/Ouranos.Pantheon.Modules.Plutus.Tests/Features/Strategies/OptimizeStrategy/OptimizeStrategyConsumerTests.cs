@@ -343,6 +343,65 @@ public sealed class OptimizeStrategyConsumerTests
     }
 
     [Fact]
+    public async Task Handle_WhenCancelledMidRun_ShouldMarkBacktestFailedNotCancelled()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var strategy = Strategy.Create(
+            marketId,
+            "Test Strategy",
+            null,
+            new TradingConfiguration(),
+            StrategyTestFactory.DefaultWeights(),
+            null
+        );
+        var backtest = Backtest.Create(
+            strategy.Id,
+            marketId,
+            DateTimeOffset.UtcNow.AddDays(-5),
+            DateTimeOffset.UtcNow.AddDays(-1),
+            10000m,
+            strategy
+        );
+
+        await using (var dbContext = await _dbContextFactory.CreateDbContextAsync())
+        {
+            await dbContext.SeedData(strategy);
+            await dbContext.SeedData(backtest);
+        }
+
+        _dataService
+            .LoadDataAsync(
+                marketId,
+                Arg.Any<DateTimeOffset>(),
+                Arg.Any<DateTimeOffset>(),
+                Arg.Any<CancellationToken>(),
+                Arg.Any<int>()
+            )
+            .Returns(
+                Task.FromException<BacktestData>(
+                    new OperationCanceledException("Simulated shutdown")
+                )
+            );
+
+        var consumer = CreateConsumer();
+        var message = new OptimizeStrategyMessage(backtest.Id, Generations: 1, PopulationSize: 2);
+
+        // Act
+        var act = async () => await consumer.Handle(message, CancellationToken.None);
+
+        // Assert
+        await act.ShouldNotThrowAsync();
+
+        await using (var dbContext = await _dbContextFactory.CreateDbContextAsync())
+        {
+            var savedBacktest = await dbContext.Backtests.FirstAsync(b => b.Id == backtest.Id);
+            savedBacktest.Status.ShouldBe(BacktestStatus.Failed);
+            savedBacktest.ErrorMessage!.ShouldContain("Interrupted");
+        }
+    }
+
+    [Fact]
     public async Task Handle_WhenBacktestAlreadyClaimed_ShouldSkipProcessing()
     {
         // Arrange

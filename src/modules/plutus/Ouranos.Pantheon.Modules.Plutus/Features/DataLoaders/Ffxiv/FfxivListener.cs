@@ -3,6 +3,8 @@ using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Ffxiv.Messages;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Ffxiv.XivApi;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Shared;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.Listeners;
 using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.WebSocketClients;
 
@@ -69,6 +71,7 @@ public sealed class FfxivListener : IListener<SaleMessage>
                 if (item is not null)
                 {
                     return new TradeMessage(
+                        DatabaseExtensions.CreateId<Trade>(),
                         Producer.Ffxiv,
                         itemCode,
                         sale.IsHighQuality ? hqCode : nqCode,

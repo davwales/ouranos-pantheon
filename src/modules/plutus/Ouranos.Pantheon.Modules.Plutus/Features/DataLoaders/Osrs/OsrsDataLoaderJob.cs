@@ -7,6 +7,8 @@ using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.DataLoaders;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Ouranos.Pantheon.Modules.Shared.Contract.Utilities;
 using TickerQ.Utilities.Base;
 
@@ -156,6 +158,7 @@ public sealed class OsrsDataLoaderJob
             {
                 trades.Add(
                     new TradeMessage(
+                        DatabaseExtensions.CreateId<Trade>(),
                         Producer.Osrs,
                         mapping.Id.ToString(),
                         subcode,
@@ -172,6 +175,7 @@ public sealed class OsrsDataLoaderJob
             {
                 trades.Add(
                     new TradeMessage(
+                        DatabaseExtensions.CreateId<Trade>(),
                         Producer.Osrs,
                         mapping.Id.ToString(),
                         subcode,
