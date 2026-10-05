@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using OpenAI;
@@ -20,6 +21,7 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
     private static readonly JsonSerializerOptions SnakeCaseOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+        UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
     };
 
     public OuranosMachineLearningClient(
