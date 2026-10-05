@@ -122,12 +122,14 @@ public sealed class ForecastGeneratorJobTests
         run.ModelName.ShouldBe("plutus-forecasting-v1");
 
         _dbContext.ForecastRecords.Count().ShouldBe(7);
+        var targetBase = new DateTimeOffset(DateTimeOffset.UtcNow.UtcDateTime.Date, TimeSpan.Zero);
         foreach (var record in _dbContext.ForecastRecords)
         {
             record.RunId.ShouldBe(run.Id);
             record.ModelName.ShouldBe("plutus-forecasting-v1");
             record.SymbolId.ShouldBe(symbol.Id);
             record.MarketId.ShouldBe(market.Id);
+            record.TargetAt.ShouldBe(targetBase.AddDays(record.HorizonDays - 1));
         }
     }
 
@@ -236,6 +238,32 @@ public sealed class ForecastGeneratorJobTests
         _dbContext.Forecasts.ShouldContain(f => f.Id != existingForecast.Id);
     }
 
+    [Fact]
+    public async Task Execute_WhenModelReturnsNonPositivePredictedPrice_ShouldSkipSymbol()
+    {
+        // Arrange
+        var market = CreateMarket(isForecastingEnabled: true);
+        var symbol = CreateSymbol(market.Id);
+        var trades = CreateTrades(symbol.Id);
+
+        await _dbContext.SeedData(market);
+        await _dbContext.SeedData(symbol);
+        await _dbContext.SeedData(trades);
+
+        var mlPredictions = CreateMlPredictions(count: 7);
+        mlPredictions[3] = mlPredictions[3] with { AveragePrice = 0m };
+        _mlClient
+            .GetPlutusForecasts(Arg.Any<GetPlutusForecastsRequest>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new List<List<MlForecastPoint>> { mlPredictions }));
+
+        // Act
+        await _job.Execute(_tickerFunctionContext, CancellationToken.None);
+
+        // Assert
+        _dbContext.Forecasts.Count().ShouldBe(0);
+        _dbContext.ForecastRecords.Count().ShouldBe(0);
+    }
+
     private static Market CreateMarket(bool isForecastingEnabled)
     {
         return Market.Create(
@@ -260,6 +288,7 @@ public sealed class ForecastGeneratorJobTests
 
     private static Trade[] CreateTrades(Id<Symbol> symbolId)
     {
+        var targetBase = new DateTimeOffset(DateTimeOffset.UtcNow.UtcDateTime.Date, TimeSpan.Zero);
         return
         [
             .. Enumerable
@@ -270,7 +299,7 @@ public sealed class ForecastGeneratorJobTests
                         symbolId,
                         100m + i,
                         10m,
-                        DateTimeOffset.UtcNow.AddDays(-(29 - i))
+                        targetBase.AddDays(-(30 - i))
                     )
                 ),
         ];

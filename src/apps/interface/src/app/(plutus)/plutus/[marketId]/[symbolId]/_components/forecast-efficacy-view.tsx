@@ -22,7 +22,7 @@ function biasColor(bias: number | null): string {
 function formatBias(bias: number | null): string {
   if (bias === null) return "-";
   const prefix = bias > 0 ? "+" : "";
-  return `${prefix}${bias.toFixed(2)}`;
+  return `${prefix}${abbreviateNumber(bias, 2)}`;
 }
 
 function Metric({

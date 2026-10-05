@@ -73,7 +73,7 @@ public sealed class ForecastGeneratorJob
         foreach (var batch in symbols.Batch(_options.Value.Forecasting.BatchSize))
         {
             var batchList = batch.ToList();
-            var inputs = await LoadBatchInputsAsync(batchList, ct);
+            var inputs = await LoadBatchInputsAsync(batchList, targetBase, ct);
 
             if (inputs.Count == 0)
             {
@@ -94,6 +94,16 @@ public sealed class ForecastGeneratorJob
             for (var i = 0; i < inputs.Count; i++)
             {
                 var input = inputs[i];
+
+                if (predictions[i].Any(p => p.AveragePrice <= 0))
+                {
+                    _logger.LogWarning(
+                        "Skipping forecast for symbol '{symbolId}' because the model returned a non-positive predicted price.",
+                        input.Symbol.Id
+                    );
+                    continue;
+                }
+
                 var latestMlPoint = input.HistoricalPoints[^1];
 
                 forecasts.Add(
@@ -131,7 +141,7 @@ public sealed class ForecastGeneratorJob
                             input.Symbol.Id,
                             _options.Value.Forecasting.ModelName,
                             generatedAt,
-                            targetBase.AddDays(h + 1),
+                            targetBase.AddDays(h),
                             h + 1,
                             new ForecastPoint(p.AveragePrice, p.MinPrice, p.MaxPrice, p.Volume)
                         )
@@ -170,16 +180,19 @@ public sealed class ForecastGeneratorJob
 
     private async Task<List<SymbolForecastInput>> LoadBatchInputsAsync(
         List<Symbol> symbols,
+        DateTimeOffset targetBase,
         CancellationToken ct
     )
     {
         var historyDays = _options.Value.Forecasting.HistoryDays;
-        var since = DateTimeOffset.UtcNow - TimeSpan.FromDays(historyDays);
+        var since = targetBase.AddDays(-historyDays);
         var symbolIds = symbols.Select(s => s.Id).ToHashSet();
 
         var bucketedTrades = await _dbContext
             .Trades.AsNoTracking()
-            .Where(t => symbolIds.Contains(t.SymbolId) && t.Timestamp >= since)
+            .Where(t =>
+                symbolIds.Contains(t.SymbolId) && t.Timestamp >= since && t.Timestamp < targetBase
+            )
             .GroupBy(t => new
             {
                 t.SymbolId,
