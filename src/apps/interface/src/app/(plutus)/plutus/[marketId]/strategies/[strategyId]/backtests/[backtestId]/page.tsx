@@ -1,15 +1,14 @@
 "use client";
 
 import { Typography } from "@/components/shared/typography";
+import { useBreadcrumbLabel } from "@/components/shared/breadcrumbs";
 import { useApi } from "@/hooks/use-api";
 import useInterval from "@/hooks/use-interval";
 import { type BacktestDetail, type StrategyDetail, plutusApi } from "@/lib/api/plutus";
-import { BacktestDetailSkeleton } from "@/app/(plutus)/plutus/[marketId]/backtests/_components/backtest-detail-skeleton";
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
+import { BacktestDetailSkeleton } from "@/app/(plutus)/plutus/[marketId]/strategies/[strategyId]/backtests/_components/backtest-detail-skeleton";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
-import { RunBacktestDialog } from "../../strategies/_components/run-backtest-dialog";
+import { RunBacktestDialog } from "../../../_components/run-backtest-dialog";
 import { BacktestMetricsGrid } from "../_components/backtest-metrics-grid";
 import { BacktestPositionsTable } from "../_components/backtest-positions-table";
 import { BacktestResultHeader } from "../_components/backtest-result-header";
@@ -21,8 +20,9 @@ import { OptimizedConfigurationCard } from "../_components/optimized-configurati
 import { NotFoundCard } from "@/components/shared/not-found-card";
 
 export default function BacktestDetailPage() {
-  const { marketId, backtestId } = useParams<{
+  const { marketId, strategyId, backtestId } = useParams<{
     marketId: string;
+    strategyId: string;
     backtestId: string;
   }>();
   const router = useRouter();
@@ -33,6 +33,11 @@ export default function BacktestDetailPage() {
   );
 
   const backtest = backtestState.data;
+  useBreadcrumbLabel(
+    backtestId,
+    backtest && (backtest.kind === "Optimization" ? "Optimization" : "Backtest"),
+    backtestState.status === "error",
+  );
 
   const isPolling =
     backtest?.status === "Pending" || backtest?.status === "Running";
@@ -43,15 +48,13 @@ export default function BacktestDetailPage() {
 
   useInterval(pollBacktest, isPolling ? 3000 : null);
 
-  const [strategyState] = useApi<StrategyDetail | null>(
-    () =>
-      backtest?.strategyId
-        ? plutusApi.getStrategy(backtest.strategyId)
-        : Promise.resolve(null),
-    [backtest?.strategyId],
+  const [strategyState] = useApi<StrategyDetail>(
+    () => plutusApi.getStrategy(strategyId),
+    [strategyId],
   );
+  useBreadcrumbLabel(strategyId, strategyState.data?.name, strategyState.status === "error");
 
-  const strategy = strategyState.data ?? undefined;
+  const strategy = strategyState.data;
 
   const [isCancelling, setIsCancelling] = useState(false);
   const [isRestarting, setIsRestarting] = useState(false);
@@ -90,17 +93,13 @@ export default function BacktestDetailPage() {
   }, [backtestId, reexecute]);
 
   const handleApplyToStrategy = useCallback(async () => {
-    if (
-      !backtest?.strategyId ||
-      !backtest.results ||
-      !strategy
-    ) {
+    if (!backtest?.results || !strategy) {
       return;
     }
     setIsApplyingConfig(true);
     setActionError(null);
     try {
-      await plutusApi.updateStrategy(backtest.strategyId, {
+      await plutusApi.updateStrategy(strategyId, {
         name: strategy.name,
         description: strategy.description ?? null,
         tradingConfiguration:
@@ -111,7 +110,7 @@ export default function BacktestDetailPage() {
         thresholds:
           backtest.results.optimizedThresholds ?? strategy.thresholds,
       });
-      router.push(`/plutus/${marketId}/strategies/${backtest.strategyId}`);
+      router.push(`/plutus/${marketId}/strategies/${strategyId}`);
     } catch (err) {
       setActionError(
         err instanceof Error ? err.message : "Failed to apply configuration",
@@ -119,16 +118,10 @@ export default function BacktestDetailPage() {
     } finally {
       setIsApplyingConfig(false);
     }
-  }, [
-    backtest?.strategyId,
-    backtest?.results,
-    strategy,
-    marketId,
-    router,
-  ]);
+  }, [backtest?.results, strategy, strategyId, marketId, router]);
 
   if (backtestState.status === "error") {
-    return <NotFoundCard title="Backtest not found" message="This backtest doesn\u0027t exist or has been removed." backHref={`/plutus/${marketId}/strategies`} backLabel="Back to Strategies" />;
+    return <NotFoundCard title="Backtest not found" message="This backtest doesn\u0027t exist or has been removed." backHref={`/plutus/${marketId}/strategies/${strategyId}/backtests`} backLabel="Back to Backtests" />;
   }
 
   if (!backtest) {
@@ -139,14 +132,6 @@ export default function BacktestDetailPage() {
 
   return (
     <div className="space-y-6">
-      <Link
-        href={`/plutus/${marketId}/strategies/${backtest.strategyId}/backtests`}
-        className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="w-4 h-4 mr-1" />
-        Back to Backtests
-      </Link>
-
       {actionError && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
           {actionError}
@@ -222,7 +207,7 @@ export default function BacktestDetailPage() {
       )}
 
       <RunBacktestDialog
-        strategyId={backtest.strategyId}
+        strategyId={strategyId}
         marketId={marketId}
         open={runAgainOpen}
         onOpenChange={setRunAgainOpen}

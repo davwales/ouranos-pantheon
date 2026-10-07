@@ -12,6 +12,7 @@ import { SignalsSection } from "./_components/signals-section";
 import { SymbolPositionsView } from "./_components/symbol-positions-view";
 
 import { PlutusState, usePlutusStore } from "@/stores/plutus-store";
+import { useBreadcrumbLabel } from "@/components/shared/breadcrumbs";
 import { useApi } from "@/hooks/use-api";
 import useInterval from "@/hooks/use-interval";
 import {
@@ -150,6 +151,7 @@ export default function SymbolDetail() {
   useInterval(() => reexecuteQuery(), 60000);
 
   const data = state.data;
+  useBreadcrumbLabel(symbolId, data?.symbol.name, state.status === "error");
 
   const formattedTrades = useMemo(
     () =>

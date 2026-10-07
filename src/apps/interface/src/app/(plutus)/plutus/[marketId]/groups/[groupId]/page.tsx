@@ -16,6 +16,7 @@ import { PlutusState, usePlutusStore } from "@/stores/plutus-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useBreadcrumbLabel } from "@/components/shared/breadcrumbs";
 import { useApi } from "@/hooks/use-api";
 import { SymbolGroupSymbol, plutusApi } from "@/lib/api/plutus";
 import { MoreHorizontal, Plus, RefreshCw, Trash2 } from "lucide-react";
@@ -52,6 +53,7 @@ export default function GroupDetailPage() {
   );
 
   const group = state.data;
+  useBreadcrumbLabel(groupId, group?.name, state.status === "error");
 
   useEffect(() => {
     if (group) {

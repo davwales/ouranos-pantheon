@@ -2,6 +2,7 @@
 
 import { StrategyDetailSkeleton } from "@/app/(plutus)/plutus/[marketId]/strategies/_components/strategy-detail-skeleton";
 import { NotFoundCard } from "@/components/shared/not-found-card";
+import { useBreadcrumbLabel } from "@/components/shared/breadcrumbs";
 import { useApi } from "@/hooks/use-api";
 import { type StrategyDetail, plutusApi } from "@/lib/api/plutus";
 import { useParams, useRouter } from "next/navigation";
@@ -23,6 +24,7 @@ export default function StrategyDetailPage() {
     () => plutusApi.getStrategy(strategyId),
     [strategyId],
   );
+  useBreadcrumbLabel(strategyId, strategy.data?.name, strategy.status === "error");
 
   const [isEditing, setIsEditing] = useState(false);
   const [toggling, setToggling] = useState(false);

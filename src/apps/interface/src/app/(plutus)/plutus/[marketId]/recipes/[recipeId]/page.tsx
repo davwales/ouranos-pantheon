@@ -7,6 +7,7 @@ import { SelectedSymbol } from "@/app/(plutus)/plutus/components/symbol-search";
 import TimeFrameSelection from "@/app/(plutus)/plutus/components/time-frame-selection";
 import { PlutusState, usePlutusStore } from "@/stores/plutus-store";
 import { Button } from "@/components/ui/button";
+import { useBreadcrumbLabel } from "@/components/shared/breadcrumbs";
 import { useApi } from "@/hooks/use-api";
 import { plutusApi } from "@/lib/api/plutus";
 import { RefreshCw } from "lucide-react";
@@ -46,6 +47,7 @@ export default function RecipeDetailPage() {
   );
 
   const recipe = state.data;
+  useBreadcrumbLabel(recipeId, recipe?.name, state.status === "error");
 
   useEffect(() => {
     if (recipe) {

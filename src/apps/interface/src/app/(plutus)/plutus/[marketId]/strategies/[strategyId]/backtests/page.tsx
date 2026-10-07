@@ -10,6 +10,7 @@ import {
 import { Typography } from "@/components/shared/typography";
 import { PlutusState, usePlutusStore } from "@/stores/plutus-store";
 import { Button } from "@/components/ui/button";
+import { useBreadcrumbLabel } from "@/components/shared/breadcrumbs";
 import { useApi } from "@/hooks/use-api";
 import {
   BacktestKind,
@@ -23,46 +24,32 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { StatusChip } from "../../../backtests/_components/status-chip";
+import { StatusChip } from "./_components/status-chip";
 
-function BacktestsBreadcrumb({
-  strategy,
+function BacktestsActions({
   marketId,
   strategyId,
   fetching,
   onRefresh,
 }: {
-  strategy: StrategyDetail | null | undefined;
   marketId: string;
   strategyId: string;
   fetching: boolean;
   onRefresh: () => void;
 }) {
   return (
-    <div className="flex items-center gap-2 justify-between">
-      <div className="flex items-center gap-2 min-w-0">
-        <Link
-          href={`/plutus/${marketId}/strategies/${strategyId}`}
-          className="text-muted-foreground hover:text-foreground hover:underline text-sm shrink-0"
-        >
-          {strategy?.name ?? "Strategy"}
-        </Link>
-        <span className="text-muted-foreground shrink-0">/</span>
-        <Typography variant="lead">Backtests</Typography>
-      </div>
-      <div className="flex items-center gap-4 shrink-0">
-        <Link href={`/plutus/${marketId}/strategies/${strategyId}`}>
-          <Button variant="link" className="flex items-end gap-0">
-            <Play className="w-4 h-4 mr-1" />
-            Run Backtest
-          </Button>
-        </Link>
-        {fetching ? (
-          <RefreshCw className="animate-spin" />
-        ) : (
-          <RefreshCw onClick={onRefresh} className="hover:cursor-pointer" />
-        )}
-      </div>
+    <div className="flex items-center gap-4 justify-end shrink-0">
+      <Link href={`/plutus/${marketId}/strategies/${strategyId}`}>
+        <Button variant="link" className="flex items-end gap-0">
+          <Play className="w-4 h-4 mr-1" />
+          Run Backtest
+        </Button>
+      </Link>
+      {fetching ? (
+        <RefreshCw className="animate-spin" />
+      ) : (
+        <RefreshCw onClick={onRefresh} className="hover:cursor-pointer" />
+      )}
     </div>
   );
 }
@@ -112,6 +99,7 @@ export default function BacktestsPage() {
     () => plutusApi.getStrategy(strategyId),
     [strategyId],
   );
+  useBreadcrumbLabel(strategyId, strategyState.data?.name, strategyState.status === "error");
 
   const [backtestsState, reexecute] = useApi(
     () =>
@@ -125,7 +113,6 @@ export default function BacktestsPage() {
     [strategyId, tableState.pagination, sortField, sortDirection, filter],
   );
 
-  const strategy = strategyState.data;
   const data = backtestsState.data;
   const fetching = backtestsState.status === "loading";
 
@@ -147,7 +134,7 @@ export default function BacktestsPage() {
         accessorFn: (row) => row.status,
         cell: ({ row, getValue }) => (
           <Link
-            href={`/plutus/${marketId}/backtests/${row.original.id}`}
+            href={`/plutus/${marketId}/strategies/${strategyId}/backtests/${row.original.id}`}
             className="hover:underline"
           >
             <StatusChip status={getValue<BacktestStatus>()} />
@@ -162,7 +149,7 @@ export default function BacktestsPage() {
           const kind = getValue<BacktestKind>();
           return (
             <Link
-              href={`/plutus/${marketId}/backtests/${row.original.id}`}
+              href={`/plutus/${marketId}/strategies/${strategyId}/backtests/${row.original.id}`}
               className="hover:underline"
             >
               <span
@@ -241,13 +228,12 @@ export default function BacktestsPage() {
           new Date(getValue<string>()).toLocaleDateString(),
       },
     ],
-    [marketId],
+    [marketId, strategyId],
   );
 
   return (
     <div>
-      <BacktestsBreadcrumb
-        strategy={strategy}
+      <BacktestsActions
         marketId={marketId}
         strategyId={strategyId}
         fetching={fetching}

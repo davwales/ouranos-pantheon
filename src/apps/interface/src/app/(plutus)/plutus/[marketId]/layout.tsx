@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { BreadcrumbLabel } from "@/components/shared/breadcrumbs";
 import { plutusApi } from "@/lib/api/plutus";
 import { ApiError } from "@/lib/api-client";
 
@@ -11,8 +12,9 @@ export default async function MarketLayout({
 }) {
   const { marketId } = await params;
 
+  let market;
   try {
-    await plutusApi.getMarket(marketId);
+    market = await plutusApi.getMarket(marketId);
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) {
       notFound();
@@ -20,7 +22,12 @@ export default async function MarketLayout({
     throw error;
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <BreadcrumbLabel segment={marketId} label={market.name} />
+      {children}
+    </>
+  );
 }
 
 export const dynamic = "force-dynamic";
