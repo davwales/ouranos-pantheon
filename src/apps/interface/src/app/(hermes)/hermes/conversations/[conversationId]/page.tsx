@@ -7,6 +7,7 @@ import {
   TraitFormInput,
 } from "@/app/(hermes)/hermes/types";
 import { MoveToFolderDropdown } from "@/app/(hermes)/hermes/conversations/components/move-to-folder-dropdown";
+import { useBreadcrumbLabel } from "@/components/shared/breadcrumbs";
 import { useApi } from "@/hooks/use-api";
 import { hermesApi } from "@/lib/api/hermes";
 import { useParams, useRouter } from "next/navigation";
@@ -37,6 +38,7 @@ export default function ResumeConversationPage() {
     () => hermesApi.getConversation(conversationId),
     [conversationId],
   );
+  useBreadcrumbLabel(conversationId, state.data?.name, state.status === "error");
   const [foldersState] = useApi(() => hermesApi.getAllFolders());
 
   const saved = state.data;

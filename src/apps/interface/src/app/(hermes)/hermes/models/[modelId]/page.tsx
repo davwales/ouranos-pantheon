@@ -4,6 +4,7 @@ import { Typography } from "@/components/shared/typography";
 import { ModelForm } from "@/app/(hermes)/hermes/components/model-form";
 import { ModelFormInput } from "@/app/(hermes)/hermes/types";
 import { Badge } from "@/components/ui/badge";
+import { useBreadcrumbLabel } from "@/components/shared/breadcrumbs";
 import { useApi } from "@/hooks/use-api";
 import { hermesApi } from "@/lib/api/hermes";
 import { AlertTriangle } from "lucide-react";
@@ -19,6 +20,7 @@ export default function EditModelPage() {
   const [model, setModel] = useState<ModelFormInput>();
 
   const [state] = useApi(() => hermesApi.getModel(modelId), [modelId]);
+  useBreadcrumbLabel(modelId, state.data?.name, state.status === "error");
 
   const fetching = state.status === "loading";
 

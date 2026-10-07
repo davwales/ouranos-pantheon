@@ -3,6 +3,7 @@
 import { Typography } from "@/components/shared/typography";
 import { TraitForm } from "@/app/(hermes)/hermes/components/trait-form";
 import { TraitFormInput } from "@/app/(hermes)/hermes/types";
+import { useBreadcrumbLabel } from "@/components/shared/breadcrumbs";
 import { useApi } from "@/hooks/use-api";
 import { hermesApi } from "@/lib/api/hermes";
 import { useParams, useRouter } from "next/navigation";
@@ -17,6 +18,7 @@ export default function EditTraitPage() {
   const [trait, setTrait] = useState<TraitFormInput>();
 
   const [state] = useApi(() => hermesApi.getTrait(traitId), [traitId]);
+  useBreadcrumbLabel(traitId, state.data?.name, state.status === "error");
 
   const fetching = state.status === "loading";
 

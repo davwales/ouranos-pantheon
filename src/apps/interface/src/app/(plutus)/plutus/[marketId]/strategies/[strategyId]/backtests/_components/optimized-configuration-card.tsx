@@ -10,11 +10,11 @@ import {
 } from "@/components/ui/card";
 import { type BacktestResults } from "@/lib/api/plutus";
 import { ArrowRight } from "lucide-react";
-import { ConfigRow } from "../../strategies/_components/config-row";
+import { ConfigRow } from "../../../_components/config-row";
 import {
   INPUT_KIND_LABELS,
   THRESHOLD_FIELDS,
-} from "../../strategies/_components/strategy-constants";
+} from "../../../_components/strategy-constants";
 
 export function OptimizedConfigurationCard({
   results,

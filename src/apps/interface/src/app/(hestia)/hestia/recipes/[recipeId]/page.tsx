@@ -1,6 +1,7 @@
 "use client";
 
 import { NotFoundCard } from "@/components/shared/not-found-card";
+import { useBreadcrumbLabel } from "@/components/shared/breadcrumbs";
 import { useApi } from "@/hooks/use-api";
 import useInterval from "@/hooks/use-interval";
 import { hestiaApi } from "@/lib/api/hestia";
@@ -20,6 +21,7 @@ export default function RecipeDetailPage() {
     () => hestiaApi.getRecipe(recipeId),
     [recipeId],
   );
+  useBreadcrumbLabel(recipeId, recipe.data?.title, recipe.status === "error");
   const [shoppingList, reexecuteShoppingList] = useApi(
     () => hestiaApi.getShoppingList(),
     [],

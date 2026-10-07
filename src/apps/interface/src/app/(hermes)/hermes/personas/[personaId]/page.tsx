@@ -3,6 +3,7 @@
 import { Typography } from "@/components/shared/typography";
 import { PersonaForm } from "@/app/(hermes)/hermes/components/persona-form";
 import { PersonaFormInput } from "@/app/(hermes)/hermes/types";
+import { useBreadcrumbLabel } from "@/components/shared/breadcrumbs";
 import { useApi } from "@/hooks/use-api";
 import { hermesApi } from "@/lib/api/hermes";
 import { useParams, useRouter } from "next/navigation";
@@ -17,6 +18,7 @@ export default function EditPersonaPage() {
   const [persona, setPersona] = useState<PersonaFormInput>();
 
   const [state] = useApi(() => hermesApi.getPersona(personaId), [personaId]);
+  useBreadcrumbLabel(personaId, state.data?.name, state.status === "error");
 
   const fetching = state.status === "loading";
 
