@@ -96,7 +96,7 @@ body, linking Loki entries to spans (see 8.14).
 - camelCase JSON with `JsonStringEnumConverter` and `IdJsonConverterFactory` for `Id<T>`
 - Async operations return **202 Accepted** with a `Location` header pointing at the
   resource to poll (backtests, optimization, restart, recipe import and re-import)
-- Streaming endpoints (Hermes completion and compaction) use Server-Sent Events
+- Streaming endpoints (Hermes completion and compaction, module assistants) use Server-Sent Events
 - Query binding is case-insensitive to input record property names
 - Bruno collection in
   `bruno/` documents every endpoint's concrete shape
@@ -137,6 +137,33 @@ surfaced to health checks through `WebSocketHealthState`.
 
 Outbound streaming uses `SseWriter` (kernel) with `IPantheonStreamHandler`; Hermes uses it
 for chat completion and conversation compaction.
+
+### AI Assistants
+
+Modules embed contextual chat assistants through the kernel's `Application/Assistants/`
+package. The governing rule: prompts, model settings, and domain data stay on the server -
+the client sends only conversation history and typed context references, so no endpoint
+becomes an open proxy to the inference host and answers are grounded in the module's own
+store rather than client-supplied data.
+
+- **`PantheonAssistant<TContext>`** is an `IPantheonStreamHandler` base class. Subclasses
+  implement only `BuildPromptAsync(TContext, CancellationToken)`, loading their own domain
+  data and returning an `AssistantPrompt` (model, system prompt, temperature, max tokens)
+  from module options. The base class streams through `IOuranosMachineLearningClient`.
+- **`MapAssistant<TContext>(pattern)`** (`API/AssistantEndpointExtensions`) maps a POST
+  route binding `AssistantCompletionInput<TContext>` (`messages` + typed `context`),
+  dispatches via `IMessageBus`, and writes events with `SseWriter`.
+- **Event contract**: `$type`-discriminated `content`, `usage`, `error`, `done`. Errors
+  before the first event surface as ProblemDetails; LLM failures mid-stream become an
+  `error` event with a generic message.
+- **Stateless history**: the client resends the whole conversation on every turn; nothing
+  is persisted.
+- **Frontend**: `components/shared/ai-assistant/` provides `AssistantPanel` (bottom drawer
+  on mobile, right sheet on desktop) and `useAssistantChat`, configured with an endpoint,
+  a context object, and a title.
+
+Current assistants: Hestia `KitchenAssistant` (`/api/hestia/recipes/assistant/completions/stream`,
+context `{ recipeId }`).
 
 ## 8.12 Health Checks
 

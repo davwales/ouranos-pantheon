@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Security.AntiSSRF;
+using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.AskKitchenAssistant;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.CreateRecipe;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetAllRecipes;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetRecipe;
@@ -89,6 +90,7 @@ public sealed class HestiaModule : IPantheonModule
         RevertRecipeEndpoint.Map(app);
         ImportRecipeEndpoint.Map(app);
         ReimportRecipeEndpoint.Map(app);
+        AskKitchenAssistantEndpoint.Map(app);
         GetShoppingListEndpoint.Map(app);
         ToggleRecipeEndpoint.Map(app);
         AddManualItemEndpoint.Map(app);

@@ -201,7 +201,8 @@ public sealed class RecipeExtractorTests
         // Arrange
         var options = Options.Create(
             new HestiaOptions(
-                new RecipeImportOptions(ModelName: string.Empty, MaxTokens: 4096, Temperature: 0f)
+                new RecipeImportOptions(ModelName: string.Empty, MaxTokens: 4096, Temperature: 0f),
+                new KitchenAssistantOptions()
             )
         );
         var extractor = new RecipeExtractor(

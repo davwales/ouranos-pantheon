@@ -1,0 +1,33 @@
+info:
+  name: Ask Kitchen Assistant
+  type: http
+  seq: 9
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/hestia/recipes/assistant/completions/stream"
+  params:
+    - name: ""
+      value: ""
+      type: query
+  body:
+    type: json
+    data: |-
+      {
+        "messages": [
+          {
+            "role": "User",
+            "content": "Can I make this recipe dairy-free?"
+          }
+        ],
+        "context": {
+          "recipeId": "{{HESTIA_RECIPE_ID}}"
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
