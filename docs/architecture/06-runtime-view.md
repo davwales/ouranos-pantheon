@@ -187,6 +187,28 @@ sequenceDiagram
 The server is stateless with respect to chat history: the client sends the whole
 conversation on every request, and the handler persists only the newest turn.
 
+### Module assistants
+
+Module assistants (e.g. the Hestia Kitchen Assistant) follow the same stateless pattern
+but own their prompt: the client sends only messages and a typed context reference.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant UI as AssistantPanel
+    participant EP as MapAssistant endpoint
+    participant A as KitchenAssistant (PantheonAssistant)
+    participant ES as Marten (schema hestia)
+    participant ML as OuranosMl (OpenAI-compatible)
+
+    UI ->> EP: POST messages + context { recipeId }
+    EP ->> A: AssistantCompletionInput<KitchenAssistantContext>
+    A ->> ES: load Recipe
+    A ->> ML: chat completion stream (recipe system prompt + messages)
+    ML -->> A: streamed tokens
+    A -->> UI: SSE content … usage, done (or error)
+```
+
 ## 6.8 Observability at Runtime
 
 Health is exposed via centrally registered checks (Postgres, RabbitMQ, OuranosMl, WebSocket
