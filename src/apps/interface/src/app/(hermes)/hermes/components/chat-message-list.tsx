@@ -4,7 +4,7 @@ import {
   MenuAction,
   ResponsiveContextMenu,
 } from "@/components/shared/responsive-context-menu";
-import { Message } from "@/app/(hermes)/hermes/components/message";
+import { Message } from "@/components/shared/ai-assistant/message";
 import SummaryView from "@/app/(hermes)/hermes/components/summary-view";
 import { MessageInput, Role } from "@/lib/api/hermes";
 import { Pencil, RotateCcw, Trash } from "lucide-react";
@@ -125,7 +125,7 @@ export default function ChatMessageList({
                         ? "You"
                         : personaName
                   }
-                  role={msg.role === Role.Summary ? Role.Assistant : msg.role}
+                  role={msg.role === Role.User ? "User" : "Assistant"}
                   content={msg.content}
                   isStreaming={isGenerating && index === messages.length - 1}
                   className="w-fit text-left wrap-break-word"

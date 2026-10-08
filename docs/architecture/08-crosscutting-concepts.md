@@ -158,9 +158,12 @@ store rather than client-supplied data.
   `error` event with a generic message.
 - **Stateless history**: the client resends the whole conversation on every turn; nothing
   is persisted.
-- **Frontend**: `components/shared/ai-assistant/` provides `AssistantPanel` (bottom drawer
-  on mobile, right sheet on desktop) and `useAssistantChat`, configured with an endpoint,
-  a context object, and a title.
+- **Frontend**: `components/shared/ai-assistant/` provides `AssistantButton` (a top-bar
+  icon button), `AssistantPanel` (bottom drawer on mobile, non-modal right sheet on desktop
+  so the page stays usable) and `useAssistantChat`, configured with a typed
+  `AssistantEndpoint<TContext>` (which binds the context type to the endpoint), a context
+  object, and a title. Pages place their assistant button in the nav bar through
+  `useNavBarActions`, only while the assistant is usable.
 
 Current assistants: Hestia `KitchenAssistant` (`/api/hestia/recipes/assistant/completions/stream`,
 context `{ recipeId }`).

@@ -138,3 +138,7 @@ export type UpdateCheckedItemsInput = {
 export type UpdateCheckedItemsResponse = {
   checkedItemIds: string[];
 };
+
+export type KitchenAssistantContext = {
+  recipeId: string;
+};

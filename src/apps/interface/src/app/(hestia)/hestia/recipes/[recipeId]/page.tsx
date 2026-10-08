@@ -2,12 +2,14 @@
 
 import { NotFoundCard } from "@/components/shared/not-found-card";
 import { useBreadcrumbLabel } from "@/components/shared/breadcrumbs";
+import { useNavBarActions } from "@/components/shared/nav-bar-actions-context";
 import { useApi } from "@/hooks/use-api";
 import useInterval from "@/hooks/use-interval";
 import { hestiaApi } from "@/lib/api/hestia";
 import type { Recipe } from "@/lib/api/hestia-types";
 import { useParams } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { KitchenAssistantButton } from "./_components/kitchen-assistant-button";
 import { RecipeDetailSkeleton } from "./_components/recipe-detail-skeleton";
 import { RecipeEditView } from "./_components/recipe-edit-view";
 import { RecipeHeader } from "./_components/recipe-header";
@@ -36,6 +38,18 @@ export default function RecipeDetailPage() {
     useCallback(() => reexecute(), [reexecute]),
     isImporting ? 3000 : null,
   );
+
+  const { setActions, clearActions } = useNavBarActions();
+  const isAssistantAvailable =
+    recipe.data?.importStatus === "Imported" ||
+    recipe.data?.importStatus === "None";
+  useEffect(() => {
+    if (!isAssistantAvailable) {
+      return;
+    }
+    setActions(<KitchenAssistantButton key={recipeId} recipeId={recipeId} />);
+    return () => clearActions();
+  }, [isAssistantAvailable, recipeId, setActions, clearActions]);
 
   const handleReimport = async () => {
     setIsReimporting(true);
