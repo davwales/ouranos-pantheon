@@ -1,9 +1,10 @@
 import { Typography } from "@/components/shared/typography";
-import { LoadingSegment } from "@/app/(hermes)/hermes/components/segments/loading-segment";
-import { TextSegment } from "@/app/(hermes)/hermes/components/segments/text-segment";
-import { ThinkingSegment } from "@/app/(hermes)/hermes/components/segments/thinking-segment";
-import { parseSegments } from "@/app/(hermes)/hermes/utils/parse-segments";
-import { Role } from "@/lib/api/hermes";
+import { LoadingSegment } from "@/components/shared/ai-assistant/segments/loading-segment";
+import { TextSegment } from "@/components/shared/ai-assistant/segments/text-segment";
+import { ThinkingSegment } from "@/components/shared/ai-assistant/segments/thinking-segment";
+import { parseSegments } from "@/components/shared/ai-assistant/parse-segments";
+import { type AssistantRole } from "@/lib/api/assistant";
+import { cn } from "@/lib/utils";
 
 export function Message({
   name,
@@ -13,22 +14,18 @@ export function Message({
   ...props
 }: React.ComponentProps<"div"> & {
   name: string;
-  role: Role;
+  role: AssistantRole;
   content: string;
   isStreaming?: boolean;
 }) {
-  const segments =
-    role === Role.User
-      ? [{ type: "text" as const, content }]
-      : parseSegments(content, isStreaming);
+  const isUser = role === "User";
+  const segments = isUser
+    ? [{ type: "text" as const, content }]
+    : parseSegments(content, isStreaming);
 
   return (
     <div {...props}>
-      <div
-        className={`py-2 px-4 border rounded-2xl ${
-          role == Role.User ? "bg-accent/30" : ""
-        }`}
-      >
+      <div className={cn("py-2 px-4 border rounded-2xl", isUser && "bg-accent/30")}>
         {segments.map((segment, i) => {
           switch (segment.type) {
             case "loading":
@@ -50,7 +47,7 @@ export function Message({
       </div>
       <Typography
         variant="muted"
-        className={`mx-2.5 my-1 ${role == Role.User && "text-right"}`}
+        className={cn("mx-2.5 my-1", isUser && "text-right")}
       >
         {name}
       </Typography>

@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  NavBarActionsProvider,
+  useNavBarActions,
+} from "@/components/shared/nav-bar-actions-context";
 import { ApiError } from "@/lib/api-client";
 import { hestiaApi } from "@/lib/api/hestia";
 import type { Recipe } from "@/lib/api/hestia-types";
@@ -10,6 +14,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/lib/api/hestia", () => ({
+  KITCHEN_ASSISTANT_ENDPOINT: "/api/hestia/recipes/assistant/completions/stream",
   hestiaApi: {
     getRecipe: vi.fn(),
     updateRecipe: vi.fn(),
@@ -47,6 +52,20 @@ vi.mock("@/components/shared/responsive-dialog/responsive-dialog", () => ({
     </div>
   ),
 }));
+
+function NavBarActionsOutlet() {
+  const { actions } = useNavBarActions();
+  return <div data-testid="nav-bar-actions">{actions}</div>;
+}
+
+function renderWithNavBar() {
+  return render(
+    <NavBarActionsProvider>
+      <NavBarActionsOutlet />
+      <RecipeDetailPage />
+    </NavBarActionsProvider>,
+  );
+}
 
 function mockRecipe(overrides: Partial<Recipe> = {}): Recipe {
   return {
@@ -161,6 +180,30 @@ describe("RecipeDetailPage", () => {
         screen.getByText(/no version history yet/i),
       ).toBeInTheDocument();
     });
+  });
+
+  it("offers the kitchen assistant in the nav bar for an imported recipe", async () => {
+    vi.mocked(hestiaApi.getRecipe).mockResolvedValueOnce(mockRecipe());
+
+    renderWithNavBar();
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Open Kitchen Assistant" }),
+    );
+
+    expect(await screen.findByText("Kitchen Assistant", { selector: "h2" })).toBeInTheDocument();
+  });
+
+  it("does not offer the kitchen assistant while the recipe is importing", async () => {
+    vi.mocked(hestiaApi.getRecipe).mockResolvedValueOnce(
+      mockRecipe({ importStatus: "Importing" }),
+    );
+
+    renderWithNavBar();
+
+    expect(await screen.findByText("Importing recipe...")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Open Kitchen Assistant" }),
+    ).not.toBeInTheDocument();
   });
 
   it("renders the importing view while the recipe is being imported", async () => {

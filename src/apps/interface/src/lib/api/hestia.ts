@@ -1,5 +1,6 @@
 import { api } from "@/lib/api-client";
 import type { PagedResponse } from "@/lib/api-client";
+import type { AssistantEndpoint } from "@/lib/api/assistant";
 import type {
   AddManualItemInput,
   ConsolidatedIngredient,
@@ -8,6 +9,7 @@ import type {
   DeleteManualItemResponse,
   ImportRecipeInput,
   ImportRecipeResponse,
+  KitchenAssistantContext,
   ManualItem,
   Recipe,
   RecipeHistoryResponse,
@@ -32,6 +34,7 @@ export type {
   ImportRecipeInput,
   ImportRecipeResponse,
   Ingredient,
+  KitchenAssistantContext,
   ManualItem,
   Recipe,
   RecipeHistoryEvent,
@@ -57,6 +60,9 @@ export type GetAllRecipesParams = {
   sortDirection?: string;
   filter?: string[];
 };
+
+export const KITCHEN_ASSISTANT_ENDPOINT: AssistantEndpoint<KitchenAssistantContext> =
+  "/api/hestia/recipes/assistant/completions/stream";
 
 export const hestiaApi = {
   getAllRecipes: (params?: GetAllRecipesParams) =>
