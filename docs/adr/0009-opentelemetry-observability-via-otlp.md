@@ -41,7 +41,7 @@ up Grafana Alloy, which receives OTLP and forwards it into the Grafana stack.
 Adopt the **OpenTelemetry .NET SDK**, registered centrally in `AddOuranosCore` via
 `AddCoreObservabilityModule` (Shared module, `Infra/Observability/`), exporting
 **traces and metrics** over OTLP to the Grafana stack. The detailed state lives in
-[arc42 §8.13](../architecture/08-crosscutting-concepts.md#813-observability-opentelemetry);
+[arc42 §8.14](../architecture/08-crosscutting-concepts.md#814-observability-opentelemetry);
 the decisions recorded here are:
 
 1. **Library instrumentation first.** Coverage follows a preference order: library

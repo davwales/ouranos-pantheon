@@ -26,6 +26,8 @@ or deleted. Superseded records stay in place and point at their replacement.
 | [0008](0008-no-authentication-single-user.md) | No authentication for the single-user, trusted-network deployment | Accepted |
 | [0009](0009-opentelemetry-observability-via-otlp.md) | OpenTelemetry traces and metrics exported to Grafana via OTLP | Accepted |
 | [0010](0010-server-side-output-caching-for-dashboard-aggregates.md) | Server-side output caching for hot dashboard aggregates | Accepted |
+| [0011](0011-container-images-on-ghcr.md) | Container images on GHCR, deployment owned by the infrastructure repo | Accepted |
+| [0012](0012-feature-flags-via-flagsmith.md) | Feature flags via Flagsmith; public mode as data-exposure control | Accepted |
 
 ## Process
 
