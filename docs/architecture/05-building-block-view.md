@@ -20,16 +20,16 @@ graph TB
                 hFeats["AI chat slices"]
             end
             subgraph hestia["Hestia module"]
-                heFeats["Recipe slices"]
+                heFeats["Recipe & shopping-list slices"]
             end
-            subgraph shared["Shared module"]
+            subgraph shared["Shared (two assemblies)"]
                 kernel["Shared.Contract kernel:<br/>abstractions · websockets · ML client · GA engine"]
-                sFeats["Health · Notifications ·<br/>Flagsmith / RabbitMq / TickerQ wiring"]
+                sFeats["Shared module: health · TickerQ store ·<br/>observability · Flagsmith / RabbitMq wiring"]
             end
         end
     end
 
-    pages -- "REST (api-client)" --> gateway
+    pages -- "REST + SSE (from the browser)" --> gateway
 ```
 
 The diagram shows containment only; the feature slices inside each module are enumerated
@@ -52,9 +52,9 @@ private static readonly IReadOnlyList<IPantheonModule> Modules =
 ```
 
 - `AddOuranosCore(builder.Configuration, Modules)`: configures Serilog, REST conventions,
-  Flagsmith, Wolverine (with handler discovery across **all** module assemblies and each
-  module's `ConfigureWolverine` hook), TickerQ, and shared health checks; then calls
-  `Build` on every module.
+  Flagsmith, observability, Wolverine (with handler discovery across **all** module
+  assemblies and each module's `ConfigureWolverine` hook), TickerQ, caching, and shared
+  health checks; then calls `Build` on every module.
 - `UseOuranosCore(app, Modules)`: migrates the TickerQ store, maps every module's
   endpoints (`MapEndpoints`), and runs each module's async configuration (`Configure`).
 
@@ -77,8 +77,8 @@ system.
 
 ### How building blocks relate
 
-Slices never reference each other, so the static dependency graph between feature folders
-is nearly empty by design. Within a module, all coupling is data coupling: async
+Slices never call each other's handlers, so the static dependency graph between feature
+folders is nearly empty by design. Within a module, all coupling is data coupling: async
 handoffs travel over RabbitMQ (`plutus.trade`, `plutus.backtest`, `hestia.recipe`; see
 [Section 8](08-crosscutting-concepts.md)), and everything else is one slice reading what
 another has written to the module's own Postgres schema. Across modules the only shared
@@ -99,17 +99,17 @@ and US equities.
 
 | Building block | Responsibility |
 |----------------|----------------|
-| `Features/DataLoaders/` | Ingestion: FFXIV and Stocks WebSocket listeners, OSRS poller, XIVAPI item sync; the trade consumer upserts symbols and writes trades |
+| `Features/DataLoaders/` | Ingestion: FFXIV and Stocks WebSocket listeners, OSRS poller job, and a cached XIVAPI item lookup; the trade consumer upserts symbols and writes trades |
 | `Features/Markets/` | Market catalog CRUD; markets are the root entity the rest of the module is scoped to |
 | `Features/Symbols/` | Symbol read access: list/get symbols (upserted by ingestion) and today's per-symbol summary statistics |
 | `Features/Trades/` | Trade queries and aggregate views over the TimescaleDB hypertable and continuous aggregates: all trades, per-symbol/market/recipe trade aggregates, market overview, volume heatmap (see [Section 8](08-crosscutting-concepts.md)) |
-| `Features/Signals/` | Signal computation via pluggable registered signal computers covering technical and game-economy indicators; scheduling in [Section 6](06-runtime-view.md) |
-| `Features/Strategies/` | Configurable strategies (input weights, buy/sell thresholds), backtesting as a step pipeline, genetic-algorithm optimization over multiple objectives; the backtest lifecycle (run, optimize, get, cancel, restart) lives here too |
-| `Features/Forecasts/` | ML price forecasts via OuranosMl and forecast efficacy evaluation |
-| `Features/Positions/` | Positions and signal-driven recommendations |
+| `Features/Signals/` | Scheduled signal computation via pluggable signal computers covering technical and game-economy indicators, plus signal queries; scheduling in [Section 6](06-runtime-view.md) |
+| `Features/Strategies/` | Configurable strategies (input weights, buy/sell thresholds), backtesting as a step pipeline, genetic-algorithm optimization over multiple objectives, and strategy-driven recommendations; the backtest lifecycle (run, optimize, get, cancel, restart) lives here too |
+| `Features/Forecasts/` | Daily ML price forecasts via OuranosMl, forecast queries, and on-demand forecast efficacy |
+| `Features/Positions/` | CRUD for user-recorded positions, including closing and linking a sell to its buy |
 | `Features/SymbolGroups/` | CRUD for named groupings of symbols within a market |
 | `Features/Recipes/` | CRUD for crafting recipes (input/output components, cost) that back the per-recipe trade aggregation and cost analysis |
-| `Shared/Domain/` | Market, Symbol, Trade, Recipe, Signal, Strategy, Backtest, Position, Forecast entities |
+| `Shared/Domain/` | Market, Symbol, SymbolGroup, Trade, Recipe, Signal, Strategy, Backtest, Position, Forecast entities |
 
 Interfaces: REST routes per feature in `bruno/ouranos-pantheon/collections/API/Plutus/`.
 Async work runs over RabbitMQ: trades (`plutus.trade`) and backtest/optimize runs
@@ -121,24 +121,25 @@ Chat interface over locally hosted LLMs.
 
 | Building block | Responsibility |
 |----------------|----------------|
-| `Features/Conversations/` | Conversation and message persistence, streaming chat completions via OuranosMl |
+| `Features/Conversations/` | Conversation and message persistence; streaming chat completions and conversation compaction (SSE) via OuranosMl |
 | `Features/Personas/` | Reusable assistant personality definitions applied to conversations |
 | `Features/Traits/` | Attachable traits that merge with the conversation's persona at prompt-build time |
-| `Features/Models/` | Model configuration CRUD and available-model sync from OuranosMl |
+| `Features/Models/` | Model configuration CRUD and the hourly available-model sync from OuranosMl |
 | `Features/Folders/` | Folders for organizing conversations |
 
-Interfaces: REST routes in `bruno/ouranos-pantheon/collections/API/Hermes/`; no async
-messaging.
+Interfaces: REST and SSE routes in `bruno/ouranos-pantheon/collections/API/Hermes/`; no
+async messaging.
 
 ## 5.5 Whitebox: Hestia (recipes)
 
-Recipe management with event-sourced persistence.
+Recipe management with event-sourced recipes and a document-stored shopping list.
 
 | Building block | Responsibility |
 |----------------|----------------|
-| `Features/Recipes/` | Recipe CRUD with full version history and revert, persisted as a Marten event stream per recipe |
+| `Features/Recipes/` | Recipe create/update with full version history and revert (no delete), persisted as a Marten event stream per recipe |
 | `Features/Recipes/ImportRecipe/` | Async import: enqueue an import request → scrape the page (JSON-LD, anti-SSRF-guarded) → LLM-normalize via OuranosMl structured output → append events |
-| `Features/ShoppingLists/` | Shopping list items derived from recipes |
+| `Features/Recipes/ReimportRecipe/` | Re-runs the import for an existing recipe |
+| `Features/ShoppingLists/` | Shopping list built from selected recipes plus manual items; stored as a single Marten document, not event-sourced |
 
 Interfaces: REST routes in `bruno/ouranos-pantheon/collections/API/Hestia/`. The async
 import handoff is the `hestia.recipe` exchange (see
@@ -146,20 +147,21 @@ import handoff is the `hestia.recipe` exchange (see
 
 ## 5.6 Whitebox: Shared
 
-Two distinct things live under `src/modules/shared/`:
+Two distinct assemblies live under `src/modules/shared/`:
 
 **`Ouranos.Pantheon.Modules.Shared.Contract`** is the shared kernel referenced by every
-module: `Id<T>`, `BaseEntity`, `BaseEventSourcedEntity`, `IPantheonHandler`, the common
-query contract (paging/sorting/filtering), the backtest step pipeline abstractions, the
-`WebSocketWorker` infrastructure, the OuranosMl client, the genetic-algorithm engine, the
-`PostgresModule`/`OuranosDbContext` persistence core, and the Marten registration helper
-(`AddCoreMartenModule`, used by Hestia). See
-[Section 8](08-crosscutting-concepts.md).
+module: `IPantheonModule`, `Id<T>`, `BaseEntity`, `BaseEventSourcedEntity`,
+`IPantheonHandler`, the common query contract (paging/sorting/filtering), the backtest
+step pipeline abstractions, `SseWriter`, the `WebSocketWorker` infrastructure, the
+OuranosMl client, the genetic-algorithm engine, the `PostgresModule`/`OuranosDbContext`
+persistence core, and the Marten registration helper (`AddCoreMartenModule`, used by
+Hestia). See [Section 8](08-crosscutting-concepts.md).
 
 **`Ouranos.Pantheon.Modules.Shared`** is a runnable module (the first entry in the
-gateway's module array) that owns: the health endpoint + checks (Postgres, RabbitMQ,
-OuranosMl, WebSocket, TickerQ), the TickerQ store migrations and dashboard, notification
-entities and dispatch job, and Flagsmith/RabbitMQ option wiring.
+gateway's module array, referenced only by the gateway) that owns: core composition
+(`CoreExtensions`, above), the health endpoint + checks (Postgres, RabbitMQ, OuranosMl,
+WebSocket, TickerQ), the TickerQ store migrations and dashboard, observability,
+notification entities and dispatch job, and Flagsmith/RabbitMQ option wiring.
 
 ## 5.7 Tests
 

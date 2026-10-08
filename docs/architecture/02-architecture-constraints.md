@@ -32,8 +32,10 @@ Enforced by CI and repository hooks (see `.github/workflows/ci.yml`, `automation
 - `.editorconfig` style rules (file-scoped namespaces, braces, sealed types; CI fails on warnings via `dotnet format`)
 - CSharpier formatting checked pre-commit; `dotnet format style` / `dotnet format analyzers` verified with no changes
 - Pre-push `dotnet build`
-- Test suite with an 85% line coverage gate
+- Frontend `npm run lint` and `npm run build` in CI
+- .NET test suite with an 85% line coverage gate
 - Images published from `main` only, via GitHub Actions to GHCR using `GITHUB_TOKEN`
+  ([ADR 0011](../adr/0011-container-images-on-ghcr.md))
 
 ## 2.4 Conventions and Tooling
 

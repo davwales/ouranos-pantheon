@@ -20,11 +20,12 @@ This project exists to demonstrate modern .NET architecture patterns in a practi
 
 Aggregates trade data from multiple external sources and provides tools for analysis and decision-making.
 
-- Real-time trade ingestion from FFXIV (Universalis), OSRS (Wiki API), and US stock markets (Alpaca)
+- Real-time trade ingestion from FFXIV (Universalis) and US stock markets (Alpaca), plus OSRS (Wiki API) polled every 5 minutes
 - Trade snapshots and aggregates across configurable time frames, backed by TimescaleDB continuous aggregates
 - Quantitative investment signal analysis (RSI, Bollinger Bands, Moving Average Crossover, Volume Anomaly, and more)
 - ML-powered price forecasting via an external inference service
-- Configurable trading strategies with backtesting and multi-objective optimization, plus signal-driven position recommendations
+- Configurable trading strategies with backtesting and multi-objective optimization, plus signal-driven recommendations
+- Manually recorded positions
 - Crafting recipe cost analysis for game economies
 
 ### Hermes - AI Chat Assistants
@@ -33,7 +34,8 @@ A chat interface for locally-hosted LLMs with configurable assistant profiles.
 
 - Create and manage assistant personas (model, system prompt, temperature, etc.) with reusable traits
 - Organize conversations into folders and switch between configured LLM models
-- Streaming chat completions
+- Streaming chat completions, automatic conversation naming, and compaction of long chats into a summary
+- A public mode (feature flag) that hides non-public data, for demos
 
 ### Hestia - Recipe Management
 
@@ -41,31 +43,34 @@ Manages cooking recipes with full version history and automated import from the 
 
 - Create and edit recipes (ingredients, steps, notes) with complete change history and one-click revert to any previous version
 - Import recipes from recipe websites asynchronously - page metadata is scraped and normalized by a locally-hosted LLM
-- Event-sourced persistence using Marten on PostgreSQL
+- A shopping list built from selected recipes plus manual items
+- Event-sourced recipe persistence using Marten on PostgreSQL
 
 ## Architecture
 
-Ouranos Pantheon is a **modular monolith** - a single deployable application composed of isolated domain modules. Each module enforces its own boundaries and communicates through explicit contracts rather than shared state.
+Ouranos Pantheon is a **modular monolith** - a single deployable application composed of isolated domain modules. Modules do not reference or call each other; each depends only on the shared kernel and owns its own database schema.
 
 Full architecture documentation following the [arc42](https://arc42.org) template lives in [`docs/architecture/`](docs/architecture/README.md), with decision records in [`docs/adr/`](docs/adr/README.md).
 
 **Patterns:** Vertical Slice Architecture · Domain-Driven Design · Message-driven data pipelines · Event Sourcing (Marten)
 
-**Module contract:** Every module implements `IPantheonModule`, which provides hooks for service registration, middleware configuration, and endpoint mapping. The gateway composes all registered modules at startup.
+**Module contract:** Every module implements `IPantheonModule`, which provides hooks for service registration, startup configuration, endpoint mapping, and message routing. The gateway composes all registered modules at startup.
 
 **Data flow:** External APIs → Data loader workers → RabbitMQ → Consumer → PostgreSQL → REST API → Next.js dashboard
 
-**Persistence:** Modules own their storage - Plutus uses EF Core with TimescaleDB hypertables and continuous aggregates, while Hestia uses event sourcing with Marten.
+**Persistence:** Modules own their storage - Plutus and Hermes use EF Core (Plutus with TimescaleDB hypertables and continuous aggregates), while Hestia uses Marten (event-sourced recipes, a document for the shopping list).
 
 ## Tech Stack
 
-| Category   | Technologies                                        |
-| ---------- | --------------------------------------------------- |
-| Backend    | .NET, ASP.NET Core Minimal APIs, EF Core, Marten    |
-| Frontend   | Next.js, React, TypeScript, Tailwind CSS, Zustand   |
-| Data       | PostgreSQL (TimescaleDB)                            |
-| Messaging  | RabbitMQ, Wolverine                                 |
-| Scheduling | TickerQ                                             |
+| Category      | Technologies                                                |
+| ------------- | ----------------------------------------------------------- |
+| Backend       | .NET, ASP.NET Core Minimal APIs, Wolverine, EF Core, Marten |
+| Frontend      | Next.js, React, TypeScript, Tailwind CSS, Zustand           |
+| Data          | PostgreSQL (TimescaleDB)                                    |
+| Messaging     | RabbitMQ, Wolverine                                         |
+| Scheduling    | TickerQ                                                     |
+| Feature flags | Flagsmith                                                   |
+| Observability | Serilog, OpenTelemetry                                      |
 
 ## Project Structure
 
@@ -77,35 +82,56 @@ src/
   modules/
     plutus/           # Market data, trades, signals, forecasts, strategies
     hermes/           # AI chat assistants
-    hestia/           # Recipes with version history and web import
-    shared/           # Cross-cutting infrastructure
-tests/
-automation/           # Git hooks (pre-commit formatting, pre-push build)
+    hestia/           # Recipes with version history, web import, shopping list
+    shared/           # Shared kernel (Shared.Contract) and cross-cutting infrastructure (Shared)
+tests/                # Unit tests mirroring src/
+docs/                 # arc42 architecture documentation and ADRs
+bruno/                # Bruno API request collection
+automation/           # Git hooks (pre-commit format check, pre-push build), format.sh
 ```
+
+The pre-commit hook only *checks* formatting; run `automation/format.sh` to apply it.
 
 ## Getting Started
 
 ### Prerequisites
 
-- .NET SDK
+- .NET SDK (see `global.json`)
 - Node.js
-- Infrastructure: PostgreSQL, RabbitMQ - the recommended setup is the Docker Compose configuration in the [ouranos-infrastructure](https://github.com/davwales/ouranos-infrastructure) repository
+- Infrastructure: PostgreSQL with the TimescaleDB extension, RabbitMQ, Flagsmith - the recommended setup is the Docker Compose configuration in the [ouranos-infrastructure](https://github.com/davwales/ouranos-infrastructure) repository
+- For Hermes and Hestia AI features: an OpenAI-compatible inference service (OuranosMl)
+
+### Configuration
+
+Local settings go in `src/apps/gateway/Ouranos.Pantheon.Apps.Gateway/appsettings.Development.json` (gitignored); see `appsettings.json` in the same folder for every key under the `Ouranos:` root.
+
+> **Every data loader defaults to enabled.** Set `Ouranos:Plutus:DataLoaders:<Ffxiv|Osrs|Stocks|Consumer>:IsEnabled` to `false` for any loader you do not want running against live external APIs.
 
 ### Backend
 
 ```bash
 dotnet restore
 dotnet build Ouranos.Pantheon.sln
+dotnet run --project src/apps/gateway/Ouranos.Pantheon.Apps.Gateway   # http profile, http://localhost:8300
 ```
 
-Override connection strings and API keys in the relevant `appsettings.json` files before running.
+Migrations for every module are applied automatically at startup.
 
 ### Frontend
 
 ```bash
 cd src/apps/interface
-npm install
-npm run dev
+npm ci
+npm run dev        # http://localhost:3000
+```
+
+The dashboard calls the gateway at `NEXT_PUBLIC_API_BASE` / `NEXT_PUBLIC_API_HOST` and falls back to `http://localhost:8300`.
+
+### Tests
+
+```bash
+dotnet test                               # backend (CI enforces 85% line coverage)
+cd src/apps/interface && npm run test     # frontend (Vitest)
 ```
 
 ## Screenshots

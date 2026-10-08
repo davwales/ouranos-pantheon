@@ -8,14 +8,16 @@ decision record under [`docs/adr/`](../adr/README.md).
 |----------|------------------------|-----|
 | **Modular monolith**: one deployable, domain-isolated modules behind an `IPantheonModule` contract | Extensibility (Q1): adding a domain is a module + one registration line. Operational simplicity (Q3): no distributed-systems overhead. Design clarity (Q2): boundaries are explicit and inspectable | [0001](../adr/0001-modular-monolith-over-microservices.md) |
 | **Vertical Slice Architecture + DDD inside each module** | Design clarity (Q2): every feature is readable end-to-end (handler → endpoint → schemas); DDD aggregates keep invariants with the data | [0002](../adr/0002-vertical-slice-architecture-with-wolverine.md) |
-| **Wolverine-mediated in-process dispatch** | Design clarity (Q2): slices never reference each other; discovery is convention-based over handler markers | [0002](../adr/0002-vertical-slice-architecture-with-wolverine.md) |
+| **Wolverine-mediated in-process dispatch** | Design clarity (Q2): slices never call each other's handlers; discovery is convention-based over handler markers | [0002](../adr/0002-vertical-slice-architecture-with-wolverine.md) |
 | **Schema-per-module on one PostgreSQL instance** | Extensibility (Q1) + simplicity (Q3): modules cannot leak into each other's data, yet there is only one database to run | [0003](../adr/0003-schema-per-module-database-isolation.md) |
-| **Polyglot persistence on one engine**: TimescaleDB hypertables/continuous aggregates for time-series (Plutus), Marten event sourcing for Hestia | Each module picks the persistence style its domain needs without adding infrastructure (Q3) | [0004](../adr/0004-polyglot-persistence-on-postgresql.md) |
-| **Message-driven ingestion & async work**: Wolverine + RabbitMQ with per-message exchanges, queues, and DLQs | Durability and back-pressure for high-volume trade data; 202-accept-then-poll for long-running backtests | [0005](../adr/0005-wolverine-rabbitmq-for-async-pipelines.md) |
+| **Polyglot persistence on one engine**: TimescaleDB hypertables/continuous aggregates for time-series (Plutus), Marten event sourcing for Hestia recipes | Each module picks the persistence style its domain needs without adding infrastructure (Q3); aggregates keep large trade reads cheap (Q4) | [0004](../adr/0004-polyglot-persistence-on-postgresql.md) |
+| **Message-driven ingestion & async work**: Wolverine + RabbitMQ with per-message exchanges, queues, and DLQs | Durability and back-pressure for high-volume trade data; 202-accept-then-poll for long-running backtests, optimizations, and recipe imports | [0005](../adr/0005-wolverine-rabbitmq-for-async-pipelines.md) |
 | **In-process scheduling via TickerQ** | Simplicity (Q3): recurring jobs live with the code and keep their state in the same Postgres | [0006](../adr/0006-tickerq-for-scheduling.md) |
-| **Server-side output caching for hot dashboard aggregates** | Scalability (Q4): repeated reads of expensive aggregate endpoints collapse into one computation per TTL window instead of one Postgres scan per request | [0010](../adr/0010-server-side-output-caching-for-dashboard-aggregates.md) |
-| **Self-hosted AI inference (OuranosMl) behind one client** | All three modules get LLM/ML capability through a single OpenAI-compatible dependency; no cloud AI cost or lock-in | [0007](../adr/0007-self-hosted-llm-inference-via-ouranosml.md) |
+| **Self-hosted AI inference (OuranosMl) behind one client** | All three modules get LLM/ML capability through a single OuranosMl dependency; no cloud AI cost or lock-in | [0007](../adr/0007-self-hosted-llm-inference-via-ouranosml.md) |
 | **No authentication, trusted-network posture** | Simplicity (Q3) for a single-user, private-network system | [0008](../adr/0008-no-authentication-single-user.md) |
+| **Server-side output caching for hot dashboard aggregates** | Responsiveness (Q4): repeated reads of expensive aggregate endpoints collapse into one computation per TTL window instead of one Postgres scan per request | [0010](../adr/0010-server-side-output-caching-for-dashboard-aggregates.md) |
+| **Container images on GHCR; deployment owned by the infrastructure repo** | Simplicity (Q3): merging to `main` produces the release artifacts; this repo carries no host topology | [0011](../adr/0011-container-images-on-ghcr.md) |
+| **Runtime feature flags via Flagsmith** (Hermes public mode) | Lets the owner limit what an unauthenticated viewer sees without a redeploy, within the no-auth posture of 0008 | [0012](../adr/0012-feature-flags-via-flagsmith.md) |
 
 ## 4.1 The Module Contract in One Picture
 
@@ -24,13 +26,13 @@ graph LR
     G["Gateway<br/>composition root"]
 
     subgraph modules["IPantheonModule implementations"]
-        M1["Shared"]
+        M1["Shared module<br/>(Modules.Shared)"]
         M2["Hermes"]
         M3["Plutus"]
         M4["Hestia"]
     end
 
-    K[["Shared kernel"]]
+    K[["Shared.Contract kernel"]]
 
     G -- references all, composes --> modules
     M1 --> K
@@ -38,10 +40,15 @@ graph LR
     M3 --> K
     M4 --> K
     M2 x--x M3
+    M2 x--x M4
+    M3 x--x M4
 ```
 
-The crossed line is the system's most important structural rule: **modules do not
-reference each other**, and they share only the kernel ([Section 5](05-building-block-view.md)).
+The crossed lines are the system's most important structural rule: **domain modules do
+not reference each other**. They share only the `Shared.Contract` kernel. The Shared
+*module* is a separate assembly that plugs in core infrastructure (health, TickerQ store,
+observability, Flagsmith); only the gateway references it
+([Section 5](05-building-block-view.md#56-whitebox-shared)).
 
 ## 4.2 Trade-Offs Accepted
 

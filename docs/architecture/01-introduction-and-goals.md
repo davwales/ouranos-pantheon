@@ -5,8 +5,8 @@
 Ouranos Pantheon is an **extensible modular monolith** for centralized personal services.
 It aggregates and analyzes market data across game economies and financial markets
 (FFXIV, OSRS, US equities; **Plutus**), provides configurable AI chat assistants over
-locally hosted LLMs (**Hermes**), and manages recipes with version history and automated
-web import (**Hestia**).
+locally hosted LLMs (**Hermes**), and manages recipes with version history, automated
+web import, and a shopping list (**Hestia**).
 
 Beyond its day-to-day utility, the project exists to demonstrate modern .NET
 architecture patterns in a real application: Vertical Slice
@@ -25,6 +25,7 @@ These quality goals are ranked; they drive the strategy in [Section 4](04-soluti
 | Q1 | **Extensibility**: a new domain is a new module, not a change to existing modules | The platform is designed to grow, module by module |
 | Q2 | **Design clarity**: patterns are idiomatic, explainable, and traceable to rationale | Core project purpose as a portfolio showcase |
 | Q3 | **Operational simplicity**: one deployable, one database engine, one broker, self-hosted | Single-operator constraint ([Section 2](02-architecture-constraints.md)) |
+| Q4 | **Responsiveness**: dashboard and API reads stay interactive at homelab data volumes (millions of trades) | Plutus data grows continuously; TimescaleDB aggregates and output caching ([ADR 0010](../adr/0010-server-side-output-caching-for-dashboard-aggregates.md)) keep reads fast |
 
 ## 1.3 Stakeholders
 
