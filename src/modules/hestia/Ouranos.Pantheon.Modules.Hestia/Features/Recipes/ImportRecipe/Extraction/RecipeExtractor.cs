@@ -79,17 +79,13 @@ public sealed class RecipeExtractor(
             return null;
         }
 
-        List<MessageDto> messages =
-        [
-            new(SystemPrompt, RoleDto.System),
-            new(recipeJsonLd, RoleDto.User),
-        ];
-
-        var result = await _mlClient.GenerateStructuredChatCompletionAsync<ExtractedRecipe>(
+        var result = await _mlClient.GenerateStructuredResponseAsync<ExtractedRecipe>(
             model,
-            messages,
+            SystemPrompt,
+            [new MessageDto(recipeJsonLd, RoleDto.User)],
             _options.Value.RecipeImport.Temperature,
             _options.Value.RecipeImport.MaxTokens,
+            _options.Value.RecipeImport.ReasoningEffort,
             cancellationToken
         );
 

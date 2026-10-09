@@ -33,6 +33,11 @@ Run **OuranosMl** as the single inference service. The shared kernel provides on
 all modules. Hermes syncs the model catalog hourly; Hestia uses structured output for
 recipe normalization; Plutus calls the dedicated forecasting endpoint. This enables a centralized location for all AI related features, including custom models like `plutus-forecasting-v1`.
 
+Update (2026-10-09): module assistants and Hestia structured output moved from Chat
+Completions to OuranosMl's OpenAI Responses API (`POST /responses`), which streams reasoning
+as typed events and accepts a per-request reasoning effort. Hermes stays on Chat Completions
+because it relies on `frequency_penalty`, which the Responses API lacks.
+
 ## Consequences
 
 - All AI features degrade together if the inference host is offline, surfaced by the

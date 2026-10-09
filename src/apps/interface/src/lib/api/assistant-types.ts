@@ -15,6 +15,7 @@ export type AssistantCompletionInput<TContext> = {
 };
 
 export type AssistantEvent =
+  | { $type: "reasoning"; content: string }
   | { $type: "content"; content: string }
   | {
       $type: "usage";

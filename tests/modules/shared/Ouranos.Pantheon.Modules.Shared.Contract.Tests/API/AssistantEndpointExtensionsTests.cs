@@ -15,6 +15,7 @@ public sealed class AssistantEndpointExtensionsTests
     private static async IAsyncEnumerable<AssistantEvent> CreateEvents()
     {
         await Task.Yield();
+        yield return new AssistantReasoningEvent("Hmm");
         yield return new AssistantContentEvent("Hello");
         yield return new AssistantDoneEvent();
     }
@@ -74,7 +75,8 @@ public sealed class AssistantEndpointExtensionsTests
         using var reader = new StreamReader(httpContext.Response.Body);
         var output = await reader.ReadToEndAsync();
         output.ShouldBe(
-            "data: {\"$type\":\"content\",\"content\":\"Hello\"}\n\n"
+            "data: {\"$type\":\"reasoning\",\"content\":\"Hmm\"}\n\n"
+                + "data: {\"$type\":\"content\",\"content\":\"Hello\"}\n\n"
                 + "data: {\"$type\":\"done\"}\n\n"
         );
     }

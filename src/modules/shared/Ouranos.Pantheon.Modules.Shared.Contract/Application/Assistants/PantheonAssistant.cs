@@ -63,16 +63,19 @@ public abstract class PantheonAssistant<TContext>(
     )
     {
         await using var stream = _mlClient
-            .StreamChatCompletionAsync(
+            .StreamResponseAsync(
                 prompt.ModelIdentifier,
-                ComposeMessages(prompt, messages),
+                prompt.SystemPrompt,
+                [.. messages.Select(m => new MessageDto(m.Content, MapRole(m.Role)))],
                 prompt.Temperature,
                 prompt.MaxTokens,
-                cancellationToken: cancellationToken
+                prompt.ReasoningEffort,
+                cancellationToken
             )
             .GetAsyncEnumerator(cancellationToken);
 
         ChatCompletionUsage? usage = null;
+        var hasContent = false;
 
         while (true)
         {
@@ -90,12 +93,27 @@ public abstract class PantheonAssistant<TContext>(
                 break;
             }
 
+            if (stream.Current.Reasoning is { Length: > 0 } reasoning)
+            {
+                yield return new AssistantReasoningEvent(reasoning);
+            }
+
             if (stream.Current.Text is { Length: > 0 } text)
             {
+                hasContent = true;
                 yield return new AssistantContentEvent(text);
             }
 
             usage = stream.Current.Usage ?? usage;
+        }
+
+        // Reasoning counts against the output token budget, so a model can finish without ever
+        // answering; that is a failure, not an empty reply.
+        if (!hasContent)
+        {
+            _logger.LogWarning("Assistant completion finished without producing any content.");
+            yield return new AssistantErrorEvent(GenerationFailedMessage);
+            yield break;
         }
 
         if (usage is not null)
@@ -111,7 +129,7 @@ public abstract class PantheonAssistant<TContext>(
     // C# forbids yield inside a try with a catch, so stream failures are returned instead of
     // thrown and turned into an error event by the caller.
     private static async Task<(bool HasNext, Exception? Error)> TryMoveNextAsync(
-        IAsyncEnumerator<ChatCompletionChunk> stream
+        IAsyncEnumerator<ResponseStreamChunk> stream
     )
     {
         try
@@ -122,18 +140,6 @@ public abstract class PantheonAssistant<TContext>(
         {
             return (false, ex);
         }
-    }
-
-    private static List<MessageDto> ComposeMessages(
-        AssistantPrompt prompt,
-        List<AssistantMessageInput> messages
-    )
-    {
-        return
-        [
-            new(prompt.SystemPrompt, RoleDto.System),
-            .. messages.Select(m => new MessageDto(m.Content, MapRole(m.Role))),
-        ];
     }
 
     private static RoleDto MapRole(AssistantRole role)

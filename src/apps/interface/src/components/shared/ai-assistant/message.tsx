@@ -2,7 +2,10 @@ import { Typography } from "@/components/shared/typography";
 import { LoadingSegment } from "@/components/shared/ai-assistant/segments/loading-segment";
 import { TextSegment } from "@/components/shared/ai-assistant/segments/text-segment";
 import { ThinkingSegment } from "@/components/shared/ai-assistant/segments/thinking-segment";
-import { parseSegments } from "@/components/shared/ai-assistant/parse-segments";
+import {
+  parseSegments,
+  type Segment,
+} from "@/components/shared/ai-assistant/parse-segments";
 import { type AssistantRole } from "@/lib/api/assistant";
 import { cn } from "@/lib/utils";
 
@@ -10,18 +13,20 @@ export function Message({
   name,
   role,
   content,
+  reasoning = "",
   isStreaming = false,
   ...props
 }: React.ComponentProps<"div"> & {
   name: string;
   role: AssistantRole;
   content: string;
+  reasoning?: string;
   isStreaming?: boolean;
 }) {
   const isUser = role === "User";
   const segments = isUser
     ? [{ type: "text" as const, content }]
-    : parseSegments(content, isStreaming);
+    : assistantSegments(content, reasoning, isStreaming);
 
   return (
     <div {...props}>
@@ -53,4 +58,20 @@ export function Message({
       </Typography>
     </div>
   );
+}
+
+function assistantSegments(
+  content: string,
+  reasoning: string,
+  isStreaming: boolean,
+): Segment[] {
+  if (reasoning.length === 0) {
+    return parseSegments(content, isStreaming);
+  }
+
+  const isThinking = isStreaming && content.length === 0;
+  return [
+    { type: "thinking", content: reasoning, isStreaming: isThinking },
+    ...(isThinking ? [] : parseSegments(content, isStreaming)),
+  ];
 }

@@ -1,11 +1,20 @@
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
+
 namespace Ouranos.Pantheon.Modules.Hestia.Shared;
 
-public sealed record RecipeImportOptions(string ModelName, int MaxTokens, float Temperature)
+public sealed record RecipeImportOptions(
+    string ModelName,
+    int MaxTokens,
+    float Temperature,
+    ReasoningEffort ReasoningEffort
+)
 {
     public RecipeImportOptions()
         : this(
-            ModelName: "hf.co/nvidia/NVIDIA-Nemotron-3-Nano-4B-GGUF",
-            MaxTokens: 4096,
-            Temperature: 0f
+            ModelName: ModelDefaults.ModelName,
+            MaxTokens: ModelDefaults.MaxTokens,
+            Temperature: 0f,
+            ReasoningEffort: ReasoningEffort.Low
         ) { }
 }

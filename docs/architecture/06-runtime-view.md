@@ -199,14 +199,14 @@ sequenceDiagram
     participant EP as MapAssistant endpoint
     participant A as KitchenAssistant (PantheonAssistant)
     participant ES as Marten (schema hestia)
-    participant ML as OuranosMl (OpenAI-compatible)
+    participant ML as OuranosMl (Responses API)
 
     UI ->> EP: POST messages + context { recipeId }
     EP ->> A: AssistantCompletionInput<KitchenAssistantContext>
     A ->> ES: load Recipe
-    A ->> ML: chat completion stream (recipe system prompt + messages)
-    ML -->> A: streamed tokens
-    A -->> UI: SSE content … usage, done (or error)
+    A ->> ML: POST /responses stream (recipe instructions + messages, reasoning effort)
+    ML -->> A: reasoning deltas, then output text deltas, then usage
+    A -->> UI: SSE reasoning … content … usage, done (or error)
 ```
 
 ## 6.8 Observability at Runtime

@@ -148,14 +148,24 @@ store rather than client-supplied data.
 
 - **`PantheonAssistant<TContext>`** is an `IPantheonStreamHandler` base class. Subclasses
   implement only `BuildPromptAsync(TContext, CancellationToken)`, loading their own domain
-  data and returning an `AssistantPrompt` (model, system prompt, temperature, max tokens)
-  from module options. The base class streams through `IOuranosMachineLearningClient`.
+  data and returning an `AssistantPrompt` (model, system prompt, temperature, max tokens,
+  reasoning effort) from module options. The base class streams through
+  `IOuranosMachineLearningClient` over the OpenAI Responses API, sending the system prompt
+  as `instructions`.
+- **Model settings**: global defaults (model, reasoning effort, max tokens) live in
+  `ModelDefaults` (`Shared.Contract/Infra/OuranosMachineLearning/`). Each feature's options
+  record initializes from them and overrides only what it needs (e.g. recipe import uses low
+  effort). Reasoning tokens count against `max_output_tokens`, so budgets must leave room
+  for thinking.
 - **`MapAssistant<TContext>(pattern)`** (`API/AssistantEndpointExtensions`) maps a POST
   route binding `AssistantCompletionInput<TContext>` (`messages` + typed `context`),
   dispatches via `IMessageBus`, and writes events with `SseWriter`.
-- **Event contract**: `$type`-discriminated `content`, `usage`, `error`, `done`. Errors
-  before the first event surface as ProblemDetails; LLM failures mid-stream become an
-  `error` event with a generic message.
+- **Event contract**: `$type`-discriminated `reasoning`, `content`, `usage`, `error`,
+  `done`. `reasoning` carries the model's thinking (rendered as a collapsible "Thinking"
+  segment) and is never resent as history. Errors before the first event surface as
+  ProblemDetails; LLM failures mid-stream, and replies that finish without any content
+  (e.g. reasoning exhausted the token budget), become an `error` event with a generic
+  message.
 - **Stateless history**: the client resends the whole conversation on every turn; nothing
   is persisted.
 - **Frontend**: `components/shared/ai-assistant/` provides `AssistantButton` (a top-bar
