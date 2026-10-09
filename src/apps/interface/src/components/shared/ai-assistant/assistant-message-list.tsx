@@ -24,6 +24,7 @@ export function AssistantMessageList({
               name={isUser ? "You" : assistantName}
               role={message.role}
               content={message.content}
+              reasoning={message.reasoning}
               isStreaming={isStreaming && index === messages.length - 1}
               className="max-w-[90%] w-fit wrap-break-word"
             />

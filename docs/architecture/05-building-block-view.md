@@ -137,7 +137,7 @@ Recipe management with event-sourced recipes and a document-stored shopping list
 | Building block | Responsibility |
 |----------------|----------------|
 | `Features/Recipes/` | Recipe create/update with full version history and revert (no delete), persisted as a Marten event stream per recipe |
-| `Features/Recipes/ImportRecipe/` | Async import: enqueue an import request → scrape the page (JSON-LD, anti-SSRF-guarded) → LLM-normalize via OuranosMl structured output → append events |
+| `Features/Recipes/ImportRecipe/` | Async import: enqueue an import request → scrape the page (JSON-LD, anti-SSRF-guarded) → LLM-normalize via OuranosMl structured output (Responses API, low reasoning effort) → append events |
 | `Features/Recipes/ReimportRecipe/` | Re-runs the import for an existing recipe |
 | `Features/Recipes/AskKitchenAssistant/` | Streaming Kitchen Assistant (`PantheonAssistant<KitchenAssistantContext>`): loads the recipe from Marten and answers questions about it via OuranosMl |
 | `Features/ShoppingLists/` | Shopping list built from selected recipes plus manual items; stored as a single Marten document, not event-sourced |
@@ -155,7 +155,7 @@ module: `IPantheonModule`, `Id<T>`, `BaseEntity`, `BaseEventSourcedEntity`,
 `IPantheonHandler`, the common query contract (paging/sorting/filtering), the backtest
 step pipeline abstractions, `SseWriter`, the AI assistant base (`PantheonAssistant<TContext>`,
 `MapAssistant`), the `WebSocketWorker` infrastructure, the
-OuranosMl client, the genetic-algorithm engine, the `PostgresModule`/`OuranosDbContext`
+OuranosMl client and its global model defaults (`ModelDefaults`), the genetic-algorithm engine, the `PostgresModule`/`OuranosDbContext`
 persistence core, and the Marten registration helper (`AddCoreMartenModule`, used by
 Hestia). See [Section 8](08-crosscutting-concepts.md).
 

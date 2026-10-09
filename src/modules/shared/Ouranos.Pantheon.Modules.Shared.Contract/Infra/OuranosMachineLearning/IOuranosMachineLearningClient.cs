@@ -23,11 +23,23 @@ public interface IOuranosMachineLearningClient
         CancellationToken cancellationToken = default
     );
 
-    Task<T?> GenerateStructuredChatCompletionAsync<T>(
+    IAsyncEnumerable<ResponseStreamChunk> StreamResponseAsync(
         string model,
-        List<MessageDto> messages,
+        string instructions,
+        List<MessageDto> input,
         float? temperature = null,
         int? maxTokens = null,
+        ReasoningEffort? reasoningEffort = null,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<T?> GenerateStructuredResponseAsync<T>(
+        string model,
+        string instructions,
+        List<MessageDto> input,
+        float? temperature = null,
+        int? maxTokens = null,
+        ReasoningEffort? reasoningEffort = null,
         CancellationToken cancellationToken = default
     )
         where T : class;

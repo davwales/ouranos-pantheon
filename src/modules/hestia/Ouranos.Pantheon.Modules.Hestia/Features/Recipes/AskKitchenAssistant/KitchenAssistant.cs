@@ -52,7 +52,8 @@ public sealed class KitchenAssistant(
             options.ModelName,
             KitchenAssistantPrompt.Compose(recipe),
             options.Temperature,
-            options.MaxTokens
+            options.MaxTokens,
+            options.ReasoningEffort
         );
     }
 }

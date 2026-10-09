@@ -34,7 +34,7 @@ graph LR
     gateway -- "HTTPS (5-min poll)" --> osrs
     gateway -- "WebSocket (JSON)" --> alpaca
     gateway -- "HTTPS (scrape)" --> recipeSites
-    gateway -- "HTTP (OpenAI-compatible + forecast)" --> ouranosMl
+    gateway -- "HTTP (OpenAI Chat Completions + Responses, forecast)" --> ouranosMl
     gateway -- HTTP --> flagsmith
     gateway -- HTTP --> loki
     gateway -- "OTLP (gRPC)" --> alloy
@@ -63,7 +63,7 @@ Code entry points are given relative to the owning module's project folder
 | XIVAPI item data | Outbound HTTPS | CSV on `raw.githubusercontent.com`, fetched lazily and cached | FFXIV item names for incoming sale events | Plutus: `Features/DataLoaders/Ffxiv/XivApi/` |
 | OSRS Wiki API | Outbound HTTPS | JSON, polled every 5 minutes | OSRS prices and item mappings | Plutus: `Features/DataLoaders/Osrs/OsrsWikiClient.cs` |
 | Alpaca (IEX feed) | Outbound WSS | `wss://stream.data.alpaca.markets/v2/iex`, JSON | Real-time US equity trades | Plutus: `Features/DataLoaders/Stocks/` |
-| OuranosMl | Outbound HTTP | OpenAI-compatible (chat, streaming, structured output) + `POST /plutus/forecast` | LLM chat, recipe normalization, price forecasting | Shared.Contract: `Infra/OuranosMachineLearning/` |
+| OuranosMl | Outbound HTTP | OpenAI-compatible: Chat Completions (Hermes chat), Responses (module assistants with streamed reasoning, structured output) + `POST /plutus/forecast` | LLM chat, recipe normalization, price forecasting | Shared.Contract: `Infra/OuranosMachineLearning/` |
 | Flagsmith | Outbound HTTP | REST | Feature flags | Shared: `Infra/Flagsmith/` |
 | Recipe websites | Outbound HTTPS | HTML with JSON-LD metadata | Recipe import | Hestia: `Features/Recipes/ImportRecipe/Scraping/RecipeScraper.cs` |
 | Grafana Loki | Outbound HTTP | Push API | Production log sink | Gateway: `appsettings.Production.json` |

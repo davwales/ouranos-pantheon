@@ -12,7 +12,8 @@ public sealed class PantheonAssistantTests
         "test-model",
         "You are a test.",
         0.5f,
-        256
+        256,
+        ReasoningEffort.Medium
     );
 
     private readonly IOuranosMachineLearningClient _mlClient =
@@ -41,8 +42,8 @@ public sealed class PantheonAssistantTests
         }
     }
 
-    private static async IAsyncEnumerable<ChatCompletionChunk> CreateStream(
-        IEnumerable<ChatCompletionChunk> chunks,
+    private static async IAsyncEnumerable<ResponseStreamChunk> CreateStream(
+        IEnumerable<ResponseStreamChunk> chunks,
         Exception? failAfter = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default
     )
@@ -60,15 +61,16 @@ public sealed class PantheonAssistantTests
         }
     }
 
-    private void SetupStream(IAsyncEnumerable<ChatCompletionChunk> stream)
+    private void SetupStream(IAsyncEnumerable<ResponseStreamChunk> stream)
     {
         _mlClient
-            .StreamChatCompletionAsync(
+            .StreamResponseAsync(
+                Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<List<MessageDto>>(),
                 Arg.Any<float?>(),
                 Arg.Any<int?>(),
-                Arg.Any<float?>(),
+                Arg.Any<ReasoningEffort?>(),
                 Arg.Any<CancellationToken>()
             )
             .Returns(stream);
@@ -100,14 +102,15 @@ public sealed class PantheonAssistantTests
     }
 
     [Fact]
-    public async Task Handle_WhenHappyPath_ShouldStreamContentThenUsageThenDone()
+    public async Task Handle_WhenHappyPath_ShouldStreamReasoningThenContentThenUsageThenDone()
     {
         // Arrange
         SetupStream(
             CreateStream([
-                new ChatCompletionChunk("Hello", null),
-                new ChatCompletionChunk(" world", null),
-                new ChatCompletionChunk(null, new ChatCompletionUsage(10, 2, 12)),
+                new ResponseStreamChunk(null, "Thinking", null),
+                new ResponseStreamChunk("Hello", null, null),
+                new ResponseStreamChunk(" world", null, null),
+                new ResponseStreamChunk(null, null, new ChatCompletionUsage(10, 2, 12)),
             ])
         );
 
@@ -116,6 +119,7 @@ public sealed class PantheonAssistantTests
 
         // Assert
         events.ShouldBe([
+            new AssistantReasoningEvent("Thinking"),
             new AssistantContentEvent("Hello"),
             new AssistantContentEvent(" world"),
             new AssistantUsageEvent(10, 2, 12),
@@ -124,10 +128,15 @@ public sealed class PantheonAssistantTests
     }
 
     [Fact]
-    public async Task Handle_WhenChunkHasNoText_ShouldNotYieldContentEvent()
+    public async Task Handle_WhenChunkHasNoTextOrReasoning_ShouldNotYieldEvents()
     {
         // Arrange
-        SetupStream(CreateStream([new ChatCompletionChunk(string.Empty, null), new("Hi", null)]));
+        SetupStream(
+            CreateStream([
+                new ResponseStreamChunk(string.Empty, string.Empty, null),
+                new("Hi", null, null),
+            ])
+        );
 
         // Act
         var events = await CollectAsync(_assistant.Handle(CreateInput()));
@@ -137,21 +146,43 @@ public sealed class PantheonAssistantTests
     }
 
     [Fact]
-    public async Task Handle_WhenCalled_ShouldPassContextAndSendPromptWithMappedMessages()
+    public async Task Handle_WhenStreamEndsWithoutContent_ShouldYieldErrorEventInsteadOfDone()
+    {
+        // Arrange
+        SetupStream(
+            CreateStream([
+                new ResponseStreamChunk(null, "Thinking", null),
+                new ResponseStreamChunk(null, null, new ChatCompletionUsage(10, 256, 266)),
+            ])
+        );
+
+        // Act
+        var events = await CollectAsync(_assistant.Handle(CreateInput()));
+
+        // Assert
+        events.ShouldBe([
+            new AssistantReasoningEvent("Thinking"),
+            new AssistantErrorEvent(PantheonAssistant<TestContext>.GenerationFailedMessage),
+        ]);
+    }
+
+    [Fact]
+    public async Task Handle_WhenCalled_ShouldPassContextAndSendPromptAsInstructionsWithMappedMessages()
     {
         // Arrange
         List<MessageDto>? sentMessages = null;
 
         _mlClient
-            .StreamChatCompletionAsync(
+            .StreamResponseAsync(
                 "test-model",
+                "You are a test.",
                 Arg.Do<List<MessageDto>>(m => sentMessages = m),
                 0.5f,
                 256,
-                Arg.Any<float?>(),
+                ReasoningEffort.Medium,
                 Arg.Any<CancellationToken>()
             )
-            .Returns(CreateStream([]));
+            .Returns(CreateStream([new ResponseStreamChunk("Hi", null, null)]));
 
         var input = CreateInput(new TestContext("grilling"));
 
@@ -162,7 +193,6 @@ public sealed class PantheonAssistantTests
         _assistant.ReceivedContext.ShouldBe(new TestContext("grilling"));
         sentMessages.ShouldNotBeNull();
         sentMessages.ShouldBe([
-            new MessageDto("You are a test.", RoleDto.System),
             new MessageDto("Hi", RoleDto.User),
             new MessageDto("Hello!", RoleDto.Assistant),
             new MessageDto("Help me", RoleDto.User),
@@ -175,7 +205,7 @@ public sealed class PantheonAssistantTests
         // Arrange
         SetupStream(
             CreateStream(
-                [new ChatCompletionChunk("Partial", null)],
+                [new ResponseStreamChunk("Partial", null, null)],
                 new HttpRequestException("boom")
             )
         );
@@ -195,7 +225,10 @@ public sealed class PantheonAssistantTests
     {
         // Arrange
         SetupStream(
-            CreateStream([new ChatCompletionChunk("Hi", null)], new OperationCanceledException())
+            CreateStream(
+                [new ResponseStreamChunk("Hi", null, null)],
+                new OperationCanceledException()
+            )
         );
 
         // Act & Assert

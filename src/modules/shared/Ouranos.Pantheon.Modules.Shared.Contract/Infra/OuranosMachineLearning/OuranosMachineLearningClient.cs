@@ -7,8 +7,13 @@ using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using OpenAI;
 using OpenAI.Chat;
+using OpenAI.Responses;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Requests;
+
+// The OpenAI SDK marks the whole Responses API as experimental; OuranosMl serves the stable
+// subset of it that this client uses.
+#pragma warning disable OPENAI001
 
 namespace Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
 
@@ -123,36 +128,117 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
         return MapResult(result.Value);
     }
 
-    public async Task<T?> GenerateStructuredChatCompletionAsync<T>(
+    public async IAsyncEnumerable<ResponseStreamChunk> StreamResponseAsync(
         string model,
-        List<MessageDto> messages,
+        string instructions,
+        List<MessageDto> input,
         float? temperature = null,
         int? maxTokens = null,
+        ReasoningEffort? reasoningEffort = null,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
+    )
+    {
+        _logger.LogTrace(
+            "Attempting to stream response using model '{Model}' with {Count} input messages.",
+            model,
+            input.Count
+        );
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var options = BuildResponseOptions(
+            model,
+            instructions,
+            input,
+            temperature,
+            maxTokens,
+            reasoningEffort
+        );
+        options.StreamingEnabled = true;
+
+        await foreach (
+            var update in _openAiClient
+                .GetResponsesClient()
+                .CreateResponseStreamingAsync(options, cancellationToken)
+        )
+        {
+            switch (update)
+            {
+                case StreamingResponseOutputTextDeltaUpdate { Delta.Length: > 0 } text:
+                    yield return new ResponseStreamChunk(text.Delta, null, null);
+                    break;
+                case StreamingResponseReasoningSummaryTextDeltaUpdate { Delta.Length: > 0 } summary:
+                    yield return new ResponseStreamChunk(null, summary.Delta, null);
+                    break;
+                case StreamingResponseReasoningTextDeltaUpdate { Delta.Length: > 0 } reasoning:
+                    yield return new ResponseStreamChunk(null, reasoning.Delta, null);
+                    break;
+                case StreamingResponseCompletedUpdate { Response.Usage: { } usage }:
+                    yield return new ResponseStreamChunk(null, null, MapUsage(usage));
+                    break;
+                case StreamingResponseIncompleteUpdate incomplete:
+                    throw new InvalidOperationException(
+                        $"Response was incomplete: '{incomplete.Response.IncompleteStatusDetails?.Reason}'."
+                    );
+                case StreamingResponseFailedUpdate failed:
+                    throw new InvalidOperationException(
+                        $"Response failed: '{failed.Response.Error?.Message}'."
+                    );
+                case StreamingResponseErrorUpdate error:
+                    throw new InvalidOperationException(
+                        $"Response stream errored: '{error.Message}'."
+                    );
+            }
+        }
+
+        _logger.LogDebug("Successfully streamed response using model '{Model}'.", model);
+    }
+
+    public async Task<T?> GenerateStructuredResponseAsync<T>(
+        string model,
+        string instructions,
+        List<MessageDto> input,
+        float? temperature = null,
+        int? maxTokens = null,
+        ReasoningEffort? reasoningEffort = null,
         CancellationToken cancellationToken = default
     )
         where T : class
     {
         _logger.LogTrace(
-            "Attempting to complete structured chat using model '{Model}' with {Count} messages.",
+            "Attempting to generate structured response using model '{Model}' with {Count} input messages.",
             model,
-            messages.Count
+            input.Count
         );
         cancellationToken.ThrowIfCancellationRequested();
 
-        var chatClient = _openAiClient.GetChatClient(model);
-        var chatMessages = messages.Select(MapMessage).ToList();
-        var options = BuildOptions(temperature, maxTokens, null);
-        options.ResponseFormat = ChatResponseFormat.CreateJsonSchemaFormat(
-            typeof(T).Name,
-            StructuredOutputSchema.For<T>(),
-            jsonSchemaFormatDescription: null,
-            jsonSchemaIsStrict: true
+        var options = BuildResponseOptions(
+            model,
+            instructions,
+            input,
+            temperature,
+            maxTokens,
+            reasoningEffort
         );
 
-        var result = await chatClient.CompleteChatAsync(chatMessages, options, cancellationToken);
+        options.TextOptions = new ResponseTextOptions
+        {
+            TextFormat = ResponseTextFormat.CreateJsonSchemaFormat(
+                typeof(T).Name,
+                StructuredOutputSchema.For<T>(),
+                jsonSchemaFormatDescription: null,
+                jsonSchemaIsStrict: true
+            ),
+        };
 
-        _logger.LogDebug("Successfully completed structured chat using model '{Model}'.", model);
-        return StructuredCompletionParser.Parse<T>(MapResult(result.Value).Content);
+        var result = await _openAiClient
+            .GetResponsesClient()
+            .CreateResponseAsync(options, cancellationToken);
+
+        _logger.LogDebug(
+            "Successfully generated structured response using model '{Model}'.",
+            model
+        );
+        return StructuredCompletionParser.Parse<T>(result.Value.GetOutputText());
     }
 
     public async Task<List<List<ForecastPoint>>> GetPlutusForecasts(
@@ -212,6 +298,66 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
             RoleDto.Assistant => ChatMessage.CreateAssistantMessage(message.Content),
             _ => throw new InvalidOperationException($"Unknown role: {message.Role}"),
         };
+    }
+
+    private static ResponseItem MapResponseItem(MessageDto message)
+    {
+        return message.Role switch
+        {
+            RoleDto.System => ResponseItem.CreateSystemMessageItem(message.Content),
+            RoleDto.User => ResponseItem.CreateUserMessageItem(message.Content),
+            RoleDto.Assistant => ResponseItem.CreateAssistantMessageItem(message.Content),
+            _ => throw new InvalidOperationException($"Unknown role: {message.Role}"),
+        };
+    }
+
+    private static CreateResponseOptions BuildResponseOptions(
+        string model,
+        string instructions,
+        List<MessageDto> input,
+        float? temperature,
+        int? maxTokens,
+        ReasoningEffort? reasoningEffort
+    )
+    {
+        var options = new CreateResponseOptions(model, input.Select(MapResponseItem))
+        {
+            Instructions = instructions,
+            Temperature = temperature,
+            MaxOutputTokenCount = maxTokens,
+        };
+
+        if (reasoningEffort.HasValue)
+        {
+            options.ReasoningOptions = new ResponseReasoningOptions
+            {
+                ReasoningEffortLevel = MapReasoningEffort(reasoningEffort.Value),
+                ReasoningSummaryVerbosity = ResponseReasoningSummaryVerbosity.Auto,
+            };
+        }
+
+        return options;
+    }
+
+    private static ResponseReasoningEffortLevel MapReasoningEffort(ReasoningEffort effort)
+    {
+        return effort switch
+        {
+            ReasoningEffort.None => ResponseReasoningEffortLevel.None,
+            ReasoningEffort.Low => ResponseReasoningEffortLevel.Low,
+            ReasoningEffort.Medium => ResponseReasoningEffortLevel.Medium,
+            ReasoningEffort.High => ResponseReasoningEffortLevel.High,
+            _ => throw new ArgumentOutOfRangeException(nameof(effort), effort, null),
+        };
+    }
+
+    private static ChatCompletionUsage MapUsage(ResponseTokenUsage usage)
+    {
+        return new ChatCompletionUsage(
+            usage.InputTokenCount,
+            usage.OutputTokenCount,
+            usage.TotalTokenCount
+        );
     }
 
     private static ChatCompletionResult MapResult(ChatCompletion completion)

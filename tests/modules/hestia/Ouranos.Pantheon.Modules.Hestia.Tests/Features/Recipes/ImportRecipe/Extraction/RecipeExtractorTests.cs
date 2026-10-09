@@ -25,11 +25,13 @@ public sealed class RecipeExtractorTests
     private void SetupCompletion(ExtractedRecipe? recipe)
     {
         _mlClient
-            .GenerateStructuredChatCompletionAsync<ExtractedRecipe>(
+            .GenerateStructuredResponseAsync<ExtractedRecipe>(
+                Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<List<MessageDto>>(),
                 Arg.Any<float?>(),
                 Arg.Any<int?>(),
+                Arg.Any<ReasoningEffort?>(),
                 Arg.Any<CancellationToken>()
             )
             .Returns(recipe);
@@ -80,16 +82,17 @@ public sealed class RecipeExtractorTests
         // Assert
         await _mlClient
             .Received(1)
-            .GenerateStructuredChatCompletionAsync<ExtractedRecipe>(
+            .GenerateStructuredResponseAsync<ExtractedRecipe>(
                 _options.Value.RecipeImport.ModelName,
+                Arg.Is<string>(instructions => !string.IsNullOrWhiteSpace(instructions)),
                 Arg.Is<List<MessageDto>>(messages =>
-                    messages.Count == 2
-                    && messages[0].Role == RoleDto.System
-                    && messages[1].Role == RoleDto.User
-                    && messages[1].Content == TestJsonLd
+                    messages.Count == 1
+                    && messages[0].Role == RoleDto.User
+                    && messages[0].Content == TestJsonLd
                 ),
                 _options.Value.RecipeImport.Temperature,
                 _options.Value.RecipeImport.MaxTokens,
+                _options.Value.RecipeImport.ReasoningEffort,
                 Arg.Any<CancellationToken>()
             );
     }
@@ -163,9 +166,11 @@ public sealed class RecipeExtractorTests
         result.ShouldBeNull();
         await _mlClient
             .DidNotReceiveWithAnyArgs()
-            .GenerateStructuredChatCompletionAsync<ExtractedRecipe>(
+            .GenerateStructuredResponseAsync<ExtractedRecipe>(
                 default!,
                 default!,
+                default!,
+                default,
                 default,
                 default,
                 default
@@ -186,9 +191,11 @@ public sealed class RecipeExtractorTests
         result.ShouldBeNull();
         await _mlClient
             .DidNotReceiveWithAnyArgs()
-            .GenerateStructuredChatCompletionAsync<ExtractedRecipe>(
+            .GenerateStructuredResponseAsync<ExtractedRecipe>(
                 default!,
                 default!,
+                default!,
+                default,
                 default,
                 default,
                 default
@@ -201,7 +208,12 @@ public sealed class RecipeExtractorTests
         // Arrange
         var options = Options.Create(
             new HestiaOptions(
-                new RecipeImportOptions(ModelName: string.Empty, MaxTokens: 4096, Temperature: 0f),
+                new RecipeImportOptions(
+                    ModelName: string.Empty,
+                    MaxTokens: 4096,
+                    Temperature: 0f,
+                    ReasoningEffort: ReasoningEffort.Low
+                ),
                 new KitchenAssistantOptions()
             )
         );
@@ -218,9 +230,11 @@ public sealed class RecipeExtractorTests
         result.ShouldBeNull();
         await _mlClient
             .DidNotReceiveWithAnyArgs()
-            .GenerateStructuredChatCompletionAsync<ExtractedRecipe>(
+            .GenerateStructuredResponseAsync<ExtractedRecipe>(
                 default!,
                 default!,
+                default!,
+                default,
                 default,
                 default,
                 default
@@ -233,11 +247,13 @@ public sealed class RecipeExtractorTests
         // Arrange
         var extractor = CreateExtractor();
         _mlClient
-            .GenerateStructuredChatCompletionAsync<ExtractedRecipe>(
+            .GenerateStructuredResponseAsync<ExtractedRecipe>(
+                Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<List<MessageDto>>(),
                 Arg.Any<float?>(),
                 Arg.Any<int?>(),
+                Arg.Any<ReasoningEffort?>(),
                 Arg.Any<CancellationToken>()
             )
             .Returns(

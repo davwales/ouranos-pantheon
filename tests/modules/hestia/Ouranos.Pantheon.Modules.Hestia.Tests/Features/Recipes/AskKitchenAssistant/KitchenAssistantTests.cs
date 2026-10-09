@@ -34,7 +34,7 @@ public sealed class KitchenAssistantTests
             Options.Create(
                 new HestiaOptions(
                     new RecipeImportOptions(),
-                    new KitchenAssistantOptions("kitchen-model", 512, 0.3f)
+                    new KitchenAssistantOptions("kitchen-model", 512, 0.3f, ReasoningEffort.High)
                 )
             )
         );
@@ -54,13 +54,13 @@ public sealed class KitchenAssistantTests
             .State;
     }
 
-    private static async IAsyncEnumerable<ChatCompletionChunk> EmptyStream(
+    private static async IAsyncEnumerable<ResponseStreamChunk> AnswerStream(
         [EnumeratorCancellation] CancellationToken cancellationToken = default
     )
     {
         await Task.Yield();
         cancellationToken.ThrowIfCancellationRequested();
-        yield break;
+        yield return new ResponseStreamChunk("Yes.", null, null);
     }
 
     private static async Task<List<AssistantEvent>> CollectAsync(
@@ -86,18 +86,20 @@ public sealed class KitchenAssistantTests
             .LoadAsync<Recipe>(id, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<Recipe?>(BuildRecipe(id)));
 
+        string? sentInstructions = null;
         List<MessageDto>? sentMessages = null;
 
         _mlClient
-            .StreamChatCompletionAsync(
+            .StreamResponseAsync(
                 "kitchen-model",
+                Arg.Do<string>(i => sentInstructions = i),
                 Arg.Do<List<MessageDto>>(m => sentMessages = m),
                 0.3f,
                 512,
-                Arg.Any<float?>(),
+                ReasoningEffort.High,
                 Arg.Any<CancellationToken>()
             )
-            .Returns(EmptyStream());
+            .Returns(AnswerStream());
 
         var input = new AssistantCompletionInput<KitchenAssistantContext>(
             [new AssistantMessageInput("Can I use butter?", AssistantRole.User)],
@@ -108,12 +110,10 @@ public sealed class KitchenAssistantTests
         var events = await CollectAsync(_assistant.Handle(input));
 
         // Assert
-        events.ShouldBe([new AssistantDoneEvent()]);
-        sentMessages.ShouldNotBeNull();
-        sentMessages.Count.ShouldBe(2);
-        sentMessages[0].Role.ShouldBe(RoleDto.System);
-        sentMessages[0].Content.ShouldContain("# Recipe: Chocolate Cake");
-        sentMessages[1].ShouldBe(new MessageDto("Can I use butter?", RoleDto.User));
+        events.ShouldBe([new AssistantContentEvent("Yes."), new AssistantDoneEvent()]);
+        sentInstructions.ShouldNotBeNull();
+        sentInstructions.ShouldContain("# Recipe: Chocolate Cake");
+        sentMessages.ShouldBe([new MessageDto("Can I use butter?", RoleDto.User)]);
     }
 
     [Fact]

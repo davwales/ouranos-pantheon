@@ -12,6 +12,7 @@ export type AssistantChatMessage = {
   id: string;
   role: AssistantRole;
   content: string;
+  reasoning?: string;
 };
 
 export type UseAssistantChatOptions<TContext> = {
@@ -58,6 +59,7 @@ export function useAssistantChat<TContext>({
       setError(null);
 
       let reply = "";
+      let reasoning = "";
       let failure: string | null = null;
       try {
         const stream = streamAssistant(
@@ -69,7 +71,15 @@ export function useAssistantChat<TContext>({
           controller.signal,
         );
         for await (const event of stream) {
-          if (event.$type === "content") {
+          if (event.$type === "reasoning") {
+            reasoning += event.content;
+            const snapshot = reasoning;
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === assistantId ? { ...m, reasoning: snapshot } : m,
+              ),
+            );
+          } else if (event.$type === "content") {
             reply += event.content;
             const snapshot = reply;
             setMessages((prev) =>

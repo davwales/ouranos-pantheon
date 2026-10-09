@@ -60,6 +60,37 @@ describe("useAssistantChat", () => {
     );
   });
 
+  it("WhenReasoningIsStreamed_ShouldAccumulateItSeparatelyAndNotResendIt", async () => {
+    // Arrange
+    vi.mocked(streamAssistant)
+      .mockReturnValueOnce(
+        events(
+          { $type: "reasoning", content: "Let me" },
+          { $type: "reasoning", content: " think" },
+          { $type: "content", content: "Answer" },
+          { $type: "done" },
+        ),
+      )
+      .mockReturnValueOnce(events({ $type: "content", content: "Second" }));
+    const { result } = renderChat();
+    await act(() => result.current.send("One"));
+
+    // Act
+    await act(() => result.current.send("Two"));
+
+    // Assert
+    expect(result.current.messages[1]).toMatchObject({
+      role: "Assistant",
+      content: "Answer",
+      reasoning: "Let me think",
+    });
+    expect(vi.mocked(streamAssistant).mock.calls[1][1].messages).toEqual([
+      { role: "User", content: "One" },
+      { role: "Assistant", content: "Answer" },
+      { role: "User", content: "Two" },
+    ]);
+  });
+
   it("WhenSendingFollowUp_ShouldIncludeHistory", async () => {
     // Arrange
     vi.mocked(streamAssistant)
