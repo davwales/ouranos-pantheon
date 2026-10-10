@@ -163,8 +163,11 @@ store rather than client-supplied data.
 - **Context budget**: the self-hosted model's context window is small (it is configured on
   the inference host and may change) and is shared by the system prompt, the history, the
   reasoning and the reply; prompt length also dominates time to first token. Assistants are therefore page-scoped (one per page, seeing only what that
-  page shows) and keep their system prompt to roughly 1,000 tokens: compact numbers, capped
-  rows, no ids. Newer assistants (Market Analyst) assert the budget in a prompt test.
+  page shows) and keep their system prompt to roughly 1,000 tokens: compact numbers
+  (`AssistantNumberFormat`, e.g. `820.6K`, because small models tokenize digits almost one by
+  one), a fixed number of rows that does not grow with the selected time frame, no ids. The
+  Plutus analysts assert a worst-case prompt against a shared character budget in their prompt
+  tests.
 - **`MapAssistant<TContext>(pattern)`** (`API/AssistantEndpointExtensions`) maps a POST
   route binding `AssistantCompletionInput<TContext>` (`messages` + typed `context`),
   dispatches via `IMessageBus`, and writes events with `SseWriter`.
@@ -174,8 +177,11 @@ store rather than client-supplied data.
   ProblemDetails; LLM failures mid-stream, and replies that finish without any content
   (e.g. reasoning exhausted the token budget), become an `error` event with a generic
   message.
-- **Stateless history**: the client resends the whole conversation on every turn; nothing
-  is persisted.
+- **Stateless, trimmed history**: the client resends the whole conversation on every turn;
+  nothing is persisted. `PantheonAssistant` keeps only the newest messages that fit
+  `AssistantPrompt.HistoryCharacterBudget` (default `ModelDefaults.HistoryCharacterBudget`),
+  always keeping the newest message and never starting with an assistant turn, so long
+  conversations keep fitting the limited context window.
 - **Frontend**: `components/shared/ai-assistant/` provides `AssistantButton` (a top-bar
   icon button), `AssistantPanel` (bottom drawer on mobile, non-modal right sheet on desktop
   so the page stays usable) and `useAssistantChat`, configured with a typed
@@ -193,8 +199,8 @@ Current assistants:
   `{ symbolId, timeFrame }`), configured by `Ouranos:Plutus:SymbolAnalyst`.
 - Plutus `MarketAnalyst` (`/api/plutus/markets/assistant/completions/stream`, context
   `{ marketId, timeFrame, filter?, sortField?, sortDirection?, skip?, take? }`) on the market
-  landing and Explorer pages, configured by `Ouranos:Plutus:MarketAnalyst` (low reasoning
-  effort and a reduced output budget to fit the limited context window).
+  landing and Explorer pages, configured by `Ouranos:Plutus:MarketAnalyst`. Both Plutus
+  analysts use a reduced output budget to fit the limited context window.
 
 ## 8.12 Health Checks
 

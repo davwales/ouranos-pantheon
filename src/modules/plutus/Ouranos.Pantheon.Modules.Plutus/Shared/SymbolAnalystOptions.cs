@@ -8,7 +8,7 @@ public sealed record SymbolAnalystOptions(
     int MaxTokens,
     float Temperature,
     ReasoningEffort ReasoningEffort,
-    int ChartBuckets,
+    int ChartPoints,
     int MaxPositions,
     int ContextCacheMinutes
 )
@@ -16,11 +16,11 @@ public sealed record SymbolAnalystOptions(
     public SymbolAnalystOptions()
         : this(
             ModelName: ModelDefaults.ModelName,
-            MaxTokens: ModelDefaults.MaxTokens,
+            MaxTokens: 1536,
             Temperature: 0.3f,
             ReasoningEffort: ModelDefaults.ReasoningEffort,
-            ChartBuckets: 24,
-            MaxPositions: 20,
+            ChartPoints: 8,
+            MaxPositions: 5,
             ContextCacheMinutes: 5
         ) { }
 }

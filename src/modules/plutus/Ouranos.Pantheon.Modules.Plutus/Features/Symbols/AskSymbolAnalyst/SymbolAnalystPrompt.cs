@@ -1,28 +1,34 @@
 using System.Globalization;
+using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetForecastEfficacy.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetMarketForecast.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSymbolSignalHistory.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.AskSymbolAnalyst.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketTrades.Schemas;
+using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetSymbolTrades.Schemas;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Symbols.AskSymbolAnalyst;
 
 internal static class SymbolAnalystPrompt
 {
     public const string Instructions = """
-        You are a trading analyst helping a user decide what to do with the single symbol below.
-        Ground every claim in the data provided and quote the relevant numbers. Account for the
-        market tax whenever you discuss margins, profit or sell prices. Investment intents: Buy
-        and Sell are directional calls, Flip is a short-term trade capturing the spread between
-        the low and high price, and Merch is a speculative hold for a larger price move. Signal
-        values range from -1 (bearish) to 1 (bullish). Weigh forecasts by their measured accuracy.
-        When the data is missing, stale or insufficient to answer, say so instead of guessing, and
-        never invent prices or trades. Keep answers concise and give concrete price levels when
-        asked. Note the uncertainty in any trade suggestion and that it is not financial advice.
-        All times are UTC.
+        You are a trading analyst for the single symbol below. Use only this data and quote the
+        numbers you rely on; never invent prices or trades, and say so when data is missing or
+        stale. Margin and ROI are after tax; apply the tax to any sell price you suggest.
+        Intents: Buy and Sell are directional, Flip trades the low-high spread, Merch holds for a
+        larger move. Signals range from -1 (bearish) to 1 (bullish). Weigh forecasts by their
+        error. Be concise, give concrete price levels, and note the uncertainty and that this is
+        not financial advice. K, M, B, and T mean thousand, million, billion, and trillion.
+        Times are UTC.
         """;
 
-    private const string DateTimeFormat = "yyyy-MM-dd HH:mm";
+    internal const int MaxNoteLength = 40;
+
+    internal const int MaxDescriptionLength = 80;
+
+    private static readonly int[] ForecastDays = [1, 3, 7];
 
     public static string Compose(SymbolAnalystSnapshot snapshot)
     {
@@ -30,13 +36,10 @@ internal static class SymbolAnalystPrompt
         [
             Instructions,
             ComposeSymbol(snapshot),
-            ComposeTaxes(snapshot),
-            ComposeLatestTrade(snapshot),
             ComposeWindows(snapshot),
             ComposeChart(snapshot),
             ComposeSignals(snapshot),
             ComposeForecast(snapshot),
-            ComposeForecastAccuracy(snapshot),
             ComposePositions(snapshot),
         ];
 
@@ -47,23 +50,20 @@ internal static class SymbolAnalystPrompt
     {
         var symbol = snapshot.Symbol;
         var fields = symbol.AdditionalFields;
-        var lines = new List<string> { $"- Code: {symbol.Code}" };
 
-        if (!string.IsNullOrWhiteSpace(symbol.Subcode))
-        {
-            lines.Add($"- Subcode: {symbol.Subcode}");
-        }
+        var code = string.IsNullOrWhiteSpace(symbol.Subcode)
+            ? symbol.Code
+            : $"{symbol.Code} ({symbol.Subcode})";
 
-        lines.Add($"- Market: {snapshot.Market.Name}");
+        var market = string.IsNullOrWhiteSpace(snapshot.Market.Description)
+            ? snapshot.Market.Name
+            : $"{snapshot.Market.Name} ({Truncate(snapshot.Market.Description, MaxDescriptionLength)})";
 
-        if (!string.IsNullOrWhiteSpace(snapshot.Market.Description))
-        {
-            lines.Add($"- Market description: {snapshot.Market.Description}");
-        }
+        var lines = new List<string> { $"- Code: {code}", $"- Market: {market}" };
 
         if (fields.Limit is { } limit)
         {
-            lines.Add($"- Buy limit: {FormatNumber(limit)}");
+            lines.Add($"- Buy limit: {Compact(limit)}");
         }
 
         if (FormatAlchemy(fields) is { } alchemy)
@@ -76,29 +76,28 @@ internal static class SymbolAnalystPrompt
             lines.Add($"- Exchange: {fields.Exchange}");
         }
 
-        lines.Add($"- Data as of: {FormatDate(snapshot.GeneratedAt)}");
+        lines.Add(FormatTax(snapshot));
+        lines.Add(FormatLatestTrade(snapshot));
+        lines.Add($"- Data as of: {FormatDateTime(snapshot.GeneratedAt)}");
 
         return $"""
-            # Symbol: {symbol.Name}
-
+            ## Symbol: {symbol.Name}
             {string.Join("\n", lines)}
             """;
     }
 
-    // Small models mistake the alchemy values for the market's low and high prices unless they
-    // are explicitly labelled as fixed NPC prices.
     private static string? FormatAlchemy(AdditionalFields fields)
     {
         var values = new List<string>();
 
         if (fields.HighAlch is { } high)
         {
-            values.Add($"high {FormatNumber(high)}");
+            values.Add($"high {Compact(high)}");
         }
 
         if (fields.LowAlch is { } low)
         {
-            values.Add($"low {FormatNumber(low)}");
+            values.Add($"low {Compact(low)}");
         }
 
         return values.Count == 0
@@ -106,63 +105,53 @@ internal static class SymbolAnalystPrompt
             : $"- Alchemy values (fixed NPC sale prices, not market prices): {string.Join(", ", values)}";
     }
 
-    private static string ComposeTaxes(SymbolAnalystSnapshot snapshot)
+    private static string FormatTax(SymbolAnalystSnapshot snapshot)
     {
         var flat = snapshot.Market.Taxes.Flat;
-        var description = flat is null
-            ? "No tax is charged on sales."
-            : $"Sales are taxed at {FormatPercent(flat.Rate)} of the sell price per item "
-                + $"(minimum {FormatNumber(flat.Minimum)}, capped at {FormatNumber(flat.Maximum)}).";
 
-        return $"""
-            ## Market Taxes
-
-            {description}
-            """;
+        return flat is null
+            ? "- Tax: none"
+            : $"- Tax: {Percent(flat.Rate)} of the sell price per item "
+                + $"(min {Compact(flat.Minimum)}, max {Compact(flat.Maximum)})";
     }
 
-    private static string ComposeLatestTrade(SymbolAnalystSnapshot snapshot)
+    private static string FormatLatestTrade(SymbolAnalystSnapshot snapshot)
     {
         var trade = snapshot.LatestTrade;
-        var description = trade is null
-            ? "No trades recorded in the last year."
-            : $"Price {FormatNumber(trade.Price)}, volume {FormatNumber(trade.Volume)}, "
-                + $"at {FormatDate(trade.Timestamp)}.";
 
-        return $"""
-            ## Latest Trade
-
-            {description}
-            """;
+        return trade is null
+            ? "- Latest trade: none in the last year"
+            : $"- Latest trade: {Compact(trade.Price)} × {Compact(trade.Volume)} "
+                + $"at {FormatDateTime(trade.Timestamp)}";
     }
 
     private static string ComposeWindows(SymbolAnalystSnapshot snapshot)
     {
         var rows = snapshot.Windows.Select(window =>
             window.Trades is { TotalVolume: > 0 } trades
-                ? FormatWindow(window.TimeFrame.ToString(), trades)
-                : $"| {window.TimeFrame} | no trades | | | | | | | |"
+                ? FormatWindow(window.TimeFrame, trades)
+                : $"{window.TimeFrame} | no trades"
         );
 
         return $"""
-            ## Price Summary
-
-            Margin is the high price minus the low price minus tax; ROI is margin over the low price.
-
-            | Window | Avg | Low | High | Volume | Trades | Tax | Margin | ROI |
-            |---|---|---|---|---|---|---|---|---|
+            ## Price Summary (Margin = high - low - tax; ROI = margin / low)
+            Window | Avg | Low | High | Vol | Margin | ROI
             {string.Join("\n", rows)}
             """;
     }
 
-    private static string FormatWindow(string label, GetMarketTradesResponse trades)
+    private static string FormatWindow(TimeFrame timeFrame, GetMarketTradesResponse trades)
     {
-        var roi = trades.MinPrice > 0 ? FormatPercent(trades.Roi) : "-";
-
-        return $"| {label} | {FormatNumber(trades.AveragePrice)} | {FormatNumber(trades.MinPrice)} "
-            + $"| {FormatNumber(trades.MaxPrice)} | {FormatNumber(trades.TotalVolume)} "
-            + $"| {trades.NumTransactions} | {FormatNumber(trades.Tax)} "
-            + $"| {FormatNumber(trades.Margin)} | {roi} |";
+        return string.Join(
+            " | ",
+            timeFrame,
+            Compact(trades.AveragePrice),
+            Compact(trades.MinPrice),
+            Compact(trades.MaxPrice),
+            Compact(trades.TotalVolume),
+            Compact(trades.Margin),
+            trades.MinPrice > 0 ? Percent(trades.Roi) : "-"
+        );
     }
 
     private static string ComposeChart(SymbolAnalystSnapshot snapshot)
@@ -174,31 +163,81 @@ internal static class SymbolAnalystPrompt
         {
             return $"""
                 {heading}
-
                 No trades in this period.
                 """;
         }
 
-        var rows = trades.Trades.Select(bucket =>
-            $"| {FormatDate(bucket.Date)} | {FormatNumber(bucket.OpenPrice)} "
-            + $"| {FormatNumber(bucket.ClosePrice)} | {FormatNumber(bucket.Price)} "
-            + $"| {FormatNumber(bucket.MinPrice)} | {FormatNumber(bucket.MaxPrice)} "
-            + $"| {FormatNumber(bucket.Volume)} |"
-        );
+        var ordered = trades.Trades.OrderBy(bucket => bucket.Date).ToList();
+        var open = ordered[0].OpenPrice;
+        var close = ordered[^1].ClosePrice;
+        var change = open > 0 ? $" ({FormatChange((close - open) / open)})" : "";
+        var rows = Downsample(ordered, snapshot.ChartPoints)
+            .Select(point => FormatChartPoint(point, snapshot.TimeFrame));
 
         return $"""
             {heading}
-
-            Average {FormatNumber(trades.AveragePrice)}, low {FormatNumber(
-                trades.MinPrice
-            )}, high {FormatNumber(trades.MaxPrice)}, volume {FormatNumber(
-                trades.Volume
-            )}, {trades.NumTransactions} trades.
-
-            | Start | Open | Close | Avg | Low | High | Volume |
-            |---|---|---|---|---|---|---|
+            Avg {Compact(trades.AveragePrice)}, low {Compact(trades.MinPrice)}, high {Compact(
+                trades.MaxPrice
+            )}, vol {Compact(trades.Volume)}, {Compact(
+                trades.NumTransactions
+            )} trades; open {Compact(open)} → close {Compact(close)}{change}.
+            Start | Avg | Low | High | Vol
             {string.Join("\n", rows)}
             """;
+    }
+
+    internal static List<GetSymbolTradeBucketsResponse> Downsample(
+        List<GetSymbolTradeBucketsResponse> ordered,
+        int points
+    )
+    {
+        if (ordered.Count <= points || points <= 0)
+        {
+            return ordered;
+        }
+
+        var size = (int)Math.Ceiling(ordered.Count / (double)points);
+
+        return
+        [
+            .. ordered
+                .Chunk(size)
+                .Select(chunk =>
+                {
+                    var traded = chunk.Where(bucket => bucket.Volume > 0).ToArray();
+                    var priced = traded.Length > 0 ? traded : chunk;
+                    var volume = chunk.Sum(bucket => bucket.Volume);
+                    var totalSpent = chunk.Sum(bucket => bucket.TotalSpent);
+
+                    return new GetSymbolTradeBucketsResponse(
+                        Price: volume == 0
+                            ? chunk.Average(bucket => bucket.Price)
+                            : totalSpent / volume,
+                        Volume: volume,
+                        TotalSpent: totalSpent,
+                        MinPrice: priced.Min(bucket => bucket.MinPrice),
+                        MaxPrice: priced.Max(bucket => bucket.MaxPrice),
+                        NumTransactions: chunk.Sum(bucket => bucket.NumTransactions),
+                        Date: chunk[0].Date,
+                        OpenPrice: priced[0].OpenPrice,
+                        ClosePrice: priced[^1].ClosePrice
+                    );
+                }),
+        ];
+    }
+
+    private static string FormatChartPoint(GetSymbolTradeBucketsResponse point, TimeFrame timeFrame)
+    {
+        var format = timeFrame >= TimeFrame.SixMonths ? "yyyy-MM-dd" : "MM-dd HH:mm";
+
+        return string.Join(
+            " | ",
+            point.Date.UtcDateTime.ToString(format, CultureInfo.InvariantCulture),
+            Compact(point.Price),
+            Compact(point.MinPrice),
+            Compact(point.MaxPrice),
+            Compact(point.Volume)
+        );
     }
 
     private static string ComposeSignals(SymbolAnalystSnapshot snapshot)
@@ -209,52 +248,30 @@ internal static class SymbolAnalystPrompt
         {
             return """
                 ## Signals
-
                 No signals have been computed for this symbol.
                 """;
         }
 
         var summary = signals.Summary;
-        var rows = signals.Signals.Select(signal =>
-            $"| {signal.Label} | {FormatNumber(signal.Value)} | {signal.Direction} "
-            + $"| {signal.Strength} | {string.Join(", ", signal.Intents)} |"
-        );
-        var legend = signals.Signals.Select(signal => $"- {signal.Label}: {signal.Description}");
 
-        var current = $"""
-            ## Signals
+        var history = snapshot
+            .SignalHistory.Signals.GroupBy(signal => signal.Type)
+            .ToDictionary(group => group.Key, group => group.First());
 
-            Aggregated score {FormatNumber(
-                summary.AggregatedScore
-            )}; {summary.BullishCount} bullish, {summary.BearishCount} bearish, {summary.NeutralCount} neutral. Flip favourable: {FormatBool(
-                summary.IsFlipFavourable
-            )}. Merch favourable: {FormatBool(summary.IsMerchFavourable)}.
-
-            | Signal | Value | Direction | Strength | Intents |
-            |---|---|---|---|---|
-            {string.Join("\n", rows)}
-
-            ### Signal Definitions
-
-            {string.Join("\n", legend)}
-            """;
-
-        var trends = snapshot
-            .SignalHistory.Signals.Where(signal => signal.History.Count > 0)
-            .Select(FormatTrend)
-            .ToList();
-
-        if (trends.Count == 0)
+        var lines = signals.Signals.Select(signal =>
         {
-            return current;
-        }
+            var trend = history.TryGetValue(signal.Type, out var past) ? FormatTrend(past) : "";
+
+            return $"- {signal.Label}: {Number(signal.Value)} {signal.Direction} {signal.Strength} "
+                + $"({string.Join(", ", signal.Intents)}){trend}";
+        });
 
         return $"""
-            {current}
-
-            ### Daily Trend (last 7 days, oldest first)
-
-            {string.Join("\n", trends)}
+            ## Signals (7d trend: oldest → latest daily value)
+            Score {Number(summary.AggregatedScore)} ({summary.BullishCount} bullish, {summary.BearishCount} bearish, {summary.NeutralCount} neutral); flip favourable: {FormatBool(
+                summary.IsFlipFavourable
+            )}; merch favourable: {FormatBool(summary.IsMerchFavourable)}.
+            {string.Join("\n", lines)}
             """;
     }
 
@@ -263,9 +280,18 @@ internal static class SymbolAnalystPrompt
         var daily = signal
             .History.GroupBy(point => point.ComputedAt.UtcDateTime.Date)
             .OrderBy(day => day.Key)
-            .Select(day => FormatNumber(day.OrderBy(point => point.ComputedAt).Last().Value));
+            .Select(day => day.OrderBy(point => point.ComputedAt).Last().Value)
+            .ToList();
 
-        return $"- {signal.Label}: {string.Join(" → ", daily)}";
+        if (daily.Count < 2)
+        {
+            return "";
+        }
+
+        int[] picks = [0, daily.Count / 2, daily.Count - 1];
+        var values = picks.Distinct().Select(i => Number(daily[i]));
+
+        return $"; 7d {string.Join(" → ", values)}";
     }
 
     private static string ComposeForecast(SymbolAnalystSnapshot snapshot)
@@ -274,7 +300,6 @@ internal static class SymbolAnalystPrompt
         {
             return """
                 ## Forecast
-
                 Forecasting is disabled for this market.
                 """;
         }
@@ -284,7 +309,6 @@ internal static class SymbolAnalystPrompt
         {
             return """
                 ## Forecast
-
                 No forecast is available for this symbol.
                 """;
         }
@@ -299,52 +323,68 @@ internal static class SymbolAnalystPrompt
             forecast.DaySix,
             forecast.DaySeven,
         ];
-        var rows = days.Select(
-            (day, i) =>
-                $"| {i + 1} | {FormatNumber(day.AveragePrice)} | {FormatNumber(day.MinPrice)} "
-                + $"| {FormatNumber(day.MaxPrice)} | {FormatNumber(day.Volume)} "
-                + $"| {FormatNumber(day.Margin)} |"
+
+        var rows = ForecastDays.Select(day =>
+            string.Join(
+                " | ",
+                day,
+                Compact(days[day - 1].AveragePrice),
+                Compact(days[day - 1].MinPrice),
+                Compact(days[day - 1].MaxPrice),
+                Compact(days[day - 1].Margin)
+            )
         );
+
         var latest = forecast.Latest;
+        var accuracy = FormatAccuracy(snapshot.ForecastEfficacy);
 
         return $"""
-            ## Forecast
-
-            Baseline (latest actual day): average {FormatNumber(
-                latest.AveragePrice
-            )}, low {FormatNumber(latest.MinPrice)}, high {FormatNumber(
-                latest.MaxPrice
-            )}, volume {FormatNumber(latest.Volume)}.
-
-            | Day | Avg | Low | High | Volume | Margin |
-            |---|---|---|---|---|---|
-            {string.Join("\n", rows)}
+            ## Forecast (baseline day: avg {Compact(latest.AveragePrice)}, low {Compact(
+                latest.MinPrice
+            )}, high {Compact(latest.MaxPrice)}, vol {Compact(latest.Volume)})
+            Day | Avg | Low | High | Margin
+            {string.Join("\n", rows)}{accuracy}
             """;
     }
 
-    private static string ComposeForecastAccuracy(SymbolAnalystSnapshot snapshot)
+    private static string FormatAccuracy(IReadOnlyList<GetForecastEfficacyResponse> efficacy)
     {
-        if (snapshot.ForecastEfficacy.Count == 0)
+        var model = efficacy
+            .GroupBy(row => row.ModelName)
+            .OrderByDescending(group => group.Sum(row => row.EvaluatedCount))
+            .FirstOrDefault();
+
+        var horizons = model
+            ?.Where(row => row.MeanAbsolutePercentageError is not null)
+            .GroupBy(row => row.HorizonDays)
+            .Select(group => group.MaxBy(row => row.EvaluatedCount))
+            .OfType<GetForecastEfficacyResponse>()
+            .OrderBy(row => row.HorizonDays)
+            .ToList();
+
+        if (horizons is not { Count: > 0 })
         {
-            return string.Empty;
+            return "";
         }
 
-        var rows = snapshot.ForecastEfficacy.Select(efficacy =>
-            $"| {efficacy.HorizonDays} | {efficacy.EvaluatedCount} "
-            + $"| {FormatOptionalPercent(efficacy.MeanAbsolutePercentageError)} "
-            + $"| {FormatOptionalNumber(efficacy.MeanAbsoluteError)} "
-            + $"| {FormatOptionalNumber(efficacy.MeanBias)} |"
+        var shown = horizons.Where(row => ForecastDays.Contains(row.HorizonDays)).ToList();
+        if (shown.Count == 0)
+        {
+            shown = [.. horizons.Take(ForecastDays.Length)];
+        }
+
+        var errors = shown.Select(row =>
+            $"{row.HorizonDays}d {Percent(row.MeanAbsolutePercentageError ?? 0)}"
         );
+        var bias = shown[0].MeanBias switch
+        {
+            > 0 => "; forecasts ran high",
+            < 0 => "; forecasts ran low",
+            _ => "",
+        };
 
-        return $"""
-            ## Forecast Accuracy (last 30 days)
-
-            Bias is the mean of predicted minus actual average price; positive means forecasts ran high.
-
-            | Horizon (days) | Evaluated | MAPE | MAE | Bias |
-            |---|---|---|---|---|
-            {string.Join("\n", rows)}
-            """;
+        return $"\nError (MAPE, last {SymbolAnalyst.ForecastEfficacyWindow.Days}d, n={shown[0].EvaluatedCount}): "
+            + $"{string.Join(", ", errors)}{bias}.";
     }
 
     private static string ComposePositions(SymbolAnalystSnapshot snapshot)
@@ -353,55 +393,63 @@ internal static class SymbolAnalystPrompt
         {
             return """
                 ## Your Positions
-
                 No positions recorded.
                 """;
         }
 
         var rows = snapshot.Positions.Select(position =>
-            $"| {FormatDate(position.CreatedAt)} | {position.Side} | {position.Status} "
-            + $"| {FormatNumber(position.Quantity)} | {FormatNumber(position.Cost)} "
-            + $"| {position.Notes ?? string.Empty} |"
+            string.Join(
+                " | ",
+                position.CreatedAt.UtcDateTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                position.Side,
+                position.Status,
+                Compact(position.Quantity),
+                Compact(position.Cost),
+                Truncate(position.Notes ?? "", MaxNoteLength)
+            )
         );
 
         return $"""
-            ## Your Positions
-
-            Most recent first. Price is per unit. Pending positions are planned but not yet filled.
-
-            | Created | Side | Status | Quantity | Price | Notes |
-            |---|---|---|---|---|---|
+            ## Your Positions (most recent first; price per unit; Pending = planned, not filled)
+            Created | Side | Status | Qty | Price | Notes
             {string.Join("\n", rows)}
             """;
     }
 
-    private static string FormatNumber(decimal value)
+    private static string Truncate(string value, int maxLength)
     {
-        return value.ToString("0.##", CultureInfo.InvariantCulture);
+        var singleLine = value.ReplaceLineEndings(" ").Trim();
+
+        return singleLine.Length <= maxLength ? singleLine : singleLine[..(maxLength - 1)] + "…";
     }
 
-    private static string FormatOptionalNumber(decimal? value)
+    private static string FormatChange(decimal ratio)
     {
-        return value is { } number ? FormatNumber(number) : "-";
+        return (ratio > 0 ? "+" : "") + Percent(ratio);
     }
 
-    private static string FormatPercent(decimal ratio)
+    private static string FormatDateTime(DateTimeOffset value)
     {
-        return (ratio * 100).ToString("0.##", CultureInfo.InvariantCulture) + "%";
-    }
-
-    private static string FormatOptionalPercent(decimal? ratio)
-    {
-        return ratio is { } value ? FormatPercent(value) : "-";
-    }
-
-    private static string FormatDate(DateTimeOffset value)
-    {
-        return value.UtcDateTime.ToString(DateTimeFormat, CultureInfo.InvariantCulture);
+        return value.UtcDateTime.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
     }
 
     private static string FormatBool(bool value)
     {
         return value ? "yes" : "no";
+    }
+
+    private static string Compact(decimal value)
+    {
+        return AssistantNumberFormat.Compact(value);
+    }
+
+    private static string Percent(decimal ratio)
+    {
+        return AssistantNumberFormat.Percent(ratio);
+    }
+
+    private static string Number(decimal value)
+    {
+        return AssistantNumberFormat.Number(value);
     }
 }

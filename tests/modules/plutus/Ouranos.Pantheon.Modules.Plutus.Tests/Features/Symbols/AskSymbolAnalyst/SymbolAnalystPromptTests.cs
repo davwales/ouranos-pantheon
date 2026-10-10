@@ -5,6 +5,8 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetSymbolTrades.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
+using Ouranos.Pantheon.Tests.Utils;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Symbols.AskSymbolAnalyst;
 
@@ -25,86 +27,40 @@ public sealed class SymbolAnalystPromptTests
                 + """
 
 
-                # Symbol: Armadyl godsword
-
+                ## Symbol: Armadyl godsword
                 - Code: 11802
-                - Market: OSRS
-                - Market description: Old School RuneScape Grand Exchange.
+                - Market: OSRS (Old School RuneScape Grand Exchange.)
                 - Buy limit: 8
-                - Alchemy values (fixed NPC sale prices, not market prices): high 750000, low 500000
+                - Alchemy values (fixed NPC sale prices, not market prices): high 750K, low 500K
+                - Tax: 2% of the sell price per item (min 1, max 5M)
+                - Latest trade: 10.3M × 2 at 2026-10-08 11:55
                 - Data as of: 2026-10-08 12:00
 
-                ## Market Taxes
-
-                Sales are taxed at 2% of the sell price per item (minimum 1, capped at 5000000).
-
-                ## Latest Trade
-
-                Price 10300000, volume 2, at 2026-10-08 11:55.
-
-                ## Price Summary
-
-                Margin is the high price minus the low price minus tax; ROI is margin over the low price.
-
-                | Window | Avg | Low | High | Volume | Trades | Tax | Margin | ROI |
-                |---|---|---|---|---|---|---|---|---|
-                | OneDay | 10100000 | 9800000 | 10400000 | 40 | 12 | 208000 | 392000 | 4% |
-                | OneWeek | no trades | | | | | | | |
+                ## Price Summary (Margin = high - low - tax; ROI = margin / low)
+                Window | Avg | Low | High | Vol | Margin | ROI
+                OneDay | 10.1M | 9.8M | 10.4M | 40 | 392K | 4%
+                OneWeek | no trades
 
                 ## OneDay Chart (the period the user is viewing)
+                Avg 10.1M, low 9.8M, high 10.4M, vol 40, 12 trades; open 9.9M → close 10.3M (+4%).
+                Start | Avg | Low | High | Vol
+                10-08 10:00 | 10M | 9.8M | 10.2M | 25
+                10-08 11:00 | 10.27M | 10.1M | 10.4M | 15
 
-                Average 10100000, low 9800000, high 10400000, volume 40, 12 trades.
+                ## Signals (7d trend: oldest → latest daily value)
+                Score 0.4 (1 bullish, 0 bearish, 0 neutral); flip favourable: yes; merch favourable: no.
+                - RSI: 0.4 Bullish Medium (Buy, Sell); 7d -0.2 → 0.4
 
-                | Start | Open | Close | Avg | Low | High | Volume |
-                |---|---|---|---|---|---|---|
-                | 2026-10-08 10:00 | 9900000 | 10100000 | 10000000 | 9800000 | 10200000 | 25 |
-                | 2026-10-08 11:00 | 10100000 | 10300000 | 10266666.67 | 10100000 | 10400000 | 15 |
+                ## Forecast (baseline day: avg 10.1M, low 9.8M, high 10.4M, vol 40)
+                Day | Avg | Low | High | Margin
+                1 | 10.2M | 10M | 10.5M | 290K
+                3 | 10.2M | 10M | 10.5M | 290K
+                7 | 10.6M | 10M | 10.5M | 290K
+                Error (MAPE, last 30d, n=20): 1d 1.5%; forecasts ran low.
 
-                ## Signals
-
-                Aggregated score 0.4; 1 bullish, 0 bearish, 0 neutral. Flip favourable: yes. Merch favourable: no.
-
-                | Signal | Value | Direction | Strength | Intents |
-                |---|---|---|---|---|
-                | RSI | 0.4 | Bullish | Medium | Buy, Sell |
-
-                ### Signal Definitions
-
-                - RSI: Relative strength index.
-
-                ### Daily Trend (last 7 days, oldest first)
-
-                - RSI: -0.2 → 0.4
-
-                ## Forecast
-
-                Baseline (latest actual day): average 10100000, low 9800000, high 10400000, volume 40.
-
-                | Day | Avg | Low | High | Volume | Margin |
-                |---|---|---|---|---|---|
-                | 1 | 10200000 | 10000000 | 10500000 | 38 | 290000 |
-                | 2 | 10200000 | 10000000 | 10500000 | 38 | 290000 |
-                | 3 | 10200000 | 10000000 | 10500000 | 38 | 290000 |
-                | 4 | 10200000 | 10000000 | 10500000 | 38 | 290000 |
-                | 5 | 10200000 | 10000000 | 10500000 | 38 | 290000 |
-                | 6 | 10200000 | 10000000 | 10500000 | 38 | 290000 |
-                | 7 | 10600000 | 10000000 | 10500000 | 38 | 290000 |
-
-                ## Forecast Accuracy (last 30 days)
-
-                Bias is the mean of predicted minus actual average price; positive means forecasts ran high.
-
-                | Horizon (days) | Evaluated | MAPE | MAE | Bias |
-                |---|---|---|---|---|
-                | 1 | 20 | 1.45% | 150000 | -20000 |
-
-                ## Your Positions
-
-                Most recent first. Price is per unit. Pending positions are planned but not yet filled.
-
-                | Created | Side | Status | Quantity | Price | Notes |
-                |---|---|---|---|---|---|
-                | 2026-10-06 12:00 | Buy | Bought | 2 | 9900000 | Bought the dip |
+                ## Your Positions (most recent first; price per unit; Pending = planned, not filled)
+                Created | Side | Status | Qty | Price | Notes
+                2026-10-06 | Buy | Bought | 2 | 9.9M | Bought the dip
                 """
         );
     }
@@ -125,7 +81,7 @@ public sealed class SymbolAnalystPromptTests
 
         // Assert
         prompt.ShouldContain("Forecasting is disabled for this market.");
-        prompt.ShouldNotContain("## Forecast Accuracy");
+        prompt.ShouldNotContain("Error (MAPE");
     }
 
     [Fact]
@@ -165,15 +121,15 @@ public sealed class SymbolAnalystPromptTests
         var prompt = SymbolAnalystPrompt.Compose(snapshot);
 
         // Assert
-        prompt.ShouldContain("No tax is charged on sales.");
-        prompt.ShouldContain("No trades recorded in the last year.");
+        prompt.ShouldContain("- Tax: none");
+        prompt.ShouldContain("- Latest trade: none in the last year");
         prompt.ShouldContain("No trades in this period.");
         prompt.ShouldContain("No signals have been computed for this symbol.");
         prompt.ShouldContain("No positions recorded.");
     }
 
     [Fact]
-    public void Compose_WhenSignalHistoryIsEmpty_ShouldOmitDailyTrend()
+    public void Compose_WhenSignalHistoryIsEmpty_ShouldOmitTheTrend()
     {
         // Arrange
         var history = SymbolAnalystSnapshotFactory.SignalHistory() with
@@ -186,8 +142,8 @@ public sealed class SymbolAnalystPromptTests
         var prompt = SymbolAnalystPrompt.Compose(snapshot);
 
         // Assert
-        prompt.ShouldContain("### Signal Definitions");
-        prompt.ShouldNotContain("### Daily Trend");
+        prompt.ShouldContain("- RSI: 0.4 Bullish Medium (Buy, Sell)\n");
+        prompt.ShouldNotContain("; 7d");
     }
 
     [Fact]
@@ -208,7 +164,7 @@ public sealed class SymbolAnalystPromptTests
         var prompt = SymbolAnalystPrompt.Compose(snapshot);
 
         // Assert
-        prompt.ShouldContain("- Subcode: Common");
+        prompt.ShouldContain("- Code: AAPL (Common)");
         prompt.ShouldContain("- Exchange: NASDAQ");
         prompt.ShouldNotContain("- Buy limit:");
         prompt.ShouldNotContain("Alchemy values");
@@ -229,7 +185,7 @@ public sealed class SymbolAnalystPromptTests
 
         // Assert
         prompt.ShouldContain(
-            "- Alchemy values (fixed NPC sale prices, not market prices): high 750000\n"
+            "- Alchemy values (fixed NPC sale prices, not market prices): high 750K\n"
         );
     }
 
@@ -250,6 +206,142 @@ public sealed class SymbolAnalystPromptTests
         var prompt = SymbolAnalystPrompt.Compose(snapshot);
 
         // Assert
-        prompt.ShouldContain("| 0 | 10400000 | 40 | 12 | 208000 | 10192000 | - |");
+        prompt.ShouldContain("OneDay | 10.1M | 0 | 10.4M | 40 | 10.19M | -\n");
+    }
+
+    [Fact]
+    public void Compose_WhenSnapshotIsFull_ShouldStayWithinTheContextBudget()
+    {
+        // Arrange
+        var snapshot = SymbolAnalystSnapshotFactory.Full();
+
+        // Act
+        var prompt = SymbolAnalystPrompt.Compose(snapshot);
+
+        // Assert
+        (
+            prompt.Length + "\n\n".Length + AssistantFormatting.Instructions.Length
+        ).ShouldBeLessThanOrEqualTo(AssistantPromptBudget.Characters);
+    }
+
+    [Theory]
+    [MemberData(nameof(TimeFrames))]
+    public void Compose_ForEveryTimeFrame_ShouldCapTheChartAtTheConfiguredPoints(
+        TimeFrame timeFrame
+    )
+    {
+        // Arrange
+        var snapshot = SymbolAnalystSnapshotFactory.Full(timeFrame);
+
+        // Act
+        var prompt = SymbolAnalystPrompt.Compose(snapshot);
+
+        // Assert
+        var chart = prompt[
+            prompt.IndexOf("Start | Avg | Low | High | Vol\n", StringComparison.Ordinal)..
+        ];
+        var rows = chart.Split("\n\n")[0].Split('\n').Skip(1);
+        rows.Count().ShouldBe(SymbolAnalystSnapshotFactory.ChartPoints);
+    }
+
+    public static TheoryData<TimeFrame> TimeFrames()
+    {
+        return [.. Enum.GetValues<TimeFrame>()];
+    }
+
+    [Fact]
+    public void Downsample_WhenThereAreMoreBucketsThanPoints_ShouldMergeTradedBucketsByVolume()
+    {
+        // Arrange
+        var start = SymbolAnalystSnapshotFactory.GeneratedAt;
+        List<GetSymbolTradeBucketsResponse> buckets =
+        [
+            new(100, 1, 100, 90, 110, 1, start, 95, 105),
+            new(200, 3, 600, 150, 250, 2, start.AddHours(1), 105, 210),
+            new(300, 0, 0, 0, 0, 0, start.AddHours(2), 0, 0),
+            new(400, 2, 800, 350, 450, 1, start.AddHours(3), 380, 420),
+        ];
+
+        // Act
+        var points = SymbolAnalystPrompt.Downsample(buckets, 2);
+
+        // Assert
+        points.ShouldBe([
+            new GetSymbolTradeBucketsResponse(175, 4, 700, 90, 250, 3, start, 95, 210),
+            new GetSymbolTradeBucketsResponse(
+                400,
+                2,
+                800,
+                350,
+                450,
+                1,
+                start.AddHours(2),
+                380,
+                420
+            ),
+        ]);
+    }
+
+    [Fact]
+    public void Compose_WhenEfficacySpansSeveralModels_ShouldShowTheMostEvaluatedModelOnce()
+    {
+        // Arrange
+        var row = SymbolAnalystSnapshotFactory.ForecastEfficacy()[0];
+        var snapshot = SymbolAnalystSnapshotFactory.Snapshot() with
+        {
+            ForecastEfficacy =
+            [
+                row with
+                {
+                    ModelName = "old",
+                    EvaluatedCount = 2,
+                    MeanAbsolutePercentageError = 0.5m,
+                },
+                row with
+                {
+                    HorizonDays = 7,
+                    MeanAbsolutePercentageError = 0.04m,
+                    MeanBias = 10,
+                },
+                row with
+                {
+                    HorizonDays = 3,
+                    MeanAbsolutePercentageError = 0.02m,
+                },
+                row with
+                {
+                    HorizonDays = 2,
+                    MeanAbsolutePercentageError = 0.9m,
+                },
+                row,
+            ],
+        };
+
+        // Act
+        var prompt = SymbolAnalystPrompt.Compose(snapshot);
+
+        // Assert
+        prompt.ShouldContain(
+            "Error (MAPE, last 30d, n=20): 1d 1.5%, 3d 2%, 7d 4%; forecasts ran low.\n"
+        );
+    }
+
+    [Fact]
+    public void Compose_WhenPositionNoteIsLong_ShouldTruncateItToOneLine()
+    {
+        // Arrange
+        var position = SymbolAnalystSnapshotFactory.Positions()[0] with
+        {
+            Notes = "Line one\n" + new string('x', 100),
+        };
+        var snapshot = SymbolAnalystSnapshotFactory.Snapshot() with { Positions = [position] };
+
+        // Act
+        var prompt = SymbolAnalystPrompt.Compose(snapshot);
+
+        // Assert
+        prompt.ShouldContain(
+            $"| Line one {new string('x', SymbolAnalystPrompt.MaxNoteLength - 10)}…"
+        );
     }
 }

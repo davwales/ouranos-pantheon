@@ -27,8 +27,10 @@ public sealed class PlutusOptionsTests
 
         // Assert
         options.ModelName.ShouldBe(ModelDefaults.ModelName);
-        options.MaxTokens.ShouldBe(ModelDefaults.MaxTokens);
+        options.MaxTokens.ShouldBe(1536);
         options.ReasoningEffort.ShouldBe(ModelDefaults.ReasoningEffort);
+        options.ChartPoints.ShouldBe(8);
+        options.MaxPositions.ShouldBe(5);
     }
 
     [Fact]

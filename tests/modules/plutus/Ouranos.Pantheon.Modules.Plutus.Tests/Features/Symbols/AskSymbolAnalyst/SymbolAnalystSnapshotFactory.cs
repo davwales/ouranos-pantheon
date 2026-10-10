@@ -4,11 +4,13 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetMarket.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Positions.GetAllPositions.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSymbolSignalHistory.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSymbolSignals.Schemas;
+using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.AskSymbolAnalyst;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.AskSymbolAnalyst.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetSymbol.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetAllTrades.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketTrades.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetSymbolTrades.Schemas;
+using Ouranos.Pantheon.Modules.Plutus.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
@@ -25,6 +27,7 @@ internal static class SymbolAnalystSnapshotFactory
     public static readonly Id<Symbol> SymbolId = new("8c1f7f1e-0000-4000-8000-000000000001");
     public static readonly Id<Market> MarketId = new("8c1f7f1e-0000-4000-8000-000000000002");
     public static readonly DateTimeOffset GeneratedAt = new(2026, 10, 8, 12, 0, 0, TimeSpan.Zero);
+    public const int ChartPoints = 8;
 
     public static GetSymbolResponse Symbol()
     {
@@ -266,6 +269,7 @@ internal static class SymbolAnalystSnapshotFactory
             Market(),
             TimeFrame.OneDay,
             SelectedTrades(),
+            ChartPoints,
             Windows(),
             LatestTrade(),
             Signals(),
@@ -275,5 +279,150 @@ internal static class SymbolAnalystSnapshotFactory
             Positions(),
             GeneratedAt
         );
+    }
+
+    public static SymbolAnalystSnapshot Full(TimeFrame timeFrame = TimeFrame.AllTime)
+    {
+        var buckets = Enumerable
+            .Range(0, ChartPoints * 2)
+            .Select(i => new GetSymbolTradeBucketsResponse(
+                Price: 1234567.89m + i,
+                Volume: 123456.78m,
+                TotalSpent: 152415787654.32m,
+                MinPrice: 1198765.43m + i,
+                MaxPrice: 1287654.32m + i,
+                NumTransactions: 98765,
+                Date: GeneratedAt.AddDays(i - (ChartPoints * 2)),
+                OpenPrice: 1212345.67m + i,
+                ClosePrice: 1265432.1m + i
+            ))
+            .ToList();
+
+        string[] signalTypes =
+        [
+            "SignalTaxAdjustedRoi",
+            "SignalVolumeAnomaly",
+            "SignalTrendMomentum",
+            "SignalBollingerBands",
+            "SignalRsi",
+            "SignalMovingAverageCrossover",
+            "SignalPriceVelocity",
+        ];
+
+        var signals = signalTypes
+            .Select(type => new SignalResponse(
+                type,
+                "Moving Average Crossover",
+                "A long description of what this signal measures and how it is normalised.",
+                [
+                    InvestmentIntent.Buy,
+                    InvestmentIntent.Sell,
+                    InvestmentIntent.Flip,
+                    InvestmentIntent.Merch,
+                ],
+                -0.87m,
+                SignalDirection.Bearish,
+                SignalStrength.Strong
+            ))
+            .ToList();
+
+        var history = signalTypes
+            .Select(type => new SignalHistoryResponse(
+                type,
+                "Moving Average Crossover",
+                "A long description of what this signal measures and how it is normalised.",
+                [InvestmentIntent.Buy],
+                -0.87m,
+                SignalDirection.Bearish,
+                SignalStrength.Strong,
+                [
+                    .. Enumerable
+                        .Range(0, 8 * 48)
+                        .Select(i => new SignalHistoryPoint(
+                            -0.12m - (i % 7 / 10m),
+                            GeneratedAt.AddMinutes(-30 * i)
+                        )),
+                ]
+            ))
+            .ToList();
+
+        var efficacy = Enumerable
+            .Range(0, 50)
+            .Select(i => new GetForecastEfficacyResponse(
+                SymbolId,
+                "Armadyl godsword",
+                MarketId,
+                $"plutus-forecasting-v{i % 2}",
+                HorizonDays: (i / 2 % 7) + 1,
+                EvaluatedCount: 123,
+                MeanAbsoluteError: 123456.78m,
+                MeanAbsolutePercentageError: 0.123456m,
+                MeanBias: -98765.43m,
+                GeneratedAt.AddDays(-30),
+                GeneratedAt.AddDays(-1)
+            ))
+            .ToList();
+
+        var positions = Enumerable
+            .Range(0, new PlutusOptions().SymbolAnalyst.MaxPositions)
+            .Select(i =>
+                Positions()[0] with
+                {
+                    Cost = 1234567.89m,
+                    Quantity = 12345,
+                    Notes = new string('n', 200),
+                }
+            )
+            .ToList();
+
+        return Snapshot() with
+        {
+            Symbol = Symbol() with
+            {
+                Name = "Twisted ancestral colour kit (ornamented)",
+                Subcode = "p2p",
+                AdditionalFields = new AdditionalFields(
+                    Limit: 70000,
+                    HighAlch: 1234567,
+                    LowAlch: 823045,
+                    Exchange: "NASDAQ"
+                ),
+            },
+            Market = Market() with { Description = new string('d', 400) },
+            TimeFrame = timeFrame,
+            SelectedTrades = new GetSymbolTradesResponse(
+                1198765.43m,
+                1287654.32m,
+                1234567.89m,
+                1975405239506.17m,
+                1987654.32m,
+                1580120,
+                buckets
+            ),
+            Windows =
+            [
+                .. SymbolAnalyst.Windows.Select(window => new SymbolAnalystWindow(
+                    window,
+                    OneDayTrades() with
+                    {
+                        TotalSpent = 152415787654.32m,
+                        MinPrice = 1198765.43m,
+                        MaxPrice = 1287654.32m,
+                        TotalVolume = 123456.78m,
+                        NumTransactions = 98765,
+                        Tax = 25753.09m,
+                    }
+                )),
+            ],
+            Signals = new GetSymbolSignalsResponse(
+                SymbolId,
+                "Armadyl godsword",
+                signals,
+                new SignalSummary(-0.87m, 3, 3, 1, IsFlipFavourable: true, IsMerchFavourable: true)
+            ),
+            SignalHistory = SignalHistory() with { Signals = history },
+            ForecastEfficacy = efficacy,
+            Positions = positions,
+        };
     }
 }

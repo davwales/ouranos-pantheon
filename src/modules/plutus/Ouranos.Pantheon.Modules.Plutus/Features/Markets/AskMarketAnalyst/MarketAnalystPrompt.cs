@@ -2,6 +2,7 @@ using System.Globalization;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.AskMarketAnalyst.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketOverview.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketTrades.Schemas;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Markets.AskMarketAnalyst;
 
@@ -41,8 +42,8 @@ internal static class MarketAnalystPrompt
 
         var tax = flat is null
             ? "Tax: none."
-            : $"Tax: {FormatPercent(flat.Rate)} of sell price "
-                + $"(min {FormatCompact(flat.Minimum)}, max {FormatCompact(flat.Maximum)}).";
+            : $"Tax: {AssistantNumberFormat.Percent(flat.Rate)} of sell price "
+                + $"(min {AssistantNumberFormat.Compact(flat.Minimum)}, max {AssistantNumberFormat.Compact(flat.Maximum)}).";
 
         return $"""
             ## Market: {snapshot.Market.Name}
@@ -58,9 +59,9 @@ internal static class MarketAnalystPrompt
     {
         var overview = snapshot.Overview;
         var summary =
-            $"Avg price {FormatCompact(overview.AveragePrice)}, "
-            + $"volume {FormatCompact(overview.Volume)}, "
-            + $"{FormatCompact(overview.NumTransactions)} trades.";
+            $"Avg price {AssistantNumberFormat.Compact(overview.AveragePrice)}, "
+            + $"volume {AssistantNumberFormat.Compact(overview.Volume)}, "
+            + $"{AssistantNumberFormat.Compact(overview.NumTransactions)} trades.";
 
         var trend = Downsample(overview.Trades, snapshot.TrendPoints);
         var trendLine =
@@ -102,7 +103,7 @@ internal static class MarketAnalystPrompt
                     var date = chunk[0]
                         .Date.UtcDateTime.ToString("MM-dd HH:mm", CultureInfo.InvariantCulture);
 
-                    return $"{date} {FormatCompact(price)}/{FormatCompact(volume)}";
+                    return $"{date} {AssistantNumberFormat.Compact(price)}/{AssistantNumberFormat.Compact(volume)}";
                 }),
         ];
     }
@@ -120,14 +121,14 @@ internal static class MarketAnalystPrompt
             .OrderByDescending(cell => cell.TotalTrades)
             .Take(HeatmapSlots)
             .Select(cell =>
-                $"{DayNames[cell.DayOfWeek % 7]} {cell.Hour:00}:00 ({FormatNumber(cell.Percentage)}%)"
+                $"{DayNames[cell.DayOfWeek % 7]} {cell.Hour:00}:00 ({AssistantNumberFormat.Number(cell.Percentage)}%)"
             );
 
         var quietest = cells
             .OrderBy(cell => cell.TotalTrades)
             .Take(HeatmapSlots)
             .Select(cell =>
-                $"{DayNames[cell.DayOfWeek % 7]} {cell.Hour:00}:00 ({FormatNumber(cell.Percentage)}%)"
+                $"{DayNames[cell.DayOfWeek % 7]} {cell.Hour:00}:00 ({AssistantNumberFormat.Number(cell.Percentage)}%)"
             );
 
         return $"""
@@ -166,14 +167,14 @@ internal static class MarketAnalystPrompt
             string.Join(
                 " | ",
                 FormatName(row),
-                FormatCompact(row.MinPrice),
-                FormatCompact(row.MaxPrice),
-                row.TotalVolume == 0 ? "-" : FormatCompact(row.AveragePrice),
-                FormatCompact(row.TotalVolume),
-                FormatCompact(row.NumTransactions),
-                FormatCompact(row.Margin),
-                row.MinPrice == 0 ? "-" : FormatPercent(row.Roi),
-                FormatCompact(row.TotalGain)
+                AssistantNumberFormat.Compact(row.MinPrice),
+                AssistantNumberFormat.Compact(row.MaxPrice),
+                row.TotalVolume == 0 ? "-" : AssistantNumberFormat.Compact(row.AveragePrice),
+                AssistantNumberFormat.Compact(row.TotalVolume),
+                AssistantNumberFormat.Compact(row.NumTransactions),
+                AssistantNumberFormat.Compact(row.Margin),
+                row.MinPrice == 0 ? "-" : AssistantNumberFormat.Percent(row.Roi),
+                AssistantNumberFormat.Compact(row.TotalGain)
             )
         );
 
@@ -189,28 +190,5 @@ internal static class MarketAnalystPrompt
         return string.IsNullOrWhiteSpace(row.SymbolSubcode)
             ? row.SymbolName
             : $"{row.SymbolName} ({row.SymbolSubcode})";
-    }
-
-    internal static string FormatCompact(decimal value)
-    {
-        var magnitude = Math.Abs(value);
-
-        return magnitude switch
-        {
-            >= 1_000_000_000m => FormatNumber(value / 1_000_000_000m, "0.#") + "B",
-            >= 1_000_000m => FormatNumber(value / 1_000_000m, "0.#") + "M",
-            >= 10_000m => FormatNumber(value / 1_000m, "0.#") + "K",
-            _ => FormatNumber(value),
-        };
-    }
-
-    private static string FormatPercent(decimal ratio)
-    {
-        return FormatNumber(ratio * 100, "0.#") + "%";
-    }
-
-    private static string FormatNumber(decimal value, string format = "0.##")
-    {
-        return value.ToString(format, CultureInfo.InvariantCulture);
     }
 }
