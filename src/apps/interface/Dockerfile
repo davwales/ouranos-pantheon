@@ -1,9 +1,9 @@
-FROM node:22-alpine
+FROM node:22.23-alpine
 
 WORKDIR /app
 
 COPY ./src/apps/interface/package*.json ./
-RUN npm install
+RUN npm ci
 
 COPY ./src/apps/interface .
 RUN npm run build
