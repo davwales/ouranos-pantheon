@@ -65,7 +65,7 @@ public abstract class PantheonAssistant<TContext>(
         await using var stream = _mlClient
             .StreamResponseAsync(
                 prompt.ModelIdentifier,
-                prompt.SystemPrompt,
+                $"{prompt.SystemPrompt}\n\n{AssistantFormatting.Instructions}",
                 [.. messages.Select(m => new MessageDto(m.Content, MapRole(m.Role)))],
                 prompt.Temperature,
                 prompt.MaxTokens,

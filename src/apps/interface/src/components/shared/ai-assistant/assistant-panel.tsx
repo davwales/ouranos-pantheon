@@ -30,6 +30,7 @@ export type AssistantPanelProps<TContext> = {
   assistantName?: string;
   placeholder?: string;
   emptyState?: React.ReactNode;
+  suggestions?: string[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
@@ -42,6 +43,7 @@ export function AssistantPanel<TContext>({
   assistantName = "Assistant",
   placeholder,
   emptyState,
+  suggestions,
   open,
   onOpenChange,
 }: AssistantPanelProps<TContext>) {
@@ -67,6 +69,7 @@ export function AssistantPanel<TContext>({
       assistantName={assistantName}
       placeholder={placeholder}
       emptyState={emptyState}
+      suggestions={suggestions}
       autoFocus={!isMobile}
       onSend={send}
       onStop={stop}

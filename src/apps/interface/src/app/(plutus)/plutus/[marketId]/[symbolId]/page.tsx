@@ -1,7 +1,5 @@
 "use client";
 
-import ClipboardCopy from "@/components/shared/clipboard-copy";
-import { PrettyNumber } from "@/components/shared/pretty-number/pretty-number";
 import { Typography } from "@/components/shared/typography";
 import CandlestickChart from "@/app/(plutus)/plutus/components/candlestick-chart";
 import PriceChart from "@/app/(plutus)/plutus/components/price-chart";
@@ -9,10 +7,13 @@ import TimeFrameSelection from "@/app/(plutus)/plutus/components/time-frame-sele
 import { ForecastEfficacyView } from "./_components/forecast-efficacy-view";
 import PercentChange from "./_components/percent-change";
 import { SignalsSection } from "./_components/signals-section";
+import { SymbolAnalystButton } from "./_components/symbol-analyst-button";
 import { SymbolPositionsView } from "./_components/symbol-positions-view";
+import { SymbolStatsGrid } from "./_components/symbol-stats-grid";
 
 import { PlutusState, usePlutusStore } from "@/stores/plutus-store";
 import { useBreadcrumbLabel } from "@/components/shared/breadcrumbs";
+import { useNavBarActions } from "@/components/shared/nav-bar-actions-context";
 import { useApi } from "@/hooks/use-api";
 import useInterval from "@/hooks/use-interval";
 import {
@@ -23,7 +24,7 @@ import {
   Symbol,
 } from "@/lib/api/plutus";
 import { useParams } from "next/navigation";
-import React, { ReactNode, useMemo } from "react";
+import { ReactNode, useEffect, useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { SymbolDetailSkeleton } from "@/app/(plutus)/plutus/[marketId]/[symbolId]/_components/symbol-detail-skeleton";
 import { NotFoundCard } from "@/components/shared/not-found-card";
@@ -34,59 +35,6 @@ interface SymbolDetails {
   summary: GetDailySymbolSummaryResponse;
   latestTrade?: { price: number; volume: number };
   forecast?: GetMarketForecastRow;
-}
-
-function StatDisplay({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}): ReactNode {
-  return (
-    <div className="flex justify-between items-end gap-2">
-      <Typography variant="h4">{label}</Typography>
-      <span className="whitespace-nowrap">{children}</span>
-    </div>
-  );
-}
-
-function Stats({
-  data,
-  ...props
-}: React.ComponentProps<"div"> & { data: SymbolDetails | undefined }) {
-  return (
-    <div {...props}>
-      <StatDisplay label="Code">{data?.symbol.code}</StatDisplay>
-      {data?.symbol.subcode && (
-        <StatDisplay label="Subcode">{data.symbol.subcode}</StatDisplay>
-      )}
-      <StatDisplay label="Total Spent">
-        <PrettyNumber number={data?.trades.totalSpent ?? 0} />
-      </StatDisplay>
-      <StatDisplay label="Minimum Price">
-        <ClipboardCopy value={data?.trades.minPrice ?? 0}>
-          <PrettyNumber number={data?.trades.minPrice ?? 0} />
-        </ClipboardCopy>
-      </StatDisplay>
-      <StatDisplay label="Average Price">
-        <ClipboardCopy value={data?.trades.averagePrice ?? 0}>
-          <PrettyNumber number={data?.trades.averagePrice ?? 0} />
-        </ClipboardCopy>
-      </StatDisplay>
-      <StatDisplay label="Maximum Price">
-        <ClipboardCopy value={data?.trades.maxPrice ?? 0}>
-          <PrettyNumber number={data?.trades.maxPrice ?? 0} />
-        </ClipboardCopy>
-      </StatDisplay>
-      <StatDisplay label="Volume">
-        <PrettyNumber number={data?.trades.volume ?? 0} />
-      </StatDisplay>
-      <StatDisplay label="# Transactions">
-        <PrettyNumber number={data?.trades.numTransactions || 0} decimals={0} />
-      </StatDisplay>
-    </div>
-  );
 }
 
 function PriceChange({
@@ -164,6 +112,24 @@ export default function SymbolDetail() {
     [state.data?.trades.trades],
   );
 
+  const { setActions, clearActions } = useNavBarActions();
+  const isAssistantAvailable = data?.symbol !== undefined;
+
+  useEffect(() => {
+    if (!isAssistantAvailable) {
+      return;
+    }
+
+    setActions(
+      <SymbolAnalystButton
+        key={symbolId}
+        symbolId={symbolId}
+        timeFrame={timeFrameKey}
+      />,
+    );
+    return () => clearActions();
+  }, [isAssistantAvailable, symbolId, timeFrameKey, setActions, clearActions]);
+
   if (state.status === "error" && !data) {
     return <NotFoundCard title="Symbol not found" backHref={`/plutus/${marketId}`} backLabel="Back to Market" />;
   }
@@ -200,8 +166,9 @@ export default function SymbolDetail() {
         />
       </div>
 
-      <Stats
-        data={data}
+      <SymbolStatsGrid
+        symbol={data?.symbol}
+        trades={data?.trades}
         className="mt-2 gap-x-40 grid grid-cols-1 md:grid-cols-2"
       />
       <PriceChart data={formattedTrades} className="mt-8 max-h-96 w-full" />

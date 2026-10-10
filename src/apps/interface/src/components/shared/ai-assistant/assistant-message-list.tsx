@@ -26,7 +26,7 @@ export function AssistantMessageList({
               content={message.content}
               reasoning={message.reasoning}
               isStreaming={isStreaming && index === messages.length - 1}
-              className="max-w-[90%] w-fit wrap-break-word"
+              className="min-w-0 max-w-[90%] w-fit wrap-break-word"
             />
           </div>
         );

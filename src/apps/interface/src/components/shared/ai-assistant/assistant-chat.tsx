@@ -2,6 +2,7 @@
 
 import { AssistantInput } from "@/components/shared/ai-assistant/assistant-input";
 import { AssistantMessageList } from "@/components/shared/ai-assistant/assistant-message-list";
+import { AssistantSuggestions } from "@/components/shared/ai-assistant/assistant-suggestions";
 import { type AssistantChatMessage } from "@/components/shared/ai-assistant/use-assistant-chat";
 import { Typography } from "@/components/shared/typography";
 import { cn } from "@/lib/utils";
@@ -16,6 +17,7 @@ export function AssistantChat({
   assistantName,
   placeholder,
   emptyState,
+  suggestions = [],
   autoFocus,
   onSend,
   onStop,
@@ -27,6 +29,7 @@ export function AssistantChat({
   assistantName: string;
   placeholder?: string;
   emptyState?: React.ReactNode;
+  suggestions?: string[];
   autoFocus?: boolean;
   onSend: (content: string) => Promise<boolean>;
   onStop: () => void;
@@ -62,9 +65,16 @@ export function AssistantChat({
         onScroll={handleScroll}
         className="min-h-0 flex-1 overflow-y-auto px-4 py-2"
       >
-        {messages.length === 0 && emptyState ? (
-          <div className="flex h-full items-center justify-center text-center">
+        {messages.length === 0 && (emptyState || suggestions.length > 0) ? (
+          <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
             {emptyState}
+            {suggestions.length > 0 && (
+              <AssistantSuggestions
+                suggestions={suggestions}
+                disabled={isStreaming}
+                onSelect={(suggestion) => void handleSend(suggestion)}
+              />
+            )}
           </div>
         ) : (
           <AssistantMessageList

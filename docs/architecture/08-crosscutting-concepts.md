@@ -151,7 +151,10 @@ store rather than client-supplied data.
   data and returning an `AssistantPrompt` (model, system prompt, temperature, max tokens,
   reasoning effort) from module options. The base class streams through
   `IOuranosMachineLearningClient` over the OpenAI Responses API, sending the system prompt
-  as `instructions`.
+  as `instructions` followed by the shared `AssistantFormatting` guideline (short answers,
+  small tables, no LaTeX), since every assistant renders in the same narrow panel. Context
+  may be loaded directly from the store or composed by invoking existing query handlers
+  through `IMessageBus`, which keeps the prompt consistent with what the page shows.
 - **Model settings**: global defaults (model, reasoning effort, max tokens) live in
   `ModelDefaults` (`Shared.Contract/Infra/OuranosMachineLearning/`). Each feature's options
   record initializes from them and overrides only what it needs (e.g. recipe import uses low
@@ -172,11 +175,17 @@ store rather than client-supplied data.
   icon button), `AssistantPanel` (bottom drawer on mobile, non-modal right sheet on desktop
   so the page stays usable) and `useAssistantChat`, configured with a typed
   `AssistantEndpoint<TContext>` (which binds the context type to the endpoint), a context
-  object, and a title. Pages place their assistant button in the nav bar through
+  object, and a title. Optional `suggestions` render as clickable starter questions in the
+  empty state. Replies render through `MarkdownRenderer` in its `compact` variant: chat-sized
+  headings and spacing, with tables in a horizontally scrolling container. Pages place their assistant button in the nav bar through
   `useNavBarActions`, only while the assistant is usable.
 
-Current assistants: Hestia `KitchenAssistant` (`/api/hestia/recipes/assistant/completions/stream`,
-context `{ recipeId }`).
+Current assistants:
+
+- Hestia `KitchenAssistant` (`/api/hestia/recipes/assistant/completions/stream`, context
+  `{ recipeId }`).
+- Plutus `SymbolAnalyst` (`/api/plutus/symbols/assistant/completions/stream`, context
+  `{ symbolId, timeFrame }`), configured by `Ouranos:Plutus:SymbolAnalyst`.
 
 ## 8.12 Health Checks
 

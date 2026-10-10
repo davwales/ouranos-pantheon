@@ -7,7 +7,10 @@ export const TextSegment = memo(function TextSegment({
   content: string;
 }) {
   return (
-    <MarkdownRenderer componentClassName={{ blockCode: "my-4" }}>
+    <MarkdownRenderer
+      variant="compact"
+      componentClassName={{ blockCode: "my-4" }}
+    >
       {content}
     </MarkdownRenderer>
   );
