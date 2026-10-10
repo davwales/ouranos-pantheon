@@ -1,4 +1,5 @@
 import { InfoCard } from "@/components/shared/info-card";
+import { MarketAnalystActions } from "@/app/(plutus)/plutus/[marketId]/_components/market-analyst-actions";
 import MarketOverview from "@/app/(plutus)/plutus/[marketId]/_components/market-overview";
 import VolumeHeatmap from "@/app/(plutus)/plutus/[marketId]/_components/volume-heatmap";
 import Link from "next/link";
@@ -66,6 +67,8 @@ export default async function MarketLanding({
 
   return (
     <div className="space-y-6">
+      <MarketAnalystActions marketId={marketId} />
+
       <MarketOverview marketId={marketId} />
 
       <VolumeHeatmap marketId={marketId} />

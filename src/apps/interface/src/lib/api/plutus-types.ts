@@ -488,3 +488,13 @@ export type SymbolAnalystContext = {
   symbolId: string;
   timeFrame: TimeFrameKey;
 };
+
+export type MarketAnalystContext = {
+  marketId: string;
+  timeFrame: TimeFrameKey;
+  filter?: string[];
+  sortField?: string;
+  sortDirection?: string;
+  skip?: number;
+  take?: number;
+};

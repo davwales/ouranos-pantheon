@@ -220,6 +220,13 @@ composed system prompt is cached in memory per symbol and time frame
 byte-identical prompt and the inference server restores its cached prompt state instead of
 re-processing the whole context.
 
+The Plutus Market Analyst (context `{ marketId, timeFrame, filter?, sortField?, sortDirection?,
+skip?, take? }`) is page-scoped: after loading the market it concurrently invokes the market
+overview, volume heatmap and market trades handlers, the last with the Explorer's own filter,
+sort and page (capped at `MaxViewRows`), so it sees exactly the rows the user sees. The market
+landing page sends no view and gets the Explorer's default order. The composed prompt is cached
+per market, time frame and view.
+
 ## 6.8 Observability at Runtime
 
 Health is exposed via centrally registered checks (Postgres, RabbitMQ, OuranosMl, WebSocket

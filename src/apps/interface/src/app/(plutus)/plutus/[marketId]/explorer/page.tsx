@@ -1,24 +1,29 @@
 "use client";
 
-import ClipboardCopy from "@/components/shared/clipboard-copy";
-import { PrettyNumber } from "@/components/shared/pretty-number";
-import { ExtendedColumnDef } from "@/components/shared/responsive-data-table";
+import { explorerColumns } from "@/app/(plutus)/plutus/[marketId]/explorer/_components/explorer-columns";
+import { MarketAnalystButton } from "@/app/(plutus)/plutus/[marketId]/_components/market-analyst-button";
+import TimeFrameSelection from "@/app/(plutus)/plutus/components/time-frame-selection";
+import { useNavBarActions } from "@/components/shared/nav-bar-actions-context";
+import { NotFoundCard } from "@/components/shared/not-found-card";
 import ResponsiveDataTable from "@/components/shared/responsive-data-table/responsive-data-table";
 import {
   extractFilter,
   extractSort,
 } from "@/components/shared/responsive-data-table/types";
 import { Typography } from "@/components/shared/typography";
-import TimeFrameSelection from "@/app/(plutus)/plutus/components/time-frame-selection";
-import { PlutusState, usePlutusStore } from "@/stores/plutus-store";
 import { useApi } from "@/hooks/use-api";
-import { GetMarketTradesRow, plutusApi } from "@/lib/api/plutus";
-import { NotFoundCard } from "@/components/shared/not-found-card";
+import { plutusApi } from "@/lib/api/plutus";
+import { PlutusState, usePlutusStore } from "@/stores/plutus-store";
 import { RefreshCw } from "lucide-react";
-import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
+
+const SUGGESTIONS = [
+  "Which of these is the best opportunity?",
+  "Which of these are too illiquid to trust?",
+  "Compare the top three after tax.",
+];
 
 export default function MarketDetail() {
   const { marketId } = useParams<{ marketId: string }>();
@@ -33,12 +38,14 @@ export default function MarketDetail() {
   const { sortField, sortDirection } = extractSort(tableState.sort);
 
   const filter = useMemo(() => extractFilter(tableState), [tableState]);
+  const skip = tableState.pagination?.skip ?? 0;
+  const take = tableState.pagination?.take ?? 10;
 
   const [state, reexecute] = useApi(
     () =>
       plutusApi.getMarketTrades(marketId, timeFrameKey, {
-        skip: tableState.pagination?.skip ?? 0,
-        take: tableState.pagination?.take ?? 10,
+        skip,
+        take,
         sortField,
         sortDirection,
         filter,
@@ -46,7 +53,8 @@ export default function MarketDetail() {
     [
       marketId,
       timeFrameKey,
-      tableState.pagination,
+      skip,
+      take,
       sortField,
       sortDirection,
       filter,
@@ -66,129 +74,38 @@ export default function MarketDetail() {
       }
     : undefined;
 
-  const columns: ExtendedColumnDef<GetMarketTradesRow>[] = useMemo(
-    () => [
-      {
-        id: "symbolName",
-        header: "Name",
-        accessorFn: (row) => row.symbolName,
-        cell: ({ cell, row }) => (
-          <Link
-            href={`/plutus/${marketId}/${row.original.symbolId}`}
-            className="hover:underline"
-          >
-            {cell.getValue<string>()}
-          </Link>
-        ),
-        filterConfig: {
-          type: "string",
-          operators: ["eq", "neq", "contains", "startsWith", "endsWith"],
-        },
-      },
-      {
-        id: "symbolSubcode",
-        header: "Subcode",
-        accessorFn: (row) => row.symbolSubcode,
-        filterConfig: {
-          type: "string",
-          operators: ["eq", "neq", "contains", "startsWith", "endsWith"],
-        },
-      },
-      {
-        id: "minPrice",
-        header: "Min Price",
-        accessorFn: (row) => row.minPrice,
-        cell: ({ getValue }) => (
-          <ClipboardCopy value={getValue<number>()}>
-            <PrettyNumber number={getValue<number>()} />
-          </ClipboardCopy>
-        ),
-        filterConfig: {
-          type: "number",
-          operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
-        },
-      },
-      {
-        id: "maxPrice",
-        header: "Max Price",
-        accessorFn: (row) => row.maxPrice,
-        cell: ({ getValue }) => (
-          <ClipboardCopy value={getValue<number>()}>
-            <PrettyNumber number={getValue<number>()} />
-          </ClipboardCopy>
-        ),
-        filterConfig: {
-          type: "number",
-          operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
-        },
-      },
-      {
-        id: "averagePrice",
-        header: "Average Price",
-        accessorFn: (row) => row.averagePrice,
-        cell: ({ getValue }) => (
-          <ClipboardCopy value={getValue<number>()}>
-            <PrettyNumber number={getValue<number>()} />
-          </ClipboardCopy>
-        ),
-        filterConfig: {
-          type: "number",
-          operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
-        },
-      },
-      {
-        id: "totalVolume",
-        header: "Volume",
-        accessorFn: (row) => row.totalVolume,
-        cell: ({ getValue }) => <PrettyNumber number={getValue<number>()} />,
-        filterConfig: {
-          type: "number",
-          operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
-        },
-      },
-      {
-        id: "limit",
-        header: "Limit",
-        accessorFn: (row) => row.limit,
-        cell: ({ getValue }) => <PrettyNumber number={getValue<number>()} />,
-        filterConfig: {
-          type: "number",
-          operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
-        },
-      },
-      {
-        id: "margin",
-        header: "Margin",
-        accessorFn: (row) => row.margin,
-        cell: ({ getValue }) => <PrettyNumber number={getValue<number>()} />,
-        filterConfig: {
-          type: "number",
-          operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
-        },
-      },
-      {
-        id: "totalGain",
-        header: "Gain",
-        accessorFn: (row) => row.totalGain,
-        cell: ({ getValue }) => <PrettyNumber number={getValue<number>()} />,
-        filterConfig: {
-          type: "number",
-          operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
-        },
-      },
-      {
-        id: "roi",
-        header: "ROI",
-        accessorFn: (row) => row.roi,
-        cell: ({ getValue }) => <>{Math.round(getValue<number>() * 100)}%</>,
-        filterConfig: {
-          type: "number",
-          operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
-        },
-      },
-    ],
-    [marketId],
-  );
+  const columns = useMemo(() => explorerColumns(marketId), [marketId]);
+
+  const { setActions, clearActions } = useNavBarActions();
+
+  useEffect(() => {
+    setActions(
+      <MarketAnalystButton
+        key={`${marketId}:${timeFrameKey}`}
+        context={{
+          marketId,
+          timeFrame: timeFrameKey,
+          filter,
+          sortField,
+          sortDirection,
+          skip,
+          take,
+        }}
+        suggestions={SUGGESTIONS}
+      />,
+    );
+    return () => clearActions();
+  }, [
+    marketId,
+    timeFrameKey,
+    filter,
+    sortField,
+    sortDirection,
+    skip,
+    take,
+    setActions,
+    clearActions,
+  ]);
 
   if (state.status === "error" && !data) {
     return <NotFoundCard title="Explorer data not found" backHref={`/plutus/${marketId}`} backLabel="Back to Market" />;

@@ -54,6 +54,7 @@ export type {
   SignalHistoryResponse,
   GetSymbolSignalHistoryResponse,
   SymbolAnalystContext,
+  MarketAnalystContext,
 } from "./plutus-types";
 
 import type {
@@ -93,10 +94,14 @@ import type {
   PositionSide,
   PositionStatus,
   SymbolAnalystContext,
+  MarketAnalystContext,
 } from "./plutus-types";
 
 export const SYMBOL_ANALYST_ENDPOINT: AssistantEndpoint<SymbolAnalystContext> =
   "/api/plutus/symbols/assistant/completions/stream";
+
+export const MARKET_ANALYST_ENDPOINT: AssistantEndpoint<MarketAnalystContext> =
+  "/api/plutus/markets/assistant/completions/stream";
 
 export const plutusApi = {
   getAllMarkets: (params?: Pick<PageParams, "filter">) =>
