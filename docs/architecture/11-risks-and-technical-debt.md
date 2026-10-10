@@ -20,6 +20,8 @@ the owner decides what gets fixed and what gets accepted.
 | D15 | **Wolverine runtime code generation** (`UseRuntimeCompilation`) | Shared `CoreExtensions` | Slower cold start and handler codegen failures surface at runtime, not build time; mitigated by `WolverineCodegenValidationTests` | Low |
 | D16 | **Ineffective overlap guard**: `SymbolSignalCalculateJob` uses an `Interlocked` instance field, but TickerQ creates a new job instance per run, so the flag never sees a concurrent run | Plutus `Features/Signals/SymbolSignalCalculate` | If a run exceeds its 5-minute interval, runs may overlap, duplicating signal writes and view refreshes | Medium |
 | D17 | **TickerQ dashboard unauthenticated**: `/tickerq/dashboard` is mapped with no auth | Shared `CoreExtensions` (`AddDashboard`) | Anyone on the network can inspect and trigger or alter scheduled jobs; a specific case of D2 with operational reach | Medium |
+| D18 | **Unpatched `braces` advisory** (GHSA-vfj7-8cjw-p6xm, stack-exhaustion DoS): no fixed release exists; reached only via `eslint-config-next` → `@next/eslint-plugin-next` → `fast-glob@3.3.1` → `micromatch` | interface `package-lock.json` (dev dependency) | Lint-time only, on trusted glob patterns, so no runtime exposure; `npm audit` stays non-zero until upstream ships a fix | Low (accepted) |
+| D19 | **React Compiler lint rules downgraded to warnings**: `react-hooks/set-state-in-effect`, `static-components` and `preserve-manual-memoization` flag pre-existing patterns (mostly dialogs resetting form state on open) | interface `eslint.config.mjs`; Hermes/Hestia/Plutus dialogs and detail pages | Cascading renders and stale-state bugs the rules guard against can still be introduced without failing CI | Low |
 
 ## 11.1 Risk Radar
 
@@ -50,4 +52,6 @@ quadrantChart
     D15 runtime codegen: [0.2, 0.15]
     D16 overlap guard: [0.75, 0.4]
     D17 dashboard: [0.55, 0.75]
+    D18 braces advisory: [0.15, 0.1]
+    D19 hooks lint: [0.45, 0.2]
 ```
