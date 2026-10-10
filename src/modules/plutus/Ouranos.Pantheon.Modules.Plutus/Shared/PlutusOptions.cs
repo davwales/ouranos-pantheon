@@ -7,7 +7,8 @@ namespace Ouranos.Pantheon.Modules.Plutus.Shared;
 public sealed record PlutusOptions(
     DataLoadersOptions DataLoaders,
     ForecastingOptions Forecasting,
-    OptimizationOptions Optimization
+    OptimizationOptions Optimization,
+    SymbolAnalystOptions SymbolAnalyst
 )
 {
     public const string SectionName = "Ouranos:Plutus";
@@ -16,6 +17,7 @@ public sealed record PlutusOptions(
         : this(
             DataLoaders: new DataLoadersOptions(),
             Forecasting: new ForecastingOptions(),
-            Optimization: new OptimizationOptions()
+            Optimization: new OptimizationOptions(),
+            SymbolAnalyst: new SymbolAnalystOptions()
         ) { }
 }

@@ -57,6 +57,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.DeleteSymbolGroup;
 using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetAllSymbolGroups;
 using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetSymbolGroup;
 using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.UpdateSymbolGroup;
+using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.AskSymbolAnalyst;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetAllSymbols;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetDailySymbolSummary;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetSymbol;
@@ -143,6 +144,7 @@ public sealed class PlutusModule : IPantheonModule
         GetAllSymbolsEndpoint.Map(app);
         GetSymbolEndpoint.Map(app);
         GetDailySymbolSummaryEndpoint.Map(app);
+        AskSymbolAnalystEndpoint.Map(app);
 
         GetAllForecastsEndpoint.Map(app);
         GetMarketForecastEndpoint.Map(app);

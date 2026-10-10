@@ -41,7 +41,10 @@ export const ThinkingSegment = memo(function ThinkingSegment({
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className="pl-6 mt-2 border-l border-border text-muted-foreground text-sm">
-          <MarkdownRenderer componentClassName={{ blockCode: "my-2" }}>
+          <MarkdownRenderer
+            variant="compact"
+            componentClassName={{ blockCode: "my-2" }}
+          >
             {content}
           </MarkdownRenderer>
         </div>

@@ -84,6 +84,70 @@ public sealed class GetMarketTradesHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenFilteredBySymbolId_ShouldReturnOnlyThatSymbol()
+    {
+        // Arrange
+        var market = Market.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<Taxes>()
+        );
+
+        Symbol[] symbols =
+        [
+            Symbol.Create(
+                new Id<Symbol>(Guid.NewGuid().ToString()),
+                _fixture.Create<string>(),
+                null,
+                _fixture.Create<string>(),
+                market.Id,
+                new AdditionalFields()
+            ),
+            Symbol.Create(
+                new Id<Symbol>(Guid.NewGuid().ToString()),
+                _fixture.Create<string>(),
+                null,
+                _fixture.Create<string>(),
+                market.Id,
+                new AdditionalFields()
+            ),
+        ];
+
+        await _dbContext.SeedData(market);
+        foreach (var symbol in symbols)
+        {
+            await _dbContext.SeedData(symbol);
+            await _dbContext.SeedData(
+                new Snapshot(
+                    market.Id,
+                    symbol.Id,
+                    TimeFrame.OneDay,
+                    TotalSpent: 1000m,
+                    MinPrice: 90m,
+                    MaxPrice: 110m,
+                    TotalVolume: 10m,
+                    NumTransactions: 5,
+                    Limit: 100m,
+                    Tax: 1m
+                )
+            );
+        }
+
+        var query = new GetMarketTradesInput(
+            market.Id,
+            TimeFrame.OneDay,
+            Filter: [$"SymbolId:eq:{symbols[1].Id}"]
+        );
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Items.ShouldHaveSingleItem().SymbolId.ShouldBe(symbols[1].Id);
+        result.TotalCount.ShouldBe(1);
+    }
+
+    [Fact]
     public async Task Handle_WhenNoSnapshots_ShouldReturnEmptyPagedResponse()
     {
         // Arrange

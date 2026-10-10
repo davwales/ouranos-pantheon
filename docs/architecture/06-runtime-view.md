@@ -209,6 +209,17 @@ sequenceDiagram
     A -->> UI: SSE reasoning … content … usage, done (or error)
 ```
 
+The Plutus Symbol Analyst (context `{ symbolId, timeFrame }`) follows the same flow, but
+instead of reading the store directly it builds its prompt by invoking the module's existing
+query handlers through `IMessageBus` - symbol, market, trade windows, latest trade, signals and
+their 7-day history, forecast and forecast efficacy (only when the market has forecasting
+enabled), and the user's positions - concurrently, each invocation in its own scope with its
+own `PlutusDbContext`, so the model sees exactly the numbers the symbol page shows. The
+composed system prompt is cached in memory per symbol and time frame
+(`Ouranos:Plutus:SymbolAnalyst:ContextCacheMinutes`, default 5), so follow-up turns send a
+byte-identical prompt and the inference server restores its cached prompt state instead of
+re-processing the whole context.
+
 ## 6.8 Observability at Runtime
 
 Health is exposed via centrally registered checks (Postgres, RabbitMQ, OuranosMl, WebSocket

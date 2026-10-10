@@ -1,4 +1,5 @@
 import { TimeFrameKey } from "@/app/(plutus)/plutus/constants/time-frames";
+import { type AssistantEndpoint } from "@/lib/api/assistant";
 import { api, PagedResponse } from "@/lib/api-client";
 
 export type {
@@ -52,6 +53,7 @@ export type {
   SignalHistoryPoint,
   SignalHistoryResponse,
   GetSymbolSignalHistoryResponse,
+  SymbolAnalystContext,
 } from "./plutus-types";
 
 import type {
@@ -90,7 +92,11 @@ import type {
   InputThresholds,
   PositionSide,
   PositionStatus,
+  SymbolAnalystContext,
 } from "./plutus-types";
+
+export const SYMBOL_ANALYST_ENDPOINT: AssistantEndpoint<SymbolAnalystContext> =
+  "/api/plutus/symbols/assistant/completions/stream";
 
 export const plutusApi = {
   getAllMarkets: (params?: Pick<PageParams, "filter">) =>

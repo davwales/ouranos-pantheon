@@ -1,3 +1,5 @@
+import { type TimeFrameKey } from "@/app/(plutus)/plutus/constants/time-frames";
+
 export interface Market {
   id: string;
   name: string;
@@ -481,3 +483,8 @@ export interface PageParams {
   filter?: string[];
   [key: string]: string | number | boolean | string[] | undefined;
 }
+
+export type SymbolAnalystContext = {
+  symbolId: string;
+  timeFrame: TimeFrameKey;
+};

@@ -1,0 +1,30 @@
+info:
+  name: Ask Symbol Analyst
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/plutus/symbols/assistant/completions/stream"
+  body:
+    type: json
+    data: |-
+      {
+        "messages": [
+          {
+            "role": "User",
+            "content": "Is this a good flip right now?"
+          }
+        ],
+        "context": {
+          "symbolId": "{{SYMBOL_ID}}",
+          "timeFrame": "OneDay"
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

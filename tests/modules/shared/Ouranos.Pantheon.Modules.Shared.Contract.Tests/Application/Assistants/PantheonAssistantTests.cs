@@ -167,7 +167,7 @@ public sealed class PantheonAssistantTests
     }
 
     [Fact]
-    public async Task Handle_WhenCalled_ShouldPassContextAndSendPromptAsInstructionsWithMappedMessages()
+    public async Task Handle_WhenCalled_ShouldSendPromptWithFormattingGuidelineAsInstructionsWithMappedMessages()
     {
         // Arrange
         List<MessageDto>? sentMessages = null;
@@ -175,7 +175,7 @@ public sealed class PantheonAssistantTests
         _mlClient
             .StreamResponseAsync(
                 "test-model",
-                "You are a test.",
+                $"You are a test.\n\n{AssistantFormatting.Instructions}",
                 Arg.Do<List<MessageDto>>(m => sentMessages = m),
                 0.5f,
                 256,

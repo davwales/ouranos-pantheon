@@ -17,6 +17,7 @@ public sealed class GetMarketTradesHandler
 {
     private static readonly FilterBuilder<GetMarketTradesResponse> FilterBuilder =
         new FilterBuilder<GetMarketTradesResponse>()
+            .On(nameof(GetMarketTradesResponse.SymbolId), x => x.SymbolId)
             .On(
                 nameof(GetMarketTradesResponse.SymbolName),
                 x => x.SymbolName,

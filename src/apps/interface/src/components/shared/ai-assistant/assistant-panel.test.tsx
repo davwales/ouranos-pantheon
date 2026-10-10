@@ -26,7 +26,7 @@ async function* events(...items: AssistantEvent[]): AsyncGenerator<AssistantEven
 const ENDPOINT: AssistantEndpoint<{ id: string }> =
   "/api/test/assistant/completions/stream";
 
-function TestPanel() {
+function TestPanel({ suggestions }: { suggestions?: string[] }) {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -37,6 +37,7 @@ function TestPanel() {
         context={{ id: "1" }}
         assistantName="Helper"
         emptyState={<p>Nothing yet</p>}
+        suggestions={suggestions}
         open={open}
         onOpenChange={setOpen}
       />
@@ -44,8 +45,8 @@ function TestPanel() {
   );
 }
 
-function renderPanel() {
-  return render(<TestPanel />);
+function renderPanel(suggestions?: string[]) {
+  return render(<TestPanel suggestions={suggestions} />);
 }
 
 describe("AssistantPanel", () => {
@@ -176,5 +177,45 @@ describe("AssistantPanel", () => {
     // Assert
     expect(await screen.findByText("Test Assistant")).toBeInTheDocument();
     expect(document.querySelector("[data-slot='drawer-content']")).not.toBeNull();
+  });
+
+  it("WhenSuggestionsProvided_ShouldRenderThemInEmptyState", async () => {
+    // Arrange
+    renderPanel(["Is this a good buy?", "Explain the signals."]);
+
+    // Act
+    fireEvent.click(screen.getByText("Open assistant"));
+
+    // Assert
+    expect(await screen.findByText("Nothing yet")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Is this a good buy?" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Explain the signals." })).toBeInTheDocument();
+  });
+
+  it("WhenSuggestionClicked_ShouldSendItAndHideSuggestions", async () => {
+    // Arrange
+    vi.mocked(streamAssistant).mockReturnValueOnce(
+      events({ $type: "content", content: "Yes, the margin is healthy." }, { $type: "done" }),
+    );
+    renderPanel(["Is this a good buy?"]);
+    fireEvent.click(screen.getByText("Open assistant"));
+
+    // Act
+    fireEvent.click(await screen.findByRole("button", { name: "Is this a good buy?" }));
+
+    // Assert
+    expect(await screen.findByText("Yes, the margin is healthy.")).toBeInTheDocument();
+    expect(screen.getByText("Is this a good buy?")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Is this a good buy?" }),
+    ).not.toBeInTheDocument();
+    expect(vi.mocked(streamAssistant)).toHaveBeenCalledWith(
+      ENDPOINT,
+      {
+        messages: [{ role: "User", content: "Is this a good buy?" }],
+        context: { id: "1" },
+      },
+      expect.any(AbortSignal),
+    );
   });
 });
