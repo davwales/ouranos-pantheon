@@ -16,6 +16,7 @@ internal sealed record SymbolAnalystSnapshot(
     GetMarketResponse Market,
     TimeFrame TimeFrame,
     GetSymbolTradesResponse SelectedTrades,
+    int ChartPoints,
     IReadOnlyList<SymbolAnalystWindow> Windows,
     GetAllTradesResponse? LatestTrade,
     GetSymbolSignalsResponse Signals,

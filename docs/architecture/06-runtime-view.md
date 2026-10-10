@@ -214,8 +214,11 @@ instead of reading the store directly it builds its prompt by invoking the modul
 query handlers through `IMessageBus` - symbol, market, trade windows, latest trade, signals and
 their 7-day history, forecast and forecast efficacy (only when the market has forecasting
 enabled), and the user's positions - concurrently, each invocation in its own scope with its
-own `PlutusDbContext`, so the model sees exactly the numbers the symbol page shows. The
-composed system prompt is cached in memory per symbol and time frame
+own `PlutusDbContext`, so the model sees exactly the numbers the symbol page shows. The prompt
+has a fixed size whatever the time frame: the chart is merged down to `ChartPoints` rows
+(default 8), signals are one line each with a three-point weekly trend, the forecast shows
+days 1, 3 and 7 with a one-line error summary for the most-evaluated model, and positions are
+capped at `MaxPositions` (default 5) with truncated notes. The composed system prompt is cached in memory per symbol and time frame
 (`Ouranos:Plutus:SymbolAnalyst:ContextCacheMinutes`, default 5), so follow-up turns send a
 byte-identical prompt and the inference server restores its cached prompt state instead of
 re-processing the whole context.

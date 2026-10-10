@@ -4,16 +4,13 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketTrades.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetVolumeHeatmap.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
+using Ouranos.Pantheon.Tests.Utils;
 using Factory = Ouranos.Pantheon.Modules.Plutus.Tests.Features.Markets.AskMarketAnalyst.MarketAnalystSnapshotFactory;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Markets.AskMarketAnalyst;
 
 public sealed class MarketAnalystPromptTests
 {
-    // Roughly 1,000 tokens: the inference model's limited context window must still fit the
-    // conversation, the reasoning and the reply.
-    private const int PromptCharacterBudget = 4000;
-
     [Fact]
     public void Compose_WhenAllDataIsPresent_ShouldRenderInstructionsAndEverySection()
     {
@@ -43,7 +40,7 @@ public sealed class MarketAnalystPromptTests
 
                 ## Rows in view (11-12 of 42; sorted by Roi desc; filter TotalVolume:gte:2)
                 Name | Min | Max | Avg | Vol | Txns | Margin | ROI | Gain
-                Twisted bow | 1.4B | 1.5B | 1.5B | 2 | 2 | 85M | 6% | 170M
+                Twisted bow | 1.42B | 1.51B | 1.47B | 2 | 2 | 85M | 6% | 170M
                 Rune platebody | 38K | 39.5K | 38.5K | 12K | 1500 | 710 | 1.9% | 88.8K
                 """
         );
@@ -156,23 +153,7 @@ public sealed class MarketAnalystPromptTests
 
         // Assert
         (prompt.Length + AssistantFormatting.Instructions.Length).ShouldBeLessThanOrEqualTo(
-            PromptCharacterBudget
+            AssistantPromptBudget.Characters
         );
-    }
-
-    [Theory]
-    [InlineData(950, "950")]
-    [InlineData(9999.5, "9999.5")]
-    [InlineData(12345, "12.3K")]
-    [InlineData(-45000, "-45K")]
-    [InlineData(2500000, "2.5M")]
-    [InlineData(1200000000, "1.2B")]
-    public void FormatCompact_ShouldAbbreviateLargeNumbers(decimal value, string expected)
-    {
-        // Act
-        var formatted = MarketAnalystPrompt.FormatCompact(value);
-
-        // Assert
-        formatted.ShouldBe(expected);
     }
 }

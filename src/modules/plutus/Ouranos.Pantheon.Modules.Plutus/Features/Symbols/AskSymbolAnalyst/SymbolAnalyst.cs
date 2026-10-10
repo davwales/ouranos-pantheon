@@ -126,7 +126,7 @@ public sealed class SymbolAnalyst(
         var positions = LoadPositionsAsync(market.Id, symbolFilter, options, cancellationToken);
 
         var selectedTrades = _bus.InvokeAsync<GetSymbolTradesResponse>(
-            new GetSymbolTradesInput(symbolId, context.TimeFrame, options.ChartBuckets),
+            new GetSymbolTradesInput(symbolId, context.TimeFrame, options.ChartPoints),
             cancellationToken
         );
 
@@ -152,6 +152,7 @@ public sealed class SymbolAnalyst(
             market,
             context.TimeFrame,
             await selectedTrades,
+            options.ChartPoints,
             await windows,
             await latestTrade,
             await signals,

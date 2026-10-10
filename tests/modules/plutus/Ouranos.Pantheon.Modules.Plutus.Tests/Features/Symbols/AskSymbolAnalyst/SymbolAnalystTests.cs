@@ -30,7 +30,7 @@ namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Symbols.AskSymbolAnalys
 
 public sealed class SymbolAnalystTests
 {
-    private const int ChartBuckets = 12;
+    private const int ChartPoints = 12;
     private const int MaxPositions = 5;
 
     private readonly IOuranosMachineLearningClient _mlClient =
@@ -54,7 +54,7 @@ public sealed class SymbolAnalystTests
                         512,
                         0.2f,
                         ReasoningEffort.High,
-                        ChartBuckets,
+                        ChartPoints,
                         MaxPositions,
                         ContextCacheMinutes: 5
                     ),
@@ -189,7 +189,7 @@ public sealed class SymbolAnalystTests
         sentInstructions.ShouldNotBeNull();
         sentInstructions.ShouldStartWith(SymbolAnalystPrompt.Instructions);
         sentInstructions.ShouldContain("# Symbol: Armadyl godsword");
-        sentInstructions.ShouldContain("| 1 | 20 | 1.45% | 150000 | -20000 |");
+        sentInstructions.ShouldContain("Error (MAPE, last 30d, n=20): 1d 1.5%");
         sentInstructions.ShouldContain("Bought the dip");
         sentMessages.ShouldBe([new MessageDto("Is this a good flip?", RoleDto.User)]);
     }
@@ -206,7 +206,7 @@ public sealed class SymbolAnalystTests
         // Assert
         await _bus.Received(1)
             .InvokeAsync<GetSymbolTradesResponse>(
-                new GetSymbolTradesInput(Factory.SymbolId, TimeFrame.FourHours, ChartBuckets),
+                new GetSymbolTradesInput(Factory.SymbolId, TimeFrame.FourHours, ChartPoints),
                 Arg.Any<CancellationToken>()
             );
     }

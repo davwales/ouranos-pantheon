@@ -139,7 +139,7 @@ public sealed class MarketAnalystTests
         sentInstructions.ShouldNotBeNull();
         sentInstructions.ShouldStartWith(MarketAnalystPrompt.Instructions);
         sentInstructions.ShouldContain("## Market: OSRS");
-        sentInstructions.ShouldContain("Twisted bow | 1.4B");
+        sentInstructions.ShouldContain("Twisted bow | 1.42B");
     }
 
     [Fact]

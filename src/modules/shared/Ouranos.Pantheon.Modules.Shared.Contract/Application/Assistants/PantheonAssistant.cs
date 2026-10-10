@@ -33,9 +33,10 @@ public abstract class PantheonAssistant<TContext>(
         Guard.Against.Null(input.Context);
 
         var prompt = await BuildPromptAsync(input.Context, cancellationToken);
+        var messages = TrimHistory(input.Messages, prompt.HistoryCharacterBudget);
 
         await foreach (
-            var assistantEvent in StreamCompletionAsync(prompt, input.Messages, cancellationToken)
+            var assistantEvent in StreamCompletionAsync(prompt, messages, cancellationToken)
         )
         {
             yield return assistantEvent;
@@ -55,6 +56,47 @@ public abstract class PantheonAssistant<TContext>(
         TContext context,
         CancellationToken cancellationToken
     );
+
+    // The client resends the whole conversation every turn, so older turns are dropped once they
+    // no longer fit beside the system prompt, the reasoning and the reply.
+    private List<AssistantMessageInput> TrimHistory(
+        List<AssistantMessageInput> messages,
+        int characterBudget
+    )
+    {
+        var kept = new List<AssistantMessageInput>();
+        var used = 0;
+
+        for (var i = messages.Count - 1; i >= 0; i--)
+        {
+            used += messages[i].Content.Length;
+
+            if (kept.Count > 0 && used > characterBudget)
+            {
+                break;
+            }
+
+            kept.Add(messages[i]);
+        }
+
+        kept.Reverse();
+
+        while (kept.Count > 1 && kept[0].Role == AssistantRole.Assistant)
+        {
+            kept.RemoveAt(0);
+        }
+
+        if (kept.Count < messages.Count)
+        {
+            _logger.LogDebug(
+                "Trimmed {droppedCount} of {messageCount} history messages to fit the context budget.",
+                messages.Count - kept.Count,
+                messages.Count
+            );
+        }
+
+        return kept;
+    }
 
     private async IAsyncEnumerable<AssistantEvent> StreamCompletionAsync(
         AssistantPrompt prompt,

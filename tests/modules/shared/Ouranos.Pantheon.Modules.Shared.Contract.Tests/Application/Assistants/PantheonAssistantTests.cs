@@ -32,6 +32,8 @@ public sealed class PantheonAssistantTests
     {
         public TestContext? ReceivedContext { get; private set; }
 
+        public AssistantPrompt Prompt { get; init; } = PantheonAssistantTests.Prompt;
+
         protected override ValueTask<AssistantPrompt> BuildPromptAsync(
             TestContext context,
             CancellationToken cancellationToken
@@ -268,5 +270,117 @@ public sealed class PantheonAssistantTests
         Should.Throw<ArgumentNullException>(() =>
             new TestAssistant(Substitute.For<ILogger>(), null!)
         );
+    }
+
+    private async Task<List<MessageDto>> SendWithBudgetAsync(
+        int historyCharacterBudget,
+        AssistantMessageInput[] messages
+    )
+    {
+        List<MessageDto>? sentMessages = null;
+
+        _mlClient
+            .StreamResponseAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Do<List<MessageDto>>(m => sentMessages = m),
+                Arg.Any<float?>(),
+                Arg.Any<int?>(),
+                Arg.Any<ReasoningEffort?>(),
+                Arg.Any<CancellationToken>()
+            )
+            .Returns(CreateStream([new ResponseStreamChunk("Ok", null, null)]));
+
+        var assistant = new TestAssistant(Substitute.For<ILogger>(), _mlClient)
+        {
+            Prompt = Prompt with { HistoryCharacterBudget = historyCharacterBudget },
+        };
+
+        await CollectAsync(assistant.Handle(new([.. messages], new TestContext("baking"))));
+
+        sentMessages.ShouldNotBeNull();
+        return sentMessages;
+    }
+
+    [Fact]
+    public async Task Handle_WhenHistoryFitsTheBudget_ShouldSendEveryMessage()
+    {
+        // Arrange
+        AssistantMessageInput[] messages =
+        [
+            new AssistantMessageInput("Hi", AssistantRole.User),
+            new AssistantMessageInput("Hello!", AssistantRole.Assistant),
+            new AssistantMessageInput("Help me", AssistantRole.User),
+        ];
+
+        // Act
+        var sent = await SendWithBudgetAsync(100, messages);
+
+        // Assert
+        sent.ShouldBe([
+            new MessageDto("Hi", RoleDto.User),
+            new MessageDto("Hello!", RoleDto.Assistant),
+            new MessageDto("Help me", RoleDto.User),
+        ]);
+    }
+
+    [Fact]
+    public async Task Handle_WhenHistoryExceedsTheBudget_ShouldSendOnlyTheNewestTurnsThatFit()
+    {
+        // Arrange
+        AssistantMessageInput[] messages =
+        [
+            new AssistantMessageInput("First question", AssistantRole.User),
+            new AssistantMessageInput("First answer", AssistantRole.Assistant),
+            new AssistantMessageInput("Second question", AssistantRole.User),
+            new AssistantMessageInput("Answer 2", AssistantRole.Assistant),
+            new AssistantMessageInput("Third", AssistantRole.User),
+        ];
+
+        // Act
+        var sent = await SendWithBudgetAsync(30, messages);
+
+        // Assert
+        sent.ShouldBe([
+            new MessageDto("Second question", RoleDto.User),
+            new MessageDto("Answer 2", RoleDto.Assistant),
+            new MessageDto("Third", RoleDto.User),
+        ]);
+    }
+
+    [Fact]
+    public async Task Handle_WhenTrimmedHistoryWouldStartWithAnAnswer_ShouldDropTheAnswer()
+    {
+        // Arrange
+        AssistantMessageInput[] messages =
+        [
+            new AssistantMessageInput("First question", AssistantRole.User),
+            new AssistantMessageInput("First answer", AssistantRole.Assistant),
+            new AssistantMessageInput("Second", AssistantRole.User),
+        ];
+
+        // Act
+        var sent = await SendWithBudgetAsync(20, messages);
+
+        // Assert
+        sent.ShouldBe([new MessageDto("Second", RoleDto.User)]);
+    }
+
+    [Fact]
+    public async Task Handle_WhenNewestMessageAloneExceedsTheBudget_ShouldStillSendIt()
+    {
+        // Arrange
+        AssistantMessageInput[] messages =
+        [
+            new AssistantMessageInput("Hi", AssistantRole.User),
+            new AssistantMessageInput("Hello!", AssistantRole.Assistant),
+            new AssistantMessageInput("A long question", AssistantRole.User),
+        ];
+
+        // Act
+        var sent = await SendWithBudgetAsync(5, messages);
+
+        // Assert
+        sent.ShouldBe([new MessageDto("A long question", RoleDto.User)]);
     }
 }
