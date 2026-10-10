@@ -160,6 +160,11 @@ store rather than client-supplied data.
   record initializes from them and overrides only what it needs (e.g. recipe import uses low
   effort). Reasoning tokens count against `max_output_tokens`, so budgets must leave room
   for thinking.
+- **Context budget**: the self-hosted model's context window is small (it is configured on
+  the inference host and may change) and is shared by the system prompt, the history, the
+  reasoning and the reply; prompt length also dominates time to first token. Assistants are therefore page-scoped (one per page, seeing only what that
+  page shows) and keep their system prompt to roughly 1,000 tokens: compact numbers, capped
+  rows, no ids. Newer assistants (Market Analyst) assert the budget in a prompt test.
 - **`MapAssistant<TContext>(pattern)`** (`API/AssistantEndpointExtensions`) maps a POST
   route binding `AssistantCompletionInput<TContext>` (`messages` + typed `context`),
   dispatches via `IMessageBus`, and writes events with `SseWriter`.
@@ -186,6 +191,10 @@ Current assistants:
   `{ recipeId }`).
 - Plutus `SymbolAnalyst` (`/api/plutus/symbols/assistant/completions/stream`, context
   `{ symbolId, timeFrame }`), configured by `Ouranos:Plutus:SymbolAnalyst`.
+- Plutus `MarketAnalyst` (`/api/plutus/markets/assistant/completions/stream`, context
+  `{ marketId, timeFrame, filter?, sortField?, sortDirection?, skip?, take? }`) on the market
+  landing and Explorer pages, configured by `Ouranos:Plutus:MarketAnalyst` (low reasoning
+  effort and a reduced output budget to fit the limited context window).
 
 ## 8.12 Health Checks
 

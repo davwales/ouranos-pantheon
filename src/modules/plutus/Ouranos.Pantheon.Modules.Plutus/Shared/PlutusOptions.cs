@@ -8,7 +8,8 @@ public sealed record PlutusOptions(
     DataLoadersOptions DataLoaders,
     ForecastingOptions Forecasting,
     OptimizationOptions Optimization,
-    SymbolAnalystOptions SymbolAnalyst
+    SymbolAnalystOptions SymbolAnalyst,
+    MarketAnalystOptions MarketAnalyst
 )
 {
     public const string SectionName = "Ouranos:Plutus";
@@ -18,6 +19,7 @@ public sealed record PlutusOptions(
             DataLoaders: new DataLoadersOptions(),
             Forecasting: new ForecastingOptions(),
             Optimization: new OptimizationOptions(),
-            SymbolAnalyst: new SymbolAnalystOptions()
+            SymbolAnalyst: new SymbolAnalystOptions(),
+            MarketAnalyst: new MarketAnalystOptions()
         ) { }
 }

@@ -1,0 +1,34 @@
+info:
+  name: Ask Market Analyst
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/plutus/markets/assistant/completions/stream"
+  body:
+    type: json
+    data: |-
+      {
+        "messages": [
+          {
+            "role": "User",
+            "content": "Which of these is the best opportunity?"
+          }
+        ],
+        "context": {
+          "marketId": "{{MARKET_ID}}",
+          "timeFrame": "OneDay",
+          "sortField": "TotalGain",
+          "sortDirection": "desc",
+          "skip": 0,
+          "take": 10
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

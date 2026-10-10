@@ -16,6 +16,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Stocks.Messages;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetAllForecasts;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetForecastEfficacy;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetMarketForecast;
+using Ouranos.Pantheon.Modules.Plutus.Features.Markets.AskMarketAnalyst;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.CreateMarket;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.DeleteMarket;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetAllMarkets;
@@ -145,6 +146,7 @@ public sealed class PlutusModule : IPantheonModule
         GetSymbolEndpoint.Map(app);
         GetDailySymbolSummaryEndpoint.Map(app);
         AskSymbolAnalystEndpoint.Map(app);
+        AskMarketAnalystEndpoint.Map(app);
 
         GetAllForecastsEndpoint.Map(app);
         GetMarketForecastEndpoint.Map(app);
