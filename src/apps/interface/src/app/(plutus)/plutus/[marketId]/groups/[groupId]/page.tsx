@@ -22,7 +22,7 @@ import { SymbolGroupSymbol, plutusApi } from "@/lib/api/plutus";
 import { MoreHorizontal, Plus, RefreshCw, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { DetailSkeleton } from "@/components/shared/skeletons/detail-skeleton";
 import { FormSkeleton } from "@/components/shared/skeletons/form-skeleton";
@@ -55,13 +55,15 @@ export default function GroupDetailPage() {
   const group = state.data;
   useBreadcrumbLabel(groupId, group?.name, state.status === "error");
 
-  useEffect(() => {
+  const [syncedGroup, setSyncedGroup] = useState(group);
+  if (group !== syncedGroup) {
+    setSyncedGroup(group);
     if (group) {
       setName(group.name);
       setDescription(group.description ?? "");
       setSymbols(group.symbols);
     }
-  }, [group]);
+  }
 
   const handleSave = async () => {
     setIsProcessing(true);
