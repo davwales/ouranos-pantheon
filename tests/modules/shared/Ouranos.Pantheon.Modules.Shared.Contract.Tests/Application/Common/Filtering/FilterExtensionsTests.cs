@@ -253,4 +253,72 @@ public sealed class FilterExtensionsTests
         // Assert
         result.Count.ShouldBe(2);
     }
+
+    [Theory]
+    [InlineData("Score:gt:2", "Y")]
+    [InlineData("Score:gte:2.5", "Y")]
+    [InlineData("Score:lt:2", "X")]
+    [InlineData("Score:lte:1.5", "X")]
+    public void FilterBy_WhenComparisonFilterOnNullableWithNullValues_ShouldExcludeNulls(
+        string filter,
+        string expectedName
+    )
+    {
+        // Arrange
+        var items = new NullableProduct[]
+        {
+            new("X", null, 1.5m),
+            new("Y", null, 2.5m),
+            new("Z", null, null),
+        }.AsQueryable();
+        var builder = new FilterBuilder<NullableProduct>().On(
+            nameof(NullableProduct.Score),
+            p => p.Score
+        );
+
+        // Act
+        var result = items.FilterBy([filter], builder).ToList();
+
+        // Assert
+        result.Single().Name.ShouldBe(expectedName);
+    }
+
+    [Theory]
+    [InlineData("Category:eq:WEAPON", 2)]
+    [InlineData("Category:like:arm", 1)]
+    [InlineData("Category:startswith:WEA", 2)]
+    [InlineData("Category:endswith:OR", 1)]
+    public void FilterBy_WhenCaseInsensitiveStringFilterOnNullValues_ShouldExcludeNulls(
+        string filter,
+        int expectedCount
+    )
+    {
+        // Arrange
+        var builder = new FilterBuilder<Product>().On(
+            nameof(Product.Category),
+            p => p.Category,
+            caseInsensitive: true
+        );
+
+        // Act
+        var result = Items.FilterBy([filter], builder).ToList();
+
+        // Assert
+        result.Count.ShouldBe(expectedCount);
+        result.ShouldAllBe(p => p.Category != null);
+    }
+
+    [Fact]
+    public void FilterBy_WhenStringFilterOnNullValues_ShouldExcludeNulls()
+    {
+        // Arrange
+        var builder = new FilterBuilder<Product>().On(nameof(Product.Category), p => p.Category);
+
+        // Act
+        var result = Items.FilterBy(["Category:like:o"], builder).ToList();
+
+        // Assert
+        result.Count.ShouldBe(3);
+        result.ShouldAllBe(p => p.Category != null);
+    }
 }

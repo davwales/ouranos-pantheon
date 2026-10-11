@@ -3,9 +3,11 @@ using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSignalRankings;
 using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSignalRankings.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
@@ -41,6 +43,34 @@ public sealed class GetSignalRankingsHandlerTests
             rows.Select(r => new LatestSignal(r.SymbolId, r.Type, r.Value))
         );
         await _dbContext.SaveChangesAsync();
+    }
+
+    private async Task<Market> SeedMarket()
+    {
+        var market = Market.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            new Taxes(null)
+        );
+
+        await _dbContext.SeedData(market);
+        return market;
+    }
+
+    private async Task<Symbol> SeedSymbol(Id<Market> marketId, string? subcode = null)
+    {
+        var symbol = Symbol.Create(
+            new Id<Symbol>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            subcode,
+            _fixture.Create<string>(),
+            marketId,
+            new AdditionalFields()
+        );
+
+        await _dbContext.SeedData(symbol);
+        await SeedLatestSignals((symbol.Id, SignalType.BollingerBands, 0.5m));
+        return symbol;
     }
 
     [Fact]
@@ -132,5 +162,67 @@ public sealed class GetSignalRankingsHandlerTests
 
         // Assert
         result.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task Handle_WhenAveragePriceFilterAndSymbolHasNoSnapshot_ShouldExcludeUnpricedSymbol()
+    {
+        // Arrange
+        var market = await SeedMarket();
+        var priced = await SeedSymbol(market.Id);
+        await SeedSymbol(market.Id);
+        await _dbContext.SeedData(
+            new MarketTradeSnapshot(
+                market.Id,
+                priced.Id,
+                TimeFrame.OneDay,
+                TotalSpent: 10000m,
+                MinPrice: 90m,
+                MaxPrice: 110m,
+                TotalVolume: 100m,
+                NumTransactions: 50,
+                Limit: 200m,
+                Tax: 1m
+            )
+        );
+
+        var handler = BuildHandler();
+        var query = new GetSignalRankingsInput(
+            market.Id,
+            Take: 10,
+            Filter: ["DailyAveragePrice:gt:50"]
+        );
+
+        // Act
+        var result = await handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.TotalCount.ShouldBe(1);
+        result.Items.Single().SymbolId.ShouldBe(priced.Id);
+        result.Items.Single().DailyAveragePrice.ShouldBe(100m);
+    }
+
+    [Fact]
+    public async Task Handle_WhenSubcodeFilter_ShouldReturnMatchingSymbols()
+    {
+        // Arrange
+        var market = await SeedMarket();
+        var members = await SeedSymbol(market.Id, "p2p");
+        await SeedSymbol(market.Id, "f2p");
+        await SeedSymbol(market.Id);
+
+        var handler = BuildHandler();
+        var query = new GetSignalRankingsInput(
+            market.Id,
+            Take: 10,
+            Filter: ["SymbolSubcode:eq:P2P"]
+        );
+
+        // Act
+        var result = await handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.TotalCount.ShouldBe(1);
+        result.Items.Single().SymbolId.ShouldBe(members.Id);
     }
 }

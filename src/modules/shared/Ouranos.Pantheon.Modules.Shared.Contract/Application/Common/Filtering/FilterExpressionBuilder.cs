@@ -18,6 +18,11 @@ internal static class FilterExpressionBuilder
         typeof(string).GetMethod(nameof(string.ToLower), Type.EmptyTypes)
         ?? throw new MissingMethodException(nameof(String), nameof(string.ToLower));
 
+    private static readonly ConstantExpression NullString = Expression.Constant(
+        null,
+        typeof(string)
+    );
+
     internal static Dictionary<Type, Func<string, object>> TypeMap = new()
     {
         [typeof(string)] = s => s,
@@ -59,7 +64,11 @@ internal static class FilterExpressionBuilder
 
         var effectivePropAccess =
             caseInsensitive && underlyingType == typeof(string)
-                ? Expression.Call(propAccess, ToLowerMethod)
+                ? Expression.Condition(
+                    Expression.Equal(propAccess, NullString),
+                    NullString,
+                    Expression.Call(propAccess, ToLowerMethod)
+                )
                 : propAccess;
 
         var effectiveValue =
@@ -122,7 +131,7 @@ internal static class FilterExpressionBuilder
             : Expression.NotEqual(propAccess, nullConst);
     }
 
-    private static MethodCallExpression BuildStringOp(
+    private static BinaryExpression BuildStringOp(
         Expression propAccess,
         Type underlyingType,
         string value,
@@ -140,7 +149,11 @@ internal static class FilterExpressionBuilder
         var method =
             typeof(string).GetMethod(methodName, [typeof(string)])
             ?? throw new MissingMethodException(nameof(String), methodName);
-        return Expression.Call(propAccess, method, Expression.Constant(value));
+
+        return Expression.AndAlso(
+            Expression.NotEqual(propAccess, NullString),
+            Expression.Call(propAccess, method, Expression.Constant(value))
+        );
     }
 
     private static MethodCallExpression BuildInExpression(
@@ -190,28 +203,18 @@ internal static class FilterExpressionBuilder
         var converted = ConvertValue(value, underlyingType);
         var isNullableValueType = Nullable.GetUnderlyingType(propType) != null;
 
-        if (op is FilterOperator.Eq or FilterOperator.Neq)
-        {
-            Expression constant = isNullableValueType
-                ? Expression.Convert(Expression.Constant(converted, underlyingType), propType)
-                : Expression.Constant(converted, underlyingType);
-
-            return op == FilterOperator.Eq
-                ? Expression.Equal(propAccess, constant)
-                : Expression.NotEqual(propAccess, constant);
-        }
-
-        var left = isNullableValueType
-            ? Expression.Convert(propAccess, underlyingType)
-            : propAccess;
-        var scalar = Expression.Constant(converted, underlyingType);
+        Expression constant = isNullableValueType
+            ? Expression.Convert(Expression.Constant(converted, underlyingType), propType)
+            : Expression.Constant(converted, underlyingType);
 
         return op switch
         {
-            FilterOperator.Lt => Expression.LessThan(left, scalar),
-            FilterOperator.Lte => Expression.LessThanOrEqual(left, scalar),
-            FilterOperator.Gt => Expression.GreaterThan(left, scalar),
-            FilterOperator.Gte => Expression.GreaterThanOrEqual(left, scalar),
+            FilterOperator.Eq => Expression.Equal(propAccess, constant),
+            FilterOperator.Neq => Expression.NotEqual(propAccess, constant),
+            FilterOperator.Lt => Expression.LessThan(propAccess, constant),
+            FilterOperator.Lte => Expression.LessThanOrEqual(propAccess, constant),
+            FilterOperator.Gt => Expression.GreaterThan(propAccess, constant),
+            FilterOperator.Gte => Expression.GreaterThanOrEqual(propAccess, constant),
             _ => throw new NotSupportedException(
                 $"Operator '{op}' is not supported as a comparison."
             ),

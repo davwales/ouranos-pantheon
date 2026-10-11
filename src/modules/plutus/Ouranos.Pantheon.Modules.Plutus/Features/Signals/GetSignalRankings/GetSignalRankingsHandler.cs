@@ -24,6 +24,11 @@ public sealed class GetSignalRankingsHandler
                 x => x.SymbolName,
                 caseInsensitive: true
             )
+            .On(
+                nameof(GetSignalRankingsResponse.SymbolSubcode),
+                x => x.SymbolSubcode,
+                caseInsensitive: true
+            )
             .On(nameof(GetSignalRankingsResponse.DailyAveragePrice), x => x.DailyAveragePrice)
             .On(nameof(GetSignalRankingsResponse.DailyVolume), x => x.DailyVolume)
             .On(nameof(GetSignalRankingsResponse.OverallScore), x => x.OverallScore)
@@ -43,6 +48,7 @@ public sealed class GetSignalRankingsHandler
             .On(nameof(GetSignalRankingsResponse.FlipScore), x => x.FlipScore)
             .On(nameof(GetSignalRankingsResponse.MerchScore), x => x.MerchScore)
             .On(nameof(GetSignalRankingsResponse.SymbolName), x => x.SymbolName)
+            .On(nameof(GetSignalRankingsResponse.SymbolSubcode), x => x.SymbolSubcode)
             .On(nameof(GetSignalRankingsResponse.SignalCount), x => x.SignalCount)
             .Default(x => x.OverallScore);
 
