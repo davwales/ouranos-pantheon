@@ -85,6 +85,44 @@ describe("ShoppingListView", () => {
     });
   });
 
+  it("resets checked items to the server state when data reloads", () => {
+    const { rerender } = render(
+      <ShoppingListView data={mockShoppingList()} onReload={vi.fn()} />,
+    );
+
+    expect(screen.getAllByRole("checkbox")[0]).not.toBeChecked();
+
+    rerender(
+      <ShoppingListView
+        data={mockShoppingList({ checkedItemIds: ["line-1"] })}
+        onReload={vi.fn()}
+      />,
+    );
+
+    expect(screen.getAllByRole("checkbox")[0]).toBeChecked();
+  });
+
+  it("drops a pending checked-items update when the list reloads", async () => {
+    const onReload = vi.fn();
+    vi.mocked(hestiaApi.addManualItem).mockResolvedValue({ id: "m2", text: "eggs" });
+
+    render(<ShoppingListView data={mockShoppingList()} onReload={onReload} />);
+
+    fireEvent.click(screen.getAllByRole("checkbox")[0]);
+    fireEvent.change(screen.getByPlaceholderText(/add an item/i), {
+      target: { value: "eggs" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /add/i }));
+
+    await waitFor(() => {
+      expect(onReload).toHaveBeenCalled();
+    });
+
+    vi.advanceTimersByTime(400);
+
+    expect(hestiaApi.updateCheckedItems).not.toHaveBeenCalled();
+  });
+
   it("calls addManualItem and reloads when adding an item", async () => {
     const onReload = vi.fn();
     vi.mocked(hestiaApi.addManualItem).mockResolvedValue({ id: "m2", text: "eggs" });

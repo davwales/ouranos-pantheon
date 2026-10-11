@@ -27,15 +27,21 @@ export function ShoppingListView({ data, onReload }: ShoppingListViewProps) {
   const [isAdding, setIsAdding] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    // why: a manual add/delete reloads the list and resets local state to the
-    // server truth; any pending debounced PUT is dropped intentionally.
+  const [syncedCheckedIds, setSyncedCheckedIds] = useState(data.checkedItemIds);
+  if (data.checkedItemIds !== syncedCheckedIds) {
+    setSyncedCheckedIds(data.checkedItemIds);
     setChecked(new Set(data.checkedItemIds));
+  }
+
+  const reload = () => {
+    // why: a reload resets local state to the server truth; any pending
+    // debounced PUT is dropped intentionally.
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
       debounceRef.current = null;
     }
-  }, [data.checkedItemIds]);
+    onReload();
+  };
 
   const flushUpdate = async (nextChecked: Set<string>) => {
     try {
@@ -47,7 +53,7 @@ export function ShoppingListView({ data, onReload }: ShoppingListViewProps) {
       setUpdateError(
         err instanceof Error ? err.message : "Failed to update checked items",
       );
-      onReload();
+      reload();
     }
   };
 
@@ -77,7 +83,7 @@ export function ShoppingListView({ data, onReload }: ShoppingListViewProps) {
     setIsAdding(true);
     try {
       await hestiaApi.addManualItem({ text });
-      onReload();
+      reload();
       return true;
     } catch (err) {
       setUpdateError(
@@ -93,7 +99,7 @@ export function ShoppingListView({ data, onReload }: ShoppingListViewProps) {
     setUpdateError(null);
     try {
       await hestiaApi.deleteManualItem(itemId);
-      onReload();
+      reload();
     } catch (err) {
       setUpdateError(
         err instanceof Error ? err.message : "Failed to delete item",
@@ -105,7 +111,7 @@ export function ShoppingListView({ data, onReload }: ShoppingListViewProps) {
     setUpdateError(null);
     try {
       await hestiaApi.toggleRecipeInShoppingList(recipeId);
-      onReload();
+      reload();
     } catch (err) {
       setUpdateError(
         err instanceof Error ? err.message : "Failed to remove recipe",
@@ -120,12 +126,12 @@ export function ShoppingListView({ data, onReload }: ShoppingListViewProps) {
       for (const recipe of data.recipes) {
         await hestiaApi.toggleRecipeInShoppingList(recipe.id);
       }
-      onReload();
+      reload();
     } catch (err) {
       setUpdateError(
         err instanceof Error ? err.message : "Failed to clear recipes",
       );
-      onReload();
+      reload();
     }
   };
 

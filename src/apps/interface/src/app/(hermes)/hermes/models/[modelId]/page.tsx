@@ -9,7 +9,7 @@ import { useApi } from "@/hooks/use-api";
 import { hermesApi } from "@/lib/api/hermes";
 import { AlertTriangle } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FormSkeleton } from "@/components/shared/skeletons/form-skeleton";
 import { NotFoundCard } from "@/components/shared/not-found-card";
 
@@ -17,18 +17,13 @@ export default function EditModelPage() {
   const router = useRouter();
   const { modelId } = useParams<{ modelId: string }>();
   const [loading, setLoading] = useState(false);
-  const [model, setModel] = useState<ModelFormInput>();
 
   const [state] = useApi(() => hermesApi.getModel(modelId), [modelId]);
   useBreadcrumbLabel(modelId, state.data?.name, state.status === "error");
 
   const fetching = state.status === "loading";
 
-  useEffect(() => {
-    if (state.status === "success") {
-      setModel({ ...state.data });
-    }
-  }, [state]);
+  const model: ModelFormInput | undefined = state.data;
 
   if (state.status === "error" && !state.data) {
     return <NotFoundCard title="Model not found" backHref="/hermes/models" backLabel="Back to Models" />;

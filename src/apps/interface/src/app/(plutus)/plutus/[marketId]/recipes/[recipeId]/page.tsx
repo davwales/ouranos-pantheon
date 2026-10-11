@@ -12,7 +12,7 @@ import { useApi } from "@/hooks/use-api";
 import { plutusApi } from "@/lib/api/plutus";
 import { RefreshCw } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { RecipeForm } from "../_components/recipe-form";
 import { RecipeSymbol } from "../types";
@@ -49,14 +49,16 @@ export default function RecipeDetailPage() {
   const recipe = state.data;
   useBreadcrumbLabel(recipeId, recipe?.name, state.status === "error");
 
-  useEffect(() => {
+  const [syncedRecipe, setSyncedRecipe] = useState(recipe);
+  if (recipe !== syncedRecipe) {
+    setSyncedRecipe(recipe);
     if (recipe) {
       setName(recipe.name);
       setCost(recipe.cost);
       setInputs(recipe.inputs);
       setOutputs(recipe.outputs);
     }
-  }, [recipe]);
+  }
 
   const handleDelete = async () => {
     setIsProcessing(true);

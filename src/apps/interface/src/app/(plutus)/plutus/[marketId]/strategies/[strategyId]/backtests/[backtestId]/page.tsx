@@ -118,7 +118,7 @@ export default function BacktestDetailPage() {
     } finally {
       setIsApplyingConfig(false);
     }
-  }, [backtest?.results, strategy, strategyId, marketId, router]);
+  }, [backtest, strategy, strategyId, marketId, router]);
 
   if (backtestState.status === "error") {
     return <NotFoundCard title="Backtest not found" message="This backtest doesn\u0027t exist or has been removed." backHref={`/plutus/${marketId}/strategies/${strategyId}/backtests`} backLabel="Back to Backtests" />;

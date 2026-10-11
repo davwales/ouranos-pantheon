@@ -7,7 +7,7 @@ import { useBreadcrumbLabel } from "@/components/shared/breadcrumbs";
 import { useApi } from "@/hooks/use-api";
 import { hermesApi } from "@/lib/api/hermes";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FormSkeleton } from "@/components/shared/skeletons/form-skeleton";
 import { NotFoundCard } from "@/components/shared/not-found-card";
 
@@ -15,18 +15,13 @@ export default function EditTraitPage() {
   const router = useRouter();
   const { traitId } = useParams<{ traitId: string }>();
   const [loading, setLoading] = useState(false);
-  const [trait, setTrait] = useState<TraitFormInput>();
 
   const [state] = useApi(() => hermesApi.getTrait(traitId), [traitId]);
   useBreadcrumbLabel(traitId, state.data?.name, state.status === "error");
 
   const fetching = state.status === "loading";
 
-  useEffect(() => {
-    if (state.status === "success") {
-      setTrait({ ...state.data });
-    }
-  }, [state]);
+  const trait: TraitFormInput | undefined = state.data;
 
   if (state.status === "error" && !state.data) {
     return <NotFoundCard title="Trait not found" backHref="/hermes/traits" backLabel="Back to Traits" />;

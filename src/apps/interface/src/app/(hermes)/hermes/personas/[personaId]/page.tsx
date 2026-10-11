@@ -7,7 +7,7 @@ import { useBreadcrumbLabel } from "@/components/shared/breadcrumbs";
 import { useApi } from "@/hooks/use-api";
 import { hermesApi } from "@/lib/api/hermes";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FormSkeleton } from "@/components/shared/skeletons/form-skeleton";
 import { NotFoundCard } from "@/components/shared/not-found-card";
 
@@ -15,18 +15,13 @@ export default function EditPersonaPage() {
   const router = useRouter();
   const { personaId } = useParams<{ personaId: string }>();
   const [loading, setLoading] = useState(false);
-  const [persona, setPersona] = useState<PersonaFormInput>();
 
   const [state] = useApi(() => hermesApi.getPersona(personaId), [personaId]);
   useBreadcrumbLabel(personaId, state.data?.name, state.status === "error");
 
   const fetching = state.status === "loading";
 
-  useEffect(() => {
-    if (state.status === "success") {
-      setPersona({ ...state.data });
-    }
-  }, [state]);
+  const persona: PersonaFormInput | undefined = state.data;
 
   if (state.status === "error" && !state.data) {
     return <NotFoundCard title="Persona not found" backHref="/hermes/personas" backLabel="Back to Personas" />;
