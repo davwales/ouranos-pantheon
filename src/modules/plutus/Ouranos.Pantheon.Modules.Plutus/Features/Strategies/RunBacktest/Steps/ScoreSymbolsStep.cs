@@ -39,12 +39,28 @@ public sealed class ScoreSymbolsStep(
         var ctx = payload.Context;
         var currentDate = ctx.CurrentDate(context);
         var signalDate = SignalDate(currentDate);
+        var cacheDay = DateOnly.FromDateTime(signalDate.UtcDateTime);
+
+        if (payload.ScoreCache is { } cache && cache.TryGetDay(cacheDay, out var cachedScores))
+        {
+            payload.Portfolio.ScoredSymbols = ScoreFromCache(ctx, cachedScores);
+            return;
+        }
 
         var scored = new List<ScoredSymbol>();
+
+        var dayCache = payload.ScoreCache is null
+            ? null
+            : new Dictionary<Id<Symbol>, CachedSymbolScore>();
 
         foreach (var symbol in ctx.Data.Symbols)
         {
             context.CancellationToken.ThrowIfCancellationRequested();
+
+            if (ctx.Data.GetTypicalDailyVolume(symbol.Id, currentDate) <= 0)
+            {
+                continue;
+            }
 
             var aggregates = ctx.Data.GetWindowAggregates(
                 symbol.Id,
@@ -86,7 +102,18 @@ public sealed class ScoreSymbolsStep(
                 context.CancellationToken
             );
 
-            var score = ctx.Executor.Score(scoreResult.Context, payload.Parameters.Configuration);
+            decimal? score;
+            if (dayCache is null)
+            {
+                score = ctx.Executor.Score(scoreResult.Context, payload.Parameters.Configuration);
+            }
+            else
+            {
+                var inputScores = ctx.Executor.ScoreInputs(scoreResult.Context);
+                dayCache[symbol.Id] = new CachedSymbolScore(currentPrice, inputScores);
+                score = ctx.Executor.Combine(inputScores, ctx.InputWeights);
+            }
+
             if (score.HasValue)
             {
                 scored.Add(new ScoredSymbol(symbol, score.Value, currentPrice));
@@ -102,7 +129,35 @@ public sealed class ScoreSymbolsStep(
             ctx.Data.Symbols.Count
         );
 
+        if (dayCache is not null)
+        {
+            payload.ScoreCache?.SetDay(cacheDay, dayCache);
+        }
+
         payload.Portfolio.ScoredSymbols = scored;
+    }
+
+    private static List<ScoredSymbol> ScoreFromCache(
+        BacktestContext ctx,
+        IReadOnlyDictionary<Id<Symbol>, CachedSymbolScore> cachedScores
+    )
+    {
+        var scored = new List<ScoredSymbol>(cachedScores.Count);
+        foreach (var symbol in ctx.Data.Symbols)
+        {
+            if (!cachedScores.TryGetValue(symbol.Id, out var cached))
+            {
+                continue;
+            }
+
+            var score = ctx.Executor.Combine(cached.InputScores, ctx.InputWeights);
+            if (score.HasValue)
+            {
+                scored.Add(new ScoredSymbol(symbol, score.Value, cached.Price));
+            }
+        }
+
+        return scored;
     }
 
     /// <summary>

@@ -14,6 +14,7 @@ public sealed class BacktestPayload(BacktestParameters parameters)
     public BacktestResults? Results { get; set; }
     public Backtest? Entity { get; set; }
     public int ProgressInterval { get; set; }
+    public BacktestScoreCache? ScoreCache { get; init; }
 
     public Dictionary<
         Id<Symbol>,

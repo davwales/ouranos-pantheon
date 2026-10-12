@@ -398,11 +398,8 @@ export const plutusApi = {
       budget: number;
       generations?: number;
       populationSize?: number;
-      sortinoWeight?: number;
-      cagrWeight?: number;
       drawdownWeight?: number;
-      turnoverWeight?: number;
-      l1RegularizationWeight?: number;
+      minTradesPerMonth?: number;
       outSampleRatio?: number;
       volumeParticipationRate?: number;
       slippageMultiplier?: number;

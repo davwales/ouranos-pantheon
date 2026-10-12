@@ -340,7 +340,9 @@ public sealed class BuyCandidatesStepTests
             strategy,
             startDate,
             DateTimeOffset.UtcNow,
-            10000m
+            10000m,
+            VolumeParticipationRate: 0.25m,
+            SlippageMultiplier: 0.1m
         );
         var payload = new BacktestPayload(parameters);
         var currentDate = startDate.AddDays(0);

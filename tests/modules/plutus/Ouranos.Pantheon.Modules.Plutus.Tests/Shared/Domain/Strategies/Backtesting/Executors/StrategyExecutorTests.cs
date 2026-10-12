@@ -162,4 +162,61 @@ public sealed class StrategyExecutorTests
         result.ShouldNotBeNull();
         result.Value.ShouldBe(-1m);
     }
+
+    [Fact]
+    public void Score_WhenWeightIsNegative_ShouldInvertThatInputAndNormalizeByAbsoluteWeight()
+    {
+        // Arrange
+        var executor = new StrategyExecutor([
+            new StubScorer(InputKind.SignalBollingerBands, 0.6m),
+            new StubScorer(InputKind.SignalTrendMomentum, 0.4m),
+        ]);
+
+        var context = ContextWithWeights([
+            new InputWeight(InputKind.SignalBollingerBands, 1m),
+            new InputWeight(InputKind.SignalTrendMomentum, -1m),
+        ]);
+
+        // Act
+        var result = executor.Score(context, new TradingConfiguration());
+
+        // Assert
+        result.ShouldBe(0.1m);
+    }
+
+    [Fact]
+    public void ScoreInputs_ShouldReturnEveryScorerWithAValueRegardlessOfWeights()
+    {
+        // Arrange
+        var executor = new StrategyExecutor([
+            new StubScorer(InputKind.SignalBollingerBands, 0.6m),
+            new StubScorer(InputKind.SignalRsi, null),
+        ]);
+
+        var context = ContextWithWeights([new InputWeight(InputKind.SignalTrendMomentum, 1m)]);
+
+        // Act
+        var result = executor.ScoreInputs(context);
+
+        // Assert
+        result.ShouldBe(
+            new Dictionary<InputKind, decimal> { [InputKind.SignalBollingerBands] = 0.6m }
+        );
+    }
+
+    [Fact]
+    public void Combine_WhenNoWeightedInputHasAScore_ShouldReturnNull()
+    {
+        // Arrange
+        var inputScores = new Dictionary<InputKind, decimal> { [InputKind.SignalRsi] = 0.5m };
+
+        // Act
+        var result = _executor.Combine(
+            inputScores,
+            [new InputWeight(InputKind.SignalBollingerBands, 1m)]
+        );
+
+        // Assert
+        result.ShouldBeNull();
+    }
 }

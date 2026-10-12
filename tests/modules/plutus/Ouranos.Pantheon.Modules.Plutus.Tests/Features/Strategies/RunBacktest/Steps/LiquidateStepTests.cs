@@ -40,7 +40,15 @@ public sealed class LiquidateStepTests
 
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var endDate = DateTimeOffset.UtcNow;
-        var parameters = new BacktestParameters(marketId, strategy, startDate, endDate, 10000m);
+        var parameters = new BacktestParameters(
+            marketId,
+            strategy,
+            startDate,
+            endDate,
+            10000m,
+            VolumeParticipationRate: 0.25m,
+            SlippageMultiplier: 0.1m
+        );
         var payload = new BacktestPayload(parameters);
         var dateOnly = DateOnly.FromDateTime(endDate.UtcDateTime);
 
@@ -284,7 +292,15 @@ public sealed class LiquidateStepTests
 
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var endDate = DateTimeOffset.UtcNow;
-        var parameters = new BacktestParameters(marketId, strategy, startDate, endDate, 10000m);
+        var parameters = new BacktestParameters(
+            marketId,
+            strategy,
+            startDate,
+            endDate,
+            10000m,
+            VolumeParticipationRate: 0.25m,
+            SlippageMultiplier: 0.1m
+        );
         var payload = new BacktestPayload(parameters);
         var dateOnly = DateOnly.FromDateTime(endDate.UtcDateTime);
 

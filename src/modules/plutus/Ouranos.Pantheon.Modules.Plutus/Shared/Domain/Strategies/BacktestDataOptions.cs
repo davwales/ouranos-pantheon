@@ -21,7 +21,14 @@ public sealed record BacktestDataOptions(
 
     public const decimal DefaultMinFillFraction = 0.1m;
 
-    public const decimal DefaultVolumeParticipationRate = 0.25m;
+    /// <summary>Share of an item's typical daily volume a trader can realistically fill.</summary>
+    public const decimal DefaultVolumeParticipationRate = 0.1m;
+
+    /// <summary>
+    ///     Square-root impact coefficient; at the default participation it costs about half of
+    ///     the ~3% median insta-buy/insta-sell spread measured on liquid OSRS items.
+    /// </summary>
+    public const decimal DefaultSlippageMultiplier = 0.05m;
 
     public BacktestDataOptions()
         : this(

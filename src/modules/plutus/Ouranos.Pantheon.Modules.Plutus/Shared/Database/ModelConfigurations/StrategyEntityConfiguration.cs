@@ -21,7 +21,7 @@ public sealed class StrategyEntityConfiguration : IEntityTypeConfiguration<Strat
             config =>
             {
                 config.Property(c => c.MaxPositions);
-                config.Property(c => c.MaxPositionPercent).HasPrecision(18, 2);
+                config.Property(c => c.MaxPositionPercent).HasPrecision(18, 6);
                 config.Property(c => c.HoldPeriodDays);
             }
         );
@@ -30,8 +30,8 @@ public sealed class StrategyEntityConfiguration : IEntityTypeConfiguration<Strat
             s => s.Thresholds,
             config =>
             {
-                config.Property(t => t.BuyThreshold).HasPrecision(18, 2);
-                config.Property(t => t.SellThreshold).HasPrecision(18, 2);
+                config.Property(t => t.BuyThreshold).HasPrecision(18, 6);
+                config.Property(t => t.SellThreshold).HasPrecision(18, 6);
             }
         );
 
@@ -40,7 +40,7 @@ public sealed class StrategyEntityConfiguration : IEntityTypeConfiguration<Strat
             w =>
             {
                 w.Property(x => x.Kind).HasConversion<int>();
-                w.Property(x => x.Weight).HasPrecision(18, 2);
+                w.Property(x => x.Weight).HasPrecision(18, 6);
                 w.HasIndex("StrategyId", "Kind").IsUnique();
             }
         );

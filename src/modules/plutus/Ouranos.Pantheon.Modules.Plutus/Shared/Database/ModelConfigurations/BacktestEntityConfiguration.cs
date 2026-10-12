@@ -28,28 +28,28 @@ public sealed class BacktestEntityConfiguration : IEntityTypeConfiguration<Backt
             results =>
             {
                 results.Property(r => r.TotalReturn).HasPrecision(18, 2);
-                results.Property(r => r.TotalReturnPercent).HasPrecision(18, 2);
+                results.Property(r => r.TotalReturnPercent).HasPrecision(18, 6);
                 results.Property(r => r.MaxDrawdown).HasPrecision(18, 2);
-                results.Property(r => r.MaxDrawdownPercent).HasPrecision(18, 2);
-                results.Property(r => r.WinRate).HasPrecision(18, 2);
-                results.Property(r => r.SharpeRatio).HasPrecision(18, 2);
-                results.Property(r => r.SortinoRatio).HasPrecision(18, 2);
+                results.Property(r => r.MaxDrawdownPercent).HasPrecision(18, 6);
+                results.Property(r => r.WinRate).HasPrecision(18, 6);
+                results.Property(r => r.SharpeRatio).HasPrecision(18, 6);
+                results.Property(r => r.SortinoRatio).HasPrecision(18, 6);
                 results.Property(r => r.CalmarRatio).HasPrecision(18, 2);
                 results.Property(r => r.Cagr).HasPrecision(18, 2);
-                results.Property(r => r.ProfitFactor).HasPrecision(18, 2);
+                results.Property(r => r.ProfitFactor).HasPrecision(18, 6);
                 results.Property(r => r.Expectancy).HasPrecision(18, 2);
-                results.Property(r => r.AverageTradeReturn).HasPrecision(18, 2);
-                results.Property(r => r.BestTrade).HasPrecision(18, 2);
-                results.Property(r => r.WorstTrade).HasPrecision(18, 2);
+                results.Property(r => r.AverageTradeReturn).HasPrecision(18, 6);
+                results.Property(r => r.BestTrade).HasPrecision(18, 6);
+                results.Property(r => r.WorstTrade).HasPrecision(18, 6);
                 results.Property(r => r.FinalBalance).HasPrecision(18, 2);
-                results.Property(r => r.TurnoverRate).HasPrecision(18, 2);
+                results.Property(r => r.TurnoverRate).HasPrecision(18, 6);
 
                 results.OwnsOne(
                     r => r.OptimizedThresholds,
                     config =>
                     {
-                        config.Property(t => t.BuyThreshold).HasPrecision(18, 2);
-                        config.Property(t => t.SellThreshold).HasPrecision(18, 2);
+                        config.Property(t => t.BuyThreshold).HasPrecision(18, 6);
+                        config.Property(t => t.SellThreshold).HasPrecision(18, 6);
                     }
                 );
 
@@ -58,7 +58,7 @@ public sealed class BacktestEntityConfiguration : IEntityTypeConfiguration<Backt
                     w =>
                     {
                         w.Property(x => x.Kind).HasConversion<int>();
-                        w.Property(x => x.Weight).HasPrecision(18, 2);
+                        w.Property(x => x.Weight).HasPrecision(18, 6);
                         w.HasIndex("BacktestResultsBacktestId", "Kind").IsUnique();
                     }
                 );
@@ -70,7 +70,7 @@ public sealed class BacktestEntityConfiguration : IEntityTypeConfiguration<Backt
                     config =>
                     {
                         config.Property(c => c.MaxPositions);
-                        config.Property(c => c.MaxPositionPercent).HasPrecision(18, 2);
+                        config.Property(c => c.MaxPositionPercent).HasPrecision(18, 6);
                         config.Property(c => c.HoldPeriodDays);
                     }
                 );
@@ -80,19 +80,19 @@ public sealed class BacktestEntityConfiguration : IEntityTypeConfiguration<Backt
                     oos =>
                     {
                         oos.Property(o => o.TotalReturn).HasPrecision(18, 2);
-                        oos.Property(o => o.TotalReturnPercent).HasPrecision(18, 2);
+                        oos.Property(o => o.TotalReturnPercent).HasPrecision(18, 6);
                         oos.Property(o => o.MaxDrawdown).HasPrecision(18, 2);
-                        oos.Property(o => o.MaxDrawdownPercent).HasPrecision(18, 2);
-                        oos.Property(o => o.WinRate).HasPrecision(18, 2);
-                        oos.Property(o => o.SharpeRatio).HasPrecision(18, 2);
-                        oos.Property(o => o.SortinoRatio).HasPrecision(18, 2);
+                        oos.Property(o => o.MaxDrawdownPercent).HasPrecision(18, 6);
+                        oos.Property(o => o.WinRate).HasPrecision(18, 6);
+                        oos.Property(o => o.SharpeRatio).HasPrecision(18, 6);
+                        oos.Property(o => o.SortinoRatio).HasPrecision(18, 6);
                         oos.Property(o => o.CalmarRatio).HasPrecision(18, 2);
                         oos.Property(o => o.Cagr).HasPrecision(18, 2);
-                        oos.Property(o => o.ProfitFactor).HasPrecision(18, 2);
+                        oos.Property(o => o.ProfitFactor).HasPrecision(18, 6);
                         oos.Property(o => o.Expectancy).HasPrecision(18, 2);
-                        oos.Property(o => o.AverageTradeReturn).HasPrecision(18, 2);
-                        oos.Property(o => o.BestTrade).HasPrecision(18, 2);
-                        oos.Property(o => o.WorstTrade).HasPrecision(18, 2);
+                        oos.Property(o => o.AverageTradeReturn).HasPrecision(18, 6);
+                        oos.Property(o => o.BestTrade).HasPrecision(18, 6);
+                        oos.Property(o => o.WorstTrade).HasPrecision(18, 6);
                         oos.Property(o => o.FinalBalance).HasPrecision(18, 2);
                         oos.Ignore(o => o.OutSampleResults);
                         oos.Ignore(o => o.OptimizedInputWeights);
@@ -121,7 +121,7 @@ public sealed class BacktestEntityConfiguration : IEntityTypeConfiguration<Backt
                 p.Property(pos => pos.ExitPrice).HasPrecision(18, 2);
                 p.Property(pos => pos.Volume).HasPrecision(18, 2);
                 p.Property(pos => pos.ProfitLoss).HasPrecision(18, 2);
-                p.Property(pos => pos.ReturnPercent).HasPrecision(18, 2);
+                p.Property(pos => pos.ReturnPercent).HasPrecision(18, 6);
             }
         );
 

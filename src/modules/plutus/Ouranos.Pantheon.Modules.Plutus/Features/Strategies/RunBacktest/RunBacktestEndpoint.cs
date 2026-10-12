@@ -28,8 +28,8 @@ public static class RunBacktestEndpoint
             body.StartDate,
             body.EndDate,
             body.Budget,
-            body.VolumeParticipationRate ?? 0.25m,
-            body.SlippageMultiplier ?? 0.1m
+            body.VolumeParticipationRate ?? BacktestDataOptions.DefaultVolumeParticipationRate,
+            body.SlippageMultiplier ?? BacktestDataOptions.DefaultSlippageMultiplier
         );
         var result = await bus.InvokeAsync<RunBacktestResponse>(input, ct);
         return Results.Accepted($"/api/plutus/backtests/{result.BacktestId}", result);

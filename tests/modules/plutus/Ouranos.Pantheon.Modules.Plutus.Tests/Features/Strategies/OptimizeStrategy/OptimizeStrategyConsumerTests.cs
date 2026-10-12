@@ -27,7 +27,7 @@ namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Strategies.OptimizeStra
 
 public sealed class OptimizeStrategyConsumerTests
 {
-    private readonly IFixture _fixture = new Fixture();
+    private readonly Fixture _fixture = new();
     private readonly ILogger<OptimizeStrategyConsumer> _logger = Substitute.For<
         ILogger<OptimizeStrategyConsumer>
     >();
@@ -175,6 +175,7 @@ public sealed class OptimizeStrategyConsumerTests
     {
         // Arrange
         var consumer = CreateConsumer();
+
         var message = new OptimizeStrategyMessage(
             _fixture.Create<Id<Backtest>>(),
             Generations: 10,
@@ -193,11 +194,13 @@ public sealed class OptimizeStrategyConsumerTests
     {
         // Arrange
         var consumer = CreateConsumer();
+
         var message = new OptimizeStrategyMessage(
             _fixture.Create<Id<Backtest>>(),
             Generations: 10,
             PopulationSize: 10
         );
+
         var cancellationToken = new CancellationToken(true);
 
         // Act
@@ -213,6 +216,7 @@ public sealed class OptimizeStrategyConsumerTests
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
         var symbolId = _fixture.Create<Id<Symbol>>();
+
         var strategy = Strategy.Create(
             marketId,
             "Test Strategy",
@@ -221,6 +225,7 @@ public sealed class OptimizeStrategyConsumerTests
             StrategyTestFactory.DefaultWeights(),
             null
         );
+
         var backtest = Backtest.Create(
             strategy.Id,
             marketId,
@@ -291,6 +296,7 @@ public sealed class OptimizeStrategyConsumerTests
     {
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
+
         var strategy = Strategy.Create(
             marketId,
             "Test Strategy",
@@ -299,6 +305,7 @@ public sealed class OptimizeStrategyConsumerTests
             StrategyTestFactory.DefaultWeights(),
             null
         );
+
         var backtest = Backtest.Create(
             strategy.Id,
             marketId,
@@ -347,6 +354,7 @@ public sealed class OptimizeStrategyConsumerTests
     {
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
+
         var strategy = Strategy.Create(
             marketId,
             "Test Strategy",
@@ -355,6 +363,7 @@ public sealed class OptimizeStrategyConsumerTests
             StrategyTestFactory.DefaultWeights(),
             null
         );
+
         var backtest = Backtest.Create(
             strategy.Id,
             marketId,
@@ -406,6 +415,7 @@ public sealed class OptimizeStrategyConsumerTests
     {
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
+
         var strategy = Strategy.Create(
             marketId,
             "Test Strategy",
@@ -414,6 +424,7 @@ public sealed class OptimizeStrategyConsumerTests
             StrategyTestFactory.DefaultWeights(),
             null
         );
+
         var backtest = Backtest.Create(
             strategy.Id,
             marketId,
@@ -485,6 +496,7 @@ public sealed class OptimizeStrategyConsumerTests
             MaxPositionPercent = 0.2m,
             HoldPeriodDays = 10,
         };
+
         var weights = new List<InputWeight>
         {
             new(InputKind.SignalTaxAdjustedRoi, 1.0m),
@@ -495,6 +507,7 @@ public sealed class OptimizeStrategyConsumerTests
             new(InputKind.SignalMovingAverageCrossover, 0.9m),
             new(InputKind.SignalPriceVelocity, 0.7m),
         };
+
         var chromosome = new StrategyChromosome(config, weights, new InputThresholds());
 
         // Act
@@ -522,180 +535,11 @@ public sealed class OptimizeStrategyConsumerTests
     }
 
     [Fact]
-    public void ComputeFitness_WhenZeroTrades_AppliesUnderTradingPenalty()
-    {
-        // Arrange
-        var results = new BacktestResults { TotalTrades = 0 };
-        var message = new OptimizeStrategyMessage(
-            _fixture.Create<Id<Backtest>>(),
-            Generations: 10,
-            PopulationSize: 20,
-            SortinoWeight: 0.5,
-            CagrWeight: 0.3,
-            DrawdownWeight: 0.2,
-            TurnoverWeight: 0.1,
-            L1RegularizationWeight: 0.05,
-            MinTrades: 5
-        );
-        var weights = StrategyTestFactory.DefaultWeights();
-
-        // Act
-        var fitness = OptimizeStrategyConsumer.ComputeFitness(results, message, weights);
-
-        // Assert
-        fitness.ShouldBe(-0.55, 0.001);
-    }
-
-    [Fact]
-    public void ComputeFitness_WhenTradesMeetMinTrades_AppliesNoPenalty()
-    {
-        // Arrange
-        var results = new BacktestResults
-        {
-            SharpeRatio = 1.0m,
-            TotalReturnPercent = 10m,
-            MaxDrawdownPercent = -5m,
-            TotalTrades = 5,
-        };
-        var message = new OptimizeStrategyMessage(
-            _fixture.Create<Id<Backtest>>(),
-            Generations: 10,
-            PopulationSize: 20,
-            SortinoWeight: 0.5,
-            CagrWeight: 0.3,
-            DrawdownWeight: 0.2,
-            TurnoverWeight: 0.1,
-            L1RegularizationWeight: 0.05,
-            MinTrades: 5
-        );
-        var weights = StrategyTestFactory.DefaultWeights();
-
-        // Act
-        var fitness = OptimizeStrategyConsumer.ComputeFitness(results, message, weights);
-
-        // Assert
-        fitness.ShouldBe(4.45, 0.001);
-    }
-
-    [Fact]
-    public void ComputeFitness_WhenMinTradesZero_DisablesPenalty()
-    {
-        // Arrange
-        var results = new BacktestResults { TotalTrades = 0 };
-        var message = new OptimizeStrategyMessage(
-            _fixture.Create<Id<Backtest>>(),
-            Generations: 10,
-            PopulationSize: 20,
-            SortinoWeight: 0.5,
-            CagrWeight: 0.3,
-            DrawdownWeight: 0.2,
-            TurnoverWeight: 0.1,
-            L1RegularizationWeight: 0.05,
-            MinTrades: 0
-        );
-        var weights = StrategyTestFactory.DefaultWeights();
-
-        // Act
-        var fitness = OptimizeStrategyConsumer.ComputeFitness(results, message, weights);
-
-        // Assert
-        fitness.ShouldBe(-0.05, 0.001);
-    }
-
-    [Fact]
-    public void ComputeFitness_WhenPartialShortfall_PenaltyScalesLinearly()
-    {
-        // Arrange
-        var baseResults = new BacktestResults
-        {
-            SharpeRatio = 1.0m,
-            TotalReturnPercent = 10m,
-            MaxDrawdownPercent = -5m,
-        };
-        var message = new OptimizeStrategyMessage(
-            _fixture.Create<Id<Backtest>>(),
-            Generations: 10,
-            PopulationSize: 20,
-            SortinoWeight: 0.5,
-            CagrWeight: 0.3,
-            DrawdownWeight: 0.2,
-            TurnoverWeight: 0.1,
-            L1RegularizationWeight: 0.05,
-            MinTrades: 5
-        );
-        var weights = StrategyTestFactory.DefaultWeights();
-
-        // Act
-        var fitness3 = OptimizeStrategyConsumer.ComputeFitness(
-            baseResults with
-            {
-                TotalTrades = 3,
-            },
-            message,
-            weights
-        );
-        var fitness4 = OptimizeStrategyConsumer.ComputeFitness(
-            baseResults with
-            {
-                TotalTrades = 4,
-            },
-            message,
-            weights
-        );
-
-        // Assert
-        (fitness3 - fitness4).ShouldBe(-0.1, 0.001);
-    }
-
-    [Fact]
-    public void ComputeFitness_WhenZeroTradeCandidateVsActiveLosing_ZeroTradeRanksLower()
-    {
-        // Arrange
-        var message = new OptimizeStrategyMessage(
-            _fixture.Create<Id<Backtest>>(),
-            Generations: 10,
-            PopulationSize: 20,
-            SortinoWeight: 0.5,
-            CagrWeight: 0.3,
-            DrawdownWeight: 0.2,
-            TurnoverWeight: 0.1,
-            L1RegularizationWeight: 0.05,
-            MinTrades: 5
-        );
-        var weights = StrategyTestFactory.DefaultWeights();
-
-        var zeroTradeResults = new BacktestResults { TotalTrades = 0 };
-
-        var activeLosingResults = new BacktestResults
-        {
-            SharpeRatio = -1m,
-            TotalReturnPercent = -5m,
-            MaxDrawdownPercent = -10m,
-            TotalTrades = 5,
-        };
-
-        // Act
-        var zeroTradeFitness = OptimizeStrategyConsumer.ComputeFitness(
-            zeroTradeResults,
-            message,
-            weights
-        );
-        var activeLosingFitness = OptimizeStrategyConsumer.ComputeFitness(
-            activeLosingResults,
-            message,
-            weights
-        );
-
-        // Assert
-        zeroTradeFitness.ShouldBeLessThan(activeLosingFitness);
-    }
-
-    [Fact]
     public async Task ComputeFitnessAsync_WhenGeneSignatureAlreadyCached_ReturnsCachedValueWithoutRunningBacktest()
     {
         // Arrange
         var consumer = CreateConsumer();
-        var chromosome = StrategyChromosome.CreateRandom();
+        var chromosome = StrategyChromosome.CreateRandom([InputKind.SignalRsi]);
         var geneSignature = string.Join(",", chromosome.Genes.Select(g => g.ToString("R")));
         var fitnessCache = new ConcurrentDictionary<string, double>();
         const double expectedCachedFitness = 42.0;

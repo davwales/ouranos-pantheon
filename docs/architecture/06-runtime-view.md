@@ -121,7 +121,7 @@ sequenceDiagram
     X ->> C: deliver (queues .run / .optimize)
     C ->> C: step pipeline (IStep registry)
     opt optimize
-        C ->> GA: evolve input weights (Sortino/CAGR/drawdown/turnover objectives)
+        C ->> GA: evolve the strategy's own input weights, thresholds and sizing (segment-consistent return)
     end
     C ->> DB: persist progress + results (metrics, optimized weights)
     UI ->> EP: GET backtest status until terminal state
@@ -153,6 +153,16 @@ that could actually have been placed:
 - **Price impact**: square-root slippage on the filled volume, capped at 5%.
 - **End of run**: volume the cap could not sell is marked at the last day's minimum price.
   Partial exits accumulate, so each round trip is one closed position.
+
+Optimization searches only the inputs the strategy already uses, with signed weights (a
+negative weight uses an input contrarily) and bounded sizing (8-60 positions, 1-15% each).
+The last `OutSampleRatio` of the range is held out. The in-sample range is split into
+~30-day segments, each run as an independent backtest, and a candidate's fitness blends its
+mean and worst segment. Per segment, fitness is the return with any single symbol's profit
+capped at 25% of gross profit, minus a drawdown penalty, minus a penalty for falling short of
+`MinTradesPerMonth`. Signals do not depend on the candidate, so per-input scores are computed
+once per segment (`BacktestScoreCache`) and candidates are evaluated in parallel. A result is
+validated only when both the in-sample and out-of-sample periods are profitable.
 
 ## 6.6 Scenario: Recipe Import
 

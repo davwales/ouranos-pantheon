@@ -472,7 +472,7 @@ public sealed class GetRecommendationsHandlerTests
         // Arrange
         var (strategy, marketId) = await SeedScoredSymbolsAsync(
             new TradingConfiguration(),
-            (Volume: 700m, Limit: null)
+            (Volume: 7000m, Limit: null)
         );
 
         var query = new GetRecommendationsInput(strategy.Id, marketId, 2000m);
@@ -482,9 +482,9 @@ public sealed class GetRecommendationsHandlerTests
 
         // Assert
         var recommendation = result.Recommendations.ShouldHaveSingleItem();
-        recommendation.TypicalDailyVolume.ShouldBe(100m);
-        recommendation.SuggestedVolume.ShouldBe(25m);
-        recommendation.SuggestedAllocation.ShouldBe(250m);
+        recommendation.TypicalDailyVolume.ShouldBe(1000m);
+        recommendation.SuggestedVolume.ShouldBe(100m);
+        recommendation.SuggestedAllocation.ShouldBe(1000m);
         recommendation.LimitedBy.ShouldBe(PositionLimit.Liquidity);
     }
 
