@@ -7,40 +7,101 @@ namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest;
 
 public static class BacktestMath
 {
+    /// <summary>Upper bound on modelled price impact so a thin day cannot produce absurd fills.</summary>
+    public const decimal MaxSlippage = 0.05m;
+
+    /// <summary>
+    ///     Square-root market impact of trading <paramref name="volume" /> units against a day
+    ///     that traded <paramref name="dayVolume" /> units, capped at <see cref="MaxSlippage" />.
+    /// </summary>
+    public static decimal ComputeSlippage(
+        decimal volume,
+        decimal dayVolume,
+        decimal slippageMultiplier
+    )
+    {
+        if (volume <= 0 || dayVolume <= 0)
+        {
+            return 0m;
+        }
+
+        var impact = (decimal)Math.Sqrt((double)(volume / dayVolume)) * slippageMultiplier;
+        return Math.Min(impact, MaxSlippage);
+    }
+
     public static (decimal NetProceeds, decimal ExitVolume, decimal NetPnl) ComputeExit(
         OpenPosition pos,
         decimal exitPrice,
         decimal taxRate,
         Market market,
-        decimal dailyVolume,
-        decimal volumeParticipationRate,
+        decimal dayVolume,
+        decimal fillCap,
         decimal slippageMultiplier
     )
     {
-        var maxSellableVolume =
-            dailyVolume > 0 ? Math.Floor(dailyVolume * volumeParticipationRate) : pos.Volume;
+        var exitVolume = Math.Min(pos.Volume, fillCap);
 
-        var exitVolume = Math.Min(pos.Volume, maxSellableVolume);
-
-        if (exitVolume <= 0)
+        if (exitVolume <= 0 || exitPrice <= 0)
         {
             return (0m, 0m, 0m);
         }
 
-        var volumeImpact = dailyVolume > 0 ? exitVolume / dailyVolume : 0m;
-        var slippage = volumeImpact * slippageMultiplier;
+        var slippage = ComputeSlippage(exitVolume, dayVolume, slippageMultiplier);
         var adjustedExitPrice = exitPrice * (1 - slippage);
 
         var grossExitValue = adjustedExitPrice * exitVolume;
-        var taxAmount = grossExitValue * taxRate;
-        var taxCap = market.Taxes.Flat?.Maximum ?? decimal.MaxValue;
-        var cappedTax = Math.Min(taxAmount, taxCap);
-
-        var netProceeds = grossExitValue - cappedTax;
+        var netProceeds = grossExitValue - ComputeTax(grossExitValue, taxRate, market);
         var costBasis = pos.EntryPrice * exitVolume;
         var netPnl = netProceeds - costBasis;
 
         return (netProceeds, exitVolume, netPnl);
+    }
+
+    public static decimal ComputeTax(decimal grossValue, decimal taxRate, Market market)
+    {
+        var taxCap = market.Taxes.Flat?.Maximum ?? decimal.MaxValue;
+        return Math.Min(grossValue * taxRate, taxCap);
+    }
+
+    /// <summary>
+    ///     Records a (possibly partial) exit against an open position. Partial exits accumulate
+    ///     on the position so each round trip yields exactly one closed position once the
+    ///     remaining volume reaches zero.
+    /// </summary>
+    public static (OpenPosition? Remaining, BacktestPosition? Closed) ApplyExit(
+        OpenPosition pos,
+        decimal exitPrice,
+        decimal exitVolume,
+        decimal netPnl,
+        DateTimeOffset exitTime
+    )
+    {
+        var accumulated = pos with
+        {
+            Volume = pos.Volume - exitVolume,
+            ExitedVolume = pos.ExitedVolume + exitVolume,
+            ExitedGross = pos.ExitedGross + (exitPrice * exitVolume),
+            RealizedPnl = pos.RealizedPnl + netPnl,
+        };
+
+        if (accumulated.Volume > 0)
+        {
+            return (accumulated, null);
+        }
+
+        var averageExitPrice =
+            accumulated.ExitedVolume > 0 ? accumulated.ExitedGross / accumulated.ExitedVolume : 0m;
+
+        return (
+            null,
+            CreateClosedPosition(
+                accumulated,
+                averageExitPrice,
+                accumulated.ExitedVolume,
+                accumulated.RealizedPnl,
+                exitTime
+            )
+        );
     }
 
     public static IReadOnlyList<PriceBucket> BuildPriceBucketsFromAggregates(

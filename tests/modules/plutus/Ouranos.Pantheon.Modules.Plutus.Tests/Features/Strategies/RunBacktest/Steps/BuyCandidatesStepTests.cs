@@ -168,6 +168,10 @@ public sealed class BuyCandidatesStepTests
         {
             new(symbolId, dateOnly, 100m, 100m, 100m, 100000m),
         };
+        dailyAggregates.InsertRange(
+            0,
+            BacktestTestData.History(symbolId, currentDate, 100m, 100000m)
+        );
         var data = BacktestData.FromRaw(market, [symbol], dailyAggregates);
         payload.Context = new BacktestContext(
             data,
@@ -345,6 +349,10 @@ public sealed class BuyCandidatesStepTests
         {
             new(symbolId, dateOnly, 100m, 100m, 100m, 100000m),
         };
+        dailyAggregates.InsertRange(
+            0,
+            BacktestTestData.History(symbolId, currentDate, 100m, 100000m)
+        );
         var data = BacktestData.FromRaw(market, [symbol], dailyAggregates);
         payload.Context = new BacktestContext(
             data,
@@ -364,8 +372,10 @@ public sealed class BuyCandidatesStepTests
 
         // Assert
         payload.Portfolio.OpenPositions.Count.ShouldBe(1);
-        payload.Portfolio.OpenPositions[symbolId].EntryPrice.ShouldBe(100.01m);
-        payload.Portfolio.Balance.ShouldBe(99.01m);
+        var position = payload.Portfolio.OpenPositions[symbolId];
+        position.EntryPrice.ShouldBe(100.3162m, 0.0001m);
+        position.Volume.ShouldBe(99m);
+        payload.Portfolio.Balance.ShouldBe(68.6935m, 0.001m);
     }
 
     [Fact]
@@ -407,6 +417,10 @@ public sealed class BuyCandidatesStepTests
         {
             new(symbolId, dateOnly, 100m, 100m, 100m, 100000m),
         };
+        dailyAggregates.InsertRange(
+            0,
+            BacktestTestData.History(symbolId, currentDate, 100m, 100000m)
+        );
         var data = BacktestData.FromRaw(market, [symbol], dailyAggregates);
         payload.Context = new BacktestContext(
             data,
@@ -470,6 +484,7 @@ public sealed class BuyCandidatesStepTests
         {
             new(symbolId, dateOnly, 100m, 100m, 100m, 50m),
         };
+        dailyAggregates.InsertRange(0, BacktestTestData.History(symbolId, currentDate, 100m, 50m));
         var data = BacktestData.FromRaw(market, [symbol], dailyAggregates);
         payload.Context = new BacktestContext(
             data,
@@ -492,5 +507,135 @@ public sealed class BuyCandidatesStepTests
 
         var position = payload.Portfolio.OpenPositions[symbolId];
         position.Volume.ShouldBe(5m);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WhenSymbolDidNotTradeToday_DoesNotBuy()
+    {
+        // Arrange
+        var (payload, symbol, _) = CreateLiquidityScenario(
+            todayVolume: null,
+            historyVolume: 1000m,
+            limit: null
+        );
+
+        payload.Portfolio.ScoredSymbols = [new ScoredSymbol(symbol, 1m, 100m)];
+        var step = new BuyCandidatesStep(Substitute.For<ILogger<BuyCandidatesStep>>());
+
+        // Act
+        await step.ExecuteAsync(new PipelineContext(CancellationToken.None), payload);
+
+        // Assert
+        payload.Portfolio.OpenPositions.ShouldBeEmpty();
+        payload.Portfolio.Balance.ShouldBe(1_000_000m);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WhenTypicalVolumeIsThin_DoesNotBuyOnSingleBusyDay()
+    {
+        // Arrange
+        var (payload, symbol, _) = CreateLiquidityScenario(
+            todayVolume: 100_000m,
+            historyVolume: 1m,
+            limit: null
+        );
+
+        payload.Portfolio.ScoredSymbols = [new ScoredSymbol(symbol, 1m, 100m)];
+        var step = new BuyCandidatesStep(Substitute.For<ILogger<BuyCandidatesStep>>());
+
+        // Act
+        await step.ExecuteAsync(new PipelineContext(CancellationToken.None), payload);
+
+        // Assert
+        payload.Portfolio.OpenPositions.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WhenSymbolHasBuyLimit_CapsVolumeAtLimitWindowsPerDay()
+    {
+        // Arrange
+        var (payload, symbol, symbolId) = CreateLiquidityScenario(
+            todayVolume: 100_000m,
+            historyVolume: 100_000m,
+            limit: 70m
+        );
+
+        payload.Portfolio.ScoredSymbols = [new ScoredSymbol(symbol, 1m, 100m)];
+        var step = new BuyCandidatesStep(Substitute.For<ILogger<BuyCandidatesStep>>());
+
+        // Act
+        await step.ExecuteAsync(new PipelineContext(CancellationToken.None), payload);
+
+        // Assert
+        payload
+            .Portfolio.OpenPositions[symbolId]
+            .Volume.ShouldBe(70m * BacktestDataOptions.DefaultLimitWindowsPerDay);
+    }
+
+    private (BacktestPayload Payload, Symbol Symbol, Id<Symbol> SymbolId) CreateLiquidityScenario(
+        decimal? todayVolume,
+        decimal historyVolume,
+        decimal? limit
+    )
+    {
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var marketId = _fixture.Create<Id<Market>>();
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+        var startDate = DateTimeOffset.UtcNow.AddDays(-10);
+
+        var symbol = Symbol.Create(
+            symbolId,
+            "SYM",
+            null,
+            "Test Symbol",
+            marketId,
+            new AdditionalFields(Limit: limit)
+        );
+
+        var strategy = Strategy.Create(
+            marketId,
+            "Test Strategy",
+            null,
+            new TradingConfiguration(),
+            StrategyTestFactory.DefaultWeights(),
+            null
+        );
+
+        var parameters = new BacktestParameters(
+            marketId,
+            strategy,
+            startDate,
+            DateTimeOffset.UtcNow,
+            1_000_000m
+        );
+
+        var aggregates = BacktestTestData.History(symbolId, startDate, 100m, historyVolume);
+        if (todayVolume.HasValue)
+        {
+            aggregates.Add(
+                new DailyTradeAggregate(
+                    symbolId,
+                    DateOnly.FromDateTime(startDate.UtcDateTime),
+                    100m,
+                    100m,
+                    100m,
+                    todayVolume.Value
+                )
+            );
+        }
+
+        var payload = new BacktestPayload(parameters)
+        {
+            Context = new BacktestContext(
+                BacktestData.FromRaw(market, [symbol], aggregates),
+                Substitute.For<IStrategyExecutor>(),
+                0m,
+                startDate,
+                parameters.InputWeights,
+                parameters.Thresholds
+            ),
+        };
+
+        return (payload, symbol, symbolId);
     }
 }

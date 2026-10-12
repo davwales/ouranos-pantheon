@@ -28,6 +28,7 @@ public sealed class LiquidateStepTests
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
         var executor = Substitute.For<IStrategyExecutor>();
+
         var strategy = Strategy.Create(
             marketId,
             "Test Strategy",
@@ -36,6 +37,7 @@ public sealed class LiquidateStepTests
             StrategyTestFactory.DefaultWeights(),
             null
         );
+
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var endDate = DateTimeOffset.UtcNow;
         var parameters = new BacktestParameters(marketId, strategy, startDate, endDate, 10000m);
@@ -46,6 +48,8 @@ public sealed class LiquidateStepTests
         {
             new(symbolId, dateOnly, 150m, 150m, 150m, 1000m),
         };
+
+        dailyAggregates.InsertRange(0, BacktestTestData.History(symbolId, endDate, 150m, 1000m));
         var data = BacktestData.FromRaw(market, [], dailyAggregates);
         payload.Context = new BacktestContext(
             data,
@@ -68,7 +72,7 @@ public sealed class LiquidateStepTests
         // Assert
         payload.Portfolio.OpenPositions.ShouldBeEmpty();
         payload.Portfolio.ClosedPositions.Count.ShouldBe(1);
-        payload.Portfolio.Balance.ShouldBe(10000m + 1498.5m);
+        payload.Portfolio.Balance.ShouldBe(10000m + 1485m);
 
         var closedPosition = payload.Portfolio.ClosedPositions[0];
         closedPosition.SymbolId.ShouldBe(symbolId.ToString());
@@ -76,7 +80,7 @@ public sealed class LiquidateStepTests
         closedPosition.EntryPrice.ShouldBe(100m);
         closedPosition.ExitPrice.ShouldBe(150m);
         closedPosition.Volume.ShouldBe(10m);
-        closedPosition.ProfitLoss.ShouldBe(498.5m);
+        closedPosition.ProfitLoss.ShouldBe(485m);
         closedPosition.EntryTime.ShouldBe(startDate);
         closedPosition.ExitTime.ShouldBe(endDate);
     }
@@ -89,6 +93,7 @@ public sealed class LiquidateStepTests
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
         var executor = Substitute.For<IStrategyExecutor>();
+
         var strategy = Strategy.Create(
             marketId,
             "Test Strategy",
@@ -97,6 +102,7 @@ public sealed class LiquidateStepTests
             StrategyTestFactory.DefaultWeights(),
             null
         );
+
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var endDate = DateTimeOffset.UtcNow;
         var parameters = new BacktestParameters(marketId, strategy, startDate, endDate, 10000m);
@@ -141,6 +147,7 @@ public sealed class LiquidateStepTests
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
         var executor = Substitute.For<IStrategyExecutor>();
+
         var strategy = Strategy.Create(
             marketId,
             "Test Strategy",
@@ -149,6 +156,7 @@ public sealed class LiquidateStepTests
             StrategyTestFactory.DefaultWeights(),
             null
         );
+
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var endDate = DateTimeOffset.UtcNow;
         var parameters = new BacktestParameters(marketId, strategy, startDate, endDate, 10000m);
@@ -159,6 +167,7 @@ public sealed class LiquidateStepTests
         {
             new(symbolId, dateOnly, 150m, 150m, 150m, 1m),
         };
+
         var data = BacktestData.FromRaw(market, [], dailyAggregates);
         payload.Context = new BacktestContext(
             data,
@@ -198,11 +207,13 @@ public sealed class LiquidateStepTests
         // Arrange
         var symbolId = _fixture.Create<Id<Symbol>>();
         var marketId = _fixture.Create<Id<Market>>();
+
         var market = Market.Create(
             marketId,
             "Test Market",
             new Taxes(new FlatTax(0m, 100m, 0.10m))
         );
+
         var executor = Substitute.For<IStrategyExecutor>();
         var strategy = Strategy.Create(
             marketId,
@@ -212,6 +223,7 @@ public sealed class LiquidateStepTests
             StrategyTestFactory.DefaultWeights(),
             null
         );
+
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var endDate = DateTimeOffset.UtcNow;
         var parameters = new BacktestParameters(marketId, strategy, startDate, endDate, 10000m);
@@ -222,6 +234,7 @@ public sealed class LiquidateStepTests
         {
             new(symbolId, dateOnly, 150m, 150m, 150m, 1m),
         };
+
         var data = BacktestData.FromRaw(market, [], dailyAggregates);
         payload.Context = new BacktestContext(
             data,
@@ -252,13 +265,14 @@ public sealed class LiquidateStepTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WhenPartialExit_MarkToMarketsRemainingAtObservedPrice()
+    public async Task ExecuteAsync_WhenPartialExit_MarksResidualAtDayMinimumInSingleRoundTrip()
     {
         // Arrange
         var symbolId = _fixture.Create<Id<Symbol>>();
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
         var executor = Substitute.For<IStrategyExecutor>();
+
         var strategy = Strategy.Create(
             marketId,
             "Test Strategy",
@@ -267,6 +281,7 @@ public sealed class LiquidateStepTests
             StrategyTestFactory.DefaultWeights(),
             null
         );
+
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var endDate = DateTimeOffset.UtcNow;
         var parameters = new BacktestParameters(marketId, strategy, startDate, endDate, 10000m);
@@ -275,8 +290,10 @@ public sealed class LiquidateStepTests
 
         var dailyAggregates = new List<DailyTradeAggregate>
         {
-            new(symbolId, dateOnly, 150m, 150m, 150m, 20m),
+            new(symbolId, dateOnly, 150m, 140m, 150m, 20m),
         };
+
+        dailyAggregates.InsertRange(0, BacktestTestData.History(symbolId, endDate, 150m, 20m));
         var data = BacktestData.FromRaw(market, [], dailyAggregates);
         payload.Context = new BacktestContext(
             data,
@@ -298,20 +315,14 @@ public sealed class LiquidateStepTests
 
         // Assert
         payload.Portfolio.OpenPositions.ShouldBeEmpty();
-        payload.Portfolio.ClosedPositions.Count.ShouldBe(2);
-        payload.Portfolio.Balance.ShouldBe(10000m + 731.25m + 750m);
+        payload.Portfolio.ClosedPositions.Count.ShouldBe(1);
+        payload.Portfolio.Balance.ShouldBe(10000m + 712.5m + 700m);
 
-        var firstClosed = payload.Portfolio.ClosedPositions[0];
-        firstClosed.ExitPrice.ShouldBe(150m);
-        firstClosed.Volume.ShouldBe(5m);
-        firstClosed.ProfitLoss.ShouldBe(231.25m);
-        firstClosed.EntryPrice.ShouldBe(100m);
-
-        var secondClosed = payload.Portfolio.ClosedPositions[1];
-        secondClosed.ExitPrice.ShouldBe(150m);
-        secondClosed.Volume.ShouldBe(5m);
-        secondClosed.ProfitLoss.ShouldBe(250m);
-        secondClosed.EntryPrice.ShouldBe(100m);
+        var closed = payload.Portfolio.ClosedPositions[0];
+        closed.Volume.ShouldBe(10m);
+        closed.ExitPrice.ShouldBe(145m);
+        closed.ProfitLoss.ShouldBe(412.5m);
+        closed.EntryPrice.ShouldBe(100m);
     }
 
     [Fact]
@@ -321,6 +332,7 @@ public sealed class LiquidateStepTests
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
         var executor = Substitute.For<IStrategyExecutor>();
+
         var strategy = Strategy.Create(
             marketId,
             "Test Strategy",
@@ -329,6 +341,7 @@ public sealed class LiquidateStepTests
             StrategyTestFactory.DefaultWeights(),
             null
         );
+
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var endDate = DateTimeOffset.UtcNow;
         var parameters = new BacktestParameters(marketId, strategy, startDate, endDate, 10000m);
@@ -363,6 +376,7 @@ public sealed class LiquidateStepTests
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
         var executor = Substitute.For<IStrategyExecutor>();
+
         var strategy = Strategy.Create(
             marketId,
             "Test Strategy",
@@ -371,6 +385,7 @@ public sealed class LiquidateStepTests
             StrategyTestFactory.DefaultWeights(),
             null
         );
+
         var parameters = new BacktestParameters(
             marketId,
             strategy,
@@ -378,6 +393,7 @@ public sealed class LiquidateStepTests
             DateTimeOffset.UtcNow,
             10000m
         );
+
         var payload = new BacktestPayload(parameters)
         {
             Context = new BacktestContext(
@@ -406,6 +422,7 @@ public sealed class LiquidateStepTests
     {
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
+
         var strategy = Strategy.Create(
             marketId,
             "Test Strategy",
@@ -414,6 +431,7 @@ public sealed class LiquidateStepTests
             StrategyTestFactory.DefaultWeights(),
             null
         );
+
         var parameters = new BacktestParameters(
             marketId,
             strategy,
@@ -421,6 +439,7 @@ public sealed class LiquidateStepTests
             DateTimeOffset.UtcNow,
             10000m
         );
+
         var payload = new BacktestPayload(parameters);
         var context = new PipelineContext(CancellationToken.None);
         var step = new LiquidateStep();

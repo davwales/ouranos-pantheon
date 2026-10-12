@@ -9,5 +9,8 @@ public sealed record OpenPosition(
     string? SymbolSubcode,
     decimal EntryPrice,
     decimal Volume,
-    DateTimeOffset EntryTime
+    DateTimeOffset EntryTime,
+    decimal ExitedVolume = 0m,
+    decimal ExitedGross = 0m,
+    decimal RealizedPnl = 0m
 );

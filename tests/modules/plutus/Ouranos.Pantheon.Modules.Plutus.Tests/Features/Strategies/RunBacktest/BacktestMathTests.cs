@@ -9,7 +9,7 @@ namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Strategies.RunBacktest;
 
 public sealed class BacktestMathTests
 {
-    private readonly IFixture _fixture = new Fixture();
+    private readonly Fixture _fixture = new();
 
     public BacktestMathTests()
     {
@@ -17,7 +17,7 @@ public sealed class BacktestMathTests
     }
 
     [Fact]
-    public void ComputeExit_WhenVolumeExceedsDailyParticipation_CapsSellVolume()
+    public void ComputeExit_WhenVolumeExceedsFillCap_CapsSellVolume()
     {
         // Arrange
         var pos = new OpenPosition(
@@ -28,10 +28,11 @@ public sealed class BacktestMathTests
             Volume: 100m,
             EntryTime: DateTimeOffset.UtcNow
         );
+
         var market = Market.Create(_fixture.Create<Id<Market>>(), "Test Market", new Taxes(null));
 
         // Act
-        var (_, exitVolume, _) = BacktestMath.ComputeExit(pos, 150m, 0m, market, 100m, 0.25m, 0m);
+        var (_, exitVolume, _) = BacktestMath.ComputeExit(pos, 150m, 0m, market, 100m, 25m, 0m);
 
         // Assert
         exitVolume.ShouldBe(25m);
@@ -49,6 +50,7 @@ public sealed class BacktestMathTests
             Volume: 100m,
             EntryTime: DateTimeOffset.UtcNow
         );
+
         var market = Market.Create(_fixture.Create<Id<Market>>(), "Test Market", new Taxes(null));
 
         // Act
@@ -58,17 +60,17 @@ public sealed class BacktestMathTests
             0m,
             market,
             100m,
-            0.25m,
+            25m,
             0.1m
         );
 
         // Assert
         exitVolume.ShouldBe(25m);
-        netProceeds.ShouldBe(2437.5m);
+        netProceeds.ShouldBe(2375m);
     }
 
     [Fact]
-    public void ComputeExit_WhenParticipationRateZero_ReturnsZero()
+    public void ComputeExit_WhenFillCapZero_ReturnsZero()
     {
         // Arrange
         var pos = new OpenPosition(
@@ -79,6 +81,7 @@ public sealed class BacktestMathTests
             Volume: 100m,
             EntryTime: DateTimeOffset.UtcNow
         );
+
         var market = Market.Create(_fixture.Create<Id<Market>>(), "Test Market", new Taxes(null));
 
         // Act
@@ -110,6 +113,7 @@ public sealed class BacktestMathTests
             Volume: 10m,
             EntryTime: DateTimeOffset.UtcNow
         );
+
         var market = Market.Create(
             _fixture.Create<Id<Market>>(),
             "Test Market",
@@ -123,7 +127,7 @@ public sealed class BacktestMathTests
             0.05m,
             market,
             0m,
-            0.25m,
+            1000m,
             0m
         );
 
@@ -145,6 +149,7 @@ public sealed class BacktestMathTests
             Volume: 100m,
             EntryTime: DateTimeOffset.UtcNow
         );
+
         var market = Market.Create(
             _fixture.Create<Id<Market>>(),
             "Test Market",
@@ -158,7 +163,7 @@ public sealed class BacktestMathTests
             0.10m,
             market,
             0m,
-            0.25m,
+            1000m,
             0m
         );
 
@@ -179,6 +184,7 @@ public sealed class BacktestMathTests
             Volume: 10m,
             EntryTime: DateTimeOffset.UtcNow
         );
+
         var market = Market.Create(
             _fixture.Create<Id<Market>>(),
             "Test Market",
@@ -186,7 +192,7 @@ public sealed class BacktestMathTests
         );
 
         // Act
-        var (_, _, netPnl) = BacktestMath.ComputeExit(pos, 50m, 0.05m, market, 0m, 0.25m, 0m);
+        var (_, _, netPnl) = BacktestMath.ComputeExit(pos, 50m, 0.05m, market, 0m, 1000m, 0m);
 
         // Assert
         netPnl.ShouldBe(-525m);
@@ -204,6 +210,7 @@ public sealed class BacktestMathTests
             Volume: 20m,
             EntryTime: DateTimeOffset.UtcNow
         );
+
         var market = Market.Create(_fixture.Create<Id<Market>>(), "Test Market", new Taxes(null));
 
         // Act
@@ -213,13 +220,75 @@ public sealed class BacktestMathTests
             0m,
             market,
             0m,
-            0.25m,
+            1000m,
             0m
         );
 
         // Assert
         netProceeds.ShouldBe(1200m);
         netPnl.ShouldBe(200m);
+    }
+
+    [Fact]
+    public void ComputeSlippage_WhenVolumeIsLargeRelativeToDay_CapsAtMaxSlippage()
+    {
+        // Arrange
+        const decimal volume = 10_000m;
+        const decimal dayVolume = 1m;
+
+        // Act
+        var slippage = BacktestMath.ComputeSlippage(volume, dayVolume, 0.1m);
+
+        // Assert
+        slippage.ShouldBe(BacktestMath.MaxSlippage);
+    }
+
+    [Fact]
+    public void ComputeSlippage_WhenDayVolumeZero_ReturnsZero()
+    {
+        // Act
+        var slippage = BacktestMath.ComputeSlippage(10m, 0m, 0.1m);
+
+        // Assert
+        slippage.ShouldBe(0m);
+    }
+
+    [Fact]
+    public void ApplyExit_WhenPartialThenFinalExit_EmitsSingleClosedPosition()
+    {
+        // Arrange
+        var entryTime = DateTimeOffset.UtcNow.AddDays(-3);
+        var exitTime = DateTimeOffset.UtcNow;
+
+        var pos = new OpenPosition(
+            _fixture.Create<Id<Symbol>>(),
+            "SYM",
+            null,
+            EntryPrice: 100m,
+            Volume: 10m,
+            EntryTime: entryTime
+        );
+
+        // Act
+        var (remaining, firstClosed) = BacktestMath.ApplyExit(pos, 110m, 4m, 40m, exitTime);
+        var (finalRemaining, closed) = BacktestMath.ApplyExit(
+            remaining.ShouldNotBeNull(),
+            120m,
+            6m,
+            120m,
+            exitTime
+        );
+
+        // Assert
+        firstClosed.ShouldBeNull();
+        remaining.Volume.ShouldBe(6m);
+        finalRemaining.ShouldBeNull();
+        closed.ShouldNotBeNull();
+        closed.Volume.ShouldBe(10m);
+        closed.ExitPrice.ShouldBe(116m);
+        closed.ProfitLoss.ShouldBe(160m);
+        closed.EntryTime.ShouldBe(entryTime);
+        closed.ExitTime.ShouldBe(exitTime);
     }
 
     [Fact]
@@ -261,6 +330,7 @@ public sealed class BacktestMathTests
     {
         // Arrange
         var symbolId = _fixture.Create<Id<Symbol>>();
+
         var aggregates = Enumerable
             .Range(0, 50)
             .Select(i => new DailyTradeAggregate(
@@ -291,6 +361,7 @@ public sealed class BacktestMathTests
     {
         // Arrange
         var symbolId = _fixture.Create<Id<Symbol>>();
+
         var aggregates = Enumerable
             .Range(0, 10)
             .Select(i => new DailyTradeAggregate(
@@ -315,6 +386,7 @@ public sealed class BacktestMathTests
     {
         // Arrange
         var symbolId = _fixture.Create<Id<Symbol>>();
+
         var aggregates = Enumerable
             .Range(0, 25)
             .Select(i => new DailyTradeAggregate(
@@ -350,6 +422,7 @@ public sealed class BacktestMathTests
             Volume: 10m,
             EntryTime: DateTimeOffset.UtcNow.AddDays(-5)
         );
+
         var exitTime = DateTimeOffset.UtcNow;
 
         // Act
@@ -377,6 +450,7 @@ public sealed class BacktestMathTests
             Volume: 10m,
             EntryTime: DateTimeOffset.UtcNow.AddDays(-5)
         );
+
         var exitTime = DateTimeOffset.UtcNow;
 
         // Act
@@ -399,6 +473,7 @@ public sealed class BacktestMathTests
             Volume: 10m,
             EntryTime: DateTimeOffset.UtcNow
         );
+
         var exitTime = DateTimeOffset.UtcNow;
 
         // Act

@@ -90,7 +90,7 @@ public sealed class BacktestDataQueryService : IBacktestDataQueryService
                 """
                 SELECT symbol_id,
                        time_bucket('1 day', "timestamp") AS date,
-                       AVG(price) AS average_price,
+                       COALESCE(SUM(price * volume) / NULLIF(SUM(volume), 0), AVG(price)) AS average_price,
                        MIN(price) AS min_price,
                        MAX(price) AS max_price,
                        SUM(volume) AS total_volume

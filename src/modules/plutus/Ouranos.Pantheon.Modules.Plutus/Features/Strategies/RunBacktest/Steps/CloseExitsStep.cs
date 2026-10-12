@@ -63,21 +63,25 @@ public sealed class CloseExitsStep(ISignalScoringService signalScoringService)
 
         foreach (var kvp in toClose)
         {
-            var exitPrice = ctx.Data.GetLatestPrice(kvp.Key, currentDate);
-
-            if (exitPrice == 0)
+            var day = ctx.Data.GetDailyAggregate(kvp.Key, currentDate);
+            if (day is null || day.AveragePrice <= 0)
             {
                 continue;
             }
 
-            var dailyVolume = ctx.Data.GetDailyVolume(kvp.Key, currentDate);
+            var fillCap = ctx.Data.GetFillCap(
+                kvp.Key,
+                currentDate,
+                payload.Parameters.VolumeParticipationRate
+            );
+
             var (netProceeds, exitVolume, netPnl) = BacktestMath.ComputeExit(
                 kvp.Value,
-                exitPrice,
+                day.AveragePrice,
                 ctx.TaxRate,
                 ctx.Data.Market,
-                dailyVolume,
-                payload.Parameters.VolumeParticipationRate,
+                day.TotalVolume,
+                fillCap,
                 payload.Parameters.SlippageMultiplier
             );
 
@@ -87,26 +91,27 @@ public sealed class CloseExitsStep(ISignalScoringService signalScoringService)
             }
 
             payload.Portfolio.Balance += netProceeds;
-            payload.Portfolio.ClosedPositions.Add(
-                BacktestMath.CreateClosedPosition(
-                    kvp.Value,
-                    exitPrice,
-                    exitVolume,
-                    netPnl,
-                    currentDate
-                )
+
+            var (remaining, closed) = BacktestMath.ApplyExit(
+                kvp.Value,
+                day.AveragePrice,
+                exitVolume,
+                netPnl,
+                currentDate
             );
 
-            if (exitVolume >= kvp.Value.Volume)
+            if (closed is not null)
+            {
+                payload.Portfolio.ClosedPositions.Add(closed);
+            }
+
+            if (remaining is null)
             {
                 payload.Portfolio.OpenPositions.Remove(kvp.Key);
             }
             else
             {
-                payload.Portfolio.OpenPositions[kvp.Key] = kvp.Value with
-                {
-                    Volume = kvp.Value.Volume - exitVolume,
-                };
+                payload.Portfolio.OpenPositions[kvp.Key] = remaining;
             }
         }
     }
@@ -124,30 +129,30 @@ public sealed class CloseExitsStep(ISignalScoringService signalScoringService)
         var cachedScore = payload.Portfolio.ScoredSymbols?.FirstOrDefault(s =>
             s.Symbol.Id == symbolId
         );
+
         if (cachedScore is not null)
         {
             return cachedScore.Score < sellThreshold;
         }
 
-        var currentDate = ctx.CurrentDate(context);
-        var snapshots = ctx.Data.GetSnapshotsForSymbol(symbolId, currentDate);
-        var currentPrice = ctx.Data.GetLatestPrice(symbolId, currentDate);
+        var signalDate = ScoreSymbolsStep.SignalDate(ctx.CurrentDate(context));
+        var snapshots = ctx.Data.GetSnapshotsForSymbol(symbolId, signalDate);
+        var currentPrice = ctx.Data.GetLatestPrice(symbolId, signalDate);
 
         if (currentPrice == 0)
         {
             return false;
         }
 
-        var limit = ctx.Data.Market.Taxes.Flat?.Maximum ?? decimal.MaxValue;
-
         var allAggregates = ctx.Data.GetWindowAggregates(
             symbolId,
             DateTimeOffset.MinValue,
-            currentDate,
+            signalDate,
             windowDays: 30
         );
-        var priceBuckets = BacktestMath.BuildPriceBucketsFromAggregates(allAggregates);
 
+        var limit = ctx.Data.Market.Taxes.Flat?.Maximum ?? decimal.MaxValue;
+        var priceBuckets = BacktestMath.BuildPriceBucketsFromAggregates(allAggregates);
         var signalHistory = ScoreSymbolsStep.GetSignalHistory(payload, symbolId);
 
         var scoreResult = await _signalScoringService.BuildScoreContextAsync(

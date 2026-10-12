@@ -38,6 +38,7 @@ public sealed class ScoreSymbolsStep(
 
         var ctx = payload.Context;
         var currentDate = ctx.CurrentDate(context);
+        var signalDate = SignalDate(currentDate);
 
         var scored = new List<ScoredSymbol>();
 
@@ -48,7 +49,7 @@ public sealed class ScoreSymbolsStep(
             var aggregates = ctx.Data.GetWindowAggregates(
                 symbol.Id,
                 DateTimeOffset.MinValue,
-                currentDate,
+                signalDate,
                 windowDays: 30
             );
             if (aggregates.Count == 0)
@@ -62,7 +63,7 @@ public sealed class ScoreSymbolsStep(
                 continue;
             }
 
-            var snapshots = ctx.Data.GetSnapshotsForSymbol(symbol.Id, currentDate);
+            var snapshots = ctx.Data.GetSnapshotsForSymbol(symbol.Id, signalDate);
             var priceBuckets = BacktestMath.BuildPriceBucketsFromAggregates(aggregates);
 
             var limit = ctx.Data.Market.Taxes.Flat?.Maximum ?? decimal.MaxValue;
@@ -102,6 +103,15 @@ public sealed class ScoreSymbolsStep(
         );
 
         payload.Portfolio.ScoredSymbols = scored;
+    }
+
+    /// <summary>
+    ///     Signals for a simulated day only see trades up to the end of the previous day, so
+    ///     decisions never use the same day's prices or volume that the fills execute against.
+    /// </summary>
+    internal static DateTimeOffset SignalDate(DateTimeOffset currentDate)
+    {
+        return currentDate.AddDays(-1);
     }
 
     /// <summary>
