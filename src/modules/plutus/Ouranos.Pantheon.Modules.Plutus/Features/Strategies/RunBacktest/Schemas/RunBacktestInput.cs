@@ -10,6 +10,6 @@ public sealed record RunBacktestInput(
     DateTimeOffset StartDate,
     DateTimeOffset EndDate,
     decimal Budget,
-    decimal VolumeParticipationRate = 0.25m,
-    decimal SlippageMultiplier = 0.1m
+    decimal VolumeParticipationRate = BacktestDataOptions.DefaultVolumeParticipationRate,
+    decimal SlippageMultiplier = BacktestDataOptions.DefaultSlippageMultiplier
 );

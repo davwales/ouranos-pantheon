@@ -3,6 +3,7 @@ using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.OptimizeStrategy.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Steps;
@@ -31,9 +32,11 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
     private readonly IOptions<BacktestDataOptions> _backtestDataOptions;
     private readonly IStepRegistry<BacktestPayload> _stepRegistry;
 
-    private const double UnderTradingPenaltyPerMissingTrade = 0.1;
+    private const double UnderTradingPenaltyPerMissingTrade = 0.01;
 
-    private const double ValidationSharpeRatio = 0.5;
+    private const int SegmentDays = 30;
+
+    private const decimal MaxSymbolProfitShare = 0.25m;
 
     public OptimizeStrategyConsumer(
         ILogger<OptimizeStrategyConsumer> logger,
@@ -149,8 +152,10 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
         await dbContext.SaveChangesAsync(cancellationToken);
 
         var outSampleRatio = Math.Clamp(message.OutSampleRatio, 0.05, 0.5);
-        var totalSpan = backtest.EndDate - backtest.StartDate;
-        var inSampleEnd = backtest.StartDate + totalSpan * (1.0 - outSampleRatio);
+        var totalDays = (backtest.EndDate - backtest.StartDate).TotalDays;
+        var inSampleEnd = backtest.StartDate.AddDays(
+            Math.Round(totalDays * (1.0 - outSampleRatio))
+        );
 
         var bestChromosome = await RunOptimizationAsync(
             backtest,
@@ -244,12 +249,21 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
         CancellationToken cancellationToken
     )
     {
-        var population = Enumerable
-            .Range(0, (int)message.PopulationSize)
-            .Select(_ => StrategyChromosome.CreateRandom())
-            .ToList();
+        var seed = new StrategyChromosome(
+            backtest.Strategy.TradingConfiguration,
+            backtest.Strategy.InputWeights,
+            backtest.Strategy.Thresholds
+        );
+
+        var population = new List<StrategyChromosome> { seed };
+        population.AddRange(
+            Enumerable
+                .Range(1, (int)message.PopulationSize - 1)
+                .Select(_ => StrategyChromosome.CreateRandom(seed.ActiveKinds))
+        );
 
         var fitnessCache = new ConcurrentDictionary<string, double>();
+        var segments = BuildSegments(backtest.StartDate, inSampleEnd);
 
         var engine = new GeneticAlgorithmBuilder<double>()
             .SetElitismRate(_options.Value.ElitismRate)
@@ -263,10 +277,22 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
                     inSampleEnd,
                     message,
                     fitnessCache,
-                    cancellationToken
+                    cancellationToken,
+                    segments
                 )
             )
             .Build();
+
+        await ComputeFitnessAsync(
+            seed,
+            backtest,
+            data,
+            inSampleEnd,
+            message,
+            fitnessCache,
+            cancellationToken,
+            segments
+        );
 
         var bestChromosome = await engine.EvolveAsync(
             population,
@@ -336,7 +362,8 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
         decimal volumeParticipationRate,
         decimal slippageMultiplier,
         StrategyChromosome chromosome,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken,
+        BacktestScoreCache? scoreCache = null
     )
     {
         var parameters = new BacktestParameters(
@@ -351,8 +378,9 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
             LimitWindowsPerDay: _backtestDataOptions.Value.LimitWindowsPerDay,
             MinFillFraction: _backtestDataOptions.Value.MinFillFraction
         );
+
         parameters = chromosome.ApplyConfigOverrides(parameters);
-        var payload = new BacktestPayload(parameters) { Data = data };
+        var payload = new BacktestPayload(parameters) { Data = data, ScoreCache = scoreCache };
 
         var backtestPipeline = new PipelineBuilder<BacktestPayload>(_stepRegistry)
             .AddStep<InitializeStep>()
@@ -397,7 +425,8 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
         decimal volumeParticipationRate,
         decimal slippageMultiplier,
         StrategyChromosome chromosome,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken,
+        BacktestScoreCache? scoreCache = null
     )
     {
         try
@@ -413,7 +442,8 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
                 volumeParticipationRate,
                 slippageMultiplier,
                 chromosome,
-                cancellationToken
+                cancellationToken,
+                scoreCache
             );
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
@@ -441,7 +471,8 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
         DateTimeOffset inSampleEnd,
         OptimizeStrategyMessage message,
         ConcurrentDictionary<string, double> fitnessCache,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken,
+        IReadOnlyList<FitnessSegment>? segments = null
     )
     {
         var geneSignature = string.Join(",", chromosome.Genes.Select(g => g.ToString("R")));
@@ -451,30 +482,85 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
         }
 
         var strategyChromosome = ExtractStrategyChromosome(chromosome);
-        var pipelineResult = await RunBacktestSafelyAsync(
-            backtest.Strategy,
-            backtest.MarketId,
-            backtest.StartDate,
-            inSampleEnd,
-            backtest.Budget,
-            strategyChromosome.Configuration,
-            data,
-            message.VolumeParticipationRate,
-            message.SlippageMultiplier,
-            strategyChromosome,
-            cancellationToken
-        );
+        segments ??=
+        [
+            new FitnessSegment(backtest.StartDate, inSampleEnd, new BacktestScoreCache()),
+        ];
 
-        var fitness = pipelineResult is null
-            ? double.MinValue
-            : ComputeFitness(
-                pipelineResult.Value.Results,
-                message,
-                strategyChromosome.InputWeights
+        var segmentFitness = new List<double>(segments.Count);
+        foreach (var segment in segments)
+        {
+            var pipelineResult = await Task.Run(
+                () =>
+                    RunBacktestSafelyAsync(
+                        backtest.Strategy,
+                        backtest.MarketId,
+                        segment.Start,
+                        segment.End,
+                        backtest.Budget,
+                        strategyChromosome.Configuration,
+                        data,
+                        message.VolumeParticipationRate,
+                        message.SlippageMultiplier,
+                        strategyChromosome,
+                        cancellationToken,
+                        segment.ScoreCache
+                    ),
+                cancellationToken
             );
 
+            if (pipelineResult is null)
+            {
+                fitnessCache[geneSignature] = double.MinValue;
+                return double.MinValue;
+            }
+
+            segmentFitness.Add(
+                ComputeFitness(
+                    pipelineResult.Value.Results,
+                    pipelineResult.Value.Positions,
+                    backtest.Budget,
+                    message
+                )
+            );
+        }
+
+        var fitness = CombineSegmentFitness(segmentFitness);
         fitnessCache[geneSignature] = fitness;
         return fitness;
+    }
+
+    /// <summary>
+    ///     Blends the mean with the worst segment, so a configuration has to hold up in every
+    ///     sub-period of the in-sample window rather than earn its score in a single stretch.
+    /// </summary>
+    internal static double CombineSegmentFitness(IReadOnlyList<double> segmentFitness)
+    {
+        return (0.75 * segmentFitness.Average()) + (0.25 * segmentFitness.Min());
+    }
+
+    /// <summary>
+    ///     Splits the in-sample window into consecutive segments of roughly
+    ///     <see cref="SegmentDays" /> whole days, each with its own score cache because signal
+    ///     history restarts at every segment start.
+    /// </summary>
+    internal static IReadOnlyList<FitnessSegment> BuildSegments(
+        DateTimeOffset start,
+        DateTimeOffset end
+    )
+    {
+        var totalDays = Math.Max(1, (int)Math.Round((end - start).TotalDays));
+        var count = Math.Max(1, totalDays / SegmentDays);
+        var segments = new List<FitnessSegment>(count);
+
+        for (var i = 0; i < count; i++)
+        {
+            var segmentStart = start.AddDays(totalDays * i / count);
+            var segmentEnd = i == count - 1 ? end : start.AddDays(totalDays * (i + 1) / count);
+            segments.Add(new FitnessSegment(segmentStart, segmentEnd, new BacktestScoreCache()));
+        }
+
+        return segments;
     }
 
     internal static StrategyChromosome ExtractStrategyChromosome(IChromosome<double> chromosome)
@@ -489,35 +575,49 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
         );
     }
 
+    /// <summary>
+    ///     Return after discounting any single symbol's profit beyond
+    ///     <see cref="MaxSymbolProfitShare" /> of gross profit, minus a drawdown penalty and a
+    ///     penalty for trading fewer than the requested round trips in a ~30-day segment. A strategy that
+    ///     depends on one lucky item scores as if that item had earned only its fair share.
+    /// </summary>
     internal static double ComputeFitness(
         BacktestResults results,
-        OptimizeStrategyMessage message,
-        IReadOnlyList<InputWeight> weights
+        IReadOnlyList<BacktestPosition> positions,
+        decimal budget,
+        OptimizeStrategyMessage message
     )
     {
-        var sortino = (double)(results.SortinoRatio ?? results.SharpeRatio);
-        var cagr = (double)(results.Cagr ?? results.TotalReturnPercent);
+        var concentrationAdjustedReturn = (double)ConcentrationAdjustedReturn(positions, budget);
+        var tradeShortfall = Math.Max(0, message.MinTradesPerMonth - results.TotalTrades);
 
-        var baseFitness =
-            message.SortinoWeight * sortino
-            + message.CagrWeight * cagr
+        return concentrationAdjustedReturn
             - message.DrawdownWeight * (double)results.MaxDrawdownPercent
-            - message.TurnoverWeight * (double)results.TurnoverRate
-            - message.L1RegularizationWeight * weights.Sum(w => Math.Abs((double)w.Weight));
+            - tradeShortfall * UnderTradingPenaltyPerMissingTrade;
+    }
 
-        var tradeShortfall = Math.Max(0, message.MinTrades - results.TotalTrades);
-        var underTradingPenalty = tradeShortfall * UnderTradingPenaltyPerMissingTrade;
-        return baseFitness - underTradingPenalty;
+    internal static decimal ConcentrationAdjustedReturn(
+        IReadOnlyList<BacktestPosition> positions,
+        decimal budget
+    )
+    {
+        if (budget <= 0 || positions.Count == 0)
+        {
+            return 0m;
+        }
+
+        var bySymbol = positions
+            .GroupBy(p => p.SymbolId)
+            .Select(g => g.Sum(p => p.ProfitLoss))
+            .ToList();
+
+        var grossProfit = bySymbol.Where(p => p > 0).Sum();
+        var excess = Math.Max(0m, bySymbol.Max() - (grossProfit * MaxSymbolProfitShare));
+        return (bySymbol.Sum() - excess) / budget;
     }
 
     internal static bool ComputeIsValidated(BacktestResults inSample, BacktestResults outSample)
     {
-        if (inSample.SharpeRatio == 0m || outSample.SharpeRatio == 0m)
-        {
-            return false;
-        }
-
-        return (double)outSample.SharpeRatio
-            >= ValidationSharpeRatio * (double)inSample.SharpeRatio;
+        return inSample.TotalReturn > 0m && outSample.TotalReturn > 0m;
     }
 }

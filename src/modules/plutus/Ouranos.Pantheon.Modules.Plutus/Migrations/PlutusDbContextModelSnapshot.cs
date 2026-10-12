@@ -18,7 +18,7 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("plutus")
-                .HasAnnotation("ProductVersion", "10.0.4")
+                .HasAnnotation("ProductVersion", "10.0.12")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -1161,13 +1161,13 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                                 .HasColumnName("id");
 
                             b1.Property<decimal>("AverageTradeReturn")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
+                                .HasPrecision(18, 6)
+                                .HasColumnType("numeric(18,6)")
                                 .HasColumnName("results_average_trade_return");
 
                             b1.Property<decimal>("BestTrade")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
+                                .HasPrecision(18, 6)
+                                .HasColumnType("numeric(18,6)")
                                 .HasColumnName("results_best_trade");
 
                             b1.Property<decimal?>("Cagr")
@@ -1204,23 +1204,23 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                                 .HasColumnName("results_max_drawdown");
 
                             b1.Property<decimal>("MaxDrawdownPercent")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
+                                .HasPrecision(18, 6)
+                                .HasColumnType("numeric(18,6)")
                                 .HasColumnName("results_max_drawdown_percent");
 
                             b1.Property<decimal?>("ProfitFactor")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
+                                .HasPrecision(18, 6)
+                                .HasColumnType("numeric(18,6)")
                                 .HasColumnName("results_profit_factor");
 
                             b1.Property<decimal>("SharpeRatio")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
+                                .HasPrecision(18, 6)
+                                .HasColumnType("numeric(18,6)")
                                 .HasColumnName("results_sharpe_ratio");
 
                             b1.Property<decimal?>("SortinoRatio")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
+                                .HasPrecision(18, 6)
+                                .HasColumnType("numeric(18,6)")
                                 .HasColumnName("results_sortino_ratio");
 
                             b1.Property<decimal>("TotalReturn")
@@ -1229,8 +1229,8 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                                 .HasColumnName("results_total_return");
 
                             b1.Property<decimal>("TotalReturnPercent")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
+                                .HasPrecision(18, 6)
+                                .HasColumnType("numeric(18,6)")
                                 .HasColumnName("results_total_return_percent");
 
                             b1.Property<int>("TotalTrades")
@@ -1238,13 +1238,13 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                                 .HasColumnName("results_total_trades");
 
                             b1.Property<decimal>("TurnoverRate")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
+                                .HasPrecision(18, 6)
+                                .HasColumnType("numeric(18,6)")
                                 .HasColumnName("results_turnover_rate");
 
                             b1.Property<decimal>("WinRate")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
+                                .HasPrecision(18, 6)
+                                .HasColumnType("numeric(18,6)")
                                 .HasColumnName("results_win_rate");
 
                             b1.Property<int>("WinningTrades")
@@ -1252,8 +1252,8 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                                 .HasColumnName("results_winning_trades");
 
                             b1.Property<decimal>("WorstTrade")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
+                                .HasPrecision(18, 6)
+                                .HasColumnType("numeric(18,6)")
                                 .HasColumnName("results_worst_trade");
 
                             b1.HasKey("BacktestId");
@@ -1275,8 +1275,8 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                                         .HasColumnName("results_optimized_configuration_hold_period_days");
 
                                     b2.Property<decimal?>("MaxPositionPercent")
-                                        .HasPrecision(18, 2)
-                                        .HasColumnType("numeric(18,2)")
+                                        .HasPrecision(18, 6)
+                                        .HasColumnType("numeric(18,6)")
                                         .HasColumnName("results_optimized_configuration_max_position_percent");
 
                                     b2.Property<int?>("MaxPositions")
@@ -1310,8 +1310,8 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                                         .HasColumnName("kind");
 
                                     b2.Property<decimal>("Weight")
-                                        .HasPrecision(18, 2)
-                                        .HasColumnType("numeric(18,2)")
+                                        .HasPrecision(18, 6)
+                                        .HasColumnType("numeric(18,6)")
                                         .HasColumnName("weight");
 
                                     b2.HasKey("BacktestResultsBacktestId", "Id")
@@ -1335,13 +1335,13 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                                         .HasColumnName("id");
 
                                     b2.Property<decimal?>("BuyThreshold")
-                                        .HasPrecision(18, 2)
-                                        .HasColumnType("numeric(18,2)")
+                                        .HasPrecision(18, 6)
+                                        .HasColumnType("numeric(18,6)")
                                         .HasColumnName("results_optimized_thresholds_buy_threshold");
 
                                     b2.Property<decimal?>("SellThreshold")
-                                        .HasPrecision(18, 2)
-                                        .HasColumnType("numeric(18,2)")
+                                        .HasPrecision(18, 6)
+                                        .HasColumnType("numeric(18,6)")
                                         .HasColumnName("results_optimized_thresholds_sell_threshold");
 
                                     b2.HasKey("BacktestResultsBacktestId");
@@ -1360,13 +1360,13 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                                         .HasColumnName("id");
 
                                     b2.Property<decimal>("AverageTradeReturn")
-                                        .HasPrecision(18, 2)
-                                        .HasColumnType("numeric(18,2)")
+                                        .HasPrecision(18, 6)
+                                        .HasColumnType("numeric(18,6)")
                                         .HasColumnName("results_out_sample_results_average_trade_return");
 
                                     b2.Property<decimal>("BestTrade")
-                                        .HasPrecision(18, 2)
-                                        .HasColumnType("numeric(18,2)")
+                                        .HasPrecision(18, 6)
+                                        .HasColumnType("numeric(18,6)")
                                         .HasColumnName("results_out_sample_results_best_trade");
 
                                     b2.Property<decimal?>("Cagr")
@@ -1399,23 +1399,23 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                                         .HasColumnName("results_out_sample_results_max_drawdown");
 
                                     b2.Property<decimal>("MaxDrawdownPercent")
-                                        .HasPrecision(18, 2)
-                                        .HasColumnType("numeric(18,2)")
+                                        .HasPrecision(18, 6)
+                                        .HasColumnType("numeric(18,6)")
                                         .HasColumnName("results_out_sample_results_max_drawdown_percent");
 
                                     b2.Property<decimal?>("ProfitFactor")
-                                        .HasPrecision(18, 2)
-                                        .HasColumnType("numeric(18,2)")
+                                        .HasPrecision(18, 6)
+                                        .HasColumnType("numeric(18,6)")
                                         .HasColumnName("results_out_sample_results_profit_factor");
 
                                     b2.Property<decimal>("SharpeRatio")
-                                        .HasPrecision(18, 2)
-                                        .HasColumnType("numeric(18,2)")
+                                        .HasPrecision(18, 6)
+                                        .HasColumnType("numeric(18,6)")
                                         .HasColumnName("results_out_sample_results_sharpe_ratio");
 
                                     b2.Property<decimal?>("SortinoRatio")
-                                        .HasPrecision(18, 2)
-                                        .HasColumnType("numeric(18,2)")
+                                        .HasPrecision(18, 6)
+                                        .HasColumnType("numeric(18,6)")
                                         .HasColumnName("results_out_sample_results_sortino_ratio");
 
                                     b2.Property<decimal>("TotalReturn")
@@ -1424,8 +1424,8 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                                         .HasColumnName("results_out_sample_results_total_return");
 
                                     b2.Property<decimal>("TotalReturnPercent")
-                                        .HasPrecision(18, 2)
-                                        .HasColumnType("numeric(18,2)")
+                                        .HasPrecision(18, 6)
+                                        .HasColumnType("numeric(18,6)")
                                         .HasColumnName("results_out_sample_results_total_return_percent");
 
                                     b2.Property<int>("TotalTrades")
@@ -1433,8 +1433,8 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                                         .HasColumnName("results_out_sample_results_total_trades");
 
                                     b2.Property<decimal>("WinRate")
-                                        .HasPrecision(18, 2)
-                                        .HasColumnType("numeric(18,2)")
+                                        .HasPrecision(18, 6)
+                                        .HasColumnType("numeric(18,6)")
                                         .HasColumnName("results_out_sample_results_win_rate");
 
                                     b2.Property<int>("WinningTrades")
@@ -1442,8 +1442,8 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                                         .HasColumnName("results_out_sample_results_winning_trades");
 
                                     b2.Property<decimal>("WorstTrade")
-                                        .HasPrecision(18, 2)
-                                        .HasColumnType("numeric(18,2)")
+                                        .HasPrecision(18, 6)
+                                        .HasColumnType("numeric(18,6)")
                                         .HasColumnName("results_out_sample_results_worst_trade");
 
                                     b2.HasKey("BacktestResultsBacktestId");
@@ -1501,8 +1501,8 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                                 .HasColumnName("profit_loss");
 
                             b1.Property<decimal>("ReturnPercent")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
+                                .HasPrecision(18, 6)
+                                .HasColumnType("numeric(18,6)")
                                 .HasColumnName("return_percent");
 
                             b1.Property<string>("SymbolId")
@@ -1564,8 +1564,8 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                                 .HasColumnName("kind");
 
                             b1.Property<decimal>("Weight")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
+                                .HasPrecision(18, 6)
+                                .HasColumnType("numeric(18,6)")
                                 .HasColumnName("weight");
 
                             b1.HasKey("StrategyId", "Id")
@@ -1589,13 +1589,13 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                                 .HasColumnName("id");
 
                             b1.Property<decimal?>("BuyThreshold")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
+                                .HasPrecision(18, 6)
+                                .HasColumnType("numeric(18,6)")
                                 .HasColumnName("thresholds_buy_threshold");
 
                             b1.Property<decimal?>("SellThreshold")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
+                                .HasPrecision(18, 6)
+                                .HasColumnType("numeric(18,6)")
                                 .HasColumnName("thresholds_sell_threshold");
 
                             b1.HasKey("StrategyId");
@@ -1618,8 +1618,8 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                                 .HasColumnName("trading_configuration_hold_period_days");
 
                             b1.Property<decimal?>("MaxPositionPercent")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
+                                .HasPrecision(18, 6)
+                                .HasColumnType("numeric(18,6)")
                                 .HasColumnName("trading_configuration_max_position_percent");
 
                             b1.Property<int?>("MaxPositions")

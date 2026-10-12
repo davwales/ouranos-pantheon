@@ -1,16 +1,16 @@
 import { NumericInput } from "@/components/shared/numeric-input";
+import {
+  DEFAULT_MIN_TRADES_PER_MONTH,
+  DEFAULT_OUT_SAMPLE_RATIO,
+  DEFAULT_SLIPPAGE_MULTIPLIER,
+  DEFAULT_VOLUME_PARTICIPATION_RATE,
+} from "./execution-constants";
 
 type OptimizeAdvancedOptionsProps = {
-  sortinoWeight: number;
-  onSortinoWeightChange: (value: number) => void;
-  cagrWeight: number;
-  onCagrWeightChange: (value: number) => void;
   drawdownWeight: number;
   onDrawdownWeightChange: (value: number) => void;
-  turnoverWeight: number;
-  onTurnoverWeightChange: (value: number) => void;
-  l1RegularizationWeight: number;
-  onL1RegularizationWeightChange: (value: number) => void;
+  minTradesPerMonth: number;
+  onMinTradesPerMonthChange: (value: number) => void;
   outSampleRatio: number;
   onOutSampleRatioChange: (value: number) => void;
   volumeParticipationRate: number;
@@ -20,16 +20,10 @@ type OptimizeAdvancedOptionsProps = {
 };
 
 export function OptimizeAdvancedOptions({
-  sortinoWeight,
-  onSortinoWeightChange,
-  cagrWeight,
-  onCagrWeightChange,
   drawdownWeight,
   onDrawdownWeightChange,
-  turnoverWeight,
-  onTurnoverWeightChange,
-  l1RegularizationWeight,
-  onL1RegularizationWeightChange,
+  minTradesPerMonth,
+  onMinTradesPerMonthChange,
   outSampleRatio,
   onOutSampleRatioChange,
   volumeParticipationRate,
@@ -40,78 +34,54 @@ export function OptimizeAdvancedOptions({
   return (
     <div className="space-y-4 border rounded-lg p-3 bg-muted/30">
       <NumericInput
-        label="Sortino Weight"
-        hint="Weight for downside-adjusted return"
-        value={sortinoWeight}
-        onChange={(v) => onSortinoWeightChange(v ?? 0)}
-        step={0.1}
-        min={-10}
-        max={10}
-      />
-      <NumericInput
-        label="CAGR Weight"
-        hint="Weight for compound annual growth rate"
-        value={cagrWeight}
-        onChange={(v) => onCagrWeightChange(v ?? 0)}
-        step={0.1}
-        min={-10}
-        max={10}
-      />
-      <NumericInput
         label="Drawdown Weight"
-        hint="Weight penalizing max drawdown"
+        hint="Fitness penalty per unit of max drawdown"
         value={drawdownWeight}
         onChange={(v) => onDrawdownWeightChange(v ?? 0)}
         step={0.1}
-        min={-10}
-        max={10}
-      />
-      <NumericInput
-        label="Turnover Weight"
-        hint="Weight penalizing excessive trading"
-        value={turnoverWeight}
-        onChange={(v) => onTurnoverWeightChange(v ?? 0)}
-        step={0.1}
-        min={-10}
-        max={10}
-      />
-      <NumericInput
-        label="L1 Regularization Weight"
-        hint="Sparsity penalty on input weights"
-        value={l1RegularizationWeight}
-        onChange={(v) => onL1RegularizationWeightChange(v ?? 0)}
-        step={0.05}
         min={0}
         max={10}
       />
       <NumericInput
+        label="Min Trades per Month"
+        hint="Round trips a candidate must make in each ~30-day segment before it is penalized"
+        value={minTradesPerMonth}
+        onChange={(v) => onMinTradesPerMonthChange(v ?? DEFAULT_MIN_TRADES_PER_MONTH)}
+        step={1}
+        min={0}
+        max={500}
+      />
+      <NumericInput
         label="Out-of-Sample Ratio"
-        hint="Fraction of data reserved for walk-forward validation"
+        hint="Fraction of the date range held out to validate the result"
         value={outSampleRatio}
-        onChange={(v) => onOutSampleRatioChange(v ?? 0.2)}
+        onChange={(v) => onOutSampleRatioChange(v ?? DEFAULT_OUT_SAMPLE_RATIO)}
         step={0.05}
         min={0}
         max={1}
       />
       <p className="text-xs text-muted-foreground">
-        The out-of-sample ratio controls the walk-forward validation split:
-        this fraction of the date range is held out and used to validate the
-        optimized parameters against unseen data.
+        Candidates are scored on every ~30-day segment of the in-sample range,
+        so a strategy has to hold up across the whole period. The held-out
+        tail then checks the result on unseen data; it is validated only when
+        both periods are profitable.
       </p>
       <NumericInput
         label="Volume Participation Rate"
-        hint="Max fraction of daily volume per trade (0-1)"
+        hint="Max fraction of an item's typical daily volume per fill (0-1)"
         value={volumeParticipationRate}
-        onChange={(v) => onVolumeParticipationRateChange(v ?? 0.25)}
+        onChange={(v) =>
+          onVolumeParticipationRateChange(v ?? DEFAULT_VOLUME_PARTICIPATION_RATE)
+        }
         min={0.01}
         max={1}
         step={0.01}
       />
       <NumericInput
         label="Slippage Multiplier"
-        hint="Price impact per unit of volume ratio (0 = none)"
+        hint="Square-root price impact coefficient (0 = fill at the daily average)"
         value={slippageMultiplier}
-        onChange={(v) => onSlippageMultiplierChange(v ?? 0.1)}
+        onChange={(v) => onSlippageMultiplierChange(v ?? DEFAULT_SLIPPAGE_MULTIPLIER)}
         min={0}
         max={1}
         step={0.01}

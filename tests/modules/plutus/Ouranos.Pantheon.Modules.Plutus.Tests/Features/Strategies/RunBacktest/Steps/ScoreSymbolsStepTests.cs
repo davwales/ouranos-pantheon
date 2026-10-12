@@ -6,6 +6,7 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Inputs;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Pipeline;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
@@ -177,6 +178,10 @@ public sealed class ScoreSymbolsStepTests
         {
             new(symbolId, dateOnly, 100m, 95m, 105m, 10000m),
         };
+        dailyAggregates.InsertRange(
+            0,
+            BacktestTestData.History(symbolId, currentDate.AddDays(-1), 100m, 10000m)
+        );
 
         var data = BacktestData.FromRaw(market, [symbol], dailyAggregates);
         payload.Context = new BacktestContext(
@@ -249,6 +254,10 @@ public sealed class ScoreSymbolsStepTests
         {
             new(symbolId, dateOnly, 100m, 95m, 105m, 10000m),
         };
+        dailyAggregates.InsertRange(
+            0,
+            BacktestTestData.History(symbolId, currentDate.AddDays(-1), 100m, 10000m)
+        );
 
         var data = BacktestData.FromRaw(market, [symbol], dailyAggregates);
         payload.Context = new BacktestContext(
@@ -346,6 +355,16 @@ public sealed class ScoreSymbolsStepTests
             new(symbolId3, dateOnly, 50m, 48m, 52m, 5000m),
         };
 
+        dailyAggregates.InsertRange(
+            0,
+            BacktestTestData.History(symbolId1, currentDate.AddDays(-1), 100m, 10000m)
+        );
+
+        dailyAggregates.InsertRange(
+            0,
+            BacktestTestData.History(symbolId3, currentDate.AddDays(-1), 50m, 5000m)
+        );
+
         var data = BacktestData.FromRaw(market, [symbol1, symbol2, symbol3], dailyAggregates);
         payload.Context = new BacktestContext(
             data,
@@ -427,6 +446,11 @@ public sealed class ScoreSymbolsStepTests
         {
             new(symbolId, dateOnly, 100m, 95m, 105m, 10000m),
         };
+
+        dailyAggregates.InsertRange(
+            0,
+            BacktestTestData.History(symbolId, currentDate.AddDays(-1), 100m, 10000m)
+        );
 
         var data = BacktestData.FromRaw(market, [symbol], dailyAggregates);
         payload.Context = new BacktestContext(
@@ -530,6 +554,11 @@ public sealed class ScoreSymbolsStepTests
             new(symbolId, dateOnly0, 100m, 95m, 105m, 10000m),
             new(symbolId, dateOnly1, 102m, 97m, 107m, 10000m),
         };
+
+        dailyAggregates.InsertRange(
+            0,
+            BacktestTestData.History(symbolId, startDate.AddDays(-1), 100m, 10000m)
+        );
 
         var data = BacktestData.FromRaw(market, [symbol], dailyAggregates);
         payload.Context = new BacktestContext(
@@ -714,5 +743,104 @@ public sealed class ScoreSymbolsStepTests
         executor
             .DidNotReceiveWithAnyArgs()
             .Score(Arg.Any<StrategyScoreContext>(), Arg.Any<TradingConfiguration>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WhenScoreCacheHasDay_ShouldRecombineCachedInputsWithoutRecomputingSignals()
+    {
+        // Arrange
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var marketId = _fixture.Create<Id<Market>>();
+        var market = Market.Create(marketId, "Test Market", new Taxes(null));
+
+        var symbol = Symbol.Create(
+            symbolId,
+            "SYM",
+            null,
+            "Test Symbol",
+            marketId,
+            new AdditionalFields()
+        );
+
+        var inputScores = new Dictionary<InputKind, decimal> { [InputKind.SignalRsi] = 0.5m };
+        var executor = Substitute.For<IStrategyExecutor>();
+        executor.ScoreInputs(Arg.Any<StrategyScoreContext>()).Returns(inputScores);
+
+        executor
+            .Combine(
+                Arg.Any<IReadOnlyDictionary<InputKind, decimal>>(),
+                Arg.Any<IReadOnlyList<InputWeight>>()
+            )
+            .Returns(0.4m);
+
+        var strategy = Strategy.Create(
+            marketId,
+            "Test Strategy",
+            null,
+            new TradingConfiguration(),
+            StrategyTestFactory.DefaultWeights(),
+            null
+        );
+
+        var startDate = DateTimeOffset.UtcNow.AddDays(-10);
+        var aggregates = BacktestTestData.History(symbolId, startDate, 100m, 10000m);
+        var data = BacktestData.FromRaw(market, [symbol], aggregates);
+        var cache = new BacktestScoreCache();
+
+        BacktestPayload NewPayload()
+        {
+            var parameters = new BacktestParameters(
+                marketId,
+                strategy,
+                startDate,
+                DateTimeOffset.UtcNow,
+                10000m
+            );
+            return new BacktestPayload(parameters)
+            {
+                ScoreCache = cache,
+                Context = new BacktestContext(
+                    data,
+                    executor,
+                    0m,
+                    startDate,
+                    parameters.InputWeights,
+                    parameters.Thresholds
+                ),
+            };
+        }
+
+        var logger = Substitute.For<ILogger<ScoreSymbolsStep>>();
+        var warm = new ScoreSymbolsStep(logger, new SignalScoringService([]));
+        await warm.ExecuteAsync(new PipelineContext(CancellationToken.None), NewPayload());
+
+        var signalScoring = Substitute.For<ISignalScoringService>();
+        var cached = new ScoreSymbolsStep(logger, signalScoring);
+        var payload = NewPayload();
+
+        // Act
+        await cached.ExecuteAsync(new PipelineContext(CancellationToken.None), payload);
+
+        // Assert
+        payload.Portfolio.ScoredSymbols.ShouldNotBeNull();
+        payload.Portfolio.ScoredSymbols.ShouldHaveSingleItem().Score.ShouldBe(0.4m);
+        executor.Received(1).ScoreInputs(Arg.Any<StrategyScoreContext>());
+        await signalScoring
+            .DidNotReceiveWithAnyArgs()
+            .BuildScoreContextAsync(
+                default,
+                default,
+                default!,
+                default,
+                default,
+                default,
+                default,
+                default,
+                default!,
+                default!,
+                default!,
+                default,
+                default
+            );
     }
 }

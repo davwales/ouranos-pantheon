@@ -12,7 +12,7 @@ public sealed record BacktestParameters(
     DateTimeOffset EndDate,
     decimal Budget,
     decimal VolumeParticipationRate = BacktestDataOptions.DefaultVolumeParticipationRate,
-    decimal SlippageMultiplier = 0.1m,
+    decimal SlippageMultiplier = BacktestDataOptions.DefaultSlippageMultiplier,
     TradingConfiguration? ConfigurationOverride = null,
     List<InputWeight>? InputWeightsOverride = null,
     InputThresholds? ThresholdsOverride = null,

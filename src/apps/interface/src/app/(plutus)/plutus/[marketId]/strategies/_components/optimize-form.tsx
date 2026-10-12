@@ -4,6 +4,13 @@ import { Button } from "@/components/ui/button";
 import { plutusApi } from "@/lib/api/plutus";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import {
+  DEFAULT_MIN_TRADES_PER_MONTH,
+  DEFAULT_OPTIMIZE_DAYS,
+  DEFAULT_OUT_SAMPLE_RATIO,
+  DEFAULT_SLIPPAGE_MULTIPLIER,
+  DEFAULT_VOLUME_PARTICIPATION_RATE,
+} from "./execution-constants";
 import { OptimizeAdvancedOptions } from "./optimize-advanced-options";
 import { OptimizeBasicOptions } from "./optimize-basic-options";
 
@@ -19,7 +26,7 @@ export function OptimizeForm({
   const router = useRouter();
   const [startDate, setStartDate] = useState(() => {
     const d = new Date();
-    d.setDate(d.getDate() - 30);
+    d.setDate(d.getDate() - DEFAULT_OPTIMIZE_DAYS);
     return d.toISOString().split("T")[0];
   });
   const [endDate, setEndDate] = useState(() => {
@@ -27,16 +34,21 @@ export function OptimizeForm({
     return d.toISOString().split("T")[0];
   });
   const [budget, setBudget] = useState(10000);
-  const [generations, setGenerations] = useState(20);
-  const [populationSize, setPopulationSize] = useState(20);
-  const [sortinoWeight, setSortinoWeight] = useState(0.4);
-  const [cagrWeight, setCagrWeight] = useState(0.3);
+  const [generations, setGenerations] = useState(30);
+  const [populationSize, setPopulationSize] = useState(50);
   const [drawdownWeight, setDrawdownWeight] = useState(0.5);
-  const [turnoverWeight, setTurnoverWeight] = useState(0.1);
-  const [l1RegularizationWeight, setL1RegularizationWeight] = useState(0.05);
-  const [outSampleRatio, setOutSampleRatio] = useState(0.2);
-  const [volumeParticipationRate, setVolumeParticipationRate] = useState(0.25);
-  const [slippageMultiplier, setSlippageMultiplier] = useState(0.1);
+  const [minTradesPerMonth, setMinTradesPerMonth] = useState(
+    DEFAULT_MIN_TRADES_PER_MONTH,
+  );
+  const [outSampleRatio, setOutSampleRatio] = useState(
+    DEFAULT_OUT_SAMPLE_RATIO,
+  );
+  const [volumeParticipationRate, setVolumeParticipationRate] = useState(
+    DEFAULT_VOLUME_PARTICIPATION_RATE,
+  );
+  const [slippageMultiplier, setSlippageMultiplier] = useState(
+    DEFAULT_SLIPPAGE_MULTIPLIER,
+  );
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,11 +65,8 @@ export function OptimizeForm({
         budget,
         generations,
         populationSize,
-        sortinoWeight,
-        cagrWeight,
         drawdownWeight,
-        turnoverWeight,
-        l1RegularizationWeight,
+        minTradesPerMonth,
         outSampleRatio,
         volumeParticipationRate,
         slippageMultiplier,
@@ -105,16 +114,10 @@ export function OptimizeForm({
       </div>
       {showAdvanced && (
         <OptimizeAdvancedOptions
-          sortinoWeight={sortinoWeight}
-          onSortinoWeightChange={setSortinoWeight}
-          cagrWeight={cagrWeight}
-          onCagrWeightChange={setCagrWeight}
           drawdownWeight={drawdownWeight}
           onDrawdownWeightChange={setDrawdownWeight}
-          turnoverWeight={turnoverWeight}
-          onTurnoverWeightChange={setTurnoverWeight}
-          l1RegularizationWeight={l1RegularizationWeight}
-          onL1RegularizationWeightChange={setL1RegularizationWeight}
+          minTradesPerMonth={minTradesPerMonth}
+          onMinTradesPerMonthChange={setMinTradesPerMonth}
           outSampleRatio={outSampleRatio}
           onOutSampleRatioChange={setOutSampleRatio}
           volumeParticipationRate={volumeParticipationRate}

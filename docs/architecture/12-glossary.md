@@ -30,7 +30,7 @@
 | **Investment intent** | Flags describing what a signal supports: `Buy`, `Sell`, `Flip` (quick resale), `Merch` (merchanting, buy low and hold to sell high) |
 | **Strategy** | A per-market decision rule set: input weights over signal kinds, buy/sell thresholds, and position-sizing limits |
 | **Backtest** | Historical simulation of a strategy over a market, period and budget, producing metrics and simulated positions. Runs asynchronously and can be cancelled or restarted; optimization runs are stored as backtests too |
-| **Strategy optimization** | Genetic-algorithm search over a strategy's input weights, scored by backtest outcomes on in-sample and out-of-sample periods |
+| **Strategy optimization** | Genetic-algorithm search over a strategy's own input weights (signed), thresholds and sizing, scored on ~30-day in-sample segments and validated on a held-out out-of-sample period |
 | **Fitness weights** | The optimization objective's weights: Sortino, CAGR, drawdown, turnover, and L1 regularization |
 | **Recommendation** | Output of a strategy for a budget: scored symbols with suggested allocation, volume, current price and rationale |
 | **Position** | A user-recorded buy or sell for a symbol with cost and quantity; a sell can be linked to its buy |

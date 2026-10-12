@@ -7,8 +7,8 @@ namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.E
 /// <summary>
 ///     Strategy executor that blends per-input scores from all registered
 ///     <see cref="IInputScorer" /> implementations using the strategy's
-///     <see cref="InputWeight" /> vector. Weights are relative; the blend is
-///     normalized by total weight at score time and clamped to [-1, 1].
+///     <see cref="InputWeight" /> vector. Weights are relative and may be negative; the
+///     blend is normalized by total absolute weight and clamped to [-1, 1].
 /// </summary>
 public sealed class StrategyExecutor(IEnumerable<IInputScorer> scorers) : IStrategyExecutor
 {
@@ -19,33 +19,45 @@ public sealed class StrategyExecutor(IEnumerable<IInputScorer> scorers) : IStrat
 
     public decimal? Score(StrategyScoreContext context, TradingConfiguration configuration)
     {
-        var weightMap = context
-            .InputWeights.Where(w => w.Weight != 0m)
-            .ToDictionary(w => w.Kind, w => w.Weight);
+        return Combine(ScoreInputs(context), context.InputWeights);
+    }
 
-        if (weightMap.Count == 0)
+    public IReadOnlyDictionary<InputKind, decimal> ScoreInputs(StrategyScoreContext context)
+    {
+        var scores = new Dictionary<InputKind, decimal>();
+        foreach (var (kind, scorer) in _scorers)
         {
-            return null;
+            var score = scorer.Score(context);
+            if (score.HasValue)
+            {
+                scores[kind] = score.Value;
+            }
         }
 
+        return scores;
+    }
+
+    /// <summary>
+    ///     Weighted average of the available input scores, normalized by the total absolute
+    ///     weight so negative weights invert an input instead of flipping the whole score.
+    /// </summary>
+    public decimal? Combine(
+        IReadOnlyDictionary<InputKind, decimal> inputScores,
+        IReadOnlyList<InputWeight> inputWeights
+    )
+    {
         decimal weightedSum = 0m;
         decimal totalWeight = 0m;
 
-        foreach (var (kind, weight) in weightMap)
+        foreach (var weight in inputWeights)
         {
-            if (!_scorers.TryGetValue(kind, out var scorer))
+            if (weight.Weight == 0m || !inputScores.TryGetValue(weight.Kind, out var score))
             {
                 continue;
             }
 
-            var subScore = scorer.Score(context);
-            if (subScore is null)
-            {
-                continue;
-            }
-
-            weightedSum += subScore.Value * weight;
-            totalWeight += weight;
+            weightedSum += score * weight.Weight;
+            totalWeight += Math.Abs(weight.Weight);
         }
 
         if (totalWeight == 0m)

@@ -6,6 +6,10 @@ import { Input } from "@/components/ui/input";
 import { plutusApi } from "@/lib/api/plutus";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import {
+  DEFAULT_SLIPPAGE_MULTIPLIER,
+  DEFAULT_VOLUME_PARTICIPATION_RATE,
+} from "./execution-constants";
 
 export function RunBacktestForm({
   strategyId,
@@ -35,8 +39,12 @@ export function RunBacktestForm({
     return d.toISOString().split("T")[0];
   });
   const [budget, setBudget] = useState(defaultBudget ?? 10000);
-  const [volumeParticipationRate, setVolumeParticipationRate] = useState(0.25);
-  const [slippageMultiplier, setSlippageMultiplier] = useState(0.1);
+  const [volumeParticipationRate, setVolumeParticipationRate] = useState(
+    DEFAULT_VOLUME_PARTICIPATION_RATE,
+  );
+  const [slippageMultiplier, setSlippageMultiplier] = useState(
+    DEFAULT_SLIPPAGE_MULTIPLIER,
+  );
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -120,16 +128,16 @@ export function RunBacktestForm({
             label="Volume Participation Rate"
             hint="Max fraction of daily volume per trade (0-1)"
             value={volumeParticipationRate}
-            onChange={(v) => setVolumeParticipationRate(v ?? 0.25)}
+            onChange={(v) => setVolumeParticipationRate(v ?? DEFAULT_VOLUME_PARTICIPATION_RATE)}
             min={0.01}
             max={1}
             step={0.01}
           />
           <NumericInput
             label="Slippage Multiplier"
-            hint="Price impact per unit of volume ratio (0 = none)"
+            hint="Square-root price impact coefficient (0 = fill at the daily average)"
             value={slippageMultiplier}
-            onChange={(v) => setSlippageMultiplier(v ?? 0.1)}
+            onChange={(v) => setSlippageMultiplier(v ?? DEFAULT_SLIPPAGE_MULTIPLIER)}
             min={0}
             max={1}
             step={0.01}

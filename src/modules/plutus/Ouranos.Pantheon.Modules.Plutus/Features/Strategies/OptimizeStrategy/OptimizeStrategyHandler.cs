@@ -83,15 +83,12 @@ public sealed class OptimizeStrategyHandler
                 backtest.Id,
                 (uint)command.Generations,
                 (uint)command.PopulationSize,
-                command.SortinoWeight,
-                command.CagrWeight,
                 command.DrawdownWeight,
-                command.TurnoverWeight,
-                command.L1RegularizationWeight,
                 command.OutSampleRatio,
-                command.VolumeParticipationRate ?? 0.25m,
-                command.SlippageMultiplier ?? 0.1m,
-                command.MinTrades
+                command.VolumeParticipationRate
+                    ?? BacktestDataOptions.DefaultVolumeParticipationRate,
+                command.SlippageMultiplier ?? BacktestDataOptions.DefaultSlippageMultiplier,
+                command.MinTradesPerMonth
             )
         );
 
