@@ -1,3 +1,5 @@
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Sizing;
+
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetRecommendations.Schemas;
 
 public sealed record StrategyRecommendation(
@@ -8,5 +10,7 @@ public sealed record StrategyRecommendation(
     decimal SuggestedAllocation,
     decimal CurrentPrice,
     decimal SuggestedVolume,
+    decimal TypicalDailyVolume,
+    PositionLimit LimitedBy,
     string Rationale
 );

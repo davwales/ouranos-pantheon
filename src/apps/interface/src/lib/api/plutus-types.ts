@@ -424,8 +424,12 @@ export interface StrategyRecommendation {
   suggestedAllocation: number;
   currentPrice: number;
   suggestedVolume: number;
+  typicalDailyVolume: number;
+  limitedBy: PositionLimit;
   rationale: string;
 }
+
+export type PositionLimit = "Budget" | "Liquidity" | "BuyLimit";
 
 export interface GetRecommendationsResponse {
   recommendations: StrategyRecommendation[];

@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetRecommendations;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetRecommendations.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
@@ -8,6 +9,7 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Executors;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Inputs;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Sizing;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
@@ -18,7 +20,7 @@ namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Strategies.GetRecommend
 
 public sealed class GetRecommendationsHandlerTests
 {
-    private readonly IFixture _fixture = new Fixture();
+    private readonly Fixture _fixture = new();
     private readonly GetRecommendationsHandler _handler;
     private readonly ILogger<GetRecommendationsHandler> _logger = Substitute.For<
         ILogger<GetRecommendationsHandler>
@@ -33,7 +35,12 @@ public sealed class GetRecommendationsHandlerTests
 
         var executor = new StrategyExecutor(StrategyTestFactory.DefaultScorers());
 
-        _handler = new GetRecommendationsHandler(_logger, _dbContext, executor);
+        _handler = new GetRecommendationsHandler(
+            _logger,
+            _dbContext,
+            executor,
+            Options.Create(new BacktestDataOptions())
+        );
     }
 
     [Fact]
@@ -189,6 +196,8 @@ public sealed class GetRecommendationsHandlerTests
         await _dbContext.MarketTradeSnapshots.AddAsync(snapshot);
         await _dbContext.SaveChangesAsync();
 
+        await AddWeeklyVolumeAsync(marketId, symbolId, 7000m);
+
         await _dbContext.LatestSignals.AddRangeAsync(
             new LatestSignal(symbolId, SignalType.BollingerBands, 0.6m),
             new LatestSignal(symbolId, SignalType.Rsi, 0.4m)
@@ -270,6 +279,8 @@ public sealed class GetRecommendationsHandlerTests
         await _dbContext.MarketTradeSnapshots.AddAsync(snapshot);
         await _dbContext.SaveChangesAsync();
 
+        await AddWeeklyVolumeAsync(marketId, symbolId, 7000m);
+
         await _dbContext.LatestSignals.AddRangeAsync(
             new LatestSignal(symbolId, SignalType.BollingerBands, 0.6m),
             new LatestSignal(symbolId, SignalType.Rsi, 0.4m)
@@ -330,6 +341,8 @@ public sealed class GetRecommendationsHandlerTests
         );
         await _dbContext.MarketTradeSnapshots.AddAsync(oneDaySnapshot);
         await _dbContext.SaveChangesAsync();
+
+        await AddWeeklyVolumeAsync(marketId, symbolId, 7000m);
 
         await _dbContext.LatestSignals.AddRangeAsync(
             new LatestSignal(symbolId, SignalType.BollingerBands, 0.6m),
@@ -451,5 +464,180 @@ public sealed class GetRecommendationsHandlerTests
 
             public void Dispose() { }
         }
+    }
+
+    [Fact]
+    public async Task Handle_WhenSymbolIsLiquid_ShouldCapVolumeAtParticipationOfTypicalVolume()
+    {
+        // Arrange
+        var (strategy, marketId) = await SeedScoredSymbolsAsync(
+            new TradingConfiguration(),
+            (Volume: 700m, Limit: null)
+        );
+
+        var query = new GetRecommendationsInput(strategy.Id, marketId, 2000m);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        var recommendation = result.Recommendations.ShouldHaveSingleItem();
+        recommendation.TypicalDailyVolume.ShouldBe(100m);
+        recommendation.SuggestedVolume.ShouldBe(25m);
+        recommendation.SuggestedAllocation.ShouldBe(250m);
+        recommendation.LimitedBy.ShouldBe(PositionLimit.Liquidity);
+    }
+
+    [Fact]
+    public async Task Handle_WhenSymbolHasBuyLimit_ShouldCapVolumeAtLimitWindows()
+    {
+        // Arrange
+        var (strategy, marketId) = await SeedScoredSymbolsAsync(
+            new TradingConfiguration(),
+            (Volume: 700_000m, Limit: 100m)
+        );
+
+        var query = new GetRecommendationsInput(strategy.Id, marketId, 10000m);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        var recommendation = result.Recommendations.ShouldHaveSingleItem();
+        recommendation.SuggestedVolume.ShouldBe(
+            100m * BacktestDataOptions.DefaultLimitWindowsPerDay
+        );
+        recommendation.LimitedBy.ShouldBe(PositionLimit.BuyLimit);
+    }
+
+    [Fact]
+    public async Task Handle_WhenSymbolIsTooThinToFill_ShouldSkipItAndBackfillWithNext()
+    {
+        // Arrange
+        var (strategy, marketId) = await SeedScoredSymbolsAsync(
+            new TradingConfiguration(MaxPositions: 1),
+            (Volume: 7m, Limit: null),
+            (Volume: 700_000m, Limit: null)
+        );
+
+        var query = new GetRecommendationsInput(strategy.Id, marketId, 10000m);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        var recommendation = result.Recommendations.ShouldHaveSingleItem();
+        recommendation.SymbolName.ShouldBe("Symbol 1");
+        recommendation.LimitedBy.ShouldBe(PositionLimit.Budget);
+    }
+
+    [Fact]
+    public async Task Handle_WhenSeveralSymbolsQualify_ShouldNotAllocateMoreThanBudget()
+    {
+        // Arrange
+        var (strategy, marketId) = await SeedScoredSymbolsAsync(
+            new TradingConfiguration(MaxPositionPercent: 0.4m),
+            (Volume: 700_000m, Limit: null),
+            (Volume: 700_000m, Limit: null),
+            (Volume: 700_000m, Limit: null)
+        );
+
+        var query = new GetRecommendationsInput(strategy.Id, marketId, 10000m);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Recommendations.Count.ShouldBe(3);
+        result.Recommendations.Sum(r => r.SuggestedAllocation).ShouldBe(10000m);
+        result.Recommendations.Max(r => r.SuggestedAllocation).ShouldBe(4000m);
+    }
+
+    private async Task AddWeeklyVolumeAsync(
+        Id<Market> marketId,
+        Id<Symbol> symbolId,
+        decimal volume
+    )
+    {
+        await _dbContext.MarketTradeSnapshots.AddAsync(
+            new MarketTradeSnapshot(
+                marketId,
+                symbolId,
+                TimeFrame.OneWeek,
+                TotalSpent: volume * 10m,
+                MinPrice: 10m,
+                MaxPrice: 10m,
+                TotalVolume: volume,
+                NumTransactions: 10,
+                Limit: decimal.MaxValue,
+                Tax: 0m
+            )
+        );
+
+        await _dbContext.SaveChangesAsync();
+    }
+
+    /// <summary>
+    ///     Seeds one symbol per entry priced at 10 with a weekly volume and optional buy limit,
+    ///     all scoring identically, with signal strength descending in seed order.
+    /// </summary>
+    private async Task<(Strategy Strategy, Id<Market> MarketId)> SeedScoredSymbolsAsync(
+        TradingConfiguration configuration,
+        params (decimal Volume, decimal? Limit)[] symbols
+    )
+    {
+        var marketId = _fixture.Create<Id<Market>>();
+        await _dbContext.Markets.AddAsync(Market.Create(marketId, "Test Market", new Taxes(null)));
+
+        for (var i = 0; i < symbols.Length; i++)
+        {
+            var symbolId = _fixture.Create<Id<Symbol>>();
+
+            await _dbContext.Symbols.AddAsync(
+                Symbol.Create(
+                    symbolId,
+                    $"SYM{i}",
+                    null,
+                    $"Symbol {i}",
+                    marketId,
+                    new AdditionalFields(Limit: symbols[i].Limit)
+                )
+            );
+
+            await _dbContext.MarketTradeSnapshots.AddAsync(
+                new MarketTradeSnapshot(
+                    marketId,
+                    symbolId,
+                    TimeFrame.OneHour,
+                    TotalSpent: 1000m,
+                    MinPrice: 10m,
+                    MaxPrice: 10m,
+                    TotalVolume: 100m,
+                    NumTransactions: 10,
+                    Limit: decimal.MaxValue,
+                    Tax: 0m
+                )
+            );
+
+            await AddWeeklyVolumeAsync(marketId, symbolId, symbols[i].Volume);
+
+            await _dbContext.LatestSignals.AddAsync(
+                new LatestSignal(symbolId, SignalType.Rsi, 0.9m - (i * 0.1m))
+            );
+        }
+
+        var strategy = Strategy.Create(
+            marketId,
+            "Test Strategy",
+            null,
+            configuration,
+            [new(InputKind.SignalRsi, 1m)],
+            null
+        );
+
+        await _dbContext.Strategies.AddAsync(strategy);
+        await _dbContext.SaveChangesAsync();
+
+        return (strategy, marketId);
     }
 }

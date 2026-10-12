@@ -11,6 +11,7 @@ import {
 import { Lightbulb, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useRef, useState } from "react";
+import { POSITION_LIMIT_LABELS } from "./recommendation-constants";
 
 const DEFAULT_BUDGET = 10000;
 
@@ -210,6 +211,19 @@ function RecommendationRow({
           </span>
           <span className="hidden sm:inline">&middot;</span>
           <span>{recommendation.suggestedVolume} units</span>
+          <span className="hidden sm:inline">·</span>
+          <span>
+            Typical volume/day:{" "}
+            {abbreviateNumber(recommendation.typicalDailyVolume)}
+          </span>
+          {recommendation.limitedBy !== "Budget" && (
+            <>
+              <span className="hidden sm:inline">·</span>
+              <span>
+                Capped by {POSITION_LIMIT_LABELS[recommendation.limitedBy]}
+              </span>
+            </>
+          )}
         </div>
         {recommendation.rationale && (
           <span className="text-xs text-muted-foreground italic">

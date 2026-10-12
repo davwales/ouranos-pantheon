@@ -11,12 +11,13 @@ public sealed record BacktestParameters(
     DateTimeOffset StartDate,
     DateTimeOffset EndDate,
     decimal Budget,
-    decimal VolumeParticipationRate = 0.25m,
+    decimal VolumeParticipationRate = BacktestDataOptions.DefaultVolumeParticipationRate,
     decimal SlippageMultiplier = 0.1m,
     TradingConfiguration? ConfigurationOverride = null,
     List<InputWeight>? InputWeightsOverride = null,
     InputThresholds? ThresholdsOverride = null,
-    decimal LimitWindowsPerDay = BacktestDataOptions.DefaultLimitWindowsPerDay
+    decimal LimitWindowsPerDay = BacktestDataOptions.DefaultLimitWindowsPerDay,
+    decimal MinFillFraction = BacktestDataOptions.DefaultMinFillFraction
 )
 {
     public TradingConfiguration Configuration =>

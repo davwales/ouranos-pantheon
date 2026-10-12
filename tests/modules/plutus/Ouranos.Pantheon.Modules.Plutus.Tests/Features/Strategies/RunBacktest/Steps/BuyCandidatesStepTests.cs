@@ -474,7 +474,8 @@ public sealed class BuyCandidatesStepTests
             startDate,
             DateTimeOffset.UtcNow,
             10000m,
-            VolumeParticipationRate: 0.1m
+            VolumeParticipationRate: 0.1m,
+            MinFillFraction: 0m
         );
         var payload = new BacktestPayload(parameters);
         var currentDate = startDate.AddDays(0);
@@ -527,7 +528,7 @@ public sealed class BuyCandidatesStepTests
 
         // Assert
         payload.Portfolio.OpenPositions.ShouldBeEmpty();
-        payload.Portfolio.Balance.ShouldBe(1_000_000m);
+        payload.Portfolio.Balance.ShouldBe(100_000m);
     }
 
     [Fact]
@@ -572,10 +573,75 @@ public sealed class BuyCandidatesStepTests
             .Volume.ShouldBe(70m * BacktestDataOptions.DefaultLimitWindowsPerDay);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_WhenCappedFillIsBelowMinFillFraction_SkipsAndBuysNextCandidate()
+    {
+        // Arrange
+        var (payload, thinSymbol, thinId) = CreateLiquidityScenario(
+            todayVolume: 40m,
+            historyVolume: 40m,
+            limit: null,
+            new TradingConfiguration(MaxPositions: 1, MaxPositionPercent: 0.5m)
+        );
+
+        var liquidId = _fixture.Create<Id<Symbol>>();
+        var liquidSymbol = Symbol.Create(
+            liquidId,
+            "LIQ",
+            null,
+            "Liquid Symbol",
+            thinSymbol.MarketId,
+            new AdditionalFields()
+        );
+
+        var aggregates = BacktestTestData.History(
+            liquidId,
+            payload.Parameters.StartDate,
+            100m,
+            100_000m
+        );
+
+        aggregates.Add(
+            new DailyTradeAggregate(
+                liquidId,
+                DateOnly.FromDateTime(payload.Parameters.StartDate.UtcDateTime),
+                100m,
+                100m,
+                100m,
+                100_000m
+            )
+        );
+
+        var thinAggregates = payload.Context.ShouldNotBeNull().Data.AggregatesBySymbol[thinId];
+        payload.Context = payload.Context with
+        {
+            Data = BacktestData.FromRaw(
+                payload.Context.Data.Market,
+                [thinSymbol, liquidSymbol],
+                [.. thinAggregates, .. aggregates]
+            ),
+        };
+
+        payload.Portfolio.ScoredSymbols =
+        [
+            new ScoredSymbol(thinSymbol, 0.9m, 100m),
+            new ScoredSymbol(liquidSymbol, 0.5m, 100m),
+        ];
+
+        var step = new BuyCandidatesStep(Substitute.For<ILogger<BuyCandidatesStep>>());
+
+        // Act
+        await step.ExecuteAsync(new PipelineContext(CancellationToken.None), payload);
+
+        // Assert
+        payload.Portfolio.OpenPositions.Keys.ShouldBe([liquidId]);
+    }
+
     private (BacktestPayload Payload, Symbol Symbol, Id<Symbol> SymbolId) CreateLiquidityScenario(
         decimal? todayVolume,
         decimal historyVolume,
-        decimal? limit
+        decimal? limit,
+        TradingConfiguration? configuration = null
     )
     {
         var symbolId = _fixture.Create<Id<Symbol>>();
@@ -596,7 +662,7 @@ public sealed class BuyCandidatesStepTests
             marketId,
             "Test Strategy",
             null,
-            new TradingConfiguration(),
+            configuration ?? new TradingConfiguration(),
             StrategyTestFactory.DefaultWeights(),
             null
         );
@@ -606,7 +672,7 @@ public sealed class BuyCandidatesStepTests
             strategy,
             startDate,
             DateTimeOffset.UtcNow,
-            1_000_000m
+            100_000m
         );
 
         var aggregates = BacktestTestData.History(symbolId, startDate, 100m, historyVolume);
