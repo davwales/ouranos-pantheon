@@ -1,4 +1,9 @@
-import { type InputKind, type InputThresholds } from "@/lib/api/plutus";
+import { type InputKind, type SwingConfiguration } from "@/lib/api/plutus";
+
+export type ThresholdKey = keyof Pick<
+  SwingConfiguration,
+  "buyThreshold" | "sellThreshold"
+>;
 
 export const INPUT_KIND_LABELS: Record<InputKind, string> = {
   SignalTaxAdjustedRoi: "Tax-Adjusted ROI",
@@ -21,7 +26,7 @@ export const INPUT_KINDS: InputKind[] = [
 ];
 
 export const THRESHOLD_FIELDS: ReadonlyArray<{
-  key: keyof InputThresholds;
+  key: ThresholdKey;
   label: string;
   hint?: string;
   placeholder?: string;

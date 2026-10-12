@@ -33,27 +33,31 @@ public sealed class BacktestRecoveryTests
             marketId,
             "Test Strategy",
             null,
-            new TradingConfiguration(),
-            StrategyTestFactory.DefaultWeights(),
-            null
+            StrategyTestFactory.Swing()
         );
+
         var running = Backtest.Create(
             strategy.Id,
             marketId,
             DateTimeOffset.UtcNow.AddDays(-5),
             DateTimeOffset.UtcNow.AddDays(-1),
             10000m,
+            new BacktestRunSettings(),
             strategy
         );
+
         running.MarkRunning();
+
         var completed = Backtest.Create(
             strategy.Id,
             marketId,
             DateTimeOffset.UtcNow.AddDays(-5),
             DateTimeOffset.UtcNow.AddDays(-1),
             10000m,
+            new BacktestRunSettings(),
             strategy
         );
+
         completed.MarkRunning();
         return (strategy, running, completed);
     }

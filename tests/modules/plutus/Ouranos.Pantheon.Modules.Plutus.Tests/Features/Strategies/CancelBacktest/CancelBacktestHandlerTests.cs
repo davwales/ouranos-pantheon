@@ -36,9 +36,7 @@ public sealed class CancelBacktestHandlerTests
             marketId,
             "Test Strategy",
             null,
-            new TradingConfiguration(),
-            StrategyTestFactory.DefaultWeights(),
-            null
+            StrategyTestFactory.Swing()
         );
         var backtest = Backtest.Create(
             strategy.Id,
@@ -46,6 +44,7 @@ public sealed class CancelBacktestHandlerTests
             DateTimeOffset.UtcNow,
             DateTimeOffset.UtcNow.AddDays(30),
             10000m,
+            new BacktestRunSettings(),
             strategy
         );
 
@@ -78,9 +77,7 @@ public sealed class CancelBacktestHandlerTests
             marketId,
             "Test Strategy",
             null,
-            new TradingConfiguration(),
-            StrategyTestFactory.DefaultWeights(),
-            null
+            StrategyTestFactory.Swing()
         );
         var backtest = Backtest.Create(
             strategy.Id,
@@ -88,6 +85,7 @@ public sealed class CancelBacktestHandlerTests
             DateTimeOffset.UtcNow,
             DateTimeOffset.UtcNow.AddDays(30),
             10000m,
+            new BacktestRunSettings(),
             strategy
         );
         backtest.MarkRunning();
@@ -131,9 +129,7 @@ public sealed class CancelBacktestHandlerTests
             marketId,
             "Test Strategy",
             null,
-            new TradingConfiguration(),
-            StrategyTestFactory.DefaultWeights(),
-            null
+            StrategyTestFactory.Swing()
         );
         var backtest = Backtest.Create(
             strategy.Id,
@@ -141,6 +137,7 @@ public sealed class CancelBacktestHandlerTests
             DateTimeOffset.UtcNow,
             DateTimeOffset.UtcNow.AddDays(30),
             10000m,
+            new BacktestRunSettings(),
             strategy
         );
         backtest.MarkRunning();

@@ -39,13 +39,7 @@ public sealed class UpdateStrategyHandler
 
         Guard.Against.NotFound(command.StrategyId, strategy);
 
-        strategy.Update(
-            command.Name,
-            command.Description,
-            command.Configuration,
-            command.InputWeights,
-            command.Thresholds
-        );
+        strategy.Update(command.Name, command.Description, command.Configuration);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 

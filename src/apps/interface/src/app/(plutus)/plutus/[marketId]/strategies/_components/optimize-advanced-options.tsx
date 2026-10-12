@@ -68,7 +68,7 @@ export function OptimizeAdvancedOptions({
       </p>
       <NumericInput
         label="Volume Participation Rate"
-        hint="Max fraction of an item's typical daily volume per fill (0-1)"
+        hint="Max fraction of a symbol's typical daily volume per fill (0-1)"
         value={volumeParticipationRate}
         onChange={(v) =>
           onVolumeParticipationRateChange(v ?? DEFAULT_VOLUME_PARTICIPATION_RATE)

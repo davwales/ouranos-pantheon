@@ -4,6 +4,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetBacktest.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Flip;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
@@ -12,7 +13,7 @@ namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Strategies.GetBacktest;
 
 public sealed class GetBacktestHandlerTests
 {
-    private readonly IFixture _fixture = new Fixture();
+    private readonly Fixture _fixture = new();
     private readonly GetBacktestHandler _handler;
     private readonly ILogger<GetBacktestHandler> _logger = Substitute.For<
         ILogger<GetBacktestHandler>
@@ -31,14 +32,14 @@ public sealed class GetBacktestHandlerTests
     {
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
+
         var strategy = Strategy.Create(
             marketId,
             "Test Strategy",
             null,
-            new TradingConfiguration(),
-            StrategyTestFactory.DefaultWeights(),
-            null
+            StrategyTestFactory.Swing()
         );
+
         await _dbContext.Strategies.AddAsync(strategy);
         await _dbContext.SaveChangesAsync();
 
@@ -47,7 +48,8 @@ public sealed class GetBacktestHandlerTests
             marketId,
             DateTimeOffset.UtcNow,
             DateTimeOffset.UtcNow.AddDays(30),
-            10000m
+            10000m,
+            new BacktestRunSettings()
         );
         await _dbContext.Backtests.AddAsync(backtest);
         await _dbContext.SaveChangesAsync();
@@ -76,14 +78,14 @@ public sealed class GetBacktestHandlerTests
     {
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
+
         var strategy = Strategy.Create(
             marketId,
             "Test Strategy",
             null,
-            new TradingConfiguration(),
-            StrategyTestFactory.DefaultWeights(),
-            null
+            StrategyTestFactory.Swing()
         );
+
         await _dbContext.Strategies.AddAsync(strategy);
         await _dbContext.SaveChangesAsync();
 
@@ -92,8 +94,10 @@ public sealed class GetBacktestHandlerTests
             marketId,
             DateTimeOffset.UtcNow,
             DateTimeOffset.UtcNow.AddDays(30),
-            10000m
+            10000m,
+            new BacktestRunSettings()
         );
+
         await _dbContext.Backtests.AddAsync(backtest);
         await _dbContext.SaveChangesAsync();
 
@@ -147,9 +151,7 @@ public sealed class GetBacktestHandlerTests
             TurnoverRate: 0m,
             IsValidated: false,
             OutSampleResults: null,
-            OptimizedInputWeights: null,
-            OptimizedThresholds: null,
-            OptimizedConfiguration: null
+            OptimizedConfiguration: new FlipConfiguration(MaxOpenOrders: 4)
         );
 
         backtest.Complete(results);
@@ -165,7 +167,10 @@ public sealed class GetBacktestHandlerTests
         result.ShouldNotBeNull();
         result.Id.ShouldBe(backtest.Id);
         result.Status.ShouldBe(BacktestStatus.Completed);
+        result.ProgressPercent.ShouldBe(100);
+        result.ProgressMessage.ShouldBeNull();
         result.Results.ShouldNotBeNull();
+        result.Results.OptimizedConfiguration.ShouldBe(new FlipConfiguration(MaxOpenOrders: 4));
         result.Positions.Count.ShouldBe(2);
 
         var btcPosition = result.Positions.First(p => p.SymbolId == "BTCUSD");

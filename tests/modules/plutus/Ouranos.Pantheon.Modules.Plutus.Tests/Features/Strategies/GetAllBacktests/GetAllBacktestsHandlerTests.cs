@@ -28,6 +28,7 @@ public sealed class GetAllBacktestsHandlerTests
     {
         _fixture.Customize(new IdCustomization());
         _dbContext = DbContextExtensions.Mock<PlutusDbContext>();
+
         _queryOptions.Value.Returns(
             new QueryOptions
             {
@@ -36,6 +37,7 @@ public sealed class GetAllBacktestsHandlerTests
                 MaxPageSize = 100,
             }
         );
+
         _handler = new GetAllBacktestsHandler(_logger, _dbContext, _queryOptions);
     }
 
@@ -48,9 +50,7 @@ public sealed class GetAllBacktestsHandlerTests
             marketId,
             "Test Strategy",
             null,
-            new TradingConfiguration(),
-            StrategyTestFactory.DefaultWeights(),
-            null
+            StrategyTestFactory.Swing()
         );
         await _dbContext.Strategies.AddAsync(strategy);
         await _dbContext.SaveChangesAsync();
@@ -60,15 +60,19 @@ public sealed class GetAllBacktestsHandlerTests
             marketId,
             DateTimeOffset.UtcNow,
             DateTimeOffset.UtcNow.AddDays(30),
-            10000m
+            10000m,
+            new BacktestRunSettings()
         );
+
         var backtest2 = Backtest.Create(
             strategy.Id,
             marketId,
             DateTimeOffset.UtcNow,
             DateTimeOffset.UtcNow.AddDays(60),
-            20000m
+            20000m,
+            new BacktestRunSettings()
         );
+
         await _dbContext.Backtests.AddRangeAsync(backtest1, backtest2);
         await _dbContext.SaveChangesAsync();
 
@@ -91,14 +95,14 @@ public sealed class GetAllBacktestsHandlerTests
     {
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
+
         var strategy = Strategy.Create(
             marketId,
             "Test Strategy",
             null,
-            new TradingConfiguration(),
-            StrategyTestFactory.DefaultWeights(),
-            null
+            StrategyTestFactory.Swing()
         );
+
         await _dbContext.Strategies.AddAsync(strategy);
         await _dbContext.SaveChangesAsync();
 

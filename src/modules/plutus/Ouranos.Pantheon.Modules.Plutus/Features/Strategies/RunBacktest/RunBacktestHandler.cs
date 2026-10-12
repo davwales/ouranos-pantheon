@@ -62,19 +62,14 @@ public sealed class RunBacktestHandler : IPantheonHandler<RunBacktestInput, RunB
             command.StartDate,
             command.EndDate,
             command.Budget,
+            new BacktestRunSettings(command.VolumeParticipationRate, command.SlippageMultiplier),
             strategy
         );
 
         await dbContext.Backtests.AddAsync(backtest, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        await _bus.PublishAsync(
-            new RunBacktestMessage(
-                backtest.Id,
-                command.VolumeParticipationRate,
-                command.SlippageMultiplier
-            )
-        );
+        await _bus.PublishAsync(new RunBacktestMessage(backtest.Id));
 
         _logger.LogDebug(
             "Successfully handled run backtest command. Backtest ID: '{backtestId}'.",

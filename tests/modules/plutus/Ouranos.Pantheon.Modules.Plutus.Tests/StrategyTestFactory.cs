@@ -1,5 +1,5 @@
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Scorers;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Inputs;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Swing;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Tests;
 
@@ -10,17 +10,8 @@ internal static class StrategyTestFactory
         return [new InputWeight(InputKind.SignalTaxAdjustedRoi, 1m)];
     }
 
-    public static IReadOnlyList<IInputScorer> DefaultScorers()
+    public static SwingConfiguration Swing()
     {
-        return
-        [
-            new TaxAdjustedRoiInputScorer(),
-            new VolumeAnomalyInputScorer(),
-            new TrendMomentumInputScorer(),
-            new BollingerBandsInputScorer(),
-            new RsiInputScorer(),
-            new MovingAverageCrossoverInputScorer(),
-            new PriceVelocityInputScorer(),
-        ];
+        return new SwingConfiguration(DefaultWeights());
     }
 }

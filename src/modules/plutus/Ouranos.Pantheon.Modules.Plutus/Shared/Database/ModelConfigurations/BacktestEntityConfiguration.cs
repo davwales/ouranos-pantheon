@@ -22,6 +22,7 @@ public sealed class BacktestEntityConfiguration : IEntityTypeConfiguration<Backt
         builder.Property(b => b.ProgressPercent).HasDefaultValue(0);
         builder.Property(b => b.ProgressMessage).HasMaxLength(256);
         builder.Property(b => b.Budget).HasPrecision(18, 2);
+        builder.Property(b => b.RunSettings).HasJsonConversion();
 
         builder.OwnsOne(
             b => b.Results,
@@ -44,36 +45,7 @@ public sealed class BacktestEntityConfiguration : IEntityTypeConfiguration<Backt
                 results.Property(r => r.FinalBalance).HasPrecision(18, 2);
                 results.Property(r => r.TurnoverRate).HasPrecision(18, 6);
 
-                results.OwnsOne(
-                    r => r.OptimizedThresholds,
-                    config =>
-                    {
-                        config.Property(t => t.BuyThreshold).HasPrecision(18, 6);
-                        config.Property(t => t.SellThreshold).HasPrecision(18, 6);
-                    }
-                );
-
-                results.OwnsMany(
-                    r => r.OptimizedInputWeights,
-                    w =>
-                    {
-                        w.Property(x => x.Kind).HasConversion<int>();
-                        w.Property(x => x.Weight).HasPrecision(18, 6);
-                        w.HasIndex("BacktestResultsBacktestId", "Kind").IsUnique();
-                    }
-                );
-
-                results.Navigation(r => r.OptimizedInputWeights);
-
-                results.OwnsOne(
-                    r => r.OptimizedConfiguration,
-                    config =>
-                    {
-                        config.Property(c => c.MaxPositions);
-                        config.Property(c => c.MaxPositionPercent).HasPrecision(18, 6);
-                        config.Property(c => c.HoldPeriodDays);
-                    }
-                );
+                results.Property(r => r.OptimizedConfiguration).HasJsonConversion();
 
                 results.OwnsOne(
                     r => r.OutSampleResults,
@@ -95,8 +67,6 @@ public sealed class BacktestEntityConfiguration : IEntityTypeConfiguration<Backt
                         oos.Property(o => o.WorstTrade).HasPrecision(18, 6);
                         oos.Property(o => o.FinalBalance).HasPrecision(18, 2);
                         oos.Ignore(o => o.OutSampleResults);
-                        oos.Ignore(o => o.OptimizedInputWeights);
-                        oos.Ignore(o => o.OptimizedThresholds);
                         oos.Ignore(o => o.OptimizedConfiguration);
                         oos.Ignore(o => o.IsValidated);
                         oos.Ignore(o => o.TurnoverRate);

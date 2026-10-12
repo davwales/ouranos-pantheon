@@ -25,10 +25,18 @@ public sealed class BacktestTests
         var budget = 10000m;
 
         // Act
-        var backtest = Backtest.Create(strategyId, marketId, startDate, endDate, budget);
+        var backtest = Backtest.Create(
+            strategyId,
+            marketId,
+            startDate,
+            endDate,
+            budget,
+            new BacktestRunSettings()
+        );
 
         // Assert
         backtest.Id.ShouldNotBe(default);
+        backtest.Kind.ShouldBe(BacktestKind.Backtest);
         backtest.StrategyId.ShouldBe(strategyId);
         backtest.MarketId.ShouldBe(marketId);
         backtest.StartDate.ShouldBe(startDate.ToUniversalTime());
@@ -37,6 +45,136 @@ public sealed class BacktestTests
         backtest.Status.ShouldBe(BacktestStatus.Pending);
         backtest.Results.ShouldBeNull();
         backtest.ErrorMessage.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Create_WhenNoOptimizationSettings_ShouldBeBacktestKind()
+    {
+        // Arrange
+        var runSettings = new BacktestRunSettings(0.2m, 0.07m);
+
+        // Act
+        var backtest = Backtest.Create(
+            _fixture.Create<Id<Strategy>>(),
+            _fixture.Create<Id<Market>>(),
+            DateTimeOffset.UtcNow,
+            DateTimeOffset.UtcNow.AddDays(30),
+            10000m,
+            runSettings
+        );
+
+        // Assert
+        backtest.Kind.ShouldBe(BacktestKind.Backtest);
+        backtest.RunSettings.ShouldBe(runSettings);
+    }
+
+    [Fact]
+    public void Create_WhenOptimizationSettings_ShouldBeOptimizationKind()
+    {
+        // Arrange
+        var runSettings = new BacktestRunSettings(Optimization: new OptimizationSettings(10, 20));
+
+        // Act
+        var backtest = Backtest.Create(
+            _fixture.Create<Id<Strategy>>(),
+            _fixture.Create<Id<Market>>(),
+            DateTimeOffset.UtcNow,
+            DateTimeOffset.UtcNow.AddDays(30),
+            10000m,
+            runSettings
+        );
+
+        // Assert
+        backtest.Kind.ShouldBe(BacktestKind.Optimization);
+        backtest.RunSettings.Optimization.ShouldBe(new OptimizationSettings(10, 20));
+    }
+
+    [Fact]
+    public void Create_WhenRunSettingsNull_ShouldThrowArgumentNullException()
+    {
+        // Act
+        var create = () =>
+            Backtest.Create(
+                _fixture.Create<Id<Strategy>>(),
+                _fixture.Create<Id<Market>>(),
+                DateTimeOffset.UtcNow,
+                DateTimeOffset.UtcNow.AddDays(30),
+                10000m,
+                null!
+            );
+
+        // Assert
+        create.ShouldThrow<ArgumentNullException>();
+    }
+
+    [Fact]
+    public void Create_WhenStrategyDoesNotMatchStrategyId_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var strategy = Strategy.Create(
+            _fixture.Create<Id<Market>>(),
+            "Test",
+            null,
+            StrategyTestFactory.Swing()
+        );
+
+        // Act
+        var create = () =>
+            Backtest.Create(
+                _fixture.Create<Id<Strategy>>(),
+                strategy.MarketId,
+                DateTimeOffset.UtcNow,
+                DateTimeOffset.UtcNow.AddDays(30),
+                10000m,
+                new BacktestRunSettings(),
+                strategy
+            );
+
+        // Assert
+        create.ShouldThrow<ArgumentException>();
+    }
+
+    [Fact]
+    public void Create_WhenStrategyMatches_ShouldExposeStrategy()
+    {
+        // Arrange
+        var strategy = Strategy.Create(
+            _fixture.Create<Id<Market>>(),
+            "Test",
+            null,
+            StrategyTestFactory.Swing()
+        );
+
+        // Act
+        var backtest = Backtest.Create(
+            strategy.Id,
+            strategy.MarketId,
+            DateTimeOffset.UtcNow,
+            DateTimeOffset.UtcNow.AddDays(30),
+            10000m,
+            new BacktestRunSettings(),
+            strategy
+        );
+
+        // Assert
+        backtest.Strategy.ShouldBeSameAs(strategy);
+    }
+
+    [Fact]
+    public void Complete_WhenRunningWithProgress_ShouldSetProgressTo100AndClearMessage()
+    {
+        // Arrange
+        var backtest = CreateValidBacktest();
+        backtest.MarkRunning();
+        backtest.UpdateProgress(42, "Simulating...");
+
+        // Act
+        var result = backtest.Complete(new BacktestResults());
+
+        // Assert
+        result.ShouldBeTrue();
+        backtest.ProgressPercent.ShouldBe(100);
+        backtest.ProgressMessage.ShouldBeNull();
     }
 
     [Fact]
@@ -51,7 +189,14 @@ public sealed class BacktestTests
         var budget = 10000m;
 
         // Act
-        var backtest = Backtest.Create(strategyId, marketId, startDate, endDate, budget);
+        var backtest = Backtest.Create(
+            strategyId,
+            marketId,
+            startDate,
+            endDate,
+            budget,
+            new BacktestRunSettings()
+        );
 
         // Assert
         backtest.StartDate.Offset.ShouldBe(TimeSpan.Zero);
@@ -72,7 +217,15 @@ public sealed class BacktestTests
         var endDate = startDate.AddDays(30);
 
         // Act
-        var create = () => Backtest.Create(strategyId, marketId, startDate, endDate, budget);
+        var create = () =>
+            Backtest.Create(
+                strategyId,
+                marketId,
+                startDate,
+                endDate,
+                budget,
+                new BacktestRunSettings()
+            );
 
         // Assert
         create.ShouldThrow<ArgumentException>();
@@ -88,7 +241,15 @@ public sealed class BacktestTests
         var endDate = startDate.AddDays(-1);
 
         // Act
-        var create = () => Backtest.Create(strategyId, marketId, startDate, endDate, 1000m);
+        var create = () =>
+            Backtest.Create(
+                strategyId,
+                marketId,
+                startDate,
+                endDate,
+                1000m,
+                new BacktestRunSettings()
+            );
 
         // Assert
         create.ShouldThrow<ArgumentException>();
@@ -103,7 +264,8 @@ public sealed class BacktestTests
         var date = DateTimeOffset.UtcNow;
 
         // Act
-        var create = () => Backtest.Create(strategyId, marketId, date, date, 1000m);
+        var create = () =>
+            Backtest.Create(strategyId, marketId, date, date, 1000m, new BacktestRunSettings());
 
         // Assert
         create.ShouldThrow<ArgumentException>();
@@ -449,7 +611,8 @@ public sealed class BacktestTests
             _fixture.Create<Id<Market>>(),
             DateTimeOffset.UtcNow,
             DateTimeOffset.UtcNow.AddDays(30),
-            10000m
+            10000m,
+            new BacktestRunSettings()
         );
     }
 

@@ -2,11 +2,7 @@ using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
 
-public sealed record RunBacktestMessage(
-    Id<Backtest> BacktestId,
-    decimal VolumeParticipationRate = BacktestDataOptions.DefaultVolumeParticipationRate,
-    decimal SlippageMultiplier = BacktestDataOptions.DefaultSlippageMultiplier
-)
+public sealed record RunBacktestMessage(Id<Backtest> BacktestId)
 {
     public const string Exchange = "plutus.backtest";
     public const string Queue = "plutus.backtest.run";

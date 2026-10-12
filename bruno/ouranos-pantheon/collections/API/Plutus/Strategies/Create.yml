@@ -18,23 +18,22 @@ http:
         "name": "Bruno Momentum",
         "description": "RSI + momentum blend created from Bruno",
         "configuration": {
-          "maxPositions": 5,
-          "maxPositionPercent": 10,
-          "holdPeriodDays": 30
-        },
-        "inputWeights": [
-          {
-            "kind": "SignalRsi",
-            "weight": 0.5
-          },
-          {
-            "kind": "SignalTrendMomentum",
-            "weight": 0.5
-          }
-        ],
-        "thresholds": {
+          "mode": "Swing",
+          "inputWeights": [
+            {
+              "kind": "SignalRsi",
+              "weight": 0.5
+            },
+            {
+              "kind": "SignalTrendMomentum",
+              "weight": 0.5
+            }
+          ],
           "buyThreshold": 0.6,
-          "sellThreshold": 0.4
+          "sellThreshold": 0.4,
+          "maxPositions": 5,
+          "maxPositionPercent": 0.1,
+          "holdPeriodDays": 30
         }
       }
   auth: inherit

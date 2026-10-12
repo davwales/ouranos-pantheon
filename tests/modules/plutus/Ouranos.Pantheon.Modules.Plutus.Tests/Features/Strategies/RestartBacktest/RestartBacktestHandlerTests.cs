@@ -15,7 +15,7 @@ namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Strategies.RestartBackt
 
 public sealed class RestartBacktestHandlerTests
 {
-    private readonly IFixture _fixture = new Fixture();
+    private readonly Fixture _fixture = new();
     private readonly RestartBacktestHandler _handler;
     private readonly ILogger<RestartBacktestHandler> _logger = Substitute.For<
         ILogger<RestartBacktestHandler>
@@ -35,22 +35,24 @@ public sealed class RestartBacktestHandlerTests
     {
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
+
         var strategy = Strategy.Create(
             marketId,
             "Test Strategy",
             null,
-            new TradingConfiguration(),
-            StrategyTestFactory.DefaultWeights(),
-            null
+            StrategyTestFactory.Swing()
         );
+
         var backtest = Backtest.Create(
             strategy.Id,
             marketId,
             DateTimeOffset.UtcNow,
             DateTimeOffset.UtcNow.AddDays(30),
             10000m,
+            new BacktestRunSettings(),
             strategy
         );
+
         backtest.MarkRunning();
         backtest.Fail("Something went wrong");
 
@@ -84,22 +86,24 @@ public sealed class RestartBacktestHandlerTests
     {
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
+
         var strategy = Strategy.Create(
             marketId,
             "Test Strategy",
             null,
-            new TradingConfiguration(),
-            StrategyTestFactory.DefaultWeights(),
-            null
+            StrategyTestFactory.Swing()
         );
+
         var backtest = Backtest.Create(
             strategy.Id,
             marketId,
             DateTimeOffset.UtcNow,
             DateTimeOffset.UtcNow.AddDays(30),
             10000m,
+            new BacktestRunSettings(),
             strategy
         );
+
         backtest.MarkRunning();
         backtest.Cancel("Cancelled by user");
 
@@ -114,6 +118,56 @@ public sealed class RestartBacktestHandlerTests
 
         // Assert
         result.Status.ShouldBe(BacktestStatus.Pending);
+        await _bus.Received(1)
+            .PublishAsync(Arg.Is<RunBacktestMessage>(m => m.BacktestId == backtest.Id));
+    }
+
+    [Fact]
+    public async Task Handle_WhenOptimizationBacktest_ShouldPublishOptimizeMessageAndKeepRunSettings()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var runSettings = new BacktestRunSettings(0.2m, 0.1m, new OptimizationSettings(5, 4));
+
+        var strategy = Strategy.Create(
+            marketId,
+            "Test Strategy",
+            null,
+            StrategyTestFactory.Swing()
+        );
+
+        var backtest = Backtest.Create(
+            strategy.Id,
+            marketId,
+            DateTimeOffset.UtcNow,
+            DateTimeOffset.UtcNow.AddDays(30),
+            10000m,
+            runSettings,
+            strategy
+        );
+
+        backtest.MarkRunning();
+        backtest.Fail("Interrupted");
+
+        await _dbContext.Strategies.AddAsync(strategy);
+        await _dbContext.Backtests.AddAsync(backtest);
+        await _dbContext.SaveChangesAsync();
+
+        // Act
+        var result = await _handler.Handle(
+            new RestartBacktestInput(backtest.Id),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.Status.ShouldBe(BacktestStatus.Pending);
+        var saved = await _dbContext.Backtests.FindAsync(backtest.Id);
+        saved.ShouldNotBeNull();
+        saved.Kind.ShouldBe(BacktestKind.Optimization);
+        saved.RunSettings.ShouldBe(runSettings);
+        await _bus.Received(1)
+            .PublishAsync(Arg.Is<OptimizeStrategyMessage>(m => m.BacktestId == backtest.Id));
+        await _bus.DidNotReceiveWithAnyArgs().PublishAsync(default(RunBacktestMessage));
     }
 
     [Fact]
@@ -134,20 +188,21 @@ public sealed class RestartBacktestHandlerTests
     {
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
+
         var strategy = Strategy.Create(
             marketId,
             "Test Strategy",
             null,
-            new TradingConfiguration(),
-            StrategyTestFactory.DefaultWeights(),
-            null
+            StrategyTestFactory.Swing()
         );
+
         var backtest = Backtest.Create(
             strategy.Id,
             marketId,
             DateTimeOffset.UtcNow,
             DateTimeOffset.UtcNow.AddDays(30),
             10000m,
+            new BacktestRunSettings(),
             strategy
         );
 
@@ -162,6 +217,7 @@ public sealed class RestartBacktestHandlerTests
 
         // Assert
         await restart.ShouldThrowAsync<InvalidOperationException>();
+        await _bus.DidNotReceiveWithAnyArgs().PublishAsync(default(RunBacktestMessage));
     }
 
     [Fact]
@@ -183,22 +239,24 @@ public sealed class RestartBacktestHandlerTests
     {
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
+
         var strategy = Strategy.Create(
             marketId,
             "Test Strategy",
             null,
-            new TradingConfiguration(),
-            StrategyTestFactory.DefaultWeights(),
-            null
+            StrategyTestFactory.Swing()
         );
+
         var backtest = Backtest.Create(
             strategy.Id,
             marketId,
             DateTimeOffset.UtcNow,
             DateTimeOffset.UtcNow.AddDays(30),
             10000m,
+            new BacktestRunSettings(),
             strategy
         );
+
         backtest.MarkRunning();
         backtest.Fail("Simulated failure");
 

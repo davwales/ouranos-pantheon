@@ -1,12 +1,8 @@
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Scorers;
-
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Inputs;
 
 /// <summary>
-///     Canonical enumeration of every weighted input a strategy can blend. Values
-///     correspond one-to-one with the seven <see cref="Signals.SignalType" /> signal
-///     computers; each kind is scored by its dedicated <see cref="SignalInputScorerBase" />
-///     subclass and blended by the executor using the strategy's weight vector.
+///     Every weighted input a swing strategy can blend. Each kind is one of the seven
+///     <see cref="Signals.SignalType" /> signals; see <see cref="Swing.SwingScoring" />.
 /// </summary>
 public enum InputKind
 {

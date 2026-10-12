@@ -93,7 +93,8 @@ export default function BacktestDetailPage() {
   }, [backtestId, reexecute]);
 
   const handleApplyToStrategy = useCallback(async () => {
-    if (!backtest?.results || !strategy) {
+    const configuration = backtest?.results?.optimizedConfiguration;
+    if (!configuration || !strategy) {
       return;
     }
     setIsApplyingConfig(true);
@@ -102,13 +103,7 @@ export default function BacktestDetailPage() {
       await plutusApi.updateStrategy(strategyId, {
         name: strategy.name,
         description: strategy.description ?? null,
-        tradingConfiguration:
-          backtest.results.optimizedConfiguration ??
-          strategy.tradingConfiguration,
-        inputWeights:
-          backtest.results.optimizedInputWeights ?? strategy.inputWeights,
-        thresholds:
-          backtest.results.optimizedThresholds ?? strategy.thresholds,
+        configuration,
       });
       router.push(`/plutus/${marketId}/strategies/${strategyId}`);
     } catch (err) {
@@ -190,9 +185,7 @@ export default function BacktestDetailPage() {
 
           <BacktestStatisticsGrid results={results} />
 
-          {(results.optimizedConfiguration != null ||
-            results.optimizedInputWeights != null ||
-            results.optimizedThresholds != null) && (
+          {results.optimizedConfiguration != null && (
             <OptimizedConfigurationCard
               results={results}
               isApplying={isApplyingConfig}

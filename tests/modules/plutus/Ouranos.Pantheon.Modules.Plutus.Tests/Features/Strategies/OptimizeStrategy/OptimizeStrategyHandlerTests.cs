@@ -5,6 +5,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.OptimizeStrategy.Schem
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Wolverine;
@@ -14,7 +15,7 @@ namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Strategies.OptimizeStra
 
 public sealed class OptimizeStrategyHandlerTests
 {
-    private readonly IFixture _fixture = new Fixture();
+    private readonly Fixture _fixture = new();
     private readonly OptimizeStrategyHandler _handler;
     private readonly ILogger<OptimizeStrategyHandler> _logger = Substitute.For<
         ILogger<OptimizeStrategyHandler>
@@ -34,14 +35,14 @@ public sealed class OptimizeStrategyHandlerTests
     {
         // Arrange
         await using var setupContext = await _dbContextFactory.CreateDbContextAsync();
+
         var strategy = Strategy.Create(
             _fixture.Create<Id<Market>>(),
             "Test",
             null,
-            new TradingConfiguration(),
-            StrategyTestFactory.DefaultWeights(),
-            null
+            StrategyTestFactory.Swing()
         );
+
         await setupContext.Strategies.AddAsync(strategy);
         await setupContext.SaveChangesAsync();
 
@@ -52,7 +53,12 @@ public sealed class OptimizeStrategyHandlerTests
             DateTimeOffset.UtcNow.AddDays(30),
             10000m,
             10,
-            5
+            5,
+            0.3,
+            0.25,
+            0.15m,
+            0.08m,
+            4
         );
 
         // Act
@@ -61,10 +67,80 @@ public sealed class OptimizeStrategyHandlerTests
         // Assert
         result.ShouldBeOfType<OptimizeStrategyResponse>();
         result.BacktestId.ShouldNotBe(default);
+
+        await using var verifyContext = await _dbContextFactory.CreateDbContextAsync();
+        var backtest = await verifyContext.Backtests.FindAsync(result.BacktestId);
+        backtest.ShouldNotBeNull();
+        backtest.Status.ShouldBe(BacktestStatus.Pending);
+        backtest.Kind.ShouldBe(BacktestKind.Optimization);
+        backtest.RunSettings.ShouldBe(
+            new BacktestRunSettings(0.15m, 0.08m, new OptimizationSettings(10, 5, 0.3, 0.25, 4))
+        );
         await _bus.Received(1)
-            .PublishAsync(
-                Arg.Any<Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events.OptimizeStrategyMessage>()
-            );
+            .PublishAsync(Arg.Is<OptimizeStrategyMessage>(m => m.BacktestId == result.BacktestId));
+    }
+
+    [Fact]
+    public async Task Handle_WhenMarketFrictionOmitted_ShouldPersistDefaults()
+    {
+        // Arrange
+        await using var setupContext = await _dbContextFactory.CreateDbContextAsync();
+
+        var strategy = Strategy.Create(
+            _fixture.Create<Id<Market>>(),
+            "Test",
+            null,
+            StrategyTestFactory.Swing()
+        );
+
+        await setupContext.Strategies.AddAsync(strategy);
+        await setupContext.SaveChangesAsync();
+
+        var command = new OptimizeStrategyInput(
+            strategy.Id,
+            strategy.MarketId,
+            DateTimeOffset.UtcNow,
+            DateTimeOffset.UtcNow.AddDays(30),
+            10000m
+        );
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await using var verifyContext = await _dbContextFactory.CreateDbContextAsync();
+        var backtest = await verifyContext.Backtests.FindAsync(result.BacktestId);
+        backtest.ShouldNotBeNull();
+        backtest.RunSettings.VolumeParticipationRate.ShouldBe(
+            BacktestDataOptions.DefaultVolumeParticipationRate
+        );
+        backtest.RunSettings.SlippageMultiplier.ShouldBe(
+            BacktestDataOptions.DefaultSlippageMultiplier
+        );
+        backtest.RunSettings.Optimization.ShouldBe(new OptimizationSettings(30, 50, 0.5, 0.2, 10));
+    }
+
+    [Theory]
+    [InlineData(0.0)]
+    [InlineData(1.0)]
+    public async Task Handle_WhenOutSampleRatioOutOfRange_ShouldThrow(double ratio)
+    {
+        // Arrange
+        var command = new OptimizeStrategyInput(
+            _fixture.Create<Id<Strategy>>(),
+            _fixture.Create<Id<Market>>(),
+            DateTimeOffset.UtcNow,
+            DateTimeOffset.UtcNow.AddDays(30),
+            10000m,
+            OutSampleRatio: ratio
+        );
+
+        // Act
+        var optimize = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await optimize.ShouldThrowAsync<ArgumentException>();
+        await _bus.DidNotReceiveWithAnyArgs().PublishAsync(default(OptimizeStrategyMessage));
     }
 
     [Fact]
@@ -91,14 +167,14 @@ public sealed class OptimizeStrategyHandlerTests
     {
         // Arrange
         await using var setupContext = await _dbContextFactory.CreateDbContextAsync();
+
         var strategy = Strategy.Create(
             _fixture.Create<Id<Market>>(),
             "Test",
             null,
-            new TradingConfiguration(),
-            StrategyTestFactory.DefaultWeights(),
-            null
+            StrategyTestFactory.Swing()
         );
+
         await setupContext.Strategies.AddAsync(strategy);
         await setupContext.SaveChangesAsync();
 
@@ -124,14 +200,14 @@ public sealed class OptimizeStrategyHandlerTests
     {
         // Arrange
         await using var setupContext = await _dbContextFactory.CreateDbContextAsync();
+
         var strategy = Strategy.Create(
             _fixture.Create<Id<Market>>(),
             "Test",
             null,
-            new TradingConfiguration(),
-            StrategyTestFactory.DefaultWeights(),
-            null
+            StrategyTestFactory.Swing()
         );
+
         await setupContext.Strategies.AddAsync(strategy);
         await setupContext.SaveChangesAsync();
 

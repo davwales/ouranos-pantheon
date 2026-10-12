@@ -10,7 +10,7 @@ public static class RestExtensions
 {
     public static IServiceCollection ConfigureRest(
         this IServiceCollection services,
-        IConfiguration configuration
+        IConfiguration _
     )
     {
         services.AddProblemDetails();
@@ -18,6 +18,7 @@ public static class RestExtensions
         services.ConfigureHttpJsonOptions(options =>
         {
             options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+            options.SerializerOptions.AllowOutOfOrderMetadataProperties = true;
             options.SerializerOptions.Converters.Add(new IdJsonConverterFactory());
             options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
         });

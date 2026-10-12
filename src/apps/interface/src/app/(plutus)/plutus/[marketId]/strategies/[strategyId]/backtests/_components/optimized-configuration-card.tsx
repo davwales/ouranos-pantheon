@@ -1,4 +1,3 @@
-import { Typography } from "@/components/shared/typography";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -10,11 +9,9 @@ import {
 } from "@/components/ui/card";
 import { type BacktestResults } from "@/lib/api/plutus";
 import { ArrowRight } from "lucide-react";
+import { ConfigGroup } from "../../../_components/config-group";
 import { ConfigRow } from "../../../_components/config-row";
-import {
-  INPUT_KIND_LABELS,
-  THRESHOLD_FIELDS,
-} from "../../../_components/strategy-constants";
+import { StrategyConfigurationView } from "../../../_components/strategy-configuration-view";
 
 export function OptimizedConfigurationCard({
   results,
@@ -25,13 +22,6 @@ export function OptimizedConfigurationCard({
   isApplying?: boolean;
   onApplyToStrategy?: () => void;
 }) {
-  const trading = results.optimizedConfiguration;
-  const optimizedWeights = results.optimizedInputWeights
-    ? [...results.optimizedInputWeights].sort((a, b) => b.weight - a.weight)
-    : [];
-  const hasThresholds = THRESHOLD_FIELDS.some(
-    (f) => results.optimizedThresholds?.[f.key] != null,
-  );
   const outSample = results.outSampleResults;
 
   return (
@@ -69,89 +59,27 @@ export function OptimizedConfigurationCard({
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {trading && (
-            <div className="space-y-1">
-              <Typography
-                variant="small"
-                className="font-semibold uppercase tracking-wide text-muted-foreground"
-              >
-                Trading Rules
-              </Typography>
-              <ConfigRow label="Max Positions" value={trading.maxPositions} />
-              <ConfigRow
-                label="Max Position Percent"
-                value={trading.maxPositionPercent}
-              />
-              <ConfigRow
-                label="Hold Period Days"
-                value={trading.holdPeriodDays}
-              />
-            </div>
-          )}
-
-          {optimizedWeights.length > 0 && (
-            <div className="space-y-2">
-              <Typography
-                variant="small"
-                className="font-semibold uppercase tracking-wide text-muted-foreground"
-              >
-                Optimized Input Weights
-              </Typography>
-              <div className="space-y-1">
-                {optimizedWeights.map((w) => (
-                  <ConfigRow
-                    key={w.kind}
-                    label={INPUT_KIND_LABELS[w.kind]}
-                    value={w.weight}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {hasThresholds && results.optimizedThresholds && (
-            <div className="space-y-2">
-              <Typography
-                variant="small"
-                className="font-semibold uppercase tracking-wide text-muted-foreground"
-              >
-                Optimized Thresholds
-              </Typography>
-              <div className="space-y-1">
-                {THRESHOLD_FIELDS.map((f) => (
-                  <ConfigRow
-                    key={f.key}
-                    label={f.label}
-                    value={results.optimizedThresholds?.[f.key]}
-                  />
-                ))}
-              </div>
-            </div>
+          {results.optimizedConfiguration && (
+            <StrategyConfigurationView
+              configuration={results.optimizedConfiguration}
+            />
           )}
 
           {outSample && (
-            <div className="space-y-2">
-              <Typography
-                variant="small"
-                className="font-semibold uppercase tracking-wide text-muted-foreground"
-              >
-                Out-of-Sample
-              </Typography>
-              <div className="space-y-1">
-                <ConfigRow
-                  label="Sharpe Ratio"
-                  value={outSample.sharpeRatio.toFixed(2)}
-                />
-                <ConfigRow
-                  label="Total Return %"
-                  value={`${(outSample.totalReturnPercent * 100).toFixed(2)}%`}
-                />
-                <ConfigRow
-                  label="Max Drawdown %"
-                  value={`${(outSample.maxDrawdownPercent * 100).toFixed(2)}%`}
-                />
-              </div>
-            </div>
+            <ConfigGroup title="Out-of-Sample">
+              <ConfigRow
+                label="Sharpe Ratio"
+                value={outSample.sharpeRatio.toFixed(2)}
+              />
+              <ConfigRow
+                label="Total Return %"
+                value={`${(outSample.totalReturnPercent * 100).toFixed(2)}%`}
+              />
+              <ConfigRow
+                label="Max Drawdown %"
+                value={`${(outSample.maxDrawdownPercent * 100).toFixed(2)}%`}
+              />
+            </ConfigGroup>
           )}
         </div>
       </CardContent>

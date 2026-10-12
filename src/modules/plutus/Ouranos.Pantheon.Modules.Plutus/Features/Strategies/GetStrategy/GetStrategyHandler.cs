@@ -41,9 +41,7 @@ public sealed class GetStrategyHandler : IPantheonHandler<GetStrategyInput, GetS
             strategy.MarketId,
             strategy.Name,
             strategy.Description,
-            strategy.TradingConfiguration,
-            strategy.InputWeights,
-            strategy.Thresholds,
+            strategy.Configuration,
             strategy.IsActive,
             strategy.CreatedAt,
             strategy.UpdatedAt

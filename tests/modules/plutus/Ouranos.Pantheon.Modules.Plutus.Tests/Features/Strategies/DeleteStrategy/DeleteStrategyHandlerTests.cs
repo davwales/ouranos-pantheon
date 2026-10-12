@@ -32,14 +32,7 @@ public sealed class DeleteStrategyHandlerTests
     {
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
-        var strategy = Strategy.Create(
-            marketId,
-            "Test",
-            null,
-            new TradingConfiguration(),
-            StrategyTestFactory.DefaultWeights(),
-            null
-        );
+        var strategy = Strategy.Create(marketId, "Test", null, StrategyTestFactory.Swing());
         await _dbContext.Strategies.AddAsync(strategy);
         await _dbContext.SaveChangesAsync();
 
