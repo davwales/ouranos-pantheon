@@ -9,9 +9,6 @@ public sealed class BuyCandidatesStep(ILogger<BuyCandidatesStep> logger) : IStep
 {
     private readonly ILogger<BuyCandidatesStep> _logger = Guard.Against.Null(logger);
 
-    /// <summary>Below this daily volume, skip the participation cap to avoid zeroing out strong-signal candidates on thin days.</summary>
-    private const decimal LowVolumeCapThreshold = 10m;
-
     public Task ExecuteAsync(PipelineContext context, BacktestPayload payload)
     {
         context.CancellationToken.ThrowIfCancellationRequested();
@@ -54,43 +51,47 @@ public sealed class BuyCandidatesStep(ILogger<BuyCandidatesStep> logger) : IStep
         decimal maxPositionPercent
     )
     {
-        var maxPositionBudget = payload.Portfolio.Balance * maxPositionPercent;
-
-        var dailyVolume = ctx.Data.GetDailyVolume(candidate.Symbol.Id, currentDate);
-        var volumeImpact =
-            dailyVolume > 0 ? Math.Max(1m, maxPositionBudget / candidate.Price) / dailyVolume : 0m;
-        var slippage = volumeImpact * payload.Parameters.SlippageMultiplier;
-        var adjustedBuyPrice = candidate.Price * (1 + slippage);
-
-        var volume = Math.Floor(maxPositionBudget / adjustedBuyPrice);
-        if (volume < 1 || adjustedBuyPrice == 0)
+        var day = ctx.Data.GetDailyAggregate(candidate.Symbol.Id, currentDate);
+        if (day is null || day.AveragePrice <= 0)
         {
             return;
         }
 
-        volume = ClampToSymbolLimit(candidate, volume);
-        if (volume == 0)
-        {
-            return;
-        }
-
-        volume = ClampToParticipationCap(
-            volume,
-            dailyVolume,
-            payload.Parameters.VolumeParticipationRate
+        var fillCap = ClampToSymbolLimit(
+            candidate,
+            ctx.Data.GetFillCap(
+                candidate.Symbol.Id,
+                currentDate,
+                payload.Parameters.VolumeParticipationRate
+            ),
+            payload.Parameters.LimitWindowsPerDay
         );
+
+        var maxPositionBudget = Math.Min(
+            payload.Portfolio.Balance * maxPositionPercent,
+            payload.Portfolio.Balance
+        );
+
+        var volume = Math.Min(Math.Floor(maxPositionBudget / day.AveragePrice), fillCap);
         if (volume < 1)
         {
             return;
         }
 
-        var cost = adjustedBuyPrice * volume;
-        if (cost > payload.Portfolio.Balance)
+        var slippage = BacktestMath.ComputeSlippage(
+            volume,
+            day.TotalVolume,
+            payload.Parameters.SlippageMultiplier
+        );
+
+        var adjustedBuyPrice = day.AveragePrice * (1 + slippage);
+        volume = Math.Min(volume, Math.Floor(maxPositionBudget / adjustedBuyPrice));
+        if (volume < 1)
         {
             return;
         }
 
-        payload.Portfolio.Balance -= cost;
+        payload.Portfolio.Balance -= adjustedBuyPrice * volume;
         payload.Portfolio.OpenPositions[candidate.Symbol.Id] = new OpenPosition(
             candidate.Symbol.Id,
             candidate.Symbol.Name,
@@ -101,10 +102,14 @@ public sealed class BuyCandidatesStep(ILogger<BuyCandidatesStep> logger) : IStep
         );
     }
 
-    private decimal ClampToSymbolLimit(ScoredSymbol candidate, decimal volume)
+    private decimal ClampToSymbolLimit(
+        ScoredSymbol candidate,
+        decimal volume,
+        decimal limitWindowsPerDay
+    )
     {
         var symbolLimit = candidate.Symbol.AdditionalFields.Limit;
-        if (!symbolLimit.HasValue || volume <= symbolLimit.Value)
+        if (!symbolLimit.HasValue)
         {
             return volume;
         }
@@ -119,21 +124,6 @@ public sealed class BuyCandidatesStep(ILogger<BuyCandidatesStep> logger) : IStep
             return 0;
         }
 
-        return symbolLimit.Value;
-    }
-
-    private static decimal ClampToParticipationCap(
-        decimal volume,
-        decimal dailyVolume,
-        decimal participationRate
-    )
-    {
-        if (dailyVolume <= 0 || dailyVolume < LowVolumeCapThreshold)
-        {
-            return volume;
-        }
-
-        var maxBuyableVolume = Math.Floor(dailyVolume * participationRate);
-        return Math.Min(volume, maxBuyableVolume);
+        return Math.Min(volume, Math.Floor(symbolLimit.Value * limitWindowsPerDay));
     }
 }

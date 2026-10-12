@@ -15,7 +15,8 @@ public sealed record BacktestParameters(
     decimal SlippageMultiplier = 0.1m,
     TradingConfiguration? ConfigurationOverride = null,
     List<InputWeight>? InputWeightsOverride = null,
-    InputThresholds? ThresholdsOverride = null
+    InputThresholds? ThresholdsOverride = null,
+    decimal LimitWindowsPerDay = BacktestDataOptions.DefaultLimitWindowsPerDay
 )
 {
     public TradingConfiguration Configuration =>

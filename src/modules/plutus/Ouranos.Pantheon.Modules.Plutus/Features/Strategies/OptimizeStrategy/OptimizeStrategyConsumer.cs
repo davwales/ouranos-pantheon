@@ -347,7 +347,8 @@ public sealed class OptimizeStrategyConsumer : IPantheonHandler<OptimizeStrategy
             budget,
             volumeParticipationRate,
             slippageMultiplier,
-            configurationOverride
+            configurationOverride,
+            LimitWindowsPerDay: _backtestDataOptions.Value.LimitWindowsPerDay
         );
         parameters = chromosome.ApplyConfigOverrides(parameters);
         var payload = new BacktestPayload(parameters) { Data = data };

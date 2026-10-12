@@ -1,7 +1,5 @@
 using Ardalis.GuardClauses;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Pipeline;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Steps;
@@ -16,62 +14,51 @@ public sealed class LiquidateStep : IStep<BacktestPayload>
         var ctx = payload.Context;
         var endDate = payload.Parameters.EndDate;
 
-        foreach (var pos in payload.Portfolio.OpenPositions.Values.ToList())
+        foreach (var open in payload.Portfolio.OpenPositions.Values.ToList())
         {
-            var exitPrice = ctx.Data.GetLatestPrice(pos.SymbolId, endDate);
-            if (exitPrice == 0)
-            {
-                exitPrice = pos.EntryPrice;
-            }
+            var pos = open;
+            var day = ctx.Data.GetDailyAggregate(pos.SymbolId, endDate);
 
-            var dailyVolume = ctx.Data.GetDailyVolume(pos.SymbolId, endDate);
-            var (netProceeds, exitVolume, netPnl) = BacktestMath.ComputeExit(
-                pos,
-                exitPrice,
-                ctx.TaxRate,
-                ctx.Data.Market,
-                dailyVolume,
-                payload.Parameters.VolumeParticipationRate,
-                payload.Parameters.SlippageMultiplier
-            );
-
-            if (exitVolume <= 0)
+            if (day is not null && day.AveragePrice > 0)
             {
-                var (forcedProceeds, forcedClosed) = ForceLiquidate(
-                    pos,
-                    exitPrice,
+                var fillCap = ctx.Data.GetFillCap(
+                    pos.SymbolId,
                     endDate,
-                    ctx.TaxRate,
-                    ctx.Data.Market
+                    payload.Parameters.VolumeParticipationRate
                 );
-                payload.Portfolio.Balance += forcedProceeds;
-                payload.Portfolio.ClosedPositions.Add(forcedClosed);
-                continue;
-            }
 
-            payload.Portfolio.Balance += netProceeds;
-            payload.Portfolio.ClosedPositions.Add(
-                BacktestMath.CreateClosedPosition(pos, exitPrice, exitVolume, netPnl, endDate)
-            );
+                var (netProceeds, exitVolume, netPnl) = BacktestMath.ComputeExit(
+                    pos,
+                    day.AveragePrice,
+                    ctx.TaxRate,
+                    ctx.Data.Market,
+                    day.TotalVolume,
+                    fillCap,
+                    payload.Parameters.SlippageMultiplier
+                );
 
-            if (exitVolume >= pos.Volume)
-            {
-                continue;
-            }
-
-            var remainingVolume = pos.Volume - exitVolume;
-            var (residualProceeds, residualClosed) = ForceLiquidate(
-                pos with
+                if (exitVolume > 0)
                 {
-                    Volume = remainingVolume,
-                },
-                exitPrice,
-                endDate,
-                ctx.TaxRate,
-                ctx.Data.Market
-            );
-            payload.Portfolio.Balance += residualProceeds;
-            payload.Portfolio.ClosedPositions.Add(residualClosed);
+                    payload.Portfolio.Balance += netProceeds;
+                    var (remaining, closed) = BacktestMath.ApplyExit(
+                        pos,
+                        day.AveragePrice,
+                        exitVolume,
+                        netPnl,
+                        endDate
+                    );
+
+                    if (closed is not null)
+                    {
+                        payload.Portfolio.ClosedPositions.Add(closed);
+                        continue;
+                    }
+
+                    pos = remaining ?? pos;
+                }
+            }
+
+            MarkResidualToMarket(pos, payload, ctx, endDate);
         }
 
         payload.Portfolio.OpenPositions.Clear();
@@ -79,34 +66,33 @@ public sealed class LiquidateStep : IStep<BacktestPayload>
     }
 
     /// <summary>
-    ///     Mark-to-market liquidation for the volume a participation cap could not
-    ///     sell. Computes gross value at <paramref name="exitPrice" />, applies the
-    ///     flat tax capped at the market maximum, and produces the closed-position
-    ///     record with the resulting net P&amp;L. Used both when no volume could be
-    ///     sold at all and when only a partial fill left residue behind.
+    ///     Volume the liquidity cap could not sell by the end of the run is valued at the latest
+    ///     day's minimum traded price (net of tax) rather than the average, so stranded inventory
+    ///     in thin items cannot inflate results.
     /// </summary>
-    private static (decimal NetProceeds, BacktestPosition ClosedPosition) ForceLiquidate(
-        OpenPosition position,
-        decimal exitPrice,
-        DateTimeOffset endDate,
-        decimal taxRate,
-        Market market
+    private static void MarkResidualToMarket(
+        OpenPosition pos,
+        BacktestPayload payload,
+        BacktestContext ctx,
+        DateTimeOffset endDate
     )
     {
-        var grossValue = exitPrice * position.Volume;
-        var tax = grossValue * taxRate;
-        var taxCap = market.Taxes.Flat?.Maximum ?? decimal.MaxValue;
-        var netProceeds = grossValue - Math.Min(tax, taxCap);
-        var costBasis = position.EntryPrice * position.Volume;
+        var latest = ctx.Data.GetLatestAggregate(pos.SymbolId, endDate);
+        var markPrice = latest is { MinPrice: > 0 } ? latest.MinPrice : pos.EntryPrice;
 
-        var closedPosition = BacktestMath.CreateClosedPosition(
-            position,
-            exitPrice,
-            position.Volume,
-            netProceeds - costBasis,
-            endDate
-        );
+        var grossValue = markPrice * pos.Volume;
 
-        return (netProceeds, closedPosition);
+        var netProceeds =
+            grossValue - BacktestMath.ComputeTax(grossValue, ctx.TaxRate, ctx.Data.Market);
+
+        var netPnl = netProceeds - (pos.EntryPrice * pos.Volume);
+
+        payload.Portfolio.Balance += netProceeds;
+
+        var (_, closed) = BacktestMath.ApplyExit(pos, markPrice, pos.Volume, netPnl, endDate);
+        if (closed is not null)
+        {
+            payload.Portfolio.ClosedPositions.Add(closed);
+        }
     }
 }

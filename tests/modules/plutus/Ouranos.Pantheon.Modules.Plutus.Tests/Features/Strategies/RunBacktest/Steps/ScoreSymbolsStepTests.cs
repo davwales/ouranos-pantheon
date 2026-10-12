@@ -29,6 +29,7 @@ public sealed class ScoreSymbolsStepTests
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
         var executor = Substitute.For<IStrategyExecutor>();
+
         var strategy = Strategy.Create(
             marketId,
             "Test Strategy",
@@ -37,6 +38,7 @@ public sealed class ScoreSymbolsStepTests
             StrategyTestFactory.DefaultWeights(),
             null
         );
+
         var parameters = new BacktestParameters(
             marketId,
             strategy,
@@ -44,6 +46,7 @@ public sealed class ScoreSymbolsStepTests
             DateTimeOffset.UtcNow,
             10000m
         );
+
         var payload = new BacktestPayload(parameters);
         var data = BacktestData.FromRaw(market, [], []);
         payload.Context = new BacktestContext(
@@ -74,6 +77,7 @@ public sealed class ScoreSymbolsStepTests
         var symbolId = _fixture.Create<Id<Symbol>>();
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
+
         var symbol = Symbol.Create(
             symbolId,
             "SYM",
@@ -82,6 +86,7 @@ public sealed class ScoreSymbolsStepTests
             marketId,
             new AdditionalFields()
         );
+
         var executor = Substitute.For<IStrategyExecutor>();
         var strategy = Strategy.Create(
             marketId,
@@ -91,6 +96,7 @@ public sealed class ScoreSymbolsStepTests
             StrategyTestFactory.DefaultWeights(),
             null
         );
+
         var parameters = new BacktestParameters(
             marketId,
             strategy,
@@ -98,6 +104,7 @@ public sealed class ScoreSymbolsStepTests
             DateTimeOffset.UtcNow,
             10000m
         );
+
         var payload = new BacktestPayload(parameters);
         var data = BacktestData.FromRaw(market, [symbol], []);
         payload.Context = new BacktestContext(
@@ -128,6 +135,7 @@ public sealed class ScoreSymbolsStepTests
         var symbolId = _fixture.Create<Id<Symbol>>();
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
+
         var symbol = Symbol.Create(
             symbolId,
             "SYM",
@@ -136,10 +144,13 @@ public sealed class ScoreSymbolsStepTests
             marketId,
             new AdditionalFields()
         );
+
         var executor = Substitute.For<IStrategyExecutor>();
+
         executor
             .Score(Arg.Any<StrategyScoreContext>(), Arg.Any<TradingConfiguration>())
             .Returns((decimal?)null);
+
         var strategy = Strategy.Create(
             marketId,
             "Test Strategy",
@@ -148,6 +159,7 @@ public sealed class ScoreSymbolsStepTests
             StrategyTestFactory.DefaultWeights(),
             null
         );
+
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var parameters = new BacktestParameters(
             marketId,
@@ -156,13 +168,16 @@ public sealed class ScoreSymbolsStepTests
             DateTimeOffset.UtcNow,
             10000m
         );
+
         var payload = new BacktestPayload(parameters);
         var currentDate = startDate.AddDays(0);
-        var dateOnly = DateOnly.FromDateTime(currentDate.UtcDateTime);
+        var dateOnly = DateOnly.FromDateTime(currentDate.AddDays(-1).UtcDateTime);
+
         var dailyAggregates = new List<DailyTradeAggregate>
         {
             new(symbolId, dateOnly, 100m, 95m, 105m, 10000m),
         };
+
         var data = BacktestData.FromRaw(market, [symbol], dailyAggregates);
         payload.Context = new BacktestContext(
             data,
@@ -192,6 +207,7 @@ public sealed class ScoreSymbolsStepTests
         var symbolId = _fixture.Create<Id<Symbol>>();
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
+
         var symbol = Symbol.Create(
             symbolId,
             "SYM",
@@ -200,10 +216,13 @@ public sealed class ScoreSymbolsStepTests
             marketId,
             new AdditionalFields()
         );
+
         var executor = Substitute.For<IStrategyExecutor>();
+
         executor
             .Score(Arg.Any<StrategyScoreContext>(), Arg.Any<TradingConfiguration>())
             .Returns(75m);
+
         var strategy = Strategy.Create(
             marketId,
             "Test Strategy",
@@ -212,6 +231,7 @@ public sealed class ScoreSymbolsStepTests
             StrategyTestFactory.DefaultWeights(),
             null
         );
+
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var parameters = new BacktestParameters(
             marketId,
@@ -220,13 +240,16 @@ public sealed class ScoreSymbolsStepTests
             DateTimeOffset.UtcNow,
             10000m
         );
+
         var payload = new BacktestPayload(parameters);
         var currentDate = startDate.AddDays(0);
-        var dateOnly = DateOnly.FromDateTime(currentDate.UtcDateTime);
+        var dateOnly = DateOnly.FromDateTime(currentDate.AddDays(-1).UtcDateTime);
+
         var dailyAggregates = new List<DailyTradeAggregate>
         {
             new(symbolId, dateOnly, 100m, 95m, 105m, 10000m),
         };
+
         var data = BacktestData.FromRaw(market, [symbol], dailyAggregates);
         payload.Context = new BacktestContext(
             data,
@@ -261,6 +284,7 @@ public sealed class ScoreSymbolsStepTests
         var symbolId3 = _fixture.Create<Id<Symbol>>();
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
+
         var symbol1 = Symbol.Create(
             symbolId1,
             "SYM1",
@@ -269,6 +293,7 @@ public sealed class ScoreSymbolsStepTests
             marketId,
             new AdditionalFields()
         );
+
         var symbol2 = Symbol.Create(
             symbolId2,
             "SYM2",
@@ -277,6 +302,7 @@ public sealed class ScoreSymbolsStepTests
             marketId,
             new AdditionalFields()
         );
+
         var symbol3 = Symbol.Create(
             symbolId3,
             "SYM3",
@@ -285,7 +311,9 @@ public sealed class ScoreSymbolsStepTests
             marketId,
             new AdditionalFields()
         );
+
         var executor = Substitute.For<IStrategyExecutor>();
+
         executor
             .Score(Arg.Any<StrategyScoreContext>(), Arg.Any<TradingConfiguration>())
             .Returns(80m);
@@ -298,6 +326,7 @@ public sealed class ScoreSymbolsStepTests
             StrategyTestFactory.DefaultWeights(),
             null
         );
+
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var parameters = new BacktestParameters(
             marketId,
@@ -306,15 +335,17 @@ public sealed class ScoreSymbolsStepTests
             DateTimeOffset.UtcNow,
             10000m
         );
+
         var payload = new BacktestPayload(parameters);
         var currentDate = startDate.AddDays(0);
-        var dateOnly = DateOnly.FromDateTime(currentDate.UtcDateTime);
+        var dateOnly = DateOnly.FromDateTime(currentDate.AddDays(-1).UtcDateTime);
 
         var dailyAggregates = new List<DailyTradeAggregate>
         {
             new(symbolId1, dateOnly, 100m, 95m, 105m, 10000m),
             new(symbolId3, dateOnly, 50m, 48m, 52m, 5000m),
         };
+
         var data = BacktestData.FromRaw(market, [symbol1, symbol2, symbol3], dailyAggregates);
         payload.Context = new BacktestContext(
             data,
@@ -347,6 +378,7 @@ public sealed class ScoreSymbolsStepTests
         var symbolId = _fixture.Create<Id<Symbol>>();
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
+
         var symbol = Symbol.Create(
             symbolId,
             "SYM",
@@ -355,13 +387,16 @@ public sealed class ScoreSymbolsStepTests
             marketId,
             new AdditionalFields()
         );
+
         var executor = Substitute.For<IStrategyExecutor>();
+
         executor
             .Score(Arg.Any<StrategyScoreContext>(), Arg.Any<TradingConfiguration>())
             .Returns(90m);
 
         var signalComputer = Substitute.For<ISignalComputer>();
         signalComputer.Type.Returns(SignalType.TrendMomentum);
+
         signalComputer
             .ComputeAsync(Arg.Any<SignalComputeContext>(), Arg.Any<CancellationToken>())
             .Returns(0.85m);
@@ -374,6 +409,7 @@ public sealed class ScoreSymbolsStepTests
             StrategyTestFactory.DefaultWeights(),
             null
         );
+
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var parameters = new BacktestParameters(
             marketId,
@@ -382,13 +418,16 @@ public sealed class ScoreSymbolsStepTests
             DateTimeOffset.UtcNow,
             10000m
         );
+
         var payload = new BacktestPayload(parameters);
         var currentDate = startDate.AddDays(0);
-        var dateOnly = DateOnly.FromDateTime(currentDate.UtcDateTime);
+        var dateOnly = DateOnly.FromDateTime(currentDate.AddDays(-1).UtcDateTime);
+
         var dailyAggregates = new List<DailyTradeAggregate>
         {
             new(symbolId, dateOnly, 100m, 95m, 105m, 10000m),
         };
+
         var data = BacktestData.FromRaw(market, [symbol], dailyAggregates);
         payload.Context = new BacktestContext(
             data,
@@ -438,6 +477,7 @@ public sealed class ScoreSymbolsStepTests
         var symbolId = _fixture.Create<Id<Symbol>>();
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
+
         var symbol = Symbol.Create(
             symbolId,
             "SYM",
@@ -449,6 +489,7 @@ public sealed class ScoreSymbolsStepTests
 
         var capturedContexts = new List<StrategyScoreContext>();
         var executor = Substitute.For<IStrategyExecutor>();
+
         executor
             .Score(Arg.Any<StrategyScoreContext>(), Arg.Any<TradingConfiguration>())
             .Returns(50m)
@@ -456,6 +497,7 @@ public sealed class ScoreSymbolsStepTests
 
         var signalComputer = Substitute.For<ISignalComputer>();
         signalComputer.Type.Returns(SignalType.TrendMomentum);
+
         signalComputer
             .ComputeAsync(Arg.Any<SignalComputeContext>(), Arg.Any<CancellationToken>())
             .Returns(0.85m);
@@ -468,6 +510,7 @@ public sealed class ScoreSymbolsStepTests
             StrategyTestFactory.DefaultWeights(),
             null
         );
+
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var parameters = new BacktestParameters(
             marketId,
@@ -476,15 +519,18 @@ public sealed class ScoreSymbolsStepTests
             DateTimeOffset.UtcNow,
             10000m
         );
+
         var payload = new BacktestPayload(parameters);
 
-        var dateOnly0 = DateOnly.FromDateTime(startDate.UtcDateTime);
-        var dateOnly1 = DateOnly.FromDateTime(startDate.AddDays(1).UtcDateTime);
+        var dateOnly0 = DateOnly.FromDateTime(startDate.AddDays(-1).UtcDateTime);
+        var dateOnly1 = DateOnly.FromDateTime(startDate.UtcDateTime);
+
         var dailyAggregates = new List<DailyTradeAggregate>
         {
             new(symbolId, dateOnly0, 100m, 95m, 105m, 10000m),
             new(symbolId, dateOnly1, 102m, 97m, 107m, 10000m),
         };
+
         var data = BacktestData.FromRaw(market, [symbol], dailyAggregates);
         payload.Context = new BacktestContext(
             data,
@@ -527,6 +573,7 @@ public sealed class ScoreSymbolsStepTests
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
         var executor = Substitute.For<IStrategyExecutor>();
+
         var strategy = Strategy.Create(
             marketId,
             "Test Strategy",
@@ -535,6 +582,7 @@ public sealed class ScoreSymbolsStepTests
             StrategyTestFactory.DefaultWeights(),
             null
         );
+
         var parameters = new BacktestParameters(
             marketId,
             strategy,
@@ -542,6 +590,7 @@ public sealed class ScoreSymbolsStepTests
             DateTimeOffset.UtcNow,
             10000m
         );
+
         var payload = new BacktestPayload(parameters);
         var data = BacktestData.FromRaw(market, [], []);
         payload.Context = new BacktestContext(
@@ -568,6 +617,7 @@ public sealed class ScoreSymbolsStepTests
     {
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
+
         var strategy = Strategy.Create(
             marketId,
             "Test Strategy",
@@ -576,6 +626,7 @@ public sealed class ScoreSymbolsStepTests
             StrategyTestFactory.DefaultWeights(),
             null
         );
+
         var parameters = new BacktestParameters(
             marketId,
             strategy,
@@ -583,6 +634,7 @@ public sealed class ScoreSymbolsStepTests
             DateTimeOffset.UtcNow,
             10000m
         );
+
         var payload = new BacktestPayload(parameters);
 
         var context = new PipelineContext(CancellationToken.None);
@@ -600,6 +652,7 @@ public sealed class ScoreSymbolsStepTests
         var symbolId = _fixture.Create<Id<Symbol>>();
         var marketId = _fixture.Create<Id<Market>>();
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
+
         var symbol = Symbol.Create(
             symbolId,
             "SYM",
@@ -608,6 +661,7 @@ public sealed class ScoreSymbolsStepTests
             marketId,
             new AdditionalFields()
         );
+
         var executor = Substitute.For<IStrategyExecutor>();
         var strategy = Strategy.Create(
             marketId,
@@ -617,6 +671,7 @@ public sealed class ScoreSymbolsStepTests
             StrategyTestFactory.DefaultWeights(),
             null
         );
+
         var startDate = DateTimeOffset.UtcNow.AddDays(-10);
         var parameters = new BacktestParameters(
             marketId,
@@ -625,13 +680,16 @@ public sealed class ScoreSymbolsStepTests
             DateTimeOffset.UtcNow,
             10000m
         );
+
         var payload = new BacktestPayload(parameters);
         var currentDate = startDate.AddDays(0);
-        var dateOnly = DateOnly.FromDateTime(currentDate.UtcDateTime);
+        var dateOnly = DateOnly.FromDateTime(currentDate.AddDays(-1).UtcDateTime);
+
         var dailyAggregates = new List<DailyTradeAggregate>
         {
             new(symbolId, dateOnly, 0m, 0m, 0m, 0m),
         };
+
         var data = BacktestData.FromRaw(market, [symbol], dailyAggregates);
         payload.Context = new BacktestContext(
             data,

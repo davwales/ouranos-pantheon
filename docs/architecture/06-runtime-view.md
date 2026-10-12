@@ -136,6 +136,20 @@ lifecycle:
   and republishes a run message.
 - **Startup recovery** marks backtests left `Running` by a previous process as `Failed`.
 
+The simulation steps one UTC day at a time over daily trade aggregates (VWAP, min, max,
+volume). Its execution model is deliberately conservative, so that results describe trades
+that could actually have been placed:
+
+- **No lookahead**: day *D*'s signals use trades up to the end of *D−1*; fills happen at
+  day *D*'s VWAP.
+- **Fills need liquidity**: nothing is bought or sold on a day the symbol did not trade.
+  Each fill is capped at the participation rate × min(day volume, trailing 14-day median
+  daily volume). Buys are also capped at the symbol's buy limit × `LimitWindowsPerDay`
+  (`Ouranos:Plutus:BacktestData`, default 2).
+- **Price impact**: square-root slippage on the filled volume, capped at 5%.
+- **End of run**: volume the cap could not sell is marked at the last day's minimum price.
+  Partial exits accumulate, so each round trip is one closed position.
+
 ## 6.6 Scenario: Recipe Import
 
 *An end-to-end AI-assisted ingestion flow in Hestia.*

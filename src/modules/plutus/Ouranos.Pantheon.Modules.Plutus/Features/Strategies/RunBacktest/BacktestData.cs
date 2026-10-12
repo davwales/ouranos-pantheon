@@ -22,6 +22,8 @@ public sealed class BacktestData
 
     private const decimal MinutesPerDay = 1440m;
 
+    public const int TypicalVolumeDays = 14;
+
     public Market Market { get; }
     public List<Symbol> Symbols { get; }
 
@@ -151,6 +153,80 @@ public sealed class BacktestData
 
         var idx = FindFirstIndex(aggregates, a => a.Date >= dateOnly);
         return idx >= 0 && aggregates[idx].Date == dateOnly ? aggregates[idx].TotalVolume : 0m;
+    }
+
+    /// <summary>
+    ///     Gets the trades aggregate for a symbol on exactly the given date, or <c>null</c> when
+    ///     the symbol did not trade that day. Fills only happen on days with real trades.
+    /// </summary>
+    public DailyTradeAggregate? GetDailyAggregate(Id<Symbol> symbolId, DateTimeOffset date)
+    {
+        if (!AggregatesBySymbol.TryGetValue(symbolId, out var aggregates))
+        {
+            return null;
+        }
+
+        var dateOnly = DateOnly.FromDateTime(date.UtcDateTime);
+        var idx = FindFirstIndex(aggregates, a => a.Date >= dateOnly);
+        return idx >= 0 && aggregates[idx].Date == dateOnly ? aggregates[idx] : null;
+    }
+
+    /// <summary>
+    ///     Gets the most recent trades aggregate for a symbol on or before the given date.
+    /// </summary>
+    public DailyTradeAggregate? GetLatestAggregate(Id<Symbol> symbolId, DateTimeOffset date)
+    {
+        if (!AggregatesBySymbol.TryGetValue(symbolId, out var aggregates))
+        {
+            return null;
+        }
+
+        var dateOnly = DateOnly.FromDateTime(date.UtcDateTime);
+        var idx = FindLastIndex(aggregates, a => a.Date <= dateOnly);
+        return idx >= 0 ? aggregates[idx] : null;
+    }
+
+    /// <summary>
+    ///     Median daily volume over the <see cref="TypicalVolumeDays" /> days before
+    ///     <paramref name="date" />, counting days without trades as zero. Excludes the
+    ///     current day so one burst of activity cannot justify a large fill.
+    /// </summary>
+    public decimal GetTypicalDailyVolume(Id<Symbol> symbolId, DateTimeOffset date)
+    {
+        if (!AggregatesBySymbol.TryGetValue(symbolId, out var aggregates))
+        {
+            return 0m;
+        }
+
+        var endDate = DateOnly.FromDateTime(date.UtcDateTime).AddDays(-1);
+        var startDate = endDate.AddDays(-(TypicalVolumeDays - 1));
+        var window = SliceAggregates(aggregates, startDate, endDate);
+
+        var volumes = new decimal[TypicalVolumeDays];
+        for (var i = 0; i < window.Count; i++)
+        {
+            volumes[i] = window[i].TotalVolume;
+        }
+
+        Array.Sort(volumes);
+        const int mid = TypicalVolumeDays / 2;
+        return (volumes[mid - 1] + volumes[mid]) / 2m;
+    }
+
+    /// <summary>
+    ///     Maximum units that can realistically be traded on <paramref name="date" />: the
+    ///     participation share of the smaller of today's and the typical daily volume.
+    /// </summary>
+    public decimal GetFillCap(Id<Symbol> symbolId, DateTimeOffset date, decimal participationRate)
+    {
+        var dayVolume = GetDailyVolume(symbolId, date);
+        if (dayVolume <= 0)
+        {
+            return 0m;
+        }
+
+        var typicalVolume = GetTypicalDailyVolume(symbolId, date);
+        return Math.Floor(Math.Min(dayVolume, typicalVolume) * participationRate);
     }
 
     /// <summary>

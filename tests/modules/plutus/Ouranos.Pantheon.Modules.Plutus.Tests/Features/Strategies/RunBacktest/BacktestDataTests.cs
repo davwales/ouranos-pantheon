@@ -10,7 +10,7 @@ namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Strategies.RunBacktest;
 
 public sealed class BacktestDataTests
 {
-    private readonly IFixture _fixture = new Fixture();
+    private readonly Fixture _fixture = new();
 
     public BacktestDataTests()
     {
@@ -26,10 +26,12 @@ public sealed class BacktestDataTests
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
         var currentDate = DateTimeOffset.UtcNow;
         var dateOnly = DateOnly.FromDateTime(currentDate.UtcDateTime);
+
         var dailyAggregates = new List<DailyTradeAggregate>
         {
             new(symbolId, dateOnly, 100m, 100m, 100m, 500m),
         };
+
         var data = BacktestData.FromRaw(market, [], dailyAggregates);
 
         // Act
@@ -48,10 +50,12 @@ public sealed class BacktestDataTests
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
         var currentDate = new DateTimeOffset(2025, 1, 15, 12, 0, 0, TimeSpan.Zero);
         var otherDate = new DateOnly(2025, 1, 10);
+
         var dailyAggregates = new List<DailyTradeAggregate>
         {
             new(symbolId, otherDate, 100m, 100m, 100m, 500m),
         };
+
         var data = BacktestData.FromRaw(market, [], dailyAggregates);
 
         // Act
@@ -71,10 +75,12 @@ public sealed class BacktestDataTests
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
         var currentDate = DateTimeOffset.UtcNow;
         var dateOnly = DateOnly.FromDateTime(currentDate.UtcDateTime);
+
         var dailyAggregates = new List<DailyTradeAggregate>
         {
             new(otherSymbolId, dateOnly, 100m, 100m, 100m, 500m),
         };
+
         var data = BacktestData.FromRaw(market, [], dailyAggregates);
 
         // Act
@@ -93,6 +99,7 @@ public sealed class BacktestDataTests
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
         var asOfDate = DateTimeOffset.UtcNow;
         var dateOnly = DateOnly.FromDateTime(asOfDate.UtcDateTime);
+
         var dailyAggregates = Enumerable
             .Range(0, 30)
             .Select(i => new DailyTradeAggregate(
@@ -178,6 +185,7 @@ public sealed class BacktestDataTests
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
         var endDate = DateTimeOffset.UtcNow;
         var endDateOnly = DateOnly.FromDateTime(endDate.UtcDateTime);
+
         var dailyAggregates = Enumerable
             .Range(0, 100)
             .Select(i => new DailyTradeAggregate(
@@ -215,6 +223,7 @@ public sealed class BacktestDataTests
         var market = Market.Create(marketId, "Test Market", new Taxes(null));
         var endDate = DateTimeOffset.UtcNow;
         var endDateOnly = DateOnly.FromDateTime(endDate.UtcDateTime);
+
         var dailyAggregates = Enumerable
             .Range(0, 100)
             .Select(i => new DailyTradeAggregate(
@@ -226,6 +235,7 @@ public sealed class BacktestDataTests
                 1000m
             ))
             .ToList();
+
         var data = BacktestData.FromRaw(market, [], dailyAggregates);
 
         // Act
@@ -234,5 +244,98 @@ public sealed class BacktestDataTests
         // Assert
         result.Count.ShouldBe(100);
         result[^1].Date.ShouldBe(endDateOnly);
+    }
+
+    [Fact]
+    public void GetTypicalDailyVolume_WhenSymbolTradesOnFewDays_CountsMissingDaysAsZero()
+    {
+        // Arrange
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var market = Market.Create(_fixture.Create<Id<Market>>(), "Test Market", new Taxes(null));
+        var currentDate = new DateTimeOffset(2026, 1, 20, 0, 0, 0, TimeSpan.Zero);
+        var day = DateOnly.FromDateTime(currentDate.UtcDateTime);
+
+        var dailyAggregates = new List<DailyTradeAggregate>
+        {
+            new(symbolId, day.AddDays(-5), 100m, 100m, 100m, 1000m),
+            new(symbolId, day.AddDays(-2), 100m, 100m, 100m, 1000m),
+            new(symbolId, day, 100m, 100m, 100m, 50_000m),
+        };
+
+        var data = BacktestData.FromRaw(market, [], dailyAggregates);
+
+        // Act
+        var result = data.GetTypicalDailyVolume(symbolId, currentDate);
+
+        // Assert
+        result.ShouldBe(0m);
+    }
+
+    [Fact]
+    public void GetTypicalDailyVolume_ExcludesCurrentDay()
+    {
+        // Arrange
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var market = Market.Create(_fixture.Create<Id<Market>>(), "Test Market", new Taxes(null));
+        var currentDate = new DateTimeOffset(2026, 1, 20, 0, 0, 0, TimeSpan.Zero);
+        var dailyAggregates = BacktestTestData.History(symbolId, currentDate, 100m, 200m);
+
+        dailyAggregates.Add(
+            new DailyTradeAggregate(
+                symbolId,
+                DateOnly.FromDateTime(currentDate.UtcDateTime),
+                100m,
+                100m,
+                100m,
+                50_000m
+            )
+        );
+
+        var data = BacktestData.FromRaw(market, [], dailyAggregates);
+
+        // Act
+        var result = data.GetTypicalDailyVolume(symbolId, currentDate);
+
+        // Assert
+        result.ShouldBe(200m);
+    }
+
+    [Theory]
+    [InlineData(1000, 200, 50)]
+    [InlineData(100, 200, 25)]
+    [InlineData(0, 200, 0)]
+    public void GetFillCap_UsesSmallerOfTodayAndTypicalVolume(
+        int todayVolume,
+        int typicalVolume,
+        int expectedCap
+    )
+    {
+        // Arrange
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var market = Market.Create(_fixture.Create<Id<Market>>(), "Test Market", new Taxes(null));
+        var currentDate = new DateTimeOffset(2026, 1, 20, 0, 0, 0, TimeSpan.Zero);
+        var dailyAggregates = BacktestTestData.History(symbolId, currentDate, 100m, typicalVolume);
+
+        if (todayVolume > 0)
+        {
+            dailyAggregates.Add(
+                new DailyTradeAggregate(
+                    symbolId,
+                    DateOnly.FromDateTime(currentDate.UtcDateTime),
+                    100m,
+                    100m,
+                    100m,
+                    todayVolume
+                )
+            );
+        }
+
+        var data = BacktestData.FromRaw(market, [], dailyAggregates);
+
+        // Act
+        var result = data.GetFillCap(symbolId, currentDate, 0.25m);
+
+        // Assert
+        result.ShouldBe(expectedCap);
     }
 }
