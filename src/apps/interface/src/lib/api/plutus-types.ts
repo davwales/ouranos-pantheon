@@ -332,6 +332,8 @@ export interface Strategy {
   backtestCount: number;
   lastBacktestReturn?: number | null;
   lastBacktestWinRate?: number | null;
+  lastBacktestBudget?: number | null;
+  lastBacktestAt?: string | null;
 }
 
 export type StrategyDetail = {

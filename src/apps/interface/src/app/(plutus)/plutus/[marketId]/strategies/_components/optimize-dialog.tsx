@@ -8,11 +8,13 @@ export function OptimizeDialog({
   marketId,
   open,
   onOpenChange,
+  defaultBudget,
 }: {
   strategyId: string;
   marketId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  defaultBudget?: number;
 }) {
   return (
     <ResponsiveDialog
@@ -26,6 +28,7 @@ export function OptimizeDialog({
         strategyId={strategyId}
         marketId={marketId}
         onDone={() => onOpenChange(false)}
+        defaultBudget={defaultBudget}
       />
     </ResponsiveDialog>
   );

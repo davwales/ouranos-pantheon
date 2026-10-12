@@ -25,6 +25,16 @@ export default function StrategyDetailPage() {
     [strategyId],
   );
   useBreadcrumbLabel(strategyId, strategy.data?.name, strategy.status === "error");
+  const [latestBacktest] = useApi(
+    () =>
+      plutusApi.getAllBacktests(strategyId, {
+        take: 1,
+        sortField: "CreatedAt",
+        sortDirection: "desc",
+      }),
+    [strategyId],
+  );
+  const lastBudget = latestBacktest.data?.items[0]?.budget;
 
   const [isEditing, setIsEditing] = useState(false);
   const [toggling, setToggling] = useState(false);
@@ -123,6 +133,7 @@ export default function StrategyDetailPage() {
         marketId={marketId}
         open={runBacktestOpen}
         onOpenChange={setRunBacktestOpen}
+        defaultBudget={lastBudget}
       />
 
       <OptimizeDialog
@@ -130,6 +141,7 @@ export default function StrategyDetailPage() {
         marketId={marketId}
         open={optimizeOpen}
         onOpenChange={setOptimizeOpen}
+        defaultBudget={lastBudget}
       />
     </div>
   );
