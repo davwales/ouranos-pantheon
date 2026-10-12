@@ -26,8 +26,12 @@ Concepts that apply across all modules. Most are implemented in the shared kerne
   the `field:op:value` filter language, parsed once in the kernel and reused by most list
   endpoints. A few lists support only part of the contract; the Bruno collection shows
   each endpoint's parameters.
-- **Step pipeline**: `IStep`/`StepRegistry` abstractions compose the backtest execution
-  pipeline via the chain of responsibility pattern
+- **Step pipeline**: `IStep`/`StepRegistry` abstractions in the kernel compose a chain of
+  responsibility pipeline. Backtests no longer use it; strategy simulators are plain classes
+  (see [Section 6.5](06-runtime-view.md))
+- **Polymorphic JSON columns**: a configuration whose shape depends on a discriminator (e.g.
+  `StrategyConfiguration` by `mode`) is one `jsonb` column via `HasJsonConversion`, stored in
+  the same camelCase, string-enum shape the API uses; adding a field needs no migration
 - **Shared Algorithms**: some generic algorithms (`Algorithms/`) have been implemented in the shared kernel for use in various features (e.g., the genetic algorithms used in strategy optimization)
 
 ## 8.3 Persistence

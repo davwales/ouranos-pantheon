@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RestartBacktest.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application;
 using Wolverine;
@@ -49,7 +50,14 @@ public sealed class RestartBacktestHandler
         backtest.Restart();
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        await _bus.PublishAsync(new RunBacktestMessage(backtest.Id));
+        if (backtest.Kind == BacktestKind.Optimization)
+        {
+            await _bus.PublishAsync(new OptimizeStrategyMessage(backtest.Id));
+        }
+        else
+        {
+            await _bus.PublishAsync(new RunBacktestMessage(backtest.Id));
+        }
 
         _logger.LogDebug("Successfully restarted backtest '{backtestId}'.", backtest.Id);
         return new RestartBacktestResponse(backtest.Id, backtest.Status);

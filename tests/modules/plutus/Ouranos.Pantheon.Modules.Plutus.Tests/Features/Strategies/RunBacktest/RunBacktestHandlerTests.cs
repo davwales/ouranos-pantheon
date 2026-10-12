@@ -5,6 +5,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Wolverine;
@@ -14,7 +15,7 @@ namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Strategies.RunBacktest;
 
 public sealed class RunBacktestHandlerTests
 {
-    private readonly IFixture _fixture = new Fixture();
+    private readonly Fixture _fixture = new();
     private readonly RunBacktestHandler _handler;
     private readonly ILogger<RunBacktestHandler> _logger = Substitute.For<
         ILogger<RunBacktestHandler>
@@ -35,14 +36,45 @@ public sealed class RunBacktestHandlerTests
         // Arrange
         await using var setupContext = await _dbContextFactory.CreateDbContextAsync();
         var marketId = _fixture.Create<Id<Market>>();
-        var strategy = Strategy.Create(
+        var strategy = Strategy.Create(marketId, "Test", null, StrategyTestFactory.Swing());
+        await setupContext.Strategies.AddAsync(strategy);
+        await setupContext.SaveChangesAsync();
+
+        var command = new RunBacktestInput(
+            strategy.Id,
             marketId,
-            "Test",
-            null,
-            new TradingConfiguration(),
-            StrategyTestFactory.DefaultWeights(),
-            null
+            DateTimeOffset.UtcNow,
+            DateTimeOffset.UtcNow.AddDays(30),
+            10000m,
+            0.2m,
+            0.07m
         );
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.ShouldBeOfType<RunBacktestResponse>();
+        result.BacktestId.ShouldNotBe(default);
+
+        await using var verifyContext = await _dbContextFactory.CreateDbContextAsync();
+        var backtest = await verifyContext.Backtests.FindAsync(result.BacktestId);
+        backtest.ShouldNotBeNull();
+        backtest.Status.ShouldBe(BacktestStatus.Pending);
+        backtest.StrategyId.ShouldBe(strategy.Id);
+        backtest.Kind.ShouldBe(BacktestKind.Backtest);
+        backtest.RunSettings.ShouldBe(new BacktestRunSettings(0.2m, 0.07m));
+        await _bus.Received(1)
+            .PublishAsync(Arg.Is<RunBacktestMessage>(m => m.BacktestId == result.BacktestId));
+    }
+
+    [Fact]
+    public async Task Handle_WhenRunSettingsOmitted_ShouldPersistDefaults()
+    {
+        // Arrange
+        await using var setupContext = await _dbContextFactory.CreateDbContextAsync();
+        var marketId = _fixture.Create<Id<Market>>();
+        var strategy = Strategy.Create(marketId, "Test", null, StrategyTestFactory.Swing());
         await setupContext.Strategies.AddAsync(strategy);
         await setupContext.SaveChangesAsync();
 
@@ -58,14 +90,16 @@ public sealed class RunBacktestHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        result.ShouldBeOfType<RunBacktestResponse>();
-        result.BacktestId.ShouldNotBe(default);
-
         await using var verifyContext = await _dbContextFactory.CreateDbContextAsync();
         var backtest = await verifyContext.Backtests.FindAsync(result.BacktestId);
         backtest.ShouldNotBeNull();
-        backtest.Status.ShouldBe(BacktestStatus.Pending);
-        backtest.StrategyId.ShouldBe(strategy.Id);
+        backtest.RunSettings.VolumeParticipationRate.ShouldBe(
+            BacktestDataOptions.DefaultVolumeParticipationRate
+        );
+        backtest.RunSettings.SlippageMultiplier.ShouldBe(
+            BacktestDataOptions.DefaultSlippageMultiplier
+        );
+        backtest.RunSettings.Optimization.ShouldBeNull();
     }
 
     [Fact]
@@ -85,6 +119,7 @@ public sealed class RunBacktestHandlerTests
 
         // Assert
         await run.ShouldThrowAsync<Exception>();
+        await _bus.DidNotReceiveWithAnyArgs().PublishAsync(default(RunBacktestMessage));
     }
 
     [Fact]

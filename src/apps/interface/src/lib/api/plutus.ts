@@ -31,10 +31,14 @@ export type {
   BacktestKind,
   InputKind,
   InputWeight,
-  InputThresholds,
-  TradingConfiguration,
+  SwingConfiguration,
+  FlipConfiguration,
+  StrategyConfiguration,
+  StrategyMode,
   Strategy,
   StrategyDetail,
+  CreateStrategyRequest,
+  UpdateStrategyRequest,
   BacktestSummary,
   BacktestPosition,
   BacktestResults,
@@ -88,9 +92,8 @@ import type {
   Position,
   ClosePositionResponse,
   PageParams,
-  TradingConfiguration,
-  InputWeight,
-  InputThresholds,
+  CreateStrategyRequest,
+  UpdateStrategyRequest,
   PositionSide,
   PositionStatus,
   SymbolAnalystContext,
@@ -298,37 +301,11 @@ export const plutusApi = {
   getStrategy: (strategyId: string) =>
     api.get<StrategyDetail>(`/api/plutus/strategies/${strategyId}`),
 
-  createStrategy: (input: {
-    marketId: string;
-    name: string;
-    description?: string | null;
-    tradingConfiguration: TradingConfiguration;
-    inputWeights: InputWeight[];
-    thresholds?: InputThresholds | null;
-  }) => {
-    const { tradingConfiguration, ...rest } = input;
-    return api.post<IdResponse>("/api/plutus/strategies", {
-      ...rest,
-      configuration: tradingConfiguration,
-    });
-  },
+  createStrategy: (input: CreateStrategyRequest) =>
+    api.post<IdResponse>("/api/plutus/strategies", input),
 
-  updateStrategy: (
-    strategyId: string,
-    input: {
-      name: string;
-      description?: string | null;
-      tradingConfiguration: TradingConfiguration;
-      inputWeights: InputWeight[];
-      thresholds?: InputThresholds | null;
-    },
-  ) => {
-    const { tradingConfiguration, ...rest } = input;
-    return api.put<IdResponse>(`/api/plutus/strategies/${strategyId}`, {
-      ...rest,
-      configuration: tradingConfiguration,
-    });
-  },
+  updateStrategy: (strategyId: string, input: UpdateStrategyRequest) =>
+    api.put<IdResponse>(`/api/plutus/strategies/${strategyId}`, input),
 
   deleteStrategy: (strategyId: string) =>
     api.del<IdResponse>(`/api/plutus/strategies/${strategyId}`),

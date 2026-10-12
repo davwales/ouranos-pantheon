@@ -16,35 +16,6 @@ public sealed class StrategyEntityConfiguration : IEntityTypeConfiguration<Strat
         builder.HasOne(s => s.Market).WithMany().HasForeignKey(s => s.MarketId);
         builder.HasIndex(s => s.MarketId);
 
-        builder.OwnsOne(
-            s => s.TradingConfiguration,
-            config =>
-            {
-                config.Property(c => c.MaxPositions);
-                config.Property(c => c.MaxPositionPercent).HasPrecision(18, 6);
-                config.Property(c => c.HoldPeriodDays);
-            }
-        );
-
-        builder.OwnsOne(
-            s => s.Thresholds,
-            config =>
-            {
-                config.Property(t => t.BuyThreshold).HasPrecision(18, 6);
-                config.Property(t => t.SellThreshold).HasPrecision(18, 6);
-            }
-        );
-
-        builder.OwnsMany(
-            s => s.InputWeights,
-            w =>
-            {
-                w.Property(x => x.Kind).HasConversion<int>();
-                w.Property(x => x.Weight).HasPrecision(18, 6);
-                w.HasIndex("StrategyId", "Kind").IsUnique();
-            }
-        );
-
-        builder.Navigation(s => s.InputWeights);
+        builder.Property(s => s.Configuration).HasJsonConversion();
     }
 }

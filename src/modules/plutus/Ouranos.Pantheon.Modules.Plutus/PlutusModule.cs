@@ -48,8 +48,6 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetStrategy;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.OptimizeStrategy;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RestartBacktest;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest;
-using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Steps;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.SetStrategyActive;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.UpdateStrategy;
@@ -73,13 +71,12 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals.Computers;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Executors;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting.Scorers;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Engine;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Flip;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Swing;
 using Ouranos.Pantheon.Modules.Shared.Contract;
-using Ouranos.Pantheon.Modules.Shared.Contract.Application.Pipeline;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres;
 using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets;
@@ -110,11 +107,14 @@ public sealed class PlutusModule : IPantheonModule
             )
             .Configure<BacktestDataOptions>(
                 plutusOptionsSection.GetSection(BacktestDataOptions.SectionName)
+            )
+            .Configure<FlipDataOptions>(
+                plutusOptionsSection.GetSection(FlipDataOptions.SectionName)
             );
 
         ConfigureDataLoaders(builder);
         ConfigureSignalComputers(builder);
-        ConfigureStrategyExecutors(builder);
+        ConfigureStrategyEngines(builder);
         return builder;
     }
 
@@ -269,29 +269,18 @@ public sealed class PlutusModule : IPantheonModule
             .AddSingleton<ISignalComputer, PriceVelocitySignalComputer>();
     }
 
-    private static void ConfigureStrategyExecutors(IHostApplicationBuilder builder)
+    private static void ConfigureStrategyEngines(IHostApplicationBuilder builder)
     {
         builder
-            .Services.AddSingleton<IStrategyExecutor, StrategyExecutor>()
-            .AddSingleton<ISignalScoringService, SignalScoringService>()
-            .AddSingleton<IInputScorer, TaxAdjustedRoiInputScorer>()
-            .AddSingleton<IInputScorer, VolumeAnomalyInputScorer>()
-            .AddSingleton<IInputScorer, TrendMomentumInputScorer>()
-            .AddSingleton<IInputScorer, BollingerBandsInputScorer>()
-            .AddSingleton<IInputScorer, RsiInputScorer>()
-            .AddSingleton<IInputScorer, MovingAverageCrossoverInputScorer>()
-            .AddSingleton<IInputScorer, PriceVelocityInputScorer>()
-            .AddSingleton<IBacktestDataQueryService, BacktestDataQueryService>()
-            .AddSingleton<BacktestRecovery>()
-            .AddScoped<IStep<BacktestPayload>, InitializeStep>()
-            .AddScoped<IStep<BacktestPayload>, CloseExitsStep>()
-            .AddScoped<IStep<BacktestPayload>, ScoreSymbolsStep>()
-            .AddScoped<IStep<BacktestPayload>, BuyCandidatesStep>()
-            .AddScoped<IStep<BacktestPayload>, TrackMetricsStep>()
-            .AddScoped<IStep<BacktestPayload>, LiquidateStep>()
-            .AddScoped<IStep<BacktestPayload>, ComputeResultsStep>()
-            .AddScoped<IStep<BacktestPayload>, IterationSetupStep>()
-            .AddScoped<IStepRegistry<BacktestPayload>, StepRegistry<BacktestPayload>>();
+            .Services.AddSingleton<ISwingDataQueryService, SwingDataQueryService>()
+            .AddSingleton<IFlipDataQueryService, FlipDataQueryService>()
+            .AddSingleton<SwingSignalReconstructor>()
+            .AddSingleton<IStrategyEngine, SwingEngine>()
+            .AddSingleton<IStrategyEngine, FlipEngine>()
+            .AddSingleton<StrategyEngines>()
+            .AddSingleton<StrategyOptimizer>()
+            .AddSingleton<BacktestJobRunner>()
+            .AddSingleton<BacktestRecovery>();
     }
 
     private static void ConfigureDataLoaders(IHostApplicationBuilder builder)

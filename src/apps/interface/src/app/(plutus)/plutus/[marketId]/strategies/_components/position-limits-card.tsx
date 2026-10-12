@@ -1,14 +1,14 @@
 import { NumericInput } from "@/components/shared/numeric-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { type TradingConfiguration } from "@/lib/api/plutus";
+import { type SwingConfiguration } from "@/lib/api/plutus";
 
 type PositionLimitsCardProps = {
-  tradingConfiguration: TradingConfiguration;
-  onChange: (next: TradingConfiguration) => void;
+  configuration: SwingConfiguration;
+  onChange: (next: SwingConfiguration) => void;
 };
 
 export function PositionLimitsCard({
-  tradingConfiguration,
+  configuration,
   onChange,
 }: PositionLimitsCardProps) {
   return (
@@ -20,25 +20,18 @@ export function PositionLimitsCard({
         <NumericInput
           label="Max Positions"
           hint="Maximum number of simultaneous positions"
-          value={tradingConfiguration.maxPositions}
-          onChange={(v) =>
-            onChange({
-              ...tradingConfiguration,
-              maxPositions: v ?? 0,
-            })
-          }
+          placeholder="Unlimited"
+          value={configuration.maxPositions}
+          onChange={(v) => onChange({ ...configuration, maxPositions: v })}
           min={1}
           step={1}
         />
         <NumericInput
           label="Max Position Percent"
           hint="Max budget allocation per position (0-1)"
-          value={tradingConfiguration.maxPositionPercent}
+          value={configuration.maxPositionPercent}
           onChange={(v) =>
-            onChange({
-              ...tradingConfiguration,
-              maxPositionPercent: v ?? 0,
-            })
+            onChange({ ...configuration, maxPositionPercent: v })
           }
           min={0.01}
           max={1}
@@ -47,13 +40,9 @@ export function PositionLimitsCard({
         <NumericInput
           label="Hold Period Days"
           hint="Maximum days to hold a position"
-          value={tradingConfiguration.holdPeriodDays}
-          onChange={(v) =>
-            onChange({
-              ...tradingConfiguration,
-              holdPeriodDays: v ?? 0,
-            })
-          }
+          placeholder="Unlimited"
+          value={configuration.holdPeriodDays}
+          onChange={(v) => onChange({ ...configuration, holdPeriodDays: v })}
           min={1}
           step={1}
         />

@@ -294,16 +294,33 @@ export interface InputWeight {
   weight: number;
 }
 
-export interface InputThresholds {
+export type SwingConfiguration = {
+  mode: "Swing";
+  inputWeights: InputWeight[];
   buyThreshold?: number | null;
   sellThreshold?: number | null;
-}
+  maxPositions?: number | null;
+  maxPositionPercent?: number | null;
+  holdPeriodDays?: number | null;
+};
 
-export interface TradingConfiguration {
-  maxPositions: number;
+export type FlipConfiguration = {
+  mode: "Flip";
+  checkInHours: number;
+  maxOpenOrders: number;
+  lookbackHours: number;
+  bidOffset: number;
+  askOffset: number;
+  minMargin: number;
+  maxHoldHours: number;
   maxPositionPercent: number;
-  holdPeriodDays: number;
-}
+  maxPriceMove: number;
+  minPrice: number;
+};
+
+export type StrategyConfiguration = SwingConfiguration | FlipConfiguration;
+
+export type StrategyMode = StrategyConfiguration["mode"];
 
 export interface Strategy {
   id: string;
@@ -317,18 +334,29 @@ export interface Strategy {
   lastBacktestWinRate?: number | null;
 }
 
-export interface StrategyDetail {
+export type StrategyDetail = {
   id: string;
   marketId: string;
   name: string;
   description?: string | null;
-  tradingConfiguration: TradingConfiguration;
-  inputWeights: InputWeight[];
-  thresholds: InputThresholds;
+  configuration: StrategyConfiguration;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
-}
+};
+
+export type CreateStrategyRequest = {
+  marketId: string;
+  name: string;
+  description?: string | null;
+  configuration: StrategyConfiguration;
+};
+
+export type UpdateStrategyRequest = {
+  name: string;
+  description?: string | null;
+  configuration: StrategyConfiguration;
+};
 
 export interface BacktestSummary {
   id: string;
@@ -357,7 +385,7 @@ export interface BacktestPosition {
   exitTime: string;
 }
 
-export interface BacktestResults {
+export type BacktestResults = {
   totalReturn: number;
   totalReturnPercent: number;
   maxDrawdown: number;
@@ -379,10 +407,8 @@ export interface BacktestResults {
   turnoverRate: number;
   isValidated: boolean;
   outSampleResults: BacktestResults | null;
-  optimizedConfiguration?: TradingConfiguration | null;
-  optimizedInputWeights?: InputWeight[] | null;
-  optimizedThresholds?: InputThresholds | null;
-}
+  optimizedConfiguration?: StrategyConfiguration | null;
+};
 
 export interface BacktestDetail {
   id: string;
@@ -427,6 +453,10 @@ export interface StrategyRecommendation {
   typicalDailyVolume: number;
   limitedBy: PositionLimit;
   rationale: string;
+  buyPrice?: number | null;
+  sellPrice?: number | null;
+  netMargin?: number | null;
+  expectedProfit?: number | null;
 }
 
 export type PositionLimit = "Budget" | "Liquidity" | "BuyLimit";

@@ -1,53 +1,66 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  type InputKind,
-  type InputThresholds,
-  type InputWeight,
+  type FlipConfiguration,
+  type StrategyConfiguration,
   type StrategyDetail,
-  type TradingConfiguration,
+  type StrategyMode,
+  type SwingConfiguration,
   plutusApi,
 } from "@/lib/api/plutus";
 import { RefreshCw } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
-import {
-  INPUT_KINDS,
-  THRESHOLD_FIELDS,
-} from "./strategy-constants";
+import { useState } from "react";
+import { DEFAULT_FLIP_CONFIGURATION } from "./flip-constants";
+import { FlipSettingsCard } from "./flip-settings-card";
 import { StrategyBasicInfoCard } from "./strategy-basic-info-card";
-import { PositionLimitsCard } from "./position-limits-card";
-import { InputWeightsSection } from "./input-weights-section";
-import { ThresholdsSection } from "./thresholds-section";
+import { StrategyModeCard } from "./strategy-mode-card";
+import { SwingConfigForm } from "./swing-config-form";
+import {
+  DEFAULT_SWING_CONFIGURATION,
+  withAllInputKinds,
+  withoutZeroWeights,
+} from "./swing-constants";
 
-type ThresholdState = Record<keyof InputThresholds, number | null>;
-type WeightState = Record<InputKind, number>;
-
-const DEFAULT_TRADING_CONFIGURATION: TradingConfiguration = {
-  maxPositions: 10,
-  maxPositionPercent: 0.2,
-  holdPeriodDays: 7,
+type ConfigurationDrafts = {
+  Swing: SwingConfiguration;
+  Flip: FlipConfiguration;
 };
 
-function buildInitialWeights(strategy?: StrategyDetail): WeightState {
-  const weights: WeightState = Object.fromEntries(
-    INPUT_KINDS.map((kind) => [kind, 1]),
-  ) as WeightState;
-  if (strategy) {
-    for (const inputWeight of strategy.inputWeights) {
-      weights[inputWeight.kind] = inputWeight.weight;
-    }
+function buildInitialDrafts(
+  configuration?: StrategyConfiguration,
+): ConfigurationDrafts {
+  const drafts: ConfigurationDrafts = {
+    Swing: DEFAULT_SWING_CONFIGURATION,
+    Flip: DEFAULT_FLIP_CONFIGURATION,
+  };
+  if (configuration?.mode === "Swing") {
+    drafts.Swing = withAllInputKinds(configuration);
+  } else if (configuration?.mode === "Flip") {
+    drafts.Flip = configuration;
   }
-  return weights;
+  return drafts;
 }
 
-function buildInitialThresholds(strategy?: StrategyDetail): ThresholdState {
-  const t = strategy?.thresholds ?? {};
-  return Object.fromEntries(
-    THRESHOLD_FIELDS.map((field) => [field.key, t[field.key] ?? null]),
-  ) as ThresholdState;
+function toRequestConfiguration(
+  configuration: StrategyConfiguration,
+): StrategyConfiguration {
+  return configuration.mode === "Swing"
+    ? withoutZeroWeights(configuration)
+    : configuration;
+}
+
+function validateConfiguration(
+  configuration: StrategyConfiguration,
+): string | null {
+  if (
+    configuration.mode === "Swing" &&
+    configuration.inputWeights.length === 0
+  ) {
+    return "At least one input weight must be non-zero";
+  }
+  return null;
 }
 
 export function StrategyConfigForm({
@@ -72,54 +85,47 @@ export function StrategyConfigForm({
   const [description, setDescription] = useState(
     initialStrategy?.description ?? "",
   );
-  const [tradingConfiguration, setTradingConfiguration] =
-    useState<TradingConfiguration>(
-      initialStrategy?.tradingConfiguration ?? DEFAULT_TRADING_CONFIGURATION,
-    );
-  const [weights, setWeights] = useState<WeightState>(() =>
-    buildInitialWeights(initialStrategy),
+  const [strategyMode, setStrategyMode] = useState<StrategyMode>(
+    initialStrategy?.configuration.mode ?? "Swing",
   );
-  const [thresholds, setThresholds] = useState<ThresholdState>(() =>
-    buildInitialThresholds(initialStrategy),
+  const [drafts, setDrafts] = useState<ConfigurationDrafts>(() =>
+    buildInitialDrafts(initialStrategy?.configuration),
   );
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleWeightsChange = useCallback((next: WeightState) => {
-    setWeights(next);
+  const handleModeChange = (next: StrategyMode) => {
+    setStrategyMode(next);
     setError(null);
-  }, []);
+  };
+
+  const handleSwingChange = (swing: SwingConfiguration) => {
+    setDrafts((current) => ({ ...current, Swing: swing }));
+    setError(null);
+  };
+
+  const handleFlipChange = (flip: FlipConfiguration) => {
+    setDrafts((current) => ({ ...current, Flip: flip }));
+    setError(null);
+  };
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
     setIsProcessing(true);
     setError(null);
     try {
-      const inputWeights: InputWeight[] = INPUT_KINDS.map((kind) => ({
-        kind,
-        weight: weights[kind],
-      })).filter((w) => w.weight !== 0);
-
-      if (inputWeights.length === 0) {
-        setError("At least one input weight must be non-zero");
+      const configuration = toRequestConfiguration(drafts[strategyMode]);
+      const validationError = validateConfiguration(configuration);
+      if (validationError) {
+        setError(validationError);
         return;
-      }
-
-      const cleanedThresholds: InputThresholds = {};
-      for (const field of THRESHOLD_FIELDS) {
-        const value = thresholds[field.key];
-        if (value != null) {
-          cleanedThresholds[field.key] = value;
-        }
       }
 
       if (isEdit && strategyId) {
         await plutusApi.updateStrategy(strategyId, {
           name: name.trim(),
           description: description.trim() || null,
-          tradingConfiguration,
-          inputWeights,
-          thresholds: cleanedThresholds,
+          configuration,
         });
         onSuccess?.();
       } else {
@@ -127,16 +133,12 @@ export function StrategyConfigForm({
           marketId,
           name: name.trim(),
           description: description.trim() || null,
-          tradingConfiguration,
-          inputWeights,
-          thresholds: cleanedThresholds,
+          configuration,
         });
         router.replace(`/plutus/${marketId}/strategies/${response.id}`);
       }
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to save strategy",
-      );
+      setError(err instanceof Error ? err.message : "Failed to save strategy");
     } finally {
       setIsProcessing(false);
     }
@@ -157,41 +159,33 @@ export function StrategyConfigForm({
             onNameChange={setName}
             onDescriptionChange={setDescription}
           />
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Input Weights</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <InputWeightsSection weights={weights} onChange={handleWeightsChange} />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Thresholds</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ThresholdsSection
-                thresholds={thresholds}
-                onChange={setThresholds}
-              />
-            </CardContent>
-          </Card>
+          {strategyMode === "Swing" ? (
+            <SwingConfigForm
+              configuration={drafts.Swing}
+              onChange={handleSwingChange}
+            />
+          ) : (
+            <FlipSettingsCard
+              configuration={drafts.Flip}
+              onChange={handleFlipChange}
+            />
+          )}
         </div>
 
         <div className="space-y-6">
-          <PositionLimitsCard
-            tradingConfiguration={tradingConfiguration}
-            onChange={setTradingConfiguration}
-          />
+          <StrategyModeCard mode={strategyMode} onChange={handleModeChange} />
         </div>
       </div>
 
       <div className="flex items-center justify-end gap-3">
         {isProcessing && <RefreshCw className="animate-spin size-4" />}
         {onCancel && (
-          <Button type="button" variant="outline" onClick={onCancel} disabled={isProcessing}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            disabled={isProcessing}
+          >
             Cancel
           </Button>
         )}

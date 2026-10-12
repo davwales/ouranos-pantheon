@@ -1,0 +1,40 @@
+info:
+  name: Create Flip
+  type: http
+  seq: 14
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/plutus/strategies"
+  params:
+    - name: ""
+      value: ""
+      type: query
+  body:
+    type: json
+    data: |-
+      {
+        "marketId": "{{MARKET_ID}}",
+        "name": "Bruno Flip",
+        "description": "Flip strategy created from Bruno",
+        "configuration": {
+          "mode": "Flip",
+          "checkInHours": 8,
+          "maxOpenOrders": 8,
+          "lookbackHours": 24,
+          "bidOffset": 0,
+          "askOffset": 0,
+          "minMargin": 0.03,
+          "maxHoldHours": 72,
+          "maxPositionPercent": 0.125,
+          "maxPriceMove": 0.1,
+          "minPrice": 0
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

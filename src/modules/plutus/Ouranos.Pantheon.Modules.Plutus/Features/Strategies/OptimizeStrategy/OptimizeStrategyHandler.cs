@@ -71,26 +71,25 @@ public sealed class OptimizeStrategyHandler
             command.StartDate,
             command.EndDate,
             command.Budget,
-            strategy,
-            BacktestKind.Optimization
+            new BacktestRunSettings(
+                command.VolumeParticipationRate
+                    ?? BacktestDataOptions.DefaultVolumeParticipationRate,
+                command.SlippageMultiplier ?? BacktestDataOptions.DefaultSlippageMultiplier,
+                new OptimizationSettings(
+                    command.Generations,
+                    command.PopulationSize,
+                    command.DrawdownWeight,
+                    command.OutSampleRatio,
+                    command.MinTradesPerMonth
+                )
+            ),
+            strategy
         );
 
         await dbContext.Backtests.AddAsync(backtest, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        await _bus.PublishAsync(
-            new OptimizeStrategyMessage(
-                backtest.Id,
-                (uint)command.Generations,
-                (uint)command.PopulationSize,
-                command.DrawdownWeight,
-                command.OutSampleRatio,
-                command.VolumeParticipationRate
-                    ?? BacktestDataOptions.DefaultVolumeParticipationRate,
-                command.SlippageMultiplier ?? BacktestDataOptions.DefaultSlippageMultiplier,
-                command.MinTradesPerMonth
-            )
-        );
+        await _bus.PublishAsync(new OptimizeStrategyMessage(backtest.Id));
 
         _logger.LogDebug(
             "Successfully handled optimize strategy command. Backtest ID: '{backtestId}'.",

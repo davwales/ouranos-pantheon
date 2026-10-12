@@ -4,6 +4,8 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetStrategy.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Flip;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Swing;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
@@ -12,7 +14,7 @@ namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Strategies.GetStrategy;
 
 public sealed class GetStrategyHandlerTests
 {
-    private readonly IFixture _fixture = new Fixture();
+    private readonly Fixture _fixture = new();
     private readonly GetStrategyHandler _handler;
     private readonly ILogger<GetStrategyHandler> _logger = Substitute.For<
         ILogger<GetStrategyHandler>
@@ -35,9 +37,7 @@ public sealed class GetStrategyHandlerTests
             marketId,
             "Test Strategy",
             "Description",
-            new TradingConfiguration(),
-            StrategyTestFactory.DefaultWeights(),
-            null
+            StrategyTestFactory.Swing()
         );
         await _dbContext.Strategies.AddAsync(strategy);
         await _dbContext.SaveChangesAsync();
@@ -52,6 +52,28 @@ public sealed class GetStrategyHandlerTests
         result.Name.ShouldBe("Test Strategy");
         result.Description.ShouldBe("Description");
         result.IsActive.ShouldBeTrue();
+        result
+            .Configuration.ShouldBeOfType<SwingConfiguration>()
+            .InputWeights.ShouldBe(StrategyTestFactory.DefaultWeights());
+    }
+
+    [Fact]
+    public async Task Handle_WhenFlipStrategy_ShouldReturnFlipConfiguration()
+    {
+        // Arrange
+        var configuration = new FlipConfiguration(CheckInHours: 6, MinPrice: 100m);
+        var strategy = Strategy.Create(_fixture.Create<Id<Market>>(), "Flip", null, configuration);
+        await _dbContext.Strategies.AddAsync(strategy);
+        await _dbContext.SaveChangesAsync();
+
+        // Act
+        var result = await _handler.Handle(
+            new GetStrategyInput(strategy.Id),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.Configuration.ShouldBe(configuration);
     }
 
     [Fact]

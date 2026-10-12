@@ -106,7 +106,8 @@ and US equities.
 | `Features/Symbols/AskSymbolAnalyst/` | Streaming Symbol Analyst (`PantheonAssistant<SymbolAnalystContext>`): composes symbol, market, trade, signal, forecast and position data from existing query handlers and answers questions about the symbol via OuranosMl |
 | `Features/Trades/` | Trade queries and aggregate views over the TimescaleDB hypertable and continuous aggregates: all trades, per-symbol/market/recipe trade aggregates, market overview, volume heatmap (see [Section 8](08-crosscutting-concepts.md)) |
 | `Features/Signals/` | Scheduled signal computation via pluggable signal computers covering technical and game-economy indicators, plus signal queries; scheduling in [Section 6](06-runtime-view.md) |
-| `Features/Strategies/` | Configurable strategies (input weights, buy/sell thresholds), backtesting as a step pipeline, genetic-algorithm optimization over multiple objectives, and strategy-driven recommendations; the backtest lifecycle (run, optimize, get, cancel, restart) lives here too |
+| `Features/Strategies/` | Mode-agnostic strategy slices: strategy CRUD, recommendations, and the backtest lifecycle (run, optimize, get, cancel, restart). `BacktestJobRunner` owns every status transition of a queued run; `StrategyOptimizer` is the one genetic-algorithm flow for every mode |
+| `Shared/Domain/Strategies/` | The strategy engines. Each `StrategyMode` (`Swing/`, `Flip/`) is one folder with its configuration, data loader, a pure simulator and an `IStrategyEngine` (load, simulate, parameter space, recommend); `Trading/` holds what the simulators share (holdings, equity curve, market tax rules, result metrics) |
 | `Features/Forecasts/` | Daily ML price forecasts via OuranosMl, forecast queries, and on-demand forecast efficacy |
 | `Features/Positions/` | CRUD for user-recorded positions, including closing and linking a sell to its buy |
 | `Features/SymbolGroups/` | CRUD for named groupings of symbols within a market |

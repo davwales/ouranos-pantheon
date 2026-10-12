@@ -22,6 +22,8 @@ public sealed class Backtest : BaseEntity<Id<Backtest>>
 
     public BacktestKind Kind { get; init; }
 
+    public BacktestRunSettings RunSettings { get; init; } = new();
+
     public BacktestStatus Status { get; private set; } = BacktestStatus.Pending;
 
     public int ProgressPercent { get; private set; }
@@ -44,11 +46,12 @@ public sealed class Backtest : BaseEntity<Id<Backtest>>
         DateTimeOffset startDate,
         DateTimeOffset endDate,
         decimal budget,
-        Strategy? strategy = null,
-        BacktestKind kind = BacktestKind.Backtest
+        BacktestRunSettings runSettings,
+        Strategy? strategy = null
     )
     {
         Guard.Against.NegativeOrZero(budget);
+        Guard.Against.Null(runSettings);
         Guard.Against.InvalidInput(endDate, nameof(endDate), d => d > startDate);
 
         if (strategy is not null)
@@ -63,7 +66,10 @@ public sealed class Backtest : BaseEntity<Id<Backtest>>
             StartDate = startDate.ToUniversalTime(),
             EndDate = endDate.ToUniversalTime(),
             Budget = budget,
-            Kind = kind,
+            Kind = runSettings.Optimization is null
+                ? BacktestKind.Backtest
+                : BacktestKind.Optimization,
+            RunSettings = runSettings,
             _strategy = strategy,
         };
     }
@@ -121,6 +127,8 @@ public sealed class Backtest : BaseEntity<Id<Backtest>>
 
         Results = results;
         Status = BacktestStatus.Completed;
+        ProgressPercent = 100;
+        ProgressMessage = null;
         Update();
         return true;
     }

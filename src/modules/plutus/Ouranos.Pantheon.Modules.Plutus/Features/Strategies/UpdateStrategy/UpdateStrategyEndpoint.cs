@@ -26,9 +26,7 @@ public static class UpdateStrategyEndpoint
             strategyId,
             body.Name,
             body.Description,
-            body.Configuration,
-            body.InputWeights,
-            body.Thresholds
+            body.Configuration
         );
         return Results.Ok(await bus.InvokeAsync<IdResponse<Strategy>>(input, ct));
     }

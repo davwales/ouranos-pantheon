@@ -4,6 +4,8 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.CreateStrategy.Schemas
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Flip;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Swing;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
@@ -31,13 +33,12 @@ public sealed class CreateStrategyHandlerTests
     public async Task Handle_WhenHappyPath_ShouldCreateStrategyAndReturnId()
     {
         // Arrange
+        var configuration = StrategyTestFactory.Swing();
         var command = new CreateStrategyInput(
             new Id<Market>(Guid.NewGuid().ToString()),
             _fixture.Create<string>(),
             _fixture.Create<string>(),
-            new TradingConfiguration(),
-            StrategyTestFactory.DefaultWeights(),
-            null
+            configuration
         );
 
         // Act
@@ -52,6 +53,54 @@ public sealed class CreateStrategyHandlerTests
         strategy.Name.ShouldBe(command.Name);
         strategy.MarketId.ShouldBe(command.MarketId);
         strategy.IsActive.ShouldBeTrue();
+        var swing = strategy.Configuration.ShouldBeOfType<SwingConfiguration>();
+        swing.InputWeights.ShouldBe(configuration.InputWeights);
+    }
+
+    [Fact]
+    public async Task Handle_WhenFlipConfiguration_ShouldPersistFlipConfiguration()
+    {
+        // Arrange
+        var configuration = new FlipConfiguration(
+            CheckInHours: 4,
+            MaxOpenOrders: 6,
+            MinMargin: 0.05m
+        );
+
+        var command = new CreateStrategyInput(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            null,
+            configuration
+        );
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var strategy = await _dbContext.Strategies.FindAsync(result.Id);
+        strategy.ShouldNotBeNull();
+        strategy.Configuration.ShouldBe(configuration);
+        strategy.Configuration.Mode.ShouldBe(StrategyMode.Flip);
+    }
+
+    [Fact]
+    public async Task Handle_WhenSwingConfigurationIsInvalid_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var command = new CreateStrategyInput(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            null,
+            new SwingConfiguration([])
+        );
+
+        // Act
+        var create = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await create.ShouldThrowAsync<ArgumentException>();
+        _dbContext.Strategies.ShouldBeEmpty();
     }
 
     [Fact]
@@ -62,9 +111,7 @@ public sealed class CreateStrategyHandlerTests
             new Id<Market>(Guid.NewGuid().ToString()),
             _fixture.Create<string>(),
             null,
-            new TradingConfiguration(),
-            StrategyTestFactory.DefaultWeights(),
-            null
+            StrategyTestFactory.Swing()
         );
 
         // Act
@@ -84,9 +131,7 @@ public sealed class CreateStrategyHandlerTests
             new Id<Market>(Guid.NewGuid().ToString()),
             _fixture.Create<string>(),
             null,
-            new TradingConfiguration(),
-            StrategyTestFactory.DefaultWeights(),
-            null
+            StrategyTestFactory.Swing()
         );
         var cancellationToken = new CancellationToken(true);
 

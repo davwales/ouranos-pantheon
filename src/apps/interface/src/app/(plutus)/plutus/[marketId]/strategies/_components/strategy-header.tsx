@@ -3,11 +3,11 @@
 import { ConfirmationButton } from "@/components/shared/confirmation-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { type StrategyDetail } from "@/lib/api/plutus";
 import { Activity, Pencil, Play, Sparkles, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { InfoChip } from "./info-chip";
+import { StrategySummaryBadge } from "./strategy-summary-badge";
 
 export function StrategyHeader({
   data,
@@ -32,10 +32,6 @@ export function StrategyHeader({
   onRunBacktest: () => void;
   onOptimize: () => void;
 }) {
-  const activeInputCount = data.inputWeights.filter(
-    (w) => w.weight !== 0,
-  ).length;
-
   return (
     <Card className="border-l-4">
       <CardContent className="pt-6 pb-6">
@@ -50,15 +46,12 @@ export function StrategyHeader({
                   {data.name}
                 </h2>
                 <p className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
-                  <Badge variant="secondary">
-                    {activeInputCount} active input
-                    {activeInputCount === 1 ? "" : "s"}
-                  </Badge>
+                  <StrategySummaryBadge configuration={data.configuration} />
                   <span
                     className={
                       data.isActive
-                        ? "text-green-600 dark:text-green-400 font-medium"
-                        : "text-red-600 dark:text-red-400 font-medium"
+                        ? "text-green-600 font-medium"
+                        : "text-red-600 font-medium"
                     }
                   >
                     {data.isActive ? "Active" : "Inactive"}

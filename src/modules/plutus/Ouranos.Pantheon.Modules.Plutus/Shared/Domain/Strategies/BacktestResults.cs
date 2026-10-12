@@ -1,5 +1,3 @@
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Inputs;
-
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 
 public sealed record BacktestResults(
@@ -24,9 +22,7 @@ public sealed record BacktestResults(
     decimal TurnoverRate,
     bool IsValidated,
     BacktestResults? OutSampleResults,
-    List<InputWeight>? OptimizedInputWeights,
-    InputThresholds? OptimizedThresholds,
-    TradingConfiguration? OptimizedConfiguration
+    StrategyConfiguration? OptimizedConfiguration
 )
 {
     public BacktestResults()
@@ -51,8 +47,6 @@ public sealed record BacktestResults(
             0,
             0,
             false,
-            null,
-            null,
             null,
             null
         ) { }

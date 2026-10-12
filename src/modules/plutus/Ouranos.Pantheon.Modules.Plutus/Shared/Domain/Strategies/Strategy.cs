@@ -1,6 +1,6 @@
 using Ardalis.GuardClauses;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Inputs;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Flip;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 
@@ -12,9 +12,7 @@ public sealed class Strategy : BaseEntity<Id<Strategy>>
         : base(id)
     {
         Name = string.Empty;
-        TradingConfiguration = new TradingConfiguration();
-        InputWeights = [];
-        Thresholds = new InputThresholds();
+        Configuration = new FlipConfiguration();
     }
 
     public Id<Market> MarketId { get; init; }
@@ -23,16 +21,7 @@ public sealed class Strategy : BaseEntity<Id<Strategy>>
 
     public string? Description { get; private set; }
 
-    /// <summary>
-    ///     Weighted vector of every input this strategy blends. At least one entry
-    ///     with a non-zero weight is required for the strategy to produce scores.
-    ///     Weights are relative; the executor normalizes by total weight at score time.
-    /// </summary>
-    public List<InputWeight> InputWeights { get; private set; } = [];
-
-    public InputThresholds Thresholds { get; private set; } = new();
-
-    public TradingConfiguration TradingConfiguration { get; private set; }
+    public StrategyConfiguration Configuration { get; private set; }
 
     public bool IsActive { get; private set; } = true;
 
@@ -43,27 +32,13 @@ public sealed class Strategy : BaseEntity<Id<Strategy>>
         Id<Market> marketId,
         string name,
         string? description,
-        TradingConfiguration tradingConfiguration,
-        List<InputWeight>? inputWeights,
-        InputThresholds? thresholds,
+        StrategyConfiguration configuration,
         Market? market = null
     )
     {
         Guard.Against.NullOrWhiteSpace(name);
-        Guard.Against.Null(tradingConfiguration);
-        Guard.Against.Null(inputWeights);
-        Guard.Against.InvalidInput(
-            inputWeights,
-            nameof(inputWeights),
-            w => w.Any(i => i.Weight != 0m),
-            "Strategy must have at least one input weight with a non-zero weight."
-        );
-        Guard.Against.InvalidInput(
-            inputWeights,
-            nameof(inputWeights),
-            w => w.Select(i => i.Kind).Distinct().Count() == w.Count,
-            "Strategy input weights must not contain duplicate input kinds."
-        );
+        Guard.Against.Null(configuration);
+        configuration.Validate();
 
         if (market is not null)
         {
@@ -75,42 +50,20 @@ public sealed class Strategy : BaseEntity<Id<Strategy>>
             MarketId = marketId,
             Name = name,
             Description = description,
-            TradingConfiguration = tradingConfiguration,
-            InputWeights = inputWeights,
-            Thresholds = thresholds ?? new InputThresholds(),
+            Configuration = configuration,
             _market = market,
         };
     }
 
-    public void Update(
-        string name,
-        string? description,
-        TradingConfiguration tradingConfiguration,
-        List<InputWeight> inputWeights,
-        InputThresholds? thresholds
-    )
+    public void Update(string name, string? description, StrategyConfiguration configuration)
     {
         Guard.Against.NullOrWhiteSpace(name);
-        Guard.Against.Null(tradingConfiguration);
-        Guard.Against.Null(inputWeights);
-        Guard.Against.InvalidInput(
-            inputWeights,
-            nameof(inputWeights),
-            w => w.Any(i => i.Weight != 0m),
-            "Strategy must have at least one input weight with a non-zero weight."
-        );
-        Guard.Against.InvalidInput(
-            inputWeights,
-            nameof(inputWeights),
-            w => w.Select(i => i.Kind).Distinct().Count() == w.Count,
-            "Strategy input weights must not contain duplicate input kinds."
-        );
+        Guard.Against.Null(configuration);
+        configuration.Validate();
 
         Name = name;
         Description = description;
-        TradingConfiguration = tradingConfiguration;
-        InputWeights = inputWeights;
-        Thresholds = thresholds ?? new InputThresholds();
+        Configuration = configuration;
 
         Update();
     }

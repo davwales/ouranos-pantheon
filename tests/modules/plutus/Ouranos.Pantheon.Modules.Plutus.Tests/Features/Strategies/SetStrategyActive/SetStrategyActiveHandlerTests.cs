@@ -12,7 +12,7 @@ namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Strategies.SetStrategyA
 
 public sealed class SetStrategyActiveHandlerTests
 {
-    private readonly IFixture _fixture = new Fixture();
+    private readonly Fixture _fixture = new();
     private readonly SetStrategyActiveHandler _handler;
     private readonly ILogger<SetStrategyActiveHandler> _logger = Substitute.For<
         ILogger<SetStrategyActiveHandler>
@@ -34,10 +34,9 @@ public sealed class SetStrategyActiveHandlerTests
             _fixture.Create<Id<Market>>(),
             "Test",
             null,
-            new TradingConfiguration(),
-            StrategyTestFactory.DefaultWeights(),
-            null
+            StrategyTestFactory.Swing()
         );
+
         await _dbContext.Strategies.AddAsync(strategy);
         await _dbContext.SaveChangesAsync();
 
@@ -60,10 +59,9 @@ public sealed class SetStrategyActiveHandlerTests
             _fixture.Create<Id<Market>>(),
             "Test",
             null,
-            new TradingConfiguration(),
-            StrategyTestFactory.DefaultWeights(),
-            null
+            StrategyTestFactory.Swing()
         );
+
         strategy.SetActive(false);
         await _dbContext.Strategies.AddAsync(strategy);
         await _dbContext.SaveChangesAsync();
