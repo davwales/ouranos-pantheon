@@ -13,5 +13,7 @@ public sealed record GetAllStrategiesResponse(
     DateTimeOffset CreatedAt,
     int BacktestCount,
     decimal? LastBacktestReturn,
-    decimal? LastBacktestWinRate
+    decimal? LastBacktestWinRate,
+    decimal? LastBacktestBudget,
+    DateTimeOffset? LastBacktestAt
 );

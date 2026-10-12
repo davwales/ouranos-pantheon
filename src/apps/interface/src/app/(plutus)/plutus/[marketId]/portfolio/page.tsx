@@ -125,7 +125,7 @@ export default function PortfolioPage() {
   );
 
   const [strategiesState] = useApi(
-    () => plutusApi.getAllStrategies(marketId),
+    () => plutusApi.getAllStrategies(marketId, { take: 100 }),
     [marketId],
   );
 

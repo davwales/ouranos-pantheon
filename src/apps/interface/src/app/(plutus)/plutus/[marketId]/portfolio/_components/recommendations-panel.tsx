@@ -2,12 +2,13 @@
 
 import ResponsiveDataTable from "@/components/shared/responsive-data-table/responsive-data-table";
 import { Typography } from "@/components/shared/typography";
+import { useApi } from "@/hooks/use-api";
 import {
   type Strategy,
   type StrategyRecommendation,
   plutusApi,
 } from "@/lib/api/plutus";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   makeFlipRecommendationColumns,
   makeSwingRecommendationColumns,
@@ -17,11 +18,22 @@ import { RecommendationsToolbar } from "./recommendations-toolbar";
 
 const DEFAULT_BUDGET = 10000;
 
-type RecommendationsState =
-  | { status: "idle" }
+type RecommendationsResultState =
   | { status: "loading" }
   | { status: "success"; data: StrategyRecommendation[]; budget: number }
   | { status: "error"; error: Error };
+
+function findLatestBacktested(strategies: Strategy[]) {
+  return strategies.reduce<Strategy | undefined>((latest, strategy) => {
+    if (!strategy.lastBacktestAt) return latest;
+    if (!latest?.lastBacktestAt) return strategy;
+    return strategy.lastBacktestAt > latest.lastBacktestAt ? strategy : latest;
+  }, undefined);
+}
+
+function budgetFor(strategy: Strategy | undefined) {
+  return strategy?.lastBacktestBudget ?? DEFAULT_BUDGET;
+}
 
 export function RecommendationsPanel({
   marketId,
@@ -36,34 +48,80 @@ export function RecommendationsPanel({
     () => strategies.filter((s) => s.isActive),
     [strategies],
   );
-  const [strategyId, setStrategyId] = useState(activeStrategies[0]?.id ?? "");
-  const [budget, setBudget] = useState(DEFAULT_BUDGET);
-  const [state, setState] = useState<RecommendationsState>({ status: "idle" });
-  const abortRef = useRef<AbortController | null>(null);
 
-  const handleGenerate = useCallback(async () => {
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-    setState({ status: "loading" });
+  if (activeStrategies.length === 0) {
+    return null;
+  }
 
-    try {
+  return (
+    <ActiveRecommendationsPanel
+      marketId={marketId}
+      strategies={activeStrategies}
+      onCreatePosition={onCreatePosition}
+    />
+  );
+}
+
+function ActiveRecommendationsPanel({
+  marketId,
+  strategies,
+  onCreatePosition,
+}: {
+  marketId: string;
+  strategies: Strategy[];
+  onCreatePosition: (symbolId: string, symbolName: string) => void;
+}) {
+  const [strategyId, setStrategyId] = useState(
+    () => (findLatestBacktested(strategies) ?? strategies[0]).id,
+  );
+  const selectedStrategy = strategies.find((s) => s.id === strategyId);
+  const [budget, setBudget] = useState(() => budgetFor(selectedStrategy));
+  const [submittedBudget, setSubmittedBudget] = useState(budget);
+
+  const [apiState, regenerate] = useApi(
+    async () => {
       const result = await plutusApi.getRecommendations(strategyId, {
         marketId,
-        budget,
+        budget: submittedBudget,
       });
-      if (!controller.signal.aborted) {
-        setState({ status: "success", data: result.recommendations, budget });
-      }
-    } catch (error) {
-      if (!controller.signal.aborted) {
-        setState({
-          status: "error",
-          error: error instanceof Error ? error : new Error(String(error)),
-        });
-      }
+      return {
+        strategyId,
+        budget: submittedBudget,
+        recommendations: result.recommendations,
+      };
+    },
+    [strategyId, marketId, submittedBudget],
+  );
+
+  const isCurrent =
+    apiState.data?.strategyId === strategyId &&
+    apiState.data.budget === submittedBudget;
+
+  const state: RecommendationsResultState =
+    apiState.status === "error"
+      ? { status: "error", error: apiState.error }
+      : apiState.status === "success" && isCurrent
+        ? {
+            status: "success",
+            data: apiState.data.recommendations,
+            budget: apiState.data.budget,
+          }
+        : { status: "loading" };
+
+  const handleStrategyChange = (id: string) => {
+    const nextBudget = budgetFor(strategies.find((s) => s.id === id));
+    setStrategyId(id);
+    setBudget(nextBudget);
+    setSubmittedBudget(nextBudget);
+  };
+
+  const handleGenerate = () => {
+    if (budget === submittedBudget) {
+      regenerate();
+    } else {
+      setSubmittedBudget(budget);
     }
-  }, [strategyId, marketId, budget]);
+  };
 
   const recommendations = state.status === "success" ? state.data : [];
   const isFlip = recommendations.some((r) => r.buyPrice != null);
@@ -75,25 +133,24 @@ export function RecommendationsPanel({
     [isFlip, marketId, onCreatePosition],
   );
 
-  if (activeStrategies.length === 0) {
-    return null;
-  }
-
   return (
     <section className="mt-8 space-y-3">
       <Typography variant="h4">Recommendations</Typography>
       <RecommendationsToolbar
-        strategies={activeStrategies}
+        strategies={strategies}
         strategyId={strategyId}
-        onStrategyChange={(id) => {
-          setStrategyId(id);
-          setState({ status: "idle" });
-        }}
+        onStrategyChange={handleStrategyChange}
         budget={budget}
         onBudgetChange={setBudget}
         loading={state.status === "loading"}
         onGenerate={handleGenerate}
       />
+      {selectedStrategy?.lastBacktestAt && (
+        <p className="text-xs text-muted-foreground">
+          Budget defaults to the latest completed backtest (
+          {new Date(selectedStrategy.lastBacktestAt).toLocaleDateString()}).
+        </p>
+      )}
       <RecommendationsResult
         state={state}
         columns={columns}
@@ -108,18 +165,10 @@ function RecommendationsResult({
   columns,
   recommendations,
 }: {
-  state: RecommendationsState;
+  state: RecommendationsResultState;
   columns: ReturnType<typeof makeSwingRecommendationColumns>;
   recommendations: StrategyRecommendation[];
 }) {
-  if (state.status === "idle") {
-    return (
-      <p className="text-sm text-muted-foreground">
-        Pick a strategy and budget, then generate to see what it would buy now.
-      </p>
-    );
-  }
-
   if (state.status === "error") {
     return <p className="text-sm text-destructive">{state.error.message}</p>;
   }

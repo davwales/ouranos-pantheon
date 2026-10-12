@@ -89,21 +89,31 @@ public sealed class GetAllStrategiesHandler
                 LastWinRate = g.OrderByDescending(b => b.CreatedAt)
                     .Select(b => b.Results != null ? b.Results.WinRate : (decimal?)null)
                     .FirstOrDefault(),
+                LastBudget = g.OrderByDescending(b => b.CreatedAt)
+                    .Select(b => (decimal?)b.Budget)
+                    .FirstOrDefault(),
+                LastAt = g.Max(b => (DateTimeOffset?)b.CreatedAt),
             })
             .ToDictionaryAsync(x => x.StrategyId, cancellationToken);
 
         var projected = strategies
-            .Select(s => new GetAllStrategiesResponse(
-                s.Id,
-                s.MarketId,
-                s.Name,
-                s.Description,
-                s.IsActive,
-                s.CreatedAt,
-                backtestSummaries.TryGetValue(s.Id, out var summary) ? summary.Count : 0,
-                backtestSummaries.TryGetValue(s.Id, out var s2) ? s2.LastReturn : null,
-                backtestSummaries.TryGetValue(s.Id, out var s3) ? s3.LastWinRate : null
-            ))
+            .Select(s =>
+            {
+                var summary = backtestSummaries.GetValueOrDefault(s.Id);
+                return new GetAllStrategiesResponse(
+                    s.Id,
+                    s.MarketId,
+                    s.Name,
+                    s.Description,
+                    s.IsActive,
+                    s.CreatedAt,
+                    summary?.Count ?? 0,
+                    summary?.LastReturn,
+                    summary?.LastWinRate,
+                    summary?.LastBudget,
+                    summary?.LastAt
+                );
+            })
             .ToList();
 
         var filtered = projected.AsQueryable().FilterBy(input.Filter, FilterBuilder);

@@ -18,10 +18,12 @@ export function OptimizeForm({
   strategyId,
   marketId,
   onDone,
+  defaultBudget,
 }: {
   strategyId: string;
   marketId: string;
   onDone: () => void;
+  defaultBudget?: number;
 }) {
   const router = useRouter();
   const [startDate, setStartDate] = useState(() => {
@@ -33,7 +35,7 @@ export function OptimizeForm({
     const d = new Date();
     return d.toISOString().split("T")[0];
   });
-  const [budget, setBudget] = useState(10000);
+  const [budget, setBudget] = useState(defaultBudget ?? 10000);
   const [generations, setGenerations] = useState(30);
   const [populationSize, setPopulationSize] = useState(50);
   const [drawdownWeight, setDrawdownWeight] = useState(0.5);
