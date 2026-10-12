@@ -18,5 +18,6 @@ internal sealed record RecommendationData(
     List<Symbol> Symbols,
     List<MarketTradeSnapshot> Snapshots,
     List<Signal> Signals,
-    Dictionary<Id<Symbol>, Dictionary<SignalType, IReadOnlyList<decimal>>> SignalHistory
+    Dictionary<Id<Symbol>, Dictionary<SignalType, IReadOnlyList<decimal>>> SignalHistory,
+    Dictionary<Id<Symbol>, decimal> TypicalDailyVolumes
 );

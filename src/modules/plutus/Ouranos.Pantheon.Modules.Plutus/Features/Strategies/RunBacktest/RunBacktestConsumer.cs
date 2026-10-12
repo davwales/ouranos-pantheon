@@ -115,7 +115,8 @@ public sealed class RunBacktestConsumer : IPantheonHandler<RunBacktestMessage>
                     backtest.Budget,
                     message.VolumeParticipationRate,
                     message.SlippageMultiplier,
-                    LimitWindowsPerDay: _backtestDataOptions.Value.LimitWindowsPerDay
+                    LimitWindowsPerDay: _backtestDataOptions.Value.LimitWindowsPerDay,
+                    MinFillFraction: _backtestDataOptions.Value.MinFillFraction
                 )
             )
             {

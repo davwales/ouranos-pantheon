@@ -1,6 +1,7 @@
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Sizing;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
@@ -22,7 +23,7 @@ public sealed class BacktestData
 
     private const decimal MinutesPerDay = 1440m;
 
-    public const int TypicalVolumeDays = 14;
+    public const int TypicalVolumeDays = LiquidityMath.TypicalVolumeDays;
 
     public Market Market { get; }
     public List<Symbol> Symbols { get; }
@@ -202,15 +203,10 @@ public sealed class BacktestData
         var startDate = endDate.AddDays(-(TypicalVolumeDays - 1));
         var window = SliceAggregates(aggregates, startDate, endDate);
 
-        var volumes = new decimal[TypicalVolumeDays];
-        for (var i = 0; i < window.Count; i++)
-        {
-            volumes[i] = window[i].TotalVolume;
-        }
-
-        Array.Sort(volumes);
-        const int mid = TypicalVolumeDays / 2;
-        return (volumes[mid - 1] + volumes[mid]) / 2m;
+        return LiquidityMath.MedianDailyVolume(
+            window.Select(a => a.TotalVolume),
+            TypicalVolumeDays
+        );
     }
 
     /// <summary>
@@ -225,8 +221,11 @@ public sealed class BacktestData
             return 0m;
         }
 
-        var typicalVolume = GetTypicalDailyVolume(symbolId, date);
-        return Math.Floor(Math.Min(dayVolume, typicalVolume) * participationRate);
+        return LiquidityMath.FillCap(
+            dayVolume,
+            GetTypicalDailyVolume(symbolId, date),
+            participationRate
+        );
     }
 
     /// <summary>

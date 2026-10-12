@@ -1,6 +1,7 @@
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Schemas;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Sizing;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Pipeline;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Steps;
@@ -30,12 +31,15 @@ public sealed class BuyCandidatesStep(ILogger<BuyCandidatesStep> logger) : IStep
             .Where(s =>
                 s.Score > buyThreshold && !payload.Portfolio.OpenPositions.ContainsKey(s.Symbol.Id)
             )
-            .OrderByDescending(s => s.Score)
-            .Take(Math.Max(0, maxPositions - payload.Portfolio.OpenPositions.Count))
-            .ToList();
+            .OrderByDescending(s => s.Score);
 
         foreach (var candidate in candidates)
         {
+            if (payload.Portfolio.OpenPositions.Count >= maxPositions)
+            {
+                break;
+            }
+
             context.CancellationToken.ThrowIfCancellationRequested();
             TryBuyCandidate(candidate, payload, ctx, currentDate, maxPositionPercent);
         }
@@ -57,35 +61,45 @@ public sealed class BuyCandidatesStep(ILogger<BuyCandidatesStep> logger) : IStep
             return;
         }
 
-        var fillCap = ClampToSymbolLimit(
-            candidate,
-            ctx.Data.GetFillCap(
-                candidate.Symbol.Id,
-                currentDate,
-                payload.Parameters.VolumeParticipationRate
-            ),
-            payload.Parameters.LimitWindowsPerDay
+        var buyLimit = candidate.Symbol.AdditionalFields.Limit;
+        if (buyLimit == 0)
+        {
+            _logger.LogWarning(
+                "Skipping strong-signal candidate {SymbolName} (score {Score:F3}) because its per-symbol trade limit is 0.",
+                candidate.Symbol.Name,
+                candidate.Score
+            );
+            return;
+        }
+
+        var positionBudget = payload.Portfolio.Balance * Math.Min(maxPositionPercent, 1m);
+        var fillCap = ctx.Data.GetFillCap(
+            candidate.Symbol.Id,
+            currentDate,
+            payload.Parameters.VolumeParticipationRate
         );
 
-        var maxPositionBudget = Math.Min(
-            payload.Portfolio.Balance * maxPositionPercent,
-            payload.Portfolio.Balance
+        var size = PositionSizer.Size(
+            day.AveragePrice,
+            positionBudget,
+            fillCap,
+            buyLimit,
+            payload.Parameters.LimitWindowsPerDay,
+            payload.Parameters.MinFillFraction
         );
-
-        var volume = Math.Min(Math.Floor(maxPositionBudget / day.AveragePrice), fillCap);
-        if (volume < 1)
+        if (size.Volume < 1)
         {
             return;
         }
 
         var slippage = BacktestMath.ComputeSlippage(
-            volume,
+            size.Volume,
             day.TotalVolume,
             payload.Parameters.SlippageMultiplier
         );
 
         var adjustedBuyPrice = day.AveragePrice * (1 + slippage);
-        volume = Math.Min(volume, Math.Floor(maxPositionBudget / adjustedBuyPrice));
+        var volume = Math.Min(size.Volume, Math.Floor(positionBudget / adjustedBuyPrice));
         if (volume < 1)
         {
             return;
@@ -100,30 +114,5 @@ public sealed class BuyCandidatesStep(ILogger<BuyCandidatesStep> logger) : IStep
             volume,
             currentDate
         );
-    }
-
-    private decimal ClampToSymbolLimit(
-        ScoredSymbol candidate,
-        decimal volume,
-        decimal limitWindowsPerDay
-    )
-    {
-        var symbolLimit = candidate.Symbol.AdditionalFields.Limit;
-        if (!symbolLimit.HasValue)
-        {
-            return volume;
-        }
-
-        if (symbolLimit.Value == 0)
-        {
-            _logger.LogWarning(
-                "Skipping strong-signal candidate {SymbolName} (score {Score:F3}) because its per-symbol trade limit is 0.",
-                candidate.Symbol.Name,
-                candidate.Score
-            );
-            return 0;
-        }
-
-        return Math.Min(volume, Math.Floor(symbolLimit.Value * limitWindowsPerDay));
     }
 }

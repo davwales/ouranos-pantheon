@@ -17,7 +17,5 @@ internal sealed record RecommendationBuildContext(
     decimal TaxRate,
     decimal Limit,
     decimal BuyThreshold,
-    decimal Budget,
-    decimal MaxPositionPercent,
     IStrategyExecutor Executor
 );

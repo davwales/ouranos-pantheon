@@ -5,12 +5,28 @@ namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 ///     How many per-symbol buy-limit windows (e.g. OSRS 4-hour GE limits) a trader realistically
 ///     uses per simulated day.
 /// </param>
-public sealed record BacktestDataOptions(int LookbackDays, decimal LimitWindowsPerDay)
+/// <param name="MinFillFraction">
+///     Smallest share of a position's intended budget a liquidity- or limit-capped fill must reach
+///     for the position to be taken at all.
+/// </param>
+public sealed record BacktestDataOptions(
+    int LookbackDays,
+    decimal LimitWindowsPerDay,
+    decimal MinFillFraction
+)
 {
     public const string SectionName = "BacktestData";
 
     public const decimal DefaultLimitWindowsPerDay = 2m;
 
+    public const decimal DefaultMinFillFraction = 0.1m;
+
+    public const decimal DefaultVolumeParticipationRate = 0.25m;
+
     public BacktestDataOptions()
-        : this(LookbackDays: 30, LimitWindowsPerDay: DefaultLimitWindowsPerDay) { }
+        : this(
+            LookbackDays: 30,
+            LimitWindowsPerDay: DefaultLimitWindowsPerDay,
+            MinFillFraction: DefaultMinFillFraction
+        ) { }
 }

@@ -146,6 +146,10 @@ that could actually have been placed:
   Each fill is capped at the participation rate × min(day volume, trailing 14-day median
   daily volume). Buys are also capped at the symbol's buy limit × `LimitWindowsPerDay`
   (`Ouranos:Plutus:BacktestData`, default 2).
+- **Shared sizing**: backtests and strategy recommendations size positions with the same
+  `PositionSizer` (budget share, liquidity cap, buy limit). A candidate whose capped fill
+  is worth less than `MinFillFraction` (default 10%) of its intended budget is skipped,
+  and the next-best candidate takes the slot.
 - **Price impact**: square-root slippage on the filled volume, capped at 5%.
 - **End of run**: volume the cap could not sell is marked at the last day's minimum price.
   Partial exits accumulate, so each round trip is one closed position.

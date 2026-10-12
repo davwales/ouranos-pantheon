@@ -1,12 +1,15 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetRecommendations.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.RunBacktest.Steps;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Backtesting;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Sizing;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application;
@@ -22,20 +25,24 @@ public sealed class GetRecommendationsHandler
     private readonly PlutusDbContext _dbContext;
     private readonly ILogger<GetRecommendationsHandler> _logger;
     private readonly IStrategyExecutor _executor;
+    private readonly IOptions<BacktestDataOptions> _executionOptions;
 
     public GetRecommendationsHandler(
         ILogger<GetRecommendationsHandler> logger,
         PlutusDbContext dbContext,
-        IStrategyExecutor executor
+        IStrategyExecutor executor,
+        IOptions<BacktestDataOptions> executionOptions
     )
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(dbContext);
         Guard.Against.Null(executor);
+        Guard.Against.Null(executionOptions);
 
         _logger = logger;
         _dbContext = dbContext;
         _executor = executor;
+        _executionOptions = executionOptions;
     }
 
     public async Task<GetRecommendationsResponse> Handle(
@@ -61,7 +68,6 @@ public sealed class GetRecommendationsHandler
         var maxPositions = data.Strategy.TradingConfiguration.MaxPositions ?? int.MaxValue;
         var maxPositionPercent = data.Strategy.TradingConfiguration.MaxPositionPercent ?? 1m;
 
-        var recommendations = new List<StrategyRecommendation>();
         var buildContext = new RecommendationBuildContext(
             data.Snapshots,
             data.Signals,
@@ -71,23 +77,28 @@ public sealed class GetRecommendationsHandler
             taxRate,
             limit,
             buyThreshold,
-            query.Budget,
-            maxPositionPercent,
             _executor
         );
 
+        var candidates = new List<RecommendationCandidate>();
         foreach (var symbol in data.Symbols)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var recommendation = TryBuildRecommendation(buildContext, symbol);
-            if (recommendation is not null)
+            var candidate = TryScoreCandidate(buildContext, symbol);
+            if (candidate is not null)
             {
-                recommendations.Add(recommendation);
+                candidates.Add(candidate);
             }
         }
 
-        var sorted = recommendations.OrderByDescending(r => r.Score).Take(maxPositions).ToList();
+        var sorted = AllocateBudget(
+            candidates.OrderByDescending(c => c.Score),
+            data.TypicalDailyVolumes,
+            query.Budget,
+            maxPositions,
+            maxPositionPercent
+        );
 
         _logger.LogDebug(
             "Successfully handled get recommendations request. {count} recommendations.",
@@ -96,7 +107,7 @@ public sealed class GetRecommendationsHandler
         return new GetRecommendationsResponse(sorted);
     }
 
-    private static StrategyRecommendation? TryBuildRecommendation(
+    private static RecommendationCandidate? TryScoreCandidate(
         RecommendationBuildContext buildContext,
         Symbol symbol
     )
@@ -149,20 +160,74 @@ public sealed class GetRecommendationsHandler
             return null;
         }
 
-        var positionBudget = buildContext.Budget * buildContext.MaxPositionPercent;
-        var volume = Math.Max(1, Math.Floor(positionBudget / currentPrice));
-        var allocation = volume * currentPrice;
-
-        return new StrategyRecommendation(
-            symbol.Id.ToString(),
-            symbol.Name,
-            symbol.Subcode,
+        return new RecommendationCandidate(
+            symbol,
             score.Value,
-            allocation,
             currentPrice,
-            volume,
             BuildRationale(score.Value, symbolSignals, symbolMedium)
         );
+    }
+
+    /// <summary>
+    ///     Walks candidates best-first, sizing each from the budget still unallocated with the
+    ///     same <see cref="PositionSizer" /> the backtest uses, so suggested volumes respect the
+    ///     typical daily volume and per-symbol buy limits and never sum past the budget.
+    ///     Candidates that cannot be meaningfully filled are skipped rather than taking a slot.
+    /// </summary>
+    private List<StrategyRecommendation> AllocateBudget(
+        IEnumerable<RecommendationCandidate> candidates,
+        Dictionary<Id<Symbol>, decimal> typicalDailyVolumes,
+        decimal budget,
+        int maxPositions,
+        decimal maxPositionPercent
+    )
+    {
+        var options = _executionOptions.Value;
+        var remaining = budget;
+        var recommendations = new List<StrategyRecommendation>();
+
+        foreach (var candidate in candidates)
+        {
+            if (recommendations.Count >= maxPositions || remaining <= 0)
+            {
+                break;
+            }
+
+            var typicalVolume = typicalDailyVolumes.GetValueOrDefault(candidate.Symbol.Id);
+            var size = PositionSizer.Size(
+                candidate.Price,
+                Math.Min(budget * maxPositionPercent, remaining),
+                Math.Floor(typicalVolume * BacktestDataOptions.DefaultVolumeParticipationRate),
+                candidate.Symbol.AdditionalFields.Limit,
+                options.LimitWindowsPerDay,
+                options.MinFillFraction
+            );
+
+            if (size.Volume < 1)
+            {
+                continue;
+            }
+
+            var allocation = size.Volume * candidate.Price;
+            remaining -= allocation;
+
+            recommendations.Add(
+                new StrategyRecommendation(
+                    candidate.Symbol.Id.ToString(),
+                    candidate.Symbol.Name,
+                    candidate.Symbol.Subcode,
+                    candidate.Score,
+                    allocation,
+                    candidate.Price,
+                    size.Volume,
+                    typicalVolume,
+                    size.LimitedBy,
+                    candidate.Rationale
+                )
+            );
+        }
+
+        return recommendations;
     }
 
     private static MarketTradeSnapshot? FindPriceSnapshot(
@@ -266,8 +331,90 @@ public sealed class GetRecommendationsHandler
             .ToList();
 
         var signalHistory = await TryLoadSignalHistoryAsync(symbolIds, cancellationToken);
+        var typicalDailyVolumes = await TryLoadTypicalDailyVolumesAsync(
+            symbolIds,
+            snapshots,
+            cancellationToken
+        );
 
-        return new RecommendationData(strategy, market, symbols, snapshots, signals, signalHistory);
+        return new RecommendationData(
+            strategy,
+            market,
+            symbols,
+            snapshots,
+            signals,
+            signalHistory,
+            typicalDailyVolumes
+        );
+    }
+
+    private async Task<Dictionary<Id<Symbol>, decimal>> TryLoadTypicalDailyVolumesAsync(
+        List<Id<Symbol>> symbolIds,
+        List<MarketTradeSnapshot> snapshots,
+        CancellationToken cancellationToken
+    )
+    {
+        try
+        {
+            return await LoadTypicalDailyVolumesAsync(symbolIds, cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogDebug(
+                ex,
+                "Daily volume query failed; falling back to the weekly snapshot average."
+            );
+
+            return snapshots
+                .Where(s => s.TimeFrame == TimeFrame.OneWeek)
+                .GroupBy(s => s.SymbolId)
+                .ToDictionary(g => g.Key, g => g.First().TotalVolume / 7m);
+        }
+    }
+
+    /// <summary>
+    ///     Median daily volume over the last <see cref="LiquidityMath.TypicalVolumeDays" />
+    ///     complete days per symbol, matching the liquidity cap the backtest applies.
+    /// </summary>
+    private async Task<Dictionary<Id<Symbol>, decimal>> LoadTypicalDailyVolumesAsync(
+        List<Id<Symbol>> symbolIds,
+        CancellationToken cancellationToken
+    )
+    {
+        if (symbolIds.Count == 0)
+        {
+            return [];
+        }
+
+        var today = new DateTimeOffset(DateTime.UtcNow.Date, TimeSpan.Zero);
+        var command = RawSqlCommand
+            .FromSql(
+                """
+                SELECT symbol_id, volume
+                FROM plutus.trades_daily
+                WHERE symbol_id = ANY(@symbolIds)
+                  AND bucket >= @from
+                  AND bucket < @to
+                """
+            )
+            .WithIds("@symbolIds", symbolIds)
+            .WithDateTimeOffset("@from", today.AddDays(-LiquidityMath.TypicalVolumeDays))
+            .WithDateTimeOffset("@to", today);
+
+        var rows = await _dbContext.Database.ExecuteQueryAsync<DailyVolumeRow>(
+            command,
+            cancellationToken
+        );
+
+        return rows.GroupBy(r => new Id<Symbol>(r.SymbolId.ToString()))
+            .ToDictionary(
+                g => g.Key,
+                g =>
+                    LiquidityMath.MedianDailyVolume(
+                        g.Select(r => r.Volume),
+                        LiquidityMath.TypicalVolumeDays
+                    )
+            );
     }
 
     private async Task<
