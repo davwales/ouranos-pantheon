@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { plutusApi } from "@/lib/api/plutus";
+import { type StrategyConfiguration, plutusApi } from "@/lib/api/plutus";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
@@ -11,17 +11,21 @@ import {
   DEFAULT_SLIPPAGE_MULTIPLIER,
   DEFAULT_VOLUME_PARTICIPATION_RATE,
 } from "./execution-constants";
+import { LockedFieldsSummary } from "./locked-fields-summary";
 import { OptimizeAdvancedOptions } from "./optimize-advanced-options";
 import { OptimizeBasicOptions } from "./optimize-basic-options";
+import { isFullyLocked } from "./parameter-locks";
 
 export function OptimizeForm({
   strategyId,
   marketId,
+  configuration,
   onDone,
   defaultBudget,
 }: {
   strategyId: string;
   marketId: string;
+  configuration: StrategyConfiguration;
   onDone: () => void;
   defaultBudget?: number;
 }) {
@@ -91,6 +95,7 @@ export function OptimizeForm({
           {error}
         </div>
       )}
+      <LockedFieldsSummary configuration={configuration} />
       <OptimizeBasicOptions
         startDate={startDate}
         onStartDateChange={setStartDate}
@@ -138,7 +143,8 @@ export function OptimizeForm({
           budget < 1 ||
           generations < 1 ||
           populationSize < 2 ||
-          dateInvalid
+          dateInvalid ||
+          isFullyLocked(configuration)
         }
       >
         {isSubmitting ? "Starting..." : "Start Optimization"}

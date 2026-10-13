@@ -287,4 +287,36 @@ public sealed class StrategyOptimizerTests
         // Assert
         await optimize.ShouldThrowAsync<ArgumentNullException>();
     }
+
+    [Fact]
+    public async Task OptimizeAsync_WhenAParameterIsLocked_ShouldKeepItsValueWhileTuningTheRest()
+    {
+        // Arrange
+        var engine = new FakeStrategyEngine { OnSimulate = OpenOrdersDriven };
+
+        var backtest = CreateBacktest(
+            new FlipConfiguration(MaxOpenOrders: 1, MaxHoldHours: 48) with
+            {
+                LockedParameters = ["maxHoldHours"],
+            }
+        );
+
+        // Act
+        var outcome = await _optimizer.OptimizeAsync(
+            engine,
+            engine.Data,
+            backtest,
+            new RecordingRunMonitor()
+        );
+
+        // Assert
+        var optimized = outcome.Results.OptimizedConfiguration.ShouldBeOfType<FlipConfiguration>();
+        optimized.MaxOpenOrders.ShouldBeGreaterThan(1);
+        optimized.MaxHoldHours.ShouldBe(48);
+        optimized.LockedParameters.ShouldBe(["maxHoldHours"]);
+
+        engine
+            .SimulatedConfigurations.Cast<FlipConfiguration>()
+            .ShouldAllBe(c => c.MaxHoldHours == 48);
+    }
 }

@@ -2,6 +2,7 @@ import { NumericInput } from "@/components/shared/numeric-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type SwingConfiguration } from "@/lib/api/plutus";
 import { THRESHOLD_FIELDS } from "./strategy-constants";
+import { SwingLockToggle } from "./swing-lock-toggle";
 
 type ThresholdsCardProps = {
   configuration: SwingConfiguration;
@@ -22,6 +23,14 @@ export function ThresholdsCard({ configuration, onChange }: ThresholdsCardProps)
               id={`threshold-${field.key}`}
               label={field.label}
               hint={field.hint}
+              labelAction={
+                <SwingLockToggle
+                  configuration={configuration}
+                  fieldKey={field.key}
+                  label={field.label}
+                  onChange={onChange}
+                />
+              }
               placeholder={field.placeholder}
               value={configuration[field.key]}
               onChange={(v) => onChange({ ...configuration, [field.key]: v })}

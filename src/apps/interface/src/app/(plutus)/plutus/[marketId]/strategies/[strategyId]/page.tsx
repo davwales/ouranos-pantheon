@@ -139,6 +139,7 @@ export default function StrategyDetailPage() {
       <OptimizeDialog
         strategyId={strategyId}
         marketId={marketId}
+        configuration={data.configuration}
         open={optimizeOpen}
         onOpenChange={setOptimizeOpen}
         defaultBudget={lastBudget}

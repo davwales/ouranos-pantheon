@@ -2,6 +2,8 @@ import { NumericInput } from "@/components/shared/numeric-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type FlipConfiguration } from "@/lib/api/plutus";
 import { FLIP_FIELDS } from "./flip-constants";
+import { LockToggle } from "./lock-toggle";
+import { isLocked, withLock } from "./parameter-locks";
 
 type FlipSettingsCardProps = {
   configuration: FlipConfiguration;
@@ -24,6 +26,24 @@ export function FlipSettingsCard({
               key={field.key}
               label={field.label}
               hint={field.hint}
+              labelAction={
+                <LockToggle
+                  label={field.label}
+                  locked={isLocked(configuration, field.key)}
+                  onToggle={
+                    field.isOptimized
+                      ? () =>
+                          onChange(
+                            withLock(
+                              configuration,
+                              field.key,
+                              !isLocked(configuration, field.key),
+                            ),
+                          )
+                      : undefined
+                  }
+                />
+              }
               value={configuration[field.key]}
               onChange={(v) =>
                 onChange({ ...configuration, [field.key]: v ?? 0 })

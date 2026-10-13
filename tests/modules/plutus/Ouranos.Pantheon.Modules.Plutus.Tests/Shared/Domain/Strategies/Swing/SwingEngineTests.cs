@@ -423,4 +423,35 @@ public sealed class SwingEngineTests
                 )
             );
     }
+
+    [Fact]
+    public void CreateParameterSpace_WhenParametersAreLocked_ShouldKeepThemAtTheSeedValue()
+    {
+        // Arrange
+        var seed = new SwingConfiguration(
+            [
+                new InputWeight(InputKind.SignalRsi, -0.5m),
+                new InputWeight(InputKind.SignalTaxAdjustedRoi, 1.25m),
+            ],
+            MaxPositions: 4
+        ) with
+        {
+            LockedParameters = ["maxPositions", $"weight.{InputKind.SignalRsi}"],
+        };
+
+        var space = _engine.CreateParameterSpace(seed);
+
+        // Act
+        var built = space
+            .Build([.. space.Parameters.Select(p => p.Min)])
+            .ShouldBeOfType<SwingConfiguration>();
+
+        // Assert
+        built.MaxPositions.ShouldBe(4);
+        built.InputWeights.ShouldBe([
+            new InputWeight(InputKind.SignalTaxAdjustedRoi, -3m),
+            new InputWeight(InputKind.SignalRsi, -0.5m),
+        ]);
+        built.LockedParameters.ShouldBe(["maxPositions", "weight.SignalRsi"]);
+    }
 }

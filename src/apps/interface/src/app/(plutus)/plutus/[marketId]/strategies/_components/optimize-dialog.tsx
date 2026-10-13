@@ -1,17 +1,20 @@
 "use client";
 
 import { ResponsiveDialog } from "@/components/shared/responsive-dialog/responsive-dialog";
+import { type StrategyConfiguration } from "@/lib/api/plutus";
 import { OptimizeForm } from "./optimize-form";
 
 export function OptimizeDialog({
   strategyId,
   marketId,
+  configuration,
   open,
   onOpenChange,
   defaultBudget,
 }: {
   strategyId: string;
   marketId: string;
+  configuration: StrategyConfiguration;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultBudget?: number;
@@ -27,6 +30,7 @@ export function OptimizeDialog({
       <OptimizeForm
         strategyId={strategyId}
         marketId={marketId}
+        configuration={configuration}
         onDone={() => onOpenChange(false)}
         defaultBudget={defaultBudget}
       />

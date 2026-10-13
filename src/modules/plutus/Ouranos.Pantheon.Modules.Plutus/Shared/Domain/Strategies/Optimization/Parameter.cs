@@ -6,6 +6,8 @@ namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization;
 /// <param name="IsWhole">Whether only whole numbers are valid.</param>
 public sealed record Parameter(string Key, double Min, double Max, bool IsWhole = false)
 {
+    public bool IsLocked => Min >= Max;
+
     public double Clamp(double value)
     {
         var clamped = Math.Clamp(value, Min, Max);

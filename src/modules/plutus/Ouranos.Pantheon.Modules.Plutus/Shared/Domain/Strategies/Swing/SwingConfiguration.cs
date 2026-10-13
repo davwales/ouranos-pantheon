@@ -40,5 +40,39 @@ public sealed record SwingConfiguration(
             w => w.Select(i => i.Kind).Distinct().Count() == w.Count,
             "Input weights must not contain duplicate input kinds."
         );
+        Guard.Against.InvalidInput(
+            LockedParameters,
+            nameof(LockedParameters),
+            locked => !UnsetFields().Any(locked.Contains),
+            "Only fields with a value can be locked."
+        );
+    }
+
+    private IEnumerable<string> UnsetFields()
+    {
+        if (BuyThreshold is null)
+        {
+            yield return SwingEngine.BuyThreshold.Key;
+        }
+
+        if (SellThreshold is null)
+        {
+            yield return SwingEngine.SellThreshold.Key;
+        }
+
+        if (MaxPositions is null)
+        {
+            yield return SwingEngine.MaxPositions.Key;
+        }
+
+        if (MaxPositionPercent is null)
+        {
+            yield return SwingEngine.MaxPositionPercent.Key;
+        }
+
+        if (HoldPeriodDays is null)
+        {
+            yield return SwingEngine.HoldPeriodDays.Key;
+        }
     }
 }

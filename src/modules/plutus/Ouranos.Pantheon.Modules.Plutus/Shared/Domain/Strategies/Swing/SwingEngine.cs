@@ -16,11 +16,11 @@ public sealed class SwingEngine(
 {
     private const int TopSignalCount = 3;
 
-    private static readonly Parameter MaxPositions = new("maxPositions", 8, 60, IsWhole: true);
-    private static readonly Parameter MaxPositionPercent = new("maxPositionPercent", 0.01, 0.15);
-    private static readonly Parameter HoldPeriodDays = new("holdPeriodDays", 1, 60, IsWhole: true);
-    private static readonly Parameter BuyThreshold = new("buyThreshold", 0, 0.95);
-    private static readonly Parameter SellThreshold = new("sellThreshold", -0.9, 0.3);
+    internal static readonly Parameter MaxPositions = new("maxPositions", 8, 60, IsWhole: true);
+    internal static readonly Parameter MaxPositionPercent = new("maxPositionPercent", 0.01, 0.15);
+    internal static readonly Parameter HoldPeriodDays = new("holdPeriodDays", 1, 60, IsWhole: true);
+    internal static readonly Parameter BuyThreshold = new("buyThreshold", 0, 0.95);
+    internal static readonly Parameter SellThreshold = new("sellThreshold", -0.9, 0.3);
 
     private readonly ISwingDataQueryService _dataService = Guard.Against.Null(dataService);
     private readonly SwingSignalReconstructor _signalReconstructor = Guard.Against.Null(

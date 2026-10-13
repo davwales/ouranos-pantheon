@@ -342,4 +342,40 @@ public sealed class FlipEngineTests
             )
             .Returns(FlipTestData.Market(series));
     }
+
+    [Fact]
+    public void CreateParameterSpace_WhenParametersAreLocked_ShouldKeepThemAtTheSeedValue()
+    {
+        // Arrange
+        var seed = new FlipConfiguration(BidOffset: 0.6m, MaxHoldHours: 24) with
+        {
+            LockedParameters = ["bidOffset", "maxHoldHours"],
+        };
+
+        var space = _engine.CreateParameterSpace(seed);
+
+        // Act
+        var built = space
+            .Build([.. space.Parameters.Select(p => p.Max)])
+            .ShouldBeOfType<FlipConfiguration>();
+
+        // Assert
+        built.BidOffset.ShouldBe(0.6m);
+        built.MaxHoldHours.ShouldBe(24);
+        built.AskOffset.ShouldBe(0.4m);
+        built.LockedParameters.ShouldBe(["bidOffset", "maxHoldHours"]);
+    }
+
+    [Fact]
+    public void CreateParameterSpace_WhenLockingANeverOptimizedField_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var seed = new FlipConfiguration() with
+        {
+            LockedParameters = ["minPrice"],
+        };
+
+        // Act & Assert
+        Should.Throw<ArgumentException>(() => _engine.CreateParameterSpace(seed));
+    }
 }

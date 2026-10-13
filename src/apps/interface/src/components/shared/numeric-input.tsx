@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 export type NumericInputProps = {
   label?: string;
   hint?: string;
+  labelAction?: React.ReactNode;
   placeholder?: string;
   value: number | null | undefined;
   onChange: (v: number | null) => void;
@@ -65,6 +66,7 @@ function clamp(value: number, min?: number, max?: number): number {
 export function NumericInput({
   label,
   hint,
+  labelAction,
   placeholder,
   value,
   onChange,
@@ -130,12 +132,15 @@ export function NumericInput({
   return (
     <div className="space-y-1">
       {label && (
-        <label htmlFor={id} className="text-sm font-medium block">
-          {label}
-          {hint && (
-            <span className="text-muted-foreground text-xs ml-1">({hint})</span>
-          )}
-        </label>
+        <div className="flex items-start justify-between gap-2">
+          <label htmlFor={id} className="text-sm font-medium block">
+            {label}
+            {hint && (
+              <span className="text-muted-foreground text-xs ml-1">({hint})</span>
+            )}
+          </label>
+          {labelAction}
+        </div>
       )}
       <Input
         id={id}

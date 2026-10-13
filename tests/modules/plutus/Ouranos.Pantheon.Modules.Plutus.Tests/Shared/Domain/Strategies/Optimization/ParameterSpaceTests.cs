@@ -80,4 +80,68 @@ public sealed class ParameterSpaceTests
         // Assert
         result.ShouldBe((decimal)expected);
     }
+
+    [Fact]
+    public void Lock_ShouldPinTheParameterToItsUnclampedSeedValue()
+    {
+        // Arrange
+        var space = new ParameterSpace(Parameters, [100, 0.1], Build);
+
+        // Act
+        var locked = space.Lock(["lookbackHours"]);
+
+        // Assert
+        locked.Parameters[0].ShouldBe(new Parameter("lookbackHours", 100, 100, IsWhole: true));
+        locked.Parameters[0].IsLocked.ShouldBeTrue();
+        locked.Parameters[1].ShouldBe(Parameters[1]);
+        locked.Seed.ShouldBe([100d, 0.1d]);
+    }
+
+    [Fact]
+    public void Lock_WhenBuilding_ShouldRememberTheLocks()
+    {
+        // Arrange
+        var space = new ParameterSpace(Parameters, [10, 0], Build).Lock(["bidOffset"]);
+
+        // Act
+        var configuration = space.Build([12, 0]);
+
+        // Assert
+        configuration.LockedParameters.ShouldBe(["bidOffset"]);
+    }
+
+    [Fact]
+    public void Lock_WhenNoKeys_ShouldReturnTheSameSpace()
+    {
+        // Arrange
+        var space = new ParameterSpace(Parameters, [10, 0], Build);
+
+        // Act
+        var locked = space.Lock([]);
+
+        // Assert
+        locked.ShouldBeSameAs(space);
+    }
+
+    [Fact]
+    public void Lock_WhenKeyIsUnknown_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var space = new ParameterSpace(Parameters, [10, 0], Build);
+
+        // Act & Assert
+        Should
+            .Throw<ArgumentException>(() => space.Lock(["minPrice"]))
+            .Message.ShouldContain("minPrice");
+    }
+
+    [Fact]
+    public void Lock_WhenEveryParameterIsLocked_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var space = new ParameterSpace(Parameters, [10, 0], Build);
+
+        // Act & Assert
+        Should.Throw<ArgumentException>(() => space.Lock(["lookbackHours", "bidOffset"]));
+    }
 }

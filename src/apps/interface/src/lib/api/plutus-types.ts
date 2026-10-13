@@ -302,6 +302,7 @@ export type SwingConfiguration = {
   maxPositions?: number | null;
   maxPositionPercent?: number | null;
   holdPeriodDays?: number | null;
+  lockedParameters?: string[];
 };
 
 export type FlipConfiguration = {
@@ -316,6 +317,7 @@ export type FlipConfiguration = {
   maxPositionPercent: number;
   maxPriceMove: number;
   minPrice: number;
+  lockedParameters?: string[];
 };
 
 export type StrategyConfiguration = SwingConfiguration | FlipConfiguration;

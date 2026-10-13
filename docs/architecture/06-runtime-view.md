@@ -182,7 +182,11 @@ after the maximum hold and marked at the sell-side price at the end.
 **Optimization** is one flow for every mode. The engine describes its tunable numbers as a
 `ParameterSpace` (swing: the strategy's own signed input weights, thresholds and sizing;
 flip: quoting and sizing settings, never the trader's check-in cadence, open order limit or minimum
-price), and a single `ParameterChromosome` evolves it. The last `OutSampleRatio` of the
+price), and a single `ParameterChromosome` evolves it. A strategy's `lockedParameters`
+(parameter keys such as `maxPositions` or `weight.SignalRsi`) pin those parameters to the
+configured value by collapsing their range to that single value, so the search tunes only the
+rest; the optimized configuration carries the locks forward. The optimize endpoint rejects
+unknown keys and strategies with every parameter locked. The last `OutSampleRatio` of the
 range is held out. The in-sample range is split into segments of the engine's length (~30
 days for swing, 7 for flip), simulated in parallel, and a candidate's fitness blends its mean
 and worst segment. Per segment, fitness is the return with any single symbol's profit capped

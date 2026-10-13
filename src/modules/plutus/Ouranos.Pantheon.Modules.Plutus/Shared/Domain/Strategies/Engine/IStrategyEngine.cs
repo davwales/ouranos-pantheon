@@ -30,7 +30,10 @@ public interface IStrategyEngine
         SimulationSettings settings
     );
 
-    /// <summary>The tunable parameters of <paramref name="seed" /> and how to rebuild a configuration from them.</summary>
+    /// <summary>
+    ///     The tunable parameters of <paramref name="seed" />, with its locked parameters pinned,
+    ///     and how to rebuild a configuration from them.
+    /// </summary>
     ParameterSpace CreateParameterSpace(StrategyConfiguration seed);
 
     /// <summary>What the strategy would buy right now with <paramref name="budget" /> and nothing held.</summary>

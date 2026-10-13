@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { DEFAULT_FLIP_CONFIGURATION } from "./flip-constants";
 import { FlipSettingsCard } from "./flip-settings-card";
+import { withValidLocks } from "./parameter-locks";
 import { StrategyBasicInfoCard } from "./strategy-basic-info-card";
 import { StrategyModeCard } from "./strategy-mode-card";
 import { SwingConfigForm } from "./swing-config-form";
@@ -46,9 +47,11 @@ function buildInitialDrafts(
 function toRequestConfiguration(
   configuration: StrategyConfiguration,
 ): StrategyConfiguration {
-  return configuration.mode === "Swing"
-    ? withoutZeroWeights(configuration)
-    : configuration;
+  return withValidLocks(
+    configuration.mode === "Swing"
+      ? withoutZeroWeights(configuration)
+      : configuration,
+  );
 }
 
 function validateConfiguration(

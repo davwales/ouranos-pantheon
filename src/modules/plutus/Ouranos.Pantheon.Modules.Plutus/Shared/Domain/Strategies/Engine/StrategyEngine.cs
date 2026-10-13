@@ -43,7 +43,7 @@ public abstract class StrategyEngine<TConfiguration, TData> : IStrategyEngine
 
     ParameterSpace IStrategyEngine.CreateParameterSpace(StrategyConfiguration seed)
     {
-        return CreateParameterSpace(Cast(seed));
+        return CreateParameterSpace(Cast(seed)).Lock(seed.LockedParameters);
     }
 
     Task<IReadOnlyList<StrategyRecommendation>> IStrategyEngine.RecommendAsync(

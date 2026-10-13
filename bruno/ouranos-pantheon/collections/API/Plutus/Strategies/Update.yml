@@ -32,7 +32,8 @@ http:
           "sellThreshold": 0.4,
           "maxPositions": 5,
           "maxPositionPercent": 0.1,
-          "holdPeriodDays": 30
+          "holdPeriodDays": 30,
+          "lockedParameters": ["maxPositions"]
         }
       }
   auth: inherit
