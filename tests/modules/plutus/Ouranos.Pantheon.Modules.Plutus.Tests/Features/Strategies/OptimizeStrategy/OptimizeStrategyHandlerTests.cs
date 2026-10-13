@@ -5,7 +5,9 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.OptimizeStrategy.Schem
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Engine;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Flip;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Wolverine;
@@ -27,7 +29,15 @@ public sealed class OptimizeStrategyHandlerTests
     {
         _fixture.Customize(new IdCustomization());
         _dbContextFactory = DbContextExtensions.MockFactory<PlutusDbContext>();
-        _handler = new OptimizeStrategyHandler(_logger, _dbContextFactory, _bus);
+        _handler = new OptimizeStrategyHandler(
+            _logger,
+            _dbContextFactory,
+            _bus,
+            new StrategyEngines([
+                new FakeStrategyEngine(StrategyMode.Swing),
+                new FakeStrategyEngine(),
+            ])
+        );
     }
 
     [Fact]
@@ -284,5 +294,42 @@ public sealed class OptimizeStrategyHandlerTests
 
         // Assert
         await optimize.ShouldThrowAsync<OperationCanceledException>();
+    }
+
+    [Theory]
+    [InlineData("minPrice")]
+    [InlineData("maxOpenOrders", "maxHoldHours")]
+    public async Task Handle_WhenLocksAreInvalid_ShouldThrowAndNotPublish(params string[] locked)
+    {
+        // Arrange
+        await using var setupContext = await _dbContextFactory.CreateDbContextAsync();
+
+        var strategy = Strategy.Create(
+            _fixture.Create<Id<Market>>(),
+            "Test",
+            null,
+            new FlipConfiguration() with
+            {
+                LockedParameters = locked,
+            }
+        );
+
+        await setupContext.Strategies.AddAsync(strategy);
+        await setupContext.SaveChangesAsync();
+
+        var command = new OptimizeStrategyInput(
+            strategy.Id,
+            _fixture.Create<Id<Market>>(),
+            DateTimeOffset.UtcNow,
+            DateTimeOffset.UtcNow.AddDays(30),
+            10000m
+        );
+
+        // Act
+        var optimize = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await optimize.ShouldThrowAsync<ArgumentException>();
+        await _bus.DidNotReceiveWithAnyArgs().PublishAsync(default(OptimizeStrategyMessage));
     }
 }

@@ -1,6 +1,7 @@
 import { type SwingConfiguration } from "@/lib/api/plutus";
 import { ConfigGroup } from "./config-group";
 import { ConfigRow } from "./config-row";
+import { lockState, weightLockKey } from "./parameter-locks";
 import { INPUT_KIND_LABELS, THRESHOLD_FIELDS } from "./strategy-constants";
 
 export function SwingConfigurationView({
@@ -23,14 +24,17 @@ export function SwingConfigurationView({
         <ConfigRow
           label="Max Positions"
           value={configuration.maxPositions ?? "Unlimited"}
+          lock={lockState(configuration, "maxPositions")}
         />
         <ConfigRow
           label="Max Position Percent"
           value={configuration.maxPositionPercent}
+          lock={lockState(configuration, "maxPositionPercent")}
         />
         <ConfigRow
           label="Hold Period Days"
           value={configuration.holdPeriodDays ?? "Unlimited"}
+          lock={lockState(configuration, "holdPeriodDays")}
         />
       </ConfigGroup>
 
@@ -41,6 +45,7 @@ export function SwingConfigurationView({
               key={w.kind}
               label={INPUT_KIND_LABELS[w.kind]}
               value={w.weight}
+              lock={lockState(configuration, weightLockKey(w.kind))}
             />
           ))}
         </ConfigGroup>
@@ -49,7 +54,12 @@ export function SwingConfigurationView({
       {hasThresholds && (
         <ConfigGroup title="Thresholds">
           {THRESHOLD_FIELDS.map((f) => (
-            <ConfigRow key={f.key} label={f.label} value={configuration[f.key]} />
+            <ConfigRow
+              key={f.key}
+              label={f.label}
+              value={configuration[f.key]}
+              lock={lockState(configuration, f.key)}
+            />
           ))}
         </ConfigGroup>
       )}

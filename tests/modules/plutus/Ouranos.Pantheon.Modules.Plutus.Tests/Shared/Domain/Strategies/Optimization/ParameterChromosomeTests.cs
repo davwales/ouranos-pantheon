@@ -185,4 +185,42 @@ public sealed class ParameterChromosomeTests
             .Genes.Select((gene, i) => (Gene: gene, Parameter: _space.Parameters[i]))
             .All(g => g.Gene >= g.Parameter.Min && g.Gene <= g.Parameter.Max);
     }
+
+    [Fact]
+    public void Mutate_WhenAParameterIsLocked_ShouldNeverChangeIt()
+    {
+        // Arrange
+        var space = _space.Lock(["bidOffset"]);
+        var chromosome = new ParameterChromosome(space);
+
+        // Act
+        for (var i = 0; i < Repetitions; i++)
+        {
+            chromosome.Mutate(1);
+        }
+
+        // Assert
+        chromosome.Genes[1].ShouldBe(0.1d);
+        chromosome.Genes[0].ShouldNotBe(24d);
+    }
+
+    [Fact]
+    public void CreateRandomAndCrossover_WhenAParameterIsLocked_ShouldKeepItsValue()
+    {
+        // Arrange
+        var space = _space.Lock(["minMargin"]);
+
+        // Act
+        var children = Enumerable
+            .Range(0, Repetitions)
+            .Select(_ =>
+                ParameterChromosome
+                    .CreateRandom(space)
+                    .Crossover(ParameterChromosome.CreateRandom(space))
+            )
+            .ToList();
+
+        // Assert
+        children.ShouldAllBe(c => c.Genes[2] == 0.05d);
+    }
 }

@@ -28,7 +28,8 @@ http:
           "maxHoldHours": 72,
           "maxPositionPercent": 0.125,
           "maxPriceMove": 0.1,
-          "minPrice": 0
+          "minPrice": 0,
+          "lockedParameters": ["maxHoldHours"]
         }
       }
   auth: inherit

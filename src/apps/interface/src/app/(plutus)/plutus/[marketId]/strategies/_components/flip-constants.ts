@@ -1,6 +1,9 @@
 import { type FlipConfiguration } from "@/lib/api/plutus";
 
-export type FlipSettingKey = Exclude<keyof FlipConfiguration, "mode">;
+export type FlipSettingKey = Exclude<
+  keyof FlipConfiguration,
+  "mode" | "lockedParameters"
+>;
 
 export const DEFAULT_FLIP_CONFIGURATION: FlipConfiguration = {
   mode: "Flip",

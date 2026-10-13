@@ -16,5 +16,25 @@ public abstract record StrategyConfiguration
     [JsonIgnore]
     public abstract StrategyMode Mode { get; }
 
+    /// <summary>Parameter keys the optimizer must keep at their configured values.</summary>
+    public IReadOnlyList<string> LockedParameters
+    {
+        get;
+        init => field = value ?? [];
+    } = [];
+
     public abstract void Validate();
+
+    /// <summary>Compares locks by content, since deserialized lists never share a reference.</summary>
+    public virtual bool Equals(StrategyConfiguration? other)
+    {
+        return other is not null
+            && EqualityContract == other.EqualityContract
+            && LockedParameters.SequenceEqual(other.LockedParameters);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(EqualityContract, LockedParameters.Count);
+    }
 }

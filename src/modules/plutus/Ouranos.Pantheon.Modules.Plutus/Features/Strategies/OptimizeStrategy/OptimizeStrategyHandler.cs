@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.OptimizeStrategy.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Engine;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Events;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application;
 using Wolverine;
@@ -16,20 +17,24 @@ public sealed class OptimizeStrategyHandler
     private readonly IDbContextFactory<PlutusDbContext> _dbContextFactory;
     private readonly ILogger<OptimizeStrategyHandler> _logger;
     private readonly IMessageBus _bus;
+    private readonly StrategyEngines _engines;
 
     public OptimizeStrategyHandler(
         ILogger<OptimizeStrategyHandler> logger,
         IDbContextFactory<PlutusDbContext> dbContextFactory,
-        IMessageBus bus
+        IMessageBus bus,
+        StrategyEngines engines
     )
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(dbContextFactory);
         Guard.Against.Null(bus);
+        Guard.Against.Null(engines);
 
         _logger = logger;
         _dbContextFactory = dbContextFactory;
         _bus = bus;
+        _engines = engines;
     }
 
     public async Task<OptimizeStrategyResponse> Handle(
@@ -64,6 +69,8 @@ public sealed class OptimizeStrategyHandler
         );
 
         Guard.Against.NotFound(command.StrategyId, strategy);
+
+        _engines.For(strategy.Configuration).CreateParameterSpace(strategy.Configuration);
 
         var backtest = Backtest.Create(
             command.StrategyId,

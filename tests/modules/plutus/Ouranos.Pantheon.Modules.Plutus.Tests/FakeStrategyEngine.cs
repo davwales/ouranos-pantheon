@@ -83,10 +83,13 @@ internal sealed class FakeStrategyEngine(StrategyMode mode = StrategyMode.Flip) 
         }
 
         return new ParameterSpace(
-            [new Parameter("maxOpenOrders", 1, MaxOpenOrdersLimit, IsWhole: true)],
-            [flip.MaxOpenOrders],
-            values => flip with { MaxOpenOrders = (int)values[0] }
-        );
+            [
+                new Parameter("maxOpenOrders", 1, MaxOpenOrdersLimit, IsWhole: true),
+                new Parameter("maxHoldHours", 12, 168, IsWhole: true),
+            ],
+            [flip.MaxOpenOrders, flip.MaxHoldHours],
+            values => flip with { MaxOpenOrders = (int)values[0], MaxHoldHours = (int)values[1] }
+        ).Lock(seed.LockedParameters);
     }
 
     public Task<IReadOnlyList<StrategyRecommendation>> RecommendAsync(

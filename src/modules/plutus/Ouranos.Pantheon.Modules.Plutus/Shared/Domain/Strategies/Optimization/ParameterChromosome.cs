@@ -41,25 +41,25 @@ public sealed class ParameterChromosome : IChromosome<double>
 
     /// <summary>
     ///     Each gene mutates independently with probability <paramref name="mutationRate" />,
-    ///     but at least one gene per call on average.
+    ///     but at least one unlocked gene per call on average.
     /// </summary>
     public void Mutate(double mutationRate)
     {
-        if (_genes.Length == 0)
+        var free = Space.Parameters.Count(p => !p.IsLocked);
+        if (free == 0)
         {
             return;
         }
 
         var random = Random.Shared;
-        var probability = Math.Max(mutationRate, 1.0 / _genes.Length);
+        var probability = Math.Max(mutationRate, 1.0 / free);
         for (var i = 0; i < _genes.Length; i++)
         {
-            if (random.NextDouble() >= probability)
+            var parameter = Space.Parameters[i];
+            if (parameter.IsLocked || random.NextDouble() >= probability)
             {
                 continue;
             }
-
-            var parameter = Space.Parameters[i];
 
             var step =
                 ((random.NextDouble() * 2) - 1) * MaxMutationStep * (parameter.Max - parameter.Min);

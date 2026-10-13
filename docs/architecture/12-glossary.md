@@ -32,7 +32,7 @@
 | **Strategy engine** | The `IStrategyEngine` for one strategy mode: loads market history, simulates a configuration, describes its tunable parameters and produces recommendations |
 | **Flip strategy** | A strategy that repeatedly buys at the recent sell-side price and sells at the recent buy-side price, re-placing orders every few hours within a limit on open orders and each symbol's buy limit |
 | **Backtest** | Historical simulation of a strategy over a market, period and budget, producing metrics and simulated positions. Runs asynchronously and can be cancelled or restarted; optimization runs are stored as backtests too |
-| **Strategy optimization** | Genetic-algorithm search over a swing strategy's own input weights (signed), thresholds and sizing, or a flip strategy's quoting and sizing settings, scored on in-sample segments (~30 days for swing, 7 for flip) and validated on a held-out out-of-sample period |
+| **Strategy optimization** | Genetic-algorithm search over a swing strategy's own input weights (signed), thresholds and sizing, or a flip strategy's quoting and sizing settings, scored on in-sample segments (~30 days for swing, 7 for flip) and validated on a held-out out-of-sample period. Locked parameters are kept at their configured values |
 | **Fitness weights** | The optimization objective's weights: Sortino, CAGR, drawdown, turnover, and L1 regularization |
 | **Recommendation** | What a strategy's simulator would buy right now for a budget: symbols with score, suggested allocation, volume, price and rationale, plus buy/sell prices and expected profit for flip strategies |
 | **Position** | A user-recorded buy or sell for a symbol with cost and quantity; a sell can be linked to its buy |
