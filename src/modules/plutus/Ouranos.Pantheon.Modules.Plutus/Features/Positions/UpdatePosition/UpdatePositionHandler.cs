@@ -39,7 +39,14 @@ public sealed class UpdatePositionHandler
 
         Guard.Against.NotFound(command.PositionId, position);
 
-        position.Modify(command.Cost, command.Quantity, command.Notes);
+        if (position.Status == PositionStatus.Pending)
+        {
+            position.Modify(command.Cost, command.Quantity, command.Notes, command.TargetPrice);
+        }
+        else
+        {
+            position.SetTargetPrice(command.TargetPrice);
+        }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 

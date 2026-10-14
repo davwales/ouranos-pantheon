@@ -31,6 +31,7 @@ public sealed class GetPositionEndpointTests
             null,
             null,
             null,
+            null,
             DateTimeOffset.UtcNow,
             DateTimeOffset.UtcNow
         );

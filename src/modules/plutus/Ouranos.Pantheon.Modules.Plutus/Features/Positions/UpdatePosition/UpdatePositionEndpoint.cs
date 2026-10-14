@@ -22,7 +22,13 @@ public static class UpdatePositionEndpoint
         CancellationToken ct
     )
     {
-        var input = new UpdatePositionInput(positionId, body.Cost, body.Quantity, body.Notes);
+        var input = new UpdatePositionInput(
+            positionId,
+            body.Cost,
+            body.Quantity,
+            body.Notes,
+            body.TargetPrice
+        );
         return Results.Ok(await bus.InvokeAsync<IdResponse<Position>>(input, ct));
     }
 }

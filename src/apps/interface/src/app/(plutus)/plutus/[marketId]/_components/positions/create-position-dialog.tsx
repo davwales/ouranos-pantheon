@@ -2,6 +2,7 @@
 
 import { ResponsiveDialog } from "@/components/shared/responsive-dialog/responsive-dialog";
 import { CreatePositionForm } from "./create-position-form";
+import { type PositionDefaults } from "./position-defaults";
 
 export function CreatePositionDialog({
   marketId,
@@ -10,6 +11,7 @@ export function CreatePositionDialog({
   linkedBuyPositionId,
   defaultSymbolId,
   defaultSymbolName,
+  defaults,
 }: {
   marketId: string;
   open: boolean;
@@ -17,6 +19,7 @@ export function CreatePositionDialog({
   linkedBuyPositionId?: string | null;
   defaultSymbolId?: string;
   defaultSymbolName?: string;
+  defaults?: PositionDefaults;
 }) {
   const title = linkedBuyPositionId
     ? "Create Sell Position"
@@ -36,6 +39,7 @@ export function CreatePositionDialog({
         linkedBuyPositionId={linkedBuyPositionId}
         defaultSymbolId={defaultSymbolId}
         defaultSymbolName={defaultSymbolName}
+        defaults={defaults}
       />
     </ResponsiveDialog>
   );

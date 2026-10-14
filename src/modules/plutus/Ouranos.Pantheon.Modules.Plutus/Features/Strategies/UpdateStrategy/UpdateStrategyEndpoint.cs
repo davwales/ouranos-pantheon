@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.OutputCaching;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.UpdateStrategy.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
@@ -19,15 +21,16 @@ public static class UpdateStrategyEndpoint
         Id<Strategy> strategyId,
         UpdateStrategyBody body,
         IMessageBus bus,
+        IOutputCacheStore outputCacheStore,
         CancellationToken ct
     )
     {
-        var input = new UpdateStrategyInput(
-            strategyId,
-            body.Name,
-            body.Description,
-            body.Configuration
+        var result = await bus.InvokeAsync<IdResponse<Strategy>>(
+            new UpdateStrategyInput(strategyId, body.Name, body.Description, body.Configuration),
+            ct
         );
-        return Results.Ok(await bus.InvokeAsync<IdResponse<Strategy>>(input, ct));
+
+        await outputCacheStore.EvictByTagAsync(RecommendationCache.TagFor(strategyId), ct);
+        return Results.Ok(result);
     }
 }

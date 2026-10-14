@@ -93,6 +93,7 @@ public sealed class GetAllPositionsHandler
                 p.Symbol.Name,
                 p.Cost,
                 p.Quantity,
+                p.TargetPrice,
                 p.LinkedBuyPositionId,
                 p.StrategyId,
                 p.Notes,

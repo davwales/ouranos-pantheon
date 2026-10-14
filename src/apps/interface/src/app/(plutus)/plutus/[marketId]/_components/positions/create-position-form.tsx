@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { NumericInput } from "@/components/shared/numeric-input";
 import { type PositionSide, plutusApi } from "@/lib/api/plutus";
 import { useState } from "react";
+import { type PositionDefaults } from "./position-defaults";
 
 export function CreatePositionForm({
   marketId,
@@ -13,12 +14,14 @@ export function CreatePositionForm({
   linkedBuyPositionId,
   defaultSymbolId,
   defaultSymbolName,
+  defaults,
 }: {
   marketId: string;
   onDone: () => void;
   linkedBuyPositionId?: string | null;
   defaultSymbolId?: string;
   defaultSymbolName?: string;
+  defaults?: PositionDefaults;
 }) {
   const [selectedSymbolId, setSelectedSymbolId] = useState<string | null>(
     defaultSymbolId ?? null,
@@ -29,8 +32,13 @@ export function CreatePositionForm({
   const [side, setSide] = useState<PositionSide>(
     linkedBuyPositionId ? "Sell" : "Buy",
   );
-  const [cost, setCost] = useState<number | null>(null);
-  const [quantity, setQuantity] = useState<number | null>(null);
+  const [cost, setCost] = useState<number | null>(defaults?.cost ?? null);
+  const [quantity, setQuantity] = useState<number | null>(
+    defaults?.quantity ?? null,
+  );
+  const [targetPrice, setTargetPrice] = useState<number | null>(
+    defaults?.targetPrice ?? null,
+  );
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,8 +57,9 @@ export function CreatePositionForm({
         symbolId: selectedSymbolId,
         cost,
         quantity,
-        strategyId: null,
+        strategyId: defaults?.strategyId ?? null,
         notes: notes.trim() || null,
+        targetPrice: side === "Buy" ? targetPrice : null,
       });
 
       if (linkedBuyPositionId && result.id) {
@@ -128,6 +137,17 @@ export function CreatePositionForm({
           step={1}
         />
       </div>
+      {side === "Buy" && (
+        <div className="space-y-1">
+          <NumericInput
+            label="Target sell price"
+            value={targetPrice}
+            onChange={setTargetPrice}
+            min={0}
+            step={0.01}
+          />
+        </div>
+      )}
       <div className="space-y-1">
         <label className="text-sm font-medium block">Notes</label>
         <Input value={notes} onChange={(e) => setNotes(e.target.value)} />

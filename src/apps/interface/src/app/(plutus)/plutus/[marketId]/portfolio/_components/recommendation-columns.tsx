@@ -34,7 +34,7 @@ function symbolColumn(marketId: string): Column {
 }
 
 function actionColumn(
-  onCreatePosition: (symbolId: string, symbolName: string) => void,
+  onCreatePosition: (recommendation: StrategyRecommendation) => void,
 ): Column {
   return {
     id: "actions",
@@ -46,9 +46,7 @@ function actionColumn(
         size="icon"
         className="h-7 w-7"
         aria-label={`Create position for ${row.original.symbolName}`}
-        onClick={() =>
-          onCreatePosition(row.original.symbolId, row.original.symbolName)
-        }
+        onClick={() => onCreatePosition(row.original)}
       >
         <Plus className="w-4 h-4" />
       </Button>
@@ -58,7 +56,7 @@ function actionColumn(
 
 export function makeSwingRecommendationColumns(
   marketId: string,
-  onCreatePosition: (symbolId: string, symbolName: string) => void,
+  onCreatePosition: (recommendation: StrategyRecommendation) => void,
 ): Column[] {
   return [
     symbolColumn(marketId),
@@ -95,7 +93,7 @@ export function makeSwingRecommendationColumns(
 
 export function makeFlipRecommendationColumns(
   marketId: string,
-  onCreatePosition: (symbolId: string, symbolName: string) => void,
+  onCreatePosition: (recommendation: StrategyRecommendation) => void,
 ): Column[] {
   return [
     symbolColumn(marketId),
@@ -133,7 +131,7 @@ export function makeFlipRecommendationColumns(
       header: "Est. Profit",
       accessorFn: (row) => row.expectedProfit,
       cell: ({ getValue }) => (
-        <span className="tabular-nums text-green-600 dark:text-green-400">
+        <span className="tabular-nums text-green-600">
           {abbreviateNumber(getValue<number | null>() ?? 0)}
         </span>
       ),

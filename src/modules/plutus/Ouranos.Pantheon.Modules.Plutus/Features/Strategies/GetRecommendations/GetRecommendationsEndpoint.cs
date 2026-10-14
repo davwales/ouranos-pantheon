@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.OutputCaching;
+using Microsoft.Extensions.DependencyInjection;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetRecommendations.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
-using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.Shared;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetRecommendations;
@@ -11,18 +12,29 @@ public static class GetRecommendationsEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapPost("/api/plutus/strategies/{strategyId}/recommendations", Handle)
+        app.MapGet("/api/plutus/strategies/{strategyId}/recommendations", Handle)
+            .CacheOutput(policy =>
+                policy
+                    .Expire(RecommendationCache.Duration)
+                    .SetVaryByQuery(
+                        nameof(GetRecommendationsInput.MarketId),
+                        nameof(GetRecommendationsInput.Budget)
+                    )
+            )
             .WithTags("Plutus.Strategies");
     }
 
     internal static async Task<IResult> Handle(
-        Id<Strategy> strategyId,
-        GetRecommendationsBody body,
+        [AsParameters] GetRecommendationsInput input,
         IMessageBus bus,
-        CancellationToken ct
+        HttpContext httpContext,
+        CancellationToken ct = default
     )
     {
-        var input = new GetRecommendationsInput(strategyId, body.MarketId, body.Budget);
+        httpContext
+            .Features.Get<IOutputCacheFeature>()
+            ?.Context.Tags.Add(RecommendationCache.TagFor(input.StrategyId));
+
         return Results.Ok(await bus.InvokeAsync<GetRecommendationsResponse>(input, ct));
     }
 }

@@ -38,7 +38,8 @@ public sealed class CreatePositionHandler
             command.Cost,
             command.Quantity,
             command.StrategyId,
-            command.Notes
+            command.Notes,
+            targetPrice: command.TargetPrice
         );
 
         await _dbContext.Positions.AddAsync(position, cancellationToken);

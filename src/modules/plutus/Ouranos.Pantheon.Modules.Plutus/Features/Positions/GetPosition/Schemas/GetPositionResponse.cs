@@ -15,6 +15,7 @@ public sealed record GetPositionResponse(
     string SymbolName,
     decimal Cost,
     decimal Quantity,
+    decimal? TargetPrice,
     Id<Position>? LinkedBuyPositionId,
     Id<Strategy>? StrategyId,
     string? Notes,

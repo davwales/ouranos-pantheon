@@ -36,17 +36,24 @@ export function PositionActions({
     );
   }
 
+  const showEditTarget =
+    onEdit && position.side === "Buy" && position.status === "Bought";
   const showCreateSell =
     onCreateSell && position.side === "Buy" && position.status === "Bought";
   const showLink =
     onLink && position.side === "Sell" && !position.linkedBuyPositionId;
 
-  if (!showCreateSell && !showLink) {
+  if (!showEditTarget && !showCreateSell && !showLink) {
     return null;
   }
 
   return (
     <div className="flex items-center gap-1">
+      {showEditTarget && (
+        <Button variant="ghost" size="sm" onClick={() => onEdit(position)}>
+          <Pencil className="w-4 h-4" />
+        </Button>
+      )}
       {showCreateSell && (
         <Button
           variant="ghost"

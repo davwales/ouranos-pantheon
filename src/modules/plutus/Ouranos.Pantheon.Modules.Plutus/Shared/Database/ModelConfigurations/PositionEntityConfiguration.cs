@@ -23,6 +23,7 @@ public sealed class PositionEntityConfiguration : IEntityTypeConfiguration<Posit
 
         builder.Property(p => p.Cost).HasPrecision(18, 2);
         builder.Property(p => p.Quantity).HasPrecision(18, 4);
+        builder.Property(p => p.TargetPrice).HasPrecision(18, 2);
         builder.Property(p => p.Notes).HasMaxLength(2000);
 
         builder.HasIndex(p => p.MarketId);

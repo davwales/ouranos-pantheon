@@ -9,7 +9,11 @@ import { Typography } from "@/components/shared/typography";
 import { PlutusState, usePlutusStore } from "@/stores/plutus-store";
 import { Button } from "@/components/ui/button";
 import { useApi } from "@/hooks/use-api";
-import { Position, plutusApi } from "@/lib/api/plutus";
+import {
+  Position,
+  type StrategyRecommendation,
+  plutusApi,
+} from "@/lib/api/plutus";
 import { Plus, RefreshCw } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -19,6 +23,11 @@ import { CreatePositionDialog } from "../_components/positions/create-position-d
 import { EditPositionDialog } from "../_components/positions/edit-position-dialog";
 import { LinkPositionDialog } from "../_components/positions/link-position-dialog";
 import { makePositionColumns } from "../_components/positions/position-columns";
+import {
+  type PositionDefaults,
+  defaultsForSellOf,
+  defaultsFromRecommendation,
+} from "../_components/positions/position-defaults";
 import { RecommendationsPanel } from "./_components/recommendations-panel";
 
 export default function PortfolioPage() {
@@ -115,6 +124,9 @@ export default function PortfolioPage() {
   const [createDefaultSymbolName, setCreateDefaultSymbolName] = useState<
     string | undefined
   >(undefined);
+  const [createDefaults, setCreateDefaults] = useState<
+    PositionDefaults | undefined
+  >(undefined);
   const [editPosition, setEditPosition] = useState<Position | null>(null);
   const [closePosition, setClosePosition] = useState<Position | null>(null);
   const [linkSellPosition, setLinkSellPosition] = useState<Position | null>(
@@ -130,11 +142,12 @@ export default function PortfolioPage() {
   );
 
   const handleCreateFromRecommendation = (
-    symbolId: string,
-    symbolName: string,
+    recommendation: StrategyRecommendation,
+    strategyId: string,
   ) => {
-    setCreateDefaultSymbolId(symbolId);
-    setCreateDefaultSymbolName(symbolName);
+    setCreateDefaultSymbolId(recommendation.symbolId);
+    setCreateDefaultSymbolName(recommendation.symbolName);
+    setCreateDefaults(defaultsFromRecommendation(recommendation, strategyId));
     setCreateOpen(true);
   };
 
@@ -162,6 +175,7 @@ export default function PortfolioPage() {
         showSymbol: true,
         actions: {
           variant: "closed",
+          onEdit: (p) => setEditPosition(p),
           onLink: (p) => setLinkSellPosition(p),
           onCreateSell: (p) => setCreateSellForBuy(p),
         },
@@ -234,10 +248,12 @@ export default function PortfolioPage() {
           setCreateOpen(v);
           setCreateDefaultSymbolId(undefined);
           setCreateDefaultSymbolName(undefined);
+          setCreateDefaults(undefined);
           if (!v) refreshAll();
         }}
         defaultSymbolId={createDefaultSymbolId}
         defaultSymbolName={createDefaultSymbolName}
+        defaults={createDefaults}
       />
 
       {createSellForBuy && (
@@ -253,6 +269,7 @@ export default function PortfolioPage() {
           linkedBuyPositionId={createSellForBuy.id}
           defaultSymbolId={createSellForBuy.symbolId}
           defaultSymbolName={createSellForBuy.symbolName}
+          defaults={defaultsForSellOf(createSellForBuy)}
         />
       )}
 

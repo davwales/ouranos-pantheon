@@ -46,7 +46,13 @@ public sealed class UpdatePositionHandlerTests
         await _dbContext.Positions.AddAsync(position);
         await _dbContext.SaveChangesAsync();
 
-        var command = new UpdatePositionInput(position.Id, 200.00m, 5m, "Updated note");
+        var command = new UpdatePositionInput(
+            position.Id,
+            200.00m,
+            5m,
+            "Updated note",
+            TargetPrice: 250.00m
+        );
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -60,6 +66,31 @@ public sealed class UpdatePositionHandlerTests
         updated.Cost.ShouldBe(200.00m);
         updated.Quantity.ShouldBe(5m);
         updated.Notes.ShouldBe("Updated note");
+        updated.TargetPrice.ShouldBe(250.00m);
+    }
+
+    [Fact]
+    public async Task Handle_WhenBuyIsBought_ShouldOnlyUpdateTargetPrice()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var position = Position.Create(PositionSide.Buy, marketId, symbolId, 150.50m, 10m);
+        position.Close(PositionStatus.Bought);
+        await _dbContext.Positions.AddAsync(position);
+        await _dbContext.SaveChangesAsync();
+
+        var command = new UpdatePositionInput(position.Id, 200.00m, 5m, null, TargetPrice: 175m);
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var updated = await _dbContext.Positions.FindAsync(position.Id);
+        updated.ShouldNotBeNull();
+        updated.TargetPrice.ShouldBe(175m);
+        updated.Cost.ShouldBe(150.50m);
+        updated.Quantity.ShouldBe(10m);
     }
 
     [Fact]
@@ -82,7 +113,7 @@ public sealed class UpdatePositionHandlerTests
         var marketId = _fixture.Create<Id<Market>>();
         var symbolId = _fixture.Create<Id<Symbol>>();
         var position = Position.Create(PositionSide.Buy, marketId, symbolId, 150.50m, 10m);
-        position.Close(PositionStatus.Bought);
+        position.Close(PositionStatus.DidNotBuy);
         await _dbContext.Positions.AddAsync(position);
         await _dbContext.SaveChangesAsync();
 

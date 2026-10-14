@@ -13,5 +13,6 @@ public sealed record CreatePositionBody(
     decimal Cost,
     decimal Quantity,
     Id<Strategy>? StrategyId = null,
-    string? Notes = null
+    string? Notes = null,
+    decimal? TargetPrice = null
 );
