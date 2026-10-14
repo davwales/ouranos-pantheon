@@ -487,6 +487,7 @@ export interface Position {
   symbolName: string;
   cost: number;
   quantity: number;
+  targetPrice: number | null;
   linkedBuyPositionId: string | null;
   strategyId: string | null;
   notes: string | null;

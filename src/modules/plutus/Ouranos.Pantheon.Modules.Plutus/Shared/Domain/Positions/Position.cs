@@ -30,6 +30,8 @@ public sealed class Position : BaseEntity<Id<Position>>
 
     public decimal Quantity { get; private set; }
 
+    public decimal? TargetPrice { get; private set; }
+
     public Id<Position>? LinkedBuyPositionId { get; private set; }
 
     private Position? _linkedBuyPosition;
@@ -52,11 +54,13 @@ public sealed class Position : BaseEntity<Id<Position>>
         Id<Strategy>? strategyId = null,
         string? notes = null,
         Position? linkedBuyPosition = null,
-        Symbol? symbol = null
+        Symbol? symbol = null,
+        decimal? targetPrice = null
     )
     {
         Guard.Against.NegativeOrZero(cost);
         Guard.Against.NegativeOrZero(quantity);
+        GuardTargetPrice(side, targetPrice);
 
         if (linkedBuyPosition is not null)
         {
@@ -80,6 +84,7 @@ public sealed class Position : BaseEntity<Id<Position>>
             SymbolId = symbolId,
             Cost = cost,
             Quantity = quantity,
+            TargetPrice = targetPrice,
             StrategyId = strategyId,
             Notes = notes,
             LinkedBuyPositionId = linkedBuyPosition?.Id,
@@ -88,7 +93,7 @@ public sealed class Position : BaseEntity<Id<Position>>
         };
     }
 
-    public void Modify(decimal cost, decimal quantity, string? notes)
+    public void Modify(decimal cost, decimal quantity, string? notes, decimal? targetPrice)
     {
         if (Status != PositionStatus.Pending)
         {
@@ -99,11 +104,31 @@ public sealed class Position : BaseEntity<Id<Position>>
 
         Guard.Against.NegativeOrZero(cost);
         Guard.Against.NegativeOrZero(quantity);
+        GuardTargetPrice(Side, targetPrice);
 
         Cost = cost;
         Quantity = quantity;
         Notes = notes;
+        TargetPrice = targetPrice;
 
+        Update();
+    }
+
+    public void SetTargetPrice(decimal? targetPrice)
+    {
+        if (
+            Side != PositionSide.Buy
+            || Status is not (PositionStatus.Pending or PositionStatus.Bought)
+        )
+        {
+            throw new InvalidOperationException(
+                $"Cannot set a target price on a {Side} position with status '{Status}'."
+            );
+        }
+
+        GuardTargetPrice(Side, targetPrice);
+
+        TargetPrice = targetPrice;
         Update();
     }
 
@@ -157,5 +182,20 @@ public sealed class Position : BaseEntity<Id<Position>>
         Guard.Against.NullOrWhiteSpace(buyPositionId.Value, nameof(buyPositionId));
         LinkedBuyPositionId = buyPositionId;
         Update();
+    }
+
+    private static void GuardTargetPrice(PositionSide side, decimal? targetPrice)
+    {
+        if (targetPrice is not { } price)
+        {
+            return;
+        }
+
+        if (side != PositionSide.Buy)
+        {
+            throw new InvalidOperationException("Only buy positions can have a target price.");
+        }
+
+        Guard.Against.NegativeOrZero(price, nameof(targetPrice));
     }
 }

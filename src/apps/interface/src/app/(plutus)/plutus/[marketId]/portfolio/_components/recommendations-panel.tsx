@@ -8,7 +8,7 @@ import {
   type StrategyRecommendation,
   plutusApi,
 } from "@/lib/api/plutus";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   makeFlipRecommendationColumns,
   makeSwingRecommendationColumns,
@@ -42,7 +42,10 @@ export function RecommendationsPanel({
 }: {
   marketId: string;
   strategies: Strategy[];
-  onCreatePosition: (symbolId: string, symbolName: string) => void;
+  onCreatePosition: (
+    recommendation: StrategyRecommendation,
+    strategyId: string,
+  ) => void;
 }) {
   const activeStrategies = useMemo(
     () => strategies.filter((s) => s.isActive),
@@ -69,7 +72,10 @@ function ActiveRecommendationsPanel({
 }: {
   marketId: string;
   strategies: Strategy[];
-  onCreatePosition: (symbolId: string, symbolName: string) => void;
+  onCreatePosition: (
+    recommendation: StrategyRecommendation,
+    strategyId: string,
+  ) => void;
 }) {
   const [strategyId, setStrategyId] = useState(
     () => (findLatestBacktested(strategies) ?? strategies[0]).id,
@@ -123,14 +129,20 @@ function ActiveRecommendationsPanel({
     }
   };
 
+  const handleCreatePosition = useCallback(
+    (recommendation: StrategyRecommendation) =>
+      onCreatePosition(recommendation, strategyId),
+    [onCreatePosition, strategyId],
+  );
+
   const recommendations = state.status === "success" ? state.data : [];
   const isFlip = recommendations.some((r) => r.buyPrice != null);
   const columns = useMemo(
     () =>
       isFlip
-        ? makeFlipRecommendationColumns(marketId, onCreatePosition)
-        : makeSwingRecommendationColumns(marketId, onCreatePosition),
-    [isFlip, marketId, onCreatePosition],
+        ? makeFlipRecommendationColumns(marketId, handleCreatePosition)
+        : makeSwingRecommendationColumns(marketId, handleCreatePosition),
+    [isFlip, marketId, handleCreatePosition],
   );
 
   return (

@@ -8,6 +8,7 @@ import { Typography } from "@/components/shared/typography";
 import { ClosePositionDialog } from "@/app/(plutus)/plutus/[marketId]/_components/positions/close-position-dialog";
 import { CreatePositionDialog } from "@/app/(plutus)/plutus/[marketId]/_components/positions/create-position-dialog";
 import { EditPositionDialog } from "@/app/(plutus)/plutus/[marketId]/_components/positions/edit-position-dialog";
+import { defaultsForSellOf } from "@/app/(plutus)/plutus/[marketId]/_components/positions/position-defaults";
 import { LinkPositionDialog } from "@/app/(plutus)/plutus/[marketId]/_components/positions/link-position-dialog";
 import { makePositionColumns } from "@/app/(plutus)/plutus/[marketId]/_components/positions/position-columns";
 import { Button } from "@/components/ui/button";
@@ -105,6 +106,7 @@ export function SymbolPositionsView({
         showSymbol: false,
         actions: {
           variant: "closed",
+          onEdit: (p) => setEditPosition(p),
           onLink: (p) => setLinkSellPosition(p),
           onCreateSell: (p) => setCreateSellForBuy(p),
         },
@@ -193,6 +195,7 @@ export function SymbolPositionsView({
           linkedBuyPositionId={createSellForBuy.id}
           defaultSymbolId={createSellForBuy.symbolId}
           defaultSymbolName={createSellForBuy.symbolName}
+          defaults={defaultsForSellOf(createSellForBuy)}
         />
       )}
 

@@ -7,5 +7,6 @@ public sealed record UpdatePositionInput(
     Id<Position> PositionId,
     decimal Cost,
     decimal Quantity,
-    string? Notes
+    string? Notes,
+    decimal? TargetPrice = null
 );

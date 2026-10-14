@@ -4,19 +4,15 @@ info:
   seq: 9
 
 http:
-  method: POST
-  url: "{{BASE_URL}}/api/plutus/strategies/{{STRATEGY_ID}}/recommendations"
+  method: GET
+  url: "{{BASE_URL}}/api/plutus/strategies/{{STRATEGY_ID}}/recommendations?marketId={{MARKET_ID}}&budget=10000"
   params:
-    - name: ""
-      value: ""
+    - name: marketId
+      value: "{{MARKET_ID}}"
       type: query
-  body:
-    type: json
-    data: |-
-      {
-        "marketId": "{{MARKET_ID}}",
-        "budget": 10000
-      }
+    - name: budget
+      value: "10000"
+      type: query
   auth: inherit
 
 settings:

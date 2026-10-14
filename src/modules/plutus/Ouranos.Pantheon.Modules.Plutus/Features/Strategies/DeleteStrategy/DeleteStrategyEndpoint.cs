@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.OutputCaching;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.DeleteStrategy.Schemas;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
@@ -18,11 +20,16 @@ public static class DeleteStrategyEndpoint
     internal static async Task<IResult> Handle(
         Id<Strategy> strategyId,
         IMessageBus bus,
+        IOutputCacheStore outputCacheStore,
         CancellationToken ct
     )
     {
-        return Results.Ok(
-            await bus.InvokeAsync<IdResponse<Strategy>>(new DeleteStrategyInput(strategyId), ct)
+        var result = await bus.InvokeAsync<IdResponse<Strategy>>(
+            new DeleteStrategyInput(strategyId),
+            ct
         );
+
+        await outputCacheStore.EvictByTagAsync(RecommendationCache.TagFor(strategyId), ct);
+        return Results.Ok(result);
     }
 }

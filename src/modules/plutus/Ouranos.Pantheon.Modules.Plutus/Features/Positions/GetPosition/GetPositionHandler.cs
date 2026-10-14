@@ -46,6 +46,7 @@ public sealed class GetPositionHandler : IPantheonHandler<GetPositionInput, GetP
             position.Symbol.Name,
             position.Cost,
             position.Quantity,
+            position.TargetPrice,
             position.LinkedBuyPositionId,
             position.StrategyId,
             position.Notes,

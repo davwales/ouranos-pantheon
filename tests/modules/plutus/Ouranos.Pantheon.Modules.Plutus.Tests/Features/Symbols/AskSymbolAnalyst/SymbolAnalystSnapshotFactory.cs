@@ -253,6 +253,7 @@ internal static class SymbolAnalystSnapshotFactory
                 "Armadyl godsword",
                 Cost: 9900000,
                 Quantity: 2,
+                TargetPrice: null,
                 LinkedBuyPositionId: null,
                 StrategyId: null,
                 Notes: "Bought the dip",

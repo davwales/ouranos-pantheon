@@ -16,7 +16,8 @@ http:
       {
         "cost": 101.0,
         "quantity": 2,
-        "notes": "Position updated from Bruno"
+        "notes": "Position updated from Bruno",
+        "targetPrice": 121.0
       }
   auth: inherit
 

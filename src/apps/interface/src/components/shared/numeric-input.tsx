@@ -15,6 +15,7 @@ export type NumericInputProps = {
   step?: number;
   id?: string;
   className?: string;
+  disabled?: boolean;
   "aria-label"?: string;
   "aria-describedby"?: string;
   "aria-invalid"?: boolean;
@@ -75,6 +76,7 @@ export function NumericInput({
   step,
   id,
   className,
+  disabled,
   "aria-label": ariaLabel,
   "aria-describedby": ariaDescribedBy,
   "aria-invalid": ariaInvalid,
@@ -159,6 +161,7 @@ export function NumericInput({
         step={step}
         placeholder={placeholder}
         className={className}
+        disabled={disabled}
         aria-label={ariaLabel}
         aria-describedby={ariaDescribedBy}
         aria-invalid={ariaInvalid}

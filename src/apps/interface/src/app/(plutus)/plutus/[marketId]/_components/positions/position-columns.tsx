@@ -31,6 +31,24 @@ function LinkedBadge() {
   );
 }
 
+function TargetPriceCell({ position }: { position: Position }) {
+  if (position.targetPrice == null) {
+    return <span className="text-muted-foreground">—</span>;
+  }
+
+  const margin = (position.targetPrice - position.cost) / position.cost;
+
+  return (
+    <span className="whitespace-nowrap">
+      <PrettyNumber number={position.targetPrice} />{" "}
+      <span className="text-xs text-muted-foreground">
+        ({margin >= 0 ? "+" : ""}
+        {(margin * 100).toFixed(1)}%)
+      </span>
+    </span>
+  );
+}
+
 export type PositionActionsConfig = {
   variant: PositionActionsVariant;
   onEdit?: (position: Position) => void;
@@ -128,6 +146,13 @@ export function makePositionColumns(
         type: "number",
         operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
       },
+    },
+    {
+      id: "targetPrice",
+      header: "Target",
+      accessorFn: (row) => row.targetPrice,
+      cell: ({ row }) => <TargetPriceCell position={row.original} />,
+      enableSorting: false,
     },
     {
       id: "total",

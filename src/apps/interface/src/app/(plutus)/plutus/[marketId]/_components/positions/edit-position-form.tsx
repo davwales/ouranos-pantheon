@@ -16,6 +16,11 @@ export function EditPositionForm({
   const [cost, setCost] = useState<number | null>(position.cost);
   const [quantity, setQuantity] = useState<number | null>(position.quantity);
   const [notes, setNotes] = useState(position.notes ?? "");
+  const [targetPrice, setTargetPrice] = useState<number | null>(
+    position.targetPrice,
+  );
+  const isTargetOnly = position.status !== "Pending";
+  const isBuy = position.side === "Buy";
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,6 +34,7 @@ export function EditPositionForm({
         cost,
         quantity,
         notes: notes.trim() || null,
+        targetPrice: isBuy ? targetPrice : null,
       });
       onDone();
     } catch (err) {
@@ -54,6 +60,7 @@ export function EditPositionForm({
           onChange={setCost}
           min={0}
           step={0.01}
+          disabled={isTargetOnly}
         />
       </div>
       <div className="space-y-1">
@@ -63,11 +70,27 @@ export function EditPositionForm({
           onChange={setQuantity}
           min={1}
           step={1}
+          disabled={isTargetOnly}
         />
       </div>
+      {isBuy && (
+        <div className="space-y-1">
+          <NumericInput
+            label="Target sell price"
+            value={targetPrice}
+            onChange={setTargetPrice}
+            min={0}
+            step={0.01}
+          />
+        </div>
+      )}
       <div className="space-y-1">
         <label className="text-sm font-medium block">Notes</label>
-        <Input value={notes} onChange={(e) => setNotes(e.target.value)} />
+        <Input
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          disabled={isTargetOnly}
+        />
       </div>
       <Button
         className="w-full"

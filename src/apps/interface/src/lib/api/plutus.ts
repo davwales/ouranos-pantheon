@@ -361,7 +361,7 @@ export const plutusApi = {
       budget: number;
     },
   ) =>
-    api.post<GetRecommendationsResponse>(
+    api.get<GetRecommendationsResponse>(
       `/api/plutus/strategies/${strategyId}/recommendations`,
       input,
     ),
@@ -404,6 +404,7 @@ export const plutusApi = {
     quantity: number;
     strategyId?: string | null;
     notes?: string | null;
+    targetPrice?: number | null;
   }) => api.post<IdResponse>("/api/plutus/positions", input),
 
   updatePosition: (
@@ -412,6 +413,7 @@ export const plutusApi = {
       cost: number;
       quantity: number;
       notes?: string | null;
+      targetPrice?: number | null;
     },
   ) => api.put<IdResponse>(`/api/plutus/positions/${positionId}`, input),
 

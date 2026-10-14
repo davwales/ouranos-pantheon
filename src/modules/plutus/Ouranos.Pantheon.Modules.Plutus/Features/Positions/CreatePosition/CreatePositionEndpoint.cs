@@ -27,7 +27,8 @@ public static class CreatePositionEndpoint
             body.Cost,
             body.Quantity,
             body.StrategyId,
-            body.Notes
+            body.Notes,
+            body.TargetPrice
         );
 
         var result = await bus.InvokeAsync<IdResponse<Position>>(input, ct);

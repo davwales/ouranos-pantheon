@@ -321,6 +321,11 @@ namespace Ouranos.Pantheon.Modules.Plutus.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("symbol_id");
 
+                    b.Property<decimal?>("TargetPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("target_price");
+
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");

@@ -279,12 +279,124 @@ public sealed class PositionTests
         var newNotes = _fixture.Create<string>();
 
         // Act
-        position.Modify(newCost, newQuantity, newNotes);
+        position.Modify(newCost, newQuantity, newNotes, null);
 
         // Assert
         position.Cost.ShouldBe(newCost);
         position.Quantity.ShouldBe(newQuantity);
         position.Notes.ShouldBe(newNotes);
+    }
+
+    [Fact]
+    public void Create_WhenTargetPriceProvided_ShouldSetTargetPrice()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var symbolId = _fixture.Create<Id<Symbol>>();
+
+        // Act
+        var position = Position.Create(
+            PositionSide.Buy,
+            marketId,
+            symbolId,
+            100m,
+            5m,
+            targetPrice: 120m
+        );
+
+        // Assert
+        position.TargetPrice.ShouldBe(120m);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void Create_WhenTargetPriceNotPositive_ShouldThrowArgumentException(int targetPrice)
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var symbolId = _fixture.Create<Id<Symbol>>();
+
+        // Act
+        var create = () =>
+            Position.Create(
+                PositionSide.Buy,
+                marketId,
+                symbolId,
+                100m,
+                5m,
+                targetPrice: targetPrice
+            );
+
+        // Assert
+        create.ShouldThrow<ArgumentException>();
+    }
+
+    [Fact]
+    public void Create_WhenSellHasTargetPrice_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var symbolId = _fixture.Create<Id<Symbol>>();
+
+        // Act
+        var create = () =>
+            Position.Create(PositionSide.Sell, marketId, symbolId, 100m, 5m, targetPrice: 120m);
+
+        // Assert
+        create.ShouldThrow<InvalidOperationException>();
+    }
+
+    [Theory]
+    [InlineData(PositionStatus.Pending)]
+    [InlineData(PositionStatus.Bought)]
+    public void SetTargetPrice_WhenBuyIsPendingOrBought_ShouldSetTargetPrice(PositionStatus status)
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var position = Position.Create(PositionSide.Buy, marketId, symbolId, 100m, 5m);
+        if (status != PositionStatus.Pending)
+        {
+            position.Close(status);
+        }
+
+        // Act
+        position.SetTargetPrice(130m);
+
+        // Assert
+        position.TargetPrice.ShouldBe(130m);
+    }
+
+    [Fact]
+    public void SetTargetPrice_WhenBuyDidNotBuy_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var position = Position.Create(PositionSide.Buy, marketId, symbolId, 100m, 5m);
+        position.Close(PositionStatus.DidNotBuy);
+
+        // Act
+        var set = () => position.SetTargetPrice(130m);
+
+        // Assert
+        set.ShouldThrow<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void SetTargetPrice_WhenSell_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var position = Position.Create(PositionSide.Sell, marketId, symbolId, 100m, 5m);
+
+        // Act
+        var set = () => position.SetTargetPrice(130m);
+
+        // Assert
+        set.ShouldThrow<InvalidOperationException>();
     }
 
     [Fact]
@@ -300,7 +412,7 @@ public sealed class PositionTests
         position.Close(PositionStatus.Bought);
 
         // Act
-        var modify = () => position.Modify(cost, quantity, null);
+        var modify = () => position.Modify(cost, quantity, null, null);
 
         // Assert
         modify.ShouldThrow<InvalidOperationException>();
@@ -318,7 +430,7 @@ public sealed class PositionTests
         var position = Position.Create(PositionSide.Buy, marketId, symbolId, cost, quantity);
 
         // Act
-        var modify = () => position.Modify(0m, quantity, null);
+        var modify = () => position.Modify(0m, quantity, null, null);
 
         // Assert
         modify.ShouldThrow<ArgumentException>();
@@ -336,7 +448,7 @@ public sealed class PositionTests
         var position = Position.Create(PositionSide.Buy, marketId, symbolId, cost, quantity);
 
         // Act
-        var modify = () => position.Modify(-1m, quantity, null);
+        var modify = () => position.Modify(-1m, quantity, null, null);
 
         // Assert
         modify.ShouldThrow<ArgumentException>();
@@ -354,7 +466,7 @@ public sealed class PositionTests
         var position = Position.Create(PositionSide.Buy, marketId, symbolId, cost, quantity);
 
         // Act
-        var modify = () => position.Modify(cost, 0m, null);
+        var modify = () => position.Modify(cost, 0m, null, null);
 
         // Assert
         modify.ShouldThrow<ArgumentException>();
@@ -372,7 +484,7 @@ public sealed class PositionTests
         var position = Position.Create(PositionSide.Buy, marketId, symbolId, cost, quantity);
 
         // Act
-        var modify = () => position.Modify(cost, -1m, null);
+        var modify = () => position.Modify(cost, -1m, null, null);
 
         // Assert
         modify.ShouldThrow<ArgumentException>();

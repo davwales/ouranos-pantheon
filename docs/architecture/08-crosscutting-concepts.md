@@ -128,7 +128,14 @@ expiry and vary by their query parameters; reference those with
 `nameof(InputSchema.Property)` so the vary-by keys stay strongly typed and track the
 input schemas the endpoints bind from. Consequently identical requests collapse into
 a single computation per TTL window, and caching an endpoint requires no changes
-outside its endpoint file. See
+outside its endpoint file. The exception is a cached response that must not outlive a
+write: the entry is tagged and the writing endpoint calls
+`IOutputCacheStore.EvictByTagAsync` for that tag after the handler succeeds, so the
+cache stays an HTTP concern and handlers never see it. Use a static `.Tag(...)` on the policy
+when any write invalidates every entry; when only one entity's entries go stale, the
+endpoint adds a per-entity tag through `IOutputCacheFeature.Context.Tags` (e.g. Plutus
+strategy recommendations, cached for 5 minutes and tagged per strategy, so updating or
+deleting a strategy evicts only its own entries). See
 [ADR 0010](../adr/0010-server-side-output-caching-for-dashboard-aggregates.md) for the
 motivating case.
 

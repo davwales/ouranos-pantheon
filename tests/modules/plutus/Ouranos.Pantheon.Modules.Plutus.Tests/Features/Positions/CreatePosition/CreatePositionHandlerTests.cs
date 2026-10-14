@@ -57,6 +57,28 @@ public sealed class CreatePositionHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenTargetPriceProvided_ShouldPersistTargetPrice()
+    {
+        // Arrange
+        var command = new CreatePositionInput(
+            PositionSide.Buy,
+            _fixture.Create<Id<Market>>(),
+            _fixture.Create<Id<Symbol>>(),
+            150.50m,
+            10m,
+            TargetPrice: 180m
+        );
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var position = await _dbContext.Positions.FindAsync(result.Id);
+        position.ShouldNotBeNull();
+        position.TargetPrice.ShouldBe(180m);
+    }
+
+    [Fact]
     public async Task Handle_WhenCreatingSellPosition_ShouldCreateSellWithNoLink()
     {
         // Arrange
