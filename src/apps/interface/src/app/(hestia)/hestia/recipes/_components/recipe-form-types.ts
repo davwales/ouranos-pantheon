@@ -2,7 +2,10 @@ export type IngredientFormRow = {
   quantity: string;
   unit: string;
   name: string;
+  isOptional: boolean;
 };
+
+export type IngredientTextField = Exclude<keyof IngredientFormRow, "isOptional">;
 
 export type InstructionStepFormRow = {
   id: string;

@@ -23,7 +23,7 @@ public sealed class GetRecipeEndpointTests
             "Chocolate Cake",
             "https://example.com/cake",
             [new StepResponse("Mix and bake.")],
-            [new IngredientResponse(4m, "tablespoons", "granulated sugar")],
+            [new IngredientResponse(4m, "tablespoons", "granulated sugar", false)],
             "Best served warm.",
             DateTimeOffset.UtcNow,
             RecipeImportStatus.Imported,

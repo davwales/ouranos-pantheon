@@ -2,7 +2,7 @@
 
 import { generateID } from "@/lib/utils";
 import { useState } from "react";
-import type { FormErrors, IngredientFormRow, RecipeFormState } from "./recipe-form-types";
+import type { FormErrors, IngredientTextField, RecipeFormState } from "./recipe-form-types";
 
 export function useRecipeFormState(initialForm: RecipeFormState) {
   const [form, setForm] = useState<RecipeFormState>(initialForm);
@@ -16,7 +16,7 @@ export function useRecipeFormState(initialForm: RecipeFormState) {
     }
   };
 
-  const clearIngredientError = (index: number, field: keyof IngredientFormRow) => {
+  const clearIngredientError = (index: number, field: IngredientTextField) => {
     if (errors.ingredients?.[index]?.[field]) {
       setErrors((prev) => {
         const next = [...(prev.ingredients ?? [])];
@@ -51,7 +51,16 @@ export function useRecipeFormState(initialForm: RecipeFormState) {
     clearGenericError();
   };
 
-  const updateIngredient = (index: number, field: keyof IngredientFormRow, value: string) => {
+  const setIngredientOptional = (index: number, isOptional: boolean) => {
+    setForm((prev) => {
+      const next = [...prev.ingredients];
+      next[index] = { ...next[index], isOptional };
+      return { ...prev, ingredients: next };
+    });
+    clearGenericError();
+  };
+
+  const updateIngredient = (index: number, field: IngredientTextField, value: string) => {
     setForm((prev) => {
       const next = [...prev.ingredients];
       next[index] = { ...next[index], [field]: value };
@@ -64,7 +73,10 @@ export function useRecipeFormState(initialForm: RecipeFormState) {
   const addIngredient = () => {
     setForm((prev) => ({
       ...prev,
-      ingredients: [...prev.ingredients, { quantity: "", unit: "", name: "" }],
+      ingredients: [
+        ...prev.ingredients,
+        { quantity: "", unit: "", name: "", isOptional: false },
+      ],
     }));
   };
 
@@ -159,6 +171,7 @@ export function useRecipeFormState(initialForm: RecipeFormState) {
     setIsSubmitting,
     updateField,
     updateIngredient,
+    setIngredientOptional,
     addIngredient,
     removeIngredient,
     updateStep,

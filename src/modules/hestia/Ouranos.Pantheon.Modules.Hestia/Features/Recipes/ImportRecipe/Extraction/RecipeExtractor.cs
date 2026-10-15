@@ -31,6 +31,8 @@ public sealed class RecipeExtractor(
           - unit: the measurement unit in lowercase singular form (cup, tbsp, tsp, g, kg, ml, oz,
             clove, slice, pinch). Use null for countable or unitless items, such as "3 eggs".
           - name: the ingredient name only, without the amount, unit, or trailing preparation notes.
+          - isOptional: true only when the source marks the ingredient as optional, for example
+            "(optional)" or "to serve, if you like"; otherwise false.
           - When one line lists multiple distinct ingredients (for example "2 cups flour, plus more
             for dusting"), emit separate entries per ingredient and keep preparation context only
             on the ingredient it describes.

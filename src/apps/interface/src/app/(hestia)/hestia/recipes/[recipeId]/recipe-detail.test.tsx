@@ -74,8 +74,8 @@ function mockRecipe(overrides: Partial<Recipe> = {}): Recipe {
     sourceUrl: "https://example.com/cake",
     steps: [{ text: "Mix and bake for 30 minutes." }],
     ingredients: [
-      { quantity: 4, unit: "tablespoons", name: "granulated sugar" },
-      { quantity: 1, unit: "tablespoon", name: "ground cinnamon" },
+      { quantity: 4, unit: "tablespoons", name: "granulated sugar", isOptional: false },
+      { quantity: 1, unit: "tablespoon", name: "ground cinnamon", isOptional: false },
     ],
     notes: "Best served warm.",
     createdAt: "2025-01-01T00:00:00.000Z",

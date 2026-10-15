@@ -154,6 +154,34 @@ public sealed class GetShoppingListHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenRecipeHasOptionalIngredients_ShouldLeaveThemOffTheList()
+    {
+        // Arrange
+        var recipeId = Guid.NewGuid();
+        var list = BuildList([new Id<Recipe>(recipeId.ToString())]);
+
+        var recipe = BuildRecipe(
+            recipeId,
+            new Ingredient(300m, "g", "Flour"),
+            new Ingredient(1m, "bunch", "Parsley", isOptional: true)
+        );
+
+        _session
+            .LoadAsync<ShoppingList>(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<ShoppingList?>(list));
+
+        _session
+            .LoadManyAsync<Recipe>(Arg.Any<CancellationToken>(), Arg.Any<Guid[]>())
+            .Returns(Task.FromResult<IReadOnlyList<Recipe>>([recipe]));
+
+        // Act
+        var result = await _handler.Handle(new GetShoppingListInput(), CancellationToken.None);
+
+        // Assert
+        result.ConsolidatedIngredients.Select(c => c.Name).ShouldBe(["Flour"]);
+    }
+
+    [Fact]
     public async Task Handle_WhenCheckedItemIdsContainStaleEntries_ShouldPruneToValidKeys()
     {
         // Arrange

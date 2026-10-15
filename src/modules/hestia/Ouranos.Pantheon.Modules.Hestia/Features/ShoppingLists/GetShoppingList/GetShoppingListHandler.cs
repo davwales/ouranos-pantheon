@@ -81,12 +81,14 @@ public sealed class GetShoppingListHandler(
                 continue;
             }
 
-            foreach (var ingredient in recipe.Ingredients)
+            // Optional ingredients are left to the user, who can add them as manual items.
+            foreach (var ingredient in recipe.Ingredients.Where(i => !i.IsOptional))
             {
                 var key = ShoppingListNormalizer.RecipeLineKey(
                     ShoppingListNormalizer.Normalize(ingredient.Name),
                     ShoppingListNormalizer.Normalize(ingredient.Unit)
                 );
+
                 if (consolidated.TryGetValue(key, out var existing))
                 {
                     consolidated[key] = (
