@@ -92,6 +92,20 @@ describe("RecipeForm", () => {
     expect(screen.getByRole("button", { name: /save/i })).toBeInTheDocument();
   });
 
+  it("adds a step when crypto.randomUUID is unavailable in a non-secure context", () => {
+    const original = crypto.randomUUID;
+    Object.defineProperty(crypto, "randomUUID", { value: undefined, configurable: true });
+
+    try {
+      render(<RecipeForm />);
+      fireEvent.click(screen.getByRole("button", { name: /add step/i }));
+
+      expect(screen.getByLabelText(/text for step 2/i)).toBeInTheDocument();
+    } finally {
+      Object.defineProperty(crypto, "randomUUID", { value: original, configurable: true });
+    }
+  });
+
   it("typing into Title updates its value", () => {
     render(<RecipeForm />);
 

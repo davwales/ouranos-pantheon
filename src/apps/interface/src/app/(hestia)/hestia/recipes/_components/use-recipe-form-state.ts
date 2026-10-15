@@ -1,5 +1,6 @@
 "use client";
 
+import { generateID } from "@/lib/utils";
 import { useState } from "react";
 import type { FormErrors, IngredientFormRow, RecipeFormState } from "./recipe-form-types";
 
@@ -99,7 +100,7 @@ export function useRecipeFormState(initialForm: RecipeFormState) {
   const addStep = () => {
     setForm((prev) => ({
       ...prev,
-      steps: [...prev.steps, { id: crypto.randomUUID(), text: "" }],
+      steps: [...prev.steps, { id: generateID(), text: "" }],
     }));
   };
 
