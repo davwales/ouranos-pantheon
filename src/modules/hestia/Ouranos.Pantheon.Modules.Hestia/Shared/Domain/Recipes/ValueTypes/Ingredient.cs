@@ -7,8 +7,9 @@ public sealed record Ingredient
     public decimal Quantity { get; init; }
     public string Unit { get; init; } = string.Empty;
     public string Name { get; init; } = string.Empty;
+    public bool IsOptional { get; init; }
 
-    public Ingredient(decimal quantity, string unit, string name)
+    public Ingredient(decimal quantity, string unit, string name, bool isOptional = false)
     {
         Guard.Against.OutOfRange(quantity, nameof(quantity), 0, decimal.MaxValue);
         Guard.Against.NullOrWhiteSpace(unit);
@@ -19,5 +20,6 @@ public sealed record Ingredient
         Quantity = quantity;
         Unit = unit;
         Name = name;
+        IsOptional = isOptional;
     }
 }

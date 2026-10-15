@@ -40,7 +40,14 @@ public sealed class GetRecipeHandler(ILogger<GetRecipeHandler> logger, IHestiaMa
             recipe.Title,
             recipe.SourceUrl,
             [.. recipe.Steps.Select(s => new StepResponse(s.Text))],
-            [.. recipe.Ingredients.Select(i => new IngredientResponse(i.Quantity, i.Unit, i.Name))],
+            [
+                .. recipe.Ingredients.Select(i => new IngredientResponse(
+                    i.Quantity,
+                    i.Unit,
+                    i.Name,
+                    i.IsOptional
+                )),
+            ],
             recipe.Notes,
             recipe.CreatedAt,
             recipe.ImportStatus,

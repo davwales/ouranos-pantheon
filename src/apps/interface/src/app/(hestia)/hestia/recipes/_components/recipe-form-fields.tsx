@@ -13,7 +13,7 @@ import { ChevronDown } from "lucide-react";
 import { IngredientRow } from "./ingredient-row";
 import { InstructionStepRow } from "./instruction-step-row";
 import { RecipeFormField } from "./recipe-form-field";
-import type { FormErrors, IngredientFormRow, RecipeFormState } from "./recipe-form-types";
+import type { FormErrors, IngredientTextField, RecipeFormState } from "./recipe-form-types";
 
 export type RecipeFormFieldsProps = {
   form: RecipeFormState;
@@ -24,7 +24,8 @@ export type RecipeFormFieldsProps = {
     field: keyof Omit<RecipeFormState, "ingredients" | "steps">,
     value: string,
   ) => void;
-  updateIngredient: (index: number, field: keyof IngredientFormRow, value: string) => void;
+  updateIngredient: (index: number, field: IngredientTextField, value: string) => void;
+  setIngredientOptional: (index: number, isOptional: boolean) => void;
   addIngredient: () => void;
   removeIngredient: (index: number) => void;
   updateStep: (index: number, value: string) => void;
@@ -41,6 +42,7 @@ export function RecipeFormFields({
   isSubmitting,
   updateField,
   updateIngredient,
+  setIngredientOptional,
   addIngredient,
   removeIngredient,
   updateStep,
@@ -81,6 +83,8 @@ export function RecipeFormFields({
             quantity={row.quantity}
             unit={row.unit}
             name={row.name}
+            isOptional={row.isOptional}
+            onOptionalChange={setIngredientOptional}
             onQuantityChange={(i, v) => updateIngredient(i, "quantity", v)}
             onUnitChange={(i, v) => updateIngredient(i, "unit", v)}
             onNameChange={(i, v) => updateIngredient(i, "name", v)}

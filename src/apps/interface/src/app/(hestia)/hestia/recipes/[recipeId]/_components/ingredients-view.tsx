@@ -71,7 +71,12 @@ export function IngredientsView({ ingredients }: IngredientsViewProps) {
                   {quantity}
                 </span>
                 <span className="text-muted-foreground">{ingredient.unit}</span>
-                <span>{ingredient.name}</span>
+                <span>
+                  {ingredient.name}
+                  {ingredient.isOptional && (
+                    <span className="ml-2 text-sm text-muted-foreground">(optional)</span>
+                  )}
+                </span>
               </li>
             );
           })}

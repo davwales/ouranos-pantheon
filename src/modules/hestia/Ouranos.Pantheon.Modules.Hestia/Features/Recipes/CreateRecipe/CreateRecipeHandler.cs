@@ -30,7 +30,14 @@ public sealed class CreateRecipeHandler(
             command.Title,
             command.SourceUrl,
             [.. command.Steps.Select(s => new Step(s.Text))],
-            [.. command.Ingredients.Select(i => new Ingredient(i.Quantity, i.Unit, i.Name))],
+            [
+                .. command.Ingredients.Select(i => new Ingredient(
+                    i.Quantity,
+                    i.Unit,
+                    i.Name,
+                    i.IsOptional
+                )),
+            ],
             command.Notes ?? string.Empty
         );
 

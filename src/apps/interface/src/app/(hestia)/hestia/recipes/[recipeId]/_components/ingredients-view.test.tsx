@@ -4,9 +4,9 @@ import type { Ingredient } from "@/lib/api/hestia-types";
 import { IngredientsView } from "./ingredients-view";
 
 const ingredients: Ingredient[] = [
-  { quantity: 4, unit: "tablespoons", name: "granulated sugar" },
-  { quantity: 1, unit: "tablespoon", name: "ground cinnamon" },
-  { quantity: 0, unit: "pinch", name: "salt to taste" },
+  { quantity: 4, unit: "tablespoons", name: "granulated sugar", isOptional: false },
+  { quantity: 1, unit: "tablespoon", name: "ground cinnamon", isOptional: false },
+  { quantity: 0, unit: "pinch", name: "salt to taste", isOptional: true },
 ];
 
 describe("IngredientsView", () => {
@@ -76,5 +76,13 @@ describe("IngredientsView", () => {
     expect(screen.queryByText(/^0/)).not.toBeInTheDocument();
     expect(screen.getByText("pinch")).toBeInTheDocument();
     expect(screen.getByText("salt to taste")).toBeInTheDocument();
+  });
+
+  it("WhenIngredientIsOptional_ShouldLabelIt", () => {
+    // Arrange & Act
+    render(<IngredientsView ingredients={ingredients} />);
+
+    // Assert
+    expect(screen.getAllByText("(optional)")).toHaveLength(1);
   });
 });

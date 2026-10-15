@@ -81,7 +81,8 @@ internal static class ExtractedRecipeMapper
                 new Ingredient(
                     ResolveQuantity(rawIngredient.Quantity),
                     ResolveUnit(rawIngredient.Unit),
-                    name
+                    name,
+                    rawIngredient.IsOptional
                 )
             );
         }

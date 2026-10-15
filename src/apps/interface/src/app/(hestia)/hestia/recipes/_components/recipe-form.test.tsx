@@ -186,8 +186,8 @@ describe("RecipeForm", () => {
         title: "Spaghetti Carbonara",
         sourceUrl: null,
         ingredients: [
-          { quantity: 400, unit: "g", name: "spaghetti" },
-          { quantity: 4, unit: "large", name: "eggs" },
+          { quantity: 400, unit: "g", name: "spaghetti", isOptional: false },
+          { quantity: 4, unit: "large", name: "eggs", isOptional: false },
         ],
         steps: [{ text: "Boil pasta. Mix eggs." }],
         notes: "",

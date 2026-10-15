@@ -40,6 +40,24 @@ public sealed class ExtractedRecipeMapperTests
     }
 
     [Fact]
+    public void TryMap_WhenIngredientIsOptional_ShouldKeepTheFlag()
+    {
+        // Arrange
+        var extracted = ValidExtractedRecipe() with
+        {
+            Ingredients = [new ExtractedIngredient(1m, "tbsp", "chives", IsOptional: true)],
+        };
+
+        // Act
+        var result = ExtractedRecipeMapper.TryMap(extracted);
+
+        // Assert
+        result
+            .ShouldBeOfType<MappedRecipe>()
+            .Ingredients.ShouldBe([new Ingredient(1m, "tbsp", "chives", isOptional: true)]);
+    }
+
+    [Fact]
     public void TryMap_WhenTitleIsBlank_ShouldReturnNull()
     {
         // Arrange

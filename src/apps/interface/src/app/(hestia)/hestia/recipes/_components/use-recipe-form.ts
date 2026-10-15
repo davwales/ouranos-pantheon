@@ -11,7 +11,7 @@ import { validateRecipeForm } from "./validate-recipe-form";
 const initialState: RecipeFormState = {
   title: "",
   sourceUrl: "",
-  ingredients: [{ quantity: "", unit: "", name: "" }],
+  ingredients: [{ quantity: "", unit: "", name: "", isOptional: false }],
   steps: [{ id: generateID(), text: "" }],
   notes: "",
 };
@@ -28,6 +28,7 @@ export function useRecipeForm() {
     setIsSubmitting,
     updateField,
     updateIngredient,
+    setIngredientOptional,
     addIngredient,
     removeIngredient,
     updateStep,
@@ -59,6 +60,7 @@ export function useRecipeForm() {
           quantity: parseFloat(r.quantity) || 0,
           unit: r.unit.trim(),
           name: r.name.trim(),
+          isOptional: r.isOptional,
         }));
 
       const steps = form.steps
@@ -93,6 +95,7 @@ export function useRecipeForm() {
     isSubmitting,
     updateField,
     updateIngredient,
+    setIngredientOptional,
     addIngredient,
     removeIngredient,
     updateStep,

@@ -16,6 +16,7 @@ function toFormState(data: Recipe): RecipeFormState {
       quantity: String(ingredient.quantity),
       unit: ingredient.unit,
       name: ingredient.name,
+      isOptional: ingredient.isOptional,
     })),
     steps: data.steps.map((step) => ({ id: generateID(), text: step.text })),
     notes: data.notes,
@@ -39,6 +40,7 @@ export function useRecipeEditForm({
     setIsSubmitting,
     updateField,
     updateIngredient,
+    setIngredientOptional,
     addIngredient,
     removeIngredient,
     updateStep,
@@ -70,6 +72,7 @@ export function useRecipeEditForm({
           quantity: parseFloat(r.quantity) || 0,
           unit: r.unit.trim(),
           name: r.name.trim(),
+          isOptional: r.isOptional,
         }));
 
       const steps = form.steps
@@ -104,6 +107,7 @@ export function useRecipeEditForm({
     isSubmitting,
     updateField,
     updateIngredient,
+    setIngredientOptional,
     addIngredient,
     removeIngredient,
     updateStep,

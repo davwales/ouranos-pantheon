@@ -11,6 +11,8 @@ type IngredientRowProps = {
   quantity: string;
   unit: string;
   name: string;
+  isOptional: boolean;
+  onOptionalChange: (index: number, value: boolean) => void;
   onQuantityChange: (index: number, value: string) => void;
   onUnitChange: (index: number, value: string) => void;
   onNameChange: (index: number, value: string) => void;
@@ -25,6 +27,8 @@ export function IngredientRow({
   quantity,
   unit,
   name,
+  isOptional,
+  onOptionalChange,
   onQuantityChange,
   onUnitChange,
   onNameChange,
@@ -110,6 +114,18 @@ export function IngredientRow({
           </p>
         )}
       </div>
+
+      <label className="flex h-9 items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={isOptional}
+          onChange={(e) => onOptionalChange(index, e.target.checked)}
+          disabled={disabled}
+          aria-label={`Ingredient ${displayIndex} is optional`}
+          className="size-4 accent-primary"
+        />
+        Optional
+      </label>
 
       <Button
         type="button"

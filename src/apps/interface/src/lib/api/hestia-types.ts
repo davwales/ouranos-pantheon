@@ -12,12 +12,14 @@ export type IngredientInput = {
   quantity: number;
   unit: string;
   name: string;
+  isOptional: boolean;
 };
 
 export type Ingredient = {
   quantity: number;
   unit: string;
   name: string;
+  isOptional: boolean;
 };
 
 export type Step = {
