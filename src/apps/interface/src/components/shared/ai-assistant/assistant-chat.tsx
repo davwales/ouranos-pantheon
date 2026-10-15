@@ -5,6 +5,7 @@ import { AssistantMessageList } from "@/components/shared/ai-assistant/assistant
 import { AssistantSuggestions } from "@/components/shared/ai-assistant/assistant-suggestions";
 import { type AssistantChatMessage } from "@/components/shared/ai-assistant/use-assistant-chat";
 import { Typography } from "@/components/shared/typography";
+import { type AssistantActionHandlers } from "@/lib/api/assistant";
 import { cn } from "@/lib/utils";
 import { useEffect, useRef } from "react";
 
@@ -21,6 +22,9 @@ export function AssistantChat({
   autoFocus,
   onSend,
   onStop,
+  toolLabels,
+  actionHandlers,
+  onApplyAction,
   className,
 }: {
   messages: AssistantChatMessage[];
@@ -33,6 +37,9 @@ export function AssistantChat({
   autoFocus?: boolean;
   onSend: (content: string) => Promise<boolean>;
   onStop: () => void;
+  toolLabels?: Record<string, string>;
+  actionHandlers?: AssistantActionHandlers;
+  onApplyAction?: (messageId: string, actionId: string) => void;
   className?: string;
 }) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -81,6 +88,9 @@ export function AssistantChat({
             messages={messages}
             isStreaming={isStreaming}
             assistantName={assistantName}
+            toolLabels={toolLabels}
+            actionHandlers={actionHandlers}
+            onApplyAction={onApplyAction}
           />
         )}
       </div>

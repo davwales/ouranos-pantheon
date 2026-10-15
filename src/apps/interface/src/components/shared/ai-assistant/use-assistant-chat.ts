@@ -2,38 +2,114 @@
 
 import {
   streamAssistant,
+  type AssistantActionHandlers,
   type AssistantEndpoint,
   type AssistantRole,
 } from "@/lib/api/assistant";
 import { generateID } from "@/lib/utils";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+export type AssistantChatActionStatus =
+  | "proposed"
+  | "applying"
+  | "applied"
+  | "failed";
+
+export type AssistantChatAction = {
+  id: string;
+  name: string;
+  action: unknown;
+  status: AssistantChatActionStatus;
+  error?: string;
+};
+
 export type AssistantChatMessage = {
   id: string;
   role: AssistantRole;
   content: string;
   reasoning?: string;
+  tools?: string[];
+  actions?: AssistantChatAction[];
 };
 
 export type UseAssistantChatOptions<TContext> = {
   endpoint: AssistantEndpoint<TContext>;
   context: TContext;
+  actions?: AssistantActionHandlers;
 };
 
 const FALLBACK_ERROR = "The assistant is unavailable right now. Please try again.";
+const FALLBACK_ACTION_ERROR = "The change could not be applied.";
 
 export function useAssistantChat<TContext>({
   endpoint,
   context,
+  actions,
 }: UseAssistantChatOptions<TContext>) {
   const [messages, setMessages] = useState<AssistantChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const actionsRef = useRef(actions);
+
+  useEffect(() => {
+    actionsRef.current = actions;
+  }, [actions]);
 
   useEffect(() => {
     return () => abortRef.current?.abort();
   }, []);
+
+  const updateAction = useCallback(
+    (messageId: string, actionId: string, update: Partial<AssistantChatAction>) => {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === messageId
+            ? {
+                ...m,
+                actions: m.actions?.map((a) =>
+                  a.id === actionId ? { ...a, ...update } : a,
+                ),
+              }
+            : m,
+        ),
+      );
+    },
+    [],
+  );
+
+  const runAction = useCallback(
+    async (messageId: string, chatAction: AssistantChatAction) => {
+      const handler = actionsRef.current?.[chatAction.name];
+      if (!handler) {
+        return;
+      }
+
+      updateAction(messageId, chatAction.id, { status: "applying", error: undefined });
+      try {
+        await handler.apply(chatAction.action);
+        updateAction(messageId, chatAction.id, { status: "applied" });
+      } catch (e) {
+        updateAction(messageId, chatAction.id, {
+          status: "failed",
+          error: e instanceof Error && e.message ? e.message : FALLBACK_ACTION_ERROR,
+        });
+      }
+    },
+    [updateAction],
+  );
+
+  const applyAction = useCallback(
+    (messageId: string, actionId: string) => {
+      const chatAction = messages
+        .find((m) => m.id === messageId)
+        ?.actions?.find((a) => a.id === actionId);
+      if (chatAction && chatAction.status !== "applying" && chatAction.status !== "applied") {
+        void runAction(messageId, chatAction);
+      }
+    },
+    [messages, runAction],
+  );
 
   const send = useCallback(
     async (content: string): Promise<boolean> => {
@@ -87,6 +163,32 @@ export function useAssistantChat<TContext>({
                 m.id === assistantId ? { ...m, content: snapshot } : m,
               ),
             );
+          } else if (event.$type === "tool") {
+            const name = event.name;
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === assistantId
+                  ? { ...m, tools: [...(m.tools ?? []), name] }
+                  : m,
+              ),
+            );
+          } else if (event.$type === "action") {
+            const chatAction: AssistantChatAction = {
+              id: generateID(),
+              name: event.name,
+              action: event.action,
+              status: "proposed",
+            };
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === assistantId
+                  ? { ...m, actions: [...(m.actions ?? []), chatAction] }
+                  : m,
+              ),
+            );
+            if (actionsRef.current?.[chatAction.name]?.autoApply) {
+              void runAction(assistantId, chatAction);
+            }
           } else if (event.$type === "error") {
             failure = event.message;
             break;
@@ -117,7 +219,7 @@ export function useAssistantChat<TContext>({
       setIsStreaming(false);
       return !isWithdrawn;
     },
-    [endpoint, context, messages],
+    [endpoint, context, messages, runAction],
   );
 
   const stop = useCallback(() => {
@@ -132,5 +234,5 @@ export function useAssistantChat<TContext>({
     setIsStreaming(false);
   }, []);
 
-  return { messages, isStreaming, error, send, stop, reset };
+  return { messages, isStreaming, error, send, stop, reset, applyAction };
 }

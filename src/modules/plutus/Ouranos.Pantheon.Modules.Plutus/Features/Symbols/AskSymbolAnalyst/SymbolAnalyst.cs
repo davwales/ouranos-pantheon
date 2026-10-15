@@ -31,8 +31,9 @@ public sealed class SymbolAnalyst(
     IOuranosMachineLearningClient mlClient,
     IMessageBus bus,
     IMemoryCache cache,
-    IOptions<PlutusOptions> options
-) : PantheonAssistant<SymbolAnalystContext>(logger, mlClient)
+    IOptions<PlutusOptions> options,
+    IEnumerable<IAssistantTool<SymbolAnalystContext>> tools
+) : PantheonAssistant<SymbolAnalystContext>(logger, mlClient, tools)
 {
     internal static readonly TimeFrame[] Windows =
     [

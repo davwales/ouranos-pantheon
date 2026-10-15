@@ -1,6 +1,7 @@
 import { useAssistantChat } from "@/components/shared/ai-assistant/use-assistant-chat";
 import {
   streamAssistant,
+  type AssistantActionHandlers,
   type AssistantEndpoint,
   type AssistantEvent,
 } from "@/lib/api/assistant";
@@ -21,9 +22,9 @@ async function* events(...items: AssistantEvent[]): AsyncGenerator<AssistantEven
   }
 }
 
-function renderChat() {
+function renderChat(actions?: AssistantActionHandlers) {
   return renderHook(() =>
-    useAssistantChat({ endpoint: ENDPOINT, context: CONTEXT }),
+    useAssistantChat({ endpoint: ENDPOINT, context: CONTEXT, actions }),
   );
 }
 
@@ -262,5 +263,117 @@ describe("useAssistantChat", () => {
       "New",
       "Fresh",
     ]);
+  });
+
+  it("WhenToolsAndActionsAreStreamed_ShouldRecordThemOnTheReplyWithoutResendingThem", async () => {
+    // Arrange
+    vi.mocked(streamAssistant)
+      .mockReturnValueOnce(
+        events(
+          { $type: "tool", name: "get_signals" },
+          { $type: "action", name: "add_note", action: { text: "Freezes well" } },
+          { $type: "content", content: "Proposed a note." },
+          { $type: "done" },
+        ),
+      )
+      .mockReturnValueOnce(events({ $type: "content", content: "Second" }));
+    const { result } = renderChat({
+      add_note: { describe: () => "Add note", apply: vi.fn() },
+    });
+    await act(() => result.current.send("One"));
+
+    // Act
+    await act(() => result.current.send("Two"));
+
+    // Assert
+    const reply = result.current.messages[1];
+    expect(reply.tools).toEqual(["get_signals"]);
+    expect(reply.actions).toEqual([
+      expect.objectContaining({
+        name: "add_note",
+        action: { text: "Freezes well" },
+        status: "proposed",
+      }),
+    ]);
+    expect(vi.mocked(streamAssistant).mock.calls[1][1].messages).toEqual([
+      { role: "User", content: "One" },
+      { role: "Assistant", content: "Proposed a note." },
+      { role: "User", content: "Two" },
+    ]);
+  });
+
+  it("WhenActionHandlerAutoApplies_ShouldApplyItAsItArrives", async () => {
+    // Arrange
+    const apply = vi.fn();
+    vi.mocked(streamAssistant).mockReturnValueOnce(
+      events(
+        { $type: "action", name: "set_view", action: { sortBy: "Roi" } },
+        { $type: "content", content: "Done." },
+      ),
+    );
+    const { result } = renderChat({
+      set_view: { describe: () => "Sort by ROI", apply, autoApply: true },
+    });
+
+    // Act
+    await act(() => result.current.send("Sort by ROI"));
+
+    // Assert
+    expect(apply).toHaveBeenCalledWith({ sortBy: "Roi" });
+    await waitFor(() =>
+      expect(result.current.messages[1].actions?.[0].status).toBe("applied"),
+    );
+  });
+
+  it("WhenProposedActionIsApplied_ShouldRunTheHandlerAndMarkItApplied", async () => {
+    // Arrange
+    const apply = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(streamAssistant).mockReturnValueOnce(
+      events(
+        { $type: "action", name: "add_note", action: { text: "Rest it" } },
+        { $type: "content", content: "Proposed." },
+      ),
+    );
+    const { result } = renderChat({
+      add_note: { describe: () => "Add note", apply },
+    });
+    await act(() => result.current.send("Add a note"));
+    const reply = result.current.messages[1];
+    expect(apply).not.toHaveBeenCalled();
+
+    // Act
+    act(() => result.current.applyAction(reply.id, reply.actions?.[0].id ?? ""));
+
+    // Assert
+    await waitFor(() =>
+      expect(result.current.messages[1].actions?.[0].status).toBe("applied"),
+    );
+    expect(apply).toHaveBeenCalledWith({ text: "Rest it" });
+  });
+
+  it("WhenApplyingFails_ShouldMarkTheActionFailedWithTheError", async () => {
+    // Arrange
+    const apply = vi.fn().mockRejectedValue(new Error("Recipe changed"));
+    vi.mocked(streamAssistant).mockReturnValueOnce(
+      events(
+        { $type: "action", name: "add_note", action: { text: "Rest it" } },
+        { $type: "content", content: "Proposed." },
+      ),
+    );
+    const { result } = renderChat({
+      add_note: { describe: () => "Add note", apply },
+    });
+    await act(() => result.current.send("Add a note"));
+    const reply = result.current.messages[1];
+
+    // Act
+    act(() => result.current.applyAction(reply.id, reply.actions?.[0].id ?? ""));
+
+    // Assert
+    await waitFor(() =>
+      expect(result.current.messages[1].actions?.[0]).toEqual(
+        expect.objectContaining({ status: "failed", error: "Recipe changed" }),
+      ),
+    );
   });
 });

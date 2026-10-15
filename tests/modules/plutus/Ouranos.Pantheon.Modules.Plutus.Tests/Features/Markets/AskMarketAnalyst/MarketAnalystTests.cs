@@ -51,7 +51,8 @@ public sealed class MarketAnalystTests
                         ContextCacheMinutes: 5
                     ),
                 }
-            )
+            ),
+            []
         );
 
         _bus.InvokeAsync<GetMarketResponse>(Arg.Any<object>(), Arg.Any<CancellationToken>())
@@ -73,7 +74,8 @@ public sealed class MarketAnalystTests
             .StreamResponseAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<List<MessageDto>>(),
+                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
+                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
                 Arg.Any<float?>(),
                 Arg.Any<int?>(),
                 Arg.Any<ReasoningEffort?>(),
@@ -123,7 +125,8 @@ public sealed class MarketAnalystTests
             .StreamResponseAsync(
                 "analyst-model",
                 Arg.Do<string>(i => sentInstructions = i),
-                Arg.Any<List<MessageDto>>(),
+                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
+                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
                 0.2f,
                 512,
                 ReasoningEffort.Low,
@@ -255,7 +258,8 @@ public sealed class MarketAnalystTests
                 _mlClient,
                 null!,
                 _cache,
-                Options.Create(new PlutusOptions())
+                Options.Create(new PlutusOptions()),
+                []
             )
         );
     }
@@ -270,7 +274,8 @@ public sealed class MarketAnalystTests
                 _mlClient,
                 _bus,
                 null!,
-                Options.Create(new PlutusOptions())
+                Options.Create(new PlutusOptions()),
+                []
             )
         );
     }
@@ -285,7 +290,8 @@ public sealed class MarketAnalystTests
                 _mlClient,
                 _bus,
                 _cache,
-                null!
+                null!,
+                []
             )
         );
     }

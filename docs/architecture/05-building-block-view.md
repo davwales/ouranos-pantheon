@@ -157,7 +157,7 @@ Two distinct assemblies live under `src/modules/shared/`:
 module: `IPantheonModule`, `Id<T>`, `BaseEntity`, `BaseEventSourcedEntity`,
 `IPantheonHandler`, the common query contract (paging/sorting/filtering), the backtest
 step pipeline abstractions, `SseWriter`, the AI assistant base (`PantheonAssistant<TContext>`,
-`MapAssistant`), the `WebSocketWorker` infrastructure, the
+`AssistantTool<TContext, TArguments>`, `MapAssistant`), the `WebSocketWorker` infrastructure, the
 OuranosMl client and its global model defaults (`ModelDefaults`), the genetic-algorithm engine, the `PostgresModule`/`OuranosDbContext`
 persistence core, and the Marten registration helper (`AddCoreMartenModule`, used by
 Hestia). See [Section 8](08-crosscutting-concepts.md).

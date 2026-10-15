@@ -17,6 +17,8 @@ export type AssistantCompletionInput<TContext> = {
 export type AssistantEvent =
   | { $type: "reasoning"; content: string }
   | { $type: "content"; content: string }
+  | { $type: "tool"; name: string }
+  | { $type: "action"; name: string; action: unknown }
   | {
       $type: "usage";
       inputTokens: number;
@@ -25,3 +27,14 @@ export type AssistantEvent =
     }
   | { $type: "error"; message: string }
   | { $type: "done" };
+
+export type AssistantActionHandler<TAction> = {
+  describe(action: TAction): string;
+  apply(action: TAction): Promise<void> | void;
+  autoApply?: boolean;
+};
+
+export type AssistantActionHandlers = Record<
+  string,
+  AssistantActionHandler<unknown>
+>;

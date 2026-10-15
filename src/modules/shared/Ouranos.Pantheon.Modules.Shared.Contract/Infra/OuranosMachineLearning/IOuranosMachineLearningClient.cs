@@ -26,7 +26,8 @@ public interface IOuranosMachineLearningClient
     IAsyncEnumerable<ResponseStreamChunk> StreamResponseAsync(
         string model,
         string instructions,
-        List<MessageDto> input,
+        IReadOnlyList<ResponseInputItemDto> input,
+        IReadOnlyList<FunctionToolDto> tools,
         float? temperature = null,
         int? maxTokens = null,
         ReasoningEffort? reasoningEffort = null,

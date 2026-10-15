@@ -96,7 +96,11 @@ public sealed class OuranosMachineLearningClientTests
             var chunk in client.StreamResponseAsync(
                 "test-model",
                 "Be brief.",
-                [new MessageDto("Hi", RoleDto.User), new MessageDto("Hello", RoleDto.Assistant)],
+                [
+                    new MessageInputItemDto(new MessageDto("Hi", RoleDto.User)),
+                    new MessageInputItemDto(new MessageDto("Hello", RoleDto.Assistant)),
+                ],
+                [],
                 0.5f,
                 256,
                 ReasoningEffort.Medium
@@ -124,6 +128,74 @@ public sealed class OuranosMachineLearningClientTests
     }
 
     [Fact]
+    public async Task StreamResponseAsync_WhenToolsAndToolItemsAreGiven_ShouldSendThemAndYieldFunctionCalls()
+    {
+        // Arrange
+        var handler = new RecordingHttpMessageHandler(
+            "text/event-stream",
+            Sse(
+                (
+                    "response.output_item.done",
+                    """{"type":"response.output_item.done","sequence_number":0,"output_index":0,"item":{"type":"function_call","id":"fc_1","call_id":"call_2","name":"lookup","arguments":"{\"query\":\"salt\"}","status":"completed"}}"""
+                ),
+                ("response.completed", Lifecycle("response.completed", 1, "completed", null))
+            )
+        );
+        var client = CreateClient(handler);
+
+        // Act
+        var chunks = new List<ResponseStreamChunk>();
+
+        await foreach (
+            var chunk in client.StreamResponseAsync(
+                "test-model",
+                "Be brief.",
+                [
+                    new MessageInputItemDto(new MessageDto("Hi", RoleDto.User)),
+                    new FunctionCallInputItemDto(
+                        new FunctionCallDto("call_1", "lookup", """{"query":"flour"}""")
+                    ),
+                    new FunctionCallOutputInputItemDto("call_1", "Bread flour."),
+                ],
+                [
+                    new FunctionToolDto(
+                        "lookup",
+                        "Looks something up.",
+                        BinaryData.FromString("""{"type":"object","properties":{}}""")
+                    ),
+                ]
+            )
+        )
+        {
+            chunks.Add(chunk);
+        }
+
+        // Assert
+        chunks.ShouldBe([
+            new ResponseStreamChunk(
+                null,
+                null,
+                null,
+                new FunctionCallDto("call_2", "lookup", """{"query":"salt"}""")
+            ),
+        ]);
+
+        var body = handler.RequestBody.ShouldNotBeNull();
+        var tool = body["tools"]!.AsArray().Single()!;
+        tool["type"]!.GetValue<string>().ShouldBe("function");
+        tool["name"]!.GetValue<string>().ShouldBe("lookup");
+        tool["description"]!.GetValue<string>().ShouldBe("Looks something up.");
+        tool["strict"]!.GetValue<bool>().ShouldBeTrue();
+
+        var input = body["input"]!.AsArray();
+        input[1]!["type"]!.GetValue<string>().ShouldBe("function_call");
+        input[1]!["call_id"]!.GetValue<string>().ShouldBe("call_1");
+        input[1]!["arguments"]!.GetValue<string>().ShouldBe("""{"query":"flour"}""");
+        input[2]!["type"]!.GetValue<string>().ShouldBe("function_call_output");
+        input[2]!["output"]!.GetValue<string>().ShouldBe("Bread flour.");
+    }
+
+    [Fact]
     public async Task StreamResponseAsync_WhenReasoningEffortIsNull_ShouldNotSendReasoning()
     {
         // Arrange
@@ -138,7 +210,8 @@ public sealed class OuranosMachineLearningClientTests
             var _ in client.StreamResponseAsync(
                 "test-model",
                 "Be brief.",
-                [new MessageDto("Hi", RoleDto.User)]
+                [new MessageInputItemDto(new MessageDto("Hi", RoleDto.User))],
+                []
             )
         ) { }
 
@@ -168,7 +241,8 @@ public sealed class OuranosMachineLearningClientTests
                 var _ in client.StreamResponseAsync(
                     "test-model",
                     "Be brief.",
-                    [new MessageDto("Hi", RoleDto.User)]
+                    [new MessageInputItemDto(new MessageDto("Hi", RoleDto.User))],
+                    []
                 )
             ) { }
         };
@@ -199,7 +273,8 @@ public sealed class OuranosMachineLearningClientTests
                 var _ in client.StreamResponseAsync(
                     "test-model",
                     "Be brief.",
-                    [new MessageDto("Hi", RoleDto.User)]
+                    [new MessageInputItemDto(new MessageDto("Hi", RoleDto.User))],
+                    []
                 )
             ) { }
         };

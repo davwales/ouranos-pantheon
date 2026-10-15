@@ -15,8 +15,9 @@ public sealed class KitchenAssistant(
     ILogger<KitchenAssistant> logger,
     IOuranosMachineLearningClient mlClient,
     IHestiaMartenStore store,
-    IOptions<HestiaOptions> options
-) : PantheonAssistant<KitchenAssistantContext>(logger, mlClient)
+    IOptions<HestiaOptions> options,
+    IEnumerable<IAssistantTool<KitchenAssistantContext>> tools
+) : PantheonAssistant<KitchenAssistantContext>(logger, mlClient, tools)
 {
     private readonly ILogger<KitchenAssistant> _logger = Guard.Against.Null(logger);
     private readonly IHestiaMartenStore _store = Guard.Against.Null(store);

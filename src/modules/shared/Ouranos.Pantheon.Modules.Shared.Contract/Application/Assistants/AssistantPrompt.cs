@@ -9,5 +9,7 @@ public sealed record AssistantPrompt(
     float? Temperature = null,
     int? MaxTokens = null,
     ReasoningEffort? ReasoningEffort = null,
-    int HistoryCharacterBudget = ModelDefaults.HistoryCharacterBudget
+    int HistoryCharacterBudget = ModelDefaults.HistoryCharacterBudget,
+    int MaxToolRounds = ModelDefaults.MaxToolRounds,
+    int MaxToolOutputCharacters = ModelDefaults.MaxToolOutputCharacters
 );
