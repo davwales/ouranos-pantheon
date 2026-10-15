@@ -1,5 +1,6 @@
 "use client";
 
+import { generateID } from "@/lib/utils";
 import { hestiaApi } from "@/lib/api/hestia";
 import { ApiError } from "@/lib/api-client";
 import { useRouter } from "next/navigation";
@@ -11,7 +12,7 @@ const initialState: RecipeFormState = {
   title: "",
   sourceUrl: "",
   ingredients: [{ quantity: "", unit: "", name: "" }],
-  steps: [{ id: crypto.randomUUID(), text: "" }],
+  steps: [{ id: generateID(), text: "" }],
   notes: "",
 };
 

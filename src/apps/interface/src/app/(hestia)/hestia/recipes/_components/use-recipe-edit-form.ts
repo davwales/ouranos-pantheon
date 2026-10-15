@@ -1,5 +1,6 @@
 "use client";
 
+import { generateID } from "@/lib/utils";
 import { hestiaApi } from "@/lib/api/hestia";
 import { ApiError } from "@/lib/api-client";
 import type { Recipe } from "@/lib/api/hestia-types";
@@ -16,7 +17,7 @@ function toFormState(data: Recipe): RecipeFormState {
       unit: ingredient.unit,
       name: ingredient.name,
     })),
-    steps: data.steps.map((step) => ({ id: crypto.randomUUID(), text: step.text })),
+    steps: data.steps.map((step) => ({ id: generateID(), text: step.text })),
     notes: data.notes,
   };
 }
