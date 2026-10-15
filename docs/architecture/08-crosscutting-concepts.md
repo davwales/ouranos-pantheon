@@ -26,6 +26,12 @@ Concepts that apply across all modules. Most are implemented in the shared kerne
   the `field:op:value` filter language, parsed once in the kernel and reused by most list
   endpoints. A few lists support only part of the contract; the Bruno collection shows
   each endpoint's parameters.
+- **Table search**: there is no search engine. The frontend data table has one search box.
+  Plain words become a text search: an `or(col:like:term|…)` group over the table's
+  `searchable` columns, which default to string columns that support `contains`. Typed
+  conditions (`Volume > 1000`) are mixed in and implicitly ANDed. The result is sent through
+  the same filter language, so search needs no backend changes. The visual filter builder
+  edits the same tree from a dialog.
 - **Step pipeline**: `IStep`/`StepRegistry` abstractions in the kernel compose a chain of
   responsibility pipeline. Backtests no longer use it; strategy simulators are plain classes
   (see [Section 6.5](06-runtime-view.md))
@@ -82,7 +88,11 @@ inventory lives in [Section 6.1](06-runtime-view.md#61-scheduled-jobs-overview).
 
 - No FluentValidation. Guards are `Ardalis.GuardClauses` in constructors/handlers
   (`Guard.Against.Null`, `Guard.Against.NotFound`, …) plus domain invariants.
-- `services.AddProblemDetails()` is registered; there is no exception-mapping middleware.
+- `services.AddProblemDetails()` is registered, and `UseExceptionHandler()` turns unhandled
+  exceptions into ProblemDetails responses. The only mapped exception is
+  `InvalidFilterException`, which `FilterBy` raises for a filter it cannot parse, a filter on
+  an unregistered field, or a value it cannot convert. `InvalidFilterExceptionHandler`
+  returns it as **400 Bad Request**; everything else stays 500.
 - The messaging error policy above handles async failure classification.
 
 ## 8.7 Logging

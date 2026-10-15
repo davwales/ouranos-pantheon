@@ -1,19 +1,43 @@
 import { describe, expect, it } from "vitest";
 import {
+  createSearchGroup,
   filterGroupToQuery,
+  parseQuery,
   queryToFilterGroup,
+  removeFilterItem,
 } from "./filter-group-converters";
-import { FilterCondition, FilterGroup } from "./types";
+import {
+  type ExtendedColumnDef,
+  type FilterCondition,
+  type FilterConfig,
+  type FilterGroup,
+} from "./types";
 
-const columns = [
-  { id: "name", header: "Name" },
-  { id: "type", header: "Type" },
-  { id: "limit", header: "Limit" },
-  { id: "isActive", header: "Active" },
-  { id: "volume", header: "Volume" },
-  { id: "margin", header: "Margin" },
-  { id: "maxPrice", header: "Max Price" },
+const text: FilterConfig = {
+  type: "string",
+  operators: ["eq", "neq", "contains", "startsWith", "endsWith"],
+};
+const numeric: FilterConfig = {
+  type: "number",
+  operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
+};
+
+const columns: ExtendedColumnDef<unknown>[] = [
+  { id: "name", header: "Name", filterConfig: { ...text, searchable: true } },
+  { id: "type", header: "Type", filterConfig: text },
+  { id: "limit", header: "Limit", filterConfig: numeric },
+  { id: "isActive", header: "Active", filterConfig: { type: "boolean", operators: ["eq"] } },
+  { id: "volume", header: "Volume", filterConfig: numeric },
+  { id: "margin", header: "Margin", filterConfig: numeric },
+  { id: "maxPrice", header: "Max Price", filterConfig: numeric },
+  { id: "notes", header: "Notes" },
 ];
+
+const searchColumns = columns.filter((c) => c.filterConfig?.searchable);
+
+function search(term: string): FilterGroup {
+  return createSearchGroup(term, searchColumns);
+}
 
 function cond(
   field: string,
@@ -231,6 +255,129 @@ describe("round-trip", () => {
         or(cond("name", "contains", "sword"), cond("name", "contains", "axe")),
         cond("maxPrice", "gt", "10000"),
       ),
+    );
+  });
+});
+
+describe("free-text search", () => {
+  it("turns a plain word into a search over searchable columns", () => {
+    expect(queryToFilterGroup("gold", columns)).toEqual(and(search("gold")));
+    expect(search("gold")).toEqual({
+      logic: "or",
+      search: "gold",
+      items: [cond("name", "contains", "gold")],
+    });
+  });
+
+  it("joins consecutive words into one search term", () => {
+    expect(queryToFilterGroup("gold ore", columns)).toEqual(
+      and(search("gold ore")),
+    );
+  });
+
+  it("combines search text with structured conditions by implicit AND", () => {
+    expect(queryToFilterGroup("gold ore limit > 100", columns)).toEqual(
+      and(search("gold ore"), cond("limit", "gt", "100")),
+    );
+    expect(queryToFilterGroup("limit > 100 gold", columns)).toEqual(
+      and(cond("limit", "gt", "100"), search("gold")),
+    );
+  });
+
+  it("supports quoted phrases and or between search terms", () => {
+    expect(queryToFilterGroup('"limit break" or sword', columns)).toEqual(
+      and(or(search("limit break"), search("sword"))),
+    );
+  });
+
+  it("treats a field name without an operator as text", () => {
+    expect(queryToFilterGroup("volume", columns)).toEqual(and(search("volume")));
+  });
+
+  it("does not resolve columns without filterConfig as fields", () => {
+    expect(queryToFilterGroup("notes is hello", columns)).toEqual(
+      and(search("notes is hello")),
+    );
+  });
+
+  it("reports an incomplete comparison instead of searching for it", () => {
+    expect(parseQuery("gold limit >", columns)).toEqual({
+      error: "Expected value after '>'",
+    });
+  });
+
+  it("reports an unknown field before a symbol operator", () => {
+    const result = parseQuery("xyz >= 100", columns);
+    expect("error" in result && result.error).toMatch(/Unknown field 'xyz'/);
+  });
+
+  it("reports when the table has no searchable columns", () => {
+    const numericOnly = columns.filter((c) => c.filterConfig?.type === "number");
+    expect(parseQuery("gold", numericOnly)).toEqual({
+      error: "This table has no searchable text columns",
+    });
+  });
+
+  it("defaults searchable columns to string columns supporting contains", () => {
+    const unflagged = columns.map((c) =>
+      c.filterConfig ? { ...c, filterConfig: { ...c.filterConfig, searchable: undefined } } : c,
+    );
+    expect(queryToFilterGroup("gold", unflagged)).toEqual(
+      and({
+        logic: "or",
+        search: "gold",
+        items: [cond("name", "contains", "gold"), cond("type", "contains", "gold")],
+      }),
+    );
+  });
+
+  it("serializes a search group back to its text", () => {
+    expect(
+      filterGroupToQuery(
+        and(search("gold ore"), cond("limit", "gt", 100)),
+        columns,
+      ),
+    ).toBe('"gold ore" and Limit > 100');
+  });
+
+  it("round-trips mixed search and conditions", () => {
+    const parsed = queryToFilterGroup("gold ore limit > 100", columns);
+    expect(parsed).not.toBeNull();
+    const serialized = filterGroupToQuery(parsed as FilterGroup, columns);
+    expect(queryToFilterGroup(serialized, columns)).toEqual(parsed);
+  });
+
+  it("serializes an edited search group as its conditions", () => {
+    const edited: FilterGroup = {
+      ...search("gold"),
+      items: [cond("name", "contains", "silver")],
+    };
+    expect(filterGroupToQuery(and(edited), columns)).toBe(
+      "(Name contains silver)",
+    );
+  });
+});
+
+describe("removeFilterItem", () => {
+  it("removes a top-level item", () => {
+    const tree = and(search("gold"), cond("limit", "gt", 100));
+    expect(removeFilterItem(tree, [0])).toEqual(and(cond("limit", "gt", 100)));
+  });
+
+  it("collapses a nested group left with one item", () => {
+    const tree = and(
+      cond("type", "eq", "weapon"),
+      or(cond("name", "contains", "sword"), cond("limit", "gte", 100)),
+    );
+    expect(removeFilterItem(tree, [1, 0])).toEqual(
+      and(cond("type", "eq", "weapon"), cond("limit", "gte", 100)),
+    );
+  });
+
+  it("drops a nested group left empty", () => {
+    const tree = and(cond("type", "eq", "weapon"), and(cond("limit", "gte", 100)));
+    expect(removeFilterItem(tree, [1, 0])).toEqual(
+      and(cond("type", "eq", "weapon")),
     );
   });
 });

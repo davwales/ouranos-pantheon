@@ -1,42 +1,10 @@
 "use client";
 
-import { SmartFilterInput } from "@/components/shared/smart-filter";
-import { FilterModeToggle } from "./filter-mode-toggle";
-import type { FilterModeDef } from "./filter-mode-toggle";
-import { Sparkles } from "lucide-react";
+import { FilterChips, SearchFilterInput } from "@/components/shared/search-filter";
 import { type ComponentProps } from "react";
-import { filterGroupToQuery } from "./filter-group-converters";
-import { FilterGroupBuilder } from "./filter-group-builder";
-import {
-  type DataTableState,
-  DEFAULT_FILTER_MODE,
-  EMPTY_FILTER,
-  type ExtendedColumnDef,
-  type FilterMode,
-} from "./types";
-
-const FILTER_MODES: FilterModeDef[] = [
-  { id: "builder", label: "Builder" },
-  {
-    id: "smart",
-    label: "Smart",
-    icon: Sparkles,
-    tooltip:
-      "Filter with natural language, e.g. 'symbolName contains gold and limit > 100'",
-  },
-];
-
-function transitionMode(
-  to: FilterMode,
-  state: DataTableState | undefined,
-  columns: ExtendedColumnDef<any>[],
-): DataTableState {
-  if (to === "smart") {
-    const currentGroup = state?.filter ?? EMPTY_FILTER;
-    return { ...state, filterMode: to, smartQuery: filterGroupToQuery(currentGroup, columns) };
-  }
-  return { ...state, filterMode: to };
-}
+import { FilterBuilderDialog } from "./filter-builder-dialog";
+import { filterGroupToQuery, removeFilterItem } from "./filter-group-converters";
+import { type DataTableState, EMPTY_FILTER, type ExtendedColumnDef, type FilterGroup } from "./types";
 
 export function DataTableFiltering<TData>({
   columns,
@@ -48,46 +16,28 @@ export function DataTableFiltering<TData>({
   state?: DataTableState;
   onStateChange?: (state: DataTableState) => void;
 }) {
-  const mode = state?.filterMode ?? DEFAULT_FILTER_MODE;
-  const currentState = state ?? { filterMode: DEFAULT_FILTER_MODE };
+  const filter = state?.filter ?? EMPTY_FILTER;
+  const query = state?.searchQuery ?? filterGroupToQuery(filter, columns);
 
-  const handleModeChange = (newMode: FilterMode) => {
-    onStateChange?.(transitionMode(newMode, state, columns));
+  const applyFilter = (group: FilterGroup) => {
+    onStateChange?.({ ...state, filter: group, searchQuery: filterGroupToQuery(group, columns) });
   };
 
   return (
     <div {...props}>
-      <FilterModeToggle
-        modes={FILTER_MODES}
-        activeMode={mode}
-        onModeChange={handleModeChange}
+      <SearchFilterInput
+        columns={columns}
+        value={query}
+        onQueryChange={(searchQuery) => onStateChange?.({ ...state, searchQuery })}
+        onChange={(group) => onStateChange?.({ ...state, searchQuery: query, filter: group })}
+        onClear={() => applyFilter(EMPTY_FILTER)}
+        actions={<FilterBuilderDialog group={filter} columns={columns} onChange={applyFilter} />}
       />
-      {mode === "builder" ? (
-        <div className="mt-2">
-        <FilterGroupBuilder
-          group={currentState.filter ?? EMPTY_FILTER}
-          columns={columns}
-          depth={0}
-          onChange={(newGroup) =>
-            onStateChange?.({ ...currentState, filter: newGroup })
-          }
-        />
-        </div>
-      ) : (
-        <SmartFilterInput
-          columns={columns}
-          value={currentState.smartQuery ?? ""}
-          onQueryChange={(query) =>
-            onStateChange?.({ ...currentState, smartQuery: query })
-          }
-          onChange={(result) => {
-            if (result) {
-              onStateChange?.({ ...currentState, filter: result });
-            }
-          }}
-          className="mt-2"
-        />
-      )}
+      <FilterChips
+        group={filter}
+        columns={columns}
+        onRemove={(path) => applyFilter(removeFilterItem(filter, path))}
+      />
     </div>
   );
 }

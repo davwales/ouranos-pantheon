@@ -28,7 +28,7 @@ public sealed class FilterBuilderTests
     }
 
     [Fact]
-    public void On_WhenUnregisteredField_ShouldThrowInvalidOperationException()
+    public void On_WhenUnregisteredField_ShouldThrowInvalidFilterException()
     {
         // Arrange
         var builder = new FilterBuilder<Item>().On(nameof(Item.Name), x => x.Name);
@@ -37,7 +37,9 @@ public sealed class FilterBuilderTests
         var filter = () => _items.FilterBy(["Price:eq:100"], builder).ToList();
 
         // Assert
-        filter.ShouldThrow<InvalidOperationException>();
+        filter
+            .ShouldThrow<InvalidFilterException>()
+            .InnerException.ShouldBeOfType<InvalidOperationException>();
     }
 
     [Fact]

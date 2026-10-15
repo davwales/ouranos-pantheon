@@ -119,6 +119,47 @@ public sealed class GetAllPositionsHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenFilteredBySymbolNameWithDifferentCasing_ShouldReturnMatchingPositions()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+
+        var matching = Symbol.Create(
+            _fixture.Create<Id<Symbol>>(),
+            "GOLD",
+            null,
+            "Gold Ore",
+            marketId,
+            new AdditionalFields()
+        );
+
+        var other = Symbol.Create(
+            _fixture.Create<Id<Symbol>>(),
+            "IRON",
+            null,
+            "Iron Ore",
+            marketId,
+            new AdditionalFields()
+        );
+
+        await _dbContext.Symbols.AddRangeAsync(matching, other);
+        await _dbContext.Positions.AddRangeAsync(
+            Position.Create(PositionSide.Buy, marketId, matching.Id, 100m, 1m, symbol: matching),
+            Position.Create(PositionSide.Buy, marketId, other.Id, 100m, 1m, symbol: other)
+        );
+
+        await _dbContext.SaveChangesAsync();
+
+        var query = new GetAllPositionsInput(marketId, Filter: ["symbolName:like:gOLD"]);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Items.ShouldHaveSingleItem().SymbolName.ShouldBe("Gold Ore");
+    }
+
+    [Fact]
     public async Task Handle_WhenFilteredByStatus_ShouldReturnOnlyMatchingPositions()
     {
         // Arrange

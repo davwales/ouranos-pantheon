@@ -321,4 +321,25 @@ public sealed class FilterExtensionsTests
         result.Count.ShouldBe(3);
         result.ShouldAllBe(p => p.Category != null);
     }
+
+    [Theory]
+    [InlineData("Name")]
+    [InlineData("Unknown:eq:Sword")]
+    [InlineData("Name:bogus:Sword")]
+    [InlineData("Price:gt:abc")]
+    public void FilterBy_WhenFilterIsInvalid_ShouldThrowInvalidFilterException(string filter)
+    {
+        // Arrange
+        var builder = new FilterBuilder<Product>()
+            .On(nameof(Product.Name), p => p.Name)
+            .On(nameof(Product.Price), p => p.Price);
+
+        // Act & Assert
+        var exception = Should.Throw<InvalidFilterException>(() =>
+            Items.FilterBy([filter], builder).ToList()
+        );
+
+        exception.Message.ShouldContain(filter);
+        exception.InnerException.ShouldNotBeNull();
+    }
 }

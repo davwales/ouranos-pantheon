@@ -1,3 +1,5 @@
+using System.Linq.Expressions;
+
 namespace Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Filtering;
 
 public static class FilterExtensions
@@ -41,8 +43,7 @@ public static class FilterExtensions
     /// q.ApplyFilters(input.Filter, builder => builder.AutoMap());
     /// </code>
     /// </example>
-    /// <exception cref="FormatException">Thrown when a filter string cannot be parsed.</exception>
-    /// <exception cref="InvalidOperationException">Thrown when a filter references an unregistered field or uses an incompatible operator.</exception>
+    /// <exception cref="InvalidFilterException">Thrown when a filter string cannot be parsed, references an unregistered field, uses an incompatible operator, or has a value that cannot be converted.</exception>
     /// <summary>
     /// Applies filters using a pre-configured <see cref="FilterBuilder{T}"/> instance.
     /// The builder is built once (e.g. as a <c>static readonly</c> field) and reused
@@ -66,9 +67,7 @@ public static class FilterExtensions
                 continue;
             }
 
-            var node = FilterParser.Parse(filter);
-            var expression = builder.Build(node);
-            query = query.Where(expression);
+            query = query.Where(BuildExpression(filter, builder));
         }
 
         return query;
@@ -94,5 +93,27 @@ public static class FilterExtensions
         configure(builder);
 
         return query.FilterBy(filters, builder);
+    }
+
+    private static Expression<Func<T, bool>> BuildExpression<T>(
+        string filter,
+        FilterBuilder<T> builder
+    )
+    {
+        try
+        {
+            return builder.Build(FilterParser.Parse(filter));
+        }
+        catch (Exception ex)
+            when (ex
+                    is FormatException
+                        or InvalidOperationException
+                        or NotSupportedException
+                        or ArgumentException
+                        or OverflowException
+            )
+        {
+            throw new InvalidFilterException($"Invalid filter '{filter}': {ex.Message}", ex);
+        }
     }
 }

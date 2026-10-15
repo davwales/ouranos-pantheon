@@ -31,6 +31,7 @@ public sealed class GetMarketTradesHandler
             .On(nameof(GetMarketTradesResponse.MinPrice), x => x.MinPrice)
             .On(nameof(GetMarketTradesResponse.MaxPrice), x => x.MaxPrice)
             .On(nameof(GetMarketTradesResponse.TotalVolume), x => x.TotalVolume)
+            .On(nameof(GetMarketTradesResponse.Limit), x => x.Limit)
             .On(nameof(GetMarketTradesResponse.Margin), x => x.Margin)
             .On(nameof(GetMarketTradesResponse.AveragePrice), x => x.AveragePrice)
             .On(nameof(GetMarketTradesResponse.TotalGain), x => x.TotalGain)

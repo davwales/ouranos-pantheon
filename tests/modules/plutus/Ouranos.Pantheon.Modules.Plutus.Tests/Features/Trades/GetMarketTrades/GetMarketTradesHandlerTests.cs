@@ -148,6 +148,60 @@ public sealed class GetMarketTradesHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenFilteredByLimit_ShouldReturnOnlyMatchingSymbols()
+    {
+        // Arrange
+        var market = Market.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<Taxes>()
+        );
+
+        await _dbContext.SeedData(market);
+
+        decimal[] limits = [100m, 500m];
+        var symbolIds = new List<Id<Symbol>>();
+
+        foreach (var limit in limits)
+        {
+            var symbol = Symbol.Create(
+                new Id<Symbol>(Guid.NewGuid().ToString()),
+                _fixture.Create<string>(),
+                null,
+                _fixture.Create<string>(),
+                market.Id,
+                new AdditionalFields()
+            );
+
+            symbolIds.Add(symbol.Id);
+            await _dbContext.SeedData(symbol);
+
+            await _dbContext.SeedData(
+                new Snapshot(
+                    market.Id,
+                    symbol.Id,
+                    TimeFrame.OneDay,
+                    TotalSpent: 1000m,
+                    MinPrice: 90m,
+                    MaxPrice: 110m,
+                    TotalVolume: 10m,
+                    NumTransactions: 5,
+                    Limit: limit,
+                    Tax: 1m
+                )
+            );
+        }
+
+        var query = new GetMarketTradesInput(market.Id, TimeFrame.OneDay, Filter: ["limit:gt:200"]);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Items.ShouldHaveSingleItem().SymbolId.ShouldBe(symbolIds[1]);
+    }
+
+    [Fact]
     public async Task Handle_WhenNoSnapshots_ShouldReturnEmptyPagedResponse()
     {
         // Arrange

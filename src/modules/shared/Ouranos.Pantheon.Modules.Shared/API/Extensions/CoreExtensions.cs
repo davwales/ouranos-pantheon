@@ -166,6 +166,7 @@ public static class CoreExtensions
         IReadOnlyList<IPantheonModule> modules
     )
     {
+        app.UseExceptionHandler();
         app.UseSerilogRequestLogging();
         app.UseOutputCache();
 

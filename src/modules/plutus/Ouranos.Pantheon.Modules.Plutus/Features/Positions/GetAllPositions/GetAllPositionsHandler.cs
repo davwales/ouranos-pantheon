@@ -18,7 +18,11 @@ public sealed class GetAllPositionsHandler
     private static readonly FilterBuilder<GetAllPositionsResponse> FilterBuilder =
         new FilterBuilder<GetAllPositionsResponse>()
             .On(nameof(GetAllPositionsResponse.SymbolId), x => x.SymbolId)
-            .On(nameof(GetAllPositionsResponse.SymbolName), x => x.SymbolName)
+            .On(
+                nameof(GetAllPositionsResponse.SymbolName),
+                x => x.SymbolName,
+                caseInsensitive: true
+            )
             .On(nameof(GetAllPositionsResponse.Side), x => x.Side)
             .On(nameof(GetAllPositionsResponse.Status), x => x.Status)
             .On(nameof(GetAllPositionsResponse.Cost), x => x.Cost)

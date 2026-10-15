@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Ouranos.Pantheon.Modules.Shared.API.ExceptionHandlers;
 using Ouranos.Pantheon.Modules.Shared.API.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Shared.Tests.API.Extensions;
@@ -36,5 +37,19 @@ public sealed class RestExtensionsTests
 
         // Assert
         jsonOptions.SerializerOptions.Converters.Count.ShouldBeGreaterThan(0);
+    }
+
+    [Fact]
+    public void ConfigureRest_ShouldRegisterInvalidFilterExceptionHandler()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder().Build();
+
+        // Act
+        services.ConfigureRest(configuration);
+
+        // Assert
+        services.ShouldContain(d => d.ImplementationType == typeof(InvalidFilterExceptionHandler));
     }
 }

@@ -92,7 +92,7 @@ public sealed class FilterExpressionBuilderTests
     }
 
     [Fact]
-    public void FilterBy_WhenNullCheckOnNonNullableProperty_ShouldThrowInvalidOperationException()
+    public void FilterBy_WhenNullCheckOnNonNullableProperty_ShouldThrowInvalidFilterException()
     {
         // Arrange
         var builder = new FilterBuilder<Item>().On(nameof(Item.Price), x => x.Price);
@@ -101,11 +101,12 @@ public sealed class FilterExpressionBuilderTests
         var act = () => _items.FilterBy(["Price:null"], builder).ToList();
 
         // Assert
-        act.ShouldThrow<InvalidOperationException>();
+        act.ShouldThrow<InvalidFilterException>()
+            .InnerException.ShouldBeOfType<InvalidOperationException>();
     }
 
     [Fact]
-    public void FilterBy_WhenStringOpOnNonStringProperty_ShouldThrowInvalidOperationException()
+    public void FilterBy_WhenStringOpOnNonStringProperty_ShouldThrowInvalidFilterException()
     {
         // Arrange
         var builder = new FilterBuilder<Item>().On(nameof(Item.Price), x => x.Price);
@@ -114,7 +115,8 @@ public sealed class FilterExpressionBuilderTests
         var act = () => _items.FilterBy(["Price:like:foo"], builder).ToList();
 
         // Assert
-        act.ShouldThrow<InvalidOperationException>();
+        act.ShouldThrow<InvalidFilterException>()
+            .InnerException.ShouldBeOfType<InvalidOperationException>();
     }
 
     [Fact]

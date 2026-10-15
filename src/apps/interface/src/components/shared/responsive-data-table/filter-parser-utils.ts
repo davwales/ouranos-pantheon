@@ -5,6 +5,7 @@ export {
   resolveFieldTokens,
   availableFields,
   matchOperator,
+  isSymbolOperator,
   parseValue,
 };
 
@@ -16,7 +17,6 @@ const OPERATORS: Record<string, string[][]> = {
   lt:         [["<"], ["below"], ["less", "than"]],
   lte:        [["<="], ["at", "most"]],
   like:       [["contains"], ["like"]],
-  in:         [["in"]],
   startswith: [["starts"], ["starts", "with"]],
   endswith:   [["ends"], ["ends", "with"]],
 };
@@ -123,6 +123,10 @@ function matchOperator(
     }
   }
   return best;
+}
+
+function isSymbolOperator(token: string | undefined): boolean {
+  return token !== undefined && /^(=|!=|>|>=|<|<=)$/.test(token);
 }
 
 function parseValue(token: string): { value: string | null; raw: string } {
