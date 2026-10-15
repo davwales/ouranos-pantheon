@@ -74,6 +74,7 @@ export default function RecentMarketTrades() {
         filterConfig: {
           type: "string",
           operators: ["eq", "neq", "contains", "startsWith", "endsWith"],
+          searchable: true,
         },
       },
       {

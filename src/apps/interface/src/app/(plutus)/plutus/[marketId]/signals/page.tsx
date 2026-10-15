@@ -84,6 +84,7 @@ export default function SignalRankingsDetail() {
         filterConfig: {
           type: "string",
           operators: ["eq", "neq", "contains", "startsWith", "endsWith"],
+          searchable: true,
         },
       },
       {
@@ -205,7 +206,7 @@ export default function SignalRankingsDetail() {
         header: "Bullish",
         accessorFn: (row) => row.bullishCount,
         cell: ({ getValue }) => (
-          <span className="text-green-600 dark:text-green-400">
+          <span className="text-green-600">
             {getValue<number>()}
           </span>
         ),
@@ -215,7 +216,7 @@ export default function SignalRankingsDetail() {
         header: "Bearish",
         accessorFn: (row) => row.bearishCount,
         cell: ({ getValue }) => (
-          <span className="text-red-600 dark:text-red-400">
+          <span className="text-red-600">
             {getValue<number>()}
           </span>
         ),

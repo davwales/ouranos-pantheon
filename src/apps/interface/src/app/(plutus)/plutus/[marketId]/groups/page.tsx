@@ -82,6 +82,7 @@ export default function GroupsPage() {
         filterConfig: {
           type: "string",
           operators: ["eq", "neq", "contains", "startsWith", "endsWith"],
+          searchable: true,
         },
       },
       {

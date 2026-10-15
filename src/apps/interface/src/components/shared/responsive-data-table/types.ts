@@ -1,7 +1,4 @@
 import { ColumnDef } from "@tanstack/react-table";
-export type FilterMode = "builder" | "smart";
-
-export const DEFAULT_FILTER_MODE: FilterMode = "builder";
 
 export type SortDirection = "ASC" | "DESC";
 
@@ -52,6 +49,7 @@ export interface FilterCondition {
 export type FilterGroup = {
   logic: "and" | "or";
   items: FilterGroupItem[];
+  search?: string;
 };
 
 export type FilterGroupItem = FilterCondition | FilterGroup;
@@ -62,6 +60,7 @@ export interface FilterConfig {
   type: FilterType;
   operators: FilterOperator[];
   enumValues?: string[];
+  searchable?: boolean;
 }
 
 export type SortValue = SortDirection | Record<string, SortDirection>;
@@ -91,8 +90,7 @@ export interface DataTableState {
   pagination?: PaginationArgs;
   filter?: FilterGroup;
   sort?: SortArgs;
-  filterMode: FilterMode;
-  smartQuery?: string;
+  searchQuery?: string;
 }
 
 /** Maps frontend FilterOperator values to the backend filter operator strings */
@@ -123,7 +121,7 @@ function serializeFilterGroupItem(item: FilterGroupItem): string {
     if (item.value === null) {
       return item.operator === "eq"
         ? `${item.field}:null`
-        : `${item.field}:${BACKEND_OPERATOR[item.operator]}:null`;
+        : `${item.field}:notnull`;
     }
 
     return `${item.field}:${BACKEND_OPERATOR[item.operator]}:${item.value}`;
@@ -150,7 +148,7 @@ export function serializeFilterGroup(group: FilterGroup): string[] {
 
 /**
  * Extracts active backend filter strings from a DataTableState.
- * The filter group is the source of truth regardless of the active filterMode.
+ * The filter group is the source of truth; the search text is only its editable form.
  */
 export function extractFilter(state?: DataTableState): string[] | undefined {
   const filter = state?.filter;
@@ -163,7 +161,7 @@ export function withDefaultState(
   state: DataTableState | undefined,
   overrides: Partial<DataTableState>,
 ): DataTableState {
-  return { ...(state ?? { filterMode: DEFAULT_FILTER_MODE }), ...overrides };
+  return { ...state, ...overrides };
 }
 
 /** Extract a flat sortField + sortDirection from a SortArgs object */

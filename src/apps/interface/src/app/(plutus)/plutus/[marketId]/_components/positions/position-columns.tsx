@@ -86,6 +86,7 @@ export function makePositionColumns(
       filterConfig: {
         type: "string",
         operators: ["eq", "neq", "contains", "startsWith", "endsWith"],
+        searchable: true,
       },
     });
   }

@@ -23,6 +23,7 @@ export function explorerColumns(
       filterConfig: {
         type: "string",
         operators: ["eq", "neq", "contains", "startsWith", "endsWith"],
+        searchable: true,
       },
     },
     {

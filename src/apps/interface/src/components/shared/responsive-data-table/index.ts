@@ -6,7 +6,6 @@ export { FilterGroupBuilder } from "./filter-group-builder";
 export { FilterInput } from "./filter-input";
 export {
   filterGroupToQuery,
+  parseQuery,
   queryToFilterGroup,
 } from "./filter-group-converters";
-export { FilterModeToggle } from "./filter-mode-toggle";
-export type { FilterModeDef } from "./filter-mode-toggle";
