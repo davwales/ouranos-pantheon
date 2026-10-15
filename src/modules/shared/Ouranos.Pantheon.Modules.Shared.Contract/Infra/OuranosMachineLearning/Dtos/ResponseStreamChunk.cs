@@ -3,5 +3,6 @@ namespace Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.
 public sealed record ResponseStreamChunk(
     string? Text,
     string? Reasoning,
-    ChatCompletionUsage? Usage
+    ChatCompletionUsage? Usage,
+    FunctionCallDto? FunctionCall = null
 );

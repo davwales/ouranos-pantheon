@@ -8,18 +8,26 @@ namespace Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
 
 /// <summary>
 /// Base class for module-owned AI assistants. Subclasses supply the prompt for a strongly-typed
-/// context; the base class owns the LLM streaming loop and the shared event contract.
+/// context and the tools registered for that context; the base class owns the LLM streaming loop,
+/// the tool rounds and the shared event contract.
 /// </summary>
 public abstract class PantheonAssistant<TContext>(
     ILogger logger,
-    IOuranosMachineLearningClient mlClient
+    IOuranosMachineLearningClient mlClient,
+    IEnumerable<IAssistantTool<TContext>> tools
 ) : IPantheonStreamHandler<AssistantCompletionInput<TContext>, AssistantEvent>
     where TContext : class
 {
     public const string GenerationFailedMessage = "The assistant failed to generate a response.";
 
+    public const string ToolFailedOutput = "The tool failed; answer without it.";
+
     private readonly ILogger _logger = Guard.Against.Null(logger);
     private readonly IOuranosMachineLearningClient _mlClient = Guard.Against.Null(mlClient);
+    private readonly IReadOnlyList<IAssistantTool<TContext>> _tools =
+    [
+        .. Guard.Against.Null(tools),
+    ];
 
     public async IAsyncEnumerable<AssistantEvent> Handle(
         AssistantCompletionInput<TContext> input,
@@ -34,9 +42,16 @@ public abstract class PantheonAssistant<TContext>(
 
         var prompt = await BuildPromptAsync(input.Context, cancellationToken);
         var messages = TrimHistory(input.Messages, prompt.HistoryCharacterBudget);
+        var tools = _tools.Where(t => t.IsAvailable(input.Context)).ToList();
 
         await foreach (
-            var assistantEvent in StreamCompletionAsync(prompt, messages, cancellationToken)
+            var assistantEvent in StreamCompletionAsync(
+                prompt,
+                input.Context,
+                tools,
+                messages,
+                cancellationToken
+            )
         )
         {
             yield return assistantEvent;
@@ -100,60 +115,122 @@ public abstract class PantheonAssistant<TContext>(
 
     private async IAsyncEnumerable<AssistantEvent> StreamCompletionAsync(
         AssistantPrompt prompt,
+        TContext context,
+        List<IAssistantTool<TContext>> tools,
         List<AssistantMessageInput> messages,
         [EnumeratorCancellation] CancellationToken cancellationToken
     )
     {
-        await using var stream = _mlClient
-            .StreamResponseAsync(
-                prompt.ModelIdentifier,
-                $"{prompt.SystemPrompt}\n\n{AssistantFormatting.Instructions}",
-                [.. messages.Select(m => new MessageDto(m.Content, MapRole(m.Role)))],
-                prompt.Temperature,
-                prompt.MaxTokens,
-                prompt.ReasoningEffort,
-                cancellationToken
-            )
-            .GetAsyncEnumerator(cancellationToken);
+        var instructions =
+            tools.Count > 0
+                ? $"{prompt.SystemPrompt}\n\n{AssistantFormatting.Instructions}\n\n{AssistantFormatting.ToolInstructions}"
+                : $"{prompt.SystemPrompt}\n\n{AssistantFormatting.Instructions}";
+
+        List<FunctionToolDto> definitions =
+        [
+            .. tools.Select(t => new FunctionToolDto(t.Name, t.Description, t.ParametersSchema)),
+        ];
+
+        List<ResponseInputItemDto> input =
+        [
+            .. messages.Select(m => new MessageInputItemDto(
+                new MessageDto(m.Content, MapRole(m.Role))
+            )),
+        ];
 
         ChatCompletionUsage? usage = null;
         var hasContent = false;
 
-        while (true)
+        for (var round = 0; ; round++)
         {
-            var (hasNext, error) = await TryMoveNextAsync(stream);
+            List<FunctionToolDto> offered = round < prompt.MaxToolRounds ? definitions : [];
+            var calls = new List<FunctionCallDto>();
 
-            if (error is not null)
+            await using var stream = _mlClient
+                .StreamResponseAsync(
+                    prompt.ModelIdentifier,
+                    instructions,
+                    [.. input],
+                    offered,
+                    prompt.Temperature,
+                    prompt.MaxTokens,
+                    prompt.ReasoningEffort,
+                    cancellationToken
+                )
+                .GetAsyncEnumerator(cancellationToken);
+
+            while (true)
             {
-                _logger.LogError(error, "Assistant completion stream failed.");
-                yield return new AssistantErrorEvent(GenerationFailedMessage);
-                yield break;
+                var (hasNext, error) = await TryMoveNextAsync(stream);
+
+                if (error is not null)
+                {
+                    _logger.LogError(error, "Assistant completion stream failed.");
+                    yield return new AssistantErrorEvent(GenerationFailedMessage);
+                    yield break;
+                }
+
+                if (!hasNext)
+                {
+                    break;
+                }
+
+                if (stream.Current.Reasoning is { Length: > 0 } reasoning)
+                {
+                    yield return new AssistantReasoningEvent(reasoning);
+                }
+
+                if (stream.Current.Text is { Length: > 0 } text)
+                {
+                    hasContent = true;
+                    yield return new AssistantContentEvent(text);
+                }
+
+                if (stream.Current.FunctionCall is { } call)
+                {
+                    calls.Add(call);
+                }
+
+                if (stream.Current.Usage is { } roundUsage)
+                {
+                    usage = Add(usage, roundUsage);
+                }
             }
 
-            if (!hasNext)
+            if (calls.Count == 0 || offered.Count == 0)
             {
                 break;
             }
 
-            if (stream.Current.Reasoning is { Length: > 0 } reasoning)
+            foreach (var call in calls)
             {
-                yield return new AssistantReasoningEvent(reasoning);
-            }
+                yield return new AssistantToolEvent(call.Name);
 
-            if (stream.Current.Text is { Length: > 0 } text)
-            {
-                hasContent = true;
-                yield return new AssistantContentEvent(text);
-            }
+                var result = await InvokeToolAsync(tools, context, call, cancellationToken);
 
-            usage = stream.Current.Usage ?? usage;
+                if (result.Action is not null)
+                {
+                    yield return new AssistantActionEvent(call.Name, result.Action);
+                }
+
+                input.Add(new FunctionCallInputItemDto(call));
+                input.Add(
+                    new FunctionCallOutputInputItemDto(
+                        call.CallId,
+                        Truncate(result.Output, prompt.MaxToolOutputCharacters)
+                    )
+                );
+            }
         }
 
         // Reasoning counts against the output token budget, so a model can finish without ever
         // answering; that is a failure, not an empty reply.
         if (!hasContent)
         {
-            _logger.LogWarning("Assistant completion finished without producing any content.");
+            _logger.LogWarning(
+                "Assistant completion finished without producing any content after {outputTokens} output tokens.",
+                usage?.OutputTokens
+            );
             yield return new AssistantErrorEvent(GenerationFailedMessage);
             yield break;
         }
@@ -166,6 +243,48 @@ public abstract class PantheonAssistant<TContext>(
                 usage.TotalTokens
             );
         }
+    }
+
+    private async Task<AssistantToolResult> InvokeToolAsync(
+        List<IAssistantTool<TContext>> tools,
+        TContext context,
+        FunctionCallDto call,
+        CancellationToken cancellationToken
+    )
+    {
+        var tool = tools.FirstOrDefault(t => t.Name == call.Name);
+
+        if (tool is null)
+        {
+            _logger.LogWarning("Assistant called unknown tool '{name}'.", call.Name);
+            return new AssistantToolResult($"Unknown tool '{call.Name}'.");
+        }
+
+        try
+        {
+            return await tool.InvokeAsync(context, call.Arguments, cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "Assistant tool '{name}' failed.", call.Name);
+            return new AssistantToolResult(ToolFailedOutput);
+        }
+    }
+
+    private static string Truncate(string output, int maxCharacters)
+    {
+        return output.Length <= maxCharacters ? output : $"{output[..maxCharacters]}…";
+    }
+
+    private static ChatCompletionUsage Add(ChatCompletionUsage? total, ChatCompletionUsage round)
+    {
+        return total is null
+            ? round
+            : new ChatCompletionUsage(
+                total.InputTokens + round.InputTokens,
+                total.OutputTokens + round.OutputTokens,
+                total.TotalTokens + round.TotalTokens
+            );
     }
 
     // C# forbids yield inside a try with a catch, so stream failures are returned instead of

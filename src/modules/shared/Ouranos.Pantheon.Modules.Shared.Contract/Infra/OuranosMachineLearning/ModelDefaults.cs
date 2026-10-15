@@ -15,4 +15,10 @@ public static class ModelDefaults
     // The model's context window is small and shared by the system prompt, the conversation, the
     // reasoning and the reply, so assistants send only the most recent turns that fit this budget.
     public const int HistoryCharacterBudget = 4000;
+
+    // Each tool round resends the whole conversation, so rounds are capped; the last round offers
+    // no tools, which forces the model to answer with what it has.
+    public const int MaxToolRounds = 3;
+
+    public const int MaxToolOutputCharacters = 1500;
 }

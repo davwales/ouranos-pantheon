@@ -19,7 +19,10 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { type AssistantEndpoint } from "@/lib/api/assistant";
+import {
+  type AssistantActionHandlers,
+  type AssistantEndpoint,
+} from "@/lib/api/assistant";
 import { RotateCcw, X } from "lucide-react";
 
 export type AssistantPanelProps<TContext> = {
@@ -31,6 +34,8 @@ export type AssistantPanelProps<TContext> = {
   placeholder?: string;
   emptyState?: React.ReactNode;
   suggestions?: string[];
+  toolLabels?: Record<string, string>;
+  actions?: AssistantActionHandlers;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
@@ -44,14 +49,14 @@ export function AssistantPanel<TContext>({
   placeholder,
   emptyState,
   suggestions,
+  toolLabels,
+  actions,
   open,
   onOpenChange,
 }: AssistantPanelProps<TContext>) {
   const isMobile = useIsMobile();
-  const { messages, isStreaming, error, send, stop, reset } = useAssistantChat({
-    endpoint,
-    context,
-  });
+  const { messages, isStreaming, error, send, stop, reset, applyAction } =
+    useAssistantChat({ endpoint, context, actions });
 
   const newChatButton =
     messages.length > 0 ? (
@@ -73,6 +78,9 @@ export function AssistantPanel<TContext>({
       autoFocus={!isMobile}
       onSend={send}
       onStop={stop}
+      toolLabels={toolLabels}
+      actionHandlers={actions}
+      onApplyAction={applyAction}
     />
   );
 
@@ -80,7 +88,7 @@ export function AssistantPanel<TContext>({
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
         <DrawerContent className="h-[85dvh] data-[vaul-drawer-direction=bottom]:max-h-[85dvh]">
-          <DrawerHeader className="gap-1 border-b text-left group-data-[vaul-drawer-direction=bottom]/drawer-content:text-left">
+          <DrawerHeader className="gap-1 border-b text-left">
             <div className="flex h-8 items-center justify-between gap-2">
               <DrawerTitle className="truncate">{title}</DrawerTitle>
               {newChatButton}

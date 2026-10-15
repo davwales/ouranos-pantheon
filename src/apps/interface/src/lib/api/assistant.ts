@@ -6,6 +6,8 @@ import type {
 } from "./assistant-types";
 
 export type {
+  AssistantActionHandler,
+  AssistantActionHandlers,
   AssistantCompletionInput,
   AssistantEndpoint,
   AssistantEvent,

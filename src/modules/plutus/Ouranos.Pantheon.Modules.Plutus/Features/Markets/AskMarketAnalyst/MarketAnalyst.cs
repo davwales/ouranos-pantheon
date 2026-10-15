@@ -21,8 +21,9 @@ public sealed class MarketAnalyst(
     IOuranosMachineLearningClient mlClient,
     IMessageBus bus,
     IMemoryCache cache,
-    IOptions<PlutusOptions> options
-) : PantheonAssistant<MarketAnalystContext>(logger, mlClient)
+    IOptions<PlutusOptions> options,
+    IEnumerable<IAssistantTool<MarketAnalystContext>> tools
+) : PantheonAssistant<MarketAnalystContext>(logger, mlClient, tools)
 {
     internal const int HeatmapLookbackWeeks = 4;
 

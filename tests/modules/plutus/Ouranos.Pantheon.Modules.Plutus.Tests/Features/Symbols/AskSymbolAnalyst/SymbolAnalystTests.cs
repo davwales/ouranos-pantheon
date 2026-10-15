@@ -59,7 +59,8 @@ public sealed class SymbolAnalystTests
                         ContextCacheMinutes: 5
                     ),
                 }
-            )
+            ),
+            []
         );
 
         _bus.InvokeAsync<GetSymbolResponse>(Arg.Any<object>(), Arg.Any<CancellationToken>())
@@ -154,7 +155,8 @@ public sealed class SymbolAnalystTests
             .StreamResponseAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<List<MessageDto>>(),
+                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
+                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
                 Arg.Any<float?>(),
                 Arg.Any<int?>(),
                 Arg.Any<ReasoningEffort?>(),
@@ -168,12 +170,13 @@ public sealed class SymbolAnalystTests
     {
         // Arrange
         string? sentInstructions = null;
-        List<MessageDto>? sentMessages = null;
+        IReadOnlyList<ResponseInputItemDto>? sentMessages = null;
         _mlClient
             .StreamResponseAsync(
                 "analyst-model",
                 Arg.Do<string>(i => sentInstructions = i),
-                Arg.Do<List<MessageDto>>(m => sentMessages = m),
+                Arg.Do<IReadOnlyList<ResponseInputItemDto>>(m => sentMessages = m),
+                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
                 0.2f,
                 512,
                 ReasoningEffort.High,
@@ -191,7 +194,9 @@ public sealed class SymbolAnalystTests
         sentInstructions.ShouldContain("# Symbol: Armadyl godsword");
         sentInstructions.ShouldContain("Error (MAPE, last 30d, n=20): 1d 1.5%");
         sentInstructions.ShouldContain("Bought the dip");
-        sentMessages.ShouldBe([new MessageDto("Is this a good flip?", RoleDto.User)]);
+        sentMessages.ShouldBe([
+            new MessageInputItemDto(new MessageDto("Is this a good flip?", RoleDto.User)),
+        ]);
     }
 
     [Fact]
@@ -220,7 +225,8 @@ public sealed class SymbolAnalystTests
             .StreamResponseAsync(
                 Arg.Any<string>(),
                 Arg.Do<string>(sentInstructions.Add),
-                Arg.Any<List<MessageDto>>(),
+                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
+                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
                 Arg.Any<float?>(),
                 Arg.Any<int?>(),
                 Arg.Any<ReasoningEffort?>(),
@@ -247,7 +253,8 @@ public sealed class SymbolAnalystTests
             .StreamResponseAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<List<MessageDto>>(),
+                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
+                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
                 Arg.Any<float?>(),
                 Arg.Any<int?>(),
                 Arg.Any<ReasoningEffort?>(),
@@ -409,7 +416,8 @@ public sealed class SymbolAnalystTests
             .StreamResponseAsync(
                 Arg.Any<string>(),
                 Arg.Do<string>(i => sentInstructions = i),
-                Arg.Any<List<MessageDto>>(),
+                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
+                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
                 Arg.Any<float?>(),
                 Arg.Any<int?>(),
                 Arg.Any<ReasoningEffort?>(),
@@ -461,7 +469,8 @@ public sealed class SymbolAnalystTests
                 _mlClient,
                 null!,
                 _cache,
-                Options.Create(new PlutusOptions())
+                Options.Create(new PlutusOptions()),
+                []
             )
         );
     }
@@ -476,7 +485,8 @@ public sealed class SymbolAnalystTests
                 _mlClient,
                 _bus,
                 null!,
-                Options.Create(new PlutusOptions())
+                Options.Create(new PlutusOptions()),
+                []
             )
         );
     }
@@ -491,7 +501,8 @@ public sealed class SymbolAnalystTests
                 _mlClient,
                 _bus,
                 _cache,
-                null!
+                null!,
+                []
             )
         );
     }

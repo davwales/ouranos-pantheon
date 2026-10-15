@@ -131,7 +131,8 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
     public async IAsyncEnumerable<ResponseStreamChunk> StreamResponseAsync(
         string model,
         string instructions,
-        List<MessageDto> input,
+        IReadOnlyList<ResponseInputItemDto> input,
+        IReadOnlyList<FunctionToolDto> tools,
         float? temperature = null,
         int? maxTokens = null,
         ReasoningEffort? reasoningEffort = null,
@@ -139,21 +140,34 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
     )
     {
         _logger.LogTrace(
-            "Attempting to stream response using model '{Model}' with {Count} input messages.",
+            "Attempting to stream response using model '{Model}' with {Count} input items and {ToolCount} tools.",
             model,
-            input.Count
+            input.Count,
+            tools.Count
         );
         cancellationToken.ThrowIfCancellationRequested();
 
         var options = BuildResponseOptions(
             model,
             instructions,
-            input,
+            input.Select(MapResponseItem),
             temperature,
             maxTokens,
             reasoningEffort
         );
         options.StreamingEnabled = true;
+
+        foreach (var tool in tools)
+        {
+            options.Tools.Add(
+                ResponseTool.CreateFunctionTool(
+                    functionName: tool.Name,
+                    functionParameters: tool.Parameters,
+                    strictModeEnabled: true,
+                    functionDescription: tool.Description
+                )
+            );
+        }
 
         await foreach (
             var update in _openAiClient
@@ -171,6 +185,18 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
                     break;
                 case StreamingResponseReasoningTextDeltaUpdate { Delta.Length: > 0 } reasoning:
                     yield return new ResponseStreamChunk(null, reasoning.Delta, null);
+                    break;
+                case StreamingResponseOutputItemDoneUpdate { Item: FunctionCallResponseItem call }:
+                    yield return new ResponseStreamChunk(
+                        null,
+                        null,
+                        null,
+                        new FunctionCallDto(
+                            call.CallId,
+                            call.FunctionName,
+                            call.FunctionArguments.ToString()
+                        )
+                    );
                     break;
                 case StreamingResponseCompletedUpdate { Response.Usage: { } usage }:
                     yield return new ResponseStreamChunk(null, null, MapUsage(usage));
@@ -214,7 +240,7 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
         var options = BuildResponseOptions(
             model,
             instructions,
-            input,
+            input.Select(MapMessageItem),
             temperature,
             maxTokens,
             reasoningEffort
@@ -300,7 +326,25 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
         };
     }
 
-    private static ResponseItem MapResponseItem(MessageDto message)
+    private static ResponseItem MapResponseItem(ResponseInputItemDto item)
+    {
+        return item switch
+        {
+            MessageInputItemDto message => MapMessageItem(message.Message),
+            FunctionCallInputItemDto function => ResponseItem.CreateFunctionCallItem(
+                function.Call.CallId,
+                function.Call.Name,
+                BinaryData.FromString(function.Call.Arguments)
+            ),
+            FunctionCallOutputInputItemDto output => ResponseItem.CreateFunctionCallOutputItem(
+                output.CallId,
+                output.Output
+            ),
+            _ => throw new InvalidOperationException($"Unknown response input item: {item}"),
+        };
+    }
+
+    private static ResponseItem MapMessageItem(MessageDto message)
     {
         return message.Role switch
         {
@@ -314,13 +358,13 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
     private static CreateResponseOptions BuildResponseOptions(
         string model,
         string instructions,
-        List<MessageDto> input,
+        IEnumerable<ResponseItem> input,
         float? temperature,
         int? maxTokens,
         ReasoningEffort? reasoningEffort
     )
     {
-        var options = new CreateResponseOptions(model, input.Select(MapResponseItem))
+        var options = new CreateResponseOptions(model, input)
         {
             Instructions = instructions,
             Temperature = temperature,

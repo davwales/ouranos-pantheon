@@ -13,4 +13,10 @@ public static class AssistantFormatting
         sparingly, no larger than ###. Never use LaTeX or math notation: write calculations inline,
         for example 195 × 0.98 = 191.1. Do not use horizontal rules.
         """;
+
+    public const string ToolInstructions = """
+        Call a tool only when the data above does not answer the question, and never name tools in
+        your reply. A tool that proposes a change only proposes it: tell the user to review and
+        apply it.
+        """;
 }

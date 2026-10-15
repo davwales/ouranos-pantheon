@@ -36,7 +36,8 @@ public sealed class KitchenAssistantTests
                     new RecipeImportOptions(),
                     new KitchenAssistantOptions("kitchen-model", 512, 0.3f, ReasoningEffort.High)
                 )
-            )
+            ),
+            []
         );
     }
 
@@ -87,13 +88,14 @@ public sealed class KitchenAssistantTests
             .Returns(Task.FromResult<Recipe?>(BuildRecipe(id)));
 
         string? sentInstructions = null;
-        List<MessageDto>? sentMessages = null;
+        IReadOnlyList<ResponseInputItemDto>? sentMessages = null;
 
         _mlClient
             .StreamResponseAsync(
                 "kitchen-model",
                 Arg.Do<string>(i => sentInstructions = i),
-                Arg.Do<List<MessageDto>>(m => sentMessages = m),
+                Arg.Do<IReadOnlyList<ResponseInputItemDto>>(m => sentMessages = m),
+                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
                 0.3f,
                 512,
                 ReasoningEffort.High,
@@ -113,7 +115,9 @@ public sealed class KitchenAssistantTests
         events.ShouldBe([new AssistantContentEvent("Yes."), new AssistantDoneEvent()]);
         sentInstructions.ShouldNotBeNull();
         sentInstructions.ShouldContain("# Recipe: Chocolate Cake");
-        sentMessages.ShouldBe([new MessageDto("Can I use butter?", RoleDto.User)]);
+        sentMessages.ShouldBe([
+            new MessageInputItemDto(new MessageDto("Can I use butter?", RoleDto.User)),
+        ]);
     }
 
     [Fact]

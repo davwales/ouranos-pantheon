@@ -176,24 +176,45 @@ store rather than client-supplied data.
   small tables, no LaTeX), since every assistant renders in the same narrow panel. Context
   may be loaded directly from the store or composed by invoking existing query handlers
   through `IMessageBus`, which keeps the prompt consistent with what the page shows.
+- **Tools**: each assistant can offer the model function tools. A tool derives from
+  `AssistantTool<TContext, TArguments>`; the arguments record is exported as the tool's JSON
+  schema (every property required, optional arguments nullable, enums as names) and parsed
+  back from the model's call. A module registers tools in `Build` with
+  `AddAssistantTool<TContext, TTool>()`, and `PantheonAssistant` receives every tool
+  registered for its context type (`IsAvailable(context)` can hide one, e.g. on a page without
+  a table). Tools take names, never ids, and reuse the module's query handlers. A tool returns
+  an `AssistantToolResult`: `Output` is compact text for the model (data, a confirmation, or a
+  validation problem the model can correct), and an optional typed `Action` is streamed to the
+  page. The base class runs a bounded loop: it streams a round, runs the requested tools
+  sequentially, appends each call and its (truncated) output to the input, and streams again,
+  up to `MaxToolRounds` (`ModelDefaults`); the last round offers no tools, so the model must
+  answer. Every round resends the whole input, because OuranosMl does not keep response state;
+  the inference server's prompt cache keeps the shared prefix cheap. A failing or unknown tool
+  becomes an output the model sees, never a failed turn.
+- **Actions**: a tool never changes data itself. Read-only view changes (the Explorer's filter
+  and sort) are applied by the page as soon as they arrive; data changes (recipe notes,
+  ingredients, steps) appear as proposal cards that the user applies through the module's
+  normal update endpoint, so event-sourced history and revert remain the undo. The next turn
+  sees the effect through the context, which is rebuilt from the store or the current view.
 - **Model settings**: global defaults (model, reasoning effort, max tokens) live in
   `ModelDefaults` (`Shared.Contract/Infra/OuranosMachineLearning/`). Each feature's options
   record initializes from them and overrides only what it needs (e.g. recipe import uses low
   effort). Reasoning tokens count against `max_output_tokens`, so budgets must leave room
   for thinking.
-- **Context budget**: the self-hosted model's context window is small (it is configured on
-  the inference host and may change) and is shared by the system prompt, the history, the
-  reasoning and the reply; prompt length also dominates time to first token. Assistants are therefore page-scoped (one per page, seeing only what that
-  page shows) and keep their system prompt to roughly 1,000 tokens: compact numbers
+- **Context budget**: the self-hosted model's context window is limited (it is configured on
+  the inference host and may change) and is shared by the system prompt, the tool definitions,
+  the history, tool outputs, the reasoning and the reply; prompt length also dominates time to
+  first token. Assistants are therefore page-scoped (one per page, seeing only what that page
+  shows) and keep a headline baseline in the prompt, with detail behind tools: compact numbers
   (`AssistantNumberFormat`, e.g. `820.6K`, because small models tokenize digits almost one by
-  one), a fixed number of rows that does not grow with the selected time frame, no ids. The
-  Plutus analysts assert a worst-case prompt against a shared character budget in their prompt
-  tests.
+  one), a fixed number of rows that does not grow with the selected time frame, no ids. Each
+  assistant's prompt tests assert its worst-case prompt plus every tool definition against a
+  shared character budget.
 - **`MapAssistant<TContext>(pattern)`** (`API/AssistantEndpointExtensions`) maps a POST
   route binding `AssistantCompletionInput<TContext>` (`messages` + typed `context`),
   dispatches via `IMessageBus`, and writes events with `SseWriter`.
-- **Event contract**: `$type`-discriminated `reasoning`, `content`, `usage`, `error`,
-  `done`. `reasoning` carries the model's thinking (rendered as a collapsible "Thinking"
+- **Event contract**: `$type`-discriminated `reasoning`, `content`, `tool` (a tool was
+  called), `action` (a typed action for the page), `usage`, `error`, `done`. `reasoning` carries the model's thinking (rendered as a collapsible "Thinking"
   segment) and is never resent as history. Errors before the first event surface as
   ProblemDetails; LLM failures mid-stream, and replies that finish without any content
   (e.g. reasoning exhausted the token budget), become an `error` event with a generic
@@ -210,7 +231,9 @@ store rather than client-supplied data.
   object, and a title. Optional `suggestions` render as clickable starter questions in the
   empty state. Replies render through `MarkdownRenderer` in its `compact` variant: chat-sized
   headings and spacing, with tables in a horizontally scrolling container. Pages place their assistant button in the nav bar through
-  `useNavBarActions`, only while the assistant is usable.
+  `useNavBarActions`, only while the assistant is usable. Optional `toolLabels` name the tools
+  in the "Looked up …" line, and `actions` maps action names to handlers (`describe`, `apply`,
+  `autoApply`) that the page owns; a reply shows each action as a card with its apply state.
 
 Current assistants:
 
