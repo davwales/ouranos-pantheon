@@ -2,15 +2,27 @@
 
 import { AssistantButton } from "@/components/shared/ai-assistant";
 import { Typography } from "@/components/shared/typography";
+import { type AssistantActionHandlers } from "@/lib/api/assistant";
 import { MARKET_ANALYST_ENDPOINT } from "@/lib/api/plutus";
 import { type MarketAnalystContext } from "@/lib/api/plutus-types";
+
+const TOOL_LABELS = {
+  find_symbols: "matching symbols",
+  get_symbol: "a symbol",
+  get_signal_rankings: "signal rankings",
+  get_forecast_leaders: "forecast leaders",
+  get_activity_hours: "trading hours",
+  set_explorer_view: "the table view",
+};
 
 export function MarketAnalystButton({
   context,
   suggestions,
+  actions,
 }: {
   context: MarketAnalystContext;
   suggestions: string[];
+  actions?: AssistantActionHandlers;
 }) {
   return (
     <AssistantButton
@@ -26,6 +38,8 @@ export function MarketAnalystButton({
         </Typography>
       }
       suggestions={suggestions}
+      toolLabels={TOOL_LABELS}
+      actions={actions}
     />
   );
 }

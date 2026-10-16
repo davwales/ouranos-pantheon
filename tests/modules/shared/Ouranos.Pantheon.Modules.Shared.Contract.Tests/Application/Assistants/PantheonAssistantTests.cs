@@ -33,12 +33,15 @@ public sealed class PantheonAssistantTests
 
     private sealed class LookupTool(
         Func<TestContext, LookupArguments, AssistantToolResult>? execute = null,
-        bool isAvailable = true
+        bool isAvailable = true,
+        bool isSingleActionPerReply = false
     ) : AssistantTool<TestContext, LookupArguments>(Substitute.For<ILogger>())
     {
         public override string Name => "lookup";
 
         public override string Description => "Looks something up.";
+
+        public override bool IsSingleActionPerReply => isSingleActionPerReply;
 
         public override bool IsAvailable(TestContext context)
         {
@@ -709,6 +712,120 @@ public sealed class PantheonAssistantTests
             .ShouldBe(
                 new AssistantErrorEvent(PantheonAssistant<TestContext>.GenerationFailedMessage)
             );
+    }
+
+    [Fact]
+    public async Task Handle_WhenARoundHasTooManyCalls_ShouldRunOnlyTheFirstAndSkipTheRest()
+    {
+        // Arrange
+        var sentInputs = new List<IReadOnlyList<ResponseInputItemDto>>();
+        var executed = new List<string>();
+
+        _mlClient
+            .StreamResponseAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Do<IReadOnlyList<ResponseInputItemDto>>(sentInputs.Add),
+                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
+                Arg.Any<float?>(),
+                Arg.Any<int?>(),
+                Arg.Any<ReasoningEffort?>(),
+                Arg.Any<CancellationToken>()
+            )
+            .Returns(
+                CreateStream([
+                    Call("call-1", """{"query":"a"}"""),
+                    Call("call-2", """{"query":"b"}"""),
+                    Call("call-3", """{"query":"c"}"""),
+                ]),
+                CreateStream([new ResponseStreamChunk("Done.", null, null)])
+            );
+
+        var assistant = new TestAssistant(
+            Substitute.For<ILogger>(),
+            _mlClient,
+            [
+                new LookupTool(
+                    (_, arguments) =>
+                    {
+                        executed.Add(arguments.Query);
+                        return new AssistantToolResult(arguments.Query);
+                    }
+                ),
+            ]
+        )
+        {
+            Prompt = Prompt with { MaxToolCallsPerRound = 2 },
+        };
+
+        // Act
+        var events = await CollectAsync(assistant.Handle(CreateInput()));
+
+        // Assert
+        executed.ShouldBe(["a", "b"]);
+        events.OfType<AssistantToolEvent>().Count().ShouldBe(2);
+        sentInputs[1]
+            .OfType<FunctionCallOutputInputItemDto>()
+            .Select(output => output.Output)
+            .ShouldBe(["a", "b", PantheonAssistant<TestContext>.TooManyToolCallsOutput]);
+    }
+
+    [Fact]
+    public async Task Handle_WhenASingleActionToolRepeatsInAReply_ShouldStreamOnlyTheFirstAction()
+    {
+        // Arrange
+        var sentInputs = new List<IReadOnlyList<ResponseInputItemDto>>();
+
+        _mlClient
+            .StreamResponseAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Do<IReadOnlyList<ResponseInputItemDto>>(sentInputs.Add),
+                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
+                Arg.Any<float?>(),
+                Arg.Any<int?>(),
+                Arg.Any<ReasoningEffort?>(),
+                Arg.Any<CancellationToken>()
+            )
+            .Returns(
+                CreateStream([
+                    Call("call-1", """{"query":"bad"}"""),
+                    Call("call-2", """{"query":"first"}"""),
+                ]),
+                CreateStream([Call("call-3", """{"query":"second"}""")]),
+                CreateStream([new ResponseStreamChunk("Proposed.", null, null)])
+            );
+
+        var assistant = new TestAssistant(
+            Substitute.For<ILogger>(),
+            _mlClient,
+            [
+                new LookupTool(
+                    (_, arguments) =>
+                        arguments.Query == "bad"
+                            ? new AssistantToolResult("Invalid.")
+                            : new AssistantToolResult("Proposed", new TestAction(arguments.Query)),
+                    isSingleActionPerReply: true
+                ),
+            ]
+        );
+
+        // Act
+        var events = await CollectAsync(assistant.Handle(CreateInput()));
+
+        // Assert
+        events
+            .OfType<AssistantActionEvent>()
+            .ShouldBe([new AssistantActionEvent("lookup", new TestAction("first"))]);
+
+        sentInputs[2]
+            .OfType<FunctionCallOutputInputItemDto>()
+            .Select(output => output.Output)
+            .ShouldBe([
+                "Invalid.",
+                "Proposed",
+                PantheonAssistant<TestContext>.RepeatedActionOutput,
+            ]);
     }
 
     [Fact]

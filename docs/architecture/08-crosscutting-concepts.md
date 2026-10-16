@@ -194,13 +194,17 @@ store rather than client-supplied data.
   class runs a bounded loop: it streams a round, runs the requested tools
   sequentially, appends each call and its (truncated) output to the input, and streams again,
   up to `MaxToolRounds` (`ModelDefaults`); the last round offers no tools, so the model must
-  answer. Every round resends the whole input, because OuranosMl does not keep response state;
+  answer. Only the first `MaxToolCallsPerRound` calls in a round run, and a tool marked
+  `IsSingleActionPerReply` is skipped once it has returned an action in the reply; skipped
+  calls get an output telling the model why, because small models sometimes repeat a call
+  many times. Every round resends the whole input, because OuranosMl does not keep response state;
   the inference server's prompt cache keeps the shared prefix cheap. A failing or unknown tool
   becomes an output the model sees, never a failed turn.
-- **Actions**: a tool never changes data itself. Read-only view changes (the Explorer's filter
-  and sort) are applied by the page as soon as they arrive; data changes (recipe notes,
-  ingredients, steps) appear as proposal cards that the user applies through the module's
-  normal update endpoint, so event-sourced history and revert remain the undo. The next turn
+- **Actions**: a tool never changes data itself. Every action appears as a proposal card that
+  the user applies: view changes (the Explorer's filter and sort) update the page's table
+  state, and data changes (recipe notes, ingredients, steps) go through the module's normal
+  update endpoint, so event-sourced history and revert remain the undo. Pages can mark a
+  handler `autoApply`, but none do. The next turn
   sees the effect through the context, which is rebuilt from the store or the current view.
 - **Model settings**: global defaults (model, reasoning effort, max tokens) live in
   `ModelDefaults` (`Shared.Contract/Infra/OuranosMachineLearning/`). Each feature's options
@@ -250,8 +254,11 @@ Current assistants:
   `get_price_history`, `get_signals`, `get_forecast`, `get_positions`, `search_symbols`,
   `compare_symbol` (by the id `search_symbols` returns).
 - Plutus `MarketAnalyst` (`/api/plutus/markets/assistant/completions/stream`, context
-  `{ marketId, timeFrame, filter?, sortField?, sortDirection?, skip?, take? }`) on the market
-  landing and Explorer pages, configured by `Ouranos:Plutus:MarketAnalyst`. Both Plutus
+  `{ marketId, timeFrame, view? }`, where `view` carries the Explorer's filter, sort and page)
+  on the market landing and Explorer pages, configured by `Ouranos:Plutus:MarketAnalyst`. Read
+  tools: `find_symbols`, `get_signal_rankings`, `get_forecast_leaders` (each returning symbol
+  ids), `get_symbol` (by one of those ids), `get_activity_hours`; on the Explorer also
+  `set_explorer_view`, which proposes one view per reply for the user to apply. Both Plutus
   analysts use a reduced output budget to fit the limited context window.
 
 ## 8.12 Health Checks

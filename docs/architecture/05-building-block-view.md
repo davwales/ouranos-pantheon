@@ -101,7 +101,7 @@ and US equities.
 |----------------|----------------|
 | `Features/DataLoaders/` | Ingestion: FFXIV and Stocks WebSocket listeners, OSRS poller job, and a cached XIVAPI item lookup; the trade consumer upserts symbols and writes trades |
 | `Features/Markets/` | Market catalog CRUD; markets are the root entity the rest of the module is scoped to |
-| `Features/Markets/AskMarketAnalyst/` | Streaming Market Analyst (`PantheonAssistant<MarketAnalystContext>`) for the market landing and Explorer pages: composes market taxes, the market overview, the activity heatmap and the user's current Explorer view into a compact prompt |
+| `Features/Markets/AskMarketAnalyst/` | Streaming Market Analyst (`PantheonAssistant<MarketAnalystContext>`) for the market landing and Explorer pages: composes market taxes, the market overview and the user's current Explorer view into a compact prompt; `Tools/` screen the market, look up symbols, rank by signals or forecasts, summarize trading hours and set the Explorer view |
 | `Features/Symbols/` | Symbol read access: list/get symbols (upserted by ingestion) and today's per-symbol summary statistics |
 | `Features/Symbols/AskSymbolAnalyst/` | Streaming Symbol Analyst (`PantheonAssistant<SymbolAnalystContext>`): composes a lean headline of symbol, market and today's prices from existing query handlers; `Tools/` fetch price history, signals, the forecast, positions, and search for and compare other symbols on demand |
 | `Features/Trades/` | Trade queries and aggregate views over the TimescaleDB hypertable and continuous aggregates: all trades, per-symbol/market/recipe trade aggregates, market overview, volume heatmap (see [Section 8](08-crosscutting-concepts.md)) |

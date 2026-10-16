@@ -17,6 +17,13 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetAllForecasts;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetForecastEfficacy;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetMarketForecast;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.AskMarketAnalyst;
+using Ouranos.Pantheon.Modules.Plutus.Features.Markets.AskMarketAnalyst.Schemas;
+using Ouranos.Pantheon.Modules.Plutus.Features.Markets.AskMarketAnalyst.Tools.FindSymbols;
+using Ouranos.Pantheon.Modules.Plutus.Features.Markets.AskMarketAnalyst.Tools.GetActivityHours;
+using Ouranos.Pantheon.Modules.Plutus.Features.Markets.AskMarketAnalyst.Tools.GetForecastLeaders;
+using Ouranos.Pantheon.Modules.Plutus.Features.Markets.AskMarketAnalyst.Tools.GetSignalRankings;
+using Ouranos.Pantheon.Modules.Plutus.Features.Markets.AskMarketAnalyst.Tools.GetSymbol;
+using Ouranos.Pantheon.Modules.Plutus.Features.Markets.AskMarketAnalyst.Tools.SetExplorerView;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.CreateMarket;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.DeleteMarket;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetAllMarkets;
@@ -135,7 +142,13 @@ public sealed class PlutusModule : IPantheonModule
             .AddAssistantTool<SymbolAnalystContext, GetForecastTool>()
             .AddAssistantTool<SymbolAnalystContext, GetPositionsTool>()
             .AddAssistantTool<SymbolAnalystContext, SearchSymbolsTool>()
-            .AddAssistantTool<SymbolAnalystContext, CompareSymbolTool>();
+            .AddAssistantTool<SymbolAnalystContext, CompareSymbolTool>()
+            .AddAssistantTool<MarketAnalystContext, FindSymbolsTool>()
+            .AddAssistantTool<MarketAnalystContext, GetSymbolTool>()
+            .AddAssistantTool<MarketAnalystContext, GetSignalRankingsTool>()
+            .AddAssistantTool<MarketAnalystContext, GetForecastLeadersTool>()
+            .AddAssistantTool<MarketAnalystContext, GetActivityHoursTool>()
+            .AddAssistantTool<MarketAnalystContext, SetExplorerViewTool>();
     }
 
     public async Task<IHost> Configure(IHost host)

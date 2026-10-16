@@ -30,17 +30,14 @@ internal static class MarketAnalystSnapshotFactory
         );
     }
 
+    public static ExplorerView ExplorerView()
+    {
+        return new ExplorerView(["TotalVolume:gte:2"], "Roi", "desc", Skip: 10, Take: 2);
+    }
+
     public static MarketAnalystContext Context()
     {
-        return new MarketAnalystContext(
-            MarketId,
-            TimeFrame.OneDay,
-            ["TotalVolume:gte:2"],
-            "Roi",
-            "desc",
-            Skip: 10,
-            Take: 2
-        );
+        return new MarketAnalystContext(MarketId, TimeFrame.OneDay, ExplorerView());
     }
 
     public static GetMarketOverviewResponse Overview()
@@ -111,7 +108,6 @@ internal static class MarketAnalystSnapshotFactory
         GetMarketResponse? market = null,
         MarketAnalystContext? context = null,
         GetMarketOverviewResponse? overview = null,
-        GetVolumeHeatmapResponse? heatmap = null,
         PagedResponse<GetMarketTradesResponse>? view = null
     )
     {
@@ -119,7 +115,6 @@ internal static class MarketAnalystSnapshotFactory
             market ?? Market(),
             context ?? Context(),
             overview ?? Overview(),
-            heatmap ?? Heatmap(),
             view ?? View(TwistedBow(), RunePlatebody()),
             TrendPoints: 2,
             GeneratedAt

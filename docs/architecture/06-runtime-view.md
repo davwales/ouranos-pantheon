@@ -288,12 +288,16 @@ with truncated notes, and another symbol's summary. The composed system prompt i
 byte-identical prompt and the inference server restores its cached prompt state instead of
 re-processing the whole context.
 
-The Plutus Market Analyst (context `{ marketId, timeFrame, filter?, sortField?, sortDirection?,
-skip?, take? }`) is page-scoped: after loading the market it concurrently invokes the market
-overview, volume heatmap and market trades handlers, the last with the Explorer's own filter,
-sort and page (capped at `MaxViewRows`), so it sees exactly the rows the user sees. The market
-landing page sends no view and gets the Explorer's default order. The composed prompt is cached
-per market, time frame and view.
+The Plutus Market Analyst (context `{ marketId, timeFrame, view? }`) is page-scoped: after
+loading the market it invokes the market overview handler and, on the Explorer, the market
+trades handler with the Explorer's own filter, sort and page (capped at `MaxViewRows`), so it
+sees exactly the rows the user sees. The market landing page sends no view. Its tools return
+typed JSON: they screen the whole market with typed conditions (validated and normalized
+before they reach the filter syntax), rank symbols by signal score or forecast gain, look up
+one symbol by an id those lists return, and summarize the activity heatmap; on the Explorer
+`set_explorer_view` returns the validated conditions as an action, once per reply, that the
+page shows as a card and turns into its table filter when the user applies it. The composed prompt is cached per market,
+time frame and view.
 
 ## 6.8 Observability at Runtime
 

@@ -23,6 +23,8 @@ public abstract class AssistantTool<TContext, TArguments>(ILogger logger) : IAss
 
     public BinaryData ParametersSchema => StructuredOutputSchema.For<TArguments>();
 
+    public virtual bool IsSingleActionPerReply => false;
+
     public virtual bool IsAvailable(TContext context)
     {
         return true;

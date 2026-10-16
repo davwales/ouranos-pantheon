@@ -80,11 +80,13 @@ describe("MarketDetail (Explorer)", () => {
           context: {
             marketId: "market-1",
             timeFrame: "OneDay",
-            filter: ["symbolName:like:rune"],
-            sortField: "roi",
-            sortDirection: "desc",
-            skip: 20,
-            take: 10,
+            view: {
+              filter: ["symbolName:like:rune"],
+              sortField: "roi",
+              sortDirection: "desc",
+              skip: 20,
+              take: 10,
+            },
           },
         }),
         expect.any(AbortSignal),

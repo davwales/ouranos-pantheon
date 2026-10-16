@@ -1,9 +1,8 @@
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.AskMarketAnalyst;
+using Ouranos.Pantheon.Modules.Plutus.Features.Markets.AskMarketAnalyst.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketOverview.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketTrades.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetVolumeHeatmap.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
-using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
 using Ouranos.Pantheon.Tests.Utils;
 using Factory = Ouranos.Pantheon.Modules.Plutus.Tests.Features.Markets.AskMarketAnalyst.MarketAnalystSnapshotFactory;
 
@@ -34,10 +33,6 @@ public sealed class MarketAnalystPromptTests
                 Avg price 1234.5, volume 2.5M, 48K trades.
                 Trend (time avg/vol): 10-08 08:00 1150/400, 10-08 10:00 1200/0
 
-                ## Activity (last 4 weeks, share of trades)
-                Busiest: Sat 20:00 (45%), Thu 12:00 (29.5%), Mon 18:00 (25%)
-                Quietest: Sun 03:00 (0.5%), Mon 18:00 (25%), Thu 12:00 (29.5%)
-
                 ## Rows in view (11-12 of 42; sorted by Roi desc; filter TotalVolume:gte:2)
                 Name | Min | Max | Avg | Vol | Txns | Margin | ROI | Gain
                 Twisted bow | 1.42B | 1.51B | 1.47B | 2 | 2 | 85M | 6% | 170M
@@ -63,7 +58,9 @@ public sealed class MarketAnalystPromptTests
     public void Compose_WhenViewHasNoSortOrFilter_ShouldDescribeTheDefaultGainOrder()
     {
         // Arrange
-        var snapshot = Factory.Snapshot(context: new(Factory.MarketId, TimeFrame.OneWeek));
+        var snapshot = Factory.Snapshot(
+            context: new(Factory.MarketId, TimeFrame.OneWeek, new ExplorerView())
+        );
 
         // Act
         var prompt = MarketAnalystPrompt.Compose(snapshot);
@@ -86,18 +83,20 @@ public sealed class MarketAnalystPromptTests
     }
 
     [Fact]
-    public void Compose_WhenThereIsNoActivity_ShouldOmitTheActivitySection()
+    public void Compose_WhenNotOnTheExplorer_ShouldOmitTheRowsInView()
     {
         // Arrange
-        var snapshot = Factory.Snapshot(
-            heatmap: new GetVolumeHeatmapResponse([new HeatmapCellResponse(0, 0, 0, 0)])
-        );
+        var snapshot = Factory.Snapshot(context: new(Factory.MarketId, TimeFrame.OneDay)) with
+        {
+            View = null,
+        };
 
         // Act
         var prompt = MarketAnalystPrompt.Compose(snapshot);
 
         // Assert
-        prompt.ShouldNotContain("## Activity");
+        prompt.ShouldNotContain("## Rows in view");
+        prompt.ShouldEndWith("Trend (time avg/vol): 10-08 08:00 1150/400, 10-08 10:00 1200/0");
     }
 
     [Fact]
@@ -139,7 +138,7 @@ public sealed class MarketAnalystPromptTests
     }
 
     [Fact]
-    public void Compose_WhenViewIsFull_ShouldStayWithinTheContextBudget()
+    public void Compose_WhenViewIsFull_ShouldStayWithinTheContextBudgetWithEveryTool()
     {
         // Arrange
         var rows = Enumerable
@@ -152,8 +151,8 @@ public sealed class MarketAnalystPromptTests
         var prompt = MarketAnalystPrompt.Compose(snapshot);
 
         // Assert
-        (prompt.Length + AssistantFormatting.Instructions.Length).ShouldBeLessThanOrEqualTo(
-            AssistantPromptBudget.Characters
-        );
+        AssistantPromptBudget
+            .Measure(prompt, MarketAnalystToolFactory.All())
+            .ShouldBeLessThanOrEqualTo(AssistantPromptBudget.Characters);
     }
 }

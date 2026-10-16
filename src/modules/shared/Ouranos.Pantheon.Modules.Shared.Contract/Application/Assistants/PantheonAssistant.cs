@@ -22,6 +22,12 @@ public abstract class PantheonAssistant<TContext>(
 
     public const string ToolFailedOutput = "The tool failed; answer without it.";
 
+    public const string TooManyToolCallsOutput =
+        "Skipped: too many tool calls at once; answer with what you have.";
+
+    public const string RepeatedActionOutput =
+        "Skipped: this reply already proposed this change; answer the user now.";
+
     private readonly ILogger _logger = Guard.Against.Null(logger);
     private readonly IOuranosMachineLearningClient _mlClient = Guard.Against.Null(mlClient);
     private readonly IReadOnlyList<IAssistantTool<TContext>> _tools =
@@ -140,6 +146,7 @@ public abstract class PantheonAssistant<TContext>(
 
         ChatCompletionUsage? usage = null;
         var hasContent = false;
+        var proposed = new HashSet<string>();
 
         for (var round = 0; ; round++)
         {
@@ -202,15 +209,41 @@ public abstract class PantheonAssistant<TContext>(
                 break;
             }
 
+            var executed = 0;
             foreach (var call in calls)
             {
-                yield return new AssistantToolEvent(call.Name);
+                var tool = tools.FirstOrDefault(t => t.Name == call.Name);
+                AssistantToolResult result;
 
-                var result = await InvokeToolAsync(tools, context, call, cancellationToken);
-
-                if (result.Action is not null)
+                if (executed >= prompt.MaxToolCallsPerRound)
                 {
-                    yield return new AssistantActionEvent(call.Name, result.Action);
+                    _logger.LogWarning(
+                        "Assistant skipped tool '{name}': more than {max} calls in one round.",
+                        call.Name,
+                        prompt.MaxToolCallsPerRound
+                    );
+                    result = new AssistantToolResult(TooManyToolCallsOutput);
+                }
+                else if (tool is { IsSingleActionPerReply: true } && proposed.Contains(tool.Name))
+                {
+                    _logger.LogWarning(
+                        "Assistant skipped tool '{name}': it already proposed an action in this reply.",
+                        call.Name
+                    );
+                    result = new AssistantToolResult(RepeatedActionOutput);
+                }
+                else
+                {
+                    executed++;
+                    yield return new AssistantToolEvent(call.Name);
+
+                    result = await InvokeToolAsync(tool, context, call, cancellationToken);
+
+                    if (result.Action is not null)
+                    {
+                        proposed.Add(call.Name);
+                        yield return new AssistantActionEvent(call.Name, result.Action);
+                    }
                 }
 
                 input.Add(new FunctionCallInputItemDto(call));
@@ -246,14 +279,12 @@ public abstract class PantheonAssistant<TContext>(
     }
 
     private async Task<AssistantToolResult> InvokeToolAsync(
-        List<IAssistantTool<TContext>> tools,
+        IAssistantTool<TContext>? tool,
         TContext context,
         FunctionCallDto call,
         CancellationToken cancellationToken
     )
     {
-        var tool = tools.FirstOrDefault(t => t.Name == call.Name);
-
         if (tool is null)
         {
             _logger.LogWarning("Assistant called unknown tool '{name}'.", call.Name);

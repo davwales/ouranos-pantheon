@@ -13,14 +13,12 @@ internal static class MarketAnalystPrompt
         which mirrors the page they are viewing. Quote the numbers you rely on and never invent
         symbols or prices. Margin, ROI and Gain are already after tax; Gain is Margin × the
         tradable volume. Rows with few trades (transactions) are unreliable, so say so. Recommend
-        at most three symbols, each with a one-line reason. Signals, forecasts and positions are
-        not shown here; point the user to the Signals, Forecasts or Portfolio page for those.
-        This is not financial advice. Times are UTC.
+        at most three symbols, each with a one-line reason. Tools can screen the whole market,
+        look up one symbol, rank symbols by signal or forecast, and show the busiest trading
+        hours. When the user asks to show, filter or sort the rows they see, propose the view
+        once with the view tool instead of listing matches. ROI values are percentages. This is not
+        financial advice. Times are UTC.
         """;
-
-    internal const int HeatmapSlots = 3;
-
-    private static readonly string[] DayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
     public static string Compose(MarketAnalystSnapshot snapshot)
     {
@@ -29,7 +27,6 @@ internal static class MarketAnalystPrompt
             Instructions,
             ComposeMarket(snapshot),
             ComposePulse(snapshot),
-            ComposeActivity(snapshot),
             ComposeView(snapshot),
         ];
 
@@ -108,40 +105,13 @@ internal static class MarketAnalystPrompt
         ];
     }
 
-    private static string ComposeActivity(MarketAnalystSnapshot snapshot)
+    private static string ComposeView(MarketAnalystSnapshot snapshot)
     {
-        var cells = snapshot.Heatmap.Rows.Where(cell => cell.TotalTrades > 0).ToList();
-
-        if (cells.Count == 0)
+        if (snapshot.View is not { } view || snapshot.Context.View is not { } context)
         {
             return "";
         }
 
-        var busiest = cells
-            .OrderByDescending(cell => cell.TotalTrades)
-            .Take(HeatmapSlots)
-            .Select(cell =>
-                $"{DayNames[cell.DayOfWeek % 7]} {cell.Hour:00}:00 ({AssistantNumberFormat.Number(cell.Percentage)}%)"
-            );
-
-        var quietest = cells
-            .OrderBy(cell => cell.TotalTrades)
-            .Take(HeatmapSlots)
-            .Select(cell =>
-                $"{DayNames[cell.DayOfWeek % 7]} {cell.Hour:00}:00 ({AssistantNumberFormat.Number(cell.Percentage)}%)"
-            );
-
-        return $"""
-            ## Activity (last {MarketAnalyst.HeatmapLookbackWeeks} weeks, share of trades)
-            Busiest: {string.Join(", ", busiest)}
-            Quietest: {string.Join(", ", quietest)}
-            """;
-    }
-
-    private static string ComposeView(MarketAnalystSnapshot snapshot)
-    {
-        var view = snapshot.View;
-        var context = snapshot.Context;
         var items = view.Items.ToList();
 
         if (items.Count == 0)
@@ -163,6 +133,14 @@ internal static class MarketAnalystPrompt
             ? $"; filter {string.Join(" and ", f)}"
             : "";
 
+        return $"""
+            ## Rows in view ({first}-{last} of {view.TotalCount}; sorted by {sort}{filter})
+            {ComposeRows(items)}
+            """;
+    }
+
+    private static string ComposeRows(IEnumerable<GetMarketTradesResponse> items)
+    {
         var rows = items.Select(row =>
             string.Join(
                 " | ",
@@ -179,7 +157,6 @@ internal static class MarketAnalystPrompt
         );
 
         return $"""
-            ## Rows in view ({first}-{last} of {view.TotalCount}; sorted by {sort}{filter})
             Name | Min | Max | Avg | Vol | Txns | Margin | ROI | Gain
             {string.Join("\n", rows)}
             """;

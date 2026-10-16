@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  applyExplorerView,
+  explorerViewHandler,
+} from "@/app/(plutus)/plutus/[marketId]/explorer/_components/explorer-assistant-actions";
 import { explorerColumns } from "@/app/(plutus)/plutus/[marketId]/explorer/_components/explorer-columns";
 import { MarketAnalystButton } from "@/app/(plutus)/plutus/[marketId]/_components/market-analyst-button";
 import TimeFrameSelection from "@/app/(plutus)/plutus/components/time-frame-selection";
@@ -13,16 +17,17 @@ import {
 import { Typography } from "@/components/shared/typography";
 import { useApi } from "@/hooks/use-api";
 import { plutusApi } from "@/lib/api/plutus";
+import { type SetExplorerViewAction } from "@/lib/api/plutus-types";
 import { PlutusState, usePlutusStore } from "@/stores/plutus-store";
 import { RefreshCw } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 
 const SUGGESTIONS = [
   "Which of these is the best opportunity?",
-  "Which of these are too illiquid to trust?",
-  "Compare the top three after tax.",
+  "Show only symbols with ROI over 5% and volume over 1,000.",
+  "Which symbols have the strongest flip signals?",
 ];
 
 export default function MarketDetail() {
@@ -78,6 +83,20 @@ export default function MarketDetail() {
 
   const { setActions, clearActions } = useNavBarActions();
 
+  // Reads the latest table state at apply time, since several actions can arrive in one reply.
+  const applyView = useCallback(
+    (action: SetExplorerViewAction) => {
+      const current = usePlutusStore.getState().explorerTableState;
+      setTableState(applyExplorerView(current, action, columns));
+    },
+    [columns, setTableState],
+  );
+
+  const actions = useMemo(
+    () => ({ set_explorer_view: explorerViewHandler(columns, applyView) }),
+    [columns, applyView],
+  );
+
   useEffect(() => {
     setActions(
       <MarketAnalystButton
@@ -85,13 +104,10 @@ export default function MarketDetail() {
         context={{
           marketId,
           timeFrame: timeFrameKey,
-          filter,
-          sortField,
-          sortDirection,
-          skip,
-          take,
+          view: { filter, sortField, sortDirection, skip, take },
         }}
         suggestions={SUGGESTIONS}
+        actions={actions}
       />,
     );
     return () => clearActions();
@@ -103,6 +119,7 @@ export default function MarketDetail() {
     sortDirection,
     skip,
     take,
+    actions,
     setActions,
     clearActions,
   ]);
