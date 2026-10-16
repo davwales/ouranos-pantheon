@@ -8,6 +8,8 @@ namespace Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes;
 
 public sealed record Recipe : BaseEventSourcedEntity
 {
+    public const int MaxNotesLength = 10_000;
+
     [JsonConstructor]
     private Recipe() { }
 
@@ -178,7 +180,7 @@ public sealed record Recipe : BaseEventSourcedEntity
 
         if (!string.IsNullOrWhiteSpace(notes))
         {
-            Guard.Against.OutOfRange(notes.Length, nameof(notes), 1, 10_000);
+            Guard.Against.OutOfRange(notes.Length, nameof(notes), 1, MaxNotesLength);
         }
     }
 

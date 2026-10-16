@@ -141,6 +141,26 @@ export type UpdateCheckedItemsResponse = {
   checkedItemIds: string[];
 };
 
+export type ProposedIngredient = {
+  quantity: number;
+  unit: string;
+  name: string;
+  isOptional: boolean;
+};
+
+export type AddRecipeNoteAction = { text: string };
+
+export type AddIngredientAction = { ingredient: ProposedIngredient };
+
+export type UpdateIngredientAction = {
+  original: ProposedIngredient;
+  updated: ProposedIngredient;
+};
+
+export type RemoveIngredientAction = { original: ProposedIngredient };
+
+export type UpdateStepAction = { original: string; text: string };
+
 export type KitchenAssistantContext = {
   recipeId: string;
 };

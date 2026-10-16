@@ -8,8 +8,9 @@ import useInterval from "@/hooks/use-interval";
 import { hestiaApi } from "@/lib/api/hestia";
 import type { Recipe } from "@/lib/api/hestia-types";
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { KitchenAssistantButton } from "./_components/kitchen-assistant-button";
+import { recipeActionHandlers } from "./_components/recipe-assistant-actions";
 import { RecipeDetailSkeleton } from "./_components/recipe-detail-skeleton";
 import { RecipeEditView } from "./_components/recipe-edit-view";
 import { RecipeHeader } from "./_components/recipe-header";
@@ -43,13 +44,31 @@ export default function RecipeDetailPage() {
   const isAssistantAvailable =
     recipe.data?.importStatus === "Imported" ||
     recipe.data?.importStatus === "None";
+  const assistantActions = useMemo(
+    () =>
+      recipeActionHandlers({
+        isEditing,
+        load: () => hestiaApi.getRecipe(recipeId),
+        save: async (input) => {
+          await hestiaApi.updateRecipe(recipeId, input);
+          reexecute();
+        },
+      }),
+    [isEditing, recipeId, reexecute],
+  );
   useEffect(() => {
     if (!isAssistantAvailable) {
       return;
     }
-    setActions(<KitchenAssistantButton key={recipeId} recipeId={recipeId} />);
+    setActions(
+      <KitchenAssistantButton
+        key={recipeId}
+        recipeId={recipeId}
+        actions={assistantActions}
+      />,
+    );
     return () => clearActions();
-  }, [isAssistantAvailable, recipeId, setActions, clearActions]);
+  }, [isAssistantAvailable, recipeId, assistantActions, setActions, clearActions]);
 
   const handleReimport = async () => {
     setIsReimporting(true);
