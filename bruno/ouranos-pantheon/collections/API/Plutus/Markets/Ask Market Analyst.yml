@@ -19,10 +19,13 @@ http:
         "context": {
           "marketId": "{{MARKET_ID}}",
           "timeFrame": "OneDay",
-          "sortField": "TotalGain",
-          "sortDirection": "desc",
-          "skip": 0,
-          "take": 10
+          "view": {
+            "filter": ["TotalVolume:gte:1000"],
+            "sortField": "TotalGain",
+            "sortDirection": "desc",
+            "skip": 0,
+            "take": 10
+          }
         }
       }
   auth: inherit

@@ -2,6 +2,7 @@ using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetMarket.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSymbolSignals.Schemas;
+using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.AskSymbolAnalyst;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.AskSymbolAnalyst.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.AskSymbolAnalyst.Tools.CompareSymbol;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.AskSymbolAnalyst.Tools.CompareSymbol.Schemas;
@@ -65,7 +66,7 @@ public sealed class CompareSymbolToolTests
         data.Name.ShouldBe("Bandos godsword");
 
         data.PriceSummaries.Select(summary => summary.TimeFrame)
-            .ShouldBe(CompareSymbolTool.TimeFrames);
+            .ShouldBe(SymbolAnalystQueries.SummaryTimeFrames);
 
         data.PriceSummaries[0].MarginAfterTax.ShouldBe(392000);
         data.SignalScore.AggregatedScore.ShouldBe(0.4m);

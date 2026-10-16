@@ -4,12 +4,11 @@ using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Markets.AskMarketAnalyst.Schemas;
 
+/// <summary>
+/// <see cref="View"/> is set only on the explorer, where the assistant can also change the table.
+/// </summary>
 public sealed record MarketAnalystContext(
     Id<Market> MarketId,
     TimeFrame TimeFrame,
-    string[]? Filter = null,
-    string? SortField = null,
-    string? SortDirection = null,
-    int Skip = 0,
-    int Take = 10
+    ExplorerView? View = null
 );

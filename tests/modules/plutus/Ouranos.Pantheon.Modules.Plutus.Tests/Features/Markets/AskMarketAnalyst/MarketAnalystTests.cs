@@ -46,6 +46,7 @@ public sealed class MarketAnalystTests
                         512,
                         0.2f,
                         ReasoningEffort.Low,
+                        DefaultToolRows: 10,
                         MaxViewRows,
                         TrendPoints: 2,
                         ContextCacheMinutes: 5
@@ -151,7 +152,7 @@ public sealed class MarketAnalystTests
         // Arrange
         var context = Factory.Context() with
         {
-            Take = 50,
+            View = Factory.ExplorerView() with { Take = 50 },
         };
 
         // Act
@@ -175,7 +176,7 @@ public sealed class MarketAnalystTests
     }
 
     [Fact]
-    public async Task Handle_WhenCalled_ShouldQueryOverviewForTheTimeFrameAndRecentActivity()
+    public async Task Handle_WhenNotOnTheExplorer_ShouldQueryOnlyTheOverviewForTheTimeFrame()
     {
         // Arrange
         var context = new MarketAnalystContext(Factory.MarketId, TimeFrame.OneWeek);
@@ -190,17 +191,12 @@ public sealed class MarketAnalystTests
                 Arg.Any<CancellationToken>()
             );
 
-        await _bus.Received(1)
-            .InvokeAsync<GetVolumeHeatmapResponse>(
-                new GetVolumeHeatmapInput(Factory.MarketId, MarketAnalyst.HeatmapLookbackWeeks),
-                Arg.Any<CancellationToken>()
-            );
+        await _bus.DidNotReceive()
+            .InvokeAsync<GetVolumeHeatmapResponse>(Arg.Any<object>(), Arg.Any<CancellationToken>());
 
-        await _bus.Received(1)
+        await _bus.DidNotReceive()
             .InvokeAsync<PagedResponse<GetMarketTradesResponse>>(
-                Arg.Is<GetMarketTradesInput>(i =>
-                    i.SortField == null && i.Filter == null && i.Skip == 0
-                ),
+                Arg.Any<object>(),
                 Arg.Any<CancellationToken>()
             );
     }
@@ -223,7 +219,7 @@ public sealed class MarketAnalystTests
         // Arrange
         var filtered = Factory.Context() with
         {
-            Filter = ["SymbolName:like:rune"],
+            View = Factory.ExplorerView() with { Filter = ["SymbolName:like:rune"] },
         };
 
         // Act

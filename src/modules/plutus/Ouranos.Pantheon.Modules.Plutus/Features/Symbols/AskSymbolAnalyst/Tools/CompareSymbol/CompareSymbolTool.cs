@@ -4,7 +4,6 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSymbolSignals.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.AskSymbolAnalyst.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.AskSymbolAnalyst.Tools.CompareSymbol.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetSymbol.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
@@ -18,13 +17,6 @@ public sealed class CompareSymbolTool(ILogger<CompareSymbolTool> logger, IMessag
     internal const int StrongestSignals = 3;
 
     internal const string SameSymbol = "That is the symbol already shown above.";
-
-    internal static readonly TimeFrame[] TimeFrames =
-    [
-        TimeFrame.OneDay,
-        TimeFrame.OneWeek,
-        TimeFrame.OneMonth,
-    ];
 
     private readonly IMessageBus _bus = Guard.Against.Null(bus);
 
@@ -68,16 +60,11 @@ public sealed class CompareSymbolTool(ILogger<CompareSymbolTool> logger, IMessag
             return NotInMarket(arguments.SymbolId);
         }
 
-        var summaries = Task.WhenAll(
-            TimeFrames.Select(timeFrame =>
-                SymbolAnalystQueries.LoadPriceSummaryAsync(
-                    _bus,
-                    other.MarketId,
-                    timeFrame,
-                    other.Id,
-                    cancellationToken
-                )
-            )
+        var summaries = SymbolAnalystQueries.LoadPriceSummariesAsync(
+            _bus,
+            other.MarketId,
+            other.Id,
+            cancellationToken
         );
 
         var signals = await _bus.InvokeAsync<GetSymbolSignalsResponse>(

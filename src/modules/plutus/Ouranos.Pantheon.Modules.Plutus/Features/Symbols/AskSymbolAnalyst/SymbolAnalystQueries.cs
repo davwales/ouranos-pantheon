@@ -12,10 +12,17 @@ using Wolverine;
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Symbols.AskSymbolAnalyst;
 
 /// <summary>
-/// Queries that more than one part of the symbol analyst runs.
+/// Queries that more than one assistant tool runs.
 /// </summary>
 internal static class SymbolAnalystQueries
 {
+    internal static readonly TimeFrame[] SummaryTimeFrames =
+    [
+        TimeFrame.OneDay,
+        TimeFrame.OneWeek,
+        TimeFrame.OneMonth,
+    ];
+
     public static string[] SymbolFilter(Id<Symbol> symbolId)
     {
         return [$"SymbolId:eq:{symbolId}"];
@@ -38,6 +45,20 @@ internal static class SymbolAnalystQueries
         );
 
         return (symbol, market);
+    }
+
+    public static Task<PriceSummaryData[]> LoadPriceSummariesAsync(
+        IMessageBus bus,
+        Id<Market> marketId,
+        Id<Symbol> symbolId,
+        CancellationToken cancellationToken
+    )
+    {
+        return Task.WhenAll(
+            SummaryTimeFrames.Select(timeFrame =>
+                LoadPriceSummaryAsync(bus, marketId, timeFrame, symbolId, cancellationToken)
+            )
+        );
     }
 
     public static async Task<PriceSummaryData> LoadPriceSummaryAsync(

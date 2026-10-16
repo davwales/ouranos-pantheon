@@ -7,10 +7,11 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Markets.AskMarketAnalyst.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetMarket.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketOverview.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketTrades.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetVolumeHeatmap.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
 using Wolverine;
 
@@ -25,8 +26,6 @@ public sealed class MarketAnalyst(
     IEnumerable<IAssistantTool<MarketAnalystContext>> tools
 ) : PantheonAssistant<MarketAnalystContext>(logger, mlClient, tools)
 {
-    internal const int HeatmapLookbackWeeks = 4;
-
     private readonly ILogger<MarketAnalyst> _logger = Guard.Against.Null(logger);
     private readonly IMessageBus _bus = Guard.Against.Null(bus);
     private readonly IMemoryCache _cache = Guard.Against.Null(cache);
@@ -98,29 +97,12 @@ public sealed class MarketAnalyst(
             cancellationToken
         );
 
-        var heatmap = _bus.InvokeAsync<GetVolumeHeatmapResponse>(
-            new GetVolumeHeatmapInput(market.Id, HeatmapLookbackWeeks),
-            cancellationToken
-        );
-
-        var view = _bus.InvokeAsync<PagedResponse<GetMarketTradesResponse>>(
-            new GetMarketTradesInput(
-                market.Id,
-                context.TimeFrame,
-                context.SortField,
-                context.SortDirection,
-                context.Skip,
-                Math.Clamp(context.Take, 1, options.MaxViewRows),
-                context.Filter
-            ),
-            cancellationToken
-        );
+        var view = LoadViewAsync(market.Id, context, options, cancellationToken);
 
         var snapshot = new MarketAnalystSnapshot(
             market,
             context,
             await overview,
-            await heatmap,
             await view,
             options.TrendPoints,
             generatedAt
@@ -134,11 +116,42 @@ public sealed class MarketAnalyst(
         return snapshot;
     }
 
+    private async Task<PagedResponse<GetMarketTradesResponse>?> LoadViewAsync(
+        Id<Market> marketId,
+        MarketAnalystContext context,
+        MarketAnalystOptions options,
+        CancellationToken cancellationToken
+    )
+    {
+        if (context.View is not { } view)
+        {
+            return null;
+        }
+
+        return await _bus.InvokeAsync<PagedResponse<GetMarketTradesResponse>>(
+            new GetMarketTradesInput(
+                marketId,
+                context.TimeFrame,
+                view.SortField,
+                view.SortDirection,
+                view.Skip,
+                options.ClampRows(view.Take),
+                view.Filter
+            ),
+            cancellationToken
+        );
+    }
+
     private static string CreateCacheKey(MarketAnalystContext context)
     {
-        var filter = string.Join('|', context.Filter ?? []);
+        var key = $"{nameof(MarketAnalyst)}:{context.MarketId}:{context.TimeFrame}";
 
-        return $"{nameof(MarketAnalyst)}:{context.MarketId}:{context.TimeFrame}:"
-            + $"{context.SortField}:{context.SortDirection}:{context.Skip}:{context.Take}:{filter}";
+        if (context.View is not { } view)
+        {
+            return key;
+        }
+
+        var filter = string.Join('|', view.Filter ?? []);
+        return $"{key}:{view.SortField}:{view.SortDirection}:{view.Skip}:{view.Take}:{filter}";
     }
 }

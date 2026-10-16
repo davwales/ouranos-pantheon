@@ -20,5 +20,9 @@ public static class ModelDefaults
     // no tools, which forces the model to answer with what it has.
     public const int MaxToolRounds = 3;
 
+    // Small models sometimes repeat a call many times in one round; each call costs a query and
+    // can produce an action, so only the first few calls in a round run.
+    public const int MaxToolCallsPerRound = 4;
+
     public const int MaxToolOutputCharacters = 1500;
 }

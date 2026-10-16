@@ -10,6 +10,7 @@ public sealed record MarketAnalystOptions(
     int MaxTokens,
     float Temperature,
     ReasoningEffort ReasoningEffort,
+    int DefaultToolRows,
     int MaxViewRows,
     int TrendPoints,
     int ContextCacheMinutes
@@ -18,11 +19,17 @@ public sealed record MarketAnalystOptions(
     public MarketAnalystOptions()
         : this(
             ModelName: ModelDefaults.ModelName,
-            MaxTokens: 1536,
+            MaxTokens: 4096,
             Temperature: 0.3f,
             ReasoningEffort: ModelDefaults.ReasoningEffort,
+            DefaultToolRows: 10,
             MaxViewRows: 12,
             TrendPoints: 6,
             ContextCacheMinutes: 5
         ) { }
+
+    public int ClampRows(int? requested)
+    {
+        return Math.Clamp(requested ?? DefaultToolRows, 1, MaxViewRows);
+    }
 }

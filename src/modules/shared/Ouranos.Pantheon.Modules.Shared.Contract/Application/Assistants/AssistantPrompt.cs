@@ -11,5 +11,6 @@ public sealed record AssistantPrompt(
     ReasoningEffort? ReasoningEffort = null,
     int HistoryCharacterBudget = ModelDefaults.HistoryCharacterBudget,
     int MaxToolRounds = ModelDefaults.MaxToolRounds,
+    int MaxToolCallsPerRound = ModelDefaults.MaxToolCallsPerRound,
     int MaxToolOutputCharacters = ModelDefaults.MaxToolOutputCharacters
 );

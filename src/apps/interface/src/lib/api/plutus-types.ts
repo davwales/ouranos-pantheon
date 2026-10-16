@@ -528,12 +528,28 @@ export type SymbolAnalystContext = {
   timeFrame: TimeFrameKey;
 };
 
-export type MarketAnalystContext = {
-  marketId: string;
-  timeFrame: TimeFrameKey;
+export type ExplorerView = {
   filter?: string[];
   sortField?: string;
   sortDirection?: string;
   skip?: number;
   take?: number;
+};
+
+export type MarketAnalystContext = {
+  marketId: string;
+  timeFrame: TimeFrameKey;
+  view?: ExplorerView;
+};
+
+export type ExplorerCondition = {
+  field: string;
+  operator: string;
+  value: string;
+};
+
+export type SetExplorerViewAction = {
+  conditions: ExplorerCondition[];
+  sortField: string | null;
+  descending: boolean;
 };
