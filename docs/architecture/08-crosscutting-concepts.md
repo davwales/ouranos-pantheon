@@ -178,14 +178,20 @@ store rather than client-supplied data.
   through `IMessageBus`, which keeps the prompt consistent with what the page shows.
 - **Tools**: each assistant can offer the model function tools. A tool derives from
   `AssistantTool<TContext, TArguments>`; the arguments record is exported as the tool's JSON
-  schema (every property required, optional arguments nullable, enums as names) and parsed
-  back from the model's call. A module registers tools in `Build` with
+  schema (every property required, optional arguments nullable, enums as names, `Id<T>` as a
+  string) and parsed back from the model's call. A module registers tools in `Build` with
   `AddAssistantTool<TContext, TTool>()`, and `PantheonAssistant` receives every tool
   registered for its context type (`IsAvailable(context)` can hide one, e.g. on a page without
-  a table). Tools take names, never ids, and reuse the module's query handlers. A tool returns
-  an `AssistantToolResult`: `Output` is compact text for the model (data, a confirmation, or a
-  validation problem the model can correct), and an optional typed `Action` is streamed to the
-  page. The base class runs a bounded loop: it streams a round, runs the requested tools
+  a table). Tools take names, or ids that another tool returned (never ids from the prompt),
+  and reuse the module's query handlers. A tool returns an `AssistantToolResult`: `Output` is
+  compact text for the model (data, a confirmation, or a validation problem the model can
+  correct), and an optional typed `Action` is streamed to the page. Read tools derive from
+  `AssistantDataTool<TContext, TArguments, TData>` instead: the tool owns the mapping from its
+  query responses to a typed `TData` record, or returns `AssistantData<TData>.WithNote(...)`
+  when there is nothing to return (an unknown id, a disabled feature), and the base serializes
+  it as compact JSON (camelCase, nulls omitted, enums as names, decimals rounded to four
+  significant figures to save tokens). Only the system prompt is composed as text. The base
+  class runs a bounded loop: it streams a round, runs the requested tools
   sequentially, appends each call and its (truncated) output to the input, and streams again,
   up to `MaxToolRounds` (`ModelDefaults`); the last round offers no tools, so the model must
   answer. Every round resends the whole input, because OuranosMl does not keep response state;
@@ -240,7 +246,9 @@ Current assistants:
 - Hestia `KitchenAssistant` (`/api/hestia/recipes/assistant/completions/stream`, context
   `{ recipeId }`).
 - Plutus `SymbolAnalyst` (`/api/plutus/symbols/assistant/completions/stream`, context
-  `{ symbolId, timeFrame }`), configured by `Ouranos:Plutus:SymbolAnalyst`.
+  `{ symbolId, timeFrame }`), configured by `Ouranos:Plutus:SymbolAnalyst`. Read tools:
+  `get_price_history`, `get_signals`, `get_forecast`, `get_positions`, `search_symbols`,
+  `compare_symbol` (by the id `search_symbols` returns).
 - Plutus `MarketAnalyst` (`/api/plutus/markets/assistant/completions/stream`, context
   `{ marketId, timeFrame, filter?, sortField?, sortDirection?, skip?, take? }`) on the market
   landing and Explorer pages, configured by `Ouranos:Plutus:MarketAnalyst`. Both Plutus

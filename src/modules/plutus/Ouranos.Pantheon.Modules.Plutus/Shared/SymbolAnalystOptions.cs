@@ -16,11 +16,11 @@ public sealed record SymbolAnalystOptions(
     public SymbolAnalystOptions()
         : this(
             ModelName: ModelDefaults.ModelName,
-            MaxTokens: 1536,
+            MaxTokens: 4096,
             Temperature: 0.3f,
             ReasoningEffort: ModelDefaults.ReasoningEffort,
             ChartPoints: 8,
-            MaxPositions: 5,
+            MaxPositions: 10,
             ContextCacheMinutes: 5
         ) { }
 }

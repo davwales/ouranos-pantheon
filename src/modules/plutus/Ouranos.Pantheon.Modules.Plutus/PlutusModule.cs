@@ -57,6 +57,13 @@ using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetAllSymbolGroups;
 using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetSymbolGroup;
 using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.UpdateSymbolGroup;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.AskSymbolAnalyst;
+using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.AskSymbolAnalyst.Schemas;
+using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.AskSymbolAnalyst.Tools.CompareSymbol;
+using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.AskSymbolAnalyst.Tools.GetForecast;
+using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.AskSymbolAnalyst.Tools.GetPositions;
+using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.AskSymbolAnalyst.Tools.GetPriceHistory;
+using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.AskSymbolAnalyst.Tools.GetSignals;
+using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.AskSymbolAnalyst.Tools.SearchSymbols;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetAllSymbols;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetDailySymbolSummary;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetSymbol;
@@ -77,6 +84,7 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Flip;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Optimization;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Swing;
 using Ouranos.Pantheon.Modules.Shared.Contract;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres;
 using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets;
@@ -115,7 +123,19 @@ public sealed class PlutusModule : IPantheonModule
         ConfigureDataLoaders(builder);
         ConfigureSignalComputers(builder);
         ConfigureStrategyEngines(builder);
+        ConfigureAssistantTools(builder);
         return builder;
+    }
+
+    private static void ConfigureAssistantTools(IHostApplicationBuilder builder)
+    {
+        builder
+            .Services.AddAssistantTool<SymbolAnalystContext, GetPriceHistoryTool>()
+            .AddAssistantTool<SymbolAnalystContext, GetSignalsTool>()
+            .AddAssistantTool<SymbolAnalystContext, GetForecastTool>()
+            .AddAssistantTool<SymbolAnalystContext, GetPositionsTool>()
+            .AddAssistantTool<SymbolAnalystContext, SearchSymbolsTool>()
+            .AddAssistantTool<SymbolAnalystContext, CompareSymbolTool>();
     }
 
     public async Task<IHost> Configure(IHost host)

@@ -146,4 +146,18 @@ public sealed class StructuredCompletionParserTests
         // Assert
         result.ShouldBeNull();
     }
+
+    [Fact]
+    public void Parse_WhenPropertyIsAnId_ShouldReadItFromAString()
+    {
+        // Act
+        var result = StructuredCompletionParser.Parse<TestIdArguments>(
+            """{"ingredientId":"abc","parentId":null}"""
+        );
+
+        // Assert
+        var parsed = result.ShouldBeOfType<TestIdArguments>();
+        parsed.IngredientId.Value.ShouldBe("abc");
+        parsed.ParentId.ShouldBeNull();
+    }
 }
