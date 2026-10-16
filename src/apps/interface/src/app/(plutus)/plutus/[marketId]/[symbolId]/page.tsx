@@ -123,12 +123,13 @@ export default function SymbolDetail() {
     setActions(
       <SymbolAnalystButton
         key={symbolId}
+        marketId={marketId}
         symbolId={symbolId}
         timeFrame={timeFrameKey}
       />,
     );
     return () => clearActions();
-  }, [isAssistantAvailable, symbolId, timeFrameKey, setActions, clearActions]);
+  }, [isAssistantAvailable, marketId, symbolId, timeFrameKey, setActions, clearActions]);
 
   if (state.status === "error" && !data) {
     return <NotFoundCard title="Symbol not found" backHref={`/plutus/${marketId}`} backLabel="Back to Market" />;

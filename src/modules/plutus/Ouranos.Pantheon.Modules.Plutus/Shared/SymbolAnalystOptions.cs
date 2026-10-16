@@ -8,8 +8,6 @@ public sealed record SymbolAnalystOptions(
     int MaxTokens,
     float Temperature,
     ReasoningEffort ReasoningEffort,
-    int ChartPoints,
-    int MaxPositions,
     int ContextCacheMinutes
 )
 {
@@ -19,8 +17,6 @@ public sealed record SymbolAnalystOptions(
             MaxTokens: 4096,
             Temperature: 0.3f,
             ReasoningEffort: ModelDefaults.ReasoningEffort,
-            ChartPoints: 8,
-            MaxPositions: 10,
             ContextCacheMinutes: 5
         ) { }
 }

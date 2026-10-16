@@ -100,10 +100,11 @@ and US equities.
 | Building block | Responsibility |
 |----------------|----------------|
 | `Features/DataLoaders/` | Ingestion: FFXIV and Stocks WebSocket listeners, OSRS poller job, and a cached XIVAPI item lookup; the trade consumer upserts symbols and writes trades |
+| `Features/Assistants/` | Everything assistant-related: one folder per assistant (below), the tool catalogue in `Tools/` (one folder per tool, with the queries and shaping they share), and in `Scopes/` the context interfaces tools are typed to (`IMarketScope`, `ISymbolScope`, `IExplorerScope`) |
+| `Features/Assistants/AskMarketAnalyst/` | Streaming Market Analyst (`PantheonAssistant<MarketAnalystContext>`) for the market landing and Explorer pages: composes market taxes, the market overview and the user's current Explorer view into a compact prompt; opts into catalogue tools that screen the market, look up symbols, rank by signals or forecasts, summarize trading hours and set the Explorer view |
+| `Features/Assistants/AskSymbolAnalyst/` | Streaming Symbol Analyst (`PantheonAssistant<SymbolAnalystContext>`): composes a lean headline of symbol, market and today's prices from existing query handlers; opts into catalogue tools that fetch price history, signals, the forecast, positions, and find and look up other symbols on demand |
 | `Features/Markets/` | Market catalog CRUD; markets are the root entity the rest of the module is scoped to |
-| `Features/Markets/AskMarketAnalyst/` | Streaming Market Analyst (`PantheonAssistant<MarketAnalystContext>`) for the market landing and Explorer pages: composes market taxes, the market overview and the user's current Explorer view into a compact prompt; `Tools/` screen the market, look up symbols, rank by signals or forecasts, summarize trading hours and set the Explorer view |
 | `Features/Symbols/` | Symbol read access: list/get symbols (upserted by ingestion) and today's per-symbol summary statistics |
-| `Features/Symbols/AskSymbolAnalyst/` | Streaming Symbol Analyst (`PantheonAssistant<SymbolAnalystContext>`): composes a lean headline of symbol, market and today's prices from existing query handlers; `Tools/` fetch price history, signals, the forecast, positions, and search for and compare other symbols on demand |
 | `Features/Trades/` | Trade queries and aggregate views over the TimescaleDB hypertable and continuous aggregates: all trades, per-symbol/market/recipe trade aggregates, market overview, volume heatmap (see [Section 8](08-crosscutting-concepts.md)) |
 | `Features/Signals/` | Scheduled signal computation via pluggable signal computers covering technical and game-economy indicators, plus signal queries; scheduling in [Section 6](06-runtime-view.md) |
 | `Features/Strategies/` | Mode-agnostic strategy slices: strategy CRUD, recommendations, and the backtest lifecycle (run, optimize, get, cancel, restart). `BacktestJobRunner` owns every status transition of a queued run; `StrategyOptimizer` is the one genetic-algorithm flow for every mode |
@@ -142,7 +143,8 @@ Recipe management with event-sourced recipes and a document-stored shopping list
 | `Features/Recipes/` | Recipe create/update with full version history and revert (no delete), persisted as a Marten event stream per recipe |
 | `Features/Recipes/ImportRecipe/` | Async import: enqueue an import request → scrape the page (JSON-LD, anti-SSRF-guarded) → LLM-normalize via OuranosMl structured output (Responses API, low reasoning effort) → append events |
 | `Features/Recipes/ReimportRecipe/` | Re-runs the import for an existing recipe |
-| `Features/Recipes/AskKitchenAssistant/` | Streaming Kitchen Assistant (`PantheonAssistant<KitchenAssistantContext>`): loads the recipe from Marten and answers questions about it via OuranosMl; `Tools/` propose notes and ingredient or step changes for the user to apply |
+| `Features/Assistants/` | Everything assistant-related: the Kitchen Assistant (below), the tool catalogue in `Tools/` (every recipe tool, plus the recipe loading and validation they share), and in `Scopes/` the `IRecipeScope` the tools are typed to |
+| `Features/Assistants/AskKitchenAssistant/` | Streaming Kitchen Assistant (`PantheonAssistant<KitchenAssistantContext>`): loads the recipe from Marten and answers questions about it via OuranosMl; opts into catalogue tools that propose notes and ingredient or step changes for the user to apply |
 | `Features/ShoppingLists/` | Shopping list built from selected recipes plus manual items; stored as a single Marten document, not event-sourced |
 
 Interfaces: REST routes in `bruno/ouranos-pantheon/collections/API/Hestia/`. The async
