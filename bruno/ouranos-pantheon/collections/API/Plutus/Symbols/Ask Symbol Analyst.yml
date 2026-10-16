@@ -17,6 +17,7 @@ http:
           }
         ],
         "context": {
+          "marketId": "{{MARKET_ID}}",
           "symbolId": "{{SYMBOL_ID}}",
           "timeFrame": "OneDay"
         }

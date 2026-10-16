@@ -4,6 +4,20 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Ouranos.Pantheon.Modules.Plutus.Features.Assistants.AskMarketAnalyst;
+using Ouranos.Pantheon.Modules.Plutus.Features.Assistants.AskMarketAnalyst.Schemas;
+using Ouranos.Pantheon.Modules.Plutus.Features.Assistants.AskSymbolAnalyst;
+using Ouranos.Pantheon.Modules.Plutus.Features.Assistants.AskSymbolAnalyst.Schemas;
+using Ouranos.Pantheon.Modules.Plutus.Features.Assistants.Tools.FindSymbols;
+using Ouranos.Pantheon.Modules.Plutus.Features.Assistants.Tools.GetActivityHours;
+using Ouranos.Pantheon.Modules.Plutus.Features.Assistants.Tools.GetForecast;
+using Ouranos.Pantheon.Modules.Plutus.Features.Assistants.Tools.GetForecastLeaders;
+using Ouranos.Pantheon.Modules.Plutus.Features.Assistants.Tools.GetPositions;
+using Ouranos.Pantheon.Modules.Plutus.Features.Assistants.Tools.GetPriceHistory;
+using Ouranos.Pantheon.Modules.Plutus.Features.Assistants.Tools.GetSignalRankings;
+using Ouranos.Pantheon.Modules.Plutus.Features.Assistants.Tools.GetSignals;
+using Ouranos.Pantheon.Modules.Plutus.Features.Assistants.Tools.GetSymbol;
+using Ouranos.Pantheon.Modules.Plutus.Features.Assistants.Tools.SetExplorerView;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Consumer;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Ffxiv;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Ffxiv.Messages;
@@ -16,14 +30,6 @@ using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Stocks.Messages;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetAllForecasts;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetForecastEfficacy;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetMarketForecast;
-using Ouranos.Pantheon.Modules.Plutus.Features.Markets.AskMarketAnalyst;
-using Ouranos.Pantheon.Modules.Plutus.Features.Markets.AskMarketAnalyst.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Features.Markets.AskMarketAnalyst.Tools.FindSymbols;
-using Ouranos.Pantheon.Modules.Plutus.Features.Markets.AskMarketAnalyst.Tools.GetActivityHours;
-using Ouranos.Pantheon.Modules.Plutus.Features.Markets.AskMarketAnalyst.Tools.GetForecastLeaders;
-using Ouranos.Pantheon.Modules.Plutus.Features.Markets.AskMarketAnalyst.Tools.GetSignalRankings;
-using Ouranos.Pantheon.Modules.Plutus.Features.Markets.AskMarketAnalyst.Tools.GetSymbol;
-using Ouranos.Pantheon.Modules.Plutus.Features.Markets.AskMarketAnalyst.Tools.SetExplorerView;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.CreateMarket;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.DeleteMarket;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetAllMarkets;
@@ -63,14 +69,6 @@ using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.DeleteSymbolGroup;
 using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetAllSymbolGroups;
 using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.GetSymbolGroup;
 using Ouranos.Pantheon.Modules.Plutus.Features.SymbolGroups.UpdateSymbolGroup;
-using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.AskSymbolAnalyst;
-using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.AskSymbolAnalyst.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.AskSymbolAnalyst.Tools.CompareSymbol;
-using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.AskSymbolAnalyst.Tools.GetForecast;
-using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.AskSymbolAnalyst.Tools.GetPositions;
-using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.AskSymbolAnalyst.Tools.GetPriceHistory;
-using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.AskSymbolAnalyst.Tools.GetSignals;
-using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.AskSymbolAnalyst.Tools.SearchSymbols;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetAllSymbols;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetDailySymbolSummary;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetSymbol;
@@ -141,9 +139,11 @@ public sealed class PlutusModule : IPantheonModule
             .AddAssistantTool<SymbolAnalystContext, GetSignalsTool>()
             .AddAssistantTool<SymbolAnalystContext, GetForecastTool>()
             .AddAssistantTool<SymbolAnalystContext, GetPositionsTool>()
-            .AddAssistantTool<SymbolAnalystContext, SearchSymbolsTool>()
-            .AddAssistantTool<SymbolAnalystContext, CompareSymbolTool>()
-            .AddAssistantTool<MarketAnalystContext, FindSymbolsTool>()
+            .AddAssistantTool<SymbolAnalystContext, FindSymbolsTool>()
+            .AddAssistantTool<SymbolAnalystContext, GetSymbolTool>();
+
+        builder
+            .Services.AddAssistantTool<MarketAnalystContext, FindSymbolsTool>()
             .AddAssistantTool<MarketAnalystContext, GetSymbolTool>()
             .AddAssistantTool<MarketAnalystContext, GetSignalRankingsTool>()
             .AddAssistantTool<MarketAnalystContext, GetForecastLeadersTool>()

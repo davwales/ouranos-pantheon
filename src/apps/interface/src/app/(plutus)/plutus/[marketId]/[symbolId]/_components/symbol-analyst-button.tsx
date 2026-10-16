@@ -19,14 +19,16 @@ const TOOL_LABELS = {
   get_signals: "signals",
   get_forecast: "the forecast",
   get_positions: "your positions",
-  search_symbols: "symbol search",
-  compare_symbol: "another symbol",
+  find_symbols: "symbol search",
+  get_symbol: "another symbol",
 };
 
 export function SymbolAnalystButton({
+  marketId,
   symbolId,
   timeFrame,
 }: {
+  marketId: string;
   symbolId: string;
   timeFrame: TimeFrameKey;
 }) {
@@ -37,7 +39,7 @@ export function SymbolAnalystButton({
       assistantName="Symbol Analyst"
       placeholder="Ask about this symbol..."
       endpoint={SYMBOL_ANALYST_ENDPOINT}
-      context={{ symbolId, timeFrame }}
+      context={{ marketId, symbolId, timeFrame }}
       emptyState={
         <Typography variant="muted">
           Ask anything about this symbol, or start with a suggestion.

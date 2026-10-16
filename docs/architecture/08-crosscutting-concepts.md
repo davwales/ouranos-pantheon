@@ -179,11 +179,24 @@ store rather than client-supplied data.
 - **Tools**: each assistant can offer the model function tools. A tool derives from
   `AssistantTool<TContext, TArguments>`; the arguments record is exported as the tool's JSON
   schema (every property required, optional arguments nullable, enums as names, `Id<T>` as a
-  string) and parsed back from the model's call. A module registers tools in `Build` with
-  `AddAssistantTool<TContext, TTool>()`, and `PantheonAssistant` receives every tool
-  registered for its context type (`IsAvailable(context)` can hide one, e.g. on a page without
-  a table). Tools take names, or ids that another tool returned (never ids from the prompt),
-  and reuse the module's query handlers. A tool returns an `AssistantToolResult`: `Output` is
+  string) and parsed back from the model's call. Tools take names, or ids that another tool
+  returned (never ids from the prompt), and reuse the module's query handlers.
+- **Layout**: everything assistant-related sits in its module's `Features/Assistants/`. Each
+  assistant has an `Ask<Assistant>/` folder (endpoint, assistant, prompt, context), next to the
+  shared `Tools/` and `Scopes/`. Endpoint routes stay under the resource the assistant serves
+  (e.g. `/api/plutus/symbols/assistant/...`).
+- **Tool catalogue**: every tool lives in its module's catalogue, `Features/Assistants/Tools/`,
+  never inside an assistant's folder, so assistants share tools instead of copying them. A tool is typed to the narrowest *scope* it needs (`Features/Assistants/Scopes/`, e.g.
+  Plutus `IMarketScope`, `ISymbolScope`, `IExplorerScope`; Hestia `IRecipeScope`), not to an
+  assistant's context. Each assistant's context implements the scopes it supports, and
+  because `IAssistantTool<in TContext>` is contravariant, a module registers a tool for an
+  assistant with `AddAssistantTool<TContext, TTool>()` in `Build`. `PantheonAssistant`
+  receives every tool registered for its context type (`IsAvailable(context)` can hide one,
+  e.g. on a page without a table). The registration block per assistant is its tool set; an
+  assistant is defined by its context, its prompt and the tools it opts into. Tool
+  descriptions and notes never name other tools, since the tools beside them depend on the
+  assistant; which tool to prefer belongs in the assistant's prompt. Catalogues are per
+  module: tools call their own module's handlers, so there are no cross-module tools. A tool returns an `AssistantToolResult`: `Output` is
   compact text for the model (data, a confirmation, or a validation problem the model can
   correct), and an optional typed `Action` is streamed to the page. Read tools derive from
   `AssistantDataTool<TContext, TArguments, TData>` instead: the tool owns the mapping from its
@@ -215,7 +228,7 @@ store rather than client-supplied data.
   the inference host and may change) and is shared by the system prompt, the tool definitions,
   the history, tool outputs, the reasoning and the reply; prompt length also dominates time to
   first token. Assistants are therefore page-scoped (one per page, seeing only what that page
-  shows) and keep a headline baseline in the prompt, with detail behind tools: compact numbers
+  shows, with a small curated tool set rather than every tool in the catalogue) and keep a headline baseline in the prompt, with detail behind tools: compact numbers
   (`AssistantNumberFormat`, e.g. `820.6K`, because small models tokenize digits almost one by
   one), a fixed number of rows that does not grow with the selected time frame, no ids. Each
   assistant's prompt tests assert its worst-case prompt plus every tool definition against a
@@ -251,16 +264,18 @@ Current assistants:
   `{ recipeId }`). Proposal tools: `add_note`, `add_ingredient`, `update_ingredient`
   (substitutions, marking an ingredient optional), `remove_ingredient`, `update_step`.
 - Plutus `SymbolAnalyst` (`/api/plutus/symbols/assistant/completions/stream`, context
-  `{ symbolId, timeFrame }`), configured by `Ouranos:Plutus:SymbolAnalyst`. Read tools:
-  `get_price_history`, `get_signals`, `get_forecast`, `get_positions`, `search_symbols`,
-  `compare_symbol` (by the id `search_symbols` returns).
+  `{ marketId, symbolId, timeFrame }`; the symbol must belong to the market), configured by
+  `Ouranos:Plutus:SymbolAnalyst`. Read tools: `get_price_history`, `get_signals`,
+  `get_forecast`, `get_positions` (all about the page's symbol), `find_symbols` and
+  `get_symbol` (any other symbol in the market, by an id `find_symbols` returns).
 - Plutus `MarketAnalyst` (`/api/plutus/markets/assistant/completions/stream`, context
   `{ marketId, timeFrame, view? }`, where `view` carries the Explorer's filter, sort and page)
   on the market landing and Explorer pages, configured by `Ouranos:Plutus:MarketAnalyst`. Read
   tools: `find_symbols`, `get_signal_rankings`, `get_forecast_leaders` (each returning symbol
   ids), `get_symbol` (by one of those ids), `get_activity_hours`; on the Explorer also
   `set_explorer_view`, which proposes one view per reply for the user to apply. Both Plutus
-  analysts use a reduced output budget to fit the limited context window.
+  analysts use a reduced output budget to fit the limited context window, and the tools' row
+  and chart limits are shared under `Ouranos:Plutus:AssistantTools`.
 
 ## 8.12 Health Checks
 

@@ -285,7 +285,7 @@ Tool rounds are capped (`ModelDefaults.MaxToolRounds`), only the first
 has to answer. Every action, including the Explorer's `set_explorer_view`, waits on its card
 until the user applies it; the next turn's context carries the result.
 
-The Plutus Symbol Analyst (context `{ symbolId, timeFrame }`) follows the same flow, but
+The Plutus Symbol Analyst (context `{ marketId, symbolId, timeFrame }`) follows the same flow, but
 instead of reading the store directly it invokes the module's existing query handlers through
 `IMessageBus`, each invocation in its own scope with its own `PlutusDbContext`, so the model
 sees exactly the numbers the symbol page shows. The prompt is a deliberately lean headline that
@@ -293,9 +293,11 @@ costs only the symbol, market and today's summary (`GetDailySymbolSummary`) quer
 symbol's facts, tax, whether forecasting is disabled, the time frame the user is viewing, and
 today's average, low, high and volume. Everything heavier is loaded only when the model asks
 for it through a tool: the latest trade with the after-tax price summary and chart buckets for
-any time frame (merged down to `ChartPoints` rows, default 8), every signal with a three-point
-weekly trend, the 7-day forecast with its error, up to `MaxPositions` positions (default 10)
-with truncated notes, and another symbol's summary. The composed system prompt is cached in memory per symbol and time frame
+any time frame (merged down to `AssistantTools:ChartPoints` rows, default 8), every signal with a three-point
+weekly trend, the 7-day forecast with its error, up to `AssistantTools:MaxPositions` positions (default 10)
+with truncated notes, and another symbol's summary found through the same `find_symbols` and
+`get_symbol` tools the Market Analyst uses. The prompt build rejects a symbol outside the
+context's market, so tools can trust the context's market. The composed system prompt is cached in memory per market, symbol and time frame
 (`Ouranos:Plutus:SymbolAnalyst:ContextCacheMinutes`, default 5), so follow-up turns send a
 byte-identical prompt and the inference server restores its cached prompt state instead of
 re-processing the whole context.

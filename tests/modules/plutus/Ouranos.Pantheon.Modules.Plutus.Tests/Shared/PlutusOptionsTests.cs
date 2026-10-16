@@ -16,6 +16,7 @@ public sealed class PlutusOptionsTests
         options.Forecasting.ShouldNotBeNull();
         options.SymbolAnalyst.ShouldNotBeNull();
         options.MarketAnalyst.ShouldNotBeNull();
+        options.AssistantTools.ShouldNotBeNull();
         PlutusOptions.SectionName.ShouldBe("Ouranos:Plutus");
     }
 
@@ -29,8 +30,6 @@ public sealed class PlutusOptionsTests
         options.ModelName.ShouldBe(ModelDefaults.ModelName);
         options.MaxTokens.ShouldBe(4096);
         options.ReasoningEffort.ShouldBe(ModelDefaults.ReasoningEffort);
-        options.ChartPoints.ShouldBe(8);
-        options.MaxPositions.ShouldBe(10);
     }
 
     [Fact]
@@ -43,7 +42,19 @@ public sealed class PlutusOptionsTests
         options.ModelName.ShouldBe(ModelDefaults.ModelName);
         options.MaxTokens.ShouldBe(4096);
         options.ReasoningEffort.ShouldBe(ModelDefaults.ReasoningEffort);
-        options.DefaultToolRows.ShouldBe(10);
         options.MaxViewRows.ShouldBe(12);
+    }
+
+    [Fact]
+    public void AssistantTools_ShouldDefaultToSmallRowAndPointLimits()
+    {
+        // Act
+        var options = new PlutusOptions().AssistantTools;
+
+        // Assert
+        options.ChartPoints.ShouldBe(8);
+        options.MaxPositions.ShouldBe(10);
+        options.DefaultRows.ShouldBe(10);
+        options.MaxRows.ShouldBe(12);
     }
 }

@@ -524,6 +524,7 @@ export interface PageParams {
 }
 
 export type SymbolAnalystContext = {
+  marketId: string;
   symbolId: string;
   timeFrame: TimeFrameKey;
 };
