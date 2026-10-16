@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 
 namespace Ouranos.Pantheon.Modules.Shared.Contract.Tests.Infra.OuranosMachineLearning;
 
@@ -25,3 +26,8 @@ internal sealed record TestDocument
     [JsonPropertyName("steps")]
     public List<string> Steps { get; init; } = [];
 }
+
+internal sealed record TestIdArguments(
+    Id<TestIngredient> IngredientId,
+    Id<TestIngredient>? ParentId
+);

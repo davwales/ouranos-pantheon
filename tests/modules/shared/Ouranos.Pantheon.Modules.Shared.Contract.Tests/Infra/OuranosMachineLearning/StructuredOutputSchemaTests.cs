@@ -71,4 +71,25 @@ public sealed class StructuredOutputSchemaTests
         // Act & Assert
         ReferenceEquals(first, second).ShouldBeTrue();
     }
+
+    [Fact]
+    public void For_WhenPropertyIsAnId_ShouldExportString()
+    {
+        // Arrange
+        var schema = StructuredOutputSchema.For<TestIdArguments>().ToString();
+
+        // Act
+        using var document = JsonDocument.Parse(schema);
+        var properties = document.RootElement.GetProperty("properties");
+
+        // Assert
+        properties.GetProperty("ingredientId").GetProperty("type").GetString().ShouldBe("string");
+        properties
+            .GetProperty("parentId")
+            .GetProperty("type")
+            .EnumerateArray()
+            .Select(node => node.GetString())
+            .ToArray()
+            .ShouldBe(["string", "null"]);
+    }
 }

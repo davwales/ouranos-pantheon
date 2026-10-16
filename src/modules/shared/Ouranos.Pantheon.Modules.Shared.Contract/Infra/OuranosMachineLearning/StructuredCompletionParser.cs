@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres.Converters;
 
 namespace Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
 
@@ -10,7 +11,7 @@ internal static class StructuredCompletionParser
         AllowTrailingCommas = true,
         ReadCommentHandling = JsonCommentHandling.Skip,
         PropertyNameCaseInsensitive = true,
-        Converters = { new JsonStringEnumConverter() },
+        Converters = { new IdJsonConverterFactory(), new JsonStringEnumConverter() },
     };
 
     public static T? Parse<T>(string? content)

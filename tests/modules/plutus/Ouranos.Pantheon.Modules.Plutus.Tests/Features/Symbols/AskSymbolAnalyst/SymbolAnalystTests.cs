@@ -3,23 +3,15 @@ using Ardalis.GuardClauses;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetForecastEfficacy.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetMarketForecast.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetMarket.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Features.Positions.GetAllPositions.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSymbolSignalHistory.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSymbolSignals.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.AskSymbolAnalyst;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.AskSymbolAnalyst.Schemas;
+using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetDailySymbolSummary.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Symbols.GetSymbol.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetAllTrades.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketTrades.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetSymbolTrades.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
-using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
 using Ouranos.Pantheon.Tests.Utils.NSubstitute;
@@ -69,52 +61,11 @@ public sealed class SymbolAnalystTests
         _bus.InvokeAsync<GetMarketResponse>(Arg.Any<object>(), Arg.Any<CancellationToken>())
             .Returns(Factory.Market());
 
-        _bus.InvokeAsync<GetSymbolTradesResponse>(Arg.Any<object>(), Arg.Any<CancellationToken>())
-            .Returns(Factory.SelectedTrades());
-
-        _bus.InvokeAsync<GetSymbolSignalsResponse>(Arg.Any<object>(), Arg.Any<CancellationToken>())
-            .Returns(Factory.Signals());
-
-        _bus.InvokeAsync<PagedResponse<GetMarketTradesResponse>>(
+        _bus.InvokeAsync<GetDailySymbolSummaryResponse>(
                 Arg.Any<object>(),
                 Arg.Any<CancellationToken>()
             )
-            .Returns(Paged(Factory.OneDayTrades()));
-
-        _bus.InvokeAsync<List<GetAllTradesResponse>>(
-                Arg.Any<object>(),
-                Arg.Any<CancellationToken>()
-            )
-            .Returns([Factory.LatestTrade()]);
-
-        _bus.InvokeAsync<GetSymbolSignalHistoryResponse>(
-                Arg.Any<object>(),
-                Arg.Any<CancellationToken>()
-            )
-            .Returns(Factory.SignalHistory());
-
-        _bus.InvokeAsync<PagedResponse<GetMarketForecastResponse>>(
-                Arg.Any<object>(),
-                Arg.Any<CancellationToken>()
-            )
-            .Returns(Paged(Factory.Forecast()));
-
-        _bus.InvokeAsync<PagedResponse<GetForecastEfficacyResponse>>(
-                Arg.Any<object>(),
-                Arg.Any<CancellationToken>()
-            )
-            .Returns(Paged(Factory.ForecastEfficacy().ToArray()));
-
-        _bus.InvokeAsync<PagedResponse<GetAllPositionsResponse>>(
-                Arg.Any<object>(),
-                Arg.Any<CancellationToken>()
-            )
-            .Returns(Paged(Factory.Positions().ToArray()));
-    }
-
-    private static PagedResponse<T> Paged<T>(params T[] items)
-    {
-        return new PagedResponse<T>(items, items.Length, 0, items.Length);
+            .Returns(Factory.Today());
     }
 
     private static AssistantCompletionInput<SymbolAnalystContext> Input(
@@ -192,28 +143,37 @@ public sealed class SymbolAnalystTests
         sentInstructions.ShouldNotBeNull();
         sentInstructions.ShouldStartWith(SymbolAnalystPrompt.Instructions);
         sentInstructions.ShouldContain("# Symbol: Armadyl godsword");
-        sentInstructions.ShouldContain("Error (MAPE, last 30d, n=20): 1d 1.5%");
-        sentInstructions.ShouldContain("Bought the dip");
+        sentInstructions.ShouldContain(
+            "## Today So Far\nAvg 10.1M, low 9.8M, high 10.4M, vol 40.\n"
+        );
         sentMessages.ShouldBe([
             new MessageInputItemDto(new MessageDto("Is this a good flip?", RoleDto.User)),
         ]);
     }
 
     [Fact]
-    public async Task Handle_WhenCalled_ShouldQueryTheSelectedTimeFrameWithConfiguredBuckets()
+    public async Task Handle_WhenCalled_ShouldQueryOnlyTheSymbolMarketAndTodaysSummary()
     {
         // Arrange
         StubCompletion();
 
         // Act
-        await CollectAsync(_assistant.Handle(Input(TimeFrame.FourHours)));
+        await CollectAsync(_assistant.Handle(Input()));
 
         // Assert
         await _bus.Received(1)
-            .InvokeAsync<GetSymbolTradesResponse>(
-                new GetSymbolTradesInput(Factory.SymbolId, TimeFrame.FourHours, ChartPoints),
+            .InvokeAsync<GetDailySymbolSummaryResponse>(
+                ArgExtensions.IsEquivalent(new GetDailySymbolSummaryInput(Factory.SymbolId)),
                 Arg.Any<CancellationToken>()
             );
+
+        await _bus.Received(1)
+            .InvokeAsync<GetSymbolResponse>(Arg.Any<object>(), Arg.Any<CancellationToken>());
+
+        await _bus.Received(1)
+            .InvokeAsync<GetMarketResponse>(Arg.Any<object>(), Arg.Any<CancellationToken>());
+
+        _bus.ReceivedCalls().Count().ShouldBe(3);
     }
 
     [Fact]
@@ -272,94 +232,26 @@ public sealed class SymbolAnalystTests
     }
 
     [Fact]
-    public async Task Handle_WhenCalled_ShouldQueryEverySummaryWindowForTheSymbol()
-    {
-        // Arrange
-        StubCompletion();
-        string[] filter = [$"SymbolId:eq:{Factory.SymbolId}"];
-
-        // Act
-        await CollectAsync(_assistant.Handle(Input()));
-
-        // Assert
-        foreach (var timeFrame in SymbolAnalyst.Windows)
-        {
-            await _bus.Received(1)
-                .InvokeAsync<PagedResponse<GetMarketTradesResponse>>(
-                    ArgExtensions.IsEquivalent(
-                        new GetMarketTradesInput(
-                            Factory.MarketId,
-                            timeFrame,
-                            Take: 1,
-                            Filter: filter
-                        )
-                    ),
-                    Arg.Any<CancellationToken>()
-                );
-        }
-    }
-
-    [Fact]
-    public async Task Handle_WhenCalled_ShouldQueryLatestTradeAndRecentPositionsForTheSymbol()
-    {
-        // Arrange
-        StubCompletion();
-        string[] filter = [$"SymbolId:eq:{Factory.SymbolId}"];
-
-        // Act
-        await CollectAsync(_assistant.Handle(Input()));
-
-        // Assert
-        await _bus.Received(1)
-            .InvokeAsync<List<GetAllTradesResponse>>(
-                ArgExtensions.IsEquivalent(
-                    new GetAllTradesInput(
-                        TimeFrame.OneYear,
-                        "Timestamp",
-                        "desc",
-                        Take: 1,
-                        Filter: filter
-                    )
-                ),
-                Arg.Any<CancellationToken>()
-            );
-
-        await _bus.Received(1)
-            .InvokeAsync<PagedResponse<GetAllPositionsResponse>>(
-                ArgExtensions.IsEquivalent(
-                    new GetAllPositionsInput(
-                        Factory.MarketId,
-                        SortField: "CreatedAt",
-                        SortDirection: "desc",
-                        Take: MaxPositions,
-                        Filter: filter
-                    )
-                ),
-                Arg.Any<CancellationToken>()
-            );
-    }
-
-    [Fact]
-    public async Task Handle_WhenCalled_ShouldStartContextQueriesConcurrently()
+    public async Task Handle_WhenCalled_ShouldQueryTodaysSummaryAlongsideTheSymbol()
     {
         // Arrange
         StubCompletion();
 
-        var signalsGate = new TaskCompletionSource<GetSymbolSignalsResponse>(
+        var todayGate = new TaskCompletionSource<GetDailySymbolSummaryResponse>(
             TaskCreationOptions.RunContinuationsAsynchronously
         );
 
-        _bus.InvokeAsync<GetSymbolSignalsResponse>(Arg.Any<object>(), Arg.Any<CancellationToken>())
-            .Returns(signalsGate.Task);
-
-        _bus.InvokeAsync<PagedResponse<GetAllPositionsResponse>>(
+        _bus.InvokeAsync<GetDailySymbolSummaryResponse>(
                 Arg.Any<object>(),
                 Arg.Any<CancellationToken>()
             )
+            .Returns(todayGate.Task);
+
+        _bus.InvokeAsync<GetMarketResponse>(Arg.Any<object>(), Arg.Any<CancellationToken>())
             .Returns(_ =>
             {
-                signalsGate.TrySetResult(Factory.Signals());
-                return Paged(Factory.Positions().ToArray());
+                todayGate.TrySetResult(Factory.Today());
+                return Factory.Market();
             });
 
         // Act
@@ -368,82 +260,6 @@ public sealed class SymbolAnalystTests
 
         // Assert
         events.ShouldBe([new AssistantContentEvent("Yes."), new AssistantDoneEvent()]);
-    }
-
-    [Fact]
-    public async Task Handle_WhenForecastingIsEnabled_ShouldQueryForecastAndEfficacyForTheSymbol()
-    {
-        // Arrange
-        StubCompletion();
-        string[] filter = [$"SymbolId:eq:{Factory.SymbolId}"];
-        var before = DateTimeOffset.UtcNow;
-        GetForecastEfficacyInput? efficacyInput = null;
-
-        _bus.InvokeAsync<PagedResponse<GetForecastEfficacyResponse>>(
-                Arg.Do<object>(input => efficacyInput = input as GetForecastEfficacyInput),
-                Arg.Any<CancellationToken>()
-            )
-            .Returns(Paged(Factory.ForecastEfficacy().ToArray()));
-
-        // Act
-        await CollectAsync(_assistant.Handle(Input()));
-
-        // Assert
-        await _bus.Received(1)
-            .InvokeAsync<PagedResponse<GetMarketForecastResponse>>(
-                ArgExtensions.IsEquivalent(
-                    new GetMarketForecastInput(Factory.MarketId, Take: 1, Filter: filter)
-                ),
-                Arg.Any<CancellationToken>()
-            );
-
-        efficacyInput.ShouldNotBeNull();
-        efficacyInput.SymbolId.ShouldBe(Factory.SymbolId.Value);
-        efficacyInput.Take.ShouldBe(50);
-        efficacyInput.Since.ShouldNotBeNull();
-        efficacyInput.Since.Value.ShouldBeGreaterThanOrEqualTo(
-            before - SymbolAnalyst.ForecastEfficacyWindow
-        );
-    }
-
-    [Fact]
-    public async Task Handle_WhenForecastingIsDisabled_ShouldNotQueryForecasts()
-    {
-        // Arrange
-        string? sentInstructions = null;
-
-        _mlClient
-            .StreamResponseAsync(
-                Arg.Any<string>(),
-                Arg.Do<string>(i => sentInstructions = i),
-                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
-                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
-                Arg.Any<float?>(),
-                Arg.Any<int?>(),
-                Arg.Any<ReasoningEffort?>(),
-                Arg.Any<CancellationToken>()
-            )
-            .Returns(AnswerStream());
-
-        _bus.InvokeAsync<GetMarketResponse>(Arg.Any<object>(), Arg.Any<CancellationToken>())
-            .Returns(Factory.Market(isForecastingEnabled: false));
-
-        // Act
-        await CollectAsync(_assistant.Handle(Input()));
-
-        // Assert
-        await _bus.DidNotReceive()
-            .InvokeAsync<PagedResponse<GetMarketForecastResponse>>(
-                Arg.Any<object>(),
-                Arg.Any<CancellationToken>()
-            );
-        await _bus.DidNotReceive()
-            .InvokeAsync<PagedResponse<GetForecastEfficacyResponse>>(
-                Arg.Any<object>(),
-                Arg.Any<CancellationToken>()
-            );
-        sentInstructions.ShouldNotBeNull();
-        sentInstructions.ShouldContain("Forecasting is disabled for this market.");
     }
 
     [Fact]
