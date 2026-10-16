@@ -4,9 +4,7 @@ using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.AskKitchenAssistant.Schemas;
 using Ouranos.Pantheon.Modules.Hestia.Shared;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Database;
-using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
-using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
 
 namespace Ouranos.Pantheon.Modules.Hestia.Features.Recipes.AskKitchenAssistant;
@@ -34,14 +32,7 @@ public sealed class KitchenAssistant(
         );
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (!context.RecipeId.TryGetStreamId(out var streamId))
-        {
-            Guard.Against.NotFound(context.RecipeId, (Recipe?)null);
-        }
-
-        using var session = _store.QuerySession();
-        var recipe = await session.LoadAsync<Recipe>(streamId, cancellationToken);
-        Guard.Against.NotFound(context.RecipeId, recipe);
+        var recipe = await KitchenRecipes.LoadAsync(_store, context, cancellationToken);
 
         var options = _options.Value.KitchenAssistant;
 

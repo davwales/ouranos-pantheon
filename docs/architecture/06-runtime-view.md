@@ -268,10 +268,22 @@ sequenceDiagram
     UI ->> EP: POST messages + context { recipeId }
     EP ->> A: AssistantCompletionInput<KitchenAssistantContext>
     A ->> ES: load Recipe
-    A ->> ML: POST /responses stream (recipe instructions + messages, reasoning effort)
-    ML -->> A: reasoning deltas, then output text deltas, then usage
-    A -->> UI: SSE reasoning … content … usage, done (or error)
+    A ->> ML: POST /responses stream (recipe instructions + messages + tools, reasoning effort)
+    ML -->> A: reasoning deltas, then a function call (e.g. update_ingredient)
+    A -->> UI: SSE reasoning … tool
+    A ->> ES: tool loads Recipe and validates the change
+    A -->> UI: SSE action (proposal)
+    A ->> ML: POST /responses stream (same input + function call + its output)
+    ML -->> A: output text deltas, then usage
+    A -->> UI: SSE content … usage, done (or error)
+    UI ->> UI: user clicks Apply on the proposal card
+    UI ->> EP: PUT /api/hestia/recipes/{id} (normal update endpoint)
 ```
+
+Tool rounds are capped (`ModelDefaults.MaxToolRounds`), only the first
+`MaxToolCallsPerRound` calls in a round run, and the last round offers no tools so the model
+has to answer. Every action, including the Explorer's `set_explorer_view`, waits on its card
+until the user applies it; the next turn's context carries the result.
 
 The Plutus Symbol Analyst (context `{ symbolId, timeFrame }`) follows the same flow, but
 instead of reading the store directly it invokes the module's existing query handlers through

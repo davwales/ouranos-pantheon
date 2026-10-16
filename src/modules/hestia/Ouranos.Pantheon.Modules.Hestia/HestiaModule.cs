@@ -5,6 +5,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Security.AntiSSRF;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.AskKitchenAssistant;
+using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.AskKitchenAssistant.Schemas;
+using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.AskKitchenAssistant.Tools.AddIngredient;
+using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.AskKitchenAssistant.Tools.AddNote;
+using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.AskKitchenAssistant.Tools.RemoveIngredient;
+using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.AskKitchenAssistant.Tools.UpdateIngredient;
+using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.AskKitchenAssistant.Tools.UpdateStep;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.CreateRecipe;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetAllRecipes;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.GetRecipe;
@@ -25,6 +31,7 @@ using Ouranos.Pantheon.Modules.Hestia.Shared.Database;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes.Events;
 using Ouranos.Pantheon.Modules.Shared.Contract;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres;
 using Wolverine;
@@ -39,7 +46,12 @@ public sealed class HestiaModule : IPantheonModule
         builder
             .Services.AddCoreOuranosMachineLearningModule(builder.Configuration)
             .Configure<HestiaOptions>(builder.Configuration.GetSection(HestiaOptions.SectionName))
-            .AddScoped<IRecipeExtractor, RecipeExtractor>();
+            .AddScoped<IRecipeExtractor, RecipeExtractor>()
+            .AddAssistantTool<KitchenAssistantContext, AddNoteTool>()
+            .AddAssistantTool<KitchenAssistantContext, AddIngredientTool>()
+            .AddAssistantTool<KitchenAssistantContext, UpdateIngredientTool>()
+            .AddAssistantTool<KitchenAssistantContext, RemoveIngredientTool>()
+            .AddAssistantTool<KitchenAssistantContext, UpdateStepTool>();
 
         builder
             .Services.AddCorePostgresModule<HestiaDbContext>(

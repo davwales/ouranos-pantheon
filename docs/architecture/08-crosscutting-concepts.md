@@ -248,7 +248,8 @@ store rather than client-supplied data.
 Current assistants:
 
 - Hestia `KitchenAssistant` (`/api/hestia/recipes/assistant/completions/stream`, context
-  `{ recipeId }`).
+  `{ recipeId }`). Proposal tools: `add_note`, `add_ingredient`, `update_ingredient`
+  (substitutions, marking an ingredient optional), `remove_ingredient`, `update_step`.
 - Plutus `SymbolAnalyst` (`/api/plutus/symbols/assistant/completions/stream`, context
   `{ symbolId, timeFrame }`), configured by `Ouranos:Plutus:SymbolAnalyst`. Read tools:
   `get_price_history`, `get_signals`, `get_forecast`, `get_positions`, `search_symbols`,
