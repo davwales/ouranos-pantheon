@@ -3,109 +3,66 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 describe("Message", () => {
-  it("WhenReasoningStreamsBeforeContent_ShouldShowThinking", () => {
+  it("WhenFromTheUser_ShouldRenderABubbleWithoutAName", () => {
     // Arrange & Act
-    render(
-      <Message
-        name="Assistant"
-        role="Assistant"
-        content=""
-        reasoning="Weighing options"
-        isStreaming
-      />,
-    );
+    render(<Message name="Assistant" role="User" content="Is it a buy?" />);
 
     // Assert
-    expect(screen.getByText("Thinking...")).toBeInTheDocument();
+    expect(screen.getByText("Is it a buy?")).toBeInTheDocument();
+    expect(screen.queryByText("Assistant")).not.toBeInTheDocument();
   });
 
-  it("WhenContentFollowsReasoning_ShouldShowReasoningAndContent", () => {
+  it("WhenFromTheAssistantWithParts_ShouldRenderTheTurnWithItsName", () => {
     // Arrange & Act
     render(
       <Message
-        name="Assistant"
+        name="Kitchen Assistant"
         role="Assistant"
         content="Use butter."
-        reasoning="Weighing options"
-        isStreaming
+        parts={[{ kind: "text", id: "t1", content: "Use butter." }]}
       />,
     );
 
     // Assert
-    expect(screen.getByText("Reasoning")).toBeInTheDocument();
+    expect(screen.getByText("Kitchen Assistant")).toBeInTheDocument();
     expect(screen.getByText("Use butter.")).toBeInTheDocument();
   });
 
-  it("WhenNoReasoning_ShouldRenderContentOnly", () => {
-    // Arrange & Act
-    render(<Message name="Assistant" role="Assistant" content="Hello" />);
-
-    // Assert
-    expect(screen.queryByText("Reasoning")).not.toBeInTheDocument();
-    expect(screen.getByText("Hello")).toBeInTheDocument();
-  });
-
-  it("WhenToolsWereUsed_ShouldShowTheirLabelsOnce", () => {
+  it("WhenContentHasThinkTagsAndNoParts_ShouldSplitReasoningFromTheReply", () => {
     // Arrange & Act
     render(
-      <Message
-        name="Assistant"
-        role="Assistant"
-        content="Up 5%."
-        tools={["get_price_history", "get_price_history", "get_signals"]}
-        toolLabels={{ get_signals: "signals" }}
-      />,
+      <Message name="Persona" role="Assistant" content="<think>Weighing it</think>Use butter." />,
     );
 
     // Assert
-    expect(screen.getByText("Looked up price history, signals")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Reasoning" })).toBeInTheDocument();
+    expect(screen.getByText("Use butter.")).toBeInTheDocument();
+    expect(screen.queryByText("Weighing it")).not.toBeInTheDocument();
   });
 
-  it("WhenActionIsProposed_ShouldDescribeItAndApplyOnClick", () => {
+  it("WhenThinkTagIsStillOpenWhileStreaming_ShouldShowThinking", () => {
+    // Arrange & Act
+    render(<Message name="Persona" role="Assistant" content="<think>Weighing" isStreaming />);
+
+    // Assert
+    expect(screen.getByText("Thinking…")).toBeInTheDocument();
+  });
+
+  it("WhenReasoningIsToggledInsideAClickableMessage_ShouldNotTriggerTheMessage", () => {
     // Arrange
-    const onApplyAction = vi.fn();
+    const onMessageClick = vi.fn();
     render(
-      <Message
-        name="Assistant"
-        role="Assistant"
-        content="Proposed."
-        actions={[
-          { id: "a1", name: "add_note", action: { text: "Rest it" }, status: "proposed" },
-          { id: "a2", name: "unknown", action: {}, status: "proposed" },
-        ]}
-        actionHandlers={{
-          add_note: {
-            describe: (action) => `Add note: ${(action as { text: string }).text}`,
-            apply: vi.fn(),
-          },
-        }}
-        onApplyAction={onApplyAction}
-      />,
+      <button type="button" onClick={onMessageClick}>
+        <Message name="Persona" role="Assistant" content="<think>Weighing it</think>Use butter." />
+      </button>,
     );
 
     // Act
-    fireEvent.click(screen.getByRole("button", { name: "Apply" }));
+    fireEvent.click(screen.getByText("Reasoning"));
+    fireEvent.keyDown(screen.getByText("Reasoning"), { key: " " });
 
     // Assert
-    expect(screen.getByText("Add note: Rest it")).toBeInTheDocument();
-    expect(screen.getAllByRole("button", { name: "Apply" })).toHaveLength(1);
-    expect(onApplyAction).toHaveBeenCalledWith("a1");
-  });
-
-  it("WhenActionIsApplied_ShouldShowAppliedInsteadOfTheButton", () => {
-    // Arrange & Act
-    render(
-      <Message
-        name="Assistant"
-        role="Assistant"
-        content="Done."
-        actions={[{ id: "a1", name: "set_view", action: {}, status: "applied" }]}
-        actionHandlers={{ set_view: { describe: () => "Sort by ROI", apply: vi.fn() } }}
-      />,
-    );
-
-    // Assert
-    expect(screen.getByText("Applied")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Apply" })).not.toBeInTheDocument();
+    expect(onMessageClick).not.toHaveBeenCalled();
+    expect(screen.queryByText("Weighing it")).not.toBeInTheDocument();
   });
 });

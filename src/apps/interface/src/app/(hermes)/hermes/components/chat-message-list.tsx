@@ -96,7 +96,7 @@ export default function ChatMessageList({
         const isSummary = msg.role === Role.Summary;
 
         return (
-          <div key={index}>
+          <div key={index} className="mx-auto w-full max-w-3xl">
             {isSummary && (
               <SummaryView
                 content={msg.content}
@@ -106,11 +106,7 @@ export default function ChatMessageList({
                 onRetryCompact={() => onRetryCompact?.()}
               />
             )}
-            <div
-              className={`flex mt-4 mx-2 ${
-                msg.role == Role.User ? "justify-end" : "justify-start"
-              }`}
-            >
+            <div className="mt-4 mx-2">
               <ResponsiveContextMenu
                 actions={getMenuActions(index)}
                 title="Actions"
@@ -118,17 +114,11 @@ export default function ChatMessageList({
                 disabled={isGenerating}
               >
                 <Message
-                  name={
-                    isSummary
-                      ? "Summary"
-                      : msg.role == Role.User
-                        ? "You"
-                        : personaName
-                  }
+                  name={isSummary ? "Summary" : personaName}
                   role={msg.role === Role.User ? "User" : "Assistant"}
                   content={msg.content}
                   isStreaming={isGenerating && index === messages.length - 1}
-                  className="w-fit text-left wrap-break-word"
+                  className="text-left"
                 />
               </ResponsiveContextMenu>
             </div>

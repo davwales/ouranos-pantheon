@@ -34,7 +34,6 @@ export type AssistantPanelProps<TContext> = {
   placeholder?: string;
   emptyState?: React.ReactNode;
   suggestions?: string[];
-  toolLabels?: Record<string, string>;
   actions?: AssistantActionHandlers;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -49,14 +48,23 @@ export function AssistantPanel<TContext>({
   placeholder,
   emptyState,
   suggestions,
-  toolLabels,
   actions,
   open,
   onOpenChange,
 }: AssistantPanelProps<TContext>) {
   const isMobile = useIsMobile();
-  const { messages, isStreaming, error, send, stop, reset, applyAction } =
-    useAssistantChat({ endpoint, context, actions });
+  const {
+    messages,
+    isStreaming,
+    error,
+    send,
+    stop,
+    reset,
+    applyAction,
+    rejectAction,
+    applyAll,
+    rejectAll,
+  } = useAssistantChat({ endpoint, context, actions });
 
   const newChatButton =
     messages.length > 0 ? (
@@ -78,9 +86,11 @@ export function AssistantPanel<TContext>({
       autoFocus={!isMobile}
       onSend={send}
       onStop={stop}
-      toolLabels={toolLabels}
       actionHandlers={actions}
       onApplyAction={applyAction}
+      onRejectAction={rejectAction}
+      onApplyAll={(messageId) => void applyAll(messageId)}
+      onRejectAll={rejectAll}
     />
   );
 

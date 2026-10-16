@@ -490,7 +490,13 @@ public sealed class PantheonAssistantTests
         // Assert
         events.ShouldBe([
             new AssistantReasoningEvent("Need data"),
-            new AssistantToolEvent("lookup"),
+            new AssistantToolEvent("call-1", "lookup", """{"query":"flour"}"""),
+            new AssistantToolResultEvent(
+                "call-1",
+                AssistantToolStatus.Completed,
+                "baking: flour",
+                false
+            ),
             new AssistantContentEvent("Use bread flour."),
             new AssistantUsageEvent(30, 8, 38),
             new AssistantDoneEvent(),
@@ -513,7 +519,7 @@ public sealed class PantheonAssistantTests
     }
 
     [Fact]
-    public async Task Handle_WhenToolReturnsAnAction_ShouldStreamTheActionAfterTheToolEvent()
+    public async Task Handle_WhenToolReturnsAnAction_ShouldStreamTheActionBetweenTheCallAndItsResult()
     {
         // Arrange
         SetupStream(
@@ -537,8 +543,14 @@ public sealed class PantheonAssistantTests
 
         // Assert
         events.ShouldBe([
-            new AssistantToolEvent("lookup"),
-            new AssistantActionEvent("lookup", new TestAction("salt")),
+            new AssistantToolEvent("call-1", "lookup", """{"query":"salt"}"""),
+            new AssistantActionEvent("call-1", "lookup", new TestAction("salt")),
+            new AssistantToolResultEvent(
+                "call-1",
+                AssistantToolStatus.Completed,
+                "Proposed",
+                false
+            ),
             new AssistantContentEvent("Proposed."),
             new AssistantDoneEvent(),
         ]);
@@ -551,7 +563,7 @@ public sealed class PantheonAssistantTests
         "not json",
         AssistantTool<TestContext, LookupArguments>.InvalidArgumentsOutput
     )]
-    public async Task Handle_WhenToolCallCannotBeServed_ShouldTellTheModelAndContinue(
+    public async Task Handle_WhenToolCallCannotBeServed_ShouldReportAFailureAndContinue(
         string name,
         string arguments,
         string expectedOutput
@@ -583,7 +595,13 @@ public sealed class PantheonAssistantTests
 
         // Assert
         events.ShouldBe([
-            new AssistantToolEvent(name),
+            new AssistantToolEvent("call-1", name, arguments),
+            new AssistantToolResultEvent(
+                "call-1",
+                AssistantToolStatus.Failed,
+                expectedOutput,
+                false
+            ),
             new AssistantContentEvent("Sorry."),
             new AssistantDoneEvent(),
         ]);
@@ -623,6 +641,14 @@ public sealed class PantheonAssistantTests
         var events = await CollectAsync(assistant.Handle(CreateInput()));
 
         // Assert
+        events.ShouldContain(
+            new AssistantToolResultEvent(
+                "call-1",
+                AssistantToolStatus.Failed,
+                PantheonAssistant<TestContext>.ToolFailedOutput,
+                false
+            )
+        );
         events.ShouldContain(new AssistantContentEvent("Sorry."));
         sentInputs[1]
             .Last()
@@ -635,7 +661,7 @@ public sealed class PantheonAssistantTests
     }
 
     [Fact]
-    public async Task Handle_WhenToolOutputIsTooLong_ShouldTruncateIt()
+    public async Task Handle_WhenToolOutputIsTooLong_ShouldTruncateItForTheModelAndTheClient()
     {
         // Arrange
         var sentInputs = new List<IReadOnlyList<ResponseInputItemDto>>();
@@ -666,10 +692,13 @@ public sealed class PantheonAssistantTests
         };
 
         // Act
-        await CollectAsync(assistant.Handle(CreateInput()));
+        var events = await CollectAsync(assistant.Handle(CreateInput()));
 
         // Assert
         sentInputs[1].Last().ShouldBe(new FunctionCallOutputInputItemDto("call-1", "aaaaa…"));
+        events.ShouldContain(
+            new AssistantToolResultEvent("call-1", AssistantToolStatus.Completed, "aaaaa…", true)
+        );
     }
 
     [Fact]
@@ -715,7 +744,7 @@ public sealed class PantheonAssistantTests
     }
 
     [Fact]
-    public async Task Handle_WhenARoundHasTooManyCalls_ShouldRunOnlyTheFirstAndSkipTheRest()
+    public async Task Handle_WhenARoundHasTooManyCalls_ShouldRunOnlyTheFirstAndReportTheRestAsSkipped()
     {
         // Arrange
         var sentInputs = new List<IReadOnlyList<ResponseInputItemDto>>();
@@ -763,7 +792,15 @@ public sealed class PantheonAssistantTests
 
         // Assert
         executed.ShouldBe(["a", "b"]);
-        events.OfType<AssistantToolEvent>().Count().ShouldBe(2);
+        events.OfType<AssistantToolEvent>().Count().ShouldBe(3);
+        events
+            .OfType<AssistantToolResultEvent>()
+            .Select(result => result.Status)
+            .ShouldBe([
+                AssistantToolStatus.Completed,
+                AssistantToolStatus.Completed,
+                AssistantToolStatus.Skipped,
+            ]);
         sentInputs[1]
             .OfType<FunctionCallOutputInputItemDto>()
             .Select(output => output.Output)
@@ -816,7 +853,18 @@ public sealed class PantheonAssistantTests
         // Assert
         events
             .OfType<AssistantActionEvent>()
-            .ShouldBe([new AssistantActionEvent("lookup", new TestAction("first"))]);
+            .ShouldBe([new AssistantActionEvent("call-2", "lookup", new TestAction("first"))]);
+        events
+            .OfType<AssistantToolResultEvent>()
+            .Last()
+            .ShouldBe(
+                new AssistantToolResultEvent(
+                    "call-3",
+                    AssistantToolStatus.Skipped,
+                    PantheonAssistant<TestContext>.RepeatedActionOutput,
+                    false
+                )
+            );
 
         sentInputs[2]
             .OfType<FunctionCallOutputInputItemDto>()
@@ -826,6 +874,74 @@ public sealed class PantheonAssistantTests
                 "Proposed",
                 PantheonAssistant<TestContext>.RepeatedActionOutput,
             ]);
+    }
+
+    [Fact]
+    public async Task Handle_WhenAnAnswerCarriesActionOutcomes_ShouldAppendThemAsANoteForTheModel()
+    {
+        // Arrange
+        AssistantMessageInput[] messages =
+        [
+            new AssistantMessageInput("Add salt", AssistantRole.User),
+            new AssistantMessageInput(
+                "Proposed.",
+                AssistantRole.Assistant,
+                [
+                    new AssistantActionOutcome(
+                        "add_ingredient",
+                        "Add 1 tsp salt",
+                        AssistantActionStatus.Rejected
+                    ),
+                    new AssistantActionOutcome("set_view", " ", AssistantActionStatus.Applied),
+                    new AssistantActionOutcome("add_note", "Note", AssistantActionStatus.Pending),
+                    new AssistantActionOutcome("add_step", "Step", AssistantActionStatus.Failed),
+                ]
+            ),
+            new AssistantMessageInput("Why?", AssistantRole.User),
+        ];
+
+        // Act
+        var sent = await SendWithBudgetAsync(1000, messages);
+
+        // Assert
+        sent.ShouldBe([
+            Message("Add salt", RoleDto.User),
+            Message(
+                "Proposed.\n\n[Proposals: \"Add 1 tsp salt\" (add_ingredient): rejected by the user; "
+                    + "set_view: applied by the user; \"Note\" (add_note): not acted on yet; "
+                    + "\"Step\" (add_step): failed to apply]",
+                RoleDto.Assistant
+            ),
+            Message("Why?", RoleDto.User),
+        ]);
+    }
+
+    [Fact]
+    public async Task Handle_WhenActionOutcomesExceedTheBudget_ShouldCountThemWhenTrimming()
+    {
+        // Arrange
+        AssistantMessageInput[] messages =
+        [
+            new AssistantMessageInput("Add salt", AssistantRole.User),
+            new AssistantMessageInput(
+                "Ok.",
+                AssistantRole.Assistant,
+                [
+                    new AssistantActionOutcome(
+                        "add_ingredient",
+                        "Add 1 tsp salt",
+                        AssistantActionStatus.Applied
+                    ),
+                ]
+            ),
+            new AssistantMessageInput("Thanks", AssistantRole.User),
+        ];
+
+        // Act
+        var sent = await SendWithBudgetAsync(30, messages);
+
+        // Assert
+        sent.ShouldBe([Message("Thanks", RoleDto.User)]);
     }
 
     [Fact]

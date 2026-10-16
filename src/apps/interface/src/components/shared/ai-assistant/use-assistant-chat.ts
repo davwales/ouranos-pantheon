@@ -1,35 +1,29 @@
 "use client";
 
 import {
+  actionOutcome,
+  applyEvent,
+  finishParts,
+  textOf,
+  type AssistantChatActionPart,
+  type AssistantChatPart,
+} from "@/components/shared/ai-assistant/assistant-chat-parts";
+import {
   streamAssistant,
   type AssistantActionHandlers,
   type AssistantEndpoint,
+  type AssistantMessageInput,
   type AssistantRole,
 } from "@/lib/api/assistant";
 import { generateID } from "@/lib/utils";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-export type AssistantChatActionStatus =
-  | "proposed"
-  | "applying"
-  | "applied"
-  | "failed";
-
-export type AssistantChatAction = {
-  id: string;
-  name: string;
-  action: unknown;
-  status: AssistantChatActionStatus;
-  error?: string;
-};
-
 export type AssistantChatMessage = {
   id: string;
   role: AssistantRole;
   content: string;
-  reasoning?: string;
-  tools?: string[];
-  actions?: AssistantChatAction[];
+  parts: AssistantChatPart[];
+  context?: unknown;
 };
 
 export type UseAssistantChatOptions<TContext> = {
@@ -60,26 +54,43 @@ export function useAssistantChat<TContext>({
     return () => abortRef.current?.abort();
   }, []);
 
-  const updateAction = useCallback(
-    (messageId: string, actionId: string, update: Partial<AssistantChatAction>) => {
+  const updateParts = useCallback(
+    (
+      messageId: string,
+      update: (parts: AssistantChatPart[]) => AssistantChatPart[],
+    ) => {
       setMessages((prev) =>
-        prev.map((m) =>
-          m.id === messageId
-            ? {
-                ...m,
-                actions: m.actions?.map((a) =>
-                  a.id === actionId ? { ...a, ...update } : a,
-                ),
-              }
-            : m,
-        ),
+        prev.map((m) => {
+          if (m.id !== messageId) {
+            return m;
+          }
+          const parts = update(m.parts);
+          return { ...m, parts, content: textOf(parts) };
+        }),
       );
     },
     [],
   );
 
+  const updateAction = useCallback(
+    (
+      messageId: string,
+      actionId: string,
+      update: Partial<AssistantChatActionPart>,
+    ) => {
+      updateParts(messageId, (parts) =>
+        parts.map((part) =>
+          part.kind === "action" && part.id === actionId
+            ? { ...part, ...update }
+            : part,
+        ),
+      );
+    },
+    [updateParts],
+  );
+
   const runAction = useCallback(
-    async (messageId: string, chatAction: AssistantChatAction) => {
+    async (messageId: string, chatAction: AssistantChatActionPart) => {
       const handler = actionsRef.current?.[chatAction.name];
       if (!handler) {
         return;
@@ -99,16 +110,65 @@ export function useAssistantChat<TContext>({
     [updateAction],
   );
 
+  const findActions = useCallback(
+    (messageId: string) => {
+      return (
+        messages
+          .find((m) => m.id === messageId)
+          ?.parts.filter((part) => part.kind === "action") ?? []
+      );
+    },
+    [messages],
+  );
+
   const applyAction = useCallback(
     (messageId: string, actionId: string) => {
-      const chatAction = messages
-        .find((m) => m.id === messageId)
-        ?.actions?.find((a) => a.id === actionId);
-      if (chatAction && chatAction.status !== "applying" && chatAction.status !== "applied") {
+      const chatAction = findActions(messageId).find((a) => a.id === actionId);
+      if (chatAction && (chatAction.status === "proposed" || chatAction.status === "failed")) {
         void runAction(messageId, chatAction);
       }
     },
-    [messages, runAction],
+    [findActions, runAction],
+  );
+
+  const rejectAction = useCallback(
+    (messageId: string, actionId: string) => {
+      updateParts(messageId, (parts) =>
+        parts.map((part) =>
+          part.kind === "action" &&
+          part.id === actionId &&
+          (part.status === "proposed" || part.status === "failed")
+            ? { ...part, status: "rejected", error: undefined }
+            : part,
+        ),
+      );
+    },
+    [updateParts],
+  );
+
+  // Applied one after another because handlers such as recipe edits save the latest state, and
+  // concurrent saves would overwrite each other.
+  const applyAll = useCallback(
+    async (messageId: string) => {
+      const proposed = findActions(messageId).filter((a) => a.status === "proposed");
+      for (const chatAction of proposed) {
+        await runAction(messageId, chatAction);
+      }
+    },
+    [findActions, runAction],
+  );
+
+  const rejectAll = useCallback(
+    (messageId: string) => {
+      updateParts(messageId, (parts) =>
+        parts.map((part) =>
+          part.kind === "action" && part.status === "proposed"
+            ? { ...part, status: "rejected" }
+            : part,
+        ),
+      );
+    },
+    [updateParts],
   );
 
   const send = useCallback(
@@ -121,7 +181,7 @@ export function useAssistantChat<TContext>({
       const userId = generateID();
       const history: AssistantChatMessage[] = [
         ...messages,
-        { id: userId, role: "User", content: text },
+        { id: userId, role: "User", content: text, parts: [] },
       ];
       const assistantId = generateID();
       const controller = new AbortController();
@@ -129,69 +189,48 @@ export function useAssistantChat<TContext>({
 
       setMessages([
         ...history,
-        { id: assistantId, role: "Assistant", content: "" },
+        { id: assistantId, role: "Assistant", content: "", parts: [], context },
       ]);
       setIsStreaming(true);
       setError(null);
 
-      let reply = "";
-      let reasoning = "";
+      let hasText = false;
+      let hasAction = false;
       let failure: string | null = null;
       try {
         const stream = streamAssistant(
           endpoint,
           {
-            messages: history.map(({ role, content }) => ({ role, content })),
+            messages: toHistory(history, actionsRef.current),
             context,
           },
           controller.signal,
         );
         for await (const event of stream) {
-          if (event.$type === "reasoning") {
-            reasoning += event.content;
-            const snapshot = reasoning;
-            setMessages((prev) =>
-              prev.map((m) =>
-                m.id === assistantId ? { ...m, reasoning: snapshot } : m,
-              ),
-            );
-          } else if (event.$type === "content") {
-            reply += event.content;
-            const snapshot = reply;
-            setMessages((prev) =>
-              prev.map((m) =>
-                m.id === assistantId ? { ...m, content: snapshot } : m,
-              ),
-            );
-          } else if (event.$type === "tool") {
-            const name = event.name;
-            setMessages((prev) =>
-              prev.map((m) =>
-                m.id === assistantId
-                  ? { ...m, tools: [...(m.tools ?? []), name] }
-                  : m,
-              ),
-            );
-          } else if (event.$type === "action") {
-            const chatAction: AssistantChatAction = {
-              id: generateID(),
+          if (event.$type === "error") {
+            failure = event.message;
+            break;
+          }
+          if (event.$type === "usage" || event.$type === "done") {
+            continue;
+          }
+
+          const id = generateID();
+          const now = Date.now();
+          hasText ||= event.$type === "content";
+          hasAction ||= event.$type === "action";
+          updateParts(assistantId, (parts) => applyEvent(parts, event, now, id));
+
+          if (event.$type === "action" && actionsRef.current?.[event.name]?.autoApply) {
+            void runAction(assistantId, {
+              kind: "action",
+              id,
+              callId: event.callId,
               name: event.name,
               action: event.action,
               status: "proposed",
-            };
-            setMessages((prev) =>
-              prev.map((m) =>
-                m.id === assistantId
-                  ? { ...m, actions: [...(m.actions ?? []), chatAction] }
-                  : m,
-              ),
-            );
-            if (actionsRef.current?.[chatAction.name]?.autoApply) {
-              void runAction(assistantId, chatAction);
-            }
-          } else if (event.$type === "error") {
-            failure = event.message;
-            break;
+              arguments: "",
+            });
           }
         }
       } catch (e) {
@@ -205,21 +244,29 @@ export function useAssistantChat<TContext>({
       }
       abortRef.current = null;
 
-      // A failed turn with no reply is withdrawn so the user can resend it without
-      // leaving two consecutive user messages in the history.
-      const isWithdrawn = failure !== null && reply.length === 0;
+      // A failed turn with nothing to keep is withdrawn so the user can resend it without
+      // leaving two consecutive user messages in the history. A proposal is never thrown away.
+      const isWithdrawn = failure !== null && !hasText && !hasAction;
+      const now = Date.now();
       setMessages((prev) =>
-        prev.filter(
-          (m) =>
-            (m.id !== assistantId || m.content.length > 0) &&
-            (m.id !== userId || !isWithdrawn),
-        ),
+        prev.flatMap((m) => {
+          if (m.id === userId) {
+            return isWithdrawn ? [] : [m];
+          }
+          if (m.id !== assistantId) {
+            return [m];
+          }
+          if (isWithdrawn || m.parts.length === 0) {
+            return [];
+          }
+          return [{ ...m, parts: finishParts(m.parts, now) }];
+        }),
       );
       setError(failure);
       setIsStreaming(false);
       return !isWithdrawn;
     },
-    [endpoint, context, messages, runAction],
+    [endpoint, context, messages, runAction, updateParts],
   );
 
   const stop = useCallback(() => {
@@ -234,5 +281,42 @@ export function useAssistantChat<TContext>({
     setIsStreaming(false);
   }, []);
 
-  return { messages, isStreaming, error, send, stop, reset, applyAction };
+  return {
+    messages,
+    isStreaming,
+    error,
+    send,
+    stop,
+    reset,
+    applyAction,
+    rejectAction,
+    applyAll,
+    rejectAll,
+  };
+}
+
+function toHistory(
+  messages: AssistantChatMessage[],
+  handlers: AssistantActionHandlers | undefined,
+): AssistantMessageInput[] {
+  return messages.flatMap(({ role, content, parts }) => {
+    const outcomes = parts.flatMap((part) => {
+      const handler = part.kind === "action" ? handlers?.[part.name] : undefined;
+      return part.kind === "action" && handler
+        ? [
+            {
+              name: part.name,
+              description: handler.describe(part.action),
+              status: actionOutcome(part.status),
+            },
+          ]
+        : [];
+    });
+
+    if (outcomes.length > 0) {
+      return [{ role, content, actions: outcomes }];
+    }
+    // A reply stopped before it said anything carries nothing the model can use.
+    return content.length > 0 || role === "User" ? [{ role, content }] : [];
+  });
 }

@@ -1,107 +1,67 @@
-import { ActionCard } from "@/components/shared/ai-assistant/action-card";
-import { toolLabel } from "@/components/shared/ai-assistant/tool-labels";
-import { type AssistantChatAction } from "@/components/shared/ai-assistant/use-assistant-chat";
-import { Typography } from "@/components/shared/typography";
-import { LoadingSegment } from "@/components/shared/ai-assistant/segments/loading-segment";
-import { TextSegment } from "@/components/shared/ai-assistant/segments/text-segment";
-import { ThinkingSegment } from "@/components/shared/ai-assistant/segments/thinking-segment";
-import { ToolSegment } from "@/components/shared/ai-assistant/segments/tool-segment";
 import {
-  parseSegments,
-  type Segment,
-} from "@/components/shared/ai-assistant/parse-segments";
-import {
-  type AssistantActionHandlers,
-  type AssistantRole,
-} from "@/lib/api/assistant";
-import { cn } from "@/lib/utils";
+  AssistantTurn,
+  type AssistantTurnProps,
+} from "@/components/shared/ai-assistant/assistant-turn";
+import { type AssistantChatPart } from "@/components/shared/ai-assistant/assistant-chat-parts";
+import { parseSegments } from "@/components/shared/ai-assistant/parse-segments";
+import { UserMessage } from "@/components/shared/ai-assistant/user-message";
+import { type AssistantRole } from "@/lib/api/assistant";
 
 export function Message({
-  name,
   role,
   content,
-  reasoning = "",
+  parts,
+  context,
+  name,
   isStreaming = false,
-  tools = [],
-  actions = [],
-  toolLabels,
   actionHandlers,
   onApplyAction,
+  onRejectAction,
+  onApplyAll,
+  onRejectAll,
   ...props
-}: React.ComponentProps<"div"> & {
-  name: string;
+}: Omit<AssistantTurnProps, "parts"> & {
   role: AssistantRole;
   content: string;
-  reasoning?: string;
-  isStreaming?: boolean;
-  tools?: string[];
-  actions?: AssistantChatAction[];
-  toolLabels?: Record<string, string>;
-  actionHandlers?: AssistantActionHandlers;
-  onApplyAction?: (actionId: string) => void;
+  parts?: AssistantChatPart[];
 }) {
-  const isUser = role === "User";
-  const segments = isUser
-    ? [{ type: "text" as const, content }]
-    : assistantSegments(content, reasoning, isStreaming);
-  const labels = [...new Set(tools.map((tool) => toolLabel(tool, toolLabels)))];
+  if (role === "User") {
+    return <UserMessage content={content} {...props} />;
+  }
 
   return (
-    <div {...props}>
-      <div className={cn("py-2 px-4 border rounded-2xl", isUser && "bg-accent/30")}>
-        {labels.length > 0 && <ToolSegment labels={labels} />}
-        {segments.map((segment, i) => {
-          switch (segment.type) {
-            case "loading":
-              return <LoadingSegment key={`loading-${i}`} />;
-            case "thinking":
-              return (
-                <ThinkingSegment
-                  key={`thinking-${i}`}
-                  content={segment.content}
-                  isStreaming={segment.isStreaming}
-                />
-              );
-            case "text":
-              return (
-                <TextSegment key={`text-${i}`} content={segment.content} />
-              );
-          }
-        })}
-        {actions.map((action) => {
-          const handler = actionHandlers?.[action.name];
-          return handler ? (
-            <ActionCard
-              key={action.id}
-              description={handler.describe(action.action)}
-              action={action}
-              onApply={() => onApplyAction?.(action.id)}
-            />
-          ) : null;
-        })}
-      </div>
-      <Typography
-        variant="muted"
-        className={cn("mx-2.5 my-1", isUser && "text-right")}
-      >
-        {name}
-      </Typography>
-    </div>
+    <AssistantTurn
+      name={name}
+      parts={parts ?? partsFromContent(content, isStreaming)}
+      context={context}
+      isStreaming={isStreaming}
+      actionHandlers={actionHandlers}
+      onApplyAction={onApplyAction}
+      onRejectAction={onRejectAction}
+      onApplyAll={onApplyAll}
+      onRejectAll={onRejectAll}
+      {...props}
+    />
   );
 }
 
-function assistantSegments(
-  content: string,
-  reasoning: string,
-  isStreaming: boolean,
-): Segment[] {
-  if (reasoning.length === 0) {
-    return parseSegments(content, isStreaming);
-  }
-
-  const isThinking = isStreaming && content.length === 0;
-  return [
-    { type: "thinking", content: reasoning, isStreaming: isThinking },
-    ...(isThinking ? [] : parseSegments(content, isStreaming)),
-  ];
+// Chats without streamed parts, such as Hermes, inline their reasoning in <think> tags.
+function partsFromContent(content: string, isStreaming: boolean): AssistantChatPart[] {
+  return parseSegments(content, isStreaming).flatMap((segment, i): AssistantChatPart[] => {
+    switch (segment.type) {
+      case "loading":
+        return [];
+      case "thinking":
+        return [
+          {
+            kind: "reasoning",
+            id: `reasoning-${i}`,
+            content: segment.content,
+            endedAt: segment.isStreaming ? undefined : 0,
+          },
+        ];
+      case "text":
+        return [{ kind: "text", id: `text-${i}`, content: segment.content }];
+    }
+  });
 }

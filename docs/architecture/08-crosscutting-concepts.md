@@ -210,15 +210,17 @@ store rather than client-supplied data.
   answer. Only the first `MaxToolCallsPerRound` calls in a round run, and a tool marked
   `IsSingleActionPerReply` is skipped once it has returned an action in the reply; skipped
   calls get an output telling the model why, because small models sometimes repeat a call
-  many times. Every round resends the whole input, because OuranosMl does not keep response state;
+  many times. Skipped calls are still streamed (status `Skipped`), so the user sees every call
+  the model made. Every round resends the whole input, because OuranosMl does not keep response state;
   the inference server's prompt cache keeps the shared prefix cheap. A failing or unknown tool
   becomes an output the model sees, never a failed turn.
-- **Actions**: a tool never changes data itself. Every action appears as a proposal card that
-  the user applies: view changes (the Explorer's filter and sort) update the page's table
-  state, and data changes (recipe notes, ingredients, steps) go through the module's normal
-  update endpoint, so event-sourced history and revert remain the undo. Pages can mark a
-  handler `autoApply`, but none do. The next turn
-  sees the effect through the context, which is rebuilt from the store or the current view.
+- **Actions**: a tool never changes data itself. Every action appears as a proposal that the
+  user applies or rejects: view changes (the Explorer's filter and sort) update the page's
+  table state, and data changes (recipe notes, ingredients, steps) go through the module's
+  normal update endpoint, so event-sourced history and revert remain the undo. Pages can mark
+  a handler `autoApply`, but none do. The next turn sees the effect through the context, which
+  is rebuilt from the store or the current view, and learns what the user decided through the
+  history (see below).
 - **Model settings**: global defaults (model, reasoning effort, max tokens) live in
   `ModelDefaults` (`Shared.Contract/Infra/OuranosMachineLearning/`). Each feature's options
   record initializes from them and overrides only what it needs (e.g. recipe import uses low
@@ -236,14 +238,23 @@ store rather than client-supplied data.
 - **`MapAssistant<TContext>(pattern)`** (`API/AssistantEndpointExtensions`) maps a POST
   route binding `AssistantCompletionInput<TContext>` (`messages` + typed `context`),
   dispatches via `IMessageBus`, and writes events with `SseWriter`.
-- **Event contract**: `$type`-discriminated `reasoning`, `content`, `tool` (a tool was
-  called), `action` (a typed action for the page), `usage`, `error`, `done`. `reasoning` carries the model's thinking (rendered as a collapsible "Thinking"
-  segment) and is never resent as history. Errors before the first event surface as
+- **Event contract**: `$type`-discriminated `reasoning`, `content`, `tool` (a call started:
+  `callId`, `name` and the raw JSON `arguments`), `toolResult` (`callId`, `status`
+  `Completed | Failed | Skipped`, and the `output` exactly as the model received it, with
+  `isTruncated` when it was cut to `MaxToolOutputCharacters`), `action` (a typed action for
+  the page, with the `callId` that proposed it, sent between the call and its result),
+  `usage`, `error`, `done`. Tool events let the user inspect what each call asked and returned;
+  they are a debugging view, not data for the page. `reasoning` carries the model's thinking
+  and is never resent as history. Errors before the first event surface as
   ProblemDetails; LLM failures mid-stream, and replies that finish without any content
   (e.g. reasoning exhausted the token budget), become an `error` event with a generic
   message.
 - **Stateless, trimmed history**: the client resends the whole conversation on every turn;
-  nothing is persisted. `PantheonAssistant` keeps only the newest messages that fit
+  nothing is persisted. Assistant messages carry typed `actions` outcomes (`name`, the page's
+  `description`, `status` `Pending | Applied | Rejected | Failed`), because pages apply
+  actions without telling the server; `PantheonAssistant` renders them as a bracketed note
+  after the reply for the model, so it does not claim an ignored change was made or propose a
+  rejected one again. Tool calls and outputs of earlier turns are not resent. `PantheonAssistant` keeps only the newest messages that fit
   `AssistantPrompt.HistoryCharacterBudget` (default `ModelDefaults.HistoryCharacterBudget`),
   always keeping the newest message and never starting with an assistant turn, so long
   conversations keep fitting the limited context window.
@@ -254,9 +265,21 @@ store rather than client-supplied data.
   object, and a title. Optional `suggestions` render as clickable starter questions in the
   empty state. Replies render through `MarkdownRenderer` in its `compact` variant: chat-sized
   headings and spacing, with tables in a horizontally scrolling container. Pages place their assistant button in the nav bar through
-  `useNavBarActions`, only while the assistant is usable. Optional `toolLabels` name the tools
-  in the "Looked up …" line, and `actions` maps action names to handlers (`describe`, `apply`,
-  `autoApply`) that the page owns; a reply shows each action as a card with its apply state.
+  `useNavBarActions`, only while the assistant is usable. `actions` maps action names to
+  handlers (`describe`, `apply`, `autoApply`) that the page owns. `useAssistantChat` folds the
+  events into an ordered list of parts per reply (`assistant-chat-parts.ts`), and the chat
+  renders them as a transcript: user messages are bubbles, and assistant turns are unbubbled
+  blocks in the order they happened. Reasoning is a collapsed "Thought for Ns" row. Each tool
+  call is a collapsed row showing its raw tool name, status and duration, which expands to its
+  input and output (truncated JSON is still indented). The input shows the turn's context
+  (kept on the reply as it was sent) beside the model's arguments, since tools also read the
+  context, e.g. `get_positions` takes the page's symbol rather than an argument. A run of reasoning and tool calls
+  between two pieces of the reply shares one stack; once the model has moved past it, a run of
+  four or more rows folds into one "Used N tools" row, so the answer stays in view.
+  Each action is a card with Apply and Reject (Retry after a failure, and its call's details
+  on demand), and a reply with several open proposals offers Apply all, which applies them one
+  after another because handlers save the latest state. Hermes renders through the same
+  `Message`, with `<think>` tags parsed into reasoning blocks.
 
 Current assistants:
 

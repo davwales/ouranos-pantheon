@@ -13,6 +13,21 @@ http:
         "messages": [
           {
             "role": "User",
+            "content": "Show me the most traded symbols."
+          },
+          {
+            "role": "Assistant",
+            "content": "I proposed a view sorted by volume; apply it to see them.",
+            "actions": [
+              {
+                "name": "set_explorer_view",
+                "description": "Sort by total volume, highest first",
+                "status": "Applied"
+              }
+            ]
+          },
+          {
+            "role": "User",
             "content": "Which of these is the best opportunity?"
           }
         ],

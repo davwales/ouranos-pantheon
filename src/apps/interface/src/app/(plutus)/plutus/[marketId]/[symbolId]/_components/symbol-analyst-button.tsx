@@ -13,16 +13,6 @@ const SUGGESTIONS = [
   "Should I hold or sell my open positions?",
 ];
 
-// TODO: These labels aren't the greatest. Will be fixed with a ux refactor to how tools are displayed.
-const TOOL_LABELS = {
-  get_price_history: "price history",
-  get_signals: "signals",
-  get_forecast: "the forecast",
-  get_positions: "your positions",
-  find_symbols: "symbol search",
-  get_symbol: "another symbol",
-};
-
 export function SymbolAnalystButton({
   marketId,
   symbolId,
@@ -46,7 +36,6 @@ export function SymbolAnalystButton({
         </Typography>
       }
       suggestions={SUGGESTIONS}
-      toolLabels={TOOL_LABELS}
     />
   );
 }

@@ -8,11 +8,14 @@ import type {
 export type {
   AssistantActionHandler,
   AssistantActionHandlers,
+  AssistantActionOutcome,
+  AssistantActionStatus,
   AssistantCompletionInput,
   AssistantEndpoint,
   AssistantEvent,
   AssistantMessageInput,
   AssistantRole,
+  AssistantToolStatus,
 } from "./assistant-types";
 
 export function streamAssistant<TContext>(

@@ -1,7 +1,10 @@
 "use client";
 
 import { AssistantInput } from "@/components/shared/ai-assistant/assistant-input";
-import { AssistantMessageList } from "@/components/shared/ai-assistant/assistant-message-list";
+import {
+  AssistantMessageList,
+  type AssistantMessageCallbacks,
+} from "@/components/shared/ai-assistant/assistant-message-list";
 import { AssistantSuggestions } from "@/components/shared/ai-assistant/assistant-suggestions";
 import { type AssistantChatMessage } from "@/components/shared/ai-assistant/use-assistant-chat";
 import { Typography } from "@/components/shared/typography";
@@ -22,11 +25,13 @@ export function AssistantChat({
   autoFocus,
   onSend,
   onStop,
-  toolLabels,
   actionHandlers,
   onApplyAction,
+  onRejectAction,
+  onApplyAll,
+  onRejectAll,
   className,
-}: {
+}: AssistantMessageCallbacks & {
   messages: AssistantChatMessage[];
   isStreaming: boolean;
   error: string | null;
@@ -37,9 +42,7 @@ export function AssistantChat({
   autoFocus?: boolean;
   onSend: (content: string) => Promise<boolean>;
   onStop: () => void;
-  toolLabels?: Record<string, string>;
   actionHandlers?: AssistantActionHandlers;
-  onApplyAction?: (messageId: string, actionId: string) => void;
   className?: string;
 }) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -70,7 +73,7 @@ export function AssistantChat({
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="min-h-0 flex-1 overflow-y-auto px-4 py-2"
+        className="min-h-0 flex-1 overflow-y-auto px-4 py-4"
       >
         {messages.length === 0 && (emptyState || suggestions.length > 0) ? (
           <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
@@ -88,9 +91,11 @@ export function AssistantChat({
             messages={messages}
             isStreaming={isStreaming}
             assistantName={assistantName}
-            toolLabels={toolLabels}
             actionHandlers={actionHandlers}
             onApplyAction={onApplyAction}
+            onRejectAction={onRejectAction}
+            onApplyAll={onApplyAll}
+            onRejectAll={onRejectAll}
           />
         )}
       </div>
