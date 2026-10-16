@@ -47,7 +47,10 @@ public abstract class PantheonAssistant<TContext>(
         Guard.Against.Null(input.Context);
 
         var prompt = await BuildPromptAsync(input.Context, cancellationToken);
-        var messages = TrimHistory(input.Messages, prompt.HistoryCharacterBudget);
+        var messages = TrimHistory(
+            [.. input.Messages.Select(Render)],
+            prompt.HistoryCharacterBudget
+        );
         var tools = _tools.Where(t => t.IsAvailable(input.Context)).ToList();
 
         await foreach (
@@ -77,6 +80,43 @@ public abstract class PantheonAssistant<TContext>(
         TContext context,
         CancellationToken cancellationToken
     );
+
+    // Pages apply proposed actions without telling the server, so the client reports what the
+    // user did with them and the model reads it as a note on the reply that proposed them.
+    private static AssistantMessageInput Render(AssistantMessageInput message)
+    {
+        if (message.Actions is not { Count: > 0 } actions)
+        {
+            return message;
+        }
+
+        var outcomes = string.Join(
+            "; ",
+            actions.Select(a =>
+                string.IsNullOrWhiteSpace(a.Description)
+                    ? $"{a.Name}: {Describe(a.Status)}"
+                    : $"\"{a.Description}\" ({a.Name}): {Describe(a.Status)}"
+            )
+        );
+
+        return message with
+        {
+            Content = $"{message.Content}\n\n[Proposals: {outcomes}]",
+            Actions = null,
+        };
+    }
+
+    private static string Describe(AssistantActionStatus status)
+    {
+        return status switch
+        {
+            AssistantActionStatus.Pending => "not acted on yet",
+            AssistantActionStatus.Applied => "applied by the user",
+            AssistantActionStatus.Rejected => "rejected by the user",
+            AssistantActionStatus.Failed => "failed to apply",
+            _ => throw new ArgumentOutOfRangeException(nameof(status), status, null),
+        };
+    }
 
     // The client resends the whole conversation every turn, so older turns are dropped once they
     // no longer fit beside the system prompt, the reasoning and the reply.
@@ -213,7 +253,10 @@ public abstract class PantheonAssistant<TContext>(
             foreach (var call in calls)
             {
                 var tool = tools.FirstOrDefault(t => t.Name == call.Name);
+                yield return new AssistantToolEvent(call.CallId, call.Name, call.Arguments);
+
                 AssistantToolResult result;
+                AssistantToolStatus status;
 
                 if (executed >= prompt.MaxToolCallsPerRound)
                 {
@@ -223,6 +266,7 @@ public abstract class PantheonAssistant<TContext>(
                         prompt.MaxToolCallsPerRound
                     );
                     result = new AssistantToolResult(TooManyToolCallsOutput);
+                    status = AssistantToolStatus.Skipped;
                 }
                 else if (tool is { IsSingleActionPerReply: true } && proposed.Contains(tool.Name))
                 {
@@ -231,28 +275,33 @@ public abstract class PantheonAssistant<TContext>(
                         call.Name
                     );
                     result = new AssistantToolResult(RepeatedActionOutput);
+                    status = AssistantToolStatus.Skipped;
                 }
                 else
                 {
                     executed++;
-                    yield return new AssistantToolEvent(call.Name);
-
                     result = await InvokeToolAsync(tool, context, call, cancellationToken);
+                    status = result.IsError
+                        ? AssistantToolStatus.Failed
+                        : AssistantToolStatus.Completed;
 
                     if (result.Action is not null)
                     {
                         proposed.Add(call.Name);
-                        yield return new AssistantActionEvent(call.Name, result.Action);
+                        yield return new AssistantActionEvent(
+                            call.CallId,
+                            call.Name,
+                            result.Action
+                        );
                     }
                 }
 
+                var (output, isTruncated) = Truncate(result.Output, prompt.MaxToolOutputCharacters);
+
                 input.Add(new FunctionCallInputItemDto(call));
-                input.Add(
-                    new FunctionCallOutputInputItemDto(
-                        call.CallId,
-                        Truncate(result.Output, prompt.MaxToolOutputCharacters)
-                    )
-                );
+                input.Add(new FunctionCallOutputInputItemDto(call.CallId, output));
+
+                yield return new AssistantToolResultEvent(call.CallId, status, output, isTruncated);
             }
         }
 
@@ -288,7 +337,7 @@ public abstract class PantheonAssistant<TContext>(
         if (tool is null)
         {
             _logger.LogWarning("Assistant called unknown tool '{name}'.", call.Name);
-            return new AssistantToolResult($"Unknown tool '{call.Name}'.");
+            return new AssistantToolResult($"Unknown tool '{call.Name}'.", IsError: true);
         }
 
         try
@@ -298,13 +347,15 @@ public abstract class PantheonAssistant<TContext>(
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _logger.LogError(ex, "Assistant tool '{name}' failed.", call.Name);
-            return new AssistantToolResult(ToolFailedOutput);
+            return new AssistantToolResult(ToolFailedOutput, IsError: true);
         }
     }
 
-    private static string Truncate(string output, int maxCharacters)
+    private static (string Output, bool IsTruncated) Truncate(string output, int maxCharacters)
     {
-        return output.Length <= maxCharacters ? output : $"{output[..maxCharacters]}…";
+        return output.Length <= maxCharacters
+            ? (output, false)
+            : ($"{output[..maxCharacters]}…", true);
     }
 
     private static ChatCompletionUsage Add(ChatCompletionUsage? total, ChatCompletionUsage round)

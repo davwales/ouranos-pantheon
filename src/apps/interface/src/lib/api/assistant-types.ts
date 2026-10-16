@@ -4,10 +4,21 @@ export type AssistantEndpoint<TContext> = string & {
   readonly __context?: TContext;
 };
 
+export type AssistantActionStatus = "Pending" | "Applied" | "Rejected" | "Failed";
+
+export type AssistantActionOutcome = {
+  name: string;
+  description: string;
+  status: AssistantActionStatus;
+};
+
 export type AssistantMessageInput = {
   role: AssistantRole;
   content: string;
+  actions?: AssistantActionOutcome[];
 };
+
+export type AssistantToolStatus = "Completed" | "Failed" | "Skipped";
 
 export type AssistantCompletionInput<TContext> = {
   messages: AssistantMessageInput[];
@@ -17,8 +28,15 @@ export type AssistantCompletionInput<TContext> = {
 export type AssistantEvent =
   | { $type: "reasoning"; content: string }
   | { $type: "content"; content: string }
-  | { $type: "tool"; name: string }
-  | { $type: "action"; name: string; action: unknown }
+  | { $type: "tool"; callId: string; name: string; arguments: string }
+  | {
+      $type: "toolResult";
+      callId: string;
+      status: AssistantToolStatus;
+      output: string;
+      isTruncated: boolean;
+    }
+  | { $type: "action"; callId: string; name: string; action: unknown }
   | {
       $type: "usage";
       inputTokens: number;

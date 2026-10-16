@@ -1,7 +1,7 @@
 import { MarkdownRenderer } from "@/components/shared/markdown-renderer";
 import { memo } from "react";
 
-export const TextSegment = memo(function TextSegment({
+export const TextBlock = memo(function TextBlock({
   content,
 }: {
   content: string;

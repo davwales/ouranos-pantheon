@@ -18,6 +18,21 @@ http:
           {
             "role": "User",
             "content": "Can I make this recipe dairy-free?"
+          },
+          {
+            "role": "Assistant",
+            "content": "Yes: swap the butter for olive oil. Review the proposed change.",
+            "actions": [
+              {
+                "name": "update_ingredient",
+                "description": "Replace 50 g butter with 3 tbsp olive oil",
+                "status": "Rejected"
+              }
+            ]
+          },
+          {
+            "role": "User",
+            "content": "What else could replace the butter?"
           }
         ],
         "context": {

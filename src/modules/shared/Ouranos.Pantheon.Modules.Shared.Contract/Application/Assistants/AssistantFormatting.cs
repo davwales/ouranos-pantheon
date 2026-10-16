@@ -11,12 +11,13 @@ public static class AssistantFormatting
         add supporting detail. Prefer short bullet lists. Use a markdown table only for a small
         comparison of at most three short columns. Use bold for key numbers and use headings
         sparingly, no larger than ###. Never use LaTeX or math notation: write calculations inline,
-        for example 195 × 0.98 = 191.1. Do not use horizontal rules.
+        for example 195 * 0.98 = 191.1. Do not use horizontal rules.
         """;
 
     public const string ToolInstructions = """
         Call a tool only when the data above does not answer the question, and never name tools in
         your reply. A tool that proposes a change only proposes it: tell the user to review and
-        apply it.
+        apply it. A bracketed note after one of your earlier replies records what the user did with
+        its proposals; never propose a rejected change again unless the user asks for it.
         """;
 }

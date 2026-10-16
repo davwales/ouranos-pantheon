@@ -55,7 +55,7 @@ public abstract class AssistantTool<TContext, TArguments>(ILogger logger) : IAss
                 Name,
                 arguments
             );
-            return new AssistantToolResult(InvalidArgumentsOutput);
+            return new AssistantToolResult(InvalidArgumentsOutput, IsError: true);
         }
 
         var result = await ExecuteAsync(context, parsed, cancellationToken);
