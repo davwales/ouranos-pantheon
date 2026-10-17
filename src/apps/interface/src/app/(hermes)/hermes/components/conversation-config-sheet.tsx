@@ -398,9 +398,6 @@ function ReasoningEffortField({
     <div className="flex items-center justify-between gap-4 px-2">
       <div>
         <p className="text-sm font-medium">Reasoning Effort</p>
-        <p className="text-xs text-muted-foreground">
-          Reasoning tokens count against the model's Max Tokens.
-        </p>
       </div>
       <ReasoningEffortSelect
         value={value}
