@@ -1,3 +1,4 @@
+using System.Globalization;
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -82,7 +83,12 @@ public sealed class GenerateImageTool(
         {
             await foreach (
                 var imageEvent in _mlClient.StreamImageGenerationAsync(
-                    new GenerateImageRequest(prompt, size.Width, size.Height, _options.Model),
+                    new GenerateImageRequest(
+                        WithLoras(prompt, context.ImageLoras),
+                        size.Width,
+                        size.Height,
+                        _options.Model
+                    ),
                     cancellationToken
                 )
             )
@@ -134,6 +140,20 @@ public sealed class GenerateImageTool(
                 prompt
             )
         );
+    }
+
+    // SwarmUI applies LoRAs written into the prompt as <lora:name:weight>.
+    private static string WithLoras(string prompt, IReadOnlyList<ImageLora> loras)
+    {
+        if (loras.Count == 0)
+        {
+            return prompt;
+        }
+
+        var tags = loras.Select(l =>
+            string.Create(CultureInfo.InvariantCulture, $"<lora:{l.Identifier}:{l.Weight:0.##}>")
+        );
+        return $"{prompt} {string.Join(' ', tags)}";
     }
 
     private HermesImageSize SizeFor(ImageOrientation orientation)

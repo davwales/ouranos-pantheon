@@ -17,6 +17,11 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Folders.GetAllFolders;
 using Ouranos.Pantheon.Modules.Hermes.Features.Folders.GetFolder;
 using Ouranos.Pantheon.Modules.Hermes.Features.Folders.UpdateFolder;
 using Ouranos.Pantheon.Modules.Hermes.Features.Images.GetImage;
+using Ouranos.Pantheon.Modules.Hermes.Features.Loras.CreateLora;
+using Ouranos.Pantheon.Modules.Hermes.Features.Loras.DeleteLora;
+using Ouranos.Pantheon.Modules.Hermes.Features.Loras.GetAllLoras;
+using Ouranos.Pantheon.Modules.Hermes.Features.Loras.GetLora;
+using Ouranos.Pantheon.Modules.Hermes.Features.Loras.UpdateLora;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.CreateModel;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.DeleteModel;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.GetAllModels;
@@ -107,6 +112,12 @@ public sealed class HermesModule : IPantheonModule
         CreateTraitEndpoint.Map(app);
         UpdateTraitEndpoint.Map(app);
         DeleteTraitEndpoint.Map(app);
+
+        GetAllLorasEndpoint.Map(app);
+        GetLoraEndpoint.Map(app);
+        CreateLoraEndpoint.Map(app);
+        UpdateLoraEndpoint.Map(app);
+        DeleteLoraEndpoint.Map(app);
 
         GetAllFoldersEndpoint.Map(app);
         GetFolderEndpoint.Map(app);

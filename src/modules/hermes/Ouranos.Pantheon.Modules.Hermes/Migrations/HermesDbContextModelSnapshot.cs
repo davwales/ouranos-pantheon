@@ -23,6 +23,25 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("ConversationLora", b =>
+                {
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("conversation_id");
+
+                    b.Property<Guid>("LorasId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("loras_id");
+
+                    b.HasKey("ConversationId", "LorasId")
+                        .HasName("pk_conversation_lora");
+
+                    b.HasIndex("LorasId")
+                        .HasDatabaseName("ix_conversation_lora_loras_id");
+
+                    b.ToTable("conversation_lora", "hermes");
+                });
+
             modelBuilder.Entity("ConversationTrait", b =>
                 {
                     b.Property<Guid>("ConversationId")
@@ -315,6 +334,48 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
                     b.ToTable("generated_images", "hermes");
                 });
 
+            modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Loras.Lora", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("identifier");
+
+                    b.Property<bool>("IsPublic")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_public");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<float>("Weight")
+                        .HasColumnType("real")
+                        .HasColumnName("weight");
+
+                    b.HasKey("Id")
+                        .HasName("pk_loras");
+
+                    b.HasIndex("Identifier")
+                        .IsUnique()
+                        .HasDatabaseName("ix_loras_identifier");
+
+                    b.ToTable("loras", "hermes");
+                });
+
             modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models.ModelConfig", b =>
                 {
                     b.Property<Guid>("Id")
@@ -557,6 +618,23 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
                     b.ToTable("message_parts", "hermes");
 
                     b.HasDiscriminator().HasValue("tool_call");
+                });
+
+            modelBuilder.Entity("ConversationLora", b =>
+                {
+                    b.HasOne("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations.Conversation", null)
+                        .WithMany()
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_conversation_lora_conversations_conversation_id");
+
+                    b.HasOne("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Loras.Lora", null)
+                        .WithMany()
+                        .HasForeignKey("LorasId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_conversation_lora_loras_loras_id");
                 });
 
             modelBuilder.Entity("ConversationTrait", b =>

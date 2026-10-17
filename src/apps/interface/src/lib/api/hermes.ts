@@ -12,12 +12,14 @@ export type {
   PersonaInput,
   ModelInput,
   TraitInput,
+  LoraInput,
   ConversationInput,
   GenerateCompletionInput,
   ConversationSummary,
   SavedConversationPersona,
   SavedConversationModel,
   SavedConversationTrait,
+  SavedConversationLora,
   SavedConversationMessage,
   SavedConversation,
   CompactConversationInput,
@@ -25,6 +27,7 @@ export type {
   CreateConversationInput,
   CompletionChunk,
   Trait,
+  Lora,
   FolderSummary,
   UpdateFolderInput,
 } from "./hermes-types";
@@ -44,6 +47,7 @@ import type {
   CreateConversationInput,
   CompactConversationInput,
   Trait,
+  Lora,
   FolderSummary,
   UpdateFolderInput,
 } from "./hermes-types";
@@ -128,6 +132,20 @@ export const hermesApi = {
   deleteTrait: (traitId: string) =>
     api.del<{ id: string }>(`/api/hermes/traits/${traitId}`),
 
+  getAllLoras: (params?: { filter?: string[] }) =>
+    api.get<Lora[]>("/api/hermes/loras", params),
+
+  getLora: (loraId: string) => api.get<Lora>(`/api/hermes/loras/${loraId}`),
+
+  createLora: (input: Omit<Lora, "id">) =>
+    api.post<{ loraId: string }>("/api/hermes/loras", input),
+
+  updateLora: (loraId: string, input: Omit<Lora, "id">) =>
+    api.put<{ loraId: string }>(`/api/hermes/loras/${loraId}`, input),
+
+  deleteLora: (loraId: string) =>
+    api.del<{ loraId: string }>(`/api/hermes/loras/${loraId}`),
+
   getAllConversations: (params?: { folderId?: string }) =>
     api.get<ConversationSummary[]>("/api/hermes/conversations", {
       folderId: params?.folderId,
@@ -150,6 +168,7 @@ export const hermesApi = {
       isPublic: boolean;
       folderId?: string | null;
       reasoningEffort?: ReasoningEffort | null;
+      loraIds?: string[];
     },
   ) => api.put<{ id: string }>(`/api/hermes/conversations/${id}`, input),
 

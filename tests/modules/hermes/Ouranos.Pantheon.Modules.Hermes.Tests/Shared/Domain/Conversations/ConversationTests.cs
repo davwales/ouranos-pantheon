@@ -1,4 +1,5 @@
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Loras;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits;
@@ -220,6 +221,37 @@ public sealed class ConversationTests
         conversation.Traits.Count.ShouldBe(1);
         conversation.IsPublic.ShouldBeFalse();
         conversation.ReasoningEffort.ShouldBe(ReasoningEffort.High);
+    }
+
+    [Fact]
+    public void Update_WhenLorasGiven_ShouldReplaceTheLoras()
+    {
+        // Arrange
+        var oldLora = Lora.Create(new Id<Lora>(Guid.NewGuid().ToString()), "Old", "old");
+        var newLora = Lora.Create(new Id<Lora>(Guid.NewGuid().ToString()), "New", "new");
+        var conversation = Conversation.Create(
+            new Id<Conversation>(Guid.NewGuid().ToString()),
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [],
+            [],
+            loras: [oldLora]
+        );
+
+        // Act
+        conversation.Update(
+            conversation.Name,
+            conversation.PersonaId,
+            conversation.ModelConfigId,
+            [],
+            [],
+            true,
+            null,
+            loras: [newLora]
+        );
+
+        // Assert
+        conversation.Loras.ShouldBe([newLora]);
     }
 
     [Theory]

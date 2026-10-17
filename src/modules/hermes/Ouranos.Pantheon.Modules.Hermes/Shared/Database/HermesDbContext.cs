@@ -3,6 +3,7 @@ using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.AvailableModels;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Images;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Loras;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits;
@@ -20,6 +21,8 @@ public sealed class HermesDbContext(DbContextOptions<HermesDbContext> options)
     public DbSet<AvailableModel> AvailableModels { get; set; }
 
     public DbSet<Trait> Traits { get; set; }
+
+    public DbSet<Lora> Loras { get; set; }
 
     public DbSet<Conversation> Conversations { get; set; }
 
@@ -39,6 +42,7 @@ public sealed class HermesDbContext(DbContextOptions<HermesDbContext> options)
         modelBuilder.Entity<ModelConfig>();
         modelBuilder.Entity<AvailableModel>();
         modelBuilder.Entity<Trait>();
+        modelBuilder.Entity<Lora>();
         modelBuilder.Entity<Conversation>();
         modelBuilder.Entity<Folder>();
         modelBuilder.Entity<Message>();

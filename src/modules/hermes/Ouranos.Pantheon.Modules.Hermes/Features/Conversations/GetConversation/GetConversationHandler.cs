@@ -33,6 +33,7 @@ public sealed class GetConversationHandler(
             .Conversations.Include(c => c.Persona)
             .Include(c => c.ModelConfig)
             .Include(c => c.Traits)
+            .Include(c => c.Loras)
             .Include(c => c.Folder)
             .Include(c => c.Messages.OrderBy(m => m.SortOrder))
                 .ThenInclude(m => m.Parts.OrderBy(p => p.SortOrder))
@@ -92,6 +93,14 @@ public sealed class GetConversationHandler(
                     t.Id,
                     t.Name,
                     t.Content
+                )),
+            ],
+            [
+                .. conversation.Loras.Select(l => new GetConversationLoraResponse(
+                    l.Id,
+                    l.Name,
+                    l.Identifier,
+                    l.Weight
                 )),
             ],
             [

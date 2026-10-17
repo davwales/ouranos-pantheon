@@ -2,6 +2,7 @@
 
 import ChatInterfaceView from "@/app/(hermes)/hermes/components/chat-interface-view";
 import {
+  type LoraFormInput,
   ModelFormInput,
   PersonaFormInput,
   TraitFormInput,
@@ -31,6 +32,9 @@ export default function ResumeConversationPage() {
   const [model, setModel] = useState<ModelFormInput | undefined>();
   const [activeTraits, setActiveTraits] = useState<
     TraitFormInput[] | undefined
+  >();
+  const [activeLoras, setActiveLoras] = useState<
+    LoraFormInput[] | undefined
   >();
   const [isPublic, setIsPublic] = useState<boolean | undefined>();
   const [reasoningEffort, setReasoningEffort] = useState<
@@ -108,6 +112,16 @@ export default function ResumeConversationPage() {
     );
   }, [activeTraits, saved]);
 
+  const resolvedLoras = useMemo<LoraFormInput[]>(() => {
+    if (activeLoras) return activeLoras;
+    return saved?.loras.map((l) => ({ ...l, isPublic: false })) ?? [];
+  }, [activeLoras, saved]);
+
+  const resolvedLoraIds = useMemo(
+    () => resolvedLoras.flatMap((l) => (l.id ? [l.id] : [])),
+    [resolvedLoras],
+  );
+
   const handleMoveToFolder = useCallback(
     async (targetFolderId: string | null) => {
       if (!saved || !resolvedPersona || !resolvedModel) return;
@@ -119,6 +133,7 @@ export default function ResumeConversationPage() {
         traitIds: resolvedTraits
           .filter((t) => t.id && !t.isEphemeral)
           .map((t) => t.id!),
+        loraIds: resolvedLoraIds,
         messages: saved.messages,
         isPublic: isPublic ?? saved.isPublic,
         folderId: targetFolderId,
@@ -133,6 +148,7 @@ export default function ResumeConversationPage() {
       savedConversationId,
       conversationName,
       resolvedTraits,
+      resolvedLoraIds,
       isPublic,
       resolvedReasoningEffort,
     ],
@@ -178,10 +194,12 @@ export default function ResumeConversationPage() {
         persona={resolvedPersona}
         model={resolvedModel}
         activeTraits={resolvedTraits}
+        activeLoras={resolvedLoras}
         reasoningEffort={resolvedReasoningEffort}
         onPersonaChange={setPersona}
         onModelChange={setModel}
         onTraitsChange={setActiveTraits}
+        onLorasChange={setActiveLoras}
         onReasoningEffortChange={setReasoningEffort}
         initialMessages={saved.messages}
         initialTokenUsage={saved.tokenUsage}
@@ -200,6 +218,7 @@ export default function ResumeConversationPage() {
             traitIds: resolvedTraits
               .filter((t) => t.id && !t.isEphemeral)
               .map((t) => t.id!),
+            loraIds: resolvedLoraIds,
             messages: saved.messages,
             isPublic: isPublic ?? saved.isPublic,
             reasoningEffort: resolvedReasoningEffort,
@@ -218,6 +237,7 @@ export default function ResumeConversationPage() {
             traitIds: resolvedTraits
               .filter((t) => t.id && !t.isEphemeral)
               .map((t) => t.id!),
+            loraIds: resolvedLoraIds,
             messages: saved.messages,
             isPublic: value,
             reasoningEffort: resolvedReasoningEffort,

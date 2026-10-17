@@ -8,6 +8,7 @@ using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Loras;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
@@ -93,6 +94,57 @@ public sealed class GetConversationHandlerTests
 
         result.Traits.ShouldBeEmpty();
         result.Messages.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Handle_WhenConversationHasLoras_ShouldReturnLoras()
+    {
+        // Arrange
+        var persona = Persona.Create(
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
+
+        var modelConfig = ModelConfig.Create(
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
+
+        var lora = Lora.Create(
+            new Id<Lora>(Guid.NewGuid().ToString()),
+            "Detail",
+            "add-detail",
+            0.8f
+        );
+
+        var conversationId = new Id<Conversation>(Guid.NewGuid().ToString());
+        var conversation = Conversation.Create(
+            conversationId,
+            persona.Id,
+            modelConfig.Id,
+            [],
+            [],
+            _fixture.Create<string>(),
+            loras: [lora]
+        );
+
+        await _dbContext.SeedData(persona);
+        await _dbContext.SeedData(modelConfig);
+        await _dbContext.SeedData(conversation);
+
+        // Act
+        var result = await _handler.Handle(
+            new GetConversationInput(conversationId),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.Loras.ShouldBe([
+            new GetConversationLoraResponse(lora.Id, "Detail", "add-detail", 0.8f),
+        ]);
     }
 
     [Fact]

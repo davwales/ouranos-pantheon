@@ -1,5 +1,6 @@
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Loras;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits;
@@ -17,5 +18,6 @@ public sealed record UpdateConversationInput(
     List<UpdateConversationMessageInput> Messages,
     bool IsPublic,
     Id<Folder>? FolderId = null,
-    ReasoningEffort? ReasoningEffort = null
+    ReasoningEffort? ReasoningEffort = null,
+    Id<Lora>[]? LoraIds = null
 );

@@ -13,7 +13,7 @@ sequenceDiagram
     participant ML as OuranosMl (Responses)
     participant DB as Postgres (schema hermes)
 
-    UI ->> EP: send conversation (persona, model, traits, messages + earlier tool calls)
+    UI ->> EP: send conversation (persona, model, traits, LoRAs, messages + earlier tool calls)
     EP ->> H: GenerateCompletionInput
     H -->> UI: instructions event (composed system prompt)
     H ->> L: instructions, replayed history, offered tools
@@ -56,7 +56,7 @@ sequenceDiagram
 
     L -->> UI: tool event (generate_image)
     L ->> T: invoke (prompt, orientation)
-    T ->> ML: POST /images/generations (stream, save=false)
+    T ->> ML: POST /images/generations (prompt + LoRA tags, stream, save=false)
     loop until done
         ML -->> T: status / progress events
     end
@@ -67,7 +67,8 @@ sequenceDiagram
     UI ->> UI: render ImageBlock from GET /api/hermes/images/{id}
 ```
 
-The tool streams from OuranosMl so status and progress events keep the connection busy
+The tool appends one `<lora:identifier:weight>` tag per active LoRA to the prompt it sends
+(see [8.5](08-concepts.md#85-image-loras)). The tool streams from OuranosMl so status and progress events keep the connection busy
 through a model load and sampling; it uses only the completed image for now. The model sees
 only the tool's short output text, never the image. Stopping the reply cancels the request,
 OuranosMl interrupts SwarmUI and nothing is stored. While the tool runs, the Interface shows

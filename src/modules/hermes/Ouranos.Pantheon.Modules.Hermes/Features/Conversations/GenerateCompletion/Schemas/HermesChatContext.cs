@@ -4,4 +4,7 @@ using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion.Schemas;
 
-public sealed record HermesChatContext(Id<Conversation>? ConversationId) : IConversationScope;
+public sealed record HermesChatContext(
+    Id<Conversation>? ConversationId,
+    IReadOnlyList<ImageLora> ImageLoras
+) : IConversationScope;

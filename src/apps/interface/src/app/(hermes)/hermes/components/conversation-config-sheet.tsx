@@ -4,10 +4,12 @@ import AutosizeTextarea from "@/components/shared/autosize-textarea";
 import { InfoCard } from "@/components/shared/info-card";
 import { ContextUsageBar } from "@/app/(hermes)/hermes/components/context-usage-bar";
 import {
+  type LoraFormInput,
   ModelFormInput,
   PersonaFormInput,
   TraitFormInput,
 } from "@/app/(hermes)/hermes/types";
+import { ImageLorasPanel } from "@/app/(hermes)/hermes/components/image-loras-panel";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -34,10 +36,12 @@ export function ConversationConfigSheet({
   persona,
   model,
   activeTraits,
+  activeLoras,
   reasoningEffort,
   onPersonaChange,
   onModelChange,
   onTraitsChange,
+  onLorasChange,
   onReasoningEffortChange,
   conversationName,
   conversationIsPublic,
@@ -55,10 +59,12 @@ export function ConversationConfigSheet({
   persona: PersonaFormInput;
   model: ModelFormInput;
   activeTraits: TraitFormInput[];
+  activeLoras: LoraFormInput[];
   reasoningEffort: ReasoningEffort | null;
   onPersonaChange?: (persona: PersonaFormInput) => void;
   onModelChange?: (model: ModelFormInput) => void;
   onTraitsChange?: (traits: TraitFormInput[]) => void;
+  onLorasChange?: (loras: LoraFormInput[]) => void;
   onReasoningEffortChange?: (effort: ReasoningEffort | null) => void;
   conversationName?: string;
   conversationIsPublic?: boolean;
@@ -267,6 +273,13 @@ export function ConversationConfigSheet({
               )}
             </CollapsibleContent>
           </Collapsible>
+
+          {model.isToolCallingEnabled && (
+            <ImageLorasPanel
+              activeLoras={activeLoras}
+              onLorasChange={onLorasChange}
+            />
+          )}
 
           {composedSystemPrompt && (
             <Collapsible defaultOpen={false}>

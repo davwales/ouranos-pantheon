@@ -43,6 +43,7 @@ public sealed class UpdateConversationHandler
 
         var conversation = await _dbContext
             .Conversations.Include(c => c.Traits)
+            .Include(c => c.Loras)
             .Include(c => c.Messages)
             .Include(c => c.Folder)
             .FirstOrDefaultAsync(c => c.Id == command.ConversationId, cancellationToken);
@@ -61,6 +62,12 @@ public sealed class UpdateConversationHandler
         var traits = await _dbContext
             .Traits.Where(t => command.TraitIds.Contains(t.Id))
             .ToListAsync(cancellationToken);
+
+        var loras = command.LoraIds is { Length: > 0 }
+            ? await _dbContext
+                .Loras.Where(l => command.LoraIds.Contains(l.Id))
+                .ToListAsync(cancellationToken)
+            : [];
 
         var newMessages = command.Messages.Select(
             (m, index) =>
@@ -82,7 +89,8 @@ public sealed class UpdateConversationHandler
             traits,
             command.IsPublic,
             command.FolderId,
-            command.ReasoningEffort
+            command.ReasoningEffort,
+            loras
         );
 
         await _dbContext.SaveChangesAsync(cancellationToken);

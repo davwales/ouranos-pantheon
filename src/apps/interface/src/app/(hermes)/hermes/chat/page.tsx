@@ -3,6 +3,7 @@
 import SelectConfigView from "@/app/(hermes)/hermes/chat/views/select-config-view";
 import ChatInterfaceView from "@/app/(hermes)/hermes/components/chat-interface-view";
 import {
+  type LoraFormInput,
   ModelFormInput,
   PersonaFormInput,
   TraitFormInput,
@@ -17,6 +18,7 @@ export default function Conversation() {
   const [persona, setPersona] = useState<PersonaFormInput>();
   const [model, setModel] = useState<ModelFormInput>();
   const [activeTraits, setActiveTraits] = useState<TraitFormInput[]>([]);
+  const [activeLoras, setActiveLoras] = useState<LoraFormInput[]>([]);
   const [reasoningEffort, setReasoningEffort] = useState<ReasoningEffort | null>(null);
   const [conversationState, setConversationState] =
     useState<ConversationState>("loading");
@@ -76,10 +78,12 @@ export default function Conversation() {
         persona={persona}
         model={model}
         activeTraits={activeTraits}
+        activeLoras={activeLoras}
         reasoningEffort={reasoningEffort}
         onPersonaChange={setPersona}
         onModelChange={setModel}
         onTraitsChange={setActiveTraits}
+        onLorasChange={setActiveLoras}
         onReasoningEffortChange={setReasoningEffort}
         conversationId={conversationId}
         onConversationSaved={(id, name) => {

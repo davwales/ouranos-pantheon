@@ -20,6 +20,9 @@ http:
         "traitIds": [
           "{{TRAIT_ID}}"
         ],
+        "loraIds": [
+          "{{LORA_ID}}"
+        ],
         "isPublic": true,
         "folderId": null,
         "reasoningEffort": "Low",

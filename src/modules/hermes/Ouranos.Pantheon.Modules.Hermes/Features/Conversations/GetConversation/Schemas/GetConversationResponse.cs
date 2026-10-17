@@ -14,6 +14,7 @@ public sealed record GetConversationResponse(
     GetConversationPersonaResponse Persona,
     GetConversationModelResponse Model,
     List<GetConversationTraitResponse> Traits,
+    List<GetConversationLoraResponse> Loras,
     List<GetConversationMessageResponse> Messages,
     GetConversationTokenUsageResponse? TokenUsage,
     DateTimeOffset CreatedAt,

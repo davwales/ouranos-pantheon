@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.Scopes;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
@@ -68,7 +69,15 @@ public sealed class GenerateCompletionHandler
         }
 
         var model = command.Conversation.Model;
-        var context = new HermesChatContext(command.ConversationId);
+        var context = new HermesChatContext(
+            command.ConversationId,
+            [
+                .. (command.Conversation.Loras ?? []).Select(l => new ImageLora(
+                    l.Identifier,
+                    l.Weight
+                )),
+            ]
+        );
         List<IAssistantTool<HermesChatContext>> tools = model.IsToolCallingEnabled
             ? [.. _tools.Where(t => t.IsAvailable(context))]
             : [];

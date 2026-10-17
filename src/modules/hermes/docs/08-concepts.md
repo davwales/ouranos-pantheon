@@ -71,3 +71,20 @@ by its unguessable id.
 **Model output.** Markdown images in replies render as links, so a model that makes up an
 image URL cannot make the page load third-party content.
 
+## 8.5 Image LoRAs
+
+OuranosMl cannot list the LoRAs SwarmUI has installed, so users register them by hand
+(`/api/hermes/loras`): a display name, the SwarmUI identifier, a default weight between -2 and
+2, and the public flag. The conversation settings list the registered LoRAs whenever the
+model config has tool calling on; the ones the user switches on are saved with the
+conversation (`conversation_lora`) and sent with every completion request, the same way
+traits are.
+
+The completion handler puts the active LoRAs on the tool context (`IConversationScope.ImageLoras`),
+and `generate_image` appends `<lora:identifier:weight>` for each one to the prompt it sends to
+OuranosMl, which passes it to SwarmUI unchanged. The chat model never sees the LoRAs: the
+tags are added after the prompt is capped at `MaxPromptLength`, so they are never cut, and the
+stored prompt and alt text keep the model's own wording. Hermes does not check identifiers
+against SwarmUI or match a LoRA to the configured image model's base; registering the right
+one is the user's responsibility.
+

@@ -1,7 +1,8 @@
 # Hermes Module
 
 Hermes is the chat interface over locally hosted LLMs: conversations organized in folders,
-reusable personas and traits, model configurations, streaming completions and compaction.
+reusable personas and traits, model configurations, image LoRAs, streaming completions and
+compaction.
 
 This is the module's arc42 entry point, refining the platform's building block view
 ([platform Section 5](../../../../docs/architecture/05-building-block-view.md)) one level
@@ -14,14 +15,14 @@ down. Platform-wide concepts are described in the
 |---------|-------|
 | [5. Building Block View](05-building-block-view.md) | The module's feature slices |
 | [6. Runtime View](06-runtime-view.md) | Streaming chat, image generation |
-| [8. Concepts](08-concepts.md) | Public mode, reply parts and history replay, tool calling, generated images |
+| [8. Concepts](08-concepts.md) | Public mode, reply parts and history replay, tool calling, generated images, image LoRAs |
 | [11. Risks and Technical Debt](11-risks-and-technical-debt.md) | Module risks (`HERMES-D*`) |
 | [12. Glossary](12-glossary.md) | Hermes ubiquitous language |
 | [Decisions](adr/README.md) | Module ADR log (`HERMES-ADR-*`) |
 
 ## Responsibilities
 
-- Persist conversations, messages, folders, personas, traits and model configurations
+- Persist conversations, messages, folders, personas, traits, LoRAs and model configurations
 - Stream chat replies (reasoning, text and tool calls) and conversation compaction from
   OuranosMl over SSE
 - Generate images for the chat model through OuranosMl and serve them to the Interface
@@ -60,7 +61,8 @@ Schema `hermes` (EF Core, `HermesDbContext`), plain relational. Assistant replie
 ordered parts in `message_parts`, one table for every part kind (table-per-hierarchy on
 `kind`). Generated images are stored as `bytea` in `generated_images` and served by
 `GET /api/hermes/images/{imageId}`; see [8.4](08-concepts.md#84-generated-images) for their
-lifetime.
+lifetime. User-registered LoRAs live in `loras` and attach to conversations through the
+`conversation_lora` join table, like traits.
 
 ## Configuration
 
@@ -76,4 +78,4 @@ true), `Model` (null uses OuranosMl's default image model), `UnsavedRetention` (
 
 Per-chat model settings live on each model config, not in configuration: system prompt,
 temperature, max tokens, context window and whether tool calling is on. Reasoning effort is a
-per-conversation setting the user can change mid-chat.
+per-conversation setting the user can change mid-chat, as are the active image LoRAs.

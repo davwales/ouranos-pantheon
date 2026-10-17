@@ -1,4 +1,5 @@
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Loras;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits;
@@ -18,5 +19,6 @@ public sealed record CreateConversationInput(
     int? OutputTokenCount = null,
     int? TotalTokenCount = null,
     Id<Folder>? FolderId = null,
-    ReasoningEffort? ReasoningEffort = null
+    ReasoningEffort? ReasoningEffort = null,
+    Id<Lora>[]? LoraIds = null
 );
