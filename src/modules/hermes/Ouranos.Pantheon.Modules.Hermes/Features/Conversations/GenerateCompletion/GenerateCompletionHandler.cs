@@ -182,6 +182,11 @@ public sealed class GenerateCompletionHandler
                 }
             }
 
+            if (string.IsNullOrWhiteSpace(message.Content))
+            {
+                continue;
+            }
+
             input.Add(
                 new MessageInputItemDto(new MessageDto(message.Content, MapRole(message.Role)))
             );

@@ -13,7 +13,8 @@ namespace Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
 /// </summary>
 public sealed class AssistantToolLoop<TContext>(
     ILogger logger,
-    IOuranosMachineLearningClient mlClient
+    IOuranosMachineLearningClient mlClient,
+    TimeProvider? timeProvider = null
 )
     where TContext : class
 {
@@ -24,11 +25,12 @@ public sealed class AssistantToolLoop<TContext>(
     public const string TooManyToolCallsOutput =
         "Skipped: too many tool calls at once; answer with what you have.";
 
-    public const string RepeatedActionOutput =
-        "Skipped: this reply already proposed this change; answer the user now.";
+    public const string RepeatedCallOutput =
+        "Skipped: this reply already has this tool's result; answer the user now.";
 
     private readonly ILogger _logger = Guard.Against.Null(logger);
     private readonly IOuranosMachineLearningClient _mlClient = Guard.Against.Null(mlClient);
+    private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
 
     /// <summary>
     /// Streams one assistant reply: model rounds with the offered tools until the model answers
@@ -60,7 +62,7 @@ public sealed class AssistantToolLoop<TContext>(
         ChatCompletionUsage? usage = null;
         ChatCompletionUsage? lastUsage = null;
         var hasContent = false;
-        var proposed = new HashSet<string>();
+        var delivered = new HashSet<string>();
 
         for (var round = 0; ; round++)
         {
@@ -132,6 +134,7 @@ public sealed class AssistantToolLoop<TContext>(
 
                 AssistantToolResult result;
                 AssistantToolStatus status;
+                long durationMs = 0;
 
                 if (executed >= prompt.MaxToolCallsPerRound)
                 {
@@ -143,27 +146,39 @@ public sealed class AssistantToolLoop<TContext>(
                     result = new AssistantToolResult(TooManyToolCallsOutput);
                     status = AssistantToolStatus.Skipped;
                 }
-                else if (tool is { IsSingleActionPerReply: true } && proposed.Contains(tool.Name))
+                else if (
+                    tool is { IsSingleDeliveryPerReply: true }
+                    && delivered.Contains(tool.Name)
+                )
                 {
                     _logger.LogWarning(
-                        "Assistant skipped tool '{name}': it already proposed an action in this reply.",
+                        "Assistant skipped tool '{name}': it already delivered a result in this reply.",
                         call.Name
                     );
-                    result = new AssistantToolResult(RepeatedActionOutput);
+                    result = new AssistantToolResult(RepeatedCallOutput);
                     status = AssistantToolStatus.Skipped;
                 }
                 else
                 {
                     executed++;
+                    var startedAt = _timeProvider.GetTimestamp();
                     result = await InvokeToolAsync(tool, context, call, cancellationToken);
+                    durationMs = (long)_timeProvider.GetElapsedTime(startedAt).TotalMilliseconds;
 
                     status = result.IsError
                         ? AssistantToolStatus.Failed
                         : AssistantToolStatus.Completed;
 
+                    // A delivered action or image is an answer in itself, so the model may end the
+                    // reply without adding text.
+                    if (!result.IsError && (result.Action ?? result.Image) is not null)
+                    {
+                        delivered.Add(call.Name);
+                        hasContent = true;
+                    }
+
                     if (result.Action is not null)
                     {
-                        proposed.Add(call.Name);
                         yield return new AssistantActionEvent(
                             call.CallId,
                             call.Name,
@@ -177,7 +192,18 @@ public sealed class AssistantToolLoop<TContext>(
                 input.Add(new FunctionCallInputItemDto(call));
                 input.Add(new FunctionCallOutputInputItemDto(call.CallId, output));
 
-                yield return new AssistantToolResultEvent(call.CallId, status, output, isTruncated);
+                yield return new AssistantToolResultEvent(
+                    call.CallId,
+                    status,
+                    output,
+                    isTruncated,
+                    durationMs
+                );
+
+                if (result.Image is not null && !result.IsError)
+                {
+                    yield return new AssistantImageEvent(call.CallId, result.Image);
+                }
             }
         }
 

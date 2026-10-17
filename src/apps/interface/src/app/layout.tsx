@@ -102,7 +102,7 @@ export default function RootLayout({ children }: React.PropsWithChildren) {
               <div className="w-full flex flex-col min-h-dvh h-dvh">
                 <ResponsiveNavigationBar items={navigationItems} />
                 <Breadcrumbs />
-                <main className="flex-auto overflow-auto">{children}</main>
+                <main className="relative flex-auto overflow-auto">{children}</main>
                 <Footer />
               </div>
             </SidebarProvider>

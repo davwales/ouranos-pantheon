@@ -10,8 +10,11 @@ the [platform glossary](../../../../docs/architecture/12-glossary.md).
 | **Trait** | A named, reusable system-prompt fragment attached to a conversation and merged with the persona and model config when the system prompt is built |
 | **Conversation** | A chat thread with an LLM using one persona and model config at a chosen reasoning effort; tracks token usage and may sit in a folder |
 | **Message** | An individual message within a conversation (system, user, assistant or summary role) |
-| **Message part** | One ordered piece of a saved assistant reply: reasoning, text or a tool call |
+| **Message part** | One ordered piece of a saved assistant reply: reasoning, text, a tool call or an image |
 | **Tool calling** | A model config setting that lets the chat model call registered tools during a reply |
+| **Generated image** | An image the chat model drew with the `generate_image` tool, stored in `generated_images` and kept only while a saved conversation references it |
+| **Image part** | The message part that places a generated image in a reply |
+| **Unsaved retention** | How long an image no saved conversation references survives before `PurgeImagesJob` deletes it (24 hours by default) |
 | **Folder** | Nestable container for conversations (`ParentFolderId`) |
 | **Compaction** | Summarizing a conversation's messages since the last summary into a single `Summary`-role message so long chats fit the context window; streamed over SSE |
 | **Available model** | An LLM served by OuranosMl, discovered by the hourly sync job |

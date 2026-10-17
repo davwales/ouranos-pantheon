@@ -280,10 +280,10 @@ describe("useAssistantChat", () => {
         events(
           { $type: "content", content: "Checking." },
           { $type: "tool", callId: "c1", name: "get_signals", arguments: '{"id":1}' },
-          { $type: "toolResult", callId: "c1", status: "Completed", output: "[]", isTruncated: false },
+          { $type: "toolResult", callId: "c1", status: "Completed", output: "[]", isTruncated: false, durationMs: 0 },
           { $type: "tool", callId: "c2", name: "add_note", arguments: '{"text":"Freezes well"}' },
           { $type: "action", callId: "c2", name: "add_note", action: { text: "Freezes well" } },
-          { $type: "toolResult", callId: "c2", status: "Completed", output: "Proposed", isTruncated: false },
+          { $type: "toolResult", callId: "c2", status: "Completed", output: "Proposed", isTruncated: false, durationMs: 0 },
           { $type: "content", content: "Proposed a note." },
           { $type: "done" },
         ),
@@ -420,7 +420,7 @@ describe("useAssistantChat", () => {
     vi.mocked(streamAssistant).mockReturnValueOnce(
       events(
         { $type: "tool", callId: "c1", name: "get_signals", arguments: "{}" },
-        { $type: "toolResult", callId: "c1", status: "Failed", output: "Boom", isTruncated: false },
+        { $type: "toolResult", callId: "c1", status: "Failed", output: "Boom", isTruncated: false, durationMs: 0 },
         { $type: "error", message: "The assistant failed." },
       ),
     );

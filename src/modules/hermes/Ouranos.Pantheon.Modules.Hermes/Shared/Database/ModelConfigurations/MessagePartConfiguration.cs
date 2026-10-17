@@ -20,6 +20,7 @@ public sealed class MessagePartConfiguration : IEntityTypeConfiguration<MessageP
             .HasDiscriminator<string>("kind")
             .HasValue<ReasoningMessagePart>("reasoning")
             .HasValue<TextMessagePart>("text")
-            .HasValue<ToolCallMessagePart>("tool_call");
+            .HasValue<ToolCallMessagePart>("tool_call")
+            .HasValue<ImageMessagePart>("image");
     }
 }

@@ -24,7 +24,15 @@ public static class MessagePartMapping
                 tool.Arguments,
                 tool.Status,
                 tool.Output,
-                tool.IsTruncated
+                tool.IsTruncated,
+                tool.DurationMs
+            ),
+            ImageMessagePartDto image => ImageMessagePart.Create(
+                DatabaseExtensions.CreateId<MessagePart>(),
+                image.ImageId,
+                image.Width,
+                image.Height,
+                image.AltText
             ),
             _ => throw new ArgumentOutOfRangeException(nameof(part), part, null),
         };
@@ -42,7 +50,14 @@ public static class MessagePartMapping
                 tool.Arguments,
                 tool.Status,
                 tool.Output,
-                tool.IsTruncated
+                tool.IsTruncated,
+                tool.DurationMs
+            ),
+            ImageMessagePart image => new ImageMessagePartDto(
+                image.ImageId,
+                image.Width,
+                image.Height,
+                image.AltText
             ),
             _ => throw new ArgumentOutOfRangeException(nameof(part), part, null),
         };

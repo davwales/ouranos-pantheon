@@ -2,10 +2,12 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.Tools.GenerateImage;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.CompactConversation;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.CreateConversation;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.DeleteConversation;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion;
+using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GetAllConversations;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GetConversation;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.UpdateConversation;
@@ -14,6 +16,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Folders.DeleteFolder;
 using Ouranos.Pantheon.Modules.Hermes.Features.Folders.GetAllFolders;
 using Ouranos.Pantheon.Modules.Hermes.Features.Folders.GetFolder;
 using Ouranos.Pantheon.Modules.Hermes.Features.Folders.UpdateFolder;
+using Ouranos.Pantheon.Modules.Hermes.Features.Images.GetImage;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.CreateModel;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.DeleteModel;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.GetAllModels;
@@ -33,6 +36,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Traits.UpdateTrait;
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Shared.Contract;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres;
 using Wolverine;
@@ -53,7 +57,14 @@ public sealed class HermesModule : IPantheonModule
                 typeof(HermesModule).Assembly
             );
 
+        ConfigureAssistantTools(builder);
+
         return builder;
+    }
+
+    private static void ConfigureAssistantTools(IHostApplicationBuilder builder)
+    {
+        builder.Services.AddAssistantTool<HermesChatContext, GenerateImageTool>();
     }
 
     public async Task<IHost> Configure(IHost host)
@@ -89,6 +100,7 @@ public sealed class HermesModule : IPantheonModule
         CreateConversationEndpoint.Map(app);
         UpdateConversationEndpoint.Map(app);
         DeleteConversationEndpoint.Map(app);
+        GetImageEndpoint.Map(app);
 
         GetAllTraitsEndpoint.Map(app);
         GetTraitEndpoint.Map(app);

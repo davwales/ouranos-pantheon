@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Net.ServerSentEvents;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
@@ -8,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using OpenAI;
 using OpenAI.Responses;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Images;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Requests;
 
 // The OpenAI SDK marks the whole Responses API as experimental; OuranosMl serves the stable
@@ -245,6 +247,64 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
 
         _logger.LogDebug("Successfully generated plutus forecasts using Ouranos ML.");
         return result;
+    }
+
+    public async IAsyncEnumerable<ImageGenerationEventDto> StreamImageGenerationAsync(
+        GenerateImageRequest payload,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
+    )
+    {
+        _logger.LogTrace(
+            "Attempting to generate a {Width}x{Height} image using model '{Model}'.",
+            payload.Width,
+            payload.Height,
+            payload.Model
+        );
+        cancellationToken.ThrowIfCancellationRequested();
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, "images/generations");
+        request.Content = ImageGenerationMapping.ToContent(payload);
+
+        using var response = await _httpClient.SendAsync(
+            request,
+            HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken
+        );
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw await ImageGenerationMapping.ToExceptionAsync(response, cancellationToken);
+        }
+
+        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+
+        var isDone = false;
+        await foreach (var item in SseParser.Create(stream).EnumerateAsync(cancellationToken))
+        {
+            var imageEvent = ImageGenerationMapping.ToEvent(item.EventType, item.Data);
+            if (imageEvent is null)
+            {
+                continue;
+            }
+
+            yield return imageEvent;
+
+            if (imageEvent is ImageGenerationDoneDto)
+            {
+                isDone = true;
+                break;
+            }
+        }
+
+        if (!isDone)
+        {
+            throw new OuranosMlRequestException(
+                "incomplete_stream",
+                "The image stream ended before the image was finished."
+            );
+        }
+
+        _logger.LogDebug("Successfully generated an image using Ouranos ML.");
     }
 
     public async Task<List<AvailableModelDto>> GetAvailableModelsAsync(

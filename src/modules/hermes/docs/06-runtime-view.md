@@ -42,3 +42,33 @@ stores its result as one `Summary`-role message.
 
 The Interface folds the events into the shared assistant turn UI. Saved replies render from
 their parts; older messages without parts fall back to `<think>` tag parsing.
+
+## 6.2 Image Generation
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant UI as Interface
+    participant L as AssistantToolLoop
+    participant T as GenerateImageTool
+    participant ML as OuranosMl (/images/generations)
+    participant DB as Postgres (schema hermes)
+
+    L -->> UI: tool event (generate_image)
+    L ->> T: invoke (prompt, orientation)
+    T ->> ML: POST /images/generations (stream, save=false)
+    loop until done
+        ML -->> T: status / progress events
+    end
+    ML -->> T: completed (base64 image), done
+    T ->> DB: insert generated_images row
+    T -->> L: output text + image
+    L -->> UI: toolResult event, then image event
+    UI ->> UI: render ImageBlock from GET /api/hermes/images/{id}
+```
+
+The tool streams from OuranosMl so status and progress events keep the connection busy
+through a model load and sampling; it uses only the completed image for now. The model sees
+only the tool's short output text, never the image. Stopping the reply cancels the request,
+OuranosMl interrupts SwarmUI and nothing is stored. While the tool runs, the Interface shows
+the tool block with its elapsed time.

@@ -41,8 +41,9 @@ export type AssistantChatToolPart = {
   status: AssistantChatToolStatus;
   output?: string;
   isTruncated?: boolean;
-  startedAt: number;
+  startedAt?: number;
   endedAt?: number;
+  durationMs?: number;
 };
 
 export type AssistantChatActionPart = {
@@ -58,15 +59,27 @@ export type AssistantChatActionPart = {
   isTruncated?: boolean;
 };
 
+export type AssistantChatImagePart = {
+  kind: "image";
+  id: string;
+  callId: string;
+  imageId: string;
+  url: string;
+  width: number;
+  height: number;
+  altText: string;
+};
+
 export type AssistantChatPart =
   | AssistantChatReasoningPart
   | AssistantChatTextPart
   | AssistantChatToolPart
-  | AssistantChatActionPart;
+  | AssistantChatActionPart
+  | AssistantChatImagePart;
 
 export type StreamedAssistantEvent = Extract<
   AssistantEvent,
-  { $type: "reasoning" | "content" | "tool" | "toolResult" | "action" }
+  { $type: "reasoning" | "content" | "tool" | "toolResult" | "action" | "image" }
 >;
 
 const TOOL_STATUSES: Record<AssistantToolStatus, AssistantChatToolStatus> = {
@@ -143,6 +156,20 @@ export function applyEvent(
         ? [...closeReasoning(parts, now), action]
         : parts.map((part, i) => (i === index ? action : part));
     }
+    case "image":
+      return [
+        ...closeReasoning(parts, now),
+        {
+          kind: "image",
+          id,
+          callId: event.callId,
+          imageId: event.image.id,
+          url: event.image.url,
+          width: event.image.width,
+          height: event.image.height,
+          altText: event.image.altText,
+        },
+      ];
     case "toolResult": {
       const index = findCall(parts, event.callId);
       return parts.map((part, i) => {
@@ -159,6 +186,7 @@ export function applyEvent(
             output: event.output,
             isTruncated: event.isTruncated,
             endedAt: now,
+            durationMs: event.durationMs,
           };
         }
         return part;

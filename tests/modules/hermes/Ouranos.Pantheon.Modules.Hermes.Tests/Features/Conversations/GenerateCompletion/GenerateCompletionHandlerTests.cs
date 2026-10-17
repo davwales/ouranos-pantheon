@@ -385,6 +385,29 @@ public sealed class GenerateCompletionHandlerTests
     }
 
     [Fact]
+    public void BuildInput_WhenAReplyHasNoText_ShouldReplayOnlyItsToolCalls()
+    {
+        // Arrange
+        CompletionMessageInput[] messages =
+        [
+            new(
+                "",
+                Role.Assistant,
+                [new CompletionToolCallInput("call-1", "generate_image", "{}", "Shown.")]
+            ),
+        ];
+
+        // Act
+        var input = GenerateCompletionHandler.BuildInput(messages, 100);
+
+        // Assert
+        input.ShouldBe([
+            new FunctionCallInputItemDto(new FunctionCallDto("call-1", "generate_image", "{}")),
+            new FunctionCallOutputInputItemDto("call-1", "Shown."),
+        ]);
+    }
+
+    [Fact]
     public async Task Handle_WhenConversationIdProvided_ShouldPersistTheTurnWithOrderedParts()
     {
         // Arrange

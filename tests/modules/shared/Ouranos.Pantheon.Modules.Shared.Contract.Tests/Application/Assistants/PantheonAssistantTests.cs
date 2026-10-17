@@ -424,19 +424,22 @@ public sealed class PantheonAssistantTests
         var events = await CollectAsync(assistant.Handle(CreateInput()));
 
         // Assert
-        events.ShouldBe([
-            new AssistantReasoningEvent("Need data"),
-            new AssistantToolEvent("call-1", "lookup", """{"query":"flour"}"""),
-            new AssistantToolResultEvent(
-                "call-1",
-                AssistantToolStatus.Completed,
-                "baking: flour",
-                false
-            ),
-            new AssistantContentEvent("Use bread flour."),
-            new AssistantUsageEvent(30, 8, 38, 23),
-            new AssistantDoneEvent(),
-        ]);
+        events
+            .Select(e => e is AssistantToolResultEvent result ? result with { DurationMs = 0 } : e)
+            .ShouldBe([
+                new AssistantReasoningEvent("Need data"),
+                new AssistantToolEvent("call-1", "lookup", """{"query":"flour"}"""),
+                new AssistantToolResultEvent(
+                    "call-1",
+                    AssistantToolStatus.Completed,
+                    "baking: flour",
+                    false,
+                    0
+                ),
+                new AssistantContentEvent("Use bread flour."),
+                new AssistantUsageEvent(30, 8, 38, 23),
+                new AssistantDoneEvent(),
+            ]);
 
         sentInstructions.ShouldNotBeNull();
         sentInstructions.ShouldEndWith(AssistantFormatting.ToolInstructions);

@@ -47,7 +47,9 @@ export type MessagePart =
       status: AssistantToolStatus;
       output: string;
       isTruncated: boolean;
-    };
+      durationMs?: number | null;
+    }
+  | { $type: "image"; imageId: string; width: number; height: number; altText: string };
 
 export interface MessageInput {
   role: Role;

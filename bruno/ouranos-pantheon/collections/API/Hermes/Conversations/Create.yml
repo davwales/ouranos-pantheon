@@ -39,6 +39,23 @@ http:
               {
                 "$type": "text",
                 "content": "Hello! How can I help?"
+              },
+              {
+                "$type": "toolCall",
+                "callId": "call-1",
+                "name": "generate_image",
+                "arguments": "{\"prompt\":\"A red fox in the snow\"}",
+                "status": "Completed",
+                "output": "The image is now shown to the user.",
+                "isTruncated": false,
+                "durationMs": 42000
+              },
+              {
+                "$type": "image",
+                "imageId": "{{IMAGE_ID}}",
+                "width": 1024,
+                "height": 1024,
+                "altText": "A red fox in the snow"
               }
             ]
           }

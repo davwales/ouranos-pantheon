@@ -8,6 +8,7 @@ namespace Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
 [JsonDerivedType(typeof(AssistantToolEvent), "tool")]
 [JsonDerivedType(typeof(AssistantToolResultEvent), "toolResult")]
 [JsonDerivedType(typeof(AssistantActionEvent), "action")]
+[JsonDerivedType(typeof(AssistantImageEvent), "image")]
 [JsonDerivedType(typeof(AssistantUsageEvent), "usage")]
 [JsonDerivedType(typeof(AssistantErrorEvent), "error")]
 [JsonDerivedType(typeof(AssistantDoneEvent), "done")]

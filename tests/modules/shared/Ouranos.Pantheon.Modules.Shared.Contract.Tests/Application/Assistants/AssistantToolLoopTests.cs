@@ -29,11 +29,17 @@ public sealed class AssistantToolLoopTests
 
     private readonly IOuranosMachineLearningClient _mlClient =
         Substitute.For<IOuranosMachineLearningClient>();
+    private readonly TimeProvider _timeProvider = Substitute.For<TimeProvider>();
     private readonly AssistantToolLoop<TestContext> _loop;
 
     public AssistantToolLoopTests()
     {
-        _loop = new AssistantToolLoop<TestContext>(Substitute.For<ILogger>(), _mlClient);
+        _timeProvider.TimestampFrequency.Returns(1000);
+        _loop = new AssistantToolLoop<TestContext>(
+            Substitute.For<ILogger>(),
+            _mlClient,
+            _timeProvider
+        );
     }
 
     public sealed record TestContext(string Topic);
@@ -44,14 +50,14 @@ public sealed class AssistantToolLoopTests
 
     private sealed class LookupTool(
         Func<TestContext, LookupArguments, AssistantToolResult>? execute = null,
-        bool isSingleActionPerReply = false
+        bool isSingleDeliveryPerReply = false
     ) : AssistantTool<TestContext, LookupArguments>(Substitute.For<ILogger>())
     {
         public override string Name => "lookup";
 
         public override string Description => "Looks something up.";
 
-        public override bool IsSingleActionPerReply => isSingleActionPerReply;
+        public override bool IsSingleDeliveryPerReply => isSingleDeliveryPerReply;
 
         protected override ValueTask<AssistantToolResult> ExecuteAsync(
             TestContext context,
@@ -363,7 +369,8 @@ public sealed class AssistantToolLoopTests
                 "call-1",
                 AssistantToolStatus.Completed,
                 "baking: flour",
-                false
+                false,
+                0
             ),
             new AssistantContentEvent("Use bread flour."),
             new AssistantUsageEvent(30, 8, 38, 23),
@@ -409,7 +416,8 @@ public sealed class AssistantToolLoopTests
                 "call-1",
                 AssistantToolStatus.Completed,
                 "Proposed",
-                false
+                false,
+                0
             ),
             new AssistantContentEvent("Proposed."),
         ]);
@@ -444,7 +452,8 @@ public sealed class AssistantToolLoopTests
                 "call-1",
                 AssistantToolStatus.Failed,
                 expectedOutput,
-                false
+                false,
+                0
             ),
             new AssistantContentEvent("Sorry."),
         ]);
@@ -472,7 +481,8 @@ public sealed class AssistantToolLoopTests
                 "call-1",
                 AssistantToolStatus.Failed,
                 AssistantToolLoop<TestContext>.ToolFailedOutput,
-                false
+                false,
+                0
             )
         );
         events.ShouldContain(new AssistantContentEvent("Sorry."));
@@ -507,7 +517,7 @@ public sealed class AssistantToolLoopTests
         // Assert
         sentInputs[1].Last().ShouldBe(new FunctionCallOutputInputItemDto("call-1", "aaaaa…"));
         events.ShouldContain(
-            new AssistantToolResultEvent("call-1", AssistantToolStatus.Completed, "aaaaa…", true)
+            new AssistantToolResultEvent("call-1", AssistantToolStatus.Completed, "aaaaa…", true, 0)
         );
     }
 
@@ -597,7 +607,7 @@ public sealed class AssistantToolLoopTests
     }
 
     [Fact]
-    public async Task RunAsync_WhenASingleActionToolRepeatsInAReply_ShouldStreamOnlyTheFirstAction()
+    public async Task RunAsync_WhenASingleDeliveryToolRepeatsInAReply_ShouldStreamOnlyTheFirstAction()
     {
         // Arrange
         var sentInputs = CaptureInputs(
@@ -616,7 +626,7 @@ public sealed class AssistantToolLoopTests
                     arguments.Query == "bad"
                         ? new AssistantToolResult("Invalid.")
                         : new AssistantToolResult("Proposed", new TestAction(arguments.Query)),
-                isSingleActionPerReply: true
+                isSingleDeliveryPerReply: true
             ),
         ]);
 
@@ -631,18 +641,139 @@ public sealed class AssistantToolLoopTests
                 new AssistantToolResultEvent(
                     "call-3",
                     AssistantToolStatus.Skipped,
-                    AssistantToolLoop<TestContext>.RepeatedActionOutput,
-                    false
+                    AssistantToolLoop<TestContext>.RepeatedCallOutput,
+                    false,
+                    0
                 )
             );
 
         sentInputs[2]
             .OfType<FunctionCallOutputInputItemDto>()
             .Select(output => output.Output)
-            .ShouldBe([
-                "Invalid.",
-                "Proposed",
-                AssistantToolLoop<TestContext>.RepeatedActionOutput,
-            ]);
+            .ShouldBe(["Invalid.", "Proposed", AssistantToolLoop<TestContext>.RepeatedCallOutput]);
+    }
+
+    [Fact]
+    public async Task RunAsync_WhenAToolReturnsAnImage_ShouldStreamItAfterTheResult()
+    {
+        // Arrange
+        var image = new AssistantImage("img-1", "/images/img-1", 64, 32, "A fox");
+
+        CaptureInputs(
+            CreateStream([Call("call-1", """{"query":"fox"}""")]),
+            CreateStream([new ResponseStreamChunk("Here it is.", null, null)])
+        );
+
+        // Act
+        var events = await RunAsync([
+            new LookupTool((_, _) => new AssistantToolResult("Generated.", Image: image)),
+        ]);
+
+        // Assert
+        var resultIndex = events.FindIndex(e => e is AssistantToolResultEvent);
+        events[resultIndex + 1].ShouldBe(new AssistantImageEvent("call-1", image));
+    }
+
+    [Fact]
+    public async Task RunAsync_WhenAnImageIsTheWholeReply_ShouldFinishWithoutAnError()
+    {
+        // Arrange
+        var image = new AssistantImage("img-1", "/images/img-1", 64, 32, "A fox");
+
+        CaptureInputs(
+            CreateStream([Call("call-1", """{"query":"fox"}""")]),
+            CreateStream([new ResponseStreamChunk(null, null, new ChatCompletionUsage(20, 1, 21))])
+        );
+
+        // Act
+        var events = await RunAsync([
+            new LookupTool((_, _) => new AssistantToolResult("Shown.", Image: image)),
+        ]);
+
+        // Assert
+        events.OfType<AssistantErrorEvent>().ShouldBeEmpty();
+        events.Last().ShouldBe(new AssistantUsageEvent(20, 1, 21, 21));
+    }
+
+    [Fact]
+    public async Task RunAsync_WhenAToolRuns_ShouldReportHowLongItTook()
+    {
+        // Arrange
+        _timeProvider.GetTimestamp().Returns(1_000, 3_500);
+
+        CaptureInputs(
+            CreateStream([Call("call-1", """{"query":"fox"}""")]),
+            CreateStream([new ResponseStreamChunk("Done.", null, null)])
+        );
+
+        // Act
+        var events = await RunAsync([new LookupTool()]);
+
+        // Assert
+        events.OfType<AssistantToolResultEvent>().Single().DurationMs.ShouldBe(2_500);
+    }
+
+    [Fact]
+    public async Task RunAsync_WhenAFailedResultCarriesAnImage_ShouldNotStreamIt()
+    {
+        // Arrange
+        CaptureInputs(
+            CreateStream([Call("call-1", """{"query":"fox"}""")]),
+            CreateStream([new ResponseStreamChunk("Sorry.", null, null)])
+        );
+
+        // Act
+        var events = await RunAsync([
+            new LookupTool(
+                (_, _) =>
+                    new AssistantToolResult(
+                        "Failed.",
+                        IsError: true,
+                        Image: new AssistantImage("img-1", "/images/img-1", 64, 32, "A fox")
+                    )
+            ),
+        ]);
+
+        // Assert
+        events.OfType<AssistantImageEvent>().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task RunAsync_WhenASingleDeliveryToolDeliversAnImage_ShouldSkipLaterCalls()
+    {
+        // Arrange
+        var executed = new List<string>();
+
+        CaptureInputs(
+            CreateStream([
+                Call("call-1", """{"query":"first"}"""),
+                Call("call-2", """{"query":"second"}"""),
+            ]),
+            CreateStream([new ResponseStreamChunk("Done.", null, null)])
+        );
+
+        // Act
+        var events = await RunAsync([
+            new LookupTool(
+                (_, arguments) =>
+                {
+                    executed.Add(arguments.Query);
+                    return new AssistantToolResult(
+                        "Generated.",
+                        Image: new AssistantImage(arguments.Query, "/x", 1, 1, "x")
+                    );
+                },
+                isSingleDeliveryPerReply: true
+            ),
+        ]);
+
+        // Assert
+        executed.ShouldBe(["first"]);
+        events.OfType<AssistantImageEvent>().Count().ShouldBe(1);
+
+        events
+            .OfType<AssistantToolResultEvent>()
+            .Last()
+            .Status.ShouldBe(AssistantToolStatus.Skipped);
     }
 }

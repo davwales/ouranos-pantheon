@@ -65,4 +65,18 @@ describe("MarkdownRenderer", () => {
     expect(link).toHaveAttribute("target", "_blank");
     expect(link).toHaveAttribute("rel", "noreferrer");
   });
+
+  it("WhenContentHasAnImage_ShouldRenderALinkInsteadOfLoadingIt", () => {
+    // Arrange & Act
+    render(
+      <MarkdownRenderer variant="compact">{"![A fox](https://example.com/fox.png)"}</MarkdownRenderer>,
+    );
+
+    // Assert
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "A fox" })).toHaveAttribute(
+      "href",
+      "https://example.com/fox.png",
+    );
+  });
 });

@@ -134,6 +134,17 @@ export function MarkdownRenderer({
         />
       ),
 
+      img: ({ node, src, alt }) => (
+        <a
+          href={typeof src === "string" ? src : undefined}
+          className="font-medium text-primary underline underline-offset-4"
+          target="_blank"
+          rel="noreferrer"
+        >
+          {alt || "Image link"}
+        </a>
+      ),
+
       hr: ({ node, className, ...props }) => (
         <hr className={cn("my-3 border-border", className)} {...props} />
       ),

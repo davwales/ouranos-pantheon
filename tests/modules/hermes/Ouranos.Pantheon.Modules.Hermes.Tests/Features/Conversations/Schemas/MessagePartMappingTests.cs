@@ -1,6 +1,8 @@
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Images;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.Conversations.Schemas;
 
@@ -17,7 +19,14 @@ public sealed class MessagePartMappingTests
                 """{"text":"hi"}""",
                 AssistantToolStatus.Failed,
                 "boom",
-                true
+                true,
+                1500
+            ),
+            new ImageMessagePartDto(
+                new Id<GeneratedImage>("0f8fad5b-d9cb-469f-a165-70867728950e"),
+                64,
+                32,
+                "A fox"
             ),
         };
 

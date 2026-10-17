@@ -17,7 +17,7 @@ public sealed class MessagePartsBuilderTests
             new AssistantReasoningEvent("check."),
             new AssistantContentEvent("One "),
             new AssistantToolEvent("call-1", "echo", """{"text":"hi"}"""),
-            new AssistantToolResultEvent("call-1", AssistantToolStatus.Completed, "hi", true),
+            new AssistantToolResultEvent("call-1", AssistantToolStatus.Completed, "hi", true, 1200),
             new AssistantReasoningEvent("Done."),
             new AssistantContentEvent("two"),
             new AssistantContentEvent(" three"),
@@ -45,6 +45,7 @@ public sealed class MessagePartsBuilderTests
         tool.Status.ShouldBe(AssistantToolStatus.Completed);
         tool.Output.ShouldBe("hi");
         tool.IsTruncated.ShouldBeTrue();
+        tool.DurationMs.ShouldBe(1200);
         parts[3].ShouldBeOfType<ReasoningMessagePart>().Content.ShouldBe("Done.");
         parts[4].ShouldBeOfType<TextMessagePart>().Content.ShouldBe("two three");
     }
@@ -73,11 +74,50 @@ public sealed class MessagePartsBuilderTests
 
         // Act
         builder.Apply(
-            new AssistantToolResultEvent("missing", AssistantToolStatus.Completed, "x", false)
+            new AssistantToolResultEvent("missing", AssistantToolStatus.Completed, "x", false, 0)
         );
 
         // Assert
         builder.Build().ShouldBeEmpty();
         builder.Content.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Build_WhenAToolDeliversAnImage_ShouldPlaceTheImageAfterTheCall()
+    {
+        // Arrange
+        var builder = new MessagePartsBuilder();
+        var imageId = Guid.NewGuid().ToString();
+
+        AssistantEvent[] events =
+        [
+            new AssistantToolEvent("call-1", "generate_image", """{"prompt":"A fox"}"""),
+            new AssistantToolResultEvent("call-1", AssistantToolStatus.Completed, "Done", false, 0),
+            new AssistantImageEvent(
+                "call-1",
+                new AssistantImage(imageId, $"/api/hermes/images/{imageId}", 64, 32, "A fox")
+            ),
+            new AssistantContentEvent("Here it is."),
+        ];
+
+        // Act
+        foreach (var assistantEvent in events)
+        {
+            builder.Apply(assistantEvent);
+        }
+
+        var parts = builder.Build();
+
+        // Assert
+        builder.Content.ShouldBe("Here it is.");
+        parts.Count.ShouldBe(3);
+        parts[0].ShouldBeOfType<ToolCallMessagePart>();
+
+        var image = parts[1].ShouldBeOfType<ImageMessagePart>();
+        image.ImageId.Value.ShouldBe(imageId);
+        image.Width.ShouldBe(64);
+        image.Height.ShouldBe(32);
+        image.AltText.ShouldBe("A fox");
+        parts[2].ShouldBeOfType<TextMessagePart>();
     }
 }

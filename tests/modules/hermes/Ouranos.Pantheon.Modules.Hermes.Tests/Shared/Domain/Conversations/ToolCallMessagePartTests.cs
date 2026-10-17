@@ -19,7 +19,8 @@ public sealed class ToolCallMessagePartTests
             """{"text":"hi"}""",
             AssistantToolStatus.Skipped,
             "skipped",
-            true
+            true,
+            2500
         );
 
         // Assert
@@ -30,6 +31,24 @@ public sealed class ToolCallMessagePartTests
         part.Status.ShouldBe(AssistantToolStatus.Skipped);
         part.Output.ShouldBe("skipped");
         part.IsTruncated.ShouldBeTrue();
+        part.DurationMs.ShouldBe(2500);
+    }
+
+    [Fact]
+    public void Create_WhenDurationIsNegative_ShouldThrowArgumentException()
+    {
+        // Act & Assert
+        Should.Throw<ArgumentException>(() =>
+            ToolCallMessagePart.Create(
+                PartId,
+                "call-1",
+                "echo",
+                "{}",
+                AssistantToolStatus.Completed,
+                "ok",
+                durationMs: -1
+            )
+        );
     }
 
     [Theory]
