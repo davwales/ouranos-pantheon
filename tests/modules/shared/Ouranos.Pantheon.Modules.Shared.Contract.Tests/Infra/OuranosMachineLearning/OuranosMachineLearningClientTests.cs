@@ -284,6 +284,62 @@ public sealed class OuranosMachineLearningClientTests
     }
 
     [Fact]
+    public async Task GenerateResponseAsync_WhenCompleted_ShouldReturnTextAndUsageAndSendInput()
+    {
+        // Arrange
+        var handler = new RecordingHttpMessageHandler(
+            "application/json",
+            ResponseJson(
+                "completed",
+                """[{"type":"message","id":"msg_1","role":"assistant","status":"completed","content":[{"type":"output_text","text":"Cake night","annotations":[],"logprobs":[]}]}]""",
+                """{"input_tokens":10,"input_tokens_details":{"cached_tokens":0},"output_tokens":5,"output_tokens_details":{"reasoning_tokens":0},"total_tokens":15}"""
+            )
+        );
+        var client = CreateClient(handler);
+
+        // Act
+        var result = await client.GenerateResponseAsync(
+            "test-model",
+            "Name it.",
+            [new MessageInputItemDto(new MessageDto("Let's bake", RoleDto.User))],
+            0.2f,
+            64,
+            ReasoningEffort.None
+        );
+
+        // Assert
+        result.ShouldBe(new GeneratedResponse("Cake night", new ChatCompletionUsage(10, 5, 15)));
+
+        var body = handler.RequestBody.ShouldNotBeNull();
+        body["instructions"]!.GetValue<string>().ShouldBe("Name it.");
+        body["max_output_tokens"]!.GetValue<int>().ShouldBe(64);
+        body["reasoning"]!["effort"]!.GetValue<string>().ShouldBe("none");
+        body["input"]![0]!["role"]!.GetValue<string>().ShouldBe("user");
+        body.ContainsKey("text").ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task GenerateResponseAsync_WhenUsageIsMissing_ShouldReturnNullUsage()
+    {
+        // Arrange
+        var handler = new RecordingHttpMessageHandler(
+            "application/json",
+            ResponseJson(
+                "completed",
+                """[{"type":"message","id":"msg_1","role":"assistant","status":"completed","content":[{"type":"output_text","text":"Hi","annotations":[],"logprobs":[]}]}]""",
+                null
+            )
+        );
+        var client = CreateClient(handler);
+
+        // Act
+        var result = await client.GenerateResponseAsync("test-model", "Say hi.", []);
+
+        // Assert
+        result.ShouldBe(new GeneratedResponse("Hi", null));
+    }
+
+    [Fact]
     public async Task GenerateStructuredResponseAsync_WhenOutputIsValidJson_ShouldParseAndSendJsonSchema()
     {
         // Arrange

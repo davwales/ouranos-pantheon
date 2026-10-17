@@ -10,7 +10,7 @@ public sealed record UpdateModelInput(
     string SystemPrompt,
     float? Temperature = null,
     int? MaxTokens = null,
-    float? RepeatPenalty = null,
+    bool IsToolCallingEnabled = false,
     int? ContextWindow = null,
     bool IsDefault = false,
     bool IsPublic = true

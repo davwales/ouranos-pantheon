@@ -23,7 +23,7 @@ public class ModelConfig : BaseEntity<Id<ModelConfig>>
 
     public int? MaxTokens { get; private set; }
 
-    public float? RepeatPenalty { get; private set; }
+    public bool IsToolCallingEnabled { get; private set; }
 
     public int? ContextWindow { get; private set; }
 
@@ -40,7 +40,7 @@ public class ModelConfig : BaseEntity<Id<ModelConfig>>
         string systemPrompt,
         float? temperature = null,
         int? maxTokens = null,
-        float? repeatPenalty = null,
+        bool isToolCallingEnabled = false,
         int? contextWindow = null,
         bool isDefault = false,
         bool isPublic = true
@@ -57,7 +57,7 @@ public class ModelConfig : BaseEntity<Id<ModelConfig>>
             SystemPrompt = systemPrompt,
             Temperature = temperature,
             MaxTokens = maxTokens,
-            RepeatPenalty = repeatPenalty,
+            IsToolCallingEnabled = isToolCallingEnabled,
             ContextWindow = contextWindow,
             IsDefault = isDefault,
             IsPublic = isPublic,
@@ -71,7 +71,7 @@ public class ModelConfig : BaseEntity<Id<ModelConfig>>
         string systemPrompt,
         float? temperature = null,
         int? maxTokens = null,
-        float? repeatPenalty = null,
+        bool isToolCallingEnabled = false,
         int? contextWindow = null,
         bool isDefault = false,
         bool isPublic = true
@@ -86,7 +86,7 @@ public class ModelConfig : BaseEntity<Id<ModelConfig>>
         SystemPrompt = systemPrompt;
         Temperature = temperature;
         MaxTokens = maxTokens;
-        RepeatPenalty = repeatPenalty;
+        IsToolCallingEnabled = isToolCallingEnabled;
         ContextWindow = contextWindow;
         IsDefault = isDefault;
         IsPublic = isPublic;

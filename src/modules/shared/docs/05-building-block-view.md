@@ -10,7 +10,7 @@ Referenced by every module. It holds no domain logic.
 |----------------|----------------|
 | `IPantheonModule.cs` | The module contract: `Build`, `Configure`, optional `MapEndpoints` and `ConfigureWolverine` |
 | `Domain/` | `Id<T>`, `BaseEntity`, `BaseEventSourcedEntity`, `IDomainEvent`, `OperationResult<T>` |
-| `Application/` | Handler markers (`IPantheonHandler`, `IPantheonStreamHandler`), the common query contract (paging, sorting, filtering), the step pipeline abstractions, and the AI assistant base (`PantheonAssistant<TContext>`, `AssistantTool<TContext, TArguments>`) |
+| `Application/` | Handler markers (`IPantheonHandler`, `IPantheonStreamHandler`), the common query contract (paging, sorting, filtering), the step pipeline abstractions, and the AI assistant framework (`AssistantToolLoop<TContext>`, `PantheonAssistant<TContext>`, `AssistantTool<TContext, TArguments>`) |
 | `API/` | `SseWriter` and `MapAssistant` (`AssistantEndpointExtensions`) |
 | `WebSockets/` | `WebSocketWorker` infrastructure: listener registry, reconnecting client, serializers, health state, telemetry |
 | `Infra/OuranosMachineLearning/` | The OuranosMl client and the global model defaults (`ModelDefaults`) |

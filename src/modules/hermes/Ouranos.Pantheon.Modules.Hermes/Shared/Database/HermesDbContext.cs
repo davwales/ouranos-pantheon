@@ -26,6 +26,8 @@ public sealed class HermesDbContext(DbContextOptions<HermesDbContext> options)
 
     public DbSet<Message> Messages { get; set; }
 
+    public DbSet<MessagePart> MessageParts { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -37,5 +39,6 @@ public sealed class HermesDbContext(DbContextOptions<HermesDbContext> options)
         modelBuilder.Entity<Conversation>();
         modelBuilder.Entity<Folder>();
         modelBuilder.Entity<Message>();
+        modelBuilder.Entity<MessagePart>();
     }
 }

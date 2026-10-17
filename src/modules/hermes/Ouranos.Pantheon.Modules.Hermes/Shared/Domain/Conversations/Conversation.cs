@@ -4,6 +4,7 @@ using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 
@@ -37,6 +38,8 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
 
     public bool IsPublic { get; private set; }
 
+    public ReasoningEffort? ReasoningEffort { get; private set; }
+
     public int? InputTokenCount { get; private set; }
 
     public int? OutputTokenCount { get; private set; }
@@ -63,7 +66,8 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
         Persona? persona = null,
         ModelConfig? modelConfig = null,
         Id<Folder>? folderId = null,
-        Folder? folder = null
+        Folder? folder = null,
+        ReasoningEffort? reasoningEffort = null
     )
     {
         Guard.Against.Null(personaId);
@@ -100,6 +104,7 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
             _modelConfig = modelConfig,
             FolderId = folderId,
             _folder = folder,
+            ReasoningEffort = reasoningEffort,
         };
 
         return conversation;
@@ -112,7 +117,8 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
         IEnumerable<Message> messages,
         IEnumerable<Trait> traits,
         bool isPublic,
-        Id<Folder>? folderId
+        Id<Folder>? folderId,
+        ReasoningEffort? reasoningEffort = null
     )
     {
         Guard.Against.Null(personaId);
@@ -125,6 +131,7 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
         Traits = [.. traits];
         IsPublic = isPublic;
         FolderId = folderId;
+        ReasoningEffort = reasoningEffort;
         Update();
     }
 

@@ -3,13 +3,16 @@ using Flagsmith;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GetConversation;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GetConversation.Schemas;
+using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
@@ -20,7 +23,7 @@ namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.Conversations.GetConver
 
 public sealed class GetConversationHandlerTests
 {
-    private readonly IFixture _fixture = new Fixture();
+    private readonly Fixture _fixture = new();
     private readonly GetConversationHandler _handler;
     private readonly ILogger<GetConversationHandler> _logger = Substitute.For<
         ILogger<GetConversationHandler>
@@ -190,6 +193,83 @@ public sealed class GetConversationHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenMessageHasParts_ShouldReturnThemInOrder()
+    {
+        // Arrange
+        var persona = Persona.Create(
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
+
+        var modelConfig = ModelConfig.Create(
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
+
+        var conversationId = new Id<Conversation>(Guid.NewGuid().ToString());
+        var message = Message.Create(
+            new Id<Message>(Guid.NewGuid().ToString()),
+            conversationId,
+            "Hello",
+            Role.Assistant,
+            0,
+            [
+                ReasoningMessagePart.Create(
+                    new Id<MessagePart>(Guid.NewGuid().ToString()),
+                    "Thinking"
+                ),
+                ToolCallMessagePart.Create(
+                    new Id<MessagePart>(Guid.NewGuid().ToString()),
+                    "call-1",
+                    "echo",
+                    "{}",
+                    AssistantToolStatus.Completed,
+                    "ok"
+                ),
+                TextMessagePart.Create(new Id<MessagePart>(Guid.NewGuid().ToString()), "Hello"),
+            ]
+        );
+
+        var conversation = Conversation.Create(
+            conversationId,
+            persona.Id,
+            modelConfig.Id,
+            [message],
+            [],
+            _fixture.Create<string>()
+        );
+
+        await _dbContext.SeedData(persona);
+        await _dbContext.SeedData(modelConfig);
+        await _dbContext.SeedData(conversation);
+
+        // Act
+        var result = await _handler.Handle(
+            new GetConversationInput(conversationId),
+            CancellationToken.None
+        );
+
+        // Assert
+        result
+            .Messages.Single()
+            .Parts.ShouldBe([
+                new ReasoningMessagePartDto("Thinking"),
+                new ToolCallMessagePartDto(
+                    "call-1",
+                    "echo",
+                    "{}",
+                    AssistantToolStatus.Completed,
+                    "ok",
+                    false
+                ),
+                new TextMessagePartDto("Hello"),
+            ]);
+    }
+
+    [Fact]
     public async Task Handle_WhenConversationNotFound_ShouldThrowNotFoundException()
     {
         // Arrange
@@ -317,7 +397,7 @@ public sealed class GetConversationHandlerTests
             _fixture.Create<string>(),
             temperature: 0.7f,
             maxTokens: 512,
-            repeatPenalty: 1.1f
+            isToolCallingEnabled: true
         );
         var conversation = Conversation.Create(
             new Id<Conversation>(Guid.NewGuid().ToString()),
@@ -325,7 +405,8 @@ public sealed class GetConversationHandlerTests
             modelConfig.Id,
             [],
             [],
-            _fixture.Create<string>()
+            _fixture.Create<string>(),
+            reasoningEffort: ReasoningEffort.High
         );
 
         await _dbContext.SeedData(persona);
@@ -344,6 +425,7 @@ public sealed class GetConversationHandlerTests
         result.Persona.Scenario.ShouldBe("In a chat");
         result.Model.Temperature.ShouldBe(0.7f);
         result.Model.MaxTokens.ShouldBe(512);
-        result.Model.RepeatPenalty.ShouldBe(1.1f);
+        result.ReasoningEffort.ShouldBe(ReasoningEffort.High);
+        result.Model.IsToolCallingEnabled.ShouldBeTrue();
     }
 }

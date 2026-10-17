@@ -27,7 +27,6 @@ public sealed class GetAllModelsHandler
         .On(nameof(ModelConfig.ModelIdentifier), m => m.ModelIdentifier)
         .On(nameof(ModelConfig.MaxTokens), m => m.MaxTokens)
         .On(nameof(ModelConfig.Temperature), m => m.Temperature)
-        .On(nameof(ModelConfig.RepeatPenalty), m => m.RepeatPenalty)
         .Default(m => m.Name, SortDirection.Asc);
 
     private readonly HermesDbContext _dbContext;
@@ -77,7 +76,7 @@ public sealed class GetAllModelsHandler
                 m.SystemPrompt,
                 m.Temperature,
                 m.MaxTokens,
-                m.RepeatPenalty,
+                m.IsToolCallingEnabled,
                 m.ContextWindow,
                 m.IsDefault,
                 m.IsPublic,

@@ -19,7 +19,7 @@ namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.Conversations.CompactCo
 
 public sealed class CompactConversationHandlerTests
 {
-    private readonly IFixture _fixture = new Fixture();
+    private readonly Fixture _fixture = new();
 
     private readonly ILogger<CompactConversationHandler> _logger = Substitute.For<
         ILogger<CompactConversationHandler>
@@ -42,7 +42,7 @@ public sealed class CompactConversationHandlerTests
         _handler = new CompactConversationHandler(_logger, _mlClient, _dbContextFactory, _options);
     }
 
-    private static async IAsyncEnumerable<ChatCompletionChunk> CreateStream(
+    private static async IAsyncEnumerable<ResponseStreamChunk> CreateStream(
         IEnumerable<string> chunks,
         [EnumeratorCancellation] CancellationToken cancellationToken = default
     )
@@ -51,11 +51,11 @@ public sealed class CompactConversationHandlerTests
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            yield return new ChatCompletionChunk(chunk, null);
+            yield return new ResponseStreamChunk(chunk, null, null);
         }
     }
 
-    private static async IAsyncEnumerable<ChatCompletionChunk> CreateStreamWithUsage(
+    private static async IAsyncEnumerable<ResponseStreamChunk> CreateStreamWithUsage(
         IEnumerable<string> chunks,
         ChatCompletionUsage usage,
         [EnumeratorCancellation] CancellationToken cancellationToken = default
@@ -65,10 +65,10 @@ public sealed class CompactConversationHandlerTests
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            yield return new ChatCompletionChunk(chunk, null);
+            yield return new ResponseStreamChunk(chunk, null, null);
         }
 
-        yield return new ChatCompletionChunk(null, usage);
+        yield return new ResponseStreamChunk(null, null, usage);
     }
 
     private static CompactConversationInput CreateCommand(
@@ -88,9 +88,9 @@ public sealed class CompactConversationHandlerTests
         );
     }
 
-    private static bool ContainsAfterLastSummaryOnly(List<MessageDto> msgs)
+    private static bool ContainsAfterLastSummaryOnly(string instructions)
     {
-        var systemContent = msgs[0].Content;
+        var systemContent = instructions;
         return systemContent.Contains("What about X?")
             && systemContent.Contains("Here is info about X.")
             && systemContent.Contains("And more.")
@@ -146,12 +146,14 @@ public sealed class CompactConversationHandlerTests
         var expectedSummary = "Concise summary of the conversation.";
 
         _mlClient
-            .StreamChatCompletionAsync(
+            .StreamResponseAsync(
                 Arg.Any<string>(),
-                Arg.Any<List<MessageDto>>(),
+                Arg.Any<string>(),
+                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
+                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
                 Arg.Any<float?>(),
                 Arg.Any<int?>(),
-                Arg.Any<float?>(),
+                Arg.Any<ReasoningEffort?>(),
                 Arg.Any<CancellationToken>()
             )
             .Returns(CreateStream([expectedSummary]));
@@ -198,12 +200,14 @@ public sealed class CompactConversationHandlerTests
         var expectedSummary = "Ephemeral summary.";
 
         _mlClient
-            .StreamChatCompletionAsync(
+            .StreamResponseAsync(
                 Arg.Any<string>(),
-                Arg.Any<List<MessageDto>>(),
+                Arg.Any<string>(),
+                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
+                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
                 Arg.Any<float?>(),
                 Arg.Any<int?>(),
-                Arg.Any<float?>(),
+                Arg.Any<ReasoningEffort?>(),
                 Arg.Any<CancellationToken>()
             )
             .Returns(CreateStream([expectedSummary]));
@@ -269,12 +273,14 @@ public sealed class CompactConversationHandlerTests
         var expectedSummary = "Summary of messages after last summary.";
 
         _mlClient
-            .StreamChatCompletionAsync(
+            .StreamResponseAsync(
                 Arg.Any<string>(),
-                Arg.Any<List<MessageDto>>(),
+                Arg.Any<string>(),
+                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
+                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
                 Arg.Any<float?>(),
                 Arg.Any<int?>(),
-                Arg.Any<float?>(),
+                Arg.Any<ReasoningEffort?>(),
                 Arg.Any<CancellationToken>()
             )
             .Returns(CreateStream([expectedSummary]));
@@ -289,12 +295,14 @@ public sealed class CompactConversationHandlerTests
         // Assert
         _mlClient
             .Received(1)
-            .StreamChatCompletionAsync(
+            .StreamResponseAsync(
                 Arg.Any<string>(),
-                Arg.Is<List<MessageDto>>(msgs => ContainsAfterLastSummaryOnly(msgs)),
+                Arg.Is<string>(i => ContainsAfterLastSummaryOnly(i)),
+                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
+                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
                 Arg.Any<float?>(),
                 Arg.Any<int?>(),
-                Arg.Any<float?>(),
+                Arg.Any<ReasoningEffort?>(),
                 Arg.Any<CancellationToken>()
             );
 
@@ -330,12 +338,14 @@ public sealed class CompactConversationHandlerTests
         var chunks = new[] { "First ", "chunk ", "and more." };
 
         _mlClient
-            .StreamChatCompletionAsync(
+            .StreamResponseAsync(
                 Arg.Any<string>(),
-                Arg.Any<List<MessageDto>>(),
+                Arg.Any<string>(),
+                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
+                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
                 Arg.Any<float?>(),
                 Arg.Any<int?>(),
-                Arg.Any<float?>(),
+                Arg.Any<ReasoningEffort?>(),
                 Arg.Any<CancellationToken>()
             )
             .Returns(CreateStream(chunks));
@@ -366,12 +376,14 @@ public sealed class CompactConversationHandlerTests
         var usage = new ChatCompletionUsage(InputTokens: 100, OutputTokens: 50, TotalTokens: 150);
 
         _mlClient
-            .StreamChatCompletionAsync(
+            .StreamResponseAsync(
                 Arg.Any<string>(),
-                Arg.Any<List<MessageDto>>(),
+                Arg.Any<string>(),
+                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
+                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
                 Arg.Any<float?>(),
                 Arg.Any<int?>(),
-                Arg.Any<float?>(),
+                Arg.Any<ReasoningEffort?>(),
                 Arg.Any<CancellationToken>()
             )
             .Returns(CreateStreamWithUsage(["Hello"], usage));
@@ -398,12 +410,14 @@ public sealed class CompactConversationHandlerTests
     {
         // Arrange
         _mlClient
-            .StreamChatCompletionAsync(
+            .StreamResponseAsync(
                 Arg.Any<string>(),
-                Arg.Any<List<MessageDto>>(),
+                Arg.Any<string>(),
+                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
+                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
                 Arg.Any<float?>(),
                 Arg.Any<int?>(),
-                Arg.Any<float?>(),
+                Arg.Any<ReasoningEffort?>(),
                 Arg.Any<CancellationToken>()
             )
             .Returns(CreateStream(["Hello"]));
@@ -493,9 +507,11 @@ public sealed class CompactConversationHandlerTests
             new HermesOptions(
                 ConversationNameSystemPrompt: "name prompt",
                 ConversationNameModel: "name-model",
+                ConversationNameReasoningEffort: null,
                 CompactionSummaryPrompt: "Custom system prompt.",
                 CompactionTemperature: 0.7f,
-                CompactionMaxTokens: 2048
+                CompactionMaxTokens: 2048,
+                CompactionReasoningEffort: ReasoningEffort.High
             )
         );
 
@@ -516,12 +532,14 @@ public sealed class CompactConversationHandlerTests
         var expectedSummary = "Custom summary.";
 
         _mlClient
-            .StreamChatCompletionAsync(
+            .StreamResponseAsync(
                 Arg.Any<string>(),
-                Arg.Any<List<MessageDto>>(),
+                Arg.Any<string>(),
+                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
+                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
                 Arg.Any<float?>(),
                 Arg.Any<int?>(),
-                Arg.Any<float?>(),
+                Arg.Any<ReasoningEffort?>(),
                 Arg.Any<CancellationToken>()
             )
             .Returns(CreateStream([expectedSummary]));
@@ -536,17 +554,73 @@ public sealed class CompactConversationHandlerTests
         // Assert
         _mlClient
             .Received(1)
-            .StreamChatCompletionAsync(
+            .StreamResponseAsync(
                 Arg.Any<string>(),
-                Arg.Is<List<MessageDto>>(msgs => msgs[0].Content.Contains("Custom system prompt.")),
+                Arg.Is<string>(i => i.Contains("Custom system prompt.")),
+                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
+                Arg.Is<IReadOnlyList<FunctionToolDto>>(t => t.Count == 0),
                 Arg.Is<float?>(t => t == 0.7f),
                 Arg.Is<int?>(m => m == 2048),
-                Arg.Any<float?>(),
+                ReasoningEffort.High,
                 Arg.Any<CancellationToken>()
             );
 
         var contentChunks = results.OfType<CompactContentChunkResponse>().ToList();
         contentChunks.Count.ShouldBe(1);
         contentChunks[0].Content.ShouldBe(expectedSummary);
+    }
+
+    [Fact]
+    public async Task Handle_WhenModelReasons_ShouldStreamOnlyTheSummaryText()
+    {
+        // Arrange
+        var command = CreateCommand(
+            messages: [new("Hello", Role.User), new("Hi!", Role.Assistant)]
+        );
+
+        _mlClient
+            .StreamResponseAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
+                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
+                Arg.Any<float?>(),
+                Arg.Any<int?>(),
+                Arg.Any<ReasoningEffort?>(),
+                Arg.Any<CancellationToken>()
+            )
+            .Returns(
+                new[]
+                {
+                    new ResponseStreamChunk(null, "Planning the summary", null),
+                    new ResponseStreamChunk("Summary.", null, null),
+                }.ToAsyncEnumerable()
+            );
+
+        // Act
+        var results = new List<CompactConversationResponse>();
+        await foreach (var chunk in _handler.Handle(command, CancellationToken.None))
+        {
+            results.Add(chunk);
+        }
+
+        // Assert
+        results
+            .OfType<CompactContentChunkResponse>()
+            .Select(c => c.Content)
+            .ShouldBe(["Summary."]);
+
+        _mlClient
+            .Received(1)
+            .StreamResponseAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
+                Arg.Is<IReadOnlyList<FunctionToolDto>>(t => t.Count == 0),
+                Arg.Any<float?>(),
+                Arg.Any<int?>(),
+                ReasoningEffort.Low,
+                Arg.Any<CancellationToken>()
+            );
     }
 }

@@ -6,12 +6,15 @@ import {
 } from "@/components/shared/responsive-context-menu";
 import { Message } from "@/components/shared/ai-assistant/message";
 import SummaryView from "@/app/(hermes)/hermes/components/summary-view";
+import { toChatParts } from "@/app/(hermes)/hermes/components/message-parts";
+import { type AssistantChatPart } from "@/components/shared/ai-assistant/assistant-chat-parts";
 import { MessageInput, Role } from "@/lib/api/hermes";
 import { Pencil, RotateCcw, Trash } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 export default function ChatMessageList({
   messages,
+  streamingParts,
   personaName,
   isGenerating,
   isCompacting,
@@ -23,6 +26,7 @@ export default function ChatMessageList({
   ...props
 }: React.ComponentProps<"div"> & {
   messages: MessageInput[];
+  streamingParts?: AssistantChatPart[] | null;
   personaName: string;
   onEditMessage?: (index: number) => void;
   onDeleteMessage?: (index: number) => void;
@@ -94,6 +98,13 @@ export default function ChatMessageList({
     <div {...props}>
       {messages.map((msg, index) => {
         const isSummary = msg.role === Role.Summary;
+        const isLast = index === messages.length - 1;
+        const parts =
+          isLast && streamingParts
+            ? streamingParts
+            : msg.parts && msg.parts.length > 0
+              ? toChatParts(msg.parts)
+              : undefined;
 
         return (
           <div key={index} className="mx-auto w-full max-w-3xl">
@@ -117,7 +128,8 @@ export default function ChatMessageList({
                   name={isSummary ? "Summary" : personaName}
                   role={msg.role === Role.User ? "User" : "Assistant"}
                   content={msg.content}
-                  isStreaming={isGenerating && index === messages.length - 1}
+                  parts={parts}
+                  isStreaming={isGenerating && isLast}
                   className="text-left"
                 />
               </ResponsiveContextMenu>

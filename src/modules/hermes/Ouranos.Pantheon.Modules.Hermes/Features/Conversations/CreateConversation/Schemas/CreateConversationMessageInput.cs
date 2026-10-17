@@ -1,5 +1,10 @@
+using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.CreateConversation.Schemas;
 
-public sealed record CreateConversationMessageInput(string Content, Role Role);
+public sealed record CreateConversationMessageInput(
+    string Content,
+    Role Role,
+    IReadOnlyList<MessagePartDto>? Parts = null
+);

@@ -20,7 +20,8 @@ http:
             "modelIdentifier": "{{MODEL_IDENTIFIER}}",
             "systemPrompt": "You are a helpful assistant.",
             "temperature": 0.7,
-            "maxTokens": 512
+            "maxTokens": 4096,
+            "isToolCallingEnabled": false
           },
           "persona": {
             "name": "Assistant",
@@ -29,10 +30,27 @@ http:
           "messages": [
             {
               "role": "User",
+              "content": "What time is it in Tokyo?"
+            },
+            {
+              "role": "Assistant",
+              "content": "It is 9:00 in Tokyo.",
+              "toolCalls": [
+                {
+                  "callId": "call-1",
+                  "name": "get_time",
+                  "arguments": "{\"timeZone\":\"Asia/Tokyo\"}",
+                  "output": "09:00"
+                }
+              ]
+            },
+            {
+              "role": "User",
               "content": "Tell me a programming joke"
             }
           ],
-          "traits": []
+          "traits": [],
+          "reasoningEffort": "Medium"
         }
       }
   auth: inherit

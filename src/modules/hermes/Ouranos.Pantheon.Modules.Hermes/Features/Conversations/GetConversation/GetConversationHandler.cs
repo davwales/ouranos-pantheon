@@ -3,6 +3,7 @@ using Flagsmith;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GetConversation.Schemas;
+using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
@@ -34,6 +35,7 @@ public sealed class GetConversationHandler(
             .Include(c => c.Traits)
             .Include(c => c.Folder)
             .Include(c => c.Messages.OrderBy(m => m.SortOrder))
+                .ThenInclude(m => m.Parts.OrderBy(p => p.SortOrder))
             .FirstOrDefaultAsync(c => c.Id == query.ConversationId, cancellationToken);
 
         Guard.Against.NotFound(query.ConversationId, conversation);
@@ -67,6 +69,7 @@ public sealed class GetConversationHandler(
             conversation.Name,
             conversation.IsPublic,
             conversation.FolderId,
+            conversation.ReasoningEffort,
             new GetConversationPersonaResponse(
                 conversation.Persona.Id,
                 conversation.Persona.Name,
@@ -81,7 +84,7 @@ public sealed class GetConversationHandler(
                 conversation.ModelConfig.SystemPrompt,
                 conversation.ModelConfig.Temperature,
                 conversation.ModelConfig.MaxTokens,
-                conversation.ModelConfig.RepeatPenalty,
+                conversation.ModelConfig.IsToolCallingEnabled,
                 conversation.ModelConfig.ContextWindow
             ),
             [
@@ -96,7 +99,8 @@ public sealed class GetConversationHandler(
                     m.Id,
                     m.Content,
                     m.Role,
-                    m.SortOrder
+                    m.SortOrder,
+                    [.. m.Parts.Select(MessagePartMapping.ToDto)]
                 )),
             ],
             tokenUsage,

@@ -11,7 +11,7 @@ import {
   PersonaFormInput,
   TraitFormInput,
 } from "@/app/(hermes)/hermes/types";
-import { hermesApi, MessageInput, Role } from "@/lib/api/hermes";
+import { hermesApi, MessageInput, type ReasoningEffort, Role } from "@/lib/api/hermes";
 import { useMessageController } from "@/hooks/use-message-controller";
 import { Bookmark, SlidersHorizontal } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -20,9 +20,11 @@ export default function ChatInterfaceView({
   persona,
   model,
   activeTraits,
+  reasoningEffort = null,
   onPersonaChange,
   onModelChange,
   onTraitsChange,
+  onReasoningEffortChange,
   conversationId,
   conversationName,
   conversationIsPublic = true,
@@ -37,9 +39,11 @@ export default function ChatInterfaceView({
   persona: PersonaFormInput;
   model: ModelFormInput;
   activeTraits: TraitFormInput[];
+  reasoningEffort?: ReasoningEffort | null;
   onPersonaChange?: (persona: PersonaFormInput) => void;
   onModelChange?: (model: ModelFormInput) => void;
   onTraitsChange?: (traits: TraitFormInput[]) => void;
+  onReasoningEffortChange?: (effort: ReasoningEffort | null) => void;
   conversationId?: string;
   conversationName?: string;
   conversationIsPublic?: boolean;
@@ -66,7 +70,10 @@ export default function ChatInterfaceView({
 
   const {
     messages,
+    streamingParts,
     isGenerating,
+    generationError,
+    stop,
     isCompacting,
     compactionError,
     tokenUsage,
@@ -79,6 +86,7 @@ export default function ChatInterfaceView({
     initialMessages: initialMessages ?? [],
     initialTokenUsage: initialTokenUsage ?? null,
     model,
+    reasoningEffort,
     persona,
     activeTraits,
     conversationId,
@@ -103,6 +111,7 @@ export default function ChatInterfaceView({
       personaId?: string;
       modelConfigId?: string;
       traitIds?: string[];
+      reasoningEffort?: ReasoningEffort | null;
     }) => ({
       name: conversationName ?? "New Conversation",
       personaId: overrides.personaId ?? persona.id!,
@@ -112,10 +121,15 @@ export default function ChatInterfaceView({
         activeTraits.filter((t) => t.id && !t.isEphemeral).map((t) => t.id!),
       messages: overrides.messages ?? messages,
       isPublic: conversationIsPublic,
+      reasoningEffort:
+        overrides.reasoningEffort !== undefined
+          ? overrides.reasoningEffort
+          : reasoningEffort,
     }),
     [
       conversationName,
       conversationIsPublic,
+      reasoningEffort,
       persona.id,
       model.id,
       activeTraits,
@@ -135,6 +149,7 @@ export default function ChatInterfaceView({
         inputTokenCount: tokenUsage?.inputTokens ?? null,
         outputTokenCount: tokenUsage?.outputTokens ?? null,
         totalTokenCount: tokenUsage?.totalTokens ?? null,
+        reasoningEffort,
       });
       onConversationSaved?.(result.id, result.name);
     } catch (error) {
@@ -146,6 +161,7 @@ export default function ChatInterfaceView({
     activeTraits,
     messages,
     tokenUsage,
+    reasoningEffort,
     onConversationSaved,
   ]);
 
@@ -217,6 +233,7 @@ export default function ChatInterfaceView({
     <div {...props}>
       <ChatMessageList
         messages={messages}
+        streamingParts={streamingParts}
         personaName={persona.name}
         onDeleteMessage={handleMessageDeleted}
         onEditMessage={handleMessageEdit}
@@ -234,6 +251,11 @@ export default function ChatInterfaceView({
         }}
         className="mb-2"
       />
+      {generationError && (
+        <p role="alert" className="mx-auto w-full max-w-3xl px-2 text-sm text-destructive">
+          {generationError}
+        </p>
+      )}
 
       <FooterContent>
         {model.contextWindow && tokenUsage && (
@@ -251,6 +273,7 @@ export default function ChatInterfaceView({
             onNewMessage={handleNewMessage}
             onUpdateMessage={handleUpdateMessage}
             onCancelEdit={handleCancelEdit}
+            onStop={stop}
             className="flex-1"
           />
         </div>
@@ -262,6 +285,7 @@ export default function ChatInterfaceView({
         persona={persona}
         model={model}
         activeTraits={activeTraits}
+        reasoningEffort={reasoningEffort}
         conversationName={conversationName}
         conversationIsPublic={conversationIsPublic}
         onRename={onRename}
@@ -292,6 +316,19 @@ export default function ChatInterfaceView({
               .updateConversation(
                 conversationId,
                 buildUpdatePayload({ modelConfigId: m.id }),
+              )
+              .catch((err) =>
+                console.error("Failed to update conversation:", err),
+              );
+          }
+        }}
+        onReasoningEffortChange={(effort) => {
+          onReasoningEffortChange?.(effort);
+          if (conversationId) {
+            hermesApi
+              .updateConversation(
+                conversationId,
+                buildUpdatePayload({ reasoningEffort: effort }),
               )
               .catch((err) =>
                 console.error("Failed to update conversation:", err),

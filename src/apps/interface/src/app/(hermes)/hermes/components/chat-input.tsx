@@ -10,6 +10,7 @@ export default function ChatInput({
   onNewMessage,
   onUpdateMessage,
   onCancelEdit,
+  onStop,
   className,
   ...props
 }: React.ComponentProps<"form"> & {
@@ -20,6 +21,7 @@ export default function ChatInput({
   onNewMessage: () => void;
   onUpdateMessage: () => void;
   onCancelEdit?: () => void;
+  onStop?: () => void;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -87,6 +89,12 @@ export default function ChatInput({
             className="w-full mt-2"
           >
             Cancel
+          </Button>
+        </div>
+      ) : isGenerating && onStop ? (
+        <div className="h-fit">
+          <Button variant="outline" type="button" onClick={onStop} className="h-fit">
+            Stop
           </Button>
         </div>
       ) : (

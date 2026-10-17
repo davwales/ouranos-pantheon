@@ -50,7 +50,7 @@ public sealed class UpdateModelHandler : IPantheonHandler<UpdateModelInput, Upda
                     existing.SystemPrompt,
                     existing.Temperature,
                     existing.MaxTokens,
-                    existing.RepeatPenalty,
+                    existing.IsToolCallingEnabled,
                     existing.ContextWindow,
                     false,
                     existing.IsPublic
@@ -64,7 +64,7 @@ public sealed class UpdateModelHandler : IPantheonHandler<UpdateModelInput, Upda
             command.SystemPrompt,
             command.Temperature,
             command.MaxTokens,
-            command.RepeatPenalty,
+            command.IsToolCallingEnabled,
             command.ContextWindow,
             command.IsDefault,
             command.IsPublic

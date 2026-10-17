@@ -21,11 +21,12 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useApi } from "@/hooks/use-api";
-import { hermesApi } from "@/lib/api/hermes";
+import { hermesApi, type ReasoningEffort } from "@/lib/api/hermes";
 import { generateID } from "@/lib/utils";
 import { ChevronDown, Minimize2, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { SystemPromptView } from "@/app/(hermes)/hermes/components/system-prompt-view";
+import { ReasoningEffortSelect } from "@/app/(hermes)/hermes/components/reasoning-effort-select";
 
 export function ConversationConfigSheet({
   open,
@@ -33,9 +34,11 @@ export function ConversationConfigSheet({
   persona,
   model,
   activeTraits,
+  reasoningEffort,
   onPersonaChange,
   onModelChange,
   onTraitsChange,
+  onReasoningEffortChange,
   conversationName,
   conversationIsPublic,
   onRename,
@@ -52,9 +55,11 @@ export function ConversationConfigSheet({
   persona: PersonaFormInput;
   model: ModelFormInput;
   activeTraits: TraitFormInput[];
+  reasoningEffort: ReasoningEffort | null;
   onPersonaChange?: (persona: PersonaFormInput) => void;
   onModelChange?: (model: ModelFormInput) => void;
   onTraitsChange?: (traits: TraitFormInput[]) => void;
+  onReasoningEffortChange?: (effort: ReasoningEffort | null) => void;
   conversationName?: string;
   conversationIsPublic?: boolean;
   onRename?: (name: string) => void;
@@ -183,6 +188,10 @@ export function ConversationConfigSheet({
               onSelect: () => onModelChange?.(m),
               selected: m.id === model.id,
             }))}
+          />
+          <ReasoningEffortField
+            value={reasoningEffort}
+            onChange={onReasoningEffortChange}
           />
 
           <Collapsible open={traitsOpen} onOpenChange={setTraitsOpen}>
@@ -375,5 +384,27 @@ function CollapsibleCardSection({
         ))}
       </CollapsibleContent>
     </Collapsible>
+  );
+}
+
+function ReasoningEffortField({
+  value,
+  onChange,
+}: {
+  value: ReasoningEffort | null;
+  onChange?: (effort: ReasoningEffort | null) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 px-2">
+      <div>
+        <p className="text-sm font-medium">Reasoning Effort</p>
+      </div>
+      <ReasoningEffortSelect
+        value={value}
+        onChange={(effort) => onChange?.(effort)}
+        disabled={!onChange}
+        className="w-36 shrink-0"
+      />
+    </div>
   );
 }

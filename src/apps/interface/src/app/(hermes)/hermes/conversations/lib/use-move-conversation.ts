@@ -23,10 +23,12 @@ export function useMoveConversation({
             role: m.role,
             content: m.content,
             sortOrder: m.sortOrder,
+            parts: m.parts,
           }),
         ),
         isPublic: conversation.isPublic,
         folderId,
+        reasoningEffort: conversation.reasoningEffort,
       });
       onSuccess();
     },

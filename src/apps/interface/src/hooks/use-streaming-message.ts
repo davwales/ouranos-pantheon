@@ -7,7 +7,6 @@ export type StreamingChunk = { $type: string } & Record<string, unknown>;
 export type ChunkHandlers = {
   onContent?: (content: string) => void;
   onUsage?: (usage: { inputTokens: number; outputTokens: number; totalTokens: number }) => void;
-  onSystemPrompt?: (systemPrompt: string) => void;
   onComplete?: () => void;
 };
 
@@ -55,13 +54,6 @@ export function useStreamingMessage(): {
                 outputTokens,
                 totalTokens,
               });
-            }
-            break;
-          }
-          case "systemPrompt": {
-            const systemPrompt = chunk.systemPrompt;
-            if (typeof systemPrompt === "string") {
-              params.chunkHandlers.onSystemPrompt?.(systemPrompt);
             }
             break;
           }

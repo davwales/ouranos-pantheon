@@ -10,7 +10,7 @@ public sealed record GetModelResponse(
     string SystemPrompt,
     float? Temperature,
     int? MaxTokens,
-    float? RepeatPenalty,
+    bool IsToolCallingEnabled,
     int? ContextWindow,
     bool IsDefault,
     bool IsPublic,

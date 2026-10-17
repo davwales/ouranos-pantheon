@@ -5,29 +5,21 @@ namespace Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
 
 public interface IOuranosMachineLearningClient
 {
-    IAsyncEnumerable<ChatCompletionChunk> StreamChatCompletionAsync(
-        string model,
-        List<MessageDto> messages,
-        float? temperature = null,
-        int? maxTokens = null,
-        float? frequencyPenalty = null,
-        CancellationToken cancellationToken = default
-    );
-
-    Task<ChatCompletionResult> GenerateChatCompletionAsync(
-        string model,
-        List<MessageDto> messages,
-        float? temperature = null,
-        int? maxTokens = null,
-        float? frequencyPenalty = null,
-        CancellationToken cancellationToken = default
-    );
-
     IAsyncEnumerable<ResponseStreamChunk> StreamResponseAsync(
         string model,
         string instructions,
         IReadOnlyList<ResponseInputItemDto> input,
         IReadOnlyList<FunctionToolDto> tools,
+        float? temperature = null,
+        int? maxTokens = null,
+        ReasoningEffort? reasoningEffort = null,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<GeneratedResponse> GenerateResponseAsync(
+        string model,
+        string instructions,
+        IReadOnlyList<ResponseInputItemDto> input,
         float? temperature = null,
         int? maxTokens = null,
         ReasoningEffort? reasoningEffort = null,

@@ -19,16 +19,25 @@ public sealed class Message : BaseEntity<Id<Message>>
 
     public int SortOrder { get; private set; }
 
+    public List<MessagePart> Parts { get; private set; } = [];
+
     public static Message Create(
         Id<Message> id,
         Id<Conversation> conversationId,
         string content,
         Role role,
-        int sortOrder
+        int sortOrder,
+        IEnumerable<MessagePart>? parts = null
     )
     {
         Guard.Against.Null(conversationId);
         Guard.Against.NullOrWhiteSpace(content);
+
+        List<MessagePart> ordered = [.. parts ?? []];
+        for (var i = 0; i < ordered.Count; i++)
+        {
+            ordered[i].Order(i);
+        }
 
         return new Message(id)
         {
@@ -36,6 +45,7 @@ public sealed class Message : BaseEntity<Id<Message>>
             Content = content,
             Role = role,
             SortOrder = sortOrder,
+            Parts = ordered,
         };
     }
 }

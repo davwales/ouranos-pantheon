@@ -1,7 +1,9 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.CreateConversation;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.CreateConversation.Schemas;
+using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
@@ -21,7 +23,7 @@ namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.Conversations.CreateCon
 
 public sealed class CreateConversationHandlerTests
 {
-    private readonly IFixture _fixture = new Fixture();
+    private readonly Fixture _fixture = new();
     private readonly CreateConversationHandler _handler;
     private readonly ILogger<CreateConversationHandler> _logger = Substitute.For<
         ILogger<CreateConversationHandler>
@@ -61,6 +63,28 @@ public sealed class CreateConversationHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenReasoningEffortProvided_ShouldSaveIt()
+    {
+        // Arrange
+        var command = new CreateConversationInput(
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [],
+            [],
+            _fixture.Create<string>(),
+            ReasoningEffort: ReasoningEffort.Medium
+        );
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var saved = await _dbContext.Conversations.FindAsync(result.Id);
+        saved.ShouldNotBeNull();
+        saved.ReasoningEffort.ShouldBe(ReasoningEffort.Medium);
+    }
+
+    [Fact]
     public async Task Handle_WhenNameIsNull_ShouldDefaultToNewConversation()
     {
         // Arrange
@@ -84,15 +108,16 @@ public sealed class CreateConversationHandlerTests
         var generatedName = _fixture.Create<string>();
 
         _mlClient
-            .GenerateChatCompletionAsync(
+            .GenerateResponseAsync(
                 Arg.Any<string>(),
-                Arg.Any<List<MessageDto>>(),
+                Arg.Any<string>(),
+                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
                 Arg.Any<float?>(),
                 Arg.Any<int?>(),
-                Arg.Any<float?>(),
+                Arg.Any<ReasoningEffort?>(),
                 Arg.Any<CancellationToken>()
             )
-            .Returns(new ChatCompletionResult(generatedName, null));
+            .Returns(new GeneratedResponse(generatedName, null));
 
         var handler = new CreateConversationHandler(
             _logger,
@@ -102,9 +127,11 @@ public sealed class CreateConversationHandlerTests
                 new HermesOptions(
                     ConversationNameSystemPrompt: "Generate a name.",
                     ConversationNameModel: "test-model",
+                    ConversationNameReasoningEffort: ReasoningEffort.None,
                     CompactionSummaryPrompt: HermesOptions.DefaultCompactionSummaryPrompt,
                     CompactionTemperature: HermesOptions.DefaultCompactionTemperature,
-                    CompactionMaxTokens: HermesOptions.DefaultCompactionMaxTokens
+                    CompactionMaxTokens: HermesOptions.DefaultCompactionMaxTokens,
+                    CompactionReasoningEffort: ReasoningEffort.Low
                 )
             )
         );
@@ -121,12 +148,13 @@ public sealed class CreateConversationHandlerTests
         // Assert
         await _mlClient
             .Received(1)
-            .GenerateChatCompletionAsync(
+            .GenerateResponseAsync(
                 Arg.Any<string>(),
-                Arg.Any<List<MessageDto>>(),
+                Arg.Any<string>(),
+                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
                 Arg.Any<float?>(),
                 Arg.Any<int?>(),
-                Arg.Any<float?>(),
+                Arg.Any<ReasoningEffort?>(),
                 Arg.Any<CancellationToken>()
             );
         result.Name.ShouldBe(
@@ -143,15 +171,16 @@ public sealed class CreateConversationHandlerTests
         var longName = new string('a', 80);
 
         _mlClient
-            .GenerateChatCompletionAsync(
+            .GenerateResponseAsync(
                 Arg.Any<string>(),
-                Arg.Any<List<MessageDto>>(),
+                Arg.Any<string>(),
+                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
                 Arg.Any<float?>(),
                 Arg.Any<int?>(),
-                Arg.Any<float?>(),
+                Arg.Any<ReasoningEffort?>(),
                 Arg.Any<CancellationToken>()
             )
-            .Returns(new ChatCompletionResult(longName, null));
+            .Returns(new GeneratedResponse(longName, null));
 
         var handler = new CreateConversationHandler(
             _logger,
@@ -161,9 +190,11 @@ public sealed class CreateConversationHandlerTests
                 new HermesOptions(
                     ConversationNameSystemPrompt: "Generate a name.",
                     ConversationNameModel: "test-model",
+                    ConversationNameReasoningEffort: ReasoningEffort.None,
                     CompactionSummaryPrompt: HermesOptions.DefaultCompactionSummaryPrompt,
                     CompactionTemperature: HermesOptions.DefaultCompactionTemperature,
-                    CompactionMaxTokens: HermesOptions.DefaultCompactionMaxTokens
+                    CompactionMaxTokens: HermesOptions.DefaultCompactionMaxTokens,
+                    CompactionReasoningEffort: ReasoningEffort.Low
                 )
             )
         );
@@ -189,15 +220,16 @@ public sealed class CreateConversationHandlerTests
         var modelConfigId = new Id<ModelConfig>(Guid.NewGuid().ToString());
 
         _mlClient
-            .GenerateChatCompletionAsync(
+            .GenerateResponseAsync(
                 Arg.Any<string>(),
-                Arg.Any<List<MessageDto>>(),
+                Arg.Any<string>(),
+                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
                 Arg.Any<float?>(),
                 Arg.Any<int?>(),
-                Arg.Any<float?>(),
+                Arg.Any<ReasoningEffort?>(),
                 Arg.Any<CancellationToken>()
             )
-            .Returns<ChatCompletionResult>(_ =>
+            .Returns<GeneratedResponse>(_ =>
                 throw new HttpRequestException("ML service unavailable")
             );
 
@@ -209,9 +241,11 @@ public sealed class CreateConversationHandlerTests
                 new HermesOptions(
                     ConversationNameSystemPrompt: "Generate a name.",
                     ConversationNameModel: "test-model",
+                    ConversationNameReasoningEffort: ReasoningEffort.None,
                     CompactionSummaryPrompt: HermesOptions.DefaultCompactionSummaryPrompt,
                     CompactionTemperature: HermesOptions.DefaultCompactionTemperature,
-                    CompactionMaxTokens: HermesOptions.DefaultCompactionMaxTokens
+                    CompactionMaxTokens: HermesOptions.DefaultCompactionMaxTokens,
+                    CompactionReasoningEffort: ReasoningEffort.Low
                 )
             )
         );
@@ -297,6 +331,42 @@ public sealed class CreateConversationHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenMessagesHaveParts_ShouldSaveTheParts()
+    {
+        // Arrange
+        var command = new CreateConversationInput(
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [],
+            [
+                new CreateConversationMessageInput("Hi", Role.User),
+                new CreateConversationMessageInput(
+                    "Hello",
+                    Role.Assistant,
+                    [new ReasoningMessagePartDto("Thinking"), new TextMessagePartDto("Hello")]
+                ),
+            ],
+            _fixture.Create<string>()
+        );
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var assistant = await _dbContext
+            .Messages.Include(m => m.Parts)
+            .SingleAsync(m => m.Role == Role.Assistant);
+
+        assistant.Parts.Count.ShouldBe(2);
+
+        assistant
+            .Parts.OrderBy(p => p.SortOrder)
+            .First()
+            .ShouldBeOfType<ReasoningMessagePart>()
+            .Content.ShouldBe("Thinking");
+    }
+
+    [Fact]
     public async Task Handle_WhenSystemAndAssistantMessagesProvided_ShouldMapRolesCorrectly()
     {
         // Arrange
@@ -304,15 +374,16 @@ public sealed class CreateConversationHandlerTests
         var modelConfigId = new Id<ModelConfig>(Guid.NewGuid().ToString());
 
         _mlClient
-            .GenerateChatCompletionAsync(
+            .GenerateResponseAsync(
                 Arg.Any<string>(),
-                Arg.Any<List<MessageDto>>(),
+                Arg.Any<string>(),
+                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
                 Arg.Any<float?>(),
                 Arg.Any<int?>(),
-                Arg.Any<float?>(),
+                Arg.Any<ReasoningEffort?>(),
                 Arg.Any<CancellationToken>()
             )
-            .Returns(new ChatCompletionResult("Generated Name", null));
+            .Returns(new GeneratedResponse("Generated Name", null));
 
         var handler = new CreateConversationHandler(
             _logger,
@@ -322,9 +393,11 @@ public sealed class CreateConversationHandlerTests
                 new HermesOptions(
                     ConversationNameSystemPrompt: "Generate a name.",
                     ConversationNameModel: "test-model",
+                    ConversationNameReasoningEffort: ReasoningEffort.None,
                     CompactionSummaryPrompt: HermesOptions.DefaultCompactionSummaryPrompt,
                     CompactionTemperature: HermesOptions.DefaultCompactionTemperature,
-                    CompactionMaxTokens: HermesOptions.DefaultCompactionMaxTokens
+                    CompactionMaxTokens: HermesOptions.DefaultCompactionMaxTokens,
+                    CompactionReasoningEffort: ReasoningEffort.Low
                 )
             )
         );
@@ -344,7 +417,35 @@ public sealed class CreateConversationHandlerTests
         var result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
-        result.ShouldNotBeNull();
+        result.Name.ShouldBe("Generated Name");
+        await _mlClient
+            .Received(1)
+            .GenerateResponseAsync(
+                "test-model",
+                "Generate a name.",
+                Arg.Is<IReadOnlyList<ResponseInputItemDto>>(input =>
+                    input.SequenceEqual(
+                        new ResponseInputItemDto[]
+                        {
+                            new MessageInputItemDto(
+                                new MessageDto("System prompt", RoleDto.System)
+                            ),
+                            new MessageInputItemDto(new MessageDto("Hello", RoleDto.User)),
+                            new MessageInputItemDto(new MessageDto("Hi there", RoleDto.Assistant)),
+                            new MessageInputItemDto(
+                                new MessageDto(
+                                    "Generate a name using the prior content.",
+                                    RoleDto.User
+                                )
+                            ),
+                        }
+                    )
+                ),
+                Arg.Any<float?>(),
+                Arg.Any<int?>(),
+                ReasoningEffort.None,
+                Arg.Any<CancellationToken>()
+            );
     }
 
     [Fact]

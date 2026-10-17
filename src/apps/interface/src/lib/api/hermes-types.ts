@@ -1,3 +1,5 @@
+import { type AssistantEvent, type AssistantToolStatus } from "@/lib/api/assistant-types";
+
 export interface Persona {
   id: string;
   name: string;
@@ -17,7 +19,7 @@ export interface ModelConfig {
   systemPrompt: string;
   temperature?: number | null;
   maxTokens?: number | null;
-  repeatPenalty?: number | null;
+  isToolCallingEnabled: boolean;
   contextWindow?: number | null;
   isDefault: boolean;
   isPublic: boolean;
@@ -32,11 +34,40 @@ export interface AvailableModel {
   ownedBy: string;
 }
 
+export type ReasoningEffort = "None" | "Low" | "Medium" | "High";
+
+export type MessagePart =
+  | { $type: "reasoning"; content: string }
+  | { $type: "text"; content: string }
+  | {
+      $type: "toolCall";
+      callId: string;
+      name: string;
+      arguments: string;
+      status: AssistantToolStatus;
+      output: string;
+      isTruncated: boolean;
+    };
+
 export interface MessageInput {
   role: Role;
   content: string;
   sortOrder?: number;
+  parts?: MessagePart[];
 }
+
+export type CompletionToolCallInput = {
+  callId: string;
+  name: string;
+  arguments: string;
+  output: string;
+};
+
+export type CompletionMessageInput = {
+  role: Role;
+  content: string;
+  toolCalls?: CompletionToolCallInput[];
+};
 
 export interface PersonaInput {
   name: string;
@@ -50,7 +81,7 @@ export interface ModelInput {
   systemPrompt: string;
   temperature?: number | null;
   maxTokens?: number | null;
-  repeatPenalty?: number | null;
+  isToolCallingEnabled: boolean;
 }
 
 export interface TraitInput {
@@ -61,8 +92,9 @@ export interface TraitInput {
 export interface ConversationInput {
   model: ModelInput;
   persona: PersonaInput;
-  messages: MessageInput[];
+  messages: CompletionMessageInput[];
   traits?: TraitInput[];
+  reasoningEffort?: ReasoningEffort | null;
 }
 
 export interface GenerateCompletionInput {
@@ -105,7 +137,7 @@ export interface SavedConversationModel {
   systemPrompt: string;
   temperature?: number | null;
   maxTokens?: number | null;
-  repeatPenalty?: number | null;
+  isToolCallingEnabled: boolean;
   contextWindow?: number | null;
 }
 
@@ -119,6 +151,7 @@ export interface SavedConversationMessage {
   content: string;
   role: Role;
   sortOrder: number;
+  parts: MessagePart[];
 }
 
 export interface SavedConversation {
@@ -126,6 +159,7 @@ export interface SavedConversation {
   name: string;
   isPublic: boolean;
   folderId: string | null;
+  reasoningEffort: ReasoningEffort | null;
   persona: SavedConversationPersona;
   model: SavedConversationModel;
   traits: SavedConversationTrait[];
@@ -172,17 +206,10 @@ export interface CreateConversationInput {
   inputTokenCount?: number | null;
   outputTokenCount?: number | null;
   totalTokenCount?: number | null;
+  reasoningEffort?: ReasoningEffort | null;
 }
 
-export type CompletionChunk =
-  | { $type: "systemPrompt"; systemPrompt: string }
-  | { $type: "content"; content: string }
-  | {
-      $type: "usage";
-      inputTokens: number;
-      outputTokens: number;
-      totalTokens: number;
-    };
+export type CompletionChunk = AssistantEvent;
 
 export interface UpdateFolderInput {
   name: string;

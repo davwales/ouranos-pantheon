@@ -9,7 +9,7 @@ import {
 import { MoveToFolderDropdown } from "@/app/(hermes)/hermes/conversations/components/move-to-folder-dropdown";
 import { useBreadcrumbLabel } from "@/components/shared/breadcrumbs";
 import { useApi } from "@/hooks/use-api";
-import { hermesApi } from "@/lib/api/hermes";
+import { hermesApi, type ReasoningEffort } from "@/lib/api/hermes";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import { buildFolderTree, flattenFolders } from "../lib/folder-utils";
@@ -33,6 +33,9 @@ export default function ResumeConversationPage() {
     TraitFormInput[] | undefined
   >();
   const [isPublic, setIsPublic] = useState<boolean | undefined>();
+  const [reasoningEffort, setReasoningEffort] = useState<
+    ReasoningEffort | null | undefined
+  >(undefined);
 
   const [state] = useApi(
     () => hermesApi.getConversation(conversationId),
@@ -42,6 +45,9 @@ export default function ResumeConversationPage() {
   const [foldersState] = useApi(() => hermesApi.getAllFolders());
 
   const saved = state.data;
+
+  const resolvedReasoningEffort =
+    reasoningEffort !== undefined ? reasoningEffort : saved?.reasoningEffort ?? null;
 
   const resolvedFolderId = useMemo(
     () => (folderId !== undefined ? folderId : saved?.folderId ?? null),
@@ -82,7 +88,7 @@ export default function ResumeConversationPage() {
       systemPrompt: saved.model.systemPrompt,
       temperature: saved.model.temperature,
       maxTokens: saved.model.maxTokens,
-      repeatPenalty: saved.model.repeatPenalty,
+      isToolCallingEnabled: saved.model.isToolCallingEnabled,
       contextWindow: saved.model.contextWindow,
       isDefault: false,
       isPublic: false,
@@ -116,6 +122,7 @@ export default function ResumeConversationPage() {
         messages: saved.messages,
         isPublic: isPublic ?? saved.isPublic,
         folderId: targetFolderId,
+        reasoningEffort: resolvedReasoningEffort,
       });
       setFolderId(targetFolderId);
     },
@@ -127,6 +134,7 @@ export default function ResumeConversationPage() {
       conversationName,
       resolvedTraits,
       isPublic,
+      resolvedReasoningEffort,
     ],
   );
 
@@ -170,9 +178,11 @@ export default function ResumeConversationPage() {
         persona={resolvedPersona}
         model={resolvedModel}
         activeTraits={resolvedTraits}
+        reasoningEffort={resolvedReasoningEffort}
         onPersonaChange={setPersona}
         onModelChange={setModel}
         onTraitsChange={setActiveTraits}
+        onReasoningEffortChange={setReasoningEffort}
         initialMessages={saved.messages}
         initialTokenUsage={saved.tokenUsage}
         conversationId={savedConversationId}
@@ -192,6 +202,7 @@ export default function ResumeConversationPage() {
               .map((t) => t.id!),
             messages: saved.messages,
             isPublic: isPublic ?? saved.isPublic,
+            reasoningEffort: resolvedReasoningEffort,
           });
           setConversationName(name);
         }}
@@ -209,6 +220,7 @@ export default function ResumeConversationPage() {
               .map((t) => t.id!),
             messages: saved.messages,
             isPublic: value,
+            reasoningEffort: resolvedReasoningEffort,
           });
           setIsPublic(value);
         }}

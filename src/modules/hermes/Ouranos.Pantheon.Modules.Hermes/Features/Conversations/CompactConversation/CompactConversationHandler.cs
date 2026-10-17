@@ -94,15 +94,15 @@ public sealed class CompactConversationHandler
         ChatCompletionUsage? tokenUsage = null;
 
         await foreach (
-            var chunk in _mlClient.StreamChatCompletionAsync(
+            var chunk in _mlClient.StreamResponseAsync(
                 command.ModelIdentifier,
-                [
-                    new MessageDto(summaryPrompt, RoleDto.System),
-                    new MessageDto("Provide the summary now.", RoleDto.User),
-                ],
-                temperature: options.EffectiveCompactionTemperature,
-                maxTokens: options.EffectiveCompactionMaxTokens,
-                cancellationToken: cancellationToken
+                summaryPrompt,
+                [new MessageInputItemDto(new MessageDto("Provide the summary now.", RoleDto.User))],
+                [],
+                options.EffectiveCompactionTemperature,
+                options.EffectiveCompactionMaxTokens,
+                options.CompactionReasoningEffort,
+                cancellationToken
             )
         )
         {

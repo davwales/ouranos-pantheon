@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using System.Text;
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -8,36 +7,46 @@ using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.SystemPrompt;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
-using ChatCompletionUsage = Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos.ChatCompletionUsage;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion;
 
 public sealed class GenerateCompletionHandler
-    : IPantheonStreamHandler<GenerateCompletionInput, GenerateCompletionResponse>
+    : IPantheonStreamHandler<GenerateCompletionInput, AssistantEvent>
 {
+    public const string ToolInstructions = """
+        You can call tools. Call one only when it helps with the user's request, and never name
+        tools in your reply.
+        """;
+
     private readonly ILogger<GenerateCompletionHandler> _logger;
-    private readonly IOuranosMachineLearningClient _ouranosMachineLearningClient;
     private readonly IDbContextFactory<HermesDbContext> _dbContextFactory;
+    private readonly IReadOnlyList<IAssistantTool<HermesChatContext>> _tools;
+    private readonly AssistantToolLoop<HermesChatContext> _loop;
 
     public GenerateCompletionHandler(
         ILogger<GenerateCompletionHandler> logger,
         IOuranosMachineLearningClient ouranosMachineLearningClient,
-        IDbContextFactory<HermesDbContext> dbContextFactory
+        IDbContextFactory<HermesDbContext> dbContextFactory,
+        IEnumerable<IAssistantTool<HermesChatContext>> tools
     )
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(ouranosMachineLearningClient);
         Guard.Against.Null(dbContextFactory);
+        Guard.Against.Null(tools);
 
         _logger = logger;
-        _ouranosMachineLearningClient = ouranosMachineLearningClient;
         _dbContextFactory = dbContextFactory;
+        _tools = [.. tools];
+        _loop = new AssistantToolLoop<HermesChatContext>(logger, ouranosMachineLearningClient);
     }
 
-    public async IAsyncEnumerable<GenerateCompletionResponse> Handle(
+    public async IAsyncEnumerable<AssistantEvent> Handle(
         GenerateCompletionInput command,
         [EnumeratorCancellation] CancellationToken cancellationToken = default
     )
@@ -58,101 +67,66 @@ public sealed class GenerateCompletionHandler
             Guard.Against.NotFound(command.ConversationId.Value, conversation);
         }
 
+        var model = command.Conversation.Model;
+        var context = new HermesChatContext(command.ConversationId);
+        List<IAssistantTool<HermesChatContext>> tools = model.IsToolCallingEnabled
+            ? [.. _tools.Where(t => t.IsAvailable(context))]
+            : [];
+
         var systemPrompt = ComposeSystemPrompt(command.Conversation);
+        var instructions = tools.Count > 0 ? $"{systemPrompt}\n\n{ToolInstructions}" : systemPrompt;
 
-        yield return new SystemPromptChunkResponse(systemPrompt);
+        yield return new AssistantInstructionsEvent(instructions);
 
-        var buffer = new StringBuilder();
-        ChatCompletionUsage? tokenUsage = null;
+        var prompt = new AssistantPrompt(
+            model.ModelIdentifier,
+            systemPrompt,
+            model.Temperature,
+            model.MaxTokens ?? ModelDefaults.MaxTokens,
+            command.Conversation.ReasoningEffort
+        );
+
+        var reply = new MessagePartsBuilder();
+        AssistantUsageEvent? usage = null;
 
         await foreach (
-            var chunk in GenerateCompletionStream(
-                command.Conversation,
-                systemPrompt,
+            var assistantEvent in _loop.RunAsync(
+                prompt,
+                instructions,
+                BuildInput(command.Conversation.Messages, prompt.MaxToolOutputCharacters),
+                tools,
+                context,
                 cancellationToken
             )
         )
         {
-            if (chunk.Text is not null)
+            yield return assistantEvent;
+
+            if (assistantEvent is AssistantErrorEvent)
             {
-                buffer.Append(chunk.Text);
-                yield return new ContentChunkResponse(chunk.Text);
+                yield break;
             }
 
-            if (chunk.Usage is not null)
+            if (assistantEvent is AssistantUsageEvent usageEvent)
             {
-                tokenUsage = chunk.Usage;
+                usage = usageEvent;
             }
-        }
 
-        if (tokenUsage is not null)
-        {
-            yield return new UsageChunkResponse(
-                tokenUsage.InputTokens,
-                tokenUsage.OutputTokens,
-                tokenUsage.TotalTokens
-            );
+            reply.Apply(assistantEvent);
         }
 
         if (command.ConversationId is not null)
         {
-            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(
+            await PersistTurnAsync(
+                command.ConversationId.Value,
+                command.Conversation.Messages,
+                reply,
+                usage,
                 cancellationToken
             );
-
-            var conversation = await dbContext.Conversations.FirstOrDefaultAsync(
-                c => c.Id == command.ConversationId,
-                cancellationToken
-            );
-
-            Guard.Against.NotFound(command.ConversationId.Value, conversation);
-
-            var existingCount = await dbContext.Messages.CountAsync(
-                m => m.ConversationId == command.ConversationId,
-                cancellationToken
-            );
-
-            var userInput = command.Conversation.Messages.LastOrDefault(m => m.Role == Role.User);
-            if (userInput is not null)
-            {
-                await dbContext.Messages.AddAsync(
-                    Message.Create(
-                        DatabaseExtensions.CreateId<Message>(),
-                        command.ConversationId.Value,
-                        userInput.Content,
-                        Role.User,
-                        existingCount
-                    ),
-                    cancellationToken
-                );
-            }
-
-            var assistantContent = buffer.ToString();
-            if (!string.IsNullOrWhiteSpace(assistantContent))
-            {
-                await dbContext.Messages.AddAsync(
-                    Message.Create(
-                        DatabaseExtensions.CreateId<Message>(),
-                        command.ConversationId.Value,
-                        assistantContent,
-                        Role.Assistant,
-                        existingCount + 1
-                    ),
-                    cancellationToken
-                );
-            }
-
-            if (tokenUsage is not null)
-            {
-                conversation.RecordTokenUsage(
-                    tokenUsage.InputTokens,
-                    tokenUsage.OutputTokens,
-                    tokenUsage.TotalTokens
-                );
-            }
-
-            await dbContext.SaveChangesAsync(cancellationToken);
         }
+
+        yield return new AssistantDoneEvent();
 
         _logger.LogDebug("Successfully handled generate completion request.");
     }
@@ -179,40 +153,109 @@ public sealed class GenerateCompletionHandler
         return builder.Build();
     }
 
-    private async IAsyncEnumerable<ChatCompletionChunk> GenerateCompletionStream(
-        ConversationInput conversation,
-        string systemPrompt,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default
+    // Earlier tool calls are replayed before the reply that made them so the model can build on
+    // what its tools returned; reasoning is not replayed.
+    internal static List<ResponseInputItemDto> BuildInput(
+        IEnumerable<CompletionMessageInput> messages,
+        int maxToolOutputCharacters
     )
     {
-        _logger.LogTrace(
-            "Attempting to generate a chat completion for conversation '{@conversation}'.",
-            conversation
-        );
-        cancellationToken.ThrowIfCancellationRequested();
+        var input = new List<ResponseInputItemDto>();
 
-        List<MessageDto> messages =
-        [
-            new(systemPrompt, RoleDto.System),
-            .. conversation.Messages.Select(m => new MessageDto(m.Content, MapRole(m.Role))),
-        ];
-
-        await foreach (
-            var chunk in _ouranosMachineLearningClient.StreamChatCompletionAsync(
-                conversation.Model.ModelIdentifier,
-                messages,
-                conversation.Model.Temperature,
-                conversation.Model.MaxTokens,
-                conversation.Model.RepeatPenalty,
-                cancellationToken
-            )
-        )
+        foreach (var message in messages)
         {
-            yield return chunk;
-            cancellationToken.ThrowIfCancellationRequested();
+            if (message.Role == Role.Assistant)
+            {
+                foreach (var call in message.ToolCalls ?? [])
+                {
+                    input.Add(
+                        new FunctionCallInputItemDto(
+                            new FunctionCallDto(call.CallId, call.Name, call.Arguments)
+                        )
+                    );
+                    input.Add(
+                        new FunctionCallOutputInputItemDto(
+                            call.CallId,
+                            Truncate(call.Output, maxToolOutputCharacters)
+                        )
+                    );
+                }
+            }
+
+            input.Add(
+                new MessageInputItemDto(new MessageDto(message.Content, MapRole(message.Role)))
+            );
         }
 
-        _logger.LogDebug("Successfully generated a chat completion.");
+        return input;
+    }
+
+    private async Task PersistTurnAsync(
+        Id<Conversation> conversationId,
+        List<CompletionMessageInput> messages,
+        MessagePartsBuilder reply,
+        AssistantUsageEvent? usage,
+        CancellationToken cancellationToken
+    )
+    {
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        var conversation = await dbContext.Conversations.FirstOrDefaultAsync(
+            c => c.Id == conversationId,
+            cancellationToken
+        );
+
+        Guard.Against.NotFound(conversationId, conversation);
+
+        var existingCount = await dbContext.Messages.CountAsync(
+            m => m.ConversationId == conversationId,
+            cancellationToken
+        );
+
+        var userInput = messages.LastOrDefault(m => m.Role == Role.User);
+        if (userInput is not null)
+        {
+            await dbContext.Messages.AddAsync(
+                Message.Create(
+                    DatabaseExtensions.CreateId<Message>(),
+                    conversationId,
+                    userInput.Content,
+                    Role.User,
+                    existingCount
+                ),
+                cancellationToken
+            );
+        }
+
+        await dbContext.Messages.AddAsync(
+            Message.Create(
+                DatabaseExtensions.CreateId<Message>(),
+                conversationId,
+                reply.Content,
+                Role.Assistant,
+                existingCount + 1,
+                reply.Build()
+            ),
+            cancellationToken
+        );
+
+        // The total tracks how much of the context window the conversation fills, which after a
+        // tool round is the last round's size rather than the sum over rounds.
+        if (usage is not null)
+        {
+            conversation.RecordTokenUsage(
+                usage.InputTokens,
+                usage.OutputTokens,
+                usage.ContextTokens
+            );
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private static string Truncate(string output, int maxCharacters)
+    {
+        return output.Length <= maxCharacters ? output : $"{output[..maxCharacters]}…";
     }
 
     private static RoleDto MapRole(Role role)

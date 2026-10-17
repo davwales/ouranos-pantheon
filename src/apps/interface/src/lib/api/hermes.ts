@@ -5,6 +5,10 @@ export type {
   ModelConfig,
   AvailableModel,
   MessageInput,
+  MessagePart,
+  ReasoningEffort,
+  CompletionMessageInput,
+  CompletionToolCallInput,
   PersonaInput,
   ModelInput,
   TraitInput,
@@ -31,6 +35,7 @@ import type {
   ModelConfig,
   AvailableModel,
   MessageInput,
+  ReasoningEffort,
   PersonaInput,
   ConversationInput,
   GenerateCompletionInput,
@@ -91,7 +96,7 @@ export const hermesApi = {
     systemPrompt: string;
     temperature?: number | null;
     maxTokens?: number | null;
-    repeatPenalty?: number | null;
+    isToolCallingEnabled: boolean;
     contextWindow?: number | null;
     isDefault: boolean;
     isPublic: boolean;
@@ -140,6 +145,7 @@ export const hermesApi = {
       messages: MessageInput[];
       isPublic: boolean;
       folderId?: string | null;
+      reasoningEffort?: ReasoningEffort | null;
     },
   ) => api.put<{ id: string }>(`/api/hermes/conversations/${id}`, input),
 

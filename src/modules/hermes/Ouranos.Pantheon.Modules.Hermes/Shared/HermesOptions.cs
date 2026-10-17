@@ -1,11 +1,15 @@
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
+
 namespace Ouranos.Pantheon.Modules.Hermes.Shared;
 
 public sealed record HermesOptions(
     string ConversationNameSystemPrompt,
     string ConversationNameModel,
+    ReasoningEffort? ConversationNameReasoningEffort,
     string CompactionSummaryPrompt,
     float CompactionTemperature,
-    int CompactionMaxTokens
+    int CompactionMaxTokens,
+    ReasoningEffort? CompactionReasoningEffort
 )
 {
     public const string SectionName = "Ouranos:Hermes";
@@ -39,7 +43,7 @@ public sealed record HermesOptions(
 
     public const float DefaultCompactionTemperature = 0.3f;
 
-    public const int DefaultCompactionMaxTokens = 1024;
+    public const int DefaultCompactionMaxTokens = 4096;
 
     public HermesOptions()
         : this(
@@ -48,9 +52,11 @@ public sealed record HermesOptions(
             Respond with only the title - no punctuation, no quotes, no explanation.
             """,
             ConversationNameModel: string.Empty,
+            ConversationNameReasoningEffort: ReasoningEffort.None,
             CompactionSummaryPrompt: DefaultCompactionSummaryPrompt,
             CompactionTemperature: DefaultCompactionTemperature,
-            CompactionMaxTokens: DefaultCompactionMaxTokens
+            CompactionMaxTokens: DefaultCompactionMaxTokens,
+            CompactionReasoningEffort: ReasoningEffort.Low
         ) { }
 
     public bool IsConversationNameGenerationEnabled =

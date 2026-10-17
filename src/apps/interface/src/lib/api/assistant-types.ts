@@ -26,6 +26,7 @@ export type AssistantCompletionInput<TContext> = {
 };
 
 export type AssistantEvent =
+  | { $type: "instructions"; instructions: string }
   | { $type: "reasoning"; content: string }
   | { $type: "content"; content: string }
   | { $type: "tool"; callId: string; name: string; arguments: string }
@@ -42,6 +43,7 @@ export type AssistantEvent =
       inputTokens: number;
       outputTokens: number;
       totalTokens: number;
+      contextTokens: number;
     }
   | { $type: "error"; message: string }
   | { $type: "done" };

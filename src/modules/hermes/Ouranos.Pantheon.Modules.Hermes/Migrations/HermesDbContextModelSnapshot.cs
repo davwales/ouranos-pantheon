@@ -18,7 +18,7 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("hermes")
-                .HasAnnotation("ProductVersion", "10.0.4")
+                .HasAnnotation("ProductVersion", "10.0.12")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -115,6 +115,10 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("persona_id");
 
+                    b.Property<string>("ReasoningEffort")
+                        .HasColumnType("text")
+                        .HasColumnName("reasoning_effort");
+
                     b.Property<int?>("TotalTokenCount")
                         .HasColumnType("integer")
                         .HasColumnName("total_token_count");
@@ -179,6 +183,47 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
                     b.ToTable("messages", "hermes");
                 });
 
+            modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations.MessagePart", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("MessageId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("message_id");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("kind")
+                        .IsRequired()
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
+                        .HasColumnName("kind");
+
+                    b.HasKey("Id")
+                        .HasName("pk_message_parts");
+
+                    b.HasIndex("MessageId", "SortOrder")
+                        .HasDatabaseName("ix_message_parts_message_id_sort_order");
+
+                    b.ToTable("message_parts", "hermes");
+
+                    b.HasDiscriminator<string>("kind").HasValue("MessagePart");
+
+                    b.UseTphMappingStrategy();
+                });
+
             modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders.Folder", b =>
                 {
                     b.Property<Guid>("Id")
@@ -237,6 +282,10 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_public");
 
+                    b.Property<bool>("IsToolCallingEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_tool_calling_enabled");
+
                     b.Property<bool>("IsUnavailable")
                         .HasColumnType("boolean")
                         .HasColumnName("is_unavailable");
@@ -254,10 +303,6 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("name");
-
-                    b.Property<float?>("RepeatPenalty")
-                        .HasColumnType("real")
-                        .HasColumnName("repeat_penalty");
 
                     b.Property<string>("SystemPrompt")
                         .IsRequired()
@@ -358,6 +403,74 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
                     b.ToTable("traits", "hermes");
                 });
 
+            modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations.ReasoningMessagePart", b =>
+                {
+                    b.HasBaseType("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations.MessagePart");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .ValueGeneratedOnUpdateSometimes()
+                        .HasColumnType("text")
+                        .HasColumnName("content");
+
+                    b.ToTable("message_parts", "hermes");
+
+                    b.HasDiscriminator().HasValue("reasoning");
+                });
+
+            modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations.TextMessagePart", b =>
+                {
+                    b.HasBaseType("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations.MessagePart");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .ValueGeneratedOnUpdateSometimes()
+                        .HasColumnType("text")
+                        .HasColumnName("content");
+
+                    b.ToTable("message_parts", "hermes");
+
+                    b.HasDiscriminator().HasValue("text");
+                });
+
+            modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations.ToolCallMessagePart", b =>
+                {
+                    b.HasBaseType("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations.MessagePart");
+
+                    b.Property<string>("Arguments")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("arguments");
+
+                    b.Property<string>("CallId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("call_id");
+
+                    b.Property<bool>("IsTruncated")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_truncated");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Output")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("output");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.ToTable("message_parts", "hermes");
+
+                    b.HasDiscriminator().HasValue("tool_call");
+                });
+
             modelBuilder.Entity("ConversationTrait", b =>
                 {
                     b.HasOne("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations.Conversation", null)
@@ -414,6 +527,16 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
                         .HasConstraintName("fk_messages_conversations_conversation_id");
                 });
 
+            modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations.MessagePart", b =>
+                {
+                    b.HasOne("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations.Message", null)
+                        .WithMany("Parts")
+                        .HasForeignKey("MessageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_message_parts_messages_message_id");
+                });
+
             modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders.Folder", b =>
                 {
                     b.HasOne("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders.Folder", "ParentFolder")
@@ -428,6 +551,11 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
             modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations.Conversation", b =>
                 {
                     b.Navigation("Messages");
+                });
+
+            modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations.Message", b =>
+                {
+                    b.Navigation("Parts");
                 });
 
             modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders.Folder", b =>

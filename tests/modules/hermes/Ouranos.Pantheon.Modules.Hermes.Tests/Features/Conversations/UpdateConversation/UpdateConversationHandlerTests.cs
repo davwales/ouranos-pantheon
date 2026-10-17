@@ -1,5 +1,7 @@
 using Ardalis.GuardClauses;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.UpdateConversation;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.UpdateConversation.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
@@ -8,6 +10,7 @@ using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
@@ -16,7 +19,7 @@ namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.Conversations.UpdateCon
 
 public sealed class UpdateConversationHandlerTests
 {
-    private readonly IFixture _fixture = new Fixture();
+    private readonly Fixture _fixture = new();
     private readonly UpdateConversationHandler _handler;
     private readonly ILogger<UpdateConversationHandler> _logger = Substitute.For<
         ILogger<UpdateConversationHandler>
@@ -72,6 +75,42 @@ public sealed class UpdateConversationHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenReasoningEffortChanges_ShouldSaveIt()
+    {
+        // Arrange
+        var conversation = Conversation.Create(
+            new Id<Conversation>(Guid.NewGuid().ToString()),
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [],
+            [],
+            _fixture.Create<string>(),
+            reasoningEffort: ReasoningEffort.High
+        );
+
+        await _dbContext.SeedData(conversation);
+
+        var command = new UpdateConversationInput(
+            conversation.Id,
+            conversation.Name,
+            conversation.PersonaId,
+            conversation.ModelConfigId,
+            [],
+            [],
+            true,
+            ReasoningEffort: ReasoningEffort.None
+        );
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var updated = await _dbContext.Conversations.FindAsync(conversation.Id);
+        updated.ShouldNotBeNull();
+        updated.ReasoningEffort.ShouldBe(ReasoningEffort.None);
+    }
+
+    [Fact]
     public async Task Handle_WhenMessagesProvided_ShouldReplaceMessages()
     {
         // Arrange
@@ -104,6 +143,51 @@ public sealed class UpdateConversationHandlerTests
         result.Id.ShouldBe(conversation.Id);
         messageInput.Content.ShouldBe("Hello World");
         messageInput.Role.ShouldBe(Role.User);
+    }
+
+    [Fact]
+    public async Task Handle_WhenMessagesHaveParts_ShouldSaveThePartsInOrder()
+    {
+        // Arrange
+        var conversation = Conversation.Create(
+            new Id<Conversation>(Guid.NewGuid().ToString()),
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [],
+            [],
+            _fixture.Create<string>()
+        );
+
+        await _dbContext.SeedData(conversation);
+
+        var command = new UpdateConversationInput(
+            conversation.Id,
+            _fixture.Create<string>(),
+            conversation.PersonaId,
+            conversation.ModelConfigId,
+            [],
+            [
+                new UpdateConversationMessageInput("Hi", Role.User),
+                new UpdateConversationMessageInput(
+                    "Hello",
+                    Role.Assistant,
+                    [new ReasoningMessagePartDto("Thinking"), new TextMessagePartDto("Hello")]
+                ),
+            ],
+            true
+        );
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var assistant = await _dbContext
+            .Messages.Include(m => m.Parts)
+            .SingleAsync(m => m.Role == Role.Assistant);
+
+        var parts = assistant.Parts.OrderBy(p => p.SortOrder).ToList();
+        parts[0].ShouldBeOfType<ReasoningMessagePart>().Content.ShouldBe("Thinking");
+        parts[1].ShouldBeOfType<TextMessagePart>().Content.ShouldBe("Hello");
     }
 
     [Fact]

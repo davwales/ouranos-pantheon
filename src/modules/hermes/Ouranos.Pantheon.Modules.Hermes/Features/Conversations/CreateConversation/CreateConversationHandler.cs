@@ -1,8 +1,10 @@
+using System.ClientModel;
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.CreateConversation.Schemas;
+using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
@@ -62,7 +64,8 @@ public sealed class CreateConversationHandler
                         conversationId,
                         m.Content,
                         m.Role,
-                        index
+                        index,
+                        m.Parts?.Select(MessagePartMapping.ToEntity)
                     )
             )
             .ToList();
@@ -92,7 +95,8 @@ public sealed class CreateConversationHandler
             name,
             command.IsPublic,
             folderId: command.FolderId,
-            folder: folder
+            folder: folder,
+            reasoningEffort: command.ReasoningEffort
         );
 
         if (
@@ -131,26 +135,27 @@ public sealed class CreateConversationHandler
 
         try
         {
-            var messages = new List<MessageDto>
-            {
-                new(_options.Value.ConversationNameSystemPrompt, RoleDto.System),
-            };
+            List<ResponseInputItemDto> input =
+            [
+                .. command.Messages.Select(m => new MessageInputItemDto(
+                    new MessageDto(m.Content, MapRole(m.Role))
+                )),
+            ];
 
-            messages.AddRange(
-                command.Messages.Select(m => new MessageDto(m.Content, MapRole(m.Role)))
-            );
-
-            var lastMessage = messages.Last();
-            if (lastMessage.Role != RoleDto.User)
+            if (command.Messages[^1].Role != Role.User)
             {
-                messages.Add(
-                    new MessageDto("Generate a name using the prior content.", RoleDto.User)
+                input.Add(
+                    new MessageInputItemDto(
+                        new MessageDto("Generate a name using the prior content.", RoleDto.User)
+                    )
                 );
             }
 
-            var result = await _mlClient.GenerateChatCompletionAsync(
+            var result = await _mlClient.GenerateResponseAsync(
                 options.ConversationNameModel,
-                messages,
+                options.ConversationNameSystemPrompt,
+                input,
+                reasoningEffort: options.ConversationNameReasoningEffort,
                 cancellationToken: cancellationToken
             );
 
@@ -165,6 +170,14 @@ public sealed class CreateConversationHandler
                 : trimmed;
         }
         catch (HttpRequestException ex)
+        {
+            _logger.LogWarning(
+                ex,
+                "Failed to auto-generate conversation name; falling back to default."
+            );
+            return null;
+        }
+        catch (ClientResultException ex)
         {
             _logger.LogWarning(
                 ex,

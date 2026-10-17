@@ -28,7 +28,7 @@ graph LR
 
     gateway -- "WebSocket / HTTPS" --> marketData
     gateway -- "HTTPS (scrape)" --> recipeSites
-    gateway -- "HTTP (OpenAI Chat Completions + Responses, forecast)" --> ouranosMl
+    gateway -- "HTTP (OpenAI Responses, forecast)" --> ouranosMl
     gateway -- HTTP --> flagsmith
     gateway -- HTTP --> loki
     gateway -- "OTLP (gRPC)" --> alloy
@@ -59,7 +59,7 @@ or repo-relative for apps.
 | External system | Channel | Protocol / format | Purpose | Code entry point |
 |-----------------|---------|-------------------|---------|------------------|
 | Market data providers (Universalis, XIVAPI, OSRS Wiki, Alpaca) | Outbound WSS / HTTPS | Per provider | Market data ingestion | Plutus: `Features/DataLoaders/` |
-| OuranosMl | Outbound HTTP | OpenAI-compatible: Chat Completions (Hermes chat), Responses (module assistants with streamed reasoning and function tools, structured output) + `POST /plutus/forecast` | LLM chat, recipe normalization, price forecasting | Shared.Contract: `Infra/OuranosMachineLearning/` |
+| OuranosMl | Outbound HTTP | OpenAI-compatible: Responses (Hermes chat and module assistants with streamed reasoning and function tools, structured output), model list + `POST /plutus/forecast` | LLM chat, recipe normalization, price forecasting | Shared.Contract: `Infra/OuranosMachineLearning/` |
 | Flagsmith | Outbound HTTP | REST | Feature flags | Shared: `Infra/Flagsmith/` |
 | Recipe websites | Outbound HTTPS | HTML with JSON-LD metadata | Recipe import | Hestia: `Features/Recipes/ImportRecipe/` |
 | Grafana Loki | Outbound HTTP | Push API | Production log sink | Gateway: `appsettings.Production.json` |

@@ -3,6 +3,7 @@ using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.CreateConversation.Schemas;
 
@@ -16,5 +17,6 @@ public sealed record CreateConversationInput(
     int? InputTokenCount = null,
     int? OutputTokenCount = null,
     int? TotalTokenCount = null,
-    Id<Folder>? FolderId = null
+    Id<Folder>? FolderId = null,
+    ReasoningEffort? ReasoningEffort = null
 );

@@ -50,4 +50,46 @@ public sealed class MessageTests
         // Assert
         create.ShouldThrow<ArgumentException>();
     }
+
+    [Fact]
+    public void Create_WhenPartsProvided_ShouldKeepThemInOrder()
+    {
+        // Arrange
+        var reasoning = ReasoningMessagePart.Create(
+            new Id<MessagePart>(Guid.NewGuid().ToString()),
+            "Thinking"
+        );
+
+        var text = TextMessagePart.Create(new Id<MessagePart>(Guid.NewGuid().ToString()), "Hi");
+
+        // Act
+        var message = Message.Create(
+            new Id<Message>(Guid.NewGuid().ToString()),
+            new Id<Conversation>(Guid.NewGuid().ToString()),
+            "Hi",
+            Role.Assistant,
+            1,
+            [reasoning, text]
+        );
+
+        // Assert
+        message.Parts.ShouldBe([reasoning, text]);
+        message.Parts.Select(p => p.SortOrder).ShouldBe([0, 1]);
+    }
+
+    [Fact]
+    public void Create_WhenNoPartsProvided_ShouldHaveNoParts()
+    {
+        // Act
+        var message = Message.Create(
+            new Id<Message>(Guid.NewGuid().ToString()),
+            new Id<Conversation>(Guid.NewGuid().ToString()),
+            "Hi",
+            Role.User,
+            0
+        );
+
+        // Assert
+        message.Parts.ShouldBeEmpty();
+    }
 }

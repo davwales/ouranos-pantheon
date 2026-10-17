@@ -29,19 +29,12 @@ public sealed class PantheonAssistantTests
 
     public sealed record LookupArguments(string Query);
 
-    public sealed record TestAction(string Query);
-
-    private sealed class LookupTool(
-        Func<TestContext, LookupArguments, AssistantToolResult>? execute = null,
-        bool isAvailable = true,
-        bool isSingleActionPerReply = false
-    ) : AssistantTool<TestContext, LookupArguments>(Substitute.For<ILogger>())
+    private sealed class LookupTool(bool isAvailable = true)
+        : AssistantTool<TestContext, LookupArguments>(Substitute.For<ILogger>())
     {
         public override string Name => "lookup";
 
         public override string Description => "Looks something up.";
-
-        public override bool IsSingleActionPerReply => isSingleActionPerReply;
 
         public override bool IsAvailable(TestContext context)
         {
@@ -55,8 +48,7 @@ public sealed class PantheonAssistantTests
         )
         {
             return ValueTask.FromResult(
-                execute?.Invoke(context, arguments)
-                    ?? new AssistantToolResult($"{context.Topic}: {arguments.Query}")
+                new AssistantToolResult($"{context.Topic}: {arguments.Query}")
             );
         }
     }
@@ -175,27 +167,9 @@ public sealed class PantheonAssistantTests
             new AssistantReasoningEvent("Thinking"),
             new AssistantContentEvent("Hello"),
             new AssistantContentEvent(" world"),
-            new AssistantUsageEvent(10, 2, 12),
+            new AssistantUsageEvent(10, 2, 12, 12),
             new AssistantDoneEvent(),
         ]);
-    }
-
-    [Fact]
-    public async Task Handle_WhenChunkHasNoTextOrReasoning_ShouldNotYieldEvents()
-    {
-        // Arrange
-        SetupStream(
-            CreateStream([
-                new ResponseStreamChunk(string.Empty, string.Empty, null),
-                new("Hi", null, null),
-            ])
-        );
-
-        // Act
-        var events = await CollectAsync(_assistant.Handle(CreateInput()));
-
-        // Assert
-        events.ShouldBe([new AssistantContentEvent("Hi"), new AssistantDoneEvent()]);
     }
 
     [Fact]
@@ -215,7 +189,7 @@ public sealed class PantheonAssistantTests
         // Assert
         events.ShouldBe([
             new AssistantReasoningEvent("Thinking"),
-            new AssistantErrorEvent(PantheonAssistant<TestContext>.GenerationFailedMessage),
+            new AssistantErrorEvent(AssistantToolLoop<TestContext>.GenerationFailedMessage),
         ]);
     }
 
@@ -251,44 +225,6 @@ public sealed class PantheonAssistantTests
             Message("Hello!", RoleDto.Assistant),
             Message("Help me", RoleDto.User),
         ]);
-    }
-
-    [Fact]
-    public async Task Handle_WhenStreamFails_ShouldYieldErrorEventAndStop()
-    {
-        // Arrange
-        SetupStream(
-            CreateStream(
-                [new ResponseStreamChunk("Partial", null, null)],
-                new HttpRequestException("boom")
-            )
-        );
-
-        // Act
-        var events = await CollectAsync(_assistant.Handle(CreateInput()));
-
-        // Assert
-        events.ShouldBe([
-            new AssistantContentEvent("Partial"),
-            new AssistantErrorEvent(PantheonAssistant<TestContext>.GenerationFailedMessage),
-        ]);
-    }
-
-    [Fact]
-    public async Task Handle_WhenStreamIsCancelled_ShouldThrowOperationCanceledException()
-    {
-        // Arrange
-        SetupStream(
-            CreateStream(
-                [new ResponseStreamChunk("Hi", null, null)],
-                new OperationCanceledException()
-            )
-        );
-
-        // Act & Assert
-        await Should.ThrowAsync<OperationCanceledException>(() =>
-            CollectAsync(_assistant.Handle(CreateInput()))
-        );
     }
 
     [Fact]
@@ -498,7 +434,7 @@ public sealed class PantheonAssistantTests
                 false
             ),
             new AssistantContentEvent("Use bread flour."),
-            new AssistantUsageEvent(30, 8, 38),
+            new AssistantUsageEvent(30, 8, 38, 23),
             new AssistantDoneEvent(),
         ]);
 
@@ -515,364 +451,6 @@ public sealed class PantheonAssistantTests
                     new FunctionCallDto("call-1", "lookup", """{"query":"flour"}""")
                 ),
                 new FunctionCallOutputInputItemDto("call-1", "baking: flour"),
-            ]);
-    }
-
-    [Fact]
-    public async Task Handle_WhenToolReturnsAnAction_ShouldStreamTheActionBetweenTheCallAndItsResult()
-    {
-        // Arrange
-        SetupStream(
-            CreateStream([Call("call-1", """{"query":"salt"}""")]),
-            CreateStream([new ResponseStreamChunk("Proposed.", null, null)])
-        );
-
-        var assistant = new TestAssistant(
-            Substitute.For<ILogger>(),
-            _mlClient,
-            [
-                new LookupTool(
-                    (_, arguments) =>
-                        new AssistantToolResult("Proposed", new TestAction(arguments.Query))
-                ),
-            ]
-        );
-
-        // Act
-        var events = await CollectAsync(assistant.Handle(CreateInput()));
-
-        // Assert
-        events.ShouldBe([
-            new AssistantToolEvent("call-1", "lookup", """{"query":"salt"}"""),
-            new AssistantActionEvent("call-1", "lookup", new TestAction("salt")),
-            new AssistantToolResultEvent(
-                "call-1",
-                AssistantToolStatus.Completed,
-                "Proposed",
-                false
-            ),
-            new AssistantContentEvent("Proposed."),
-            new AssistantDoneEvent(),
-        ]);
-    }
-
-    [Theory]
-    [InlineData("unknown", """{"query":"x"}""", "Unknown tool 'unknown'.")]
-    [InlineData(
-        "lookup",
-        "not json",
-        AssistantTool<TestContext, LookupArguments>.InvalidArgumentsOutput
-    )]
-    public async Task Handle_WhenToolCallCannotBeServed_ShouldReportAFailureAndContinue(
-        string name,
-        string arguments,
-        string expectedOutput
-    )
-    {
-        // Arrange
-        var sentInputs = new List<IReadOnlyList<ResponseInputItemDto>>();
-
-        _mlClient
-            .StreamResponseAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Do<IReadOnlyList<ResponseInputItemDto>>(sentInputs.Add),
-                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
-                Arg.Any<float?>(),
-                Arg.Any<int?>(),
-                Arg.Any<ReasoningEffort?>(),
-                Arg.Any<CancellationToken>()
-            )
-            .Returns(
-                CreateStream([Call("call-1", arguments, name)]),
-                CreateStream([new ResponseStreamChunk("Sorry.", null, null)])
-            );
-
-        var assistant = new TestAssistant(Substitute.For<ILogger>(), _mlClient, [new LookupTool()]);
-
-        // Act
-        var events = await CollectAsync(assistant.Handle(CreateInput()));
-
-        // Assert
-        events.ShouldBe([
-            new AssistantToolEvent("call-1", name, arguments),
-            new AssistantToolResultEvent(
-                "call-1",
-                AssistantToolStatus.Failed,
-                expectedOutput,
-                false
-            ),
-            new AssistantContentEvent("Sorry."),
-            new AssistantDoneEvent(),
-        ]);
-
-        sentInputs[1].Last().ShouldBe(new FunctionCallOutputInputItemDto("call-1", expectedOutput));
-    }
-
-    [Fact]
-    public async Task Handle_WhenToolThrows_ShouldTellTheModelTheToolFailed()
-    {
-        // Arrange
-        var sentInputs = new List<IReadOnlyList<ResponseInputItemDto>>();
-
-        _mlClient
-            .StreamResponseAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Do<IReadOnlyList<ResponseInputItemDto>>(sentInputs.Add),
-                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
-                Arg.Any<float?>(),
-                Arg.Any<int?>(),
-                Arg.Any<ReasoningEffort?>(),
-                Arg.Any<CancellationToken>()
-            )
-            .Returns(
-                CreateStream([Call("call-1", """{"query":"x"}""")]),
-                CreateStream([new ResponseStreamChunk("Sorry.", null, null)])
-            );
-
-        var assistant = new TestAssistant(
-            Substitute.For<ILogger>(),
-            _mlClient,
-            [new LookupTool((_, _) => throw new InvalidOperationException("boom"))]
-        );
-
-        // Act
-        var events = await CollectAsync(assistant.Handle(CreateInput()));
-
-        // Assert
-        events.ShouldContain(
-            new AssistantToolResultEvent(
-                "call-1",
-                AssistantToolStatus.Failed,
-                PantheonAssistant<TestContext>.ToolFailedOutput,
-                false
-            )
-        );
-        events.ShouldContain(new AssistantContentEvent("Sorry."));
-        sentInputs[1]
-            .Last()
-            .ShouldBe(
-                new FunctionCallOutputInputItemDto(
-                    "call-1",
-                    PantheonAssistant<TestContext>.ToolFailedOutput
-                )
-            );
-    }
-
-    [Fact]
-    public async Task Handle_WhenToolOutputIsTooLong_ShouldTruncateItForTheModelAndTheClient()
-    {
-        // Arrange
-        var sentInputs = new List<IReadOnlyList<ResponseInputItemDto>>();
-
-        _mlClient
-            .StreamResponseAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Do<IReadOnlyList<ResponseInputItemDto>>(sentInputs.Add),
-                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
-                Arg.Any<float?>(),
-                Arg.Any<int?>(),
-                Arg.Any<ReasoningEffort?>(),
-                Arg.Any<CancellationToken>()
-            )
-            .Returns(
-                CreateStream([Call("call-1", """{"query":"x"}""")]),
-                CreateStream([new ResponseStreamChunk("Ok.", null, null)])
-            );
-
-        var assistant = new TestAssistant(
-            Substitute.For<ILogger>(),
-            _mlClient,
-            [new LookupTool((_, _) => new AssistantToolResult(new string('a', 20)))]
-        )
-        {
-            Prompt = Prompt with { MaxToolOutputCharacters = 5 },
-        };
-
-        // Act
-        var events = await CollectAsync(assistant.Handle(CreateInput()));
-
-        // Assert
-        sentInputs[1].Last().ShouldBe(new FunctionCallOutputInputItemDto("call-1", "aaaaa…"));
-        events.ShouldContain(
-            new AssistantToolResultEvent("call-1", AssistantToolStatus.Completed, "aaaaa…", true)
-        );
-    }
-
-    [Fact]
-    public async Task Handle_WhenToolRoundsAreExhausted_ShouldOfferNoToolsInTheLastRound()
-    {
-        // Arrange
-        var sentTools = new List<IReadOnlyList<FunctionToolDto>>();
-
-        _mlClient
-            .StreamResponseAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
-                Arg.Do<IReadOnlyList<FunctionToolDto>>(sentTools.Add),
-                Arg.Any<float?>(),
-                Arg.Any<int?>(),
-                Arg.Any<ReasoningEffort?>(),
-                Arg.Any<CancellationToken>()
-            )
-            .Returns(
-                CreateStream([Call("call-1", """{"query":"a"}""")]),
-                CreateStream([Call("call-2", """{"query":"b"}""")]),
-                CreateStream([Call("call-3", """{"query":"c"}""")])
-            );
-
-        var assistant = new TestAssistant(Substitute.For<ILogger>(), _mlClient, [new LookupTool()])
-        {
-            Prompt = Prompt with { MaxToolRounds = 2 },
-        };
-
-        // Act
-        var events = await CollectAsync(assistant.Handle(CreateInput()));
-
-        // Assert
-        sentTools.Select(t => t.Count).ShouldBe([1, 1, 0]);
-        events.Count(e => e is AssistantToolEvent).ShouldBe(2);
-
-        events
-            .Last()
-            .ShouldBe(
-                new AssistantErrorEvent(PantheonAssistant<TestContext>.GenerationFailedMessage)
-            );
-    }
-
-    [Fact]
-    public async Task Handle_WhenARoundHasTooManyCalls_ShouldRunOnlyTheFirstAndReportTheRestAsSkipped()
-    {
-        // Arrange
-        var sentInputs = new List<IReadOnlyList<ResponseInputItemDto>>();
-        var executed = new List<string>();
-
-        _mlClient
-            .StreamResponseAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Do<IReadOnlyList<ResponseInputItemDto>>(sentInputs.Add),
-                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
-                Arg.Any<float?>(),
-                Arg.Any<int?>(),
-                Arg.Any<ReasoningEffort?>(),
-                Arg.Any<CancellationToken>()
-            )
-            .Returns(
-                CreateStream([
-                    Call("call-1", """{"query":"a"}"""),
-                    Call("call-2", """{"query":"b"}"""),
-                    Call("call-3", """{"query":"c"}"""),
-                ]),
-                CreateStream([new ResponseStreamChunk("Done.", null, null)])
-            );
-
-        var assistant = new TestAssistant(
-            Substitute.For<ILogger>(),
-            _mlClient,
-            [
-                new LookupTool(
-                    (_, arguments) =>
-                    {
-                        executed.Add(arguments.Query);
-                        return new AssistantToolResult(arguments.Query);
-                    }
-                ),
-            ]
-        )
-        {
-            Prompt = Prompt with { MaxToolCallsPerRound = 2 },
-        };
-
-        // Act
-        var events = await CollectAsync(assistant.Handle(CreateInput()));
-
-        // Assert
-        executed.ShouldBe(["a", "b"]);
-        events.OfType<AssistantToolEvent>().Count().ShouldBe(3);
-        events
-            .OfType<AssistantToolResultEvent>()
-            .Select(result => result.Status)
-            .ShouldBe([
-                AssistantToolStatus.Completed,
-                AssistantToolStatus.Completed,
-                AssistantToolStatus.Skipped,
-            ]);
-        sentInputs[1]
-            .OfType<FunctionCallOutputInputItemDto>()
-            .Select(output => output.Output)
-            .ShouldBe(["a", "b", PantheonAssistant<TestContext>.TooManyToolCallsOutput]);
-    }
-
-    [Fact]
-    public async Task Handle_WhenASingleActionToolRepeatsInAReply_ShouldStreamOnlyTheFirstAction()
-    {
-        // Arrange
-        var sentInputs = new List<IReadOnlyList<ResponseInputItemDto>>();
-
-        _mlClient
-            .StreamResponseAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Do<IReadOnlyList<ResponseInputItemDto>>(sentInputs.Add),
-                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
-                Arg.Any<float?>(),
-                Arg.Any<int?>(),
-                Arg.Any<ReasoningEffort?>(),
-                Arg.Any<CancellationToken>()
-            )
-            .Returns(
-                CreateStream([
-                    Call("call-1", """{"query":"bad"}"""),
-                    Call("call-2", """{"query":"first"}"""),
-                ]),
-                CreateStream([Call("call-3", """{"query":"second"}""")]),
-                CreateStream([new ResponseStreamChunk("Proposed.", null, null)])
-            );
-
-        var assistant = new TestAssistant(
-            Substitute.For<ILogger>(),
-            _mlClient,
-            [
-                new LookupTool(
-                    (_, arguments) =>
-                        arguments.Query == "bad"
-                            ? new AssistantToolResult("Invalid.")
-                            : new AssistantToolResult("Proposed", new TestAction(arguments.Query)),
-                    isSingleActionPerReply: true
-                ),
-            ]
-        );
-
-        // Act
-        var events = await CollectAsync(assistant.Handle(CreateInput()));
-
-        // Assert
-        events
-            .OfType<AssistantActionEvent>()
-            .ShouldBe([new AssistantActionEvent("call-2", "lookup", new TestAction("first"))]);
-        events
-            .OfType<AssistantToolResultEvent>()
-            .Last()
-            .ShouldBe(
-                new AssistantToolResultEvent(
-                    "call-3",
-                    AssistantToolStatus.Skipped,
-                    PantheonAssistant<TestContext>.RepeatedActionOutput,
-                    false
-                )
-            );
-
-        sentInputs[2]
-            .OfType<FunctionCallOutputInputItemDto>()
-            .Select(output => output.Output)
-            .ShouldBe([
-                "Invalid.",
-                "Proposed",
-                PantheonAssistant<TestContext>.RepeatedActionOutput,
             ]);
     }
 

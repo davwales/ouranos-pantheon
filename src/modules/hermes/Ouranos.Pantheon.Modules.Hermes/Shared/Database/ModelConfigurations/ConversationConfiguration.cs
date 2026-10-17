@@ -16,6 +16,7 @@ public sealed class ConversationConfiguration : IEntityTypeConfiguration<Convers
         builder.Property(c => c.Id).HasIdConversion();
         builder.Property(c => c.PersonaId).HasIdConversion();
         builder.Property(c => c.ModelConfigId).HasIdConversion();
+        builder.Property(c => c.ReasoningEffort).HasConversion<string>();
 
         builder
             .HasOne(c => c.Persona)
