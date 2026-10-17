@@ -28,11 +28,28 @@ or deleted. Superseded records stay in place and point at their replacement.
 | [0010](0010-server-side-output-caching-for-dashboard-aggregates.md) | Server-side output caching for hot dashboard aggregates | Accepted |
 | [0011](0011-container-images-on-ghcr.md) | Container images on GHCR, deployment owned by the infrastructure repo | Accepted |
 | [0012](0012-feature-flags-via-flagsmith.md) | Feature flags via Flagsmith; public mode as data-exposure control | Accepted |
+| [0013](0013-module-owned-architecture-documentation.md) | Module-owned architecture documentation | Accepted |
+
+## Module Decision Logs
+
+This log holds platform decisions: those that constrain more than one module. A decision
+whose consequences stay inside one module goes in that module's log instead, cited as
+`<MODULE>-ADR-NNNN`, and is never listed here, so module work does not edit this index
+([ADR 0013](0013-module-owned-architecture-documentation.md)).
+
+| Module | Log |
+|--------|-----|
+| Plutus | [Plutus docs](../../src/modules/plutus/docs/README.md) |
+| Hermes | [Hermes docs](../../src/modules/hermes/docs/README.md) |
+| Hestia | [Hestia docs](../../src/modules/hestia/docs/README.md) |
+| Shared | [Shared docs](../../src/modules/shared/docs/README.md) |
 
 ## Process
 
-1. Copy the structure of any existing ADR (or MADR's template).
-2. Use the next sequential number and a short, decision-shaped title.
-3. Link the ADR from the relevant arc42 section. Most decisions belong in
+1. Decide the level: platform here, or the owning module's log (see
+   [Maintaining this documentation](../architecture/README.md#maintaining-this-documentation)).
+2. Copy the structure of any existing ADR (or MADR's template).
+3. Use the next sequential number and a short, decision-shaped title.
+4. Link the ADR from the relevant arc42 section. Most decisions belong in
    [Section 4](../architecture/04-solution-strategy.md).
-4. If a decision changes, mark the old ADR superseded and write a new one.
+5. If a decision changes, mark the old ADR superseded and write a new one.

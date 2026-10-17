@@ -18,6 +18,7 @@ decision record under [`docs/adr/`](../adr/README.md).
 | **Server-side output caching for hot dashboard aggregates** | Responsiveness (Q4): repeated reads of expensive aggregate endpoints collapse into one computation per TTL window instead of one Postgres scan per request | [0010](../adr/0010-server-side-output-caching-for-dashboard-aggregates.md) |
 | **Container images on GHCR; deployment owned by the infrastructure repo** | Simplicity (Q3): merging to `main` produces the release artifacts; this repo carries no host topology | [0011](../adr/0011-container-images-on-ghcr.md) |
 | **Runtime feature flags via Flagsmith** (Hermes public mode) | Lets the owner limit what an unauthenticated viewer sees without a redeploy, within the no-auth posture of 0008 | [0012](../adr/0012-feature-flags-via-flagsmith.md) |
+| **Module-owned architecture documentation**: platform arc42 describes modules as blackboxes; each module keeps its own arc42 subset and ADR log next to its code | Extensibility (Q1): a module's documentation changes stay inside its folder, as its code does. Design clarity (Q2): the rationale stays in the repo at the level that owns it | [0013](../adr/0013-module-owned-architecture-documentation.md) |
 
 ## 4.1 The Module Contract in One Picture
 
@@ -48,7 +49,7 @@ The crossed lines are the system's most important structural rule: **domain modu
 not reference each other**. They share only the `Shared.Contract` kernel. The Shared
 *module* is a separate assembly that plugs in core infrastructure (health, TickerQ store,
 observability, Flagsmith); only the gateway references it
-([Section 5](05-building-block-view.md#56-whitebox-shared)).
+([Section 5.3](05-building-block-view.md#53-blackboxes-modules)).
 
 ## 4.2 Trade-Offs Accepted
 
