@@ -36,7 +36,14 @@ describe("assistant chat parts", () => {
     // Arrange & Act
     const parts = run(
       { $type: "tool", callId: "c1", name: "get_signals", arguments: "{}" },
-      { $type: "toolResult", callId: "c1", status: "Skipped", output: "Skipped.", isTruncated: true },
+      {
+        $type: "toolResult",
+        callId: "c1",
+        status: "Skipped",
+        output: "Skipped.",
+        isTruncated: true,
+        durationMs: 40,
+      },
     );
 
     // Assert
@@ -52,6 +59,7 @@ describe("assistant chat parts", () => {
         isTruncated: true,
         startedAt: 0,
         endedAt: 100,
+        durationMs: 40,
       },
     ]);
   });
@@ -60,9 +68,9 @@ describe("assistant chat parts", () => {
     // Arrange & Act
     const parts = run(
       { $type: "tool", callId: "c1", name: "first", arguments: "{}" },
-      { $type: "toolResult", callId: "c1", status: "Completed", output: "1", isTruncated: false },
+      { $type: "toolResult", callId: "c1", status: "Completed", output: "1", isTruncated: false, durationMs: 0 },
       { $type: "tool", callId: "c1", name: "second", arguments: "{}" },
-      { $type: "toolResult", callId: "c1", status: "Failed", output: "2", isTruncated: false },
+      { $type: "toolResult", callId: "c1", status: "Failed", output: "2", isTruncated: false, durationMs: 0 },
     );
 
     // Assert
@@ -77,7 +85,7 @@ describe("assistant chat parts", () => {
     const parts = run(
       { $type: "tool", callId: "c1", name: "add_note", arguments: '{"text":"A"}' },
       { $type: "action", callId: "c1", name: "add_note", action: { text: "A" } },
-      { $type: "toolResult", callId: "c1", status: "Completed", output: "Proposed", isTruncated: false },
+      { $type: "toolResult", callId: "c1", status: "Completed", output: "Proposed", isTruncated: false, durationMs: 0 },
     );
 
     // Assert
@@ -114,7 +122,7 @@ describe("assistant chat parts", () => {
     // Arrange & Act
     const parts = run(
       { $type: "content", content: "Hi" },
-      { $type: "toolResult", callId: "c1", status: "Completed", output: "1", isTruncated: false },
+      { $type: "toolResult", callId: "c1", status: "Completed", output: "1", isTruncated: false, durationMs: 0 },
     );
 
     // Assert
@@ -155,5 +163,38 @@ describe("assistant chat parts", () => {
     expect(
       (["proposed", "applying", "applied", "rejected", "failed"] as const).map(actionOutcome),
     ).toEqual(["Pending", "Pending", "Applied", "Rejected", "Failed"]);
+  });
+
+  it("applyEvent_WhenAToolDeliversAnImage_ShouldAddAnImagePartAndLeaveTheTextAlone", () => {
+    // Arrange & Act
+    const parts = run(
+      { $type: "tool", callId: "c1", name: "generate_image", arguments: "{}" },
+      {
+        $type: "toolResult",
+        callId: "c1",
+        status: "Completed",
+        output: "Generated.",
+        isTruncated: false, durationMs: 0,
+      },
+      {
+        $type: "image",
+        callId: "c1",
+        image: { id: "img-1", url: "/api/hermes/images/img-1", width: 64, height: 32, altText: "A fox" },
+      },
+      { $type: "content", content: "Here it is." },
+    );
+
+    // Assert
+    expect(parts[1]).toEqual({
+      kind: "image",
+      id: "p2",
+      callId: "c1",
+      imageId: "img-1",
+      url: "/api/hermes/images/img-1",
+      width: 64,
+      height: 32,
+      altText: "A fox",
+    });
+    expect(textOf(parts)).toBe("Here it is.");
   });
 });

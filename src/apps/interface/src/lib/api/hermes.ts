@@ -49,6 +49,10 @@ import type {
 } from "./hermes-types";
 import type { CompletionChunk, CompactChunk } from "./hermes-types";
 
+export function hermesImagePath(imageId: string): string {
+  return `/api/hermes/images/${encodeURIComponent(imageId)}`;
+}
+
 export const hermesApi = {
   getAllPersonas: (params?: { filter?: string[] }) =>
     api.get<Persona[]>("/api/hermes/personas", params),

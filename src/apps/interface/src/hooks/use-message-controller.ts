@@ -198,15 +198,19 @@ export function useMessageController(params: {
         abortRef.current = null;
       }
 
-      // A reply with no text is dropped so the user can retry from their own message.
+      // A reply with neither text nor an image is dropped so the user can retry from their own
+      // message.
       const finished = finishParts(parts, Date.now());
       const content = textOf(finished);
+      const isAnswered = content !== "" || finished.some((part) => part.kind === "image");
+
       setMessages((prev) => {
         const updated = prev.slice(0, -1);
-        return content
+        return isAnswered
           ? [...updated, { role: Role.Assistant, content, parts: toMessageParts(finished) }]
           : updated;
       });
+
       setGenerationError(failure);
       setStreamingParts(null);
     },

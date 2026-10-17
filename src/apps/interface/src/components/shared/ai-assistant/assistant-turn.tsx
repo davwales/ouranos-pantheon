@@ -1,5 +1,6 @@
 import { ActionBlock } from "@/components/shared/ai-assistant/blocks/action-block";
 import { ActionGroupBar } from "@/components/shared/ai-assistant/blocks/action-group-bar";
+import { ImageBlock } from "@/components/shared/ai-assistant/blocks/image-block";
 import { PendingBlock } from "@/components/shared/ai-assistant/blocks/pending-block";
 import { ReasoningBlock } from "@/components/shared/ai-assistant/blocks/reasoning-block";
 import { TextBlock } from "@/components/shared/ai-assistant/blocks/text-block";
@@ -79,6 +80,8 @@ export function AssistantTurn({
                 context={context}
               />
             );
+          case "image":
+            return <ImageBlock key={block.id} image={block} />;
           case "action":
             return (
               <ActionBlock
@@ -113,6 +116,9 @@ function isAwaitingModel(last: AssistantChatPart | undefined): boolean {
   }
   if (last.kind === "tool") {
     return last.status !== "running";
+  }
+  if (last.kind === "image") {
+    return true;
   }
   return last.kind === "action" && last.output !== undefined;
 }

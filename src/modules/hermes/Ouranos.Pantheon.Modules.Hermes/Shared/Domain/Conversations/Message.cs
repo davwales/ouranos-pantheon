@@ -31,9 +31,14 @@ public sealed class Message : BaseEntity<Id<Message>>
     )
     {
         Guard.Against.Null(conversationId);
-        Guard.Against.NullOrWhiteSpace(content);
+        Guard.Against.Null(content);
 
         List<MessagePart> ordered = [.. parts ?? []];
+        if (ordered.Count == 0)
+        {
+            Guard.Against.NullOrWhiteSpace(content);
+        }
+
         for (var i = 0; i < ordered.Count; i++)
         {
             ordered[i].Order(i);

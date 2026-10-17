@@ -8,6 +8,8 @@ are relative to `Ouranos.Pantheon.Modules.Hermes/`.
 | `Features/Conversations/` | Conversation and message persistence; streaming chat replies through the shared assistant tool loop and conversation compaction (SSE) via OuranosMl |
 | `Features/Conversations/Schemas/` | Message part contract shared by the slices that read and write messages |
 | `Features/Assistants/Scopes/` | `IConversationScope`, the narrow interface Hermes chat tools are typed to |
+| `Features/Assistants/Tools/` | The chat tool catalogue: `GenerateImage` (`generate_image`) |
+| `Features/Images/` | Serving generated images and the scheduled purge of unreferenced ones |
 | `Features/Personas/` | Reusable assistant personality definitions applied to conversations |
 | `Features/Traits/` | Attachable traits that merge with the conversation's persona at prompt-build time |
 | `Features/Models/` | Model configuration CRUD and the hourly available-model sync from OuranosMl |

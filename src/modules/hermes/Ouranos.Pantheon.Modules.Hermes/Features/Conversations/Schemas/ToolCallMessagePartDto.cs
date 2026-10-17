@@ -8,5 +8,6 @@ public sealed record ToolCallMessagePartDto(
     string Arguments,
     AssistantToolStatus Status,
     string Output,
-    bool IsTruncated
+    bool IsTruncated,
+    long? DurationMs = null
 ) : MessagePartDto;

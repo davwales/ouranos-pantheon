@@ -23,7 +23,7 @@ public sealed class SetExplorerViewTool(ILogger<SetExplorerViewTool> logger, IMe
         + "percent) or to SymbolName (Like matches part of a name); an empty list clears the "
         + "filter.";
 
-    public override bool IsSingleActionPerReply => true;
+    public override bool IsSingleDeliveryPerReply => true;
 
     public override bool IsAvailable(IExplorerScope context)
     {

@@ -78,6 +78,27 @@ public sealed class MessageTests
     }
 
     [Fact]
+    public void Create_WhenContentIsEmptyButPartsAreProvided_ShouldCreateTheMessage()
+    {
+        // Arrange
+        var text = TextMessagePart.Create(new Id<MessagePart>(Guid.NewGuid().ToString()), "x");
+
+        // Act
+        var message = Message.Create(
+            new Id<Message>(Guid.NewGuid().ToString()),
+            new Id<Conversation>(Guid.NewGuid().ToString()),
+            "",
+            Role.Assistant,
+            1,
+            [text]
+        );
+
+        // Assert
+        message.Content.ShouldBeEmpty();
+        message.Parts.ShouldBe([text]);
+    }
+
+    [Fact]
     public void Create_WhenNoPartsProvided_ShouldHaveNoParts()
     {
         // Act

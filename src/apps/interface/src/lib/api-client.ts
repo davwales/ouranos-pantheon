@@ -3,6 +3,10 @@ const API_BASE =
   process.env.NEXT_PUBLIC_API_HOST ??
   "http://localhost:8300";
 
+export function apiUrl(path: string): string {
+  return `${API_BASE}${path}`;
+}
+
 export class ApiError extends Error {
   constructor(
     public status: number,

@@ -66,7 +66,7 @@ describe("AssistantTurn", () => {
 
     // Assert
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
-    expect(screen.getByText("Running…")).toBeInTheDocument();
+    expect(screen.getByText(/^Running…/)).toBeInTheDocument();
   });
 
   it("WhenReasoningHasNoTools_ShouldRenderItInline", () => {

@@ -9,4 +9,5 @@ namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.Schemas;
 [JsonDerivedType(typeof(ReasoningMessagePartDto), "reasoning")]
 [JsonDerivedType(typeof(TextMessagePartDto), "text")]
 [JsonDerivedType(typeof(ToolCallMessagePartDto), "toolCall")]
+[JsonDerivedType(typeof(ImageMessagePartDto), "image")]
 public abstract record MessagePartDto;

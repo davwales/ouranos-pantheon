@@ -27,6 +27,8 @@ public sealed class ToolCallMessagePart : MessagePart
 
     public bool IsTruncated { get; private set; }
 
+    public long? DurationMs { get; private set; }
+
     public static ToolCallMessagePart Create(
         Id<MessagePart> id,
         string callId,
@@ -34,7 +36,8 @@ public sealed class ToolCallMessagePart : MessagePart
         string arguments,
         AssistantToolStatus status,
         string output,
-        bool isTruncated = false
+        bool isTruncated = false,
+        long? durationMs = null
     )
     {
         Guard.Against.NullOrWhiteSpace(callId);
@@ -42,6 +45,11 @@ public sealed class ToolCallMessagePart : MessagePart
         Guard.Against.Null(arguments);
         Guard.Against.EnumOutOfRange(status);
         Guard.Against.Null(output);
+
+        if (durationMs is { } duration)
+        {
+            Guard.Against.Negative(duration, nameof(durationMs));
+        }
 
         return new ToolCallMessagePart(id)
         {
@@ -51,6 +59,7 @@ public sealed class ToolCallMessagePart : MessagePart
             Status = status,
             Output = output,
             IsTruncated = isTruncated,
+            DurationMs = durationMs,
         };
     }
 }

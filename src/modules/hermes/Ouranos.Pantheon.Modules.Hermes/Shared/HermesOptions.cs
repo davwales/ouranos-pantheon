@@ -9,7 +9,8 @@ public sealed record HermesOptions(
     string CompactionSummaryPrompt,
     float CompactionTemperature,
     int CompactionMaxTokens,
-    ReasoningEffort? CompactionReasoningEffort
+    ReasoningEffort? CompactionReasoningEffort,
+    HermesImageGenerationOptions ImageGeneration
 )
 {
     public const string SectionName = "Ouranos:Hermes";
@@ -56,7 +57,8 @@ public sealed record HermesOptions(
             CompactionSummaryPrompt: DefaultCompactionSummaryPrompt,
             CompactionTemperature: DefaultCompactionTemperature,
             CompactionMaxTokens: DefaultCompactionMaxTokens,
-            CompactionReasoningEffort: ReasoningEffort.Low
+            CompactionReasoningEffort: ReasoningEffort.Low,
+            ImageGeneration: new HermesImageGenerationOptions()
         ) { }
 
     public bool IsConversationNameGenerationEnabled =

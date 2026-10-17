@@ -99,10 +99,10 @@ public sealed class SetExplorerViewToolTests
     }
 
     [Fact]
-    public void IsSingleActionPerReply_ShouldBeTrue()
+    public void IsSingleDeliveryPerReply_ShouldBeTrue()
     {
         // Act & Assert
-        _tool.IsSingleActionPerReply.ShouldBeTrue();
+        _tool.IsSingleDeliveryPerReply.ShouldBeTrue();
     }
 
     [Fact]

@@ -5,6 +5,7 @@ import {
 import { type AssistantToolStatus } from "@/lib/api/assistant";
 import {
   type CompletionToolCallInput,
+  hermesImagePath,
   type MessagePart,
 } from "@/lib/api/hermes";
 
@@ -32,8 +33,18 @@ export function toChatParts(parts: MessagePart[]): AssistantChatPart[] {
           status: CHAT_TOOL_STATUSES[part.status],
           output: part.output,
           isTruncated: part.isTruncated,
-          startedAt: 0,
-          endedAt: 0,
+          durationMs: part.durationMs ?? undefined,
+        };
+      case "image":
+        return {
+          kind: "image",
+          id,
+          callId: "",
+          imageId: part.imageId,
+          url: hermesImagePath(part.imageId),
+          width: part.width,
+          height: part.height,
+          altText: part.altText,
         };
     }
   });
@@ -56,6 +67,17 @@ export function toMessageParts(parts: AssistantChatPart[]): MessagePart[] {
             status: toToolStatus(part.status),
             output: part.output ?? "",
             isTruncated: part.isTruncated ?? false,
+            ...(part.durationMs !== undefined && { durationMs: part.durationMs }),
+          },
+        ];
+      case "image":
+        return [
+          {
+            $type: "image",
+            imageId: part.imageId,
+            width: part.width,
+            height: part.height,
+            altText: part.altText,
           },
         ];
       case "action":

@@ -16,6 +16,7 @@ const TOOL_CALL: MessagePart = {
   status: "Completed",
   output: "echo: hi",
   isTruncated: false,
+  durationMs: 1200,
 };
 
 describe("message parts", () => {
@@ -42,11 +43,22 @@ describe("message parts", () => {
         status: "completed",
         output: "echo: hi",
         isTruncated: false,
-        startedAt: 0,
-        endedAt: 0,
+        durationMs: 1200,
       },
       { kind: "text", id: "part-2", content: "It said hi." },
     ]);
+  });
+
+  it("toChatParts_WhenAToolCallHasNoDuration_ShouldLeaveItUnknown", () => {
+    // Arrange
+    const legacy: MessagePart = { ...TOOL_CALL, durationMs: null };
+
+    // Act
+    const [part] = toChatParts([legacy]);
+
+    // Assert
+    expect(part).not.toHaveProperty("durationMs", expect.anything());
+    expect(toMessageParts([part])).toEqual([{ ...TOOL_CALL, durationMs: undefined }]);
   });
 
   it("toMessageParts_WhenToolNeverFinished_ShouldSaveItAsFailedAndDropActions", () => {
@@ -146,5 +158,21 @@ describe("message parts", () => {
     // Arrange & Act & Assert
     expect(withEditedText(undefined, "Edited")).toBeUndefined();
     expect(withEditedText([], "Edited")).toEqual([]);
+  });
+
+  it("toChatParts_WhenAnImageIsSaved_ShouldPointAtTheGatewayAndRoundTrip", () => {
+    // Arrange
+    const parts: MessagePart[] = [
+      { $type: "image", imageId: "img-1", width: 64, height: 32, altText: "A fox" },
+    ];
+
+    // Act
+    const chatParts = toChatParts(parts);
+
+    // Assert
+    expect(chatParts[0]).toEqual(
+      expect.objectContaining({ kind: "image", url: "/api/hermes/images/img-1" }),
+    );
+    expect(toMessageParts(chatParts)).toEqual(parts);
   });
 });

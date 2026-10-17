@@ -20,6 +20,14 @@ export type AssistantMessageInput = {
 
 export type AssistantToolStatus = "Completed" | "Failed" | "Skipped";
 
+export type AssistantImage = {
+  id: string;
+  url: string;
+  width: number;
+  height: number;
+  altText: string;
+};
+
 export type AssistantCompletionInput<TContext> = {
   messages: AssistantMessageInput[];
   context: TContext;
@@ -36,8 +44,10 @@ export type AssistantEvent =
       status: AssistantToolStatus;
       output: string;
       isTruncated: boolean;
+      durationMs: number;
     }
   | { $type: "action"; callId: string; name: string; action: unknown }
+  | { $type: "image"; callId: string; image: AssistantImage }
   | {
       $type: "usage";
       inputTokens: number;

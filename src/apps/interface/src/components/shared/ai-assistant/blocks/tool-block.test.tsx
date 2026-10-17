@@ -1,7 +1,7 @@
 import { ToolBlock } from "@/components/shared/ai-assistant/blocks/tool-block";
 import { type AssistantChatToolPart } from "@/components/shared/ai-assistant/assistant-chat-parts";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 const TOOL: AssistantChatToolPart = {
   kind: "tool",
@@ -26,6 +26,28 @@ describe("ToolBlock", () => {
     expect(header).toHaveAttribute("aria-expanded", "false");
     expect(header).toHaveTextContent("0.4s");
     expect(screen.queryByText(/"days": 30/)).not.toBeInTheDocument();
+  });
+
+  it("WhenSaved_ShouldShowTheRecordedDuration", () => {
+    // Arrange & Act
+    render(
+      <ToolBlock
+        tool={{ ...TOOL, startedAt: undefined, endedAt: undefined, durationMs: 83_000 }}
+      />,
+    );
+
+    // Assert
+    expect(screen.getByRole("button", { name: /get_price_history/ })).toHaveTextContent("83s");
+  });
+
+  it("WhenSavedWithoutADuration_ShouldNotMakeOneUp", () => {
+    // Arrange & Act
+    render(<ToolBlock tool={{ ...TOOL, startedAt: undefined, endedAt: undefined }} />);
+
+    // Assert
+    const header = screen.getByRole("button", { name: /get_price_history/ });
+    expect(header).toHaveTextContent("Completed");
+    expect(header).not.toHaveTextContent(/\d+(\.\d)?s/);
   });
 
   it("WhenExpanded_ShouldShowTheInputAndOutput", () => {
@@ -116,7 +138,7 @@ describe("ToolBlock", () => {
     fireEvent.click(screen.getByRole("button", { name: /get_price_history/ }));
 
     // Assert
-    expect(screen.getByText("Running…")).toBeInTheDocument();
+    expect(screen.getByText(/^Running…/)).toBeInTheDocument();
     expect(screen.getByText("Waiting for the result…")).toBeInTheDocument();
   });
 
@@ -130,5 +152,20 @@ describe("ToolBlock", () => {
 
     // Assert
     expect(screen.getByText(label)).toBeInTheDocument();
+  });
+
+  it("WhenRunning_ShouldShowTheElapsedTime", () => {
+    // Arrange
+    vi.useFakeTimers();
+    vi.setSystemTime(10_000);
+
+    // Act
+    render(<ToolBlock tool={{ ...TOOL, status: "running", startedAt: 7_000, endedAt: undefined }} />);
+
+    // Assert
+    expect(screen.getByRole("button", { name: /get_price_history/ })).toHaveTextContent(
+      "Running… 3s",
+    );
+    vi.useRealTimers();
   });
 });

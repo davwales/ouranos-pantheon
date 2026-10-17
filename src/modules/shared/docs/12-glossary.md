@@ -12,3 +12,4 @@ slice, …) are in the [platform glossary](../../../../docs/architecture/12-glos
 | **Tool** | A function the model may call during an assistant reply; reads data or proposes an action |
 | **Scope** | A context interface a tool is typed to, so one tool serves every assistant whose context implements it |
 | **Action** | A typed proposal streamed to the page that the user applies or rejects |
+| **Assistant image** | An image a tool returns alongside its output, streamed as an `image` event and shown in the turn; the model sees only the output text |

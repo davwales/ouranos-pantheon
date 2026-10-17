@@ -260,6 +260,61 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
                     b.ToTable("folders", "hermes");
                 });
 
+            modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Images.GeneratedImage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<byte[]>("Content")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("content");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("Height")
+                        .HasColumnType("integer")
+                        .HasColumnName("height");
+
+                    b.Property<string>("MediaType")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("media_type");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("model");
+
+                    b.Property<string>("Prompt")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("prompt");
+
+                    b.Property<long?>("Seed")
+                        .HasColumnType("bigint")
+                        .HasColumnName("seed");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("Width")
+                        .HasColumnType("integer")
+                        .HasColumnName("width");
+
+                    b.HasKey("Id")
+                        .HasName("pk_generated_images");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("ix_generated_images_created_at");
+
+                    b.ToTable("generated_images", "hermes");
+                });
+
             modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models.ModelConfig", b =>
                 {
                     b.Property<Guid>("Id")
@@ -403,6 +458,35 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
                     b.ToTable("traits", "hermes");
                 });
 
+            modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations.ImageMessagePart", b =>
+                {
+                    b.HasBaseType("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations.MessagePart");
+
+                    b.Property<string>("AltText")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("alt_text");
+
+                    b.Property<int>("Height")
+                        .HasColumnType("integer")
+                        .HasColumnName("height");
+
+                    b.Property<Guid>("ImageId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("image_id");
+
+                    b.Property<int>("Width")
+                        .HasColumnType("integer")
+                        .HasColumnName("width");
+
+                    b.HasIndex("ImageId")
+                        .HasDatabaseName("ix_message_parts_image_id");
+
+                    b.ToTable("message_parts", "hermes");
+
+                    b.HasDiscriminator().HasValue("image");
+                });
+
             modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations.ReasoningMessagePart", b =>
                 {
                     b.HasBaseType("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations.MessagePart");
@@ -446,6 +530,10 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("call_id");
+
+                    b.Property<long?>("DurationMs")
+                        .HasColumnType("bigint")
+                        .HasColumnName("duration_ms");
 
                     b.Property<bool>("IsTruncated")
                         .HasColumnType("boolean")

@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using OpenAI;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Requests;
 using Ouranos.Pantheon.Modules.Shared.Contract.Tests.Infra.OuranosMachineLearning;
 
 namespace Ouranos.Pantheon.Modules.Shared.Tests.Infra.OuranosMachineLearning;
@@ -399,6 +400,179 @@ public sealed class OuranosMachineLearningClientTests
         result.ShouldBeNull();
     }
 
+    [Fact]
+    public async Task StreamImageGenerationAsync_WhenStreamCompletes_ShouldYieldTheImageSkipProgressAndSendAnUnsavedStreamedRequest()
+    {
+        // Arrange
+        var content = Convert.ToBase64String([1, 2, 3]);
+        var handler = new RecordingHttpMessageHandler(
+            "text/event-stream",
+            Sse(
+                (
+                    "image_generation.status",
+                    """{"type":"image_generation.status","sequence_number":0,"stage":"queued","waiting_gens":1,"loading_models":0,"live_gens":0}"""
+                ),
+                (
+                    "image_generation.progress",
+                    """{"type":"image_generation.progress","sequence_number":1,"image_index":0,"percent":0.5,"step_percent":0.5,"total_percent":0.5,"preview_b64":null}"""
+                ),
+                (
+                    "image_generation.completed",
+                    $$"""{"type":"image_generation.completed","sequence_number":2,"image_index":0,"b64_json":"{{content}}","seed":42,"size":"832x1216","output_format":"jpeg"}"""
+                ),
+                (
+                    "image_generation.done",
+                    """{"type":"image_generation.done","sequence_number":3,"created":1700000000,"model":"flux","count":1}"""
+                )
+            )
+        );
+
+        var client = CreateImageClient(handler);
+
+        // Act
+        var events = await CollectAsync(
+            client.StreamImageGenerationAsync(new GenerateImageRequest("A fox", 832, 1216, "flux"))
+        );
+
+        // Assert
+        events.Count.ShouldBe(2);
+        var completed = events[0].ShouldBeOfType<ImageGenerationCompletedDto>();
+        completed.Content.ShouldBe(new byte[] { 1, 2, 3 });
+        completed.MediaType.ShouldBe("image/jpeg");
+        completed.Width.ShouldBe(832);
+        completed.Height.ShouldBe(1216);
+        completed.Seed.ShouldBe(42);
+        events[1].ShouldBe(new ImageGenerationDoneDto("flux"));
+
+        handler.RequestUri.ShouldBe(new Uri("http://test.com/v1/images/generations"));
+        var body = handler.RequestBody.ShouldNotBeNull();
+        body["prompt"]!.GetValue<string>().ShouldBe("A fox");
+        body["model"]!.GetValue<string>().ShouldBe("flux");
+        body["size"]!.GetValue<string>().ShouldBe("832x1216");
+        body["n"]!.GetValue<int>().ShouldBe(1);
+        body["stream"]!.GetValue<bool>().ShouldBeTrue();
+        body["save"]!.GetValue<bool>().ShouldBeFalse();
+        body["previews"]!.GetValue<bool>().ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task StreamImageGenerationAsync_WhenRequestFails_ShouldThrowWithOuranosMlsError()
+    {
+        // Arrange
+        var handler = new RecordingHttpMessageHandler(
+            "application/json",
+            """{"error":{"message":"Model 'x' not found.","type":"model_not_found"}}""",
+            HttpStatusCode.NotFound
+        );
+        var client = CreateImageClient(handler);
+
+        // Act
+        var act = () =>
+            CollectAsync(
+                client.StreamImageGenerationAsync(new GenerateImageRequest("A fox", 64, 64))
+            );
+
+        // Assert
+        var exception = await act.ShouldThrowAsync<OuranosMlRequestException>();
+        exception.Type.ShouldBe("model_not_found");
+        exception.Message.ShouldBe("Model 'x' not found.");
+        exception.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task StreamImageGenerationAsync_WhenErrorBodyIsNotOuranosMls_ShouldThrowWithTheStatus()
+    {
+        // Arrange
+        var handler = new RecordingHttpMessageHandler(
+            "application/json",
+            """{"detail":[{"msg":"bad"}]}""",
+            HttpStatusCode.UnprocessableEntity
+        );
+        var client = CreateImageClient(handler);
+
+        // Act
+        var act = () =>
+            CollectAsync(
+                client.StreamImageGenerationAsync(new GenerateImageRequest("A fox", 64, 64))
+            );
+
+        // Assert
+        var exception = await act.ShouldThrowAsync<OuranosMlRequestException>();
+        exception.Type.ShouldBe("http_error");
+        exception.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+    }
+
+    [Fact]
+    public async Task StreamImageGenerationAsync_WhenStreamReportsAnError_ShouldThrow()
+    {
+        // Arrange
+        var handler = new RecordingHttpMessageHandler(
+            "text/event-stream",
+            Sse(
+                (
+                    "error",
+                    """{"type":"error","sequence_number":0,"code":"timeout","message":"Generation timed out."}"""
+                )
+            )
+        );
+        var client = CreateImageClient(handler);
+
+        // Act
+        var act = () =>
+            CollectAsync(
+                client.StreamImageGenerationAsync(new GenerateImageRequest("A fox", 64, 64))
+            );
+
+        // Assert
+        var exception = await act.ShouldThrowAsync<OuranosMlRequestException>();
+        exception.Type.ShouldBe("timeout");
+        exception.Message.ShouldBe("Generation timed out.");
+        exception.StatusCode.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task StreamImageGenerationAsync_WhenStreamEndsWithoutDone_ShouldThrow()
+    {
+        // Arrange
+        var handler = new RecordingHttpMessageHandler(
+            "text/event-stream",
+            Sse(
+                (
+                    "image_generation.status",
+                    """{"type":"image_generation.status","sequence_number":0,"stage":"generating","waiting_gens":0,"loading_models":0,"live_gens":1}"""
+                )
+            )
+        );
+        var client = CreateImageClient(handler);
+
+        // Act
+        var act = () =>
+            CollectAsync(
+                client.StreamImageGenerationAsync(new GenerateImageRequest("A fox", 64, 64))
+            );
+
+        // Assert
+        var exception = await act.ShouldThrowAsync<OuranosMlRequestException>();
+        exception.Type.ShouldBe("incomplete_stream");
+    }
+
+    private OuranosMachineLearningClient CreateImageClient(HttpMessageHandler handler)
+    {
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("http://test.com/v1/") };
+        return new OuranosMachineLearningClient(_logger, httpClient, _openAiClient);
+    }
+
+    private static async Task<List<T>> CollectAsync<T>(IAsyncEnumerable<T> source)
+    {
+        var items = new List<T>();
+        await foreach (var item in source)
+        {
+            items.Add(item);
+        }
+
+        return items;
+    }
+
     private OuranosMachineLearningClient CreateClient(HttpMessageHandler handler)
     {
         var openAiClient = new OpenAIClient(
@@ -428,8 +602,11 @@ public sealed class OuranosMachineLearningClientTests
         return string.Concat(events.Select(e => $"event: {e.Event}\ndata: {e.Data}\n\n"));
     }
 
-    private sealed class RecordingHttpMessageHandler(string contentType, string content)
-        : HttpMessageHandler
+    private sealed class RecordingHttpMessageHandler(
+        string contentType,
+        string content,
+        HttpStatusCode statusCode = HttpStatusCode.OK
+    ) : HttpMessageHandler
     {
         public Uri? RequestUri { get; private set; }
 
@@ -448,7 +625,7 @@ public sealed class OuranosMachineLearningClientTests
                     ?.AsObject();
             }
 
-            return new HttpResponseMessage(HttpStatusCode.OK)
+            return new HttpResponseMessage(statusCode)
             {
                 Content = new StringContent(content, Encoding.UTF8, contentType),
             };

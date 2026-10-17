@@ -13,6 +13,7 @@ export type {
   AssistantCompletionInput,
   AssistantEndpoint,
   AssistantEvent,
+  AssistantImage,
   AssistantMessageInput,
   AssistantRole,
   AssistantToolStatus,

@@ -1,6 +1,8 @@
 using System.Text;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Images;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion;
@@ -43,6 +45,10 @@ internal sealed class MessagePartsBuilder
                 call.Status = result.Status;
                 call.Output = result.Output;
                 call.IsTruncated = result.IsTruncated;
+                call.DurationMs = result.DurationMs;
+                break;
+            case AssistantImageEvent image:
+                _drafts.Add(new Draft(DraftKind.Image) { Image = image.Image });
                 break;
         }
     }
@@ -80,7 +86,15 @@ internal sealed class MessagePartsBuilder
                 draft.Arguments,
                 draft.Status ?? AssistantToolStatus.Failed,
                 draft.Output,
-                draft.IsTruncated
+                draft.IsTruncated,
+                draft.DurationMs
+            ),
+            DraftKind.Image when draft.Image is { } image => ImageMessagePart.Create(
+                id,
+                new Id<GeneratedImage>(image.Id),
+                image.Width,
+                image.Height,
+                image.AltText
             ),
             _ => throw new ArgumentOutOfRangeException(nameof(draft), draft.Kind, null),
         };
@@ -91,6 +105,7 @@ internal sealed class MessagePartsBuilder
         Reasoning,
         Text,
         ToolCall,
+        Image,
     }
 
     private sealed class Draft(DraftKind kind)
@@ -110,5 +125,9 @@ internal sealed class MessagePartsBuilder
         public string Output { get; set; } = string.Empty;
 
         public bool IsTruncated { get; set; }
+
+        public long? DurationMs { get; set; }
+
+        public AssistantImage? Image { get; init; }
     }
 }

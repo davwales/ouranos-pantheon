@@ -2,7 +2,11 @@
 
 import { BlockHeader } from "@/components/shared/ai-assistant/blocks/block-header";
 import { ReasoningBlock } from "@/components/shared/ai-assistant/blocks/reasoning-block";
-import { ToolBlock } from "@/components/shared/ai-assistant/blocks/tool-block";
+import {
+  formatDuration,
+  ToolBlock,
+  toolDurationMs,
+} from "@/components/shared/ai-assistant/blocks/tool-block";
 import {
   type AssistantChatReasoningPart,
   type AssistantChatToolPart,
@@ -85,9 +89,16 @@ export function ActivityGroup({
 function formatTotal(parts: ActivityPart[]): string | undefined {
   const starts = parts.flatMap((part) => (part.startedAt === undefined ? [] : [part.startedAt]));
   const ends = parts.flatMap((part) => (part.endedAt === undefined ? [] : [part.endedAt]));
-  if (starts.length === 0 || ends.length === 0) {
-    return undefined;
+
+  if (starts.length > 0 && ends.length > 0) {
+    return formatDuration(Math.max(...ends) - Math.min(...starts));
   }
-  const seconds = (Math.max(...ends) - Math.min(...starts)) / 1000;
-  return seconds < 10 ? `${Math.max(0.1, seconds).toFixed(1)}s` : `${Math.round(seconds)}s`;
+  const durations = parts.flatMap((part) => {
+    const durationMs = part.kind === "tool" ? toolDurationMs(part) : undefined;
+    return durationMs === undefined ? [] : [durationMs];
+  });
+
+  return durations.length === 0
+    ? undefined
+    : formatDuration(durations.reduce((total, durationMs) => total + durationMs, 0));
 }

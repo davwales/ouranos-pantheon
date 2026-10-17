@@ -5,7 +5,7 @@ import { ToolDetails } from "@/components/shared/ai-assistant/blocks/tool-detail
 import { type AssistantChatToolPart } from "@/components/shared/ai-assistant/assistant-chat-parts";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { Check, CircleSlash, Loader2, SkipForward, X } from "lucide-react";
-import { memo, useId, useState } from "react";
+import { memo, useEffect, useId, useState } from "react";
 
 export const ToolBlock = memo(function ToolBlock({
   tool,
@@ -59,14 +59,18 @@ export function ToolStatusIcon({ status }: { status: AssistantChatToolPart["stat
 function ToolStatusLabel({ tool }: { tool: AssistantChatToolPart }) {
   switch (tool.status) {
     case "running":
-      return "Running…";
-    case "completed":
-      return (
+      return tool.startedAt === undefined ? "Running…" : <RunningLabel startedAt={tool.startedAt} />;
+    case "completed": {
+      const durationMs = toolDurationMs(tool);
+      return durationMs === undefined ? (
+        "Completed"
+      ) : (
         <>
           <span className="sr-only">Completed in </span>
-          {formatDuration(tool.startedAt, tool.endedAt)}
+          {formatDuration(durationMs)}
         </>
       );
+    }
     case "failed":
       return <span className="text-destructive">Failed</span>;
     case "skipped":
@@ -76,10 +80,33 @@ function ToolStatusLabel({ tool }: { tool: AssistantChatToolPart }) {
   }
 }
 
-function formatDuration(startedAt: number, endedAt: number | undefined): string {
-  const ms = Math.max(0, (endedAt ?? startedAt) - startedAt);
+function RunningLabel({ startedAt }: { startedAt: number }) {
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const interval = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  const seconds = Math.floor(Math.max(0, now - startedAt) / 1000);
+  return seconds < 1 ? "Running…" : `Running… ${seconds}s`;
+}
+
+export function toolDurationMs(tool: AssistantChatToolPart): number | undefined {
+  if (tool.durationMs !== undefined) {
+    return tool.durationMs;
+  }
+
+  return tool.startedAt !== undefined && tool.endedAt !== undefined
+    ? tool.endedAt - tool.startedAt
+    : undefined;
+}
+
+export function formatDuration(durationMs: number): string {
+  const ms = Math.max(0, durationMs);
   if (ms < 1000) {
     return `${Math.max(0.1, ms / 1000).toFixed(1)}s`;
   }
+
   return ms < 10_000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms / 1000)}s`;
 }

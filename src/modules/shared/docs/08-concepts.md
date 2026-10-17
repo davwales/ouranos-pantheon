@@ -56,9 +56,10 @@ Each module documents its own assistants and tools in its module docs.
   tools sequentially, appends each call and its (truncated) output to the input, and streams
   again, up to `MaxToolRounds` (`ModelDefaults`); the last round offers no tools, so the model
   must answer. Only the first `MaxToolCallsPerRound` calls in a round run, and a tool marked
-  `IsSingleActionPerReply` is skipped once it has returned an action in the reply; skipped
-  calls get an output telling the model why, because small models sometimes repeat a call
-  many times. Skipped calls are still streamed (status `Skipped`), so the user sees every call
+  `IsSingleDeliveryPerReply` is skipped once it has returned an action or an image in the
+  reply; skipped calls get an output telling the model why, because small models sometimes
+  repeat a call many times. A delivered action or image counts as an answer, so a reply may
+  end without text. Skipped calls are still streamed (status `Skipped`), so the user sees every call
   the model made. Every round resends the whole input, because OuranosMl does not keep
   response state; the inference server's prompt cache keeps the shared prefix cheap. A
   failing or unknown tool becomes an output the model sees, never a failed turn.
@@ -89,9 +90,12 @@ Each module documents its own assistants and tools in its module docs.
   `content`, `tool` (a call started:
   `callId`, `name` and the raw JSON `arguments`), `toolResult` (`callId`, `status`
   `Completed | Failed | Skipped`, and the `output` exactly as the model received it, with
-  `isTruncated` when it was cut to `MaxToolOutputCharacters`), `action` (a typed action for
+  `isTruncated` when it was cut to `MaxToolOutputCharacters`, and `durationMs`, how long the
+  tool ran as timed by the loop, 0 when skipped), `action` (a typed action for
   the page, with the `callId` that proposed it, sent between the call and its result),
-  `usage` (input, output and total summed over the reply's rounds, plus `contextTokens`, the
+  `image` (an `AssistantImage` a tool returned, with its gateway-relative `url`, size and alt
+  text, sent after the call's result; the model never sees it), `usage` (input, output and
+  total summed over the reply's rounds, plus `contextTokens`, the
   last round's input and output, i.e. how much of the context window the conversation now
   fills), `error`, `done`. Tool events let the user inspect what each call asked and
   returned; they are a debugging view, not data for the page. `reasoning` carries the model's
@@ -129,12 +133,18 @@ object, and a title.
   (`assistant-chat-parts.ts`), and the chat renders them as a transcript: user messages are
   bubbles, and assistant turns are unbubbled blocks in the order they happened.
 - Reasoning is a collapsed "Thought for Ns" row. Each tool call is a collapsed row showing
-  its raw tool name, status and duration, which expands to its input and output (truncated
+  its raw tool name, status and duration (a running call counts up its elapsed seconds;
+  a finished call shows the server's `durationMs`, and saved calls without one show none),
+  which expands to its input and output (truncated
   JSON is still indented). The input shows the turn's context (kept on the reply as it was
   sent) beside the model's arguments, since tools also read the context.
 - A run of reasoning and tool calls between two pieces of the reply shares one stack; once
   the model has moved past it, a run of four or more rows folds into one "Used N tools" row,
   so the answer stays in view.
+- An image part renders as its own block outside the tool stack: a lazy, fixed-ratio image
+  that opens full size in a dialog, or a "no longer available" placeholder when it fails to
+  load. Markdown images in replies render as links instead, so model text never loads
+  third-party URLs.
 - Each action is a card with Apply and Reject (Retry after a failure, and its call's details
   on demand), and a reply with several open proposals offers Apply all, which applies them
   one after another because handlers save the latest state.

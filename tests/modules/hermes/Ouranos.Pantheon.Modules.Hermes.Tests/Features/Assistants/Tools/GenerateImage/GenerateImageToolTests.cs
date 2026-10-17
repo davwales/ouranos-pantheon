@@ -1,0 +1,303 @@
+using System.Net;
+using System.Runtime.CompilerServices;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.Tools.GenerateImage;
+using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion.Schemas;
+using Ouranos.Pantheon.Modules.Hermes.Shared;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Requests;
+using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
+
+namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.Assistants.Tools.GenerateImage;
+
+public sealed class GenerateImageToolTests
+{
+    private static readonly HermesChatContext Context = new(null);
+
+    private readonly IOuranosMachineLearningClient _mlClient =
+        Substitute.For<IOuranosMachineLearningClient>();
+    private readonly string _dbName = Guid.NewGuid().ToString();
+
+    private GenerateImageTool CreateTool(HermesImageGenerationOptions? imageOptions = null)
+    {
+        return new GenerateImageTool(
+            Substitute.For<ILogger<GenerateImageTool>>(),
+            _mlClient,
+            DbContextExtensions.MockFactory<HermesDbContext>(_dbName),
+            Options.Create(
+                new HermesOptions
+                {
+                    ImageGeneration = imageOptions ?? new HermesImageGenerationOptions(),
+                }
+            )
+        );
+    }
+
+    private void SetupStream(params ImageGenerationEventDto[] events)
+    {
+        _mlClient
+            .StreamImageGenerationAsync(
+                Arg.Any<GenerateImageRequest>(),
+                Arg.Any<CancellationToken>()
+            )
+            .Returns(_ => ToAsync(events));
+    }
+
+    private static async IAsyncEnumerable<ImageGenerationEventDto> ToAsync(
+        IEnumerable<ImageGenerationEventDto> events,
+        Exception? failWith = null,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
+    )
+    {
+        foreach (var imageEvent in events)
+        {
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+            yield return imageEvent;
+        }
+
+        if (failWith is not null)
+        {
+            throw failWith;
+        }
+    }
+
+    [Fact]
+    public async Task InvokeAsync_WhenImageIsGenerated_ShouldSaveItAndReturnTheImage()
+    {
+        // Arrange
+        SetupStream(
+            new ImageGenerationCompletedDto([1, 2, 3], "image/png", 1216, 832, 42),
+            new ImageGenerationDoneDto("flux")
+        );
+        var tool = CreateTool();
+
+        // Act
+        var result = await tool.InvokeAsync(
+            Context,
+            """{"prompt":"  A red fox  ","orientation":"Landscape"}""",
+            CancellationToken.None
+        );
+
+        // Assert
+        result.IsError.ShouldBeFalse();
+        result.Output.ShouldBe(GenerateImageTool.ShownOutput);
+        var image = result.Image.ShouldNotBeNull();
+        image.Width.ShouldBe(1216);
+        image.Height.ShouldBe(832);
+        image.AltText.ShouldBe("A red fox");
+        image.Url.ShouldBe($"/api/hermes/images/{image.Id}");
+
+        await using var dbContext = DbContextExtensions.Mock<HermesDbContext>(_dbName);
+        var saved = dbContext.GeneratedImages.Single();
+        saved.Id.Value.ShouldBe(image.Id);
+        saved.Content.ShouldBe(new byte[] { 1, 2, 3 });
+        saved.Prompt.ShouldBe("A red fox");
+        saved.Model.ShouldBe("flux");
+        saved.Seed.ShouldBe(42);
+
+        _mlClient
+            .Received(1)
+            .StreamImageGenerationAsync(
+                new GenerateImageRequest("A red fox", 1216, 832, null),
+                Arg.Any<CancellationToken>()
+            );
+    }
+
+    [Theory]
+    [InlineData(null, 1024, 1024)]
+    [InlineData("\"Portrait\"", 832, 1216)]
+    public async Task InvokeAsync_WhenOrientationIsGiven_ShouldRequestItsSize(
+        string? orientation,
+        int width,
+        int height
+    )
+    {
+        // Arrange
+        SetupStream(new ImageGenerationDoneDto("flux"));
+        var tool = CreateTool(new HermesImageGenerationOptions { Model = "flux" });
+
+        // Act
+        await tool.InvokeAsync(
+            Context,
+            $$"""{"prompt":"A fox","orientation":{{orientation ?? "null"}}}""",
+            CancellationToken.None
+        );
+
+        // Assert
+        _mlClient
+            .Received(1)
+            .StreamImageGenerationAsync(
+                new GenerateImageRequest("A fox", width, height, "flux"),
+                Arg.Any<CancellationToken>()
+            );
+    }
+
+    [Fact]
+    public async Task InvokeAsync_WhenSizesAreConfigured_ShouldRequestTheConfiguredSize()
+    {
+        // Arrange
+        SetupStream(new ImageGenerationDoneDto("sd15"));
+        var tool = CreateTool(
+            new HermesImageGenerationOptions { PortraitSize = new HermesImageSize(512, 768) }
+        );
+
+        // Act
+        await tool.InvokeAsync(
+            Context,
+            """{"prompt":"A fox","orientation":"Portrait"}""",
+            CancellationToken.None
+        );
+
+        // Assert
+        _mlClient
+            .Received(1)
+            .StreamImageGenerationAsync(
+                new GenerateImageRequest("A fox", 512, 768, null),
+                Arg.Any<CancellationToken>()
+            );
+    }
+
+    [Fact]
+    public async Task InvokeAsync_WhenPromptIsBlank_ShouldFailWithoutCallingOuranosMl()
+    {
+        // Arrange
+        var tool = CreateTool();
+
+        // Act
+        var result = await tool.InvokeAsync(
+            Context,
+            """{"prompt":"   ","orientation":null}""",
+            CancellationToken.None
+        );
+
+        // Assert
+        result.IsError.ShouldBeTrue();
+        result.Output.ShouldBe(GenerateImageTool.EmptyPromptOutput);
+        _mlClient
+            .DidNotReceive()
+            .StreamImageGenerationAsync(
+                Arg.Any<GenerateImageRequest>(),
+                Arg.Any<CancellationToken>()
+            );
+    }
+
+    [Fact]
+    public async Task InvokeAsync_WhenPromptIsTooLong_ShouldCapIt()
+    {
+        // Arrange
+        SetupStream(new ImageGenerationDoneDto("flux"));
+        var tool = CreateTool(new HermesImageGenerationOptions { MaxPromptLength = 5 });
+
+        // Act
+        await tool.InvokeAsync(
+            Context,
+            """{"prompt":"A red fox","orientation":null}""",
+            CancellationToken.None
+        );
+
+        // Assert
+        _mlClient
+            .Received(1)
+            .StreamImageGenerationAsync(
+                Arg.Is<GenerateImageRequest>(r => r.Prompt == "A red"),
+                Arg.Any<CancellationToken>()
+            );
+    }
+
+    [Fact]
+    public async Task InvokeAsync_WhenOuranosMlFails_ShouldReturnItsReasonAndSaveNothing()
+    {
+        // Arrange
+        _mlClient
+            .StreamImageGenerationAsync(
+                Arg.Any<GenerateImageRequest>(),
+                Arg.Any<CancellationToken>()
+            )
+            .Returns(_ =>
+                ToAsync(
+                    [],
+                    new OuranosMlRequestException(
+                        "not_configured",
+                        "SwarmUI is not configured.",
+                        HttpStatusCode.ServiceUnavailable
+                    )
+                )
+            );
+        var tool = CreateTool();
+
+        // Act
+        var result = await tool.InvokeAsync(
+            Context,
+            """{"prompt":"A fox","orientation":null}""",
+            CancellationToken.None
+        );
+
+        // Assert
+        result.IsError.ShouldBeTrue();
+        result.Output.ShouldBe("No image generated: SwarmUI is not configured.");
+        result.Image.ShouldBeNull();
+        await using var dbContext = DbContextExtensions.Mock<HermesDbContext>(_dbName);
+        dbContext.GeneratedImages.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task InvokeAsync_WhenStreamHasNoImage_ShouldFail()
+    {
+        // Arrange
+        SetupStream(new ImageGenerationDoneDto("flux"));
+        var tool = CreateTool();
+
+        // Act
+        var result = await tool.InvokeAsync(
+            Context,
+            """{"prompt":"A fox","orientation":null}""",
+            CancellationToken.None
+        );
+
+        // Assert
+        result.IsError.ShouldBeTrue();
+        result.Output.ShouldBe(GenerateImageTool.NoImageOutput);
+    }
+
+    [Fact]
+    public async Task InvokeAsync_WhenCancelled_ShouldThrowAndSaveNothing()
+    {
+        // Arrange
+        SetupStream(new ImageGenerationDoneDto("flux"));
+        var tool = CreateTool();
+        using var cts = new CancellationTokenSource();
+        await cts.CancelAsync();
+
+        // Act
+        var act = async () =>
+            await tool.InvokeAsync(Context, """{"prompt":"A fox","orientation":null}""", cts.Token);
+
+        // Assert
+        await act.ShouldThrowAsync<OperationCanceledException>();
+        await using var dbContext = DbContextExtensions.Mock<HermesDbContext>(_dbName);
+        dbContext.GeneratedImages.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void IsAvailable_ShouldFollowTheEnabledOption(bool isEnabled)
+    {
+        // Arrange
+        var tool = CreateTool(new HermesImageGenerationOptions { IsEnabled = isEnabled });
+
+        // Act & Assert
+        tool.IsAvailable(Context).ShouldBe(isEnabled);
+    }
+
+    [Fact]
+    public void Tool_ShouldDeliverAtMostOneImagePerReply()
+    {
+        // Arrange & Act & Assert
+        CreateTool().IsSingleDeliveryPerReply.ShouldBeTrue();
+    }
+}

@@ -511,7 +511,8 @@ public sealed class CompactConversationHandlerTests
                 CompactionSummaryPrompt: "Custom system prompt.",
                 CompactionTemperature: 0.7f,
                 CompactionMaxTokens: 2048,
-                CompactionReasoningEffort: ReasoningEffort.High
+                CompactionReasoningEffort: ReasoningEffort.High,
+                ImageGeneration: new HermesImageGenerationOptions()
             )
         );
 

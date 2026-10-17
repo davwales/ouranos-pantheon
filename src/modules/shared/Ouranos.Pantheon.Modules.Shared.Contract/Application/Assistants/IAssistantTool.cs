@@ -10,11 +10,11 @@ public interface IAssistantTool<in TContext>
     BinaryData ParametersSchema { get; }
 
     /// <summary>
-    /// When true, a reply carries at most one action from this tool: once it returns an action,
-    /// later calls in the same reply are skipped. Calls that return no action, such as invalid
-    /// arguments, can still be retried.
+    /// When true, the tool delivers at most once per reply: once a call returns an action or an
+    /// image, later calls in the same reply are skipped. Calls that deliver nothing, such as
+    /// invalid arguments, can still be retried.
     /// </summary>
-    bool IsSingleActionPerReply { get; }
+    bool IsSingleDeliveryPerReply { get; }
 
     bool IsAvailable(TContext context);
 

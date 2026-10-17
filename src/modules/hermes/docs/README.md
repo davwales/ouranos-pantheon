@@ -13,8 +13,9 @@ down. Platform-wide concepts are described in the
 | Section | Focus |
 |---------|-------|
 | [5. Building Block View](05-building-block-view.md) | The module's feature slices |
-| [6. Runtime View](06-runtime-view.md) | Streaming chat |
-| [8. Concepts](08-concepts.md) | Public mode, reply parts and history replay, tool calling |
+| [6. Runtime View](06-runtime-view.md) | Streaming chat, image generation |
+| [8. Concepts](08-concepts.md) | Public mode, reply parts and history replay, tool calling, generated images |
+| [11. Risks and Technical Debt](11-risks-and-technical-debt.md) | Module risks (`HERMES-D*`) |
 | [12. Glossary](12-glossary.md) | Hermes ubiquitous language |
 | [Decisions](adr/README.md) | Module ADR log (`HERMES-ADR-*`) |
 
@@ -23,6 +24,7 @@ down. Platform-wide concepts are described in the
 - Persist conversations, messages, folders, personas, traits and model configurations
 - Stream chat replies (reasoning, text and tool calls) and conversation compaction from
   OuranosMl over SSE
+- Generate images for the chat model through OuranosMl and serve them to the Interface
 - Keep the list of available models in sync with OuranosMl
 - Limit reads to public entities while public mode is on
 
@@ -30,7 +32,7 @@ down. Platform-wide concepts are described in the
 
 | Neighbour | Channel | Purpose | Code entry point |
 |-----------|---------|---------|------------------|
-| OuranosMl | Outbound HTTP (OpenAI-compatible Responses, model list) | Chat, compaction, conversation naming, model sync | `Features/Conversations/`, `Features/Models/` |
+| OuranosMl | Outbound HTTP (OpenAI-compatible Responses, model list, streamed `/images/generations`) | Chat, compaction, conversation naming, model sync, image generation | `Features/Conversations/`, `Features/Models/`, `Features/Assistants/Tools/GenerateImage/` |
 | Flagsmith | Outbound HTTP (via the Shared module's client) | `hermes.public_mode` flag | Read handlers |
 | Interface | Inbound REST + SSE | Hermes pages under `src/apps/interface/src/app/hermes/` | Every `*Endpoint.cs` |
 
@@ -50,18 +52,27 @@ shared kernel.
 | Job | Schedule | Purpose |
 |-----|----------|---------|
 | `SyncModelsJob` | hourly | Sync available LLM models from OuranosMl |
+| `PurgeImagesJob` | hourly (minute 15) | Delete generated images no saved conversation references once older than the unsaved retention |
 
 ## Persistence
 
 Schema `hermes` (EF Core, `HermesDbContext`), plain relational. Assistant replies keep their
 ordered parts in `message_parts`, one table for every part kind (table-per-hierarchy on
-`kind`).
+`kind`). Generated images are stored as `bytea` in `generated_images` and served by
+`GET /api/hermes/images/{imageId}`; see [8.4](08-concepts.md#84-generated-images) for their
+lifetime.
 
 ## Configuration
 
 `Ouranos:Hermes` (`HermesOptions`): conversation-naming prompt, model and reasoning effort,
 and the compaction prompt, temperature, max tokens and reasoning effort. Conversation naming
 is off unless both the prompt and the model are set.
+
+`Ouranos:Hermes:ImageGeneration` (`HermesImageGenerationOptions`): `IsEnabled` (default
+true), `Model` (null uses OuranosMl's default image model), `UnsavedRetention` (default
+24 hours), `MaxPromptLength` (default 1000) and `SquareSize`, `PortraitSize` and
+`LandscapeSize` (`Width`/`Height` per orientation; defaults 1024x1024, 832x1216 and
+1216x832, which suit SDXL- and Flux-class models).
 
 Per-chat model settings live on each model config, not in configuration: system prompt,
 temperature, max tokens, context window and whether tool calling is on. Reasoning effort is a
