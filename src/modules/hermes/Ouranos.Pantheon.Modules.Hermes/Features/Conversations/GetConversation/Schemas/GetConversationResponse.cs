@@ -1,6 +1,7 @@
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GetConversation.Schemas;
 
@@ -9,6 +10,7 @@ public sealed record GetConversationResponse(
     string Name,
     bool IsPublic,
     Id<Folder>? FolderId,
+    ReasoningEffort? ReasoningEffort,
     GetConversationPersonaResponse Persona,
     GetConversationModelResponse Model,
     List<GetConversationTraitResponse> Traits,

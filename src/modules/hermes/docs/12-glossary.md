@@ -6,10 +6,12 @@ the [platform glossary](../../../../docs/architecture/12-glossary.md).
 | Term | Definition |
 |------|------------|
 | **Persona** | A reusable assistant personality (name, description, personality, scenario) selected when a conversation is created |
-| **Model config** | A named configuration of an available model (system prompt and sampling settings); marked unavailable when the model disappears from OuranosMl |
+| **Model config** | A named configuration of an available model (system prompt, sampling settings and tool calling); marked unavailable when the model disappears from OuranosMl |
 | **Trait** | A named, reusable system-prompt fragment attached to a conversation and merged with the persona and model config when the system prompt is built |
-| **Conversation** | A chat thread with an LLM using one persona and model config; tracks token usage and may sit in a folder |
+| **Conversation** | A chat thread with an LLM using one persona and model config at a chosen reasoning effort; tracks token usage and may sit in a folder |
 | **Message** | An individual message within a conversation (system, user, assistant or summary role) |
+| **Message part** | One ordered piece of a saved assistant reply: reasoning, text or a tool call |
+| **Tool calling** | A model config setting that lets the chat model call registered tools during a reply |
 | **Folder** | Nestable container for conversations (`ParentFolderId`) |
 | **Compaction** | Summarizing a conversation's messages since the last summary into a single `Summary`-role message so long chats fit the context window; streamed over SSE |
 | **Available model** | An LLM served by OuranosMl, discovered by the hourly sync job |

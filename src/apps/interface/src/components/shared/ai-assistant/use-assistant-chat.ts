@@ -211,7 +211,11 @@ export function useAssistantChat<TContext>({
             failure = event.message;
             break;
           }
-          if (event.$type === "usage" || event.$type === "done") {
+          if (
+            event.$type === "usage" ||
+            event.$type === "done" ||
+            event.$type === "instructions"
+          ) {
             continue;
           }
 

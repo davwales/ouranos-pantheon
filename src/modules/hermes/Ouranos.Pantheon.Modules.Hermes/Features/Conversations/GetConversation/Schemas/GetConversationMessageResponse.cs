@@ -1,3 +1,4 @@
+using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 
@@ -7,5 +8,6 @@ public sealed record GetConversationMessageResponse(
     Id<Message> Id,
     string Content,
     Role Role,
-    int SortOrder
+    int SortOrder,
+    IReadOnlyList<MessagePartDto> Parts
 );

@@ -7,7 +7,7 @@ import {
   PersonaFormInput,
   TraitFormInput,
 } from "@/app/(hermes)/hermes/types";
-import { hermesApi } from "@/lib/api/hermes";
+import { hermesApi, type ReasoningEffort } from "@/lib/api/hermes";
 import { useEffect, useState } from "react";
 import { ChatMessageSkeleton } from "@/components/shared/skeletons/chat-message-skeleton";
 
@@ -17,6 +17,7 @@ export default function Conversation() {
   const [persona, setPersona] = useState<PersonaFormInput>();
   const [model, setModel] = useState<ModelFormInput>();
   const [activeTraits, setActiveTraits] = useState<TraitFormInput[]>([]);
+  const [reasoningEffort, setReasoningEffort] = useState<ReasoningEffort | null>(null);
   const [conversationState, setConversationState] =
     useState<ConversationState>("loading");
   const [conversationId, setConversationId] = useState<string | undefined>();
@@ -75,9 +76,11 @@ export default function Conversation() {
         persona={persona}
         model={model}
         activeTraits={activeTraits}
+        reasoningEffort={reasoningEffort}
         onPersonaChange={setPersona}
         onModelChange={setModel}
         onTraitsChange={setActiveTraits}
+        onReasoningEffortChange={setReasoningEffort}
         conversationId={conversationId}
         onConversationSaved={(id, name) => {
           setConversationId(id);

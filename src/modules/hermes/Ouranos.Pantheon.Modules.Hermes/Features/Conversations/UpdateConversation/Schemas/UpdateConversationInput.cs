@@ -4,6 +4,7 @@ using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.UpdateConversation.Schemas;
 
@@ -15,5 +16,6 @@ public sealed record UpdateConversationInput(
     Id<Trait>[] TraitIds,
     List<UpdateConversationMessageInput> Messages,
     bool IsPublic,
-    Id<Folder>? FolderId = null
+    Id<Folder>? FolderId = null,
+    ReasoningEffort? ReasoningEffort = null
 );

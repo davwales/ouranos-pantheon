@@ -1,10 +1,28 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useStreamingMessage } from "@/hooks/use-streaming-message";
 import { streamCompletion, streamCompact } from "@/lib/api/hermes";
-import { MessageInput, Role } from "@/lib/api/hermes-types";
+import {
+  type MessageInput,
+  type ReasoningEffort,
+  Role,
+} from "@/lib/api/hermes-types";
 import { TraitFormInput } from "@/app/(hermes)/hermes/types";
+import {
+  type AssistantChatPart,
+  applyEvent,
+  finishParts,
+  textOf,
+} from "@/components/shared/ai-assistant/assistant-chat-parts";
+import {
+  toMessageParts,
+  toolCallsOf,
+  withEditedText,
+} from "@/app/(hermes)/hermes/components/message-parts";
+import { generateID } from "@/lib/utils";
+
+const FALLBACK_ERROR = "The response could not be generated. Please try again.";
 
 export type TokenUsage = {
   inputTokens: number;
@@ -20,8 +38,9 @@ export function useMessageController(params: {
     systemPrompt: string;
     temperature?: number | null;
     maxTokens?: number | null;
-    repeatPenalty?: number | null;
+    isToolCallingEnabled: boolean;
   };
+  reasoningEffort: ReasoningEffort | null;
   persona: {
     name: string;
     description: string;
@@ -35,7 +54,10 @@ export function useMessageController(params: {
   onMessagesPersist?: (messages: MessageInput[]) => void;
 }): {
   messages: MessageInput[];
+  streamingParts: AssistantChatPart[] | null;
   isGenerating: boolean;
+  generationError: string | null;
+  stop: () => void;
   isCompacting: boolean;
   compactionError: string | null;
   tokenUsage: TokenUsage | null;
@@ -50,6 +72,7 @@ export function useMessageController(params: {
     initialMessages,
     initialTokenUsage,
     model,
+    reasoningEffort,
     persona,
     activeTraits,
     conversationId,
@@ -65,7 +88,14 @@ export function useMessageController(params: {
     initialTokenUsage,
   );
 
-  const { isStreaming: isGenerating, startStream } = useStreamingMessage();
+  const [streamingParts, setStreamingParts] = useState<AssistantChatPart[] | null>(null);
+  const [generationError, setGenerationError] = useState<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  const { isStreaming: isCompactionStreaming, startStream } = useStreamingMessage();
+  const isGenerating = streamingParts !== null || isCompactionStreaming;
+
+  useEffect(() => () => abortRef.current?.abort(), []);
 
   const getMessagesForLlm = useCallback(
     (allMessages: MessageInput[]): MessageInput[] => {
@@ -89,24 +119,24 @@ export function useMessageController(params: {
     async (currentMessages: MessageInput[]) => {
       if (isGenerating) return;
 
-      const assistantMessage: MessageInput = {
-        role: Role.Assistant,
-        content: "",
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
+      const controller = new AbortController();
+      abortRef.current = controller;
+      setGenerationError(null);
+      setStreamingParts([]);
+      setMessages((prev) => [...prev, { role: Role.Assistant, content: "" }]);
 
-      const messagesForLlm = getMessagesForLlm(currentMessages);
-
-      await startStream({
-        generator: () =>
-          streamCompletion({
+      let parts: AssistantChatPart[] = [];
+      let failure: string | null = null;
+      try {
+        const stream = streamCompletion(
+          {
             conversation: {
               model: {
                 modelIdentifier: model.modelIdentifier,
                 systemPrompt: model.systemPrompt,
                 temperature: model.temperature,
                 maxTokens: model.maxTokens,
-                repeatPenalty: model.repeatPenalty,
+                isToolCallingEnabled: model.isToolCallingEnabled,
               },
               persona: {
                 name: persona.name,
@@ -118,42 +148,73 @@ export function useMessageController(params: {
                 name: t.name,
                 content: t.content,
               })),
-              messages: messagesForLlm.map(({ role, content }) => ({
-                role,
-                content,
-              })),
+              messages: getMessagesForLlm(currentMessages).map(
+                ({ role, content, parts: messageParts }) => ({
+                  role,
+                  content,
+                  toolCalls: toolCallsOf(messageParts),
+                }),
+              ),
+              reasoningEffort,
             },
             ...(conversationId ? { conversationId } : {}),
-          }),
-        chunkHandlers: {
-          onContent: (content) => {
-            setMessages((prev) => {
-              const updated = [...prev];
-              updated[updated.length - 1] = {
-                ...updated[updated.length - 1],
-                content: updated[updated.length - 1].content + content,
+          },
+          controller.signal,
+        );
+
+        for await (const event of stream) {
+          switch (event.$type) {
+            case "instructions":
+              onSystemPromptChange?.(event.instructions);
+              break;
+            case "usage": {
+              const usage = {
+                inputTokens: event.inputTokens,
+                outputTokens: event.outputTokens,
+                totalTokens: event.contextTokens,
               };
-              return updated;
-            });
-          },
-          onUsage: (usage) => {
-            setTokenUsage(usage);
-            onTokenUsageChange?.(usage);
-          },
-          onSystemPrompt: (systemPrompt) => {
-            onSystemPromptChange?.(systemPrompt);
-          },
-        },
-        onError: (error) => {
-          console.error("Error sending message:", error);
-        },
+              setTokenUsage(usage);
+              onTokenUsageChange?.(usage);
+              break;
+            }
+            case "error":
+              failure = event.message;
+              break;
+            case "done":
+            case "action":
+              break;
+            default:
+              parts = applyEvent(parts, event, Date.now(), generateID());
+              setStreamingParts(parts);
+          }
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          failure = error instanceof Error && error.message ? error.message : FALLBACK_ERROR;
+        }
+      }
+
+      if (abortRef.current === controller) {
+        abortRef.current = null;
+      }
+
+      // A reply with no text is dropped so the user can retry from their own message.
+      const finished = finishParts(parts, Date.now());
+      const content = textOf(finished);
+      setMessages((prev) => {
+        const updated = prev.slice(0, -1);
+        return content
+          ? [...updated, { role: Role.Assistant, content, parts: toMessageParts(finished) }]
+          : updated;
       });
+      setGenerationError(failure);
+      setStreamingParts(null);
     },
     [
       isGenerating,
-      startStream,
       getMessagesForLlm,
       model,
+      reasoningEffort,
       persona,
       activeTraits,
       conversationId,
@@ -161,6 +222,10 @@ export function useMessageController(params: {
       onSystemPromptChange,
     ],
   );
+
+  const stop = useCallback(() => {
+    abortRef.current?.abort();
+  }, []);
 
   const addUserMessage = useCallback(
     async (content: string) => {
@@ -178,7 +243,12 @@ export function useMessageController(params: {
     (index: number, content: string) => {
       setMessages((prev) => {
         const updatedMessages = [...prev];
-        updatedMessages[index] = { ...updatedMessages[index], content };
+        const message = updatedMessages[index];
+        updatedMessages[index] = {
+          ...message,
+          content,
+          parts: withEditedText(message.parts, content),
+        };
         if (conversationId) {
           onMessagesPersist?.(updatedMessages);
         }
@@ -288,7 +358,10 @@ export function useMessageController(params: {
 
   return {
     messages,
+    streamingParts,
     isGenerating,
+    generationError,
+    stop,
     isCompacting,
     compactionError,
     tokenUsage,

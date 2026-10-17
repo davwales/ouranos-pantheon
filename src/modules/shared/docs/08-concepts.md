@@ -8,15 +8,21 @@ server; the client sends only history and typed context references) is stated in
 This section describes how the kernel's `Application/Assistants/` package implements it.
 Each module documents its own assistants and tools in its module docs.
 
-- **`PantheonAssistant<TContext>`** is an `IPantheonStreamHandler` base class. Subclasses
-  implement only `BuildPromptAsync(TContext, CancellationToken)`, loading their own domain
-  data and returning an `AssistantPrompt` (model, system prompt, temperature, max tokens,
-  reasoning effort) from module options. The base class streams through
-  `IOuranosMachineLearningClient` over the OpenAI Responses API, sending the system prompt
-  as `instructions` followed by the shared `AssistantFormatting` guideline (short answers,
-  small tables, no LaTeX), since every assistant renders in the same narrow panel. Context
-  may be loaded directly from the store or composed by invoking existing query handlers
-  through `IMessageBus`, which keeps the prompt consistent with what the page shows.
+- **`AssistantToolLoop<TContext>`** is the reusable engine. It streams one reply through
+  `IOuranosMachineLearningClient` over the OpenAI Responses API from caller-supplied
+  instructions, history items and tools, runs the tool loop below and emits the event
+  contract, but never `done`, so its caller decides how the turn ends. Hermes chat uses it
+  directly, because it composes its own prompt, replays persisted tool calls and saves the
+  turn (see the [Hermes concepts](../../hermes/docs/08-concepts.md)).
+- **`PantheonAssistant<TContext>`** is the `IPantheonStreamHandler` base class for page
+  assistants, built on the loop. Subclasses implement only
+  `BuildPromptAsync(TContext, CancellationToken)`, loading their own domain data and
+  returning an `AssistantPrompt` (model, system prompt, temperature, max tokens, reasoning
+  effort) from module options. The base class sends the system prompt as `instructions`
+  followed by the shared `AssistantFormatting` guideline (short answers, small tables, no
+  LaTeX), since every page assistant renders in the same narrow panel. Context may be loaded
+  directly from the store or composed by invoking existing query handlers through
+  `IMessageBus`, which keeps the prompt consistent with what the page shows.
 - **Tools**: each assistant can offer the model function tools. A tool derives from
   `AssistantTool<TContext, TArguments>`; the arguments record is exported as the tool's JSON
   schema (every property required, optional arguments nullable, enums as names, `Id<T>` as a
@@ -46,7 +52,7 @@ Each module documents its own assistants and tools in its module docs.
   when there is nothing to return (an unknown id, a disabled feature), and the base serializes
   it as compact JSON (camelCase, nulls omitted, enums as names, decimals rounded to four
   significant figures to save tokens). Only the system prompt is composed as text.
-- **Tool loop**: the base class runs a bounded loop. It streams a round, runs the requested
+- **Tool loop**: the loop is bounded. It streams a round, runs the requested
   tools sequentially, appends each call and its (truncated) output to the input, and streams
   again, up to `MaxToolRounds` (`ModelDefaults`); the last round offers no tools, so the model
   must answer. Only the first `MaxToolCallsPerRound` calls in a round run, and a tool marked
@@ -78,12 +84,16 @@ Each module documents its own assistants and tools in its module docs.
 - **`MapAssistant<TContext>(pattern)`** (`API/AssistantEndpointExtensions`) maps a POST
   route binding `AssistantCompletionInput<TContext>` (`messages` + typed `context`),
   dispatches via `IMessageBus`, and writes events with `SseWriter`.
-- **Event contract**: `$type`-discriminated `reasoning`, `content`, `tool` (a call started:
+- **Event contract**: `$type`-discriminated `instructions` (the composed system prompt; only
+  handlers that show it emit it, Hermes does, page assistants do not), `reasoning`,
+  `content`, `tool` (a call started:
   `callId`, `name` and the raw JSON `arguments`), `toolResult` (`callId`, `status`
   `Completed | Failed | Skipped`, and the `output` exactly as the model received it, with
   `isTruncated` when it was cut to `MaxToolOutputCharacters`), `action` (a typed action for
   the page, with the `callId` that proposed it, sent between the call and its result),
-  `usage`, `error`, `done`. Tool events let the user inspect what each call asked and
+  `usage` (input, output and total summed over the reply's rounds, plus `contextTokens`, the
+  last round's input and output, i.e. how much of the context window the conversation now
+  fills), `error`, `done`. Tool events let the user inspect what each call asked and
   returned; they are a debugging view, not data for the page. `reasoning` carries the model's
   thinking and is never resent as history. Errors before the first event surface as
   ProblemDetails; LLM failures mid-stream, and replies that finish without any content
@@ -128,5 +138,6 @@ object, and a title.
 - Each action is a card with Apply and Reject (Retry after a failure, and its call's details
   on demand), and a reply with several open proposals offers Apply all, which applies them
   one after another because handlers save the latest state.
-- Hermes renders through the same `Message`, with `<think>` tags parsed into reasoning
-  blocks.
+- Hermes renders through the same `Message`: its controller folds the same events into
+  parts with `assistant-chat-parts.ts`, and saved replies render from their stored parts.
+  Older Hermes messages without parts fall back to `<think>` tag parsing.

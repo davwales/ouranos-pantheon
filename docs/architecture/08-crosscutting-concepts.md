@@ -186,6 +186,11 @@ client-supplied data. Every module's assistants follow these rules:
 - **Model defaults are central**: `ModelDefaults` holds the global model, effort and token
   defaults; features override only what they need.
 
+Hermes chat is not a page assistant: it is the user's own general-purpose chat, so it sends
+its persona, model settings and history from the client and persists its conversations. It
+reuses the same tool loop, tool abstraction and event contract
+([Hermes module docs](../../src/modules/hermes/docs/README.md)).
+
 The framework's mechanics (tool loop, event contract, history trimming, frontend panel) are
 documented in the [Shared module docs](../../src/modules/shared/docs/README.md). Each module
 documents its own assistants and their tools. The runtime flow is

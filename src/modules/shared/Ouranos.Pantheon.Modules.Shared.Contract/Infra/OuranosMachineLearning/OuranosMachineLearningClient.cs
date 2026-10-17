@@ -6,7 +6,6 @@ using System.Text.Json.Serialization;
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using OpenAI;
-using OpenAI.Chat;
 using OpenAI.Responses;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Requests;
@@ -42,90 +41,6 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
         _logger = logger;
         _httpClient = httpClient;
         _openAiClient = openAiClient;
-    }
-
-    public async IAsyncEnumerable<ChatCompletionChunk> StreamChatCompletionAsync(
-        string model,
-        List<MessageDto> messages,
-        float? temperature = null,
-        int? maxTokens = null,
-        float? frequencyPenalty = null,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default
-    )
-    {
-        _logger.LogTrace(
-            "Attempting to stream chat completion using model '{Model}' with {Count} messages.",
-            model,
-            messages.Count
-        );
-        cancellationToken.ThrowIfCancellationRequested();
-
-        var chatClient = _openAiClient.GetChatClient(model);
-        var chatMessages = messages.Select(MapMessage).ToList();
-        var options = BuildOptions(temperature, maxTokens, frequencyPenalty);
-
-        ChatTokenUsage? usage = null;
-
-        await foreach (
-            var update in chatClient.CompleteChatStreamingAsync(
-                chatMessages,
-                options,
-                cancellationToken
-            )
-        )
-        {
-            foreach (var part in update.ContentUpdate)
-            {
-                if (!string.IsNullOrEmpty(part.Text))
-                {
-                    yield return new ChatCompletionChunk(part.Text, null);
-                }
-            }
-
-            if (update.Usage is not null)
-            {
-                usage = update.Usage;
-            }
-        }
-
-        if (usage is not null)
-        {
-            yield return new ChatCompletionChunk(
-                null,
-                new ChatCompletionUsage(
-                    usage.InputTokenCount,
-                    usage.OutputTokenCount,
-                    usage.TotalTokenCount
-                )
-            );
-        }
-
-        _logger.LogDebug("Successfully streamed chat completion using model '{Model}'.", model);
-    }
-
-    public async Task<ChatCompletionResult> GenerateChatCompletionAsync(
-        string model,
-        List<MessageDto> messages,
-        float? temperature = null,
-        int? maxTokens = null,
-        float? frequencyPenalty = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        _logger.LogTrace(
-            "Attempting to complete chat using model '{Model}' with {Count} messages.",
-            model,
-            messages.Count
-        );
-
-        var chatClient = _openAiClient.GetChatClient(model);
-        var chatMessages = messages.Select(MapMessage).ToList();
-        var options = BuildOptions(temperature, maxTokens, frequencyPenalty);
-
-        var result = await chatClient.CompleteChatAsync(chatMessages, options, cancellationToken);
-
-        _logger.LogDebug("Successfully completed chat using model '{Model}'.", model);
-        return MapResult(result.Value);
     }
 
     public async IAsyncEnumerable<ResponseStreamChunk> StreamResponseAsync(
@@ -217,6 +132,43 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
         }
 
         _logger.LogDebug("Successfully streamed response using model '{Model}'.", model);
+    }
+
+    public async Task<GeneratedResponse> GenerateResponseAsync(
+        string model,
+        string instructions,
+        IReadOnlyList<ResponseInputItemDto> input,
+        float? temperature = null,
+        int? maxTokens = null,
+        ReasoningEffort? reasoningEffort = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        _logger.LogTrace(
+            "Attempting to generate response using model '{Model}' with {Count} input items.",
+            model,
+            input.Count
+        );
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var options = BuildResponseOptions(
+            model,
+            instructions,
+            input.Select(MapResponseItem),
+            temperature,
+            maxTokens,
+            reasoningEffort
+        );
+
+        var result = await _openAiClient
+            .GetResponsesClient()
+            .CreateResponseAsync(options, cancellationToken);
+
+        _logger.LogDebug("Successfully generated response using model '{Model}'.", model);
+        return new GeneratedResponse(
+            result.Value.GetOutputText() ?? string.Empty,
+            result.Value.Usage is { } usage ? MapUsage(usage) : null
+        );
     }
 
     public async Task<T?> GenerateStructuredResponseAsync<T>(
@@ -315,17 +267,6 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
         return result;
     }
 
-    private static ChatMessage MapMessage(MessageDto message)
-    {
-        return message.Role switch
-        {
-            RoleDto.System => ChatMessage.CreateSystemMessage(message.Content),
-            RoleDto.User => ChatMessage.CreateUserMessage(message.Content),
-            RoleDto.Assistant => ChatMessage.CreateAssistantMessage(message.Content),
-            _ => throw new InvalidOperationException($"Unknown role: {message.Role}"),
-        };
-    }
-
     private static ResponseItem MapResponseItem(ResponseInputItemDto item)
     {
         return item switch
@@ -402,48 +343,5 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
             usage.OutputTokenCount,
             usage.TotalTokenCount
         );
-    }
-
-    private static ChatCompletionResult MapResult(ChatCompletion completion)
-    {
-        var content = completion.Content.Count > 0 ? completion.Content[0].Text : string.Empty;
-
-        ChatCompletionUsage? usage = null;
-        if (completion.Usage is not null)
-        {
-            usage = new ChatCompletionUsage(
-                completion.Usage.InputTokenCount,
-                completion.Usage.OutputTokenCount,
-                completion.Usage.TotalTokenCount
-            );
-        }
-
-        return new ChatCompletionResult(content, usage);
-    }
-
-    private static ChatCompletionOptions BuildOptions(
-        float? temperature,
-        int? maxTokens,
-        float? frequencyPenalty
-    )
-    {
-        var options = new ChatCompletionOptions();
-
-        if (temperature.HasValue)
-        {
-            options.Temperature = temperature.Value;
-        }
-
-        if (maxTokens.HasValue)
-        {
-            options.MaxOutputTokenCount = maxTokens.Value;
-        }
-
-        if (frequencyPenalty.HasValue)
-        {
-            options.FrequencyPenalty = frequencyPenalty.Value;
-        }
-
-        return options;
     }
 }

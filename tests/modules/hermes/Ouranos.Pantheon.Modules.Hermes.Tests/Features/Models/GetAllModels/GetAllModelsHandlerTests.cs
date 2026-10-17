@@ -14,7 +14,7 @@ namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.Models.GetAllModels;
 
 public sealed class GetAllModelsHandlerTests
 {
-    private readonly IFixture _fixture = new Fixture();
+    private readonly Fixture _fixture = new();
     private readonly GetAllModelsHandler _handler;
     private readonly ILogger<GetAllModelsHandler> _logger = Substitute.For<
         ILogger<GetAllModelsHandler>
@@ -140,7 +140,7 @@ public sealed class GetAllModelsHandlerTests
             _fixture.Create<string>(),
             temperature: 0.7f,
             maxTokens: 512,
-            repeatPenalty: 1.1f,
+            isToolCallingEnabled: true,
             isDefault: true,
             isPublic: false
         );
@@ -156,7 +156,7 @@ public sealed class GetAllModelsHandlerTests
         var item = result[0];
         item.Temperature.ShouldBe(0.7f);
         item.MaxTokens.ShouldBe(512);
-        item.RepeatPenalty.ShouldBe(1.1f);
+        item.IsToolCallingEnabled.ShouldBeTrue();
         item.IsDefault.ShouldBeTrue();
         item.IsPublic.ShouldBeFalse();
     }

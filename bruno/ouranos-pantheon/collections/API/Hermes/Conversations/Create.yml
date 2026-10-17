@@ -22,10 +22,25 @@ http:
         "name": "Bruno chat",
         "isPublic": true,
         "folderId": null,
+        "reasoningEffort": "Low",
         "messages": [
           {
             "role": "User",
             "content": "Hello from Bruno"
+          },
+          {
+            "role": "Assistant",
+            "content": "Hello! How can I help?",
+            "parts": [
+              {
+                "$type": "reasoning",
+                "content": "The user greeted me."
+              },
+              {
+                "$type": "text",
+                "content": "Hello! How can I help?"
+              }
+            ]
           }
         ]
       }

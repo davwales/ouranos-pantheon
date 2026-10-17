@@ -6,7 +6,7 @@ namespace Ouranos.Pantheon.Modules.Hermes.Tests.Shared.Domain.Models;
 
 public sealed class ModelConfigTests
 {
-    private readonly IFixture _fixture = new Fixture();
+    private readonly Fixture _fixture = new();
 
     public ModelConfigTests()
     {
@@ -23,7 +23,7 @@ public sealed class ModelConfigTests
         var systemPrompt = _fixture.Create<string>();
         var temperature = _fixture.Create<float?>();
         var maxTokens = _fixture.Create<int?>();
-        var repeatPenalty = _fixture.Create<float?>();
+        var isToolCallingEnabled = _fixture.Create<bool>();
         var isDefault = _fixture.Create<bool>();
         var isPublic = _fixture.Create<bool>();
 
@@ -35,7 +35,7 @@ public sealed class ModelConfigTests
             systemPrompt,
             temperature,
             maxTokens,
-            repeatPenalty,
+            isToolCallingEnabled,
             null,
             isDefault,
             isPublic
@@ -48,7 +48,7 @@ public sealed class ModelConfigTests
         model.SystemPrompt.ShouldBe(systemPrompt);
         model.Temperature.ShouldBe(temperature);
         model.MaxTokens.ShouldBe(maxTokens);
-        model.RepeatPenalty.ShouldBe(repeatPenalty);
+        model.IsToolCallingEnabled.ShouldBe(isToolCallingEnabled);
         model.IsDefault.ShouldBe(isDefault);
         model.IsPublic.ShouldBe(isPublic);
     }
@@ -138,7 +138,7 @@ public sealed class ModelConfigTests
             newSystemPrompt,
             0.5f,
             1024,
-            1.1f,
+            true,
             null,
             true,
             false
@@ -150,7 +150,7 @@ public sealed class ModelConfigTests
         model.SystemPrompt.ShouldBe(newSystemPrompt);
         model.Temperature.ShouldBe(0.5f);
         model.MaxTokens.ShouldBe(1024);
-        model.RepeatPenalty.ShouldBe(1.1f);
+        model.IsToolCallingEnabled.ShouldBeTrue();
         model.IsDefault.ShouldBeTrue();
         model.IsPublic.ShouldBeFalse();
     }

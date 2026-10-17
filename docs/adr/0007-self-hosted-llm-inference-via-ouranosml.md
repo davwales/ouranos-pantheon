@@ -38,6 +38,12 @@ Completions to OuranosMl's OpenAI Responses API (`POST /responses`), which strea
 as typed events and accepts a per-request reasoning effort. Hermes stays on Chat Completions
 because it relies on `frequency_penalty`, which the Responses API lacks.
 
+Update (2026-10-17): Hermes chat, compaction and conversation naming moved to the Responses
+API too, so Hermes chat can use the shared assistant tool loop. `frequency_penalty` (the
+model config's repeat penalty) was dropped: it guarded against repetition loops in older
+models and is no longer worth a non-standard OuranosMl extension. The kernel client no
+longer calls Chat Completions.
+
 ## Consequences
 
 - All AI features degrade together if the inference host is offline, surfaced by the

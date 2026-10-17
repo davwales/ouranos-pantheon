@@ -5,5 +5,5 @@ public sealed record ModelInput(
     string SystemPrompt,
     float? Temperature = null,
     int? MaxTokens = null,
-    float? RepeatPenalty = null
+    bool IsToolCallingEnabled = false
 );

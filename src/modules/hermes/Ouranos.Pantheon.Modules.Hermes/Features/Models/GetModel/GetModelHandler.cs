@@ -63,7 +63,7 @@ public sealed class GetModelHandler : IPantheonHandler<GetModelInput, GetModelRe
             model.SystemPrompt,
             model.Temperature,
             model.MaxTokens,
-            model.RepeatPenalty,
+            model.IsToolCallingEnabled,
             model.ContextWindow,
             model.IsDefault,
             model.IsPublic,

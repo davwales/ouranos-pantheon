@@ -3,7 +3,7 @@
 import AutosizeTextarea from "@/components/shared/autosize-textarea";
 import { ConfirmationButton } from "@/components/shared/confirmation-button";
 import { Typography } from "@/components/shared/typography";
-import { type AvailableModel, hermesApi } from "@/lib/api/hermes";
+import { hermesApi } from "@/lib/api/hermes";
 import { ModelFormInput } from "@/app/(hermes)/hermes/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,7 +39,7 @@ export function ModelForm({
       systemPrompt: "",
       temperature: null,
       maxTokens: null,
-      repeatPenalty: null,
+      isToolCallingEnabled: false,
       contextWindow: null,
       isDefault: false,
       isPublic: true,
@@ -150,23 +150,6 @@ export function ModelForm({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-        <Typography variant="h4">Repeat Penalty</Typography>
-        <Input
-          type="number"
-          readOnly={isReadOnly}
-          value={model.repeatPenalty?.toFixed(2) ?? 1.0}
-          step={0.01}
-          onChange={(e: ChangeEvent<HTMLInputElement>) => {
-            const repeatPenalty = parseFloat(e.target.value);
-            if (!isNaN(repeatPenalty)) {
-              setModel((prev) => ({ ...prev, repeatPenalty }));
-            }
-          }}
-          className="w-full"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
         <Typography variant="h4">Context Window</Typography>
         <Input
           type="number"
@@ -182,6 +165,22 @@ export function ModelForm({
             }));
           }}
           className="w-full"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 items-center">
+        <Typography variant="h4">Tool Calling</Typography>
+        <input
+          type="checkbox"
+          checked={model.isToolCallingEnabled}
+          disabled={isReadOnly}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            setModel((prev) => ({
+              ...prev,
+              isToolCallingEnabled: e.target.checked,
+            }))
+          }
+          className="h-5 w-5 cursor-pointer"
         />
       </div>
 

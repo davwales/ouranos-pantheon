@@ -20,7 +20,7 @@ export default function CreateModelPage() {
         systemPrompt: input.systemPrompt,
         temperature: input.temperature,
         maxTokens: input.maxTokens,
-        repeatPenalty: input.repeatPenalty,
+        isToolCallingEnabled: input.isToolCallingEnabled,
         contextWindow: input.contextWindow,
         isDefault: input.isDefault,
         isPublic: input.isPublic,

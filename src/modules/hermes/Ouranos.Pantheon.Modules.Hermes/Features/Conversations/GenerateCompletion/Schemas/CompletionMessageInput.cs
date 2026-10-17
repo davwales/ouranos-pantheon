@@ -2,4 +2,8 @@ using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion.Schemas;
 
-public sealed record CompletionMessageInput(string Content, Role Role);
+public sealed record CompletionMessageInput(
+    string Content,
+    Role Role,
+    IReadOnlyList<CompletionToolCallInput>? ToolCalls = null
+);

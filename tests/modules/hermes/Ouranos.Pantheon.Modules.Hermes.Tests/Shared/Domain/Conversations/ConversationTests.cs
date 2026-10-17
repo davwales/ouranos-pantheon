@@ -3,13 +3,14 @@ using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Tests.Shared.Domain.Conversations;
 
 public sealed class ConversationTests
 {
-    private readonly IFixture _fixture = new Fixture();
+    private readonly Fixture _fixture = new();
 
     public ConversationTests()
     {
@@ -36,6 +37,27 @@ public sealed class ConversationTests
         conversation.IsPublic.ShouldBeTrue();
         conversation.Messages.ShouldBeEmpty();
         conversation.Traits.ShouldBeEmpty();
+        conversation.ReasoningEffort.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Create_WhenReasoningEffortProvided_ShouldSetIt()
+    {
+        // Arrange
+        var id = new Id<Conversation>(Guid.NewGuid().ToString());
+
+        // Act
+        var conversation = Conversation.Create(
+            id,
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [],
+            [],
+            reasoningEffort: ReasoningEffort.Low
+        );
+
+        // Assert
+        conversation.ReasoningEffort.ShouldBe(ReasoningEffort.Low);
     }
 
     [Theory]
@@ -186,7 +208,8 @@ public sealed class ConversationTests
             [message],
             [trait],
             false,
-            null
+            null,
+            ReasoningEffort.High
         );
 
         // Assert
@@ -196,6 +219,7 @@ public sealed class ConversationTests
         conversation.Messages.Count.ShouldBe(1);
         conversation.Traits.Count.ShouldBe(1);
         conversation.IsPublic.ShouldBeFalse();
+        conversation.ReasoningEffort.ShouldBe(ReasoningEffort.High);
     }
 
     [Theory]

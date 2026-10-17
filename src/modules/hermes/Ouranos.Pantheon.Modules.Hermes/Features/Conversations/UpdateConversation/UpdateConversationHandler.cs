@@ -1,6 +1,7 @@
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.UpdateConversation.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
@@ -68,7 +69,8 @@ public sealed class UpdateConversationHandler
                     command.ConversationId,
                     m.Content,
                     m.Role,
-                    index
+                    index,
+                    m.Parts?.Select(MessagePartMapping.ToEntity)
                 )
         );
 
@@ -79,8 +81,10 @@ public sealed class UpdateConversationHandler
             newMessages,
             traits,
             command.IsPublic,
-            command.FolderId
+            command.FolderId,
+            command.ReasoningEffort
         );
+
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         _logger.LogDebug(

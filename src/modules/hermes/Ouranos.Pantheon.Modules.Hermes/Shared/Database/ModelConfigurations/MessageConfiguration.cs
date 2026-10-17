@@ -17,5 +17,11 @@ public sealed class MessageConfiguration : IEntityTypeConfiguration<Message>
         builder.HasIndex(m => new { m.ConversationId, m.SortOrder });
 
         builder.Property(m => m.Role).HasConversion<string>();
+
+        builder
+            .HasMany(m => m.Parts)
+            .WithOne()
+            .HasForeignKey(p => p.MessageId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
