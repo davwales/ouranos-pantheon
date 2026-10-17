@@ -131,7 +131,8 @@ public sealed class CreateConversationHandlerTests
                     CompactionSummaryPrompt: HermesOptions.DefaultCompactionSummaryPrompt,
                     CompactionTemperature: HermesOptions.DefaultCompactionTemperature,
                     CompactionMaxTokens: HermesOptions.DefaultCompactionMaxTokens,
-                    CompactionReasoningEffort: ReasoningEffort.Low
+                    CompactionReasoningEffort: ReasoningEffort.Low,
+                    ImageGeneration: new HermesImageGenerationOptions()
                 )
             )
         );
@@ -194,7 +195,8 @@ public sealed class CreateConversationHandlerTests
                     CompactionSummaryPrompt: HermesOptions.DefaultCompactionSummaryPrompt,
                     CompactionTemperature: HermesOptions.DefaultCompactionTemperature,
                     CompactionMaxTokens: HermesOptions.DefaultCompactionMaxTokens,
-                    CompactionReasoningEffort: ReasoningEffort.Low
+                    CompactionReasoningEffort: ReasoningEffort.Low,
+                    ImageGeneration: new HermesImageGenerationOptions()
                 )
             )
         );
@@ -245,7 +247,8 @@ public sealed class CreateConversationHandlerTests
                     CompactionSummaryPrompt: HermesOptions.DefaultCompactionSummaryPrompt,
                     CompactionTemperature: HermesOptions.DefaultCompactionTemperature,
                     CompactionMaxTokens: HermesOptions.DefaultCompactionMaxTokens,
-                    CompactionReasoningEffort: ReasoningEffort.Low
+                    CompactionReasoningEffort: ReasoningEffort.Low,
+                    ImageGeneration: new HermesImageGenerationOptions()
                 )
             )
         );
@@ -397,7 +400,8 @@ public sealed class CreateConversationHandlerTests
                     CompactionSummaryPrompt: HermesOptions.DefaultCompactionSummaryPrompt,
                     CompactionTemperature: HermesOptions.DefaultCompactionTemperature,
                     CompactionMaxTokens: HermesOptions.DefaultCompactionMaxTokens,
-                    CompactionReasoningEffort: ReasoningEffort.Low
+                    CompactionReasoningEffort: ReasoningEffort.Low,
+                    ImageGeneration: new HermesImageGenerationOptions()
                 )
             )
         );
