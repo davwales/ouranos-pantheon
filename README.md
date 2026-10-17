@@ -50,7 +50,7 @@ Manages cooking recipes with full version history and automated import from the 
 
 Ouranos Pantheon is a **modular monolith** - a single deployable application composed of isolated domain modules. Modules do not reference or call each other; each depends only on the shared kernel and owns its own database schema.
 
-Full architecture documentation following the [arc42](https://arc42.org) template lives in [`docs/architecture/`](docs/architecture/README.md), with decision records in [`docs/adr/`](docs/adr/README.md).
+Full architecture documentation following the [arc42](https://arc42.org) template lives in [`docs/architecture/`](docs/architecture/README.md), with decision records in [`docs/adr/`](docs/adr/README.md). Each module documents its own internals and decisions in `src/modules/<module>/docs/`.
 
 **Patterns:** Vertical Slice Architecture · Domain-Driven Design · Message-driven data pipelines · Event Sourcing (Marten)
 
@@ -84,8 +84,9 @@ src/
     hermes/           # AI chat assistants
     hestia/           # Recipes with version history, web import, shopping list
     shared/           # Shared kernel (Shared.Contract) and cross-cutting infrastructure (Shared)
+    <module>/docs/    # Module-owned arc42 sections and ADRs
 tests/                # Unit tests mirroring src/
-docs/                 # arc42 architecture documentation and ADRs
+docs/                 # Platform arc42 documentation, ADRs, module docs template
 bruno/                # Bruno API request collection
 automation/           # Git hooks (pre-commit format check, pre-push build), format.sh
 ```

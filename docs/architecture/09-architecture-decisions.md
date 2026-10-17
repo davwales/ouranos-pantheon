@@ -19,4 +19,7 @@ Three decisions explain most of the architecture's texture:
    each domain gets the persistence style it needs (hypertables, event streams, plain
    relational) without multiplying infrastructure.
 
-New decisions follow the process in [`docs/adr/README.md`](../adr/README.md).
+New decisions follow the process in [`docs/adr/README.md`](../adr/README.md). Decisions
+whose consequences stay inside one module are recorded in that module's own ADR log
+([ADR 0013](../adr/0013-module-owned-architecture-documentation.md)) and are not indexed
+here.

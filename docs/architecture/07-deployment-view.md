@@ -73,8 +73,7 @@ graph TB
 | CORS allow-list | `CorsAllowedHosts` array (policy `AllowLocalAndServer`) |
 | Wolverine retry policy | `Ouranos:RabbitMq:RetryCount` (the policy is registered only when it is set): cooldown retries for unexpected exceptions, immediate dead-letter for `ArgumentException`/`InvalidOperationException` |
 | Query defaults | `Ouranos:Query` section (`QueryOptions`: paging/sorting limits behind the common query contract) |
-| Data loaders | `Ouranos:Plutus:DataLoaders` enable flags (all default to enabled) |
-| Forecasting | `Ouranos:Plutus:Forecasting` enable flag and model settings |
+| Module settings | `Ouranos:<Module>` section per module (e.g. Plutus data-loader enable flags), documented in each module's README ([Section 5.3](05-building-block-view.md#53-blackboxes-modules)) |
 | Feature flags | Flagsmith environments (dev at `ouranos.local:8001`), see [ADR 0012](../adr/0012-feature-flags-via-flagsmith.md) |
 | Trace and metric export | `Ouranos:Observability` section (`ObservabilityOptions`): endpoint/protocol/sampling, see [ADR 0009](../adr/0009-opentelemetry-observability-via-otlp.md) |
 | Frontend API base | `NEXT_PUBLIC_API_BASE` / `NEXT_PUBLIC_API_HOST` (default `http://localhost:8300`), inlined at build time |

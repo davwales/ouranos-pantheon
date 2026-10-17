@@ -32,8 +32,8 @@ graph TB
     pages -- "REST + SSE (from the browser)" --> gateway
 ```
 
-The diagram shows containment only; the feature slices inside each module are enumerated
-in the whitebox sections below.
+The diagram shows containment only; each module's feature slices are enumerated in its own
+documentation (see [5.3](#53-blackboxes-modules)).
 
 ### Composition mechanics
 
@@ -79,11 +79,11 @@ system.
 
 Slices never call each other's handlers, so the static dependency graph between feature
 folders is nearly empty by design. Within a module, all coupling is data coupling: async
-handoffs travel over RabbitMQ (`plutus.trade`, `plutus.backtest`, `hestia.recipe`; see
-[Section 8](08-crosscutting-concepts.md)), and everything else is one slice reading what
-another has written to the module's own Postgres schema. Across modules the only shared
+handoffs travel over RabbitMQ (see [Section 8.4](08-crosscutting-concepts.md#84-messaging-wolverine--rabbitmq)),
+and everything else is one slice reading what another has written to the module's own
+Postgres schema. Across modules the only shared
 things are the kernel and the gateway composition. The meaningful interactions are
-therefore dynamic; see the scenarios in [Section 6](06-runtime-view.md).
+therefore dynamic; see [Section 6](06-runtime-view.md) and each module's runtime view.
 
 ## 5.2 Blackbox: Interface (`src/apps/interface`)
 
@@ -92,85 +92,21 @@ Next.js App Router dashboard. Talks to the Gateway exclusively through a typed
 Zustand stores (`src/stores/`, e.g. `plutus-store.ts`). Pages compose feature components
 from per-route component folders (`_components/`).
 
-## 5.3 Whitebox: Plutus (market data & analysis)
+## 5.3 Blackboxes: Modules
 
-It ingests, aggregates, analyzes, and acts on market data for FFXIV, OSRS,
-and US equities.
+Each module is a blackbox at this level. Its whitebox (level 2), runtime scenarios,
+module-specific concepts, debt, glossary and module-scoped decisions are owned by the
+module and live next to its code in `src/modules/<module>/docs/`. This table changes only
+when a module is added, renamed or removed.
 
-| Building block | Responsibility |
-|----------------|----------------|
-| `Features/DataLoaders/` | Ingestion: FFXIV and Stocks WebSocket listeners, OSRS poller job, and a cached XIVAPI item lookup; the trade consumer upserts symbols and writes trades |
-| `Features/Assistants/` | Everything assistant-related: one folder per assistant (below), the tool catalogue in `Tools/` (one folder per tool, with the queries and shaping they share), and in `Scopes/` the context interfaces tools are typed to (`IMarketScope`, `ISymbolScope`, `IExplorerScope`) |
-| `Features/Assistants/AskMarketAnalyst/` | Streaming Market Analyst (`PantheonAssistant<MarketAnalystContext>`) for the market landing and Explorer pages: composes market taxes, the market overview and the user's current Explorer view into a compact prompt; opts into catalogue tools that screen the market, look up symbols, rank by signals or forecasts, summarize trading hours and set the Explorer view |
-| `Features/Assistants/AskSymbolAnalyst/` | Streaming Symbol Analyst (`PantheonAssistant<SymbolAnalystContext>`): composes a lean headline of symbol, market and today's prices from existing query handlers; opts into catalogue tools that fetch price history, signals, the forecast, positions, and find and look up other symbols on demand |
-| `Features/Markets/` | Market catalog CRUD; markets are the root entity the rest of the module is scoped to |
-| `Features/Symbols/` | Symbol read access: list/get symbols (upserted by ingestion) and today's per-symbol summary statistics |
-| `Features/Trades/` | Trade queries and aggregate views over the TimescaleDB hypertable and continuous aggregates: all trades, per-symbol/market/recipe trade aggregates, market overview, volume heatmap (see [Section 8](08-crosscutting-concepts.md)) |
-| `Features/Signals/` | Scheduled signal computation via pluggable signal computers covering technical and game-economy indicators, plus signal queries; scheduling in [Section 6](06-runtime-view.md) |
-| `Features/Strategies/` | Mode-agnostic strategy slices: strategy CRUD, recommendations, and the backtest lifecycle (run, optimize, get, cancel, restart). `BacktestJobRunner` owns every status transition of a queued run; `StrategyOptimizer` is the one genetic-algorithm flow for every mode |
-| `Shared/Domain/Strategies/` | The strategy engines. Each `StrategyMode` (`Swing/`, `Flip/`) is one folder with its configuration, data loader, a pure simulator and an `IStrategyEngine` (load, simulate, parameter space, recommend); `Trading/` holds what the simulators share (holdings, equity curve, market tax rules, result metrics) |
-| `Features/Forecasts/` | Daily ML price forecasts via OuranosMl, forecast queries, and on-demand forecast efficacy |
-| `Features/Positions/` | CRUD for user-recorded positions, including closing and linking a sell to its buy |
-| `Features/SymbolGroups/` | CRUD for named groupings of symbols within a market |
-| `Features/Recipes/` | CRUD for crafting recipes (input/output components, cost) that back the per-recipe trade aggregation and cost analysis |
-| `Shared/Domain/` | Market, Symbol, SymbolGroup, Trade, Recipe, Signal, Strategy, Backtest, Position, Forecast entities |
+| Module | Responsibility | Persistence | Documentation |
+|--------|----------------|-------------|---------------|
+| **Plutus** | Market data ingestion, signals, forecasts, strategies and backtests for FFXIV, OSRS and US equities | EF Core + TimescaleDB, schema `plutus` | [Plutus docs](../../src/modules/plutus/docs/README.md) |
+| **Hermes** | Chat over locally hosted LLMs: conversations, personas, traits, models | EF Core, schema `hermes` | [Hermes docs](../../src/modules/hermes/docs/README.md) |
+| **Hestia** | Event-sourced recipes, recipe import, shopping list | Marten (events + documents) | [Hestia docs](../../src/modules/hestia/docs/README.md) |
+| **Shared** | The shared kernel (`Shared.Contract`) and the Shared module that composes the host | EF Core, Shared and TickerQ stores | [Shared docs](../../src/modules/shared/docs/README.md) |
 
-Interfaces: REST routes per feature in `bruno/ouranos-pantheon/collections/API/Plutus/`.
-Async work runs over RabbitMQ: trades (`plutus.trade`) and backtest/optimize runs
-(`plutus.backtest`); topology in [Section 8](08-crosscutting-concepts.md).
-
-## 5.4 Whitebox: Hermes (AI chat)
-
-Chat interface over locally hosted LLMs.
-
-| Building block | Responsibility |
-|----------------|----------------|
-| `Features/Conversations/` | Conversation and message persistence; streaming chat completions and conversation compaction (SSE) via OuranosMl |
-| `Features/Personas/` | Reusable assistant personality definitions applied to conversations |
-| `Features/Traits/` | Attachable traits that merge with the conversation's persona at prompt-build time |
-| `Features/Models/` | Model configuration CRUD and the hourly available-model sync from OuranosMl |
-| `Features/Folders/` | Folders for organizing conversations |
-
-Interfaces: REST and SSE routes in `bruno/ouranos-pantheon/collections/API/Hermes/`; no
-async messaging.
-
-## 5.5 Whitebox: Hestia (recipes)
-
-Recipe management with event-sourced recipes and a document-stored shopping list.
-
-| Building block | Responsibility |
-|----------------|----------------|
-| `Features/Recipes/` | Recipe create/update with full version history and revert (no delete), persisted as a Marten event stream per recipe |
-| `Features/Recipes/ImportRecipe/` | Async import: enqueue an import request → scrape the page (JSON-LD, anti-SSRF-guarded) → LLM-normalize via OuranosMl structured output (Responses API, low reasoning effort) → append events |
-| `Features/Recipes/ReimportRecipe/` | Re-runs the import for an existing recipe |
-| `Features/Assistants/` | Everything assistant-related: the Kitchen Assistant (below), the tool catalogue in `Tools/` (every recipe tool, plus the recipe loading and validation they share), and in `Scopes/` the `IRecipeScope` the tools are typed to |
-| `Features/Assistants/AskKitchenAssistant/` | Streaming Kitchen Assistant (`PantheonAssistant<KitchenAssistantContext>`): loads the recipe from Marten and answers questions about it via OuranosMl; opts into catalogue tools that propose notes and ingredient or step changes for the user to apply |
-| `Features/ShoppingLists/` | Shopping list built from selected recipes plus manual items; stored as a single Marten document, not event-sourced |
-
-Interfaces: REST routes in `bruno/ouranos-pantheon/collections/API/Hestia/`. The async
-import handoff is the `hestia.recipe` exchange (see
-[Section 8](08-crosscutting-concepts.md)).
-
-## 5.6 Whitebox: Shared
-
-Two distinct assemblies live under `src/modules/shared/`:
-
-**`Ouranos.Pantheon.Modules.Shared.Contract`** is the shared kernel referenced by every
-module: `IPantheonModule`, `Id<T>`, `BaseEntity`, `BaseEventSourcedEntity`,
-`IPantheonHandler`, the common query contract (paging/sorting/filtering), the backtest
-step pipeline abstractions, `SseWriter`, the AI assistant base (`PantheonAssistant<TContext>`,
-`AssistantTool<TContext, TArguments>`, `MapAssistant`), the `WebSocketWorker` infrastructure, the
-OuranosMl client and its global model defaults (`ModelDefaults`), the genetic-algorithm engine, the `PostgresModule`/`OuranosDbContext`
-persistence core, and the Marten registration helper (`AddCoreMartenModule`, used by
-Hestia). See [Section 8](08-crosscutting-concepts.md).
-
-**`Ouranos.Pantheon.Modules.Shared`** is a runnable module (the first entry in the
-gateway's module array, referenced only by the gateway) that owns: core composition
-(`CoreExtensions`, above), the health endpoint + checks (Postgres, RabbitMQ, OuranosMl,
-WebSocket, TickerQ), the TickerQ store migrations and dashboard, observability,
-notification entities and dispatch job, and Flagsmith/RabbitMQ option wiring.
-
-## 5.7 Tests
+## 5.4 Tests
 
 `tests/` mirrors `src/` (`tests/modules/{plutus,hermes,hestia,shared}`,
 `tests/apps/`, `tests/Ouranos.Pantheon.Tests.Utils/`). Stack: xUnit + AutoFixture +

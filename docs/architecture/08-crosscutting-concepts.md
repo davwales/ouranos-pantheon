@@ -1,7 +1,10 @@
 # 8. Crosscutting Concepts
 
 Concepts that apply across all modules. Most are implemented in the shared kernel,
-`Ouranos.Pantheon.Modules.Shared.Contract` (see [Section 5.6](05-building-block-view.md#56-whitebox-shared)).
+`Ouranos.Pantheon.Modules.Shared.Contract`, whose internals are documented in the
+[Shared module docs](../../src/modules/shared/docs/README.md). This section states the rules
+every module follows; how a module applies them is documented by that module (see
+[Section 5.3](05-building-block-view.md#53-blackboxes-modules)).
 
 ## 8.1 Domain Primitives
 
@@ -33,24 +36,27 @@ Concepts that apply across all modules. Most are implemented in the shared kerne
   the same filter language, so search needs no backend changes. The visual filter builder
   edits the same tree from a dialog.
 - **Step pipeline**: `IStep`/`StepRegistry` abstractions in the kernel compose a chain of
-  responsibility pipeline. Backtests no longer use it; strategy simulators are plain classes
-  (see [Section 6.5](06-runtime-view.md))
-- **Polymorphic JSON columns**: a configuration whose shape depends on a discriminator (e.g.
-  `StrategyConfiguration` by `mode`) is one `jsonb` column via `HasJsonConversion`, stored in
-  the same camelCase, string-enum shape the API uses; adding a field needs no migration
-- **Shared Algorithms**: some generic algorithms (`Algorithms/`) have been implemented in the shared kernel for use in various features (e.g., the genetic algorithms used in strategy optimization)
+  responsibility pipeline. No module uses it today
+- **Polymorphic JSON columns**: a configuration whose shape depends on a discriminator is
+  one `jsonb` column via `HasJsonConversion`, stored in the same camelCase, string-enum
+  shape the API uses; adding a field needs no migration
+- **Shared Algorithms**: generic algorithms (`Algorithms/`, e.g. the genetic-algorithm
+  engine) live in the kernel so any module can use them
 
 ## 8.3 Persistence
 
 - **Schema-per-module**: each `OuranosDbContext` subclass declares its Postgres schema
   (`plutus`, `hermes`, …); EFCore.NamingConventions enforces snake_case.
 - **Two persistence styles, one engine:**
-  - *Relational + time-series* (Plutus, Hermes, Shared): EF Core; trade, signal, and
-    forecast tables are TimescaleDB hypertables with continuous aggregates for market
-    views; `plutus.latest_signals` is a plain materialized view refreshed by the signal
-    job. Migrations per module, applied in module `Configure`.
-  - *Documents and events* (Hestia): Marten streams per recipe with inline snapshots; the
-    shopping list is a plain Marten document.
+  - *Relational + time-series* (Plutus, Hermes, Shared): EF Core, with TimescaleDB
+    hypertables and continuous aggregates where data is time-series. Migrations per module,
+    applied in module `Configure`.
+  - *Documents and events* (Hestia): Marten event streams with inline snapshots, and plain
+    Marten documents.
+
+  Which style a module uses is a platform decision
+  ([ADR 0004](../adr/0004-polyglot-persistence-on-postgresql.md)); how it models its data is
+  documented by the module.
 - **`PostgresModule`**: `AddCorePostgresModule<TContext>()` / `ApplyCorePostgresMigrations<TContext>()`
   provide the shared DAL registration/migration path so modules stay consistent.
 - TickerQ's operational store is a separate context, migrated centrally in `UseOuranosCore`.
@@ -62,27 +68,26 @@ published message declares its topology as constants on the message type. Withou
 no RabbitMQ transport is configured and Wolverine routes messages locally. `AutoProvision`
 creates exchanges/queues at startup (`AutoCreate.CreateOrUpdate` in production).
 
-| Message | Exchange | Queue | DLQ |
-|---------|----------|-------|-----|
-| `TradeMessage` | `plutus.trade` | `plutus.trade.ingest` | `plutus.trade.ingest.dlq` |
-| `RunBacktestMessage` | `plutus.backtest` | `plutus.backtest.run` | `plutus.backtest.run.dlq` |
-| `OptimizeStrategyMessage` | `plutus.backtest` | `plutus.backtest.optimize` | `plutus.backtest.optimize.dlq` |
-| `ImportRecipeRequested` | `hestia.recipe` | `hestia.recipe.import` | `hestia.recipe.import.dlq` |
+Topology is named per module: exchange `<module>.<topic>`, queue
+`<module>.<topic>.<action>`, dead-letter queue `<queue>.dlq`. Each module lists its messages
+in its module README.
 
 **Error policy** (centralized in `CoreExtensions`, registered only when `Ouranos:RabbitMq:RetryCount`
 is set): `ArgumentException` and
 `InvalidOperationException` move straight to the error queue (they indicate bugs/bad
 input, not transient faults); any other exception retries with fixed cooldown intervals
-(configured via `Ouranos:RabbitMq:RetryCount`, 250 ms steps) before dead-lettering. The
-backtest, optimization and recipe-import consumers record failures on their entity
-instead of throwing, so their DLQs only see infrastructure faults.
+(configured via `Ouranos:RabbitMq:RetryCount`, 250 ms steps) before dead-lettering.
+Consumers of long-running work record failures on their entity instead of throwing, so
+their DLQs only see infrastructure faults.
 
-All messages are module-internal async flows; no message crosses module boundaries.
+All messages today are module-internal async flows; no message crosses module boundaries.
+A message that did would be a platform-level contract and documented here.
 
 ## 8.5 Scheduling (TickerQ)
 
-In-process scheduler with EF Core store and dashboard at `/tickerq/dashboard`; the job
-inventory lives in [Section 6.1](06-runtime-view.md#61-scheduled-jobs-overview).
+In-process scheduler with EF Core store and dashboard at `/tickerq/dashboard`
+([Section 6.1](06-runtime-view.md#61-scheduled-jobs)). Each module lists its own jobs in its
+module README.
 
 ## 8.6 Errors and Validation
 
@@ -109,19 +114,21 @@ body, linking Loki entries to spans (see 8.14).
 - Routes are `/api/<module>/...`; `/health` is the only unprefixed route
 - camelCase JSON with `JsonStringEnumConverter` and `IdJsonConverterFactory` for `Id<T>`
 - Async operations return **202 Accepted** with a `Location` header pointing at the
-  resource to poll (backtests, optimization, restart, recipe import and re-import)
-- Streaming endpoints (Hermes completion and compaction, module assistants) use Server-Sent Events
+  resource to poll ([Section 6.3](06-runtime-view.md#63-scenario-asynchronous-long-running-work))
+- Streaming endpoints (chat completion, module assistants) use Server-Sent Events
 - Query binding is case-insensitive to input record property names
 - Bruno collection in
   `bruno/` documents every endpoint's concrete shape
 
 ## 8.9 Feature Flags and Configuration
 
-Flagsmith is registered centrally (`AddCoreFlagsmithModule`) and consumed where behavior
-toggles matter (currently Hermes handlers via `IFlagsmithClient`, for the
-`hermes.public_mode` flag; see [ADR 0012](../adr/0012-feature-flags-via-flagsmith.md)).
+Flagsmith is registered centrally (`AddCoreFlagsmithModule`) and consumed through
+`IFlagsmithClient` where behavior toggles matter
+([ADR 0012](../adr/0012-feature-flags-via-flagsmith.md)). Each flag carries the owning
+module's prefix and is documented by the module that reads it.
 Configuration binds through typed option classes per section under the `Ouranos:` root
-(e.g. `RabbitMqOptions`, `PostgresOptions`, `QueryOptions`, `HealthOptions`).
+(e.g. `RabbitMqOptions`, `PostgresOptions`, `QueryOptions`, `HealthOptions`); each module
+binds its own section `Ouranos:<Module>` and documents it in its module README.
 `IMemoryCache` is registered centrally in `AddOuranosCore`; HTTP response caching is
 separate (8.10).
 
@@ -143,162 +150,46 @@ write: the entry is tagged and the writing endpoint calls
 `IOutputCacheStore.EvictByTagAsync` for that tag after the handler succeeds, so the
 cache stays an HTTP concern and handlers never see it. Use a static `.Tag(...)` on the policy
 when any write invalidates every entry; when only one entity's entries go stale, the
-endpoint adds a per-entity tag through `IOutputCacheFeature.Context.Tags` (e.g. Plutus
-strategy recommendations, cached for 5 minutes and tagged per strategy, so updating or
-deleting a strategy evicts only its own entries). See
+endpoint adds a per-entity tag through `IOutputCacheFeature.Context.Tags`, so updating or
+deleting one entity evicts only its own entries. See
 [ADR 0010](../adr/0010-server-side-output-caching-for-dashboard-aggregates.md) for the
 motivating case.
 
 ## 8.11 Real-Time Infrastructure
 
 The kernel's `WebSockets/` package generalizes long-lived connections: listener registry,
-reconnecting client, serializers, and the `WebSocketWorker` hosted service. Plutus hosts
-it twice (FFXIV, Stocks) via factory methods in `PlutusModule.Build`; connection state is
-surfaced to health checks through `WebSocketHealthState`.
+reconnecting client, serializers, and the `WebSocketWorker` hosted service. A module hosts
+a worker per feed via factory methods in its `Build`; connection state is surfaced to
+health checks through `WebSocketHealthState`.
 
-Outbound streaming uses `SseWriter` (kernel) with `IPantheonStreamHandler`; Hermes uses it
-for chat completion and conversation compaction.
+Outbound streaming uses `SseWriter` (kernel) with `IPantheonStreamHandler`.
 
 ### AI Assistants
 
 Modules embed contextual chat assistants through the kernel's `Application/Assistants/`
-package. The governing rule: prompts, model settings, and domain data stay on the server -
-the client sends only conversation history and typed context references, so no endpoint
-becomes an open proxy to the inference host and answers are grounded in the module's own
-store rather than client-supplied data.
+package (`PantheonAssistant<TContext>`, mapped with `MapAssistant`). The governing rule:
+prompts, model settings, and domain data stay on the server - the client sends only
+conversation history and typed context references, so no endpoint becomes an open proxy to
+the inference host and answers are grounded in the module's own store rather than
+client-supplied data. Every module's assistants follow these rules:
 
-- **`PantheonAssistant<TContext>`** is an `IPantheonStreamHandler` base class. Subclasses
-  implement only `BuildPromptAsync(TContext, CancellationToken)`, loading their own domain
-  data and returning an `AssistantPrompt` (model, system prompt, temperature, max tokens,
-  reasoning effort) from module options. The base class streams through
-  `IOuranosMachineLearningClient` over the OpenAI Responses API, sending the system prompt
-  as `instructions` followed by the shared `AssistantFormatting` guideline (short answers,
-  small tables, no LaTeX), since every assistant renders in the same narrow panel. Context
-  may be loaded directly from the store or composed by invoking existing query handlers
-  through `IMessageBus`, which keeps the prompt consistent with what the page shows.
-- **Tools**: each assistant can offer the model function tools. A tool derives from
-  `AssistantTool<TContext, TArguments>`; the arguments record is exported as the tool's JSON
-  schema (every property required, optional arguments nullable, enums as names, `Id<T>` as a
-  string) and parsed back from the model's call. Tools take names, or ids that another tool
-  returned (never ids from the prompt), and reuse the module's query handlers.
-- **Layout**: everything assistant-related sits in its module's `Features/Assistants/`. Each
-  assistant has an `Ask<Assistant>/` folder (endpoint, assistant, prompt, context), next to the
-  shared `Tools/` and `Scopes/`. Endpoint routes stay under the resource the assistant serves
-  (e.g. `/api/plutus/symbols/assistant/...`).
-- **Tool catalogue**: every tool lives in its module's catalogue, `Features/Assistants/Tools/`,
-  never inside an assistant's folder, so assistants share tools instead of copying them. A tool is typed to the narrowest *scope* it needs (`Features/Assistants/Scopes/`, e.g.
-  Plutus `IMarketScope`, `ISymbolScope`, `IExplorerScope`; Hestia `IRecipeScope`), not to an
-  assistant's context. Each assistant's context implements the scopes it supports, and
-  because `IAssistantTool<in TContext>` is contravariant, a module registers a tool for an
-  assistant with `AddAssistantTool<TContext, TTool>()` in `Build`. `PantheonAssistant`
-  receives every tool registered for its context type (`IsAvailable(context)` can hide one,
-  e.g. on a page without a table). The registration block per assistant is its tool set; an
-  assistant is defined by its context, its prompt and the tools it opts into. Tool
-  descriptions and notes never name other tools, since the tools beside them depend on the
-  assistant; which tool to prefer belongs in the assistant's prompt. Catalogues are per
-  module: tools call their own module's handlers, so there are no cross-module tools. A tool returns an `AssistantToolResult`: `Output` is
-  compact text for the model (data, a confirmation, or a validation problem the model can
-  correct), and an optional typed `Action` is streamed to the page. Read tools derive from
-  `AssistantDataTool<TContext, TArguments, TData>` instead: the tool owns the mapping from its
-  query responses to a typed `TData` record, or returns `AssistantData<TData>.WithNote(...)`
-  when there is nothing to return (an unknown id, a disabled feature), and the base serializes
-  it as compact JSON (camelCase, nulls omitted, enums as names, decimals rounded to four
-  significant figures to save tokens). Only the system prompt is composed as text. The base
-  class runs a bounded loop: it streams a round, runs the requested tools
-  sequentially, appends each call and its (truncated) output to the input, and streams again,
-  up to `MaxToolRounds` (`ModelDefaults`); the last round offers no tools, so the model must
-  answer. Only the first `MaxToolCallsPerRound` calls in a round run, and a tool marked
-  `IsSingleActionPerReply` is skipped once it has returned an action in the reply; skipped
-  calls get an output telling the model why, because small models sometimes repeat a call
-  many times. Skipped calls are still streamed (status `Skipped`), so the user sees every call
-  the model made. Every round resends the whole input, because OuranosMl does not keep response state;
-  the inference server's prompt cache keeps the shared prefix cheap. A failing or unknown tool
-  becomes an output the model sees, never a failed turn.
-- **Actions**: a tool never changes data itself. Every action appears as a proposal that the
-  user applies or rejects: view changes (the Explorer's filter and sort) update the page's
-  table state, and data changes (recipe notes, ingredients, steps) go through the module's
-  normal update endpoint, so event-sourced history and revert remain the undo. Pages can mark
-  a handler `autoApply`, but none do. The next turn sees the effect through the context, which
-  is rebuilt from the store or the current view, and learns what the user decided through the
-  history (see below).
-- **Model settings**: global defaults (model, reasoning effort, max tokens) live in
-  `ModelDefaults` (`Shared.Contract/Infra/OuranosMachineLearning/`). Each feature's options
-  record initializes from them and overrides only what it needs (e.g. recipe import uses low
-  effort). Reasoning tokens count against `max_output_tokens`, so budgets must leave room
-  for thinking.
-- **Context budget**: the self-hosted model's context window is limited (it is configured on
-  the inference host and may change) and is shared by the system prompt, the tool definitions,
-  the history, tool outputs, the reasoning and the reply; prompt length also dominates time to
-  first token. Assistants are therefore page-scoped (one per page, seeing only what that page
-  shows, with a small curated tool set rather than every tool in the catalogue) and keep a headline baseline in the prompt, with detail behind tools: compact numbers
-  (`AssistantNumberFormat`, e.g. `820.6K`, because small models tokenize digits almost one by
-  one), a fixed number of rows that does not grow with the selected time frame, no ids. Each
-  assistant's prompt tests assert its worst-case prompt plus every tool definition against a
-  shared character budget.
-- **`MapAssistant<TContext>(pattern)`** (`API/AssistantEndpointExtensions`) maps a POST
-  route binding `AssistantCompletionInput<TContext>` (`messages` + typed `context`),
-  dispatches via `IMessageBus`, and writes events with `SseWriter`.
-- **Event contract**: `$type`-discriminated `reasoning`, `content`, `tool` (a call started:
-  `callId`, `name` and the raw JSON `arguments`), `toolResult` (`callId`, `status`
-  `Completed | Failed | Skipped`, and the `output` exactly as the model received it, with
-  `isTruncated` when it was cut to `MaxToolOutputCharacters`), `action` (a typed action for
-  the page, with the `callId` that proposed it, sent between the call and its result),
-  `usage`, `error`, `done`. Tool events let the user inspect what each call asked and returned;
-  they are a debugging view, not data for the page. `reasoning` carries the model's thinking
-  and is never resent as history. Errors before the first event surface as
-  ProblemDetails; LLM failures mid-stream, and replies that finish without any content
-  (e.g. reasoning exhausted the token budget), become an `error` event with a generic
-  message.
-- **Stateless, trimmed history**: the client resends the whole conversation on every turn;
-  nothing is persisted. Assistant messages carry typed `actions` outcomes (`name`, the page's
-  `description`, `status` `Pending | Applied | Rejected | Failed`), because pages apply
-  actions without telling the server; `PantheonAssistant` renders them as a bracketed note
-  after the reply for the model, so it does not claim an ignored change was made or propose a
-  rejected one again. Tool calls and outputs of earlier turns are not resent. `PantheonAssistant` keeps only the newest messages that fit
-  `AssistantPrompt.HistoryCharacterBudget` (default `ModelDefaults.HistoryCharacterBudget`),
-  always keeping the newest message and never starting with an assistant turn, so long
-  conversations keep fitting the limited context window.
-- **Frontend**: `components/shared/ai-assistant/` provides `AssistantButton` (a top-bar
-  icon button), `AssistantPanel` (bottom drawer on mobile, non-modal right sheet on desktop
-  so the page stays usable) and `useAssistantChat`, configured with a typed
-  `AssistantEndpoint<TContext>` (which binds the context type to the endpoint), a context
-  object, and a title. Optional `suggestions` render as clickable starter questions in the
-  empty state. Replies render through `MarkdownRenderer` in its `compact` variant: chat-sized
-  headings and spacing, with tables in a horizontally scrolling container. Pages place their assistant button in the nav bar through
-  `useNavBarActions`, only while the assistant is usable. `actions` maps action names to
-  handlers (`describe`, `apply`, `autoApply`) that the page owns. `useAssistantChat` folds the
-  events into an ordered list of parts per reply (`assistant-chat-parts.ts`), and the chat
-  renders them as a transcript: user messages are bubbles, and assistant turns are unbubbled
-  blocks in the order they happened. Reasoning is a collapsed "Thought for Ns" row. Each tool
-  call is a collapsed row showing its raw tool name, status and duration, which expands to its
-  input and output (truncated JSON is still indented). The input shows the turn's context
-  (kept on the reply as it was sent) beside the model's arguments, since tools also read the
-  context, e.g. `get_positions` takes the page's symbol rather than an argument. A run of reasoning and tool calls
-  between two pieces of the reply shares one stack; once the model has moved past it, a run of
-  four or more rows folds into one "Used N tools" row, so the answer stays in view.
-  Each action is a card with Apply and Reject (Retry after a failure, and its call's details
-  on demand), and a reply with several open proposals offers Apply all, which applies them one
-  after another because handlers save the latest state. Hermes renders through the same
-  `Message`, with `<think>` tags parsed into reasoning blocks.
+- **Layout**: everything assistant-related sits in the module's `Features/Assistants/`: one
+  `Ask<Assistant>/` folder per assistant, a tool catalogue in `Tools/`, and the context
+  interfaces tools are typed to in `Scopes/`.
+- **Per-module tools**: tools call only their own module's handlers; there are no
+  cross-module tools.
+- **Proposals, not writes**: a tool never changes data. Every action is a proposal the user
+  applies or rejects, and data changes go through the module's normal update endpoint.
+- **Page-scoped and budgeted**: one assistant per page, seeing only what the page shows,
+  with a small tool set, because the self-hosted model's context window is limited.
+- **Stateless**: the client resends the conversation each turn; nothing is persisted.
+- **Model defaults are central**: `ModelDefaults` holds the global model, effort and token
+  defaults; features override only what they need.
 
-Current assistants:
-
-- Hestia `KitchenAssistant` (`/api/hestia/recipes/assistant/completions/stream`, context
-  `{ recipeId }`). Proposal tools: `add_note`, `add_ingredient`, `update_ingredient`
-  (substitutions, marking an ingredient optional), `remove_ingredient`, `update_step`.
-- Plutus `SymbolAnalyst` (`/api/plutus/symbols/assistant/completions/stream`, context
-  `{ marketId, symbolId, timeFrame }`; the symbol must belong to the market), configured by
-  `Ouranos:Plutus:SymbolAnalyst`. Read tools: `get_price_history`, `get_signals`,
-  `get_forecast`, `get_positions` (all about the page's symbol), `find_symbols` and
-  `get_symbol` (any other symbol in the market, by an id `find_symbols` returns).
-- Plutus `MarketAnalyst` (`/api/plutus/markets/assistant/completions/stream`, context
-  `{ marketId, timeFrame, view? }`, where `view` carries the Explorer's filter, sort and page)
-  on the market landing and Explorer pages, configured by `Ouranos:Plutus:MarketAnalyst`. Read
-  tools: `find_symbols`, `get_signal_rankings`, `get_forecast_leaders` (each returning symbol
-  ids), `get_symbol` (by one of those ids), `get_activity_hours`; on the Explorer also
-  `set_explorer_view`, which proposes one view per reply for the user to apply. Both Plutus
-  analysts use a reduced output budget to fit the limited context window, and the tools' row
-  and chart limits are shared under `Ouranos:Plutus:AssistantTools`.
+The framework's mechanics (tool loop, event contract, history trimming, frontend panel) are
+documented in the [Shared module docs](../../src/modules/shared/docs/README.md). Each module
+documents its own assistants and their tools. The runtime flow is
+[Section 6.4](06-runtime-view.md#64-scenario-module-assistant-turn).
 
 ## 8.12 Health Checks
 
@@ -318,7 +209,8 @@ has full access. The controls that do exist:
 - **CORS allow-list** (`CorsAllowedHosts`, policy `AllowLocalAndServer`, see 7.3). It
   limits which browser origins may call the API; it does nothing against non-browser
   clients.
-- **Anti-SSRF guard** on the recipe scraper, so imported URLs cannot reach internal hosts.
+- **Anti-SSRF guard** on Hestia's recipe scraper, so imported URLs cannot reach internal
+  hosts.
 
 ## 8.14 Observability (OpenTelemetry)
 

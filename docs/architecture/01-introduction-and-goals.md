@@ -36,5 +36,17 @@ These quality goals are ranked; they drive the strategy in [Section 4](04-soluti
 
 ## 1.4 Document Scope
 
+The arc42 set is federated across two levels:
+
+- **Platform** (`docs/architecture/`, `docs/adr/`): the system as a whole, with each module
+  as a blackbox. It changes only with platform work: the module contract, shared
+  infrastructure, cross-module integration, deployment, quality goals.
+- **Modules** (`src/modules/<module>/docs/`): each module's whitebox, runtime scenarios,
+  concepts, debt, glossary and module-scoped decisions, owned by the module and changed in
+  the same pull request as its code.
+
+Platform docs link down only to each module's `README.md`; module docs link up freely
+([ADR 0013](../adr/0013-module-owned-architecture-documentation.md)).
+
 Sections 3–8 are derived from the repository (code, configuration, CI) and kept factual.
 Sections 1, 4, 9, 10, and 11 encode intent and judgment; treat them as living documents.

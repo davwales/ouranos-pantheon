@@ -16,11 +16,8 @@ graph LR
         gateway["Gateway (.NET)"]
     end
 
-    universalis["Universalis<br/>(FFXIV market data)"]
-    xivapi["XIVAPI item data<br/>(Item.csv on GitHub)"]
-    osrs["OSRS Wiki API<br/>(OSRS prices)"]
-    alpaca["Alpaca<br/>(US equities, IEX)"]
-    recipeSites["Recipe websites"]
+    marketData["Market data providers<br/>(Plutus)"]
+    recipeSites["Recipe websites<br/>(Hestia)"]
     ouranosMl["OuranosMl<br/>(self-hosted LLM inference)"]
     flagsmith["Flagsmith<br/>(feature flags)"]
     loki["Grafana Loki<br/>(log sink)"]
@@ -29,10 +26,7 @@ graph LR
     owner -- "browser / HTTP (UI)" --> interface
     owner -- "browser / HTTP (REST + SSE, CORS)" --> gateway
 
-    gateway -- "WebSocket (BSON)" --> universalis
-    gateway -- "HTTPS (lazy lookup)" --> xivapi
-    gateway -- "HTTPS (5-min poll)" --> osrs
-    gateway -- "WebSocket (JSON)" --> alpaca
+    gateway -- "WebSocket / HTTPS" --> marketData
     gateway -- "HTTPS (scrape)" --> recipeSites
     gateway -- "HTTP (OpenAI Chat Completions + Responses, forecast)" --> ouranosMl
     gateway -- HTTP --> flagsmith
@@ -46,7 +40,8 @@ directly, which is why the gateway has a CORS allow-list.
 **Roles:**
 
 - **Owner**: the only actor. Uses the dashboard, whose browser code calls the REST API.
-- **Data providers**: supply market data; the system is a pure consumer.
+- **Data providers**: supply market data and recipe pages; the system is a pure consumer.
+  Each provider is owned by one module, which documents it in its module README.
 - **OuranosMl**: a separately hosted inference service used by all three modules
   (chat for Hermes, recipe normalization for Hestia, price forecasting for Plutus).
 - **Flagsmith / Loki / Grafana Alloy**: supporting platform services (feature flags, log
@@ -54,26 +49,24 @@ directly, which is why the gateway has a CORS allow-list.
 
 ## 3.2 Technical Context
 
-Code entry points are given relative to the owning module's project folder
-(`src/modules/<module>/Ouranos.Pantheon.Modules.<Module>/`), or repo-relative for apps.
+This table lists the platform's own integrations. External systems that a single module
+consumes appear here as one grouped row; their channels, protocols and code entry points are
+in the owning module's README ([Section 5.3](05-building-block-view.md#53-blackboxes-modules)),
+so adding or changing one is a module change. Code entry points are given relative to the
+owning module's project folder (`src/modules/<module>/Ouranos.Pantheon.Modules.<Module>/`),
+or repo-relative for apps.
 
 | External system | Channel | Protocol / format | Purpose | Code entry point |
 |-----------------|---------|-------------------|---------|------------------|
-| Universalis | Outbound WSS | `wss://universalis.app/api/ws`, BSON frames | Real-time FFXIV sale events | Plutus: `Features/DataLoaders/Ffxiv/` |
-| XIVAPI item data | Outbound HTTPS | CSV on `raw.githubusercontent.com`, fetched lazily and cached | FFXIV item names for incoming sale events | Plutus: `Features/DataLoaders/Ffxiv/XivApi/` |
-| OSRS Wiki API | Outbound HTTPS | JSON, polled every 5 minutes | OSRS prices and item mappings | Plutus: `Features/DataLoaders/Osrs/OsrsWikiClient.cs` |
-| Alpaca (IEX feed) | Outbound WSS | `wss://stream.data.alpaca.markets/v2/iex`, JSON | Real-time US equity trades | Plutus: `Features/DataLoaders/Stocks/` |
+| Market data providers (Universalis, XIVAPI, OSRS Wiki, Alpaca) | Outbound WSS / HTTPS | Per provider | Market data ingestion | Plutus: `Features/DataLoaders/` |
 | OuranosMl | Outbound HTTP | OpenAI-compatible: Chat Completions (Hermes chat), Responses (module assistants with streamed reasoning and function tools, structured output) + `POST /plutus/forecast` | LLM chat, recipe normalization, price forecasting | Shared.Contract: `Infra/OuranosMachineLearning/` |
 | Flagsmith | Outbound HTTP | REST | Feature flags | Shared: `Infra/Flagsmith/` |
-| Recipe websites | Outbound HTTPS | HTML with JSON-LD metadata | Recipe import | Hestia: `Features/Recipes/ImportRecipe/Scraping/RecipeScraper.cs` |
+| Recipe websites | Outbound HTTPS | HTML with JSON-LD metadata | Recipe import | Hestia: `Features/Recipes/ImportRecipe/` |
 | Grafana Loki | Outbound HTTP | Push API | Production log sink | Gateway: `appsettings.Production.json` |
 | Grafana Alloy | Outbound gRPC | OTLP | Trace and metric export (production; see [ADR 0009](../adr/0009-opentelemetry-observability-via-otlp.md)) | Shared: `Infra/Observability/` |
 | PostgreSQL / TimescaleDB | Outbound TCP | Npgsql (EF Core, Marten, TickerQ) | All persistence, schema per module | Shared.Contract: `Infra/Postgres/` |
-| RabbitMQ | Outbound AMQP | Wolverine RabbitMQ transport | Async messages (trades, backtests, recipe import) | Shared: `API/Extensions/CoreExtensions.cs` |
+| RabbitMQ | Outbound AMQP | Wolverine RabbitMQ transport | Module-internal async messages | Shared: `API/Extensions/CoreExtensions.cs` |
 | Browser | Inbound HTTP | Next.js UI; REST + JSON and SSE from the gateway | Dashboard | `src/apps/interface/` |
-
-Note: MongoDB.Bson is used as a **BSON parser only** for Universalis frames. No MongoDB
-server is involved anywhere in the system.
 
 ## 3.3 Scope
 
