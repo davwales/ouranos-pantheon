@@ -50,7 +50,13 @@ http:
             }
           ],
           "traits": [],
-          "reasoningEffort": "Medium"
+          "reasoningEffort": "Medium",
+          "loras": [
+            {
+              "identifier": "add-detail-xl",
+              "weight": 0.8
+            }
+          ]
         }
       }
   auth: inherit

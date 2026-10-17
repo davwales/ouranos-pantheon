@@ -30,6 +30,14 @@ export interface TraitFormInput {
   isEphemeral?: boolean;
 }
 
+export type LoraFormInput = {
+  id?: string;
+  name: string;
+  identifier: string;
+  weight: number;
+  isPublic: boolean;
+};
+
 export interface ConversationConfig {
   persona: PersonaFormInput;
   model: ModelFormInput;

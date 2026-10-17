@@ -91,12 +91,18 @@ export interface TraitInput {
   content: string;
 }
 
+export type LoraInput = {
+  identifier: string;
+  weight: number;
+};
+
 export interface ConversationInput {
   model: ModelInput;
   persona: PersonaInput;
   messages: CompletionMessageInput[];
   traits?: TraitInput[];
   reasoningEffort?: ReasoningEffort | null;
+  loras?: LoraInput[];
 }
 
 export interface GenerateCompletionInput {
@@ -149,6 +155,13 @@ export interface SavedConversationTrait {
   content: string;
 }
 
+export type SavedConversationLora = {
+  id: string;
+  name: string;
+  identifier: string;
+  weight: number;
+};
+
 export interface SavedConversationMessage {
   content: string;
   role: Role;
@@ -165,6 +178,7 @@ export interface SavedConversation {
   persona: SavedConversationPersona;
   model: SavedConversationModel;
   traits: SavedConversationTrait[];
+  loras: SavedConversationLora[];
   messages: SavedConversationMessage[];
   tokenUsage?: {
     inputTokens: number;
@@ -209,6 +223,7 @@ export interface CreateConversationInput {
   outputTokenCount?: number | null;
   totalTokenCount?: number | null;
   reasoningEffort?: ReasoningEffort | null;
+  loraIds?: string[];
 }
 
 export type CompletionChunk = AssistantEvent;
@@ -234,3 +249,11 @@ export interface Trait {
   createdAt?: string;
   updatedAt?: string;
 }
+
+export type Lora = {
+  id: string;
+  name: string;
+  identifier: string;
+  weight: number;
+  isPublic: boolean;
+};

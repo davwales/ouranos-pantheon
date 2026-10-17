@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.Scopes;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
@@ -273,6 +274,34 @@ public sealed class GenerateCompletionHandlerTests
                 Arg.Any<ReasoningEffort?>(),
                 Arg.Any<CancellationToken>()
             );
+    }
+
+    [Fact]
+    public async Task Handle_WhenLorasAreSelected_ShouldPassThemToTheToolContext()
+    {
+        // Arrange
+        SetupStream(CreateStream([Text("Ok")]));
+        HermesChatContext? context = null;
+        var tool = Substitute.For<IAssistantTool<HermesChatContext>>();
+        tool.IsAvailable(Arg.Do<HermesChatContext>(c => context = c)).Returns(false);
+
+        var handler = CreateHandler([tool]);
+        var conversation = CreateConversation(
+            new ModelInput("test-model", "Base prompt.", IsToolCallingEnabled: true),
+            new CompletionMessageInput("Hi", Role.User)
+        ) with
+        {
+            Loras = [new LoraInput("add-detail", 0.8f)],
+        };
+
+        // Act
+        await CollectAsync(
+            handler.Handle(new GenerateCompletionInput(conversation), CancellationToken.None)
+        );
+
+        // Assert
+        context.ShouldNotBeNull();
+        context.ImageLoras.ShouldBe([new ImageLora("add-detail", 0.8f)]);
     }
 
     [Fact]

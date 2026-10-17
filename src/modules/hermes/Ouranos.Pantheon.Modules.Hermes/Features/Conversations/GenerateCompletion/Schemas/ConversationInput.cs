@@ -7,5 +7,6 @@ public sealed record ConversationInput(
     PersonaInput Persona,
     List<CompletionMessageInput> Messages,
     List<TraitInput>? Traits = null,
-    ReasoningEffort? ReasoningEffort = null
+    ReasoningEffort? ReasoningEffort = null,
+    List<LoraInput>? Loras = null
 );

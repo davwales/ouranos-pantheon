@@ -76,6 +76,12 @@ public sealed class CreateConversationHandler
                 .ToListAsync(cancellationToken)
             : [];
 
+        var loras = command.LoraIds is { Length: > 0 }
+            ? await _dbContext
+                .Loras.Where(l => command.LoraIds.Contains(l.Id))
+                .ToListAsync(cancellationToken)
+            : [];
+
         var folder = await FolderValidation.ValidateFolderExistsAsync(
             _dbContext,
             command.FolderId,
@@ -96,7 +102,8 @@ public sealed class CreateConversationHandler
             command.IsPublic,
             folderId: command.FolderId,
             folder: folder,
-            reasoningEffort: command.ReasoningEffort
+            reasoningEffort: command.ReasoningEffort,
+            loras: loras
         );
 
         if (

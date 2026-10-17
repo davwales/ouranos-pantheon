@@ -8,7 +8,7 @@ import {
   type ReasoningEffort,
   Role,
 } from "@/lib/api/hermes-types";
-import { TraitFormInput } from "@/app/(hermes)/hermes/types";
+import { type LoraFormInput, TraitFormInput } from "@/app/(hermes)/hermes/types";
 import {
   type AssistantChatPart,
   applyEvent,
@@ -48,6 +48,7 @@ export function useMessageController(params: {
     scenario?: string | null;
   };
   activeTraits: TraitFormInput[];
+  activeLoras: LoraFormInput[];
   conversationId?: string;
   onTokenUsageChange?: (usage: TokenUsage | null) => void;
   onSystemPromptChange?: (prompt: string | null) => void;
@@ -75,6 +76,7 @@ export function useMessageController(params: {
     reasoningEffort,
     persona,
     activeTraits,
+    activeLoras,
     conversationId,
     onTokenUsageChange,
     onSystemPromptChange,
@@ -156,6 +158,10 @@ export function useMessageController(params: {
                 }),
               ),
               reasoningEffort,
+              loras: activeLoras.map((l) => ({
+                identifier: l.identifier,
+                weight: l.weight,
+              })),
             },
             ...(conversationId ? { conversationId } : {}),
           },
@@ -221,6 +227,7 @@ export function useMessageController(params: {
       reasoningEffort,
       persona,
       activeTraits,
+      activeLoras,
       conversationId,
       onTokenUsageChange,
       onSystemPromptChange,

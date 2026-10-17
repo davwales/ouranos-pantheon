@@ -57,6 +57,11 @@ const navigationItems: NavigationBarItem[] = [
         description: "Create and manage conversation traits.",
         href: "/hermes/traits",
       },
+      {
+        label: "Manage LoRAs",
+        description: "Register LoRAs that can restyle generated images.",
+        href: "/hermes/loras",
+      },
     ],
   },
   {

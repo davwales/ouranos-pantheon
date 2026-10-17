@@ -7,6 +7,7 @@ import ChatMessageList from "@/app/(hermes)/hermes/components/chat-message-list"
 import { ContextUsageBar } from "@/app/(hermes)/hermes/components/context-usage-bar";
 import { ConversationConfigSheet } from "@/app/(hermes)/hermes/components/conversation-config-sheet";
 import {
+  type LoraFormInput,
   ModelFormInput,
   PersonaFormInput,
   TraitFormInput,
@@ -20,10 +21,12 @@ export default function ChatInterfaceView({
   persona,
   model,
   activeTraits,
+  activeLoras,
   reasoningEffort = null,
   onPersonaChange,
   onModelChange,
   onTraitsChange,
+  onLorasChange,
   onReasoningEffortChange,
   conversationId,
   conversationName,
@@ -39,10 +42,12 @@ export default function ChatInterfaceView({
   persona: PersonaFormInput;
   model: ModelFormInput;
   activeTraits: TraitFormInput[];
+  activeLoras: LoraFormInput[];
   reasoningEffort?: ReasoningEffort | null;
   onPersonaChange?: (persona: PersonaFormInput) => void;
   onModelChange?: (model: ModelFormInput) => void;
   onTraitsChange?: (traits: TraitFormInput[]) => void;
+  onLorasChange?: (loras: LoraFormInput[]) => void;
   onReasoningEffortChange?: (effort: ReasoningEffort | null) => void;
   conversationId?: string;
   conversationName?: string;
@@ -89,6 +94,7 @@ export default function ChatInterfaceView({
     reasoningEffort,
     persona,
     activeTraits,
+    activeLoras,
     conversationId,
     onSystemPromptChange: setComposedSystemPrompt,
     onMessagesPersist: conversationId
@@ -111,6 +117,7 @@ export default function ChatInterfaceView({
       personaId?: string;
       modelConfigId?: string;
       traitIds?: string[];
+      loraIds?: string[];
       reasoningEffort?: ReasoningEffort | null;
     }) => ({
       name: conversationName ?? "New Conversation",
@@ -119,6 +126,7 @@ export default function ChatInterfaceView({
       traitIds:
         overrides.traitIds ??
         activeTraits.filter((t) => t.id && !t.isEphemeral).map((t) => t.id!),
+      loraIds: overrides.loraIds ?? loraIdsOf(activeLoras),
       messages: overrides.messages ?? messages,
       isPublic: conversationIsPublic,
       reasoningEffort:
@@ -133,6 +141,7 @@ export default function ChatInterfaceView({
       persona.id,
       model.id,
       activeTraits,
+      activeLoras,
       messages,
     ],
   );
@@ -145,6 +154,7 @@ export default function ChatInterfaceView({
         traitIds: activeTraits
           .filter((t) => t.id && !t.isEphemeral)
           .map((t) => t.id!),
+        loraIds: loraIdsOf(activeLoras),
         messages: messages,
         inputTokenCount: tokenUsage?.inputTokens ?? null,
         outputTokenCount: tokenUsage?.outputTokens ?? null,
@@ -159,6 +169,7 @@ export default function ChatInterfaceView({
     persona.id,
     model.id,
     activeTraits,
+    activeLoras,
     messages,
     tokenUsage,
     reasoningEffort,
@@ -285,6 +296,7 @@ export default function ChatInterfaceView({
         persona={persona}
         model={model}
         activeTraits={activeTraits}
+        activeLoras={activeLoras}
         reasoningEffort={reasoningEffort}
         conversationName={conversationName}
         conversationIsPublic={conversationIsPublic}
@@ -352,7 +364,24 @@ export default function ChatInterfaceView({
               );
           }
         }}
+        onLorasChange={(loras) => {
+          onLorasChange?.(loras);
+          if (conversationId) {
+            hermesApi
+              .updateConversation(
+                conversationId,
+                buildUpdatePayload({ loraIds: loraIdsOf(loras) }),
+              )
+              .catch((err) =>
+                console.error("Failed to update conversation:", err),
+              );
+          }
+        }}
       />
     </div>
   );
+}
+
+function loraIdsOf(loras: LoraFormInput[]): string[] {
+  return loras.flatMap((l) => (l.id ? [l.id] : []));
 }

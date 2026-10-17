@@ -29,6 +29,7 @@ public sealed class ConversationConfiguration : IEntityTypeConfiguration<Convers
             .HasForeignKey(c => c.ModelConfigId)
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasMany(c => c.Traits).WithMany();
+        builder.HasMany(c => c.Loras).WithMany();
         builder
             .HasMany(c => c.Messages)
             .WithOne()

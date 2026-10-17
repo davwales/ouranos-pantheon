@@ -32,7 +32,8 @@ public static class UpdateConversationEndpoint
             body.Messages,
             body.IsPublic,
             body.FolderId,
-            body.ReasoningEffort
+            body.ReasoningEffort,
+            body.LoraIds
         );
         return Results.Ok(await bus.InvokeAsync<IdResponse<Conversation>>(input, ct));
     }

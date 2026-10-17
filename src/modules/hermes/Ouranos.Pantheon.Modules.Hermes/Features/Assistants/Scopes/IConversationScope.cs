@@ -9,4 +9,6 @@ namespace Ouranos.Pantheon.Modules.Hermes.Features.Assistants.Scopes;
 public interface IConversationScope
 {
     Id<Conversation>? ConversationId { get; }
+
+    IReadOnlyList<ImageLora> ImageLoras { get; }
 }

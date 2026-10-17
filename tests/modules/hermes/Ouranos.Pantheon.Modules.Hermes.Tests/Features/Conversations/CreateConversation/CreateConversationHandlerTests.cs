@@ -8,6 +8,7 @@ using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Loras;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits;
@@ -299,6 +300,36 @@ public sealed class CreateConversationHandlerTests
         var savedConversation = await _dbContext.Conversations.FindAsync(result.Id);
         savedConversation.ShouldNotBeNull();
         savedConversation.Traits.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task Handle_WhenLoraIdsProvided_ShouldLoadLorasFromDb()
+    {
+        // Arrange
+        var lora = Lora.Create(
+            new Id<Lora>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
+
+        await _dbContext.SeedData(lora);
+
+        var command = new CreateConversationInput(
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [],
+            [],
+            _fixture.Create<string>(),
+            LoraIds: [lora.Id]
+        );
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var savedConversation = await _dbContext.Conversations.FindAsync(result.Id);
+        savedConversation.ShouldNotBeNull();
+        savedConversation.Loras.ShouldHaveSingleItem().Id.ShouldBe(lora.Id);
     }
 
     [Fact]

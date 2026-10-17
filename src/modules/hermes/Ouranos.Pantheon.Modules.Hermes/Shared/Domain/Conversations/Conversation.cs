@@ -1,5 +1,6 @@
 using Ardalis.GuardClauses;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Loras;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits;
@@ -48,6 +49,8 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
 
     public List<Trait> Traits { get; private set; } = [];
 
+    public List<Lora> Loras { get; private set; } = [];
+
     public Id<Folder>? FolderId { get; private set; }
 
     private Folder? _folder;
@@ -67,7 +70,8 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
         ModelConfig? modelConfig = null,
         Id<Folder>? folderId = null,
         Folder? folder = null,
-        ReasoningEffort? reasoningEffort = null
+        ReasoningEffort? reasoningEffort = null,
+        IEnumerable<Lora>? loras = null
     )
     {
         Guard.Against.Null(personaId);
@@ -105,6 +109,7 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
             FolderId = folderId,
             _folder = folder,
             ReasoningEffort = reasoningEffort,
+            Loras = [.. loras ?? []],
         };
 
         return conversation;
@@ -118,7 +123,8 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
         IEnumerable<Trait> traits,
         bool isPublic,
         Id<Folder>? folderId,
-        ReasoningEffort? reasoningEffort = null
+        ReasoningEffort? reasoningEffort = null,
+        IEnumerable<Lora>? loras = null
     )
     {
         Guard.Against.Null(personaId);
@@ -132,6 +138,7 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
         IsPublic = isPublic;
         FolderId = folderId;
         ReasoningEffort = reasoningEffort;
+        Loras = [.. loras ?? []];
         Update();
     }
 

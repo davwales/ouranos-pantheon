@@ -19,6 +19,9 @@ http:
         "traitIds": [
           "{{TRAIT_ID}}"
         ],
+        "loraIds": [
+          "{{LORA_ID}}"
+        ],
         "name": "Bruno chat",
         "isPublic": true,
         "folderId": null,

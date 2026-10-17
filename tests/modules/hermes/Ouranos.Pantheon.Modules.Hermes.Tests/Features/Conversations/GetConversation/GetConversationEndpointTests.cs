@@ -40,6 +40,7 @@ public sealed class GetConversationEndpointTests
             ),
             [],
             [],
+            [],
             null,
             DateTimeOffset.UtcNow,
             DateTimeOffset.UtcNow

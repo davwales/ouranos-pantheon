@@ -14,6 +14,7 @@ the [platform glossary](../../../../docs/architecture/12-glossary.md).
 | **Tool calling** | A model config setting that lets the chat model call registered tools during a reply |
 | **Generated image** | An image the chat model drew with the `generate_image` tool, stored in `generated_images` and kept only while a saved conversation references it |
 | **Image part** | The message part that places a generated image in a reply |
+| **LoRA** | A user-registered SwarmUI LoRA (identifier and weight) that a conversation can switch on; its tag is appended to every image prompt in that conversation |
 | **Unsaved retention** | How long an image no saved conversation references survives before `PurgeImagesJob` deletes it (24 hours by default) |
 | **Folder** | Nestable container for conversations (`ParentFolderId`) |
 | **Compaction** | Summarizing a conversation's messages since the last summary into a single `Summary`-role message so long chats fit the context window; streamed over SSE |

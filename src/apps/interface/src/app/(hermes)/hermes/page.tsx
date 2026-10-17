@@ -28,6 +28,11 @@ export default function Hermes() {
       description: "Create and manage conversation traits.",
       href: "/hermes/traits",
     },
+    {
+      name: "Manage LoRAs",
+      description: "Register LoRAs that can restyle generated images.",
+      href: "/hermes/loras",
+    },
   ];
 
   return (

@@ -6,6 +6,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.UpdateConversation;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.UpdateConversation.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Loras;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
@@ -72,6 +73,58 @@ public sealed class UpdateConversationHandlerTests
         updated.Name.ShouldBe(newName);
         updated.PersonaId.ShouldBe(newPersonaId);
         updated.ModelConfigId.ShouldBe(newModelConfigId);
+    }
+
+    [Fact]
+    public async Task Handle_WhenLoraIdsChange_ShouldReplaceTheConversationLoras()
+    {
+        // Arrange
+        var oldLora = Lora.Create(
+            new Id<Lora>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
+
+        var newLora = Lora.Create(
+            new Id<Lora>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
+
+        await _dbContext.SeedData(oldLora, newLora);
+
+        var conversation = Conversation.Create(
+            new Id<Conversation>(Guid.NewGuid().ToString()),
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [],
+            [],
+            _fixture.Create<string>(),
+            loras: [oldLora]
+        );
+
+        await _dbContext.SeedData(conversation);
+
+        var command = new UpdateConversationInput(
+            conversation.Id,
+            conversation.Name,
+            conversation.PersonaId,
+            conversation.ModelConfigId,
+            [],
+            [],
+            true,
+            LoraIds: [newLora.Id]
+        );
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var updated = await _dbContext
+            .Conversations.Include(c => c.Loras)
+            .SingleAsync(c => c.Id == conversation.Id);
+
+        updated.Loras.ShouldHaveSingleItem().Id.ShouldBe(newLora.Id);
     }
 
     [Fact]
