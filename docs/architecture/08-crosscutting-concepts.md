@@ -126,6 +126,12 @@ Flagsmith is registered centrally (`AddCoreFlagsmithModule`) and consumed throug
 `IFlagsmithClient` where behavior toggles matter
 ([ADR 0012](../adr/0012-feature-flags-via-flagsmith.md)). Each flag carries the owning
 module's prefix and is documented by the module that reads it.
+The client caches environment flags for `CacheDurationMinutes` (default 1), so a request
+reaches Flagsmith at most once per interval, and uses a short request timeout and few
+retries. When Flagsmith is unreachable, or a flag does not exist, the client falls back to
+`Ouranos:Flagsmith:DefaultFlags` (flag name to enabled state); flags not listed there read as
+disabled. A module whose flag guards data exposure lists it there as enabled so that it fails
+closed. The fallback result is cached like any other, so recovery takes up to one interval.
 Configuration binds through typed option classes per section under the `Ouranos:` root
 (e.g. `RabbitMqOptions`, `PostgresOptions`, `QueryOptions`, `HealthOptions`); each module
 binds its own section `Ouranos:<Module>` and documents it in its module README.

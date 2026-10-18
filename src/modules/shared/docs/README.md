@@ -60,5 +60,9 @@ both migrated centrally in `UseOuranosCore`.
 Platform sections under `Ouranos:` (`RabbitMq`, `Postgres`, `Query`, `Health`, `Flagsmith`,
 `Observability`); listed in
 [platform Section 7.3](../../../../docs/architecture/07-deployment-view.md#73-configuration-surface).
+`Ouranos:Flagsmith` takes `ApiUrl` and `EnvironmentKey`, plus optional `CacheDurationMinutes`
+(default 1), `RequestTimeoutSeconds` (default 2), `Retries` (default 1) and `DefaultFlags`, a
+map of flag name to the enabled state used when Flagsmith is unreachable or the flag is
+unknown (unlisted flags read as disabled).
 Global model defaults for every assistant and LLM feature are code, in `ModelDefaults`
 (`Shared.Contract/Infra/OuranosMachineLearning/`).
