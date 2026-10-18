@@ -22,7 +22,8 @@ down. Platform-wide concepts are described in the
 
 ## Responsibilities
 
-- Persist conversations, messages, folders, personas, traits, LoRAs and model configurations
+- Persist conversations, messages, folders, personas, traits, LoRAs, tool sets and model
+  configurations
 - Stream chat replies (reasoning, text and tool calls) and conversation compaction from
   OuranosMl over SSE
 - Generate images for the chat model through OuranosMl and serve them to the Interface
@@ -62,7 +63,8 @@ ordered parts in `message_parts`, one table for every part kind (table-per-hiera
 `kind`). Generated images are stored as `bytea` in `generated_images` and served by
 `GET /api/hermes/images/{imageId}`; see [8.4](08-concepts.md#84-generated-images) for their
 lifetime. User-registered LoRAs live in `loras` and attach to conversations through the
-`conversation_lora` join table, like traits. `PUT /api/hermes/conversations/{id}` sets every
+`conversation_lora` join table, like traits. Tool sets live in `tool_sets`, with their enabled
+tools in `tool_set_tools` (unique per set on source and name). `PUT /api/hermes/conversations/{id}` sets every
 metadata field exactly (a `null` `folderId` means the root folder) but replaces the messages only
 when `messages` is supplied, so metadata updates leave turns persisted by completions untouched.
 

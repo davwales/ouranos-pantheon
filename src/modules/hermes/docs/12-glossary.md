@@ -11,6 +11,8 @@ the [platform glossary](../../../../docs/architecture/12-glossary.md).
 | **Conversation** | A chat thread with an LLM using one persona and model config at a chosen reasoning effort; tracks token usage and may sit in a folder |
 | **Message** | An individual message within a conversation (system, user, assistant or summary role) |
 | **Message part** | One ordered piece of a saved assistant reply: reasoning, text, a tool call or an image |
+| **Tool set** | A named collection of enabled tools, each with optional additional description appended to the tool's own, plus optional instructions appended to the system prompt when its tools are offered |
+| **Tool source** | Where a tool set's tools come from (`ToolSource`); only `Native`, the built-in tool catalogue, exists today |
 | **Tool calling** | A model config setting that lets the chat model call registered tools during a reply |
 | **Generated image** | An image the chat model drew with the `generate_image` tool, stored in `generated_images` and kept only while a saved conversation references it |
 | **Image part** | The message part that places a generated image in a reply |

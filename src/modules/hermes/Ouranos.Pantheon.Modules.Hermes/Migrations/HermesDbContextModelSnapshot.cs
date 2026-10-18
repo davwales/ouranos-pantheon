@@ -485,6 +485,87 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
                     b.ToTable("personas", "hermes");
                 });
 
+            modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets.ToolSet", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Instructions")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("instructions");
+
+                    b.Property<bool>("IsPublic")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_public");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_tool_sets");
+
+                    b.ToTable("tool_sets", "hermes");
+                });
+
+            modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets.ToolSetTool", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("AdditionalDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("additional_description");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("source");
+
+                    b.Property<Guid>("ToolSetId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tool_set_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_tool_set_tools");
+
+                    b.HasIndex("ToolSetId", "Source", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("ix_tool_set_tools_tool_set_id_source_name");
+
+                    b.ToTable("tool_set_tools", "hermes");
+                });
+
             modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits.Trait", b =>
                 {
                     b.Property<Guid>("Id")
@@ -714,6 +795,16 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
                     b.Navigation("ParentFolder");
                 });
 
+            modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets.ToolSetTool", b =>
+                {
+                    b.HasOne("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets.ToolSet", null)
+                        .WithMany("Tools")
+                        .HasForeignKey("ToolSetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_tool_set_tools_tool_sets_tool_set_id");
+                });
+
             modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations.Conversation", b =>
                 {
                     b.Navigation("Messages");
@@ -729,6 +820,11 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
                     b.Navigation("ChildFolders");
 
                     b.Navigation("Conversations");
+                });
+
+            modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets.ToolSet", b =>
+                {
+                    b.Navigation("Tools");
                 });
 #pragma warning restore 612, 618
         }

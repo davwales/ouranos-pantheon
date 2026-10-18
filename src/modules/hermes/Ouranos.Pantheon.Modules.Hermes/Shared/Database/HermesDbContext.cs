@@ -6,6 +6,7 @@ using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Images;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Loras;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres;
 
@@ -34,6 +35,10 @@ public sealed class HermesDbContext(DbContextOptions<HermesDbContext> options)
 
     public DbSet<GeneratedImage> GeneratedImages { get; set; }
 
+    public DbSet<ToolSet> ToolSets { get; set; }
+
+    public DbSet<ToolSetTool> ToolSetTools { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -48,5 +53,7 @@ public sealed class HermesDbContext(DbContextOptions<HermesDbContext> options)
         modelBuilder.Entity<Message>();
         modelBuilder.Entity<MessagePart>();
         modelBuilder.Entity<GeneratedImage>();
+        modelBuilder.Entity<ToolSet>();
+        modelBuilder.Entity<ToolSetTool>();
     }
 }
