@@ -19,6 +19,12 @@ namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.CompactConversa
 public sealed class CompactConversationHandler
     : IPantheonStreamHandler<CompactConversationInput, CompactConversationResponse>
 {
+    internal const string NothingToCompactMessage = "Nothing to compact.";
+
+    internal const string CompactionFailedMessage = "Compaction failed. Please try again.";
+
+    private const string TruncationMarker = "…";
+
     private readonly ILogger<CompactConversationHandler> _logger;
     private readonly IOuranosMachineLearningClient _mlClient;
     private readonly IDbContextFactory<HermesDbContext> _dbContextFactory;
@@ -79,22 +85,26 @@ public sealed class CompactConversationHandler
 
         if (userAndAssistantMessages.Count == 0)
         {
-            throw new InvalidOperationException(
-                "Cannot compact a conversation with no user or assistant messages to summarize."
+            _logger.LogWarning(
+                "Conversation '{conversationId}' has no user or assistant messages to compact.",
+                command.ConversationId
             );
+            yield return new CompactErrorResponse(NothingToCompactMessage);
+            yield break;
         }
 
         var options = _options.Value;
         var summaryPrompt = ComposeSummaryPrompt(
             command,
             userAndAssistantMessages,
-            options.EffectiveCompactionSummaryPrompt
+            options.EffectiveCompactionSummaryPrompt,
+            options.EffectiveCompactionMaxInputCharacters
         );
         var buffer = new StringBuilder();
         ChatCompletionUsage? tokenUsage = null;
 
-        await foreach (
-            var chunk in _mlClient.StreamResponseAsync(
+        var stream = _mlClient
+            .StreamResponseAsync(
                 command.ModelIdentifier,
                 summaryPrompt,
                 [new MessageInputItemDto(new MessageDto("Provide the summary now.", RoleDto.User))],
@@ -104,21 +114,58 @@ public sealed class CompactConversationHandler
                 options.CompactionReasoningEffort,
                 cancellationToken
             )
-        )
-        {
-            if (chunk.Text is not null)
-            {
-                buffer.Append(chunk.Text);
-                yield return new CompactContentChunkResponse(chunk.Text);
-            }
+            .GetAsyncEnumerator(cancellationToken);
 
-            if (chunk.Usage is not null)
+        await using (stream)
+        {
+            while (true)
             {
-                tokenUsage = chunk.Usage;
+                var (hasNext, error) = await TryMoveNextAsync(stream);
+
+                if (error is not null)
+                {
+                    _logger.LogError(
+                        error,
+                        "Compaction of conversation '{conversationId}' failed while streaming.",
+                        command.ConversationId
+                    );
+                    yield return new CompactErrorResponse(CompactionFailedMessage);
+                    yield break;
+                }
+
+                if (!hasNext)
+                {
+                    break;
+                }
+
+                var chunk = stream.Current;
+
+                if (chunk.Text is not null)
+                {
+                    buffer.Append(chunk.Text);
+                    yield return new CompactContentChunkResponse(chunk.Text);
+                }
+
+                if (chunk.Usage is not null)
+                {
+                    tokenUsage = chunk.Usage;
+                }
             }
         }
 
         var summary = buffer.ToString().Trim();
+
+        if (string.IsNullOrWhiteSpace(summary))
+        {
+            _logger.LogWarning(
+                "Compaction of conversation '{conversationId}' produced no summary after {outputTokens} output tokens.",
+                command.ConversationId,
+                tokenUsage?.OutputTokens
+            );
+            yield return new CompactErrorResponse(CompactionFailedMessage);
+            yield break;
+        }
+
         var summaryMessageId = await PersistSummary(
             command,
             summary,
@@ -178,11 +225,7 @@ public sealed class CompactConversationHandler
 
         if (tokenUsage is not null)
         {
-            conversation.RecordTokenUsage(
-                tokenUsage.InputTokens,
-                tokenUsage.OutputTokens,
-                tokenUsage.TotalTokens
-            );
+            conversation.RecordTokenUsage(0, tokenUsage.OutputTokens, tokenUsage.OutputTokens);
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -193,26 +236,85 @@ public sealed class CompactConversationHandler
     internal static string ComposeSummaryPrompt(
         CompactConversationInput command,
         IEnumerable<CompactConversationMessageInput> messages,
-        string summaryPromptTemplate
+        string summaryPromptTemplate,
+        int maxInputCharacters
     )
     {
         var prompt = summaryPromptTemplate
             .Replace("{PersonaName}", command.PersonaName)
             .Replace("{PersonaDescription}", command.PersonaDescription);
 
+        var lines = messages
+            .Select(message =>
+            {
+                var roleLabel = message.Role switch
+                {
+                    Role.Assistant => command.PersonaName,
+                    _ => message.Role.ToString(),
+                };
+                return $"{roleLabel}: {message.Content}";
+            })
+            .ToList();
+
+        var keptLines = new List<string>();
+        var remaining = maxInputCharacters;
+
+        for (var i = lines.Count - 1; i >= 0; i--)
+        {
+            var line = lines[i];
+
+            if (line.Length <= remaining)
+            {
+                keptLines.Add(line);
+                remaining -= line.Length;
+                continue;
+            }
+
+            if (keptLines.Count == 0)
+            {
+                keptLines.Add(Truncate(line, maxInputCharacters));
+            }
+
+            break;
+        }
+
+        keptLines.Reverse();
+
         var builder = new StringBuilder(prompt);
 
         builder.AppendLine("Conversation history:");
-        foreach (var message in messages)
+        if (keptLines.Count < lines.Count)
         {
-            var roleLabel = message.Role switch
-            {
-                Role.Assistant => command.PersonaName,
-                _ => message.Role.ToString(),
-            };
-            builder.AppendLine($"{roleLabel}: {message.Content}");
+            builder.AppendLine("(Earlier messages omitted.)");
+        }
+
+        foreach (var line in keptLines)
+        {
+            builder.AppendLine(line);
         }
 
         return builder.ToString();
+    }
+
+    private static string Truncate(string value, int maxCharacters)
+    {
+        var length = Math.Max(0, maxCharacters - TruncationMarker.Length);
+        return $"{value[..length]}{TruncationMarker}";
+    }
+
+    // C# forbids yield inside a try with a catch, so stream failures are returned instead of
+    // thrown and turned into an error event by the caller.
+    private static async Task<(bool HasNext, Exception? Error)> TryMoveNextAsync(
+        IAsyncEnumerator<ResponseStreamChunk> stream
+    )
+    {
+        try
+        {
+            return (await stream.MoveNextAsync(), null);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            return (false, ex);
+        }
     }
 }

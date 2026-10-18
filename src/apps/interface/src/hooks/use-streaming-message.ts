@@ -8,6 +8,7 @@ export type ChunkHandlers = {
   onContent?: (content: string) => void;
   onUsage?: (usage: { inputTokens: number; outputTokens: number; totalTokens: number }) => void;
   onComplete?: () => void;
+  onErrorMessage?: (message: string) => void;
 };
 
 export type StartStreamParams = {
@@ -59,6 +60,13 @@ export function useStreamingMessage(): {
           }
           case "complete": {
             params.chunkHandlers.onComplete?.();
+            break;
+          }
+          case "error": {
+            const message = chunk.message;
+            if (typeof message === "string") {
+              params.chunkHandlers.onErrorMessage?.(message);
+            }
             break;
           }
         }
