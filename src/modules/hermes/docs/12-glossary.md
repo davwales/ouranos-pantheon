@@ -12,7 +12,8 @@ the [platform glossary](../../../../docs/architecture/12-glossary.md).
 | **Message** | An individual message within a conversation (system, user, assistant or summary role) |
 | **Message part** | One ordered piece of a saved assistant reply: reasoning, text, a tool call or an image |
 | **Tool set** | A named collection of enabled tools, each with optional additional description appended to the tool's own, plus optional instructions appended to the system prompt when its tools are offered |
-| **Tool source** | Where a tool set's tools come from (`ToolSource`); only `Native`, the built-in tool catalogue, exists today |
+| **Tool source** | Where a tool set's tools come from (`ToolSource`); only `Native` exists today |
+| **Native tool** | A tool implemented in Hermes itself and registered in code (today only `generate_image`), as opposed to tools from external sources such as MCP servers |
 | **Tool calling** | A model config setting that lets the chat model call registered tools during a reply |
 | **Generated image** | An image the chat model drew with the `generate_image` tool, stored in `generated_images` and kept only while a saved conversation references it |
 | **Image part** | The message part that places a generated image in a reply |

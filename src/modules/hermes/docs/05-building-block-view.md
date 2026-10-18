@@ -9,7 +9,7 @@ are relative to `Ouranos.Pantheon.Modules.Hermes/`.
 | `Features/Conversations/Schemas/` | Message part contract shared by the slices that read and write messages |
 | `Features/Assistants/Scopes/` | `IConversationScope`, the narrow interface Hermes chat tools are typed to (conversation id and active image LoRAs) |
 | `Features/Assistants/Tools/` | The chat tool catalogue: `GenerateImage` (`generate_image`) |
-| `Features/Assistants/ToolSources/` | `IHermesToolSource`, which lists the tools a source offers and resolves tool set entries into chat tools; `NativeToolSource` serves the built-in catalogue, and `ToolSetAssistantTool` appends a tool set's extra guidance to a tool's description |
+| `Features/Assistants/ToolSources/` | `IHermesToolSource`, which lists the tools a source offers and resolves tool set entries into chat tools; `NativeToolSource` serves the native tools, and `ToolSetAssistantTool` appends a tool set's extra guidance to a tool's description |
 | `Features/ToolSets/` | Tool set CRUD and the catalogue of tools available to tool sets (`GET /api/hermes/tools`) |
 | `Features/Images/` | Serving generated images and the scheduled purge of unreferenced ones |
 | `Features/Personas/` | Reusable assistant personality definitions applied to conversations |

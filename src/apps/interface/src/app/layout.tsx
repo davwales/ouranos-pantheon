@@ -62,6 +62,11 @@ const navigationItems: NavigationBarItem[] = [
         description: "Register LoRAs that can restyle generated images.",
         href: "/hermes/loras",
       },
+      {
+        label: "Manage Tool Sets",
+        description: "Choose which tools a model can call and how to use them.",
+        href: "/hermes/tool-sets",
+      },
     ],
   },
   {
