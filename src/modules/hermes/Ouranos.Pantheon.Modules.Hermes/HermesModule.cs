@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.Tools.GenerateImage;
+using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.ToolSources;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.CompactConversation;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.CreateConversation;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.DeleteConversation;
@@ -33,6 +34,12 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Personas.DeletePersona;
 using Ouranos.Pantheon.Modules.Hermes.Features.Personas.GetAllPersonas;
 using Ouranos.Pantheon.Modules.Hermes.Features.Personas.GetPersona;
 using Ouranos.Pantheon.Modules.Hermes.Features.Personas.UpdatePersona;
+using Ouranos.Pantheon.Modules.Hermes.Features.ToolSets.CreateToolSet;
+using Ouranos.Pantheon.Modules.Hermes.Features.ToolSets.DeleteToolSet;
+using Ouranos.Pantheon.Modules.Hermes.Features.ToolSets.GetAllToolSets;
+using Ouranos.Pantheon.Modules.Hermes.Features.ToolSets.GetAvailableTools;
+using Ouranos.Pantheon.Modules.Hermes.Features.ToolSets.GetToolSet;
+using Ouranos.Pantheon.Modules.Hermes.Features.ToolSets.UpdateToolSet;
 using Ouranos.Pantheon.Modules.Hermes.Features.Traits.CreateTrait;
 using Ouranos.Pantheon.Modules.Hermes.Features.Traits.DeleteTrait;
 using Ouranos.Pantheon.Modules.Hermes.Features.Traits.GetAllTraits;
@@ -70,6 +77,7 @@ public sealed class HermesModule : IPantheonModule
     private static void ConfigureAssistantTools(IHostApplicationBuilder builder)
     {
         builder.Services.AddAssistantTool<HermesChatContext, GenerateImageTool>();
+        builder.Services.AddScoped<IHermesToolSource, NativeToolSource>();
     }
 
     public async Task<IHost> Configure(IHost host)
@@ -118,6 +126,13 @@ public sealed class HermesModule : IPantheonModule
         CreateLoraEndpoint.Map(app);
         UpdateLoraEndpoint.Map(app);
         DeleteLoraEndpoint.Map(app);
+
+        GetAvailableToolsEndpoint.Map(app);
+        GetAllToolSetsEndpoint.Map(app);
+        GetToolSetEndpoint.Map(app);
+        CreateToolSetEndpoint.Map(app);
+        UpdateToolSetEndpoint.Map(app);
+        DeleteToolSetEndpoint.Map(app);
 
         GetAllFoldersEndpoint.Map(app);
         GetFolderEndpoint.Map(app);

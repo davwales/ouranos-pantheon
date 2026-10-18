@@ -1,0 +1,35 @@
+info:
+  name: Create
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/hermes/tool-sets"
+  params:
+    - name: ""
+      value: ""
+      type: query
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Default",
+        "description": "Illustrates scenes freely.",
+        "instructions": "Use tools freely to make the story more vivid.",
+        "tools": [
+          {
+            "source": "Native",
+            "name": "generate_image",
+            "additionalDescription": "Use it whenever the scene changes noticeably."
+          }
+        ],
+        "isPublic": true
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
