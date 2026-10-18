@@ -27,6 +27,7 @@ public sealed class GetConversationEndpointTests
             true,
             null,
             null,
+            null,
             new GetConversationPersonaResponse(personaId, "Bot", "A bot", null, null),
             new GetConversationModelResponse(
                 modelId,
@@ -35,7 +36,7 @@ public sealed class GetConversationEndpointTests
                 "Prompt",
                 null,
                 null,
-                false,
+                null,
                 null
             ),
             [],

@@ -26,6 +26,7 @@ http:
         "isPublic": true,
         "folderId": null,
         "reasoningEffort": "Low",
+        "toolSetId": null,
         "messages": [
           {
             "role": "User",

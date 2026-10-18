@@ -17,7 +17,7 @@ export interface ModelFormInput {
   systemPrompt: string;
   temperature?: number | null;
   maxTokens?: number | null;
-  isToolCallingEnabled: boolean;
+  defaultToolSetId: string | null;
   contextWindow?: number | null;
   isDefault: boolean;
   isPublic: boolean;

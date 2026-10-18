@@ -21,6 +21,7 @@ export function useMoveConversation({
         isPublic: conversation.isPublic,
         folderId,
         reasoningEffort: conversation.reasoningEffort,
+        toolSetId: conversation.toolSetId,
       });
       onSuccess();
     },

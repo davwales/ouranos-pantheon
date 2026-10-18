@@ -6,6 +6,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.UpdateConversation.
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
@@ -68,6 +69,12 @@ public sealed class UpdateConversationHandler
                 .ToListAsync(cancellationToken)
             : [];
 
+        await ToolSetValidation.ValidateToolSetExistsAsync(
+            _dbContext,
+            command.ToolSetId,
+            cancellationToken
+        );
+
         var newMessages = command.Messages?.Select(
             (m, index) =>
                 Message.Create(
@@ -89,7 +96,8 @@ public sealed class UpdateConversationHandler
             command.IsPublic,
             command.FolderId,
             command.ReasoningEffort,
-            loras
+            loras,
+            command.ToolSetId
         );
 
         await _dbContext.SaveChangesAsync(cancellationToken);

@@ -10,8 +10,10 @@ using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Loras;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
@@ -383,5 +385,118 @@ public sealed class UpdateConversationHandlerTests
 
         // Assert
         await handle.ShouldThrowAsync<OperationCanceledException>();
+    }
+
+    private async Task<Id<ToolSet>> SeedToolSetAsync()
+    {
+        var toolSet = ToolSet.Create(
+            DatabaseExtensions.CreateId<ToolSet>(),
+            _fixture.Create<string>(),
+            null,
+            null,
+            []
+        );
+        await _dbContext.SeedData(toolSet);
+
+        return toolSet.Id;
+    }
+
+    [Fact]
+    public async Task Handle_WhenToolSetIdChanges_ShouldSaveIt()
+    {
+        // Arrange
+        var toolSetId = await SeedToolSetAsync();
+        var conversation = Conversation.Create(
+            DatabaseExtensions.CreateId<Conversation>(),
+            DatabaseExtensions.CreateId<Persona>(),
+            DatabaseExtensions.CreateId<ModelConfig>(),
+            [],
+            [],
+            _fixture.Create<string>()
+        );
+        await _dbContext.SeedData(conversation);
+
+        var command = new UpdateConversationInput(
+            conversation.Id,
+            conversation.Name,
+            conversation.PersonaId,
+            conversation.ModelConfigId,
+            [],
+            true,
+            ToolSetId: toolSetId
+        );
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var updated = await _dbContext.Conversations.FindAsync(conversation.Id);
+        updated.ShouldNotBeNull();
+        updated.ToolSetId.ShouldBe(toolSetId);
+    }
+
+    [Fact]
+    public async Task Handle_WhenToolSetIdIsCleared_ShouldRemoveIt()
+    {
+        // Arrange
+        var toolSetId = await SeedToolSetAsync();
+        var conversation = Conversation.Create(
+            DatabaseExtensions.CreateId<Conversation>(),
+            DatabaseExtensions.CreateId<Persona>(),
+            DatabaseExtensions.CreateId<ModelConfig>(),
+            [],
+            [],
+            _fixture.Create<string>(),
+            toolSetId: toolSetId
+        );
+        await _dbContext.SeedData(conversation);
+
+        var command = new UpdateConversationInput(
+            conversation.Id,
+            conversation.Name,
+            conversation.PersonaId,
+            conversation.ModelConfigId,
+            [],
+            true
+        );
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var updated = await _dbContext.Conversations.FindAsync(conversation.Id);
+        updated.ShouldNotBeNull();
+        updated.ToolSetId.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Handle_WhenToolSetDoesNotExist_ShouldThrowNotFoundException()
+    {
+        // Arrange
+        var conversation = Conversation.Create(
+            DatabaseExtensions.CreateId<Conversation>(),
+            DatabaseExtensions.CreateId<Persona>(),
+            DatabaseExtensions.CreateId<ModelConfig>(),
+            [],
+            [],
+            _fixture.Create<string>()
+        );
+        await _dbContext.SeedData(conversation);
+
+        var command = new UpdateConversationInput(
+            conversation.Id,
+            conversation.Name,
+            conversation.PersonaId,
+            conversation.ModelConfigId,
+            [],
+            true,
+            ToolSetId: DatabaseExtensions.CreateId<ToolSet>()
+        );
+
+        // Act
+        var handle = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await handle.ShouldThrowAsync<NotFoundException>();
     }
 }

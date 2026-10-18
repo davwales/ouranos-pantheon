@@ -47,7 +47,6 @@ public sealed class GenerateImageTool(
     public override string Description =>
         """
             Draw the current scene or subject.
-            Call it on your own whenever a picture adds to the reply, or when the user asks for one; never ask the user whether they want a picture.
             Write the prompt in English as a detailed visual description: subject, style, composition and lighting.
             Every call draws a new image from scratch, so to change an earlier image call again with a full revised prompt.
             The image is shown to the user automatically; never add links or markdown images to your reply.

@@ -1,10 +1,13 @@
+using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.CreateModel;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.CreateModel.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.AvailableModels;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
@@ -13,7 +16,7 @@ namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.Models.CreateModel;
 
 public sealed class CreateModelHandlerTests
 {
-    private readonly IFixture _fixture = new Fixture();
+    private readonly Fixture _fixture = new();
     private readonly CreateModelHandler _handler;
     private readonly ILogger<CreateModelHandler> _logger = Substitute.For<
         ILogger<CreateModelHandler>
@@ -202,5 +205,62 @@ public sealed class CreateModelHandlerTests
         var savedModel = await _dbContext.ModelConfigs.FindAsync(result.ModelId);
         savedModel.ShouldNotBeNull();
         savedModel.IsUnavailable.ShouldBeTrue();
+    }
+
+    private async Task<Id<ToolSet>> SeedToolSetAsync()
+    {
+        var toolSet = ToolSet.Create(
+            DatabaseExtensions.CreateId<ToolSet>(),
+            _fixture.Create<string>(),
+            null,
+            null,
+            []
+        );
+        await _dbContext.SeedData(toolSet);
+
+        return toolSet.Id;
+    }
+
+    [Fact]
+    public async Task Handle_WhenDefaultToolSetIdProvided_ShouldSaveIt()
+    {
+        // Arrange
+        var modelIdentifier = _fixture.Create<string>();
+        await SeedAvailableModel(modelIdentifier);
+        var toolSetId = await SeedToolSetAsync();
+
+        var command = new CreateModelInput(
+            _fixture.Create<string>(),
+            modelIdentifier,
+            _fixture.Create<string>(),
+            DefaultToolSetId: toolSetId
+        );
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var savedModel = await _dbContext.ModelConfigs.FindAsync(result.ModelId);
+        savedModel.ShouldNotBeNull();
+        savedModel.DefaultToolSetId.ShouldBe(toolSetId);
+    }
+
+    [Fact]
+    public async Task Handle_WhenDefaultToolSetDoesNotExist_ShouldThrowNotFoundException()
+    {
+        // Arrange
+        var command = new CreateModelInput(
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            DefaultToolSetId: DatabaseExtensions.CreateId<ToolSet>()
+        );
+
+        // Act
+        var handle = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await handle.ShouldThrowAsync<NotFoundException>();
+        _dbContext.ModelConfigs.ShouldBeEmpty();
     }
 }

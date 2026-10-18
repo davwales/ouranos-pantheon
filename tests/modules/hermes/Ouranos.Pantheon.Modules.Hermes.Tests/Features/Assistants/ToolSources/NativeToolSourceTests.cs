@@ -4,6 +4,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion.
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.Assistants.ToolSources;
 
@@ -155,7 +156,7 @@ public sealed class NativeToolSourceTests
     private ToolSetTool CreateEntry(string name, string? additionalDescription = null)
     {
         return ToolSetTool.Create(
-            new Id<ToolSetTool>(Guid.NewGuid().ToString()),
+            DatabaseExtensions.CreateId<ToolSetTool>(),
             _toolSetId,
             ToolSource.Native,
             name,

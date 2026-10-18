@@ -19,7 +19,7 @@ http:
         "systemPrompt": "You are a helpful assistant.",
         "temperature": 0.7,
         "maxTokens": 4096,
-        "isToolCallingEnabled": false,
+        "defaultToolSetId": null,
         "contextWindow": 4096,
         "isDefault": false,
         "isPublic": true

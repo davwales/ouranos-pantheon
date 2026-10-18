@@ -19,7 +19,7 @@ export interface ModelConfig {
   systemPrompt: string;
   temperature?: number | null;
   maxTokens?: number | null;
-  isToolCallingEnabled: boolean;
+  defaultToolSetId: string | null;
   contextWindow?: number | null;
   isDefault: boolean;
   isPublic: boolean;
@@ -83,7 +83,6 @@ export interface ModelInput {
   systemPrompt: string;
   temperature?: number | null;
   maxTokens?: number | null;
-  isToolCallingEnabled: boolean;
 }
 
 export interface TraitInput {
@@ -103,6 +102,7 @@ export interface ConversationInput {
   traits?: TraitInput[];
   reasoningEffort?: ReasoningEffort | null;
   loras?: LoraInput[];
+  toolSetId?: string | null;
 }
 
 export interface GenerateCompletionInput {
@@ -145,7 +145,7 @@ export interface SavedConversationModel {
   systemPrompt: string;
   temperature?: number | null;
   maxTokens?: number | null;
-  isToolCallingEnabled: boolean;
+  defaultToolSetId: string | null;
   contextWindow?: number | null;
 }
 
@@ -175,6 +175,7 @@ export interface SavedConversation {
   isPublic: boolean;
   folderId: string | null;
   reasoningEffort: ReasoningEffort | null;
+  toolSetId: string | null;
   persona: SavedConversationPersona;
   model: SavedConversationModel;
   traits: SavedConversationTrait[];
@@ -224,6 +225,7 @@ export interface CreateConversationInput {
   totalTokenCount?: number | null;
   reasoningEffort?: ReasoningEffort | null;
   loraIds?: string[];
+  toolSetId?: string | null;
 }
 
 export type UpdateConversationInput = {
@@ -236,6 +238,7 @@ export type UpdateConversationInput = {
   messages?: MessageInput[];
   reasoningEffort?: ReasoningEffort | null;
   loraIds?: string[];
+  toolSetId: string | null;
 };
 
 export type CompletionChunk = AssistantEvent;

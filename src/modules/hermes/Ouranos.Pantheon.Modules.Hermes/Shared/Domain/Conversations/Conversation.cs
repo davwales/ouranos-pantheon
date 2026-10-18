@@ -3,6 +3,7 @@ using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Loras;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
@@ -51,6 +52,8 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
 
     public List<Lora> Loras { get; private set; } = [];
 
+    public Id<ToolSet>? ToolSetId { get; private set; }
+
     public Id<Folder>? FolderId { get; private set; }
 
     private Folder? _folder;
@@ -71,7 +74,8 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
         Id<Folder>? folderId = null,
         Folder? folder = null,
         ReasoningEffort? reasoningEffort = null,
-        IEnumerable<Lora>? loras = null
+        IEnumerable<Lora>? loras = null,
+        Id<ToolSet>? toolSetId = null
     )
     {
         Guard.Against.Null(personaId);
@@ -110,6 +114,7 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
             _folder = folder,
             ReasoningEffort = reasoningEffort,
             Loras = [.. loras ?? []],
+            ToolSetId = toolSetId,
         };
 
         return conversation;
@@ -124,7 +129,8 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
         bool isPublic,
         Id<Folder>? folderId,
         ReasoningEffort? reasoningEffort = null,
-        IEnumerable<Lora>? loras = null
+        IEnumerable<Lora>? loras = null,
+        Id<ToolSet>? toolSetId = null
     )
     {
         Guard.Against.Null(personaId);
@@ -143,6 +149,7 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
         FolderId = folderId;
         ReasoningEffort = reasoningEffort;
         Loras = [.. loras ?? []];
+        ToolSetId = toolSetId;
         Update();
     }
 

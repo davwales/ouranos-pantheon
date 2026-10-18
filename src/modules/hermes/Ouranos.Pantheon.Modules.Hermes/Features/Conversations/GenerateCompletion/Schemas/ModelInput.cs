@@ -4,6 +4,5 @@ public sealed record ModelInput(
     string ModelIdentifier,
     string SystemPrompt,
     float? Temperature = null,
-    int? MaxTokens = null,
-    bool IsToolCallingEnabled = false
+    int? MaxTokens = null
 );

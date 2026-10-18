@@ -1,3 +1,4 @@
+using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -11,8 +12,10 @@ using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Loras;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
@@ -582,5 +585,63 @@ public sealed class CreateConversationHandlerTests
 
         // Assert
         await handle.ShouldThrowAsync<OperationCanceledException>();
+    }
+
+    private async Task<Id<ToolSet>> SeedToolSetAsync()
+    {
+        var toolSet = ToolSet.Create(
+            DatabaseExtensions.CreateId<ToolSet>(),
+            _fixture.Create<string>(),
+            null,
+            null,
+            []
+        );
+        await _dbContext.SeedData(toolSet);
+
+        return toolSet.Id;
+    }
+
+    [Fact]
+    public async Task Handle_WhenToolSetIdProvided_ShouldSaveIt()
+    {
+        // Arrange
+        var toolSetId = await SeedToolSetAsync();
+        var command = new CreateConversationInput(
+            DatabaseExtensions.CreateId<Persona>(),
+            DatabaseExtensions.CreateId<ModelConfig>(),
+            [],
+            [],
+            _fixture.Create<string>(),
+            ToolSetId: toolSetId
+        );
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var saved = await _dbContext.Conversations.FindAsync(result.Id);
+        saved.ShouldNotBeNull();
+        saved.ToolSetId.ShouldBe(toolSetId);
+    }
+
+    [Fact]
+    public async Task Handle_WhenToolSetDoesNotExist_ShouldThrowNotFoundException()
+    {
+        // Arrange
+        var command = new CreateConversationInput(
+            DatabaseExtensions.CreateId<Persona>(),
+            DatabaseExtensions.CreateId<ModelConfig>(),
+            [],
+            [],
+            _fixture.Create<string>(),
+            ToolSetId: DatabaseExtensions.CreateId<ToolSet>()
+        );
+
+        // Act
+        var handle = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await handle.ShouldThrowAsync<NotFoundException>();
+        _dbContext.Conversations.ShouldBeEmpty();
     }
 }

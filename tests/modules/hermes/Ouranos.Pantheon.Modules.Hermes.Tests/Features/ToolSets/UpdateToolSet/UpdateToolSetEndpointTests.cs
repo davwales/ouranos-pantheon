@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Ouranos.Pantheon.Modules.Hermes.Features.ToolSets.UpdateToolSet;
 using Ouranos.Pantheon.Modules.Hermes.Features.ToolSets.UpdateToolSet.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
-using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.ToolSets.UpdateToolSet;
@@ -16,7 +16,7 @@ public sealed class UpdateToolSetEndpointTests
     {
         // Arrange
         var ct = CancellationToken.None;
-        var toolSetId = new Id<ToolSet>(Guid.NewGuid().ToString());
+        var toolSetId = DatabaseExtensions.CreateId<ToolSet>();
 
         var body = new UpdateToolSetBody(
             "Research",

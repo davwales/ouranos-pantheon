@@ -2,8 +2,10 @@ using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Loras;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 
@@ -39,6 +41,27 @@ public sealed class ConversationTests
         conversation.Messages.ShouldBeEmpty();
         conversation.Traits.ShouldBeEmpty();
         conversation.ReasoningEffort.ShouldBeNull();
+        conversation.ToolSetId.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Create_WhenToolSetIdProvided_ShouldSetIt()
+    {
+        // Arrange
+        var toolSetId = DatabaseExtensions.CreateId<ToolSet>();
+
+        // Act
+        var conversation = Conversation.Create(
+            DatabaseExtensions.CreateId<Conversation>(),
+            DatabaseExtensions.CreateId<Persona>(),
+            DatabaseExtensions.CreateId<ModelConfig>(),
+            [],
+            [],
+            toolSetId: toolSetId
+        );
+
+        // Assert
+        conversation.ToolSetId.ShouldBe(toolSetId);
     }
 
     [Fact]
@@ -252,6 +275,64 @@ public sealed class ConversationTests
 
         // Assert
         conversation.Loras.ShouldBe([newLora]);
+    }
+
+    [Fact]
+    public void Update_WhenToolSetIdGiven_ShouldReplaceTheToolSetId()
+    {
+        // Arrange
+        var newToolSetId = DatabaseExtensions.CreateId<ToolSet>();
+        var conversation = Conversation.Create(
+            DatabaseExtensions.CreateId<Conversation>(),
+            DatabaseExtensions.CreateId<Persona>(),
+            DatabaseExtensions.CreateId<ModelConfig>(),
+            [],
+            [],
+            toolSetId: DatabaseExtensions.CreateId<ToolSet>()
+        );
+
+        // Act
+        conversation.Update(
+            conversation.Name,
+            conversation.PersonaId,
+            conversation.ModelConfigId,
+            [],
+            [],
+            true,
+            null,
+            toolSetId: newToolSetId
+        );
+
+        // Assert
+        conversation.ToolSetId.ShouldBe(newToolSetId);
+    }
+
+    [Fact]
+    public void Update_WhenToolSetIdOmitted_ShouldClearTheToolSetId()
+    {
+        // Arrange
+        var conversation = Conversation.Create(
+            DatabaseExtensions.CreateId<Conversation>(),
+            DatabaseExtensions.CreateId<Persona>(),
+            DatabaseExtensions.CreateId<ModelConfig>(),
+            [],
+            [],
+            toolSetId: DatabaseExtensions.CreateId<ToolSet>()
+        );
+
+        // Act
+        conversation.Update(
+            conversation.Name,
+            conversation.PersonaId,
+            conversation.ModelConfigId,
+            [],
+            [],
+            true,
+            null
+        );
+
+        // Assert
+        conversation.ToolSetId.ShouldBeNull();
     }
 
     [Fact]

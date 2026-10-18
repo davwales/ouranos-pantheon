@@ -29,11 +29,28 @@ replayed.
 
 Hermes chat runs on the shared assistant tool loop (`AssistantToolLoop`), so it uses the same
 tool abstraction, limits and event contract as the module assistants. Tools are typed to
-`IConversationScope` and registered for `HermesChatContext` with `AddAssistantTool`. A model
-config offers tools only when its `IsToolCallingEnabled` is set, because small models may not
-support function calling; Hermes appends its own short tool guidance to the prompt only when
-tools are offered. Hermes has no page to apply proposals, so tool actions are ignored and
-tools answer through their output, plus an optional image.
+`IConversationScope` and registered for `HermesChatContext` with `AddAssistantTool`. Hermes
+has no page to apply proposals, so tool actions are ignored and tools answer through their
+output, plus an optional image.
+
+Which tools a reply may call is decided by **tool sets**, not by the tools themselves. A tool
+set names the tools it enables, each identified by its source and name, and can add guidance
+at two levels: an additional description appended to a tool's own description, and
+instructions appended to the system prompt. That lets one set tell the model to draw freely
+while another draws only on request, so tool descriptions stay neutral about when to call them.
+
+- A model config has an optional **default tool set**; models without one get no tools, since
+  small models may not support function calling.
+- Each conversation has exactly one **active tool set** (or none), saved on the conversation
+  and sent with every completion request. Choosing a model in the conversation settings resets
+  it to that model's default, and the user can switch it mid-chat.
+- `ToolSetResolver` loads the active set, asks each `IHermesToolSource` to resolve its entries
+  (only `NativeToolSource` today; MCP servers are planned as another source), wraps each tool
+  so its description carries the set's guidance, and drops tools whose `IsAvailable` is false.
+  An unknown set means no tools rather than a failed reply.
+- When tools are offered, the instructions are the system prompt, then the fixed
+  `ToolInstructions` line, then the set's instructions.
+- Deleting a tool set clears it from the models and conversations that used it.
 
 Reasoning effort belongs to the conversation, not the model config, so the user can raise or
 lower it mid-chat without editing a shared model config. Unset sends no reasoning block and
@@ -79,7 +96,7 @@ image URL cannot make the page load third-party content.
 OuranosMl cannot list the LoRAs SwarmUI has installed, so users register them by hand
 (`/api/hermes/loras`): a display name, the SwarmUI identifier, a default weight between -2 and
 2, and the public flag. The conversation settings list the registered LoRAs whenever the
-model config has tool calling on; the ones the user switches on are saved with the
+active tool set enables `generate_image`; the ones the user switches on are saved with the
 conversation (`conversation_lora`) and sent with every completion request, the same way
 traits are.
 

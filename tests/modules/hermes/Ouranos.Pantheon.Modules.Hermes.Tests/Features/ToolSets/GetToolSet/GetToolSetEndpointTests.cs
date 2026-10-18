@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Ouranos.Pantheon.Modules.Hermes.Features.ToolSets.GetToolSet;
 using Ouranos.Pantheon.Modules.Hermes.Features.ToolSets.GetToolSet.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
-using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.ToolSets.GetToolSet;
@@ -16,7 +16,7 @@ public sealed class GetToolSetEndpointTests
     {
         // Arrange
         var ct = CancellationToken.None;
-        var toolSetId = new Id<ToolSet>(Guid.NewGuid().ToString());
+        var toolSetId = DatabaseExtensions.CreateId<ToolSet>();
         var expected = new GetToolSetResponse(toolSetId, "Research", null, null, [], true);
 
         _bus.InvokeAsync<GetToolSetResponse>(Arg.Any<object>(), Arg.Any<CancellationToken>())

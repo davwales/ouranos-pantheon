@@ -76,7 +76,7 @@ public sealed class GetAllModelsHandler
                 m.SystemPrompt,
                 m.Temperature,
                 m.MaxTokens,
-                m.IsToolCallingEnabled,
+                m.DefaultToolSetId,
                 m.ContextWindow,
                 m.IsDefault,
                 m.IsPublic,

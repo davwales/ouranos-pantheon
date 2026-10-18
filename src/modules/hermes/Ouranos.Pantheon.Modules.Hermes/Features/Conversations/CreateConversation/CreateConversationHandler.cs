@@ -9,6 +9,7 @@ using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application;
 using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
@@ -88,6 +89,12 @@ public sealed class CreateConversationHandler
             cancellationToken
         );
 
+        await ToolSetValidation.ValidateToolSetExistsAsync(
+            _dbContext,
+            command.ToolSetId,
+            cancellationToken
+        );
+
         var name = string.IsNullOrWhiteSpace(command.Name)
             ? await GenerateNameAsync(command, cancellationToken)
             : command.Name;
@@ -103,7 +110,8 @@ public sealed class CreateConversationHandler
             folderId: command.FolderId,
             folder: folder,
             reasoningEffort: command.ReasoningEffort,
-            loras: loras
+            loras: loras,
+            toolSetId: command.ToolSetId
         );
 
         if (

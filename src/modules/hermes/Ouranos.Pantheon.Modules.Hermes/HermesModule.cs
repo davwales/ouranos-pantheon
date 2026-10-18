@@ -78,6 +78,7 @@ public sealed class HermesModule : IPantheonModule
     {
         builder.Services.AddAssistantTool<HermesChatContext, GenerateImageTool>();
         builder.Services.AddScoped<IHermesToolSource, NativeToolSource>();
+        builder.Services.AddScoped<ToolSetResolver>();
     }
 
     public async Task<IHost> Configure(IHost host)

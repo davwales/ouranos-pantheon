@@ -25,7 +25,8 @@ http:
         ],
         "isPublic": true,
         "folderId": null,
-        "reasoningEffort": "Low"
+        "reasoningEffort": "Low",
+        "toolSetId": null
       }
   auth: inherit
 

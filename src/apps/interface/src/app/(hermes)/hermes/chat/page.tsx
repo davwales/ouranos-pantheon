@@ -22,12 +22,18 @@ export default function Conversation() {
   const [activeTraits, setActiveTraits] = useState<TraitFormInput[]>([]);
   const [activeLoras, setActiveLoras] = useState<LoraFormInput[]>([]);
   const [reasoningEffort, setReasoningEffort] = useState<ReasoningEffort | null>(null);
+  const [toolSetId, setToolSetId] = useState<string | null>(null);
   const [conversationState, setConversationState] =
     useState<ConversationState>("loading");
   const [conversationId, setConversationId] = useState<string | undefined>();
   const [conversationName, setConversationName] = useState<
     string | undefined
   >();
+
+  const handleModelChange = (selected: ModelFormInput | undefined) => {
+    setModel(selected);
+    setToolSetId(selected?.defaultToolSetId ?? null);
+  };
 
   useEffect(() => {
     const loadDefaults = async () => {
@@ -44,7 +50,7 @@ export default function Conversation() {
           setPersona({ ...defaultPersona });
         }
         if (defaultModel) {
-          setModel({ ...defaultModel });
+          handleModelChange({ ...defaultModel });
         }
 
         if (defaultPersona && defaultModel) {
@@ -82,11 +88,13 @@ export default function Conversation() {
         activeTraits={activeTraits}
         activeLoras={activeLoras}
         reasoningEffort={reasoningEffort}
+        toolSetId={toolSetId}
         onPersonaChange={setPersona}
         onModelChange={setModel}
         onTraitsChange={setActiveTraits}
         onLorasChange={setActiveLoras}
         onReasoningEffortChange={setReasoningEffort}
+        onToolSetChange={setToolSetId}
         conversationId={conversationId}
         conversationName={conversationName}
         onConversationSaved={(id, name) => {
@@ -104,7 +112,7 @@ export default function Conversation() {
         persona={persona}
         setPersona={setPersona}
         model={model}
-        setModel={setModel}
+        setModel={handleModelChange}
         onBegin={handleBeginConversation}
         beginDisabled={!persona || !model}
       />

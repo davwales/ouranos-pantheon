@@ -3,6 +3,8 @@ using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.Scopes;
+using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.ToolSources;
+using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.ToolSources.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
@@ -19,31 +21,28 @@ namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateComplet
 public sealed class GenerateCompletionHandler
     : IPantheonStreamHandler<GenerateCompletionInput, AssistantEvent>
 {
-    public const string ToolInstructions = """
-        You can call tools. Call one whenever it helps the reply, without asking the user first,
-        and never name tools in your reply.
-        """;
+    public const string ToolInstructions = "You can call tools. Never name tools in your reply.";
 
     private readonly ILogger<GenerateCompletionHandler> _logger;
     private readonly IDbContextFactory<HermesDbContext> _dbContextFactory;
-    private readonly IReadOnlyList<IAssistantTool<HermesChatContext>> _tools;
+    private readonly ToolSetResolver _toolSetResolver;
     private readonly AssistantToolLoop<HermesChatContext> _loop;
 
     public GenerateCompletionHandler(
         ILogger<GenerateCompletionHandler> logger,
         IOuranosMachineLearningClient ouranosMachineLearningClient,
         IDbContextFactory<HermesDbContext> dbContextFactory,
-        IEnumerable<IAssistantTool<HermesChatContext>> tools
+        ToolSetResolver toolSetResolver
     )
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(ouranosMachineLearningClient);
         Guard.Against.Null(dbContextFactory);
-        Guard.Against.Null(tools);
+        Guard.Against.Null(toolSetResolver);
 
         _logger = logger;
         _dbContextFactory = dbContextFactory;
-        _tools = [.. tools];
+        _toolSetResolver = toolSetResolver;
         _loop = new AssistantToolLoop<HermesChatContext>(logger, ouranosMachineLearningClient);
     }
 
@@ -69,6 +68,7 @@ public sealed class GenerateCompletionHandler
         }
 
         var model = command.Conversation.Model;
+
         var context = new HermesChatContext(
             command.ConversationId,
             [
@@ -78,12 +78,15 @@ public sealed class GenerateCompletionHandler
                 )),
             ]
         );
-        List<IAssistantTool<HermesChatContext>> tools = model.IsToolCallingEnabled
-            ? [.. _tools.Where(t => t.IsAvailable(context))]
-            : [];
+
+        var toolSet = await _toolSetResolver.ResolveAsync(
+            command.Conversation.ToolSetId,
+            context,
+            cancellationToken
+        );
 
         var systemPrompt = ComposeSystemPrompt(command.Conversation);
-        var instructions = tools.Count > 0 ? $"{systemPrompt}\n\n{ToolInstructions}" : systemPrompt;
+        var instructions = ComposeInstructions(systemPrompt, toolSet);
 
         yield return new AssistantInstructionsEvent(instructions);
 
@@ -103,7 +106,7 @@ public sealed class GenerateCompletionHandler
                 prompt,
                 instructions,
                 BuildInput(command.Conversation.Messages, prompt.MaxToolOutputCharacters),
-                tools,
+                toolSet.Tools,
                 context,
                 cancellationToken
             )
@@ -160,6 +163,18 @@ public sealed class GenerateCompletionHandler
         }
 
         return builder.Build();
+    }
+
+    internal static string ComposeInstructions(string systemPrompt, ResolvedToolSet toolSet)
+    {
+        if (toolSet.Tools.Count == 0)
+        {
+            return systemPrompt;
+        }
+
+        return string.IsNullOrWhiteSpace(toolSet.Instructions)
+            ? $"{systemPrompt}\n\n{ToolInstructions}"
+            : $"{systemPrompt}\n\n{ToolInstructions}\n{toolSet.Instructions}";
     }
 
     // Earlier tool calls are replayed before the reply that made them so the model can build on

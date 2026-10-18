@@ -2,16 +2,21 @@ using System.Runtime.CompilerServices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.Scopes;
+using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.ToolSources;
+using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.ToolSources.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
+using Ouranos.Pantheon.Tests.Utils.Extensions;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.Conversations.GenerateCompletion;
@@ -28,10 +33,19 @@ public sealed class GenerateCompletionHandlerTests
         IDbContextFactory<HermesDbContext>
     >();
 
+    private readonly string _dbName = Guid.NewGuid().ToString();
+
+    private string? _sentInstructions;
+    private IReadOnlyList<FunctionToolDto>? _sentTools;
+
     private readonly GenerateCompletionHandler _handler;
 
     public GenerateCompletionHandlerTests()
     {
+        _dbContextFactory
+            .CreateDbContextAsync(Arg.Any<CancellationToken>())
+            .Returns(_ => Task.FromResult(DbContextExtensions.Mock<HermesDbContext>(_dbName)));
+
         _handler = CreateHandler([]);
     }
 
@@ -63,7 +77,57 @@ public sealed class GenerateCompletionHandlerTests
         IEnumerable<IAssistantTool<HermesChatContext>> tools
     )
     {
-        return new GenerateCompletionHandler(_logger, _mlClient, _dbContextFactory, tools);
+        var resolver = new ToolSetResolver(
+            Substitute.For<ILogger<ToolSetResolver>>(),
+            _dbContextFactory,
+            [new NativeToolSource(tools)]
+        );
+
+        return new GenerateCompletionHandler(_logger, _mlClient, _dbContextFactory, resolver);
+    }
+
+    private async Task<Id<ToolSet>> SeedToolSetAsync(
+        string? instructions = null,
+        string? additionalDescription = null
+    )
+    {
+        var toolSetId = DatabaseExtensions.CreateId<ToolSet>();
+        var toolSet = ToolSet.Create(
+            toolSetId,
+            "Echo set",
+            null,
+            instructions,
+            [
+                ToolSetTool.Create(
+                    DatabaseExtensions.CreateId<ToolSetTool>(),
+                    toolSetId,
+                    ToolSource.Native,
+                    "echo",
+                    additionalDescription
+                ),
+            ]
+        );
+
+        await using var seedContext = DbContextExtensions.Mock<HermesDbContext>(_dbName);
+        await seedContext.SeedData(toolSet);
+
+        return toolSetId;
+    }
+
+    private void CaptureRequest()
+    {
+        _mlClient
+            .StreamResponseAsync(
+                Arg.Any<string>(),
+                Arg.Do<string>(i => _sentInstructions = i),
+                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
+                Arg.Do<IReadOnlyList<FunctionToolDto>>(t => _sentTools = t),
+                Arg.Any<float?>(),
+                Arg.Any<int?>(),
+                Arg.Any<ReasoningEffort?>(),
+                Arg.Any<CancellationToken>()
+            )
+            .Returns(CreateStream([Text("Ok")]));
     }
 
     private static async IAsyncEnumerable<ResponseStreamChunk> CreateStream(
@@ -139,6 +203,19 @@ public sealed class GenerateCompletionHandlerTests
         );
     }
 
+    private static GenerateCompletionInput CreateCommand(Id<ToolSet>? toolSetId)
+    {
+        return new GenerateCompletionInput(
+            CreateConversation(
+                new ModelInput("test-model", "Base prompt."),
+                new CompletionMessageInput("Hi", Role.User)
+            ) with
+            {
+                ToolSetId = toolSetId,
+            }
+        );
+    }
+
     private static async Task<List<AssistantEvent>> CollectAsync(
         IAsyncEnumerable<AssistantEvent> stream
     )
@@ -152,12 +229,8 @@ public sealed class GenerateCompletionHandlerTests
         return events;
     }
 
-    private async Task<Id<Conversation>> SeedConversationAsync(string dbName)
+    private async Task<Id<Conversation>> SeedConversationAsync()
     {
-        _dbContextFactory
-            .CreateDbContextAsync(Arg.Any<CancellationToken>())
-            .Returns(_ => Task.FromResult(DbContextExtensions.Mock<HermesDbContext>(dbName)));
-
         var conversationId = new Id<Conversation>(Guid.NewGuid().ToString());
         var conversation = Conversation.Create(
             conversationId,
@@ -168,9 +241,8 @@ public sealed class GenerateCompletionHandlerTests
             "Test"
         );
 
-        await using var seedContext = DbContextExtensions.Mock<HermesDbContext>(dbName);
-        await seedContext.Conversations.AddAsync(conversation);
-        await seedContext.SaveChangesAsync();
+        await using var seedContext = DbContextExtensions.Mock<HermesDbContext>(_dbName);
+        await seedContext.SeedData(conversation);
 
         return conversationId;
     }
@@ -211,13 +283,7 @@ public sealed class GenerateCompletionHandlerTests
         // Arrange
         SetupStream(CreateStream([Text("Ok")]));
 
-        var model = new ModelInput(
-            "test-model",
-            "Base prompt.",
-            0.4f,
-            null,
-            IsToolCallingEnabled: true
-        );
+        var model = new ModelInput("test-model", "Base prompt.", 0.4f);
 
         var command = new GenerateCompletionInput(
             CreateConversation(model, new CompletionMessageInput("Hi", Role.User)) with
@@ -248,32 +314,129 @@ public sealed class GenerateCompletionHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenToolCallingIsDisabled_ShouldNotOfferTools()
+    public async Task Handle_WhenNoToolSetIsSelected_ShouldNotOfferToolsAndSendOnlyTheSystemPrompt()
     {
         // Arrange
-        SetupStream(CreateStream([Text("Ok")]));
+        CaptureRequest();
 
         var handler = CreateHandler([new EchoTool()]);
-        var command = new GenerateCompletionInput(
-            CreateConversation(messages: new CompletionMessageInput("Hi", Role.User))
+        var command = CreateCommand(null);
+
+        // Act
+        var events = await CollectAsync(handler.Handle(command, CancellationToken.None));
+
+        // Assert
+        _sentTools.ShouldNotBeNull();
+        _sentTools.ShouldBeEmpty();
+        _sentInstructions.ShouldNotBeNull();
+        _sentInstructions.ShouldBe(
+            GenerateCompletionHandler.ComposeSystemPrompt(command.Conversation)
         );
+        events[0].ShouldBe(new AssistantInstructionsEvent(_sentInstructions));
+    }
+
+    [Fact]
+    public async Task Handle_WhenToolSetHasAnAvailableTool_ShouldOfferItWithToolInstructions()
+    {
+        // Arrange
+        CaptureRequest();
+
+        var toolSetId = await SeedToolSetAsync();
+        var handler = CreateHandler([new EchoTool()]);
+        var command = CreateCommand(toolSetId);
+
+        // Act
+        var events = await CollectAsync(handler.Handle(command, CancellationToken.None));
+
+        // Assert
+        _sentTools.ShouldNotBeNull();
+        var tool = _sentTools.ShouldHaveSingleItem();
+        tool.Name.ShouldBe("echo");
+        tool.Description.ShouldBe("Echoes text.");
+        _sentInstructions.ShouldEndWith($"\n\n{GenerateCompletionHandler.ToolInstructions}");
+        events[0].ShouldBe(new AssistantInstructionsEvent(_sentInstructions));
+    }
+
+    [Fact]
+    public async Task Handle_WhenToolSetEntryHasAdditionalDescription_ShouldAppendItToTheToolDescription()
+    {
+        // Arrange
+        CaptureRequest();
+
+        var toolSetId = await SeedToolSetAsync(additionalDescription: "Only echo greetings.");
+        var handler = CreateHandler([new EchoTool()]);
+
+        // Act
+        await CollectAsync(handler.Handle(CreateCommand(toolSetId), CancellationToken.None));
+
+        // Assert
+        _sentTools.ShouldNotBeNull();
+        _sentTools
+            .ShouldHaveSingleItem()
+            .Description.ShouldBe("Echoes text.\n\nOnly echo greetings.");
+    }
+
+    [Fact]
+    public async Task Handle_WhenToolSetHasInstructions_ShouldAppendThemAfterTheToolInstructions()
+    {
+        // Arrange
+        CaptureRequest();
+
+        var toolSetId = await SeedToolSetAsync(instructions: "Echo whenever asked.");
+        var handler = CreateHandler([new EchoTool()]);
+
+        // Act
+        var events = await CollectAsync(
+            handler.Handle(CreateCommand(toolSetId), CancellationToken.None)
+        );
+
+        // Assert
+        var instructions = events[0].ShouldBeOfType<AssistantInstructionsEvent>().Instructions;
+        instructions.ShouldEndWith(
+            $"\n\n{GenerateCompletionHandler.ToolInstructions}\nEcho whenever asked."
+        );
+        _sentInstructions.ShouldBe(instructions);
+    }
+
+    [Fact]
+    public async Task Handle_WhenToolSetDoesNotExist_ShouldNotOfferTools()
+    {
+        // Arrange
+        CaptureRequest();
+
+        var handler = CreateHandler([new EchoTool()]);
+        var command = CreateCommand(DatabaseExtensions.CreateId<ToolSet>());
 
         // Act
         await CollectAsync(handler.Handle(command, CancellationToken.None));
 
         // Assert
-        _mlClient
-            .Received(1)
-            .StreamResponseAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
-                Arg.Is<IReadOnlyList<FunctionToolDto>>(t => t.Count == 0),
-                Arg.Any<float?>(),
-                Arg.Any<int?>(),
-                Arg.Any<ReasoningEffort?>(),
-                Arg.Any<CancellationToken>()
-            );
+        _sentTools.ShouldNotBeNull();
+        _sentTools.ShouldBeEmpty();
+        _sentInstructions.ShouldNotBeNull();
+        _sentInstructions.ShouldNotContain(GenerateCompletionHandler.ToolInstructions);
+    }
+
+    [Fact]
+    public async Task Handle_WhenToolSetToolIsUnavailable_ShouldFilterItOut()
+    {
+        // Arrange
+        CaptureRequest();
+
+        var toolSetId = await SeedToolSetAsync(instructions: "Echo whenever asked.");
+        var handler = CreateHandler([new EchoTool(isAvailable: false)]);
+        var command = CreateCommand(toolSetId);
+
+        // Act
+        await CollectAsync(handler.Handle(command, CancellationToken.None));
+
+        // Assert
+        _sentTools.ShouldNotBeNull();
+        _sentTools.ShouldBeEmpty();
+        _sentInstructions.ShouldNotBeNull();
+        _sentInstructions.ShouldBe(
+            GenerateCompletionHandler.ComposeSystemPrompt(command.Conversation)
+        );
     }
 
     [Fact]
@@ -283,13 +446,12 @@ public sealed class GenerateCompletionHandlerTests
         SetupStream(CreateStream([Text("Ok")]));
         HermesChatContext? context = null;
         var tool = Substitute.For<IAssistantTool<HermesChatContext>>();
+        tool.Name.Returns("echo");
         tool.IsAvailable(Arg.Do<HermesChatContext>(c => context = c)).Returns(false);
 
+        var toolSetId = await SeedToolSetAsync();
         var handler = CreateHandler([tool]);
-        var conversation = CreateConversation(
-            new ModelInput("test-model", "Base prompt.", IsToolCallingEnabled: true),
-            new CompletionMessageInput("Hi", Role.User)
-        ) with
+        var conversation = CreateCommand(toolSetId).Conversation with
         {
             Loras = [new LoraInput("add-detail", 0.8f)],
         };
@@ -302,45 +464,6 @@ public sealed class GenerateCompletionHandlerTests
         // Assert
         context.ShouldNotBeNull();
         context.ImageLoras.ShouldBe([new ImageLora("add-detail", 0.8f)]);
-    }
-
-    [Fact]
-    public async Task Handle_WhenToolCallingIsEnabled_ShouldOfferAvailableToolsWithInstructions()
-    {
-        // Arrange
-        string? sentInstructions = null;
-        IReadOnlyList<FunctionToolDto>? sentTools = null;
-
-        _mlClient
-            .StreamResponseAsync(
-                Arg.Any<string>(),
-                Arg.Do<string>(i => sentInstructions = i),
-                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
-                Arg.Do<IReadOnlyList<FunctionToolDto>>(t => sentTools = t),
-                Arg.Any<float?>(),
-                Arg.Any<int?>(),
-                Arg.Any<ReasoningEffort?>(),
-                Arg.Any<CancellationToken>()
-            )
-            .Returns(CreateStream([Text("Ok")]));
-
-        var handler = CreateHandler([new EchoTool(), new EchoTool(isAvailable: false)]);
-        var command = new GenerateCompletionInput(
-            CreateConversation(
-                new ModelInput("test-model", "Base prompt.", IsToolCallingEnabled: true),
-                new CompletionMessageInput("Hi", Role.User)
-            )
-        );
-
-        // Act
-        var events = await CollectAsync(handler.Handle(command, CancellationToken.None));
-
-        // Assert
-        sentTools.ShouldNotBeNull();
-        sentTools.Single().Name.ShouldBe("echo");
-        sentInstructions.ShouldNotBeNull();
-        sentInstructions.ShouldEndWith(GenerateCompletionHandler.ToolInstructions);
-        events[0].ShouldBe(new AssistantInstructionsEvent(sentInstructions));
     }
 
     [Fact]
@@ -440,8 +563,8 @@ public sealed class GenerateCompletionHandlerTests
     public async Task Handle_WhenConversationIdProvided_ShouldPersistTheTurnWithOrderedParts()
     {
         // Arrange
-        var dbName = Guid.NewGuid().ToString();
-        var conversationId = await SeedConversationAsync(dbName);
+        var conversationId = await SeedConversationAsync();
+        var toolSetId = await SeedToolSetAsync();
 
         SetupStream(
             CreateStream([
@@ -455,9 +578,12 @@ public sealed class GenerateCompletionHandlerTests
         var handler = CreateHandler([new EchoTool()]);
         var command = new GenerateCompletionInput(
             CreateConversation(
-                new ModelInput("test-model", "Base prompt.", IsToolCallingEnabled: true),
+                new ModelInput("test-model", "Base prompt."),
                 new CompletionMessageInput("Echo hi", Role.User)
-            ),
+            ) with
+            {
+                ToolSetId = toolSetId,
+            },
             conversationId
         );
 
@@ -465,7 +591,7 @@ public sealed class GenerateCompletionHandlerTests
         await CollectAsync(handler.Handle(command, CancellationToken.None));
 
         // Assert
-        await using var checkContext = DbContextExtensions.Mock<HermesDbContext>(dbName);
+        await using var checkContext = DbContextExtensions.Mock<HermesDbContext>(_dbName);
         var messages = await checkContext
             .Messages.Include(m => m.Parts)
             .OrderBy(m => m.SortOrder)
@@ -493,8 +619,7 @@ public sealed class GenerateCompletionHandlerTests
     public async Task Handle_WhenGenerationFails_ShouldStopWithErrorAndPersistNothing()
     {
         // Arrange
-        var dbName = Guid.NewGuid().ToString();
-        var conversationId = await SeedConversationAsync(dbName);
+        var conversationId = await SeedConversationAsync();
 
         SetupStream(CreateStream([Reasoning("Thinking"), Usage(10, 256)]));
 
@@ -516,7 +641,7 @@ public sealed class GenerateCompletionHandlerTests
             );
         events.ShouldNotContain(e => e is AssistantDoneEvent);
 
-        await using var checkContext = DbContextExtensions.Mock<HermesDbContext>(dbName);
+        await using var checkContext = DbContextExtensions.Mock<HermesDbContext>(_dbName);
         (await checkContext.Messages.CountAsync()).ShouldBe(0);
     }
 
@@ -578,7 +703,7 @@ public sealed class GenerateCompletionHandlerTests
     }
 
     [Fact]
-    public void Constructor_WhenToolsAreNull_ShouldThrowArgumentNullException()
+    public void Constructor_WhenToolSetResolverIsNull_ShouldThrowArgumentNullException()
     {
         // Act & Assert
         Should.Throw<ArgumentNullException>(() =>
@@ -647,5 +772,51 @@ public sealed class GenerateCompletionHandlerTests
 
         // Assert
         result.ShouldNotContain("## Traits");
+    }
+
+    [Fact]
+    public void ComposeInstructions_WhenToolSetHasNoTools_ShouldReturnTheSystemPrompt()
+    {
+        // Arrange
+        var toolSet = new ResolvedToolSet([], "Use tools wisely.");
+
+        // Act
+        var result = GenerateCompletionHandler.ComposeInstructions("Prompt.", toolSet);
+
+        // Assert
+        result.ShouldBe("Prompt.");
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("  ")]
+    public void ComposeInstructions_WhenToolSetHasToolsButNoInstructions_ShouldAppendOnlyToolInstructions(
+        string? instructions
+    )
+    {
+        // Arrange
+        var toolSet = new ResolvedToolSet([new EchoTool()], instructions);
+
+        // Act
+        var result = GenerateCompletionHandler.ComposeInstructions("Prompt.", toolSet);
+
+        // Assert
+        result.ShouldBe($"Prompt.\n\n{GenerateCompletionHandler.ToolInstructions}");
+    }
+
+    [Fact]
+    public void ComposeInstructions_WhenToolSetHasToolsAndInstructions_ShouldAppendBoth()
+    {
+        // Arrange
+        var toolSet = new ResolvedToolSet([new EchoTool()], "Use tools wisely.");
+
+        // Act
+        var result = GenerateCompletionHandler.ComposeInstructions("Prompt.", toolSet);
+
+        // Assert
+        result.ShouldBe(
+            $"Prompt.\n\n{GenerateCompletionHandler.ToolInstructions}\nUse tools wisely."
+        );
     }
 }

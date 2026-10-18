@@ -15,7 +15,7 @@ down. Platform-wide concepts are described in the
 |---------|-------|
 | [5. Building Block View](05-building-block-view.md) | The module's feature slices |
 | [6. Runtime View](06-runtime-view.md) | Streaming chat, image generation |
-| [8. Concepts](08-concepts.md) | Public mode, reply parts and history replay, tool calling, generated images, image LoRAs |
+| [8. Concepts](08-concepts.md) | Public mode, reply parts and history replay, tool calling and tool sets, generated images, image LoRAs |
 | [11. Risks and Technical Debt](11-risks-and-technical-debt.md) | Module risks (`HERMES-D*`) |
 | [12. Glossary](12-glossary.md) | Hermes ubiquitous language |
 | [Decisions](adr/README.md) | Module ADR log (`HERMES-ADR-*`) |
@@ -83,5 +83,6 @@ true), `Model` (null uses OuranosMl's default image model), `UnsavedRetention` (
 1216x832, which suit SDXL- and Flux-class models).
 
 Per-chat model settings live on each model config, not in configuration: system prompt,
-temperature, max tokens, context window and whether tool calling is on. Reasoning effort is a
-per-conversation setting the user can change mid-chat, as are the active image LoRAs.
+temperature, max tokens, context window and the default tool set. Reasoning effort is a
+per-conversation setting the user can change mid-chat, as are the active tool set and image
+LoRAs.

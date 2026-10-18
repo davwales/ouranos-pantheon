@@ -1,4 +1,5 @@
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 
@@ -23,7 +24,7 @@ public sealed class ModelConfigTests
         var systemPrompt = _fixture.Create<string>();
         var temperature = _fixture.Create<float?>();
         var maxTokens = _fixture.Create<int?>();
-        var isToolCallingEnabled = _fixture.Create<bool>();
+        var defaultToolSetId = _fixture.Create<Id<ToolSet>>();
         var isDefault = _fixture.Create<bool>();
         var isPublic = _fixture.Create<bool>();
 
@@ -35,7 +36,7 @@ public sealed class ModelConfigTests
             systemPrompt,
             temperature,
             maxTokens,
-            isToolCallingEnabled,
+            defaultToolSetId,
             null,
             isDefault,
             isPublic
@@ -48,7 +49,7 @@ public sealed class ModelConfigTests
         model.SystemPrompt.ShouldBe(systemPrompt);
         model.Temperature.ShouldBe(temperature);
         model.MaxTokens.ShouldBe(maxTokens);
-        model.IsToolCallingEnabled.ShouldBe(isToolCallingEnabled);
+        model.DefaultToolSetId.ShouldBe(defaultToolSetId);
         model.IsDefault.ShouldBe(isDefault);
         model.IsPublic.ShouldBe(isPublic);
     }
@@ -130,6 +131,7 @@ public sealed class ModelConfigTests
         var newName = _fixture.Create<string>();
         var newModelIdentifier = _fixture.Create<string>();
         var newSystemPrompt = _fixture.Create<string>();
+        var newDefaultToolSetId = _fixture.Create<Id<ToolSet>>();
 
         // Act
         model.Update(
@@ -138,7 +140,7 @@ public sealed class ModelConfigTests
             newSystemPrompt,
             0.5f,
             1024,
-            true,
+            newDefaultToolSetId,
             null,
             true,
             false
@@ -150,7 +152,7 @@ public sealed class ModelConfigTests
         model.SystemPrompt.ShouldBe(newSystemPrompt);
         model.Temperature.ShouldBe(0.5f);
         model.MaxTokens.ShouldBe(1024);
-        model.IsToolCallingEnabled.ShouldBeTrue();
+        model.DefaultToolSetId.ShouldBe(newDefaultToolSetId);
         model.IsDefault.ShouldBeTrue();
         model.IsPublic.ShouldBeFalse();
     }

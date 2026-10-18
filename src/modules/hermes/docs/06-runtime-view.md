@@ -8,13 +8,17 @@ sequenceDiagram
     participant UI as Interface
     participant EP as Hermes endpoint
     participant H as GenerateCompletionHandler
+    participant R as ToolSetResolver
     participant L as AssistantToolLoop
     participant T as Tool
     participant ML as OuranosMl (Responses)
     participant DB as Postgres (schema hermes)
 
-    UI ->> EP: send conversation (persona, model, traits, LoRAs, messages + earlier tool calls)
+    UI ->> EP: send conversation (persona, model, traits, LoRAs, active tool set, messages + earlier tool calls)
     EP ->> H: GenerateCompletionInput
+    H ->> R: active tool set id
+    R ->> DB: load tool set and its tools
+    R -->> H: available tools (with set guidance) + set instructions
     H -->> UI: instructions event (composed system prompt)
     H ->> L: instructions, replayed history, offered tools
     loop until the model answers without a tool call

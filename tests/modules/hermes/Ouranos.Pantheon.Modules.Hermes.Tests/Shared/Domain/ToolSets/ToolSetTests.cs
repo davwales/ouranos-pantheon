@@ -1,5 +1,6 @@
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Tests.Shared.Domain.ToolSets;
 
@@ -156,10 +157,7 @@ public sealed class ToolSetTests
     public void Create_WhenToolBelongsToOtherToolSet_ShouldThrowArgumentException()
     {
         // Arrange
-        var tools = new[]
-        {
-            CreateTool("echo", toolSetId: new Id<ToolSet>(Guid.NewGuid().ToString())),
-        };
+        var tools = new[] { CreateTool("echo", toolSetId: DatabaseExtensions.CreateId<ToolSet>()) };
 
         // Act
         var create = () => ToolSet.Create(_id, "Research", null, null, tools);
@@ -263,10 +261,7 @@ public sealed class ToolSetTests
     {
         // Arrange
         var toolSet = ToolSet.Create(_id, "Research", null, null, []);
-        var tools = new[]
-        {
-            CreateTool("echo", toolSetId: new Id<ToolSet>(Guid.NewGuid().ToString())),
-        };
+        var tools = new[] { CreateTool("echo", toolSetId: DatabaseExtensions.CreateId<ToolSet>()) };
 
         // Act
         var update = () => toolSet.Update("Research", null, null, tools);
@@ -350,7 +345,7 @@ public sealed class ToolSetTests
     )
     {
         return ToolSetTool.Create(
-            new Id<ToolSetTool>(Guid.NewGuid().ToString()),
+            DatabaseExtensions.CreateId<ToolSetTool>(),
             toolSetId ?? _id,
             ToolSource.Native,
             name,
