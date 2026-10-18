@@ -28,10 +28,10 @@ public sealed class GenerateImageTool(
 
     public const string NoImageOutput = "Image generation finished without an image.";
 
-    // Models otherwise tend to announce or describe every image; the user already sees it.
-    public const string ShownOutput =
-        "The image is now shown to the user. Do not describe or mention it unless the user asks; "
-        + "if your reply is already complete, end it without adding text.";
+    public const string ShownOutput = """
+        The image is now shown to the user. Do not describe or mention it unless the user asks;
+        if your reply is already complete, end it without adding text.
+        """;
 
     private readonly ILogger<GenerateImageTool> _logger = Guard.Against.Null(logger);
     private readonly IOuranosMachineLearningClient _mlClient = Guard.Against.Null(mlClient);
@@ -45,11 +45,13 @@ public sealed class GenerateImageTool(
     public override string Name => "generate_image";
 
     public override string Description =>
-        "Draw an image when the user asks for a picture, or to illustrate a scene you have "
-        + "described. Write the prompt in English as a detailed visual description: subject, "
-        + "style, composition and lighting. Every call draws a new image from scratch, so to "
-        + "change an earlier image call again with a full revised prompt. The image is shown to "
-        + "the user automatically; never add links or markdown images to your reply.";
+        """
+            Draw the current scene or subject.
+            Call it on your own whenever a picture adds to the reply, or when the user asks for one; never ask the user whether they want a picture.
+            Write the prompt in English as a detailed visual description: subject, style, composition and lighting.
+            Every call draws a new image from scratch, so to change an earlier image call again with a full revised prompt.
+            The image is shown to the user automatically; never add links or markdown images to your reply.
+            """;
 
     public override bool IsSingleDeliveryPerReply => true;
 

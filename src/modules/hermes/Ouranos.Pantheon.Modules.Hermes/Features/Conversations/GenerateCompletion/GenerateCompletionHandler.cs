@@ -20,8 +20,8 @@ public sealed class GenerateCompletionHandler
     : IPantheonStreamHandler<GenerateCompletionInput, AssistantEvent>
 {
     public const string ToolInstructions = """
-        You can call tools. Call one only when it helps with the user's request, and never name
-        tools in your reply.
+        You can call tools. Call one whenever it helps the reply, without asking the user first,
+        and never name tools in your reply.
         """;
 
     private readonly ILogger<GenerateCompletionHandler> _logger;
