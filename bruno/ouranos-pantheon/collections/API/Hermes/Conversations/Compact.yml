@@ -16,7 +16,6 @@ http:
       {
         "conversationId": "{{CONVERSATION_ID}}",
         "modelIdentifier": "{{MODEL_IDENTIFIER}}",
-        "systemPrompt": "You are a helpful assistant.",
         "personaName": "Assistant",
         "personaDescription": "A helpful assistant.",
         "messages": [

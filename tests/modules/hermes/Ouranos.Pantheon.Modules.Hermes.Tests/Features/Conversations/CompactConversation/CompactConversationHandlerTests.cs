@@ -71,6 +71,19 @@ public sealed class CompactConversationHandlerTests
         yield return new ResponseStreamChunk(null, null, usage);
     }
 
+    private static async IAsyncEnumerable<ResponseStreamChunk> CreateFailingStream(
+        IEnumerable<string> chunks,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
+    )
+    {
+        await foreach (var chunk in CreateStream(chunks, cancellationToken))
+        {
+            yield return chunk;
+        }
+
+        throw new HttpRequestException("Inference host unavailable.");
+    }
+
     private static CompactConversationInput CreateCommand(
         Id<Conversation>? conversationId = null,
         string? personaName = null,
@@ -81,7 +94,6 @@ public sealed class CompactConversationHandlerTests
         return new CompactConversationInput(
             ConversationId: conversationId,
             ModelIdentifier: "test-model",
-            SystemPrompt: "You are a helpful assistant.",
             PersonaName: personaName ?? "TestBot",
             PersonaDescription: personaDescription ?? "A test persona",
             Messages: messages ?? []
@@ -232,7 +244,7 @@ public sealed class CompactConversationHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenNoUserOrAssistantMessages_ShouldThrowInvalidOperationException()
+    public async Task Handle_WhenNoUserOrAssistantMessages_ShouldYieldErrorEvent()
     {
         // Arrange
         var messages = new List<CompactConversationMessageInput>
@@ -243,16 +255,194 @@ public sealed class CompactConversationHandlerTests
         var command = CreateCommand(messages: messages);
 
         // Act
-        var handle = async () =>
+        var results = new List<CompactConversationResponse>();
+        await foreach (var chunk in _handler.Handle(command, CancellationToken.None))
         {
-            await foreach (var _ in _handler.Handle(command, CancellationToken.None)) { }
-        };
+            results.Add(chunk);
+        }
 
         // Assert
-        var exception = await handle.ShouldThrowAsync<InvalidOperationException>();
-        exception.Message.ShouldBe(
-            "Cannot compact a conversation with no user or assistant messages to summarize."
+        results.ShouldHaveSingleItem();
+        results[0]
+            .ShouldBeOfType<CompactErrorResponse>()
+            .Message.ShouldBe(CompactConversationHandler.NothingToCompactMessage);
+
+        _mlClient
+            .DidNotReceive()
+            .StreamResponseAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
+                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
+                Arg.Any<float?>(),
+                Arg.Any<int?>(),
+                Arg.Any<ReasoningEffort?>(),
+                Arg.Any<CancellationToken>()
+            );
+    }
+
+    [Fact]
+    public async Task Handle_WhenStreamThrows_ShouldYieldErrorEventWithoutPersisting()
+    {
+        // Arrange
+        var dbName = Guid.NewGuid().ToString();
+
+        _dbContextFactory
+            .CreateDbContextAsync(Arg.Any<CancellationToken>())
+            .Returns(_ => Task.FromResult(DbContextExtensions.Mock<HermesDbContext>(dbName)));
+
+        var conversationId = new Id<Conversation>(Guid.NewGuid().ToString());
+        var dbContext = DbContextExtensions.Mock<HermesDbContext>(dbName);
+        await dbContext.Conversations.AddAsync(CreateConversationWithMessages(conversationId));
+        await dbContext.SaveChangesAsync();
+
+        var command = CreateCommand(
+            conversationId: conversationId,
+            messages: [new("Hello", Role.User), new("Hi!", Role.Assistant)]
         );
+
+        _mlClient
+            .StreamResponseAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
+                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
+                Arg.Any<float?>(),
+                Arg.Any<int?>(),
+                Arg.Any<ReasoningEffort?>(),
+                Arg.Any<CancellationToken>()
+            )
+            .Returns(CreateFailingStream(["Partial "]));
+
+        // Act
+        var results = new List<CompactConversationResponse>();
+        await foreach (var chunk in _handler.Handle(command, CancellationToken.None))
+        {
+            results.Add(chunk);
+        }
+
+        // Assert
+        results
+            .Last()
+            .ShouldBeOfType<CompactErrorResponse>()
+            .Message.ShouldBe(CompactConversationHandler.CompactionFailedMessage);
+        results.ShouldNotContain(r => r is CompactCompleteResponse);
+
+        var checkContext = DbContextExtensions.Mock<HermesDbContext>(dbName);
+        (
+            await checkContext.Messages.AnyAsync(m => m.ConversationId == conversationId)
+        ).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Handle_WhenSummaryIsEmpty_ShouldYieldErrorEventWithoutPersisting()
+    {
+        // Arrange
+        var dbName = Guid.NewGuid().ToString();
+
+        _dbContextFactory
+            .CreateDbContextAsync(Arg.Any<CancellationToken>())
+            .Returns(_ => Task.FromResult(DbContextExtensions.Mock<HermesDbContext>(dbName)));
+
+        var conversationId = new Id<Conversation>(Guid.NewGuid().ToString());
+        var dbContext = DbContextExtensions.Mock<HermesDbContext>(dbName);
+        await dbContext.Conversations.AddAsync(CreateConversationWithMessages(conversationId));
+        await dbContext.SaveChangesAsync();
+
+        var command = CreateCommand(
+            conversationId: conversationId,
+            messages: [new("Hello", Role.User), new("Hi!", Role.Assistant)]
+        );
+
+        _mlClient
+            .StreamResponseAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
+                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
+                Arg.Any<float?>(),
+                Arg.Any<int?>(),
+                Arg.Any<ReasoningEffort?>(),
+                Arg.Any<CancellationToken>()
+            )
+            .Returns(
+                CreateStreamWithUsage(
+                    ["  "],
+                    new ChatCompletionUsage(InputTokens: 100, OutputTokens: 4096, TotalTokens: 4196)
+                )
+            );
+
+        // Act
+        var results = new List<CompactConversationResponse>();
+        await foreach (var chunk in _handler.Handle(command, CancellationToken.None))
+        {
+            results.Add(chunk);
+        }
+
+        // Assert
+        results
+            .Last()
+            .ShouldBeOfType<CompactErrorResponse>()
+            .Message.ShouldBe(CompactConversationHandler.CompactionFailedMessage);
+        results.ShouldNotContain(r => r is CompactCompleteResponse);
+        results.ShouldNotContain(r => r is CompactUsageChunkResponse);
+
+        var checkContext = DbContextExtensions.Mock<HermesDbContext>(dbName);
+        (
+            await checkContext.Messages.AnyAsync(m => m.ConversationId == conversationId)
+        ).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Handle_WhenUsageReported_ShouldRecordSummarySizeAsTokenUsage()
+    {
+        // Arrange
+        var dbName = Guid.NewGuid().ToString();
+
+        _dbContextFactory
+            .CreateDbContextAsync(Arg.Any<CancellationToken>())
+            .Returns(_ => Task.FromResult(DbContextExtensions.Mock<HermesDbContext>(dbName)));
+
+        var conversationId = new Id<Conversation>(Guid.NewGuid().ToString());
+        var dbContext = DbContextExtensions.Mock<HermesDbContext>(dbName);
+        await dbContext.Conversations.AddAsync(CreateConversationWithMessages(conversationId));
+        await dbContext.SaveChangesAsync();
+
+        var command = CreateCommand(
+            conversationId: conversationId,
+            messages: [new("Hello", Role.User), new("Hi!", Role.Assistant)]
+        );
+
+        _mlClient
+            .StreamResponseAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
+                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
+                Arg.Any<float?>(),
+                Arg.Any<int?>(),
+                Arg.Any<ReasoningEffort?>(),
+                Arg.Any<CancellationToken>()
+            )
+            .Returns(
+                CreateStreamWithUsage(
+                    ["Summary."],
+                    new ChatCompletionUsage(InputTokens: 9000, OutputTokens: 300, TotalTokens: 9300)
+                )
+            );
+
+        // Act
+        await foreach (var _ in _handler.Handle(command, CancellationToken.None)) { }
+
+        // Assert
+        var checkContext = DbContextExtensions.Mock<HermesDbContext>(dbName);
+        var conversation = await checkContext.Conversations.SingleAsync(c =>
+            c.Id == conversationId
+        );
+
+        conversation.InputTokenCount.ShouldBe(0);
+        conversation.OutputTokenCount.ShouldBe(300);
+        conversation.TotalTokenCount.ShouldBe(300);
     }
 
     [Fact]
@@ -442,7 +632,6 @@ public sealed class CompactConversationHandlerTests
         var command = new CompactConversationInput(
             null,
             "test-model",
-            "You are helpful.",
             "AssistantBot",
             "A friendly assistant",
             []
@@ -459,7 +648,8 @@ public sealed class CompactConversationHandlerTests
         var result = CompactConversationHandler.ComposeSummaryPrompt(
             command,
             messages,
-            HermesOptions.DefaultCompactionSummaryPrompt
+            HermesOptions.DefaultCompactionSummaryPrompt,
+            HermesOptions.DefaultCompactionMaxInputCharacters
         );
 
         // Assert
@@ -479,7 +669,6 @@ public sealed class CompactConversationHandlerTests
         var command = new CompactConversationInput(
             null,
             "test-model",
-            "You are helpful.",
             "CustomBot",
             "A custom persona",
             []
@@ -491,7 +680,8 @@ public sealed class CompactConversationHandlerTests
         var result = CompactConversationHandler.ComposeSummaryPrompt(
             command,
             messages,
-            customPrompt
+            customPrompt,
+            HermesOptions.DefaultCompactionMaxInputCharacters
         );
 
         // Assert
@@ -621,6 +811,146 @@ public sealed class CompactConversationHandlerTests
                 Arg.Any<float?>(),
                 Arg.Any<int?>(),
                 ReasoningEffort.Low,
+                Arg.Any<CancellationToken>()
+            );
+    }
+
+    [Fact]
+    public void ComposeSummaryPrompt_WhenHistoryExceedsBudget_ShouldKeepNewestMessagesWithinBudget()
+    {
+        // Arrange
+        var command = new CompactConversationInput(null, "test-model", "Bot", "A bot", []);
+
+        var messages = new List<CompactConversationMessageInput>
+        {
+            new("oldest-" + new string('a', 50), Role.User),
+            new("middle-" + new string('b', 50), Role.Assistant),
+            new("newest-" + new string('c', 50), Role.User),
+        };
+
+        // Act
+        var result = CompactConversationHandler.ComposeSummaryPrompt(
+            command,
+            messages,
+            "Template.",
+            150
+        );
+
+        // Assert
+        result.ShouldNotContain("oldest-");
+        result.ShouldContain("Bot: middle-");
+        result.ShouldContain("User: newest-");
+        result.ShouldContain("(Earlier messages omitted.)");
+        result
+            .IndexOf("middle-", StringComparison.Ordinal)
+            .ShouldBeLessThan(result.IndexOf("newest-", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void ComposeSummaryPrompt_WhenNewestMessageExceedsBudget_ShouldTruncateIt()
+    {
+        // Arrange
+        var command = new CompactConversationInput(null, "test-model", "Bot", "A bot", []);
+
+        var messages = new List<CompactConversationMessageInput>
+        {
+            new("older", Role.Assistant),
+            new(new string('x', 500), Role.User),
+        };
+
+        // Act
+        var result = CompactConversationHandler.ComposeSummaryPrompt(
+            command,
+            messages,
+            "Template.",
+            100
+        );
+
+        // Assert
+        var historyLine = result
+            .Split(Environment.NewLine)
+            .Single(line => line.StartsWith("User: ", StringComparison.Ordinal));
+        historyLine.Length.ShouldBe(100);
+        historyLine.ShouldEndWith("…");
+        result.ShouldNotContain("Bot: older");
+    }
+
+    [Fact]
+    public void ComposeSummaryPrompt_WhenHistoryFitsBudget_ShouldNotMarkOmission()
+    {
+        // Arrange
+        var command = new CompactConversationInput(null, "test-model", "Bot", "A bot", []);
+
+        var messages = new List<CompactConversationMessageInput> { new("Hello!", Role.User) };
+
+        // Act
+        var result = CompactConversationHandler.ComposeSummaryPrompt(
+            command,
+            messages,
+            "Template.",
+            HermesOptions.DefaultCompactionMaxInputCharacters
+        );
+
+        // Assert
+        result.ShouldContain("User: Hello!");
+        result.ShouldNotContain("(Earlier messages omitted.)");
+    }
+
+    [Fact]
+    public async Task Handle_WhenMaxInputCharactersConfigured_ShouldBoundThePrompt()
+    {
+        // Arrange
+        var customOptions = Options.Create(
+            new HermesOptions() with
+            {
+                CompactionMaxInputCharacters = 40,
+            }
+        );
+
+        var handler = new CompactConversationHandler(
+            _logger,
+            _mlClient,
+            _dbContextFactory,
+            customOptions
+        );
+
+        var command = CreateCommand(
+            messages:
+            [
+                new("ancient history " + new string('z', 100), Role.User),
+                new("recent", Role.Assistant),
+            ]
+        );
+
+        _mlClient
+            .StreamResponseAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
+                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
+                Arg.Any<float?>(),
+                Arg.Any<int?>(),
+                Arg.Any<ReasoningEffort?>(),
+                Arg.Any<CancellationToken>()
+            )
+            .Returns(CreateStream(["Summary."]));
+
+        // Act
+        await foreach (var _ in handler.Handle(command, CancellationToken.None)) { }
+
+        // Assert
+        _mlClient
+            .Received(1)
+            .StreamResponseAsync(
+                Arg.Any<string>(),
+                Arg.Is<string>(i =>
+                    i.Contains("TestBot: recent") && !i.Contains("ancient history")
+                ),
+                Arg.Any<IReadOnlyList<ResponseInputItemDto>>(),
+                Arg.Any<IReadOnlyList<FunctionToolDto>>(),
+                Arg.Any<float?>(),
+                Arg.Any<int?>(),
+                Arg.Any<ReasoningEffort?>(),
                 Arg.Any<CancellationToken>()
             );
     }
