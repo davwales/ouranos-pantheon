@@ -22,8 +22,21 @@ public static class FlagsmithModule
                     {
                         ApiUri = new Uri(opts.ApiUrl),
                         EnvironmentKey = opts.EnvironmentKey,
+                        CacheConfig = new CacheConfig(true)
+                        {
+                            DurationInMinutes = opts.CacheDurationMinutes,
+                        },
+                        RequestTimeout = opts.RequestTimeoutSeconds,
+                        Retries = opts.Retries,
+                        DefaultFlagHandler = featureName => CreateDefaultFlag(opts, featureName),
                     }
                 );
             });
+    }
+
+    private static Flag CreateDefaultFlag(FlagsmithOptions options, string featureName)
+    {
+        var isEnabled = options.DefaultFlags.TryGetValue(featureName, out var enabled) && enabled;
+        return new Flag(new Feature(featureName), isEnabled, string.Empty);
     }
 }

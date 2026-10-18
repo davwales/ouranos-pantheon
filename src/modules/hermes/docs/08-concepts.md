@@ -7,6 +7,9 @@ Hermes reads the Flagsmith flag `hermes.public_mode` through `IFlagsmithClient`
 the read handlers (conversations, folders, personas, traits, models) return only entities
 whose `IsPublic` is set and treat the others as not found. Writes, completion and compaction
 are not gated, so public mode limits what is listed, not what can be done.
+Public mode fails closed: the gateway's base `appsettings.json` lists `hermes.public_mode` as
+enabled under `Ouranos:Flagsmith:DefaultFlags`, so while Flagsmith is unreachable reads are
+limited to public entities instead of failing.
 
 ## 8.2 Reply Parts and History Replay
 

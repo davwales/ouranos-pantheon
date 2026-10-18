@@ -36,7 +36,7 @@ public sealed class GetFolderHandler(
 
         Guard.Against.NotFound(query.FolderId, folder);
 
-        var flags = await flagsmith.GetEnvironmentFlags();
+        var flags = await _flagsmith.GetEnvironmentFlags();
         var isPublicMode = await flags.IsFeatureEnabled(HermesFeatureFlags.PublicMode);
 
         if (isPublicMode && !folder.IsPublic)

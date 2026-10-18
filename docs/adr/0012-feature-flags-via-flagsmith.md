@@ -43,7 +43,9 @@ unauthenticated viewer can see.
 - Demo exposure can be switched on and off in seconds from the Flagsmith UI
 - Entities carry an explicit `IsPublic` decision, which documents intent per record
 - Hermes reads depend on one more runtime service; with no `Ouranos:Flagsmith:ApiUrl`
-  configured, the client cannot be constructed and those reads fail
+  configured, the client cannot be constructed and those reads fail. An unreachable
+  Flagsmith no longer fails them: flags are cached and fall back to configured defaults
+  ([§8.9](../architecture/08-crosscutting-concepts.md#89-feature-flags-and-configuration))
 - The filter is only as complete as the handlers that check the flag. Write endpoints,
   completion, and compaction are not gated, so public mode limits what is listed, not
   what can be done
