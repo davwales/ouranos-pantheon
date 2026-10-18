@@ -192,7 +192,6 @@ export interface SavedConversation {
 export interface CompactConversationInput {
   conversationId?: string;
   modelIdentifier: string;
-  systemPrompt: string;
   personaName: string;
   personaDescription: string;
   messages: MessageInput[];
@@ -209,7 +208,8 @@ export type CompactChunk =
   | {
       $type: "complete";
       summaryMessageId: string | null;
-    };
+    }
+  | { $type: "error"; message: string };
 
 export interface CreateConversationInput {
   personaId: string;

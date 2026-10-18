@@ -69,8 +69,10 @@ when `messages` is supplied, so metadata updates leave turns persisted by comple
 ## Configuration
 
 `Ouranos:Hermes` (`HermesOptions`): conversation-naming prompt, model and reasoning effort,
-and the compaction prompt, temperature, max tokens and reasoning effort. Conversation naming
-is off unless both the prompt and the model are set.
+and the compaction prompt, temperature, max tokens and reasoning effort.
+`CompactionMaxInputCharacters` (default 32000; zero or negative uses the default) bounds the
+conversation history sent for compaction. Conversation naming is off unless both the prompt
+and the model are set.
 
 `Ouranos:Hermes:ImageGeneration` (`HermesImageGenerationOptions`): `IsEnabled` (default
 true), `Model` (null uses OuranosMl's default image model), `UnsavedRetention` (default
