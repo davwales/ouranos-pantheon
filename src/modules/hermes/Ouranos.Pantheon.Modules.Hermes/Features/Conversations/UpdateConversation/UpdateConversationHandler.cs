@@ -38,7 +38,6 @@ public sealed class UpdateConversationHandler
         _logger.LogTrace("Attempting to handle update conversation command '{@command}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
-        Guard.Against.Null(command.Messages, nameof(command.Messages));
         Guard.Against.Null(command.TraitIds, nameof(command.TraitIds));
 
         var conversation = await _dbContext
@@ -69,7 +68,7 @@ public sealed class UpdateConversationHandler
                 .ToListAsync(cancellationToken)
             : [];
 
-        var newMessages = command.Messages.Select(
+        var newMessages = command.Messages?.Select(
             (m, index) =>
                 Message.Create(
                     DatabaseExtensions.CreateId<Message>(),

@@ -134,7 +134,6 @@ export default function ResumeConversationPage() {
           .filter((t) => t.id && !t.isEphemeral)
           .map((t) => t.id!),
         loraIds: resolvedLoraIds,
-        messages: saved.messages,
         isPublic: isPublic ?? saved.isPublic,
         folderId: targetFolderId,
         reasoningEffort: resolvedReasoningEffort,
@@ -206,6 +205,7 @@ export default function ResumeConversationPage() {
         conversationId={savedConversationId}
         conversationName={conversationName ?? saved.name}
         conversationIsPublic={isPublic ?? saved.isPublic}
+        conversationFolderId={resolvedFolderId}
         onConversationSaved={(id, name) => {
           setSavedConversationId(id);
           setConversationName(name);
@@ -219,8 +219,8 @@ export default function ResumeConversationPage() {
               .filter((t) => t.id && !t.isEphemeral)
               .map((t) => t.id!),
             loraIds: resolvedLoraIds,
-            messages: saved.messages,
             isPublic: isPublic ?? saved.isPublic,
+            folderId: resolvedFolderId,
             reasoningEffort: resolvedReasoningEffort,
           });
           setConversationName(name);
@@ -238,8 +238,8 @@ export default function ResumeConversationPage() {
               .filter((t) => t.id && !t.isEphemeral)
               .map((t) => t.id!),
             loraIds: resolvedLoraIds,
-            messages: saved.messages,
             isPublic: value,
+            folderId: resolvedFolderId,
             reasoningEffort: resolvedReasoningEffort,
           });
           setIsPublic(value);

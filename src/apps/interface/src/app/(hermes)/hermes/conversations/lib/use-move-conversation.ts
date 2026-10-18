@@ -3,7 +3,6 @@
 import { useCallback } from "react";
 
 import { hermesApi } from "@/lib/api/hermes";
-import type { MessageInput } from "@/lib/api/hermes-types";
 
 export function useMoveConversation({
   onSuccess,
@@ -18,14 +17,7 @@ export function useMoveConversation({
         personaId: conversation.persona.id,
         modelConfigId: conversation.model.id,
         traitIds: conversation.traits.map((t) => t.id),
-        messages: conversation.messages.map(
-          (m): MessageInput => ({
-            role: m.role,
-            content: m.content,
-            sortOrder: m.sortOrder,
-            parts: m.parts,
-          }),
-        ),
+        loraIds: conversation.loras.map((l) => l.id),
         isPublic: conversation.isPublic,
         folderId,
         reasoningEffort: conversation.reasoningEffort,

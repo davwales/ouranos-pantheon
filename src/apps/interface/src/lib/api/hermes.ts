@@ -25,6 +25,7 @@ export type {
   CompactConversationInput,
   CompactChunk,
   CreateConversationInput,
+  UpdateConversationInput,
   CompletionChunk,
   Trait,
   Lora,
@@ -45,6 +46,7 @@ import type {
   ConversationSummary,
   SavedConversation,
   CreateConversationInput,
+  UpdateConversationInput,
   CompactConversationInput,
   Trait,
   Lora,
@@ -157,20 +159,8 @@ export const hermesApi = {
   createConversation: (input: CreateConversationInput) =>
     api.post<{ id: string; name: string }>("/api/hermes/conversations", input),
 
-  updateConversation: (
-    id: string,
-    input: {
-      name: string;
-      personaId: string;
-      modelConfigId: string;
-      traitIds: string[];
-      messages: MessageInput[];
-      isPublic: boolean;
-      folderId?: string | null;
-      reasoningEffort?: ReasoningEffort | null;
-      loraIds?: string[];
-    },
-  ) => api.put<{ id: string }>(`/api/hermes/conversations/${id}`, input),
+  updateConversation: (id: string, input: UpdateConversationInput) =>
+    api.put<{ id: string }>(`/api/hermes/conversations/${id}`, input),
 
   deleteConversation: (id: string) =>
     api.del<{ id: string }>(`/api/hermes/conversations/${id}`),

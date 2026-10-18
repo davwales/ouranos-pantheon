@@ -9,12 +9,14 @@ import {
   TraitFormInput,
 } from "@/app/(hermes)/hermes/types";
 import { hermesApi, type ReasoningEffort } from "@/lib/api/hermes";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ChatMessageSkeleton } from "@/components/shared/skeletons/chat-message-skeleton";
 
 type ConversationState = "loading" | "setup" | "chat";
 
 export default function Conversation() {
+  const router = useRouter();
   const [persona, setPersona] = useState<PersonaFormInput>();
   const [model, setModel] = useState<ModelFormInput>();
   const [activeTraits, setActiveTraits] = useState<TraitFormInput[]>([]);
@@ -86,9 +88,11 @@ export default function Conversation() {
         onLorasChange={setActiveLoras}
         onReasoningEffortChange={setReasoningEffort}
         conversationId={conversationId}
+        conversationName={conversationName}
         onConversationSaved={(id, name) => {
           setConversationId(id);
           setConversationName(name);
+          router.replace(`/hermes/conversations/${id}`);
         }}
       />
     );
