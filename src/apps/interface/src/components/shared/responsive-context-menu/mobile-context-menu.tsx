@@ -14,6 +14,10 @@ export function MobileContextMenu({
     const [open, setOpen] = useState<boolean>(false);
 
     const handleOpenChange = (updatedOpen: boolean) => {
+        if (updatedOpen && disabled) {
+            return;
+        }
+
         setOpen(updatedOpen);
 
         if (onOpenChange) {
@@ -28,8 +32,15 @@ export function MobileContextMenu({
 
     return (
         <Drawer open={open} onOpenChange={handleOpenChange} {...props}>
-            <DrawerTrigger disabled={disabled} className="w-full">
-                {children}
+            <DrawerTrigger asChild>
+                <div
+                    role="button"
+                    tabIndex={disabled ? -1 : 0}
+                    aria-disabled={disabled}
+                    className="w-full"
+                >
+                    {children}
+                </div>
             </DrawerTrigger>
             <DrawerContent>
                 <div className="m-4">

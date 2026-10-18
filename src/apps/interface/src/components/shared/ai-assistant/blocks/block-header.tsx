@@ -3,8 +3,8 @@
 import { cn } from "@/lib/utils";
 import { ChevronRight } from "lucide-react";
 
-// A div rather than a button: Hermes wraps whole messages in a button-based context-menu
-// trigger on mobile, and nested buttons are invalid. Events stop here so toggling a block never
+// A div rather than a button: Hermes wraps whole messages in a context-menu trigger on mobile,
+// and nested interactive elements are invalid. Events stop here so toggling a block never
 // opens that menu.
 export function BlockHeader({
   open,
