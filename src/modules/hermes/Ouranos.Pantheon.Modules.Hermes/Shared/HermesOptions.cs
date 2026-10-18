@@ -10,7 +10,8 @@ public sealed record HermesOptions(
     float CompactionTemperature,
     int CompactionMaxTokens,
     ReasoningEffort? CompactionReasoningEffort,
-    HermesImageGenerationOptions ImageGeneration
+    HermesImageGenerationOptions ImageGeneration,
+    int CompactionMaxInputCharacters = HermesOptions.DefaultCompactionMaxInputCharacters
 )
 {
     public const string SectionName = "Ouranos:Hermes";
@@ -46,6 +47,8 @@ public sealed record HermesOptions(
 
     public const int DefaultCompactionMaxTokens = 4096;
 
+    public const int DefaultCompactionMaxInputCharacters = 32000;
+
     public HermesOptions()
         : this(
             ConversationNameSystemPrompt: """
@@ -58,7 +61,8 @@ public sealed record HermesOptions(
             CompactionTemperature: DefaultCompactionTemperature,
             CompactionMaxTokens: DefaultCompactionMaxTokens,
             CompactionReasoningEffort: ReasoningEffort.Low,
-            ImageGeneration: new HermesImageGenerationOptions()
+            ImageGeneration: new HermesImageGenerationOptions(),
+            CompactionMaxInputCharacters: DefaultCompactionMaxInputCharacters
         ) { }
 
     public bool IsConversationNameGenerationEnabled =
@@ -77,4 +81,9 @@ public sealed record HermesOptions(
 
     public int EffectiveCompactionMaxTokens =>
         CompactionMaxTokens <= 0 ? DefaultCompactionMaxTokens : CompactionMaxTokens;
+
+    public int EffectiveCompactionMaxInputCharacters =>
+        CompactionMaxInputCharacters <= 0
+            ? DefaultCompactionMaxInputCharacters
+            : CompactionMaxInputCharacters;
 }

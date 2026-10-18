@@ -302,12 +302,19 @@ export function useMessageController(params: {
     };
     setMessages((prev) => [...prev, summaryMessage]);
 
+    const failCompaction = (message: string) => {
+      setMessages((prev) =>
+        prev.at(-1)?.role === Role.Summary ? prev.slice(0, -1) : prev,
+      );
+      setCompactionError(message);
+      setIsCompacting(false);
+    };
+
     await startStream({
       generator: () =>
         streamCompact({
           ...(conversationId ? { conversationId } : {}),
           modelIdentifier: model.modelIdentifier,
-          systemPrompt: model.systemPrompt,
           personaName: persona.name,
           personaDescription: persona.description,
           messages: messagesToCompact,
@@ -335,11 +342,13 @@ export function useMessageController(params: {
         onComplete: () => {
           setIsCompacting(false);
         },
+        onErrorMessage: (message) => {
+          failCompaction(message);
+        },
       },
       onError: (error) => {
         console.error("Error compacting conversation:", error);
-        setCompactionError("Compaction failed. Please try again.");
-        setIsCompacting(false);
+        failCompaction("Compaction failed. Please try again.");
       },
     });
   }, [

@@ -36,14 +36,51 @@ sequenceDiagram
 
 The server is stateless with respect to chat history: the client sends the whole
 conversation on every request, and the handler persists only the newest turn. A reply that
-ends without text is reported as an `error` event and nothing is persisted. Compaction
-streams its own `content`/`usage`/`complete` events, ignores the model's reasoning and
-stores its result as one `Summary`-role message.
+ends without text is reported as an `error` event and nothing is persisted.
+
+## 6.2 Conversation Compaction
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant UI as Interface
+    participant H as CompactConversationHandler
+    participant ML as OuranosMl (Responses)
+    participant DB as Postgres (schema hermes)
+
+    UI ->> H: conversation messages, persona, model
+    alt no user or assistant messages since the last summary
+        H -->> UI: error event ("Nothing to compact.")
+    else
+        H ->> H: keep the newest messages within CompactionMaxInputCharacters
+        H ->> ML: POST /responses (stream, no tools)
+        ML -->> H: reasoning (ignored), text
+        H -->> UI: content events
+        alt stream fails or summary is empty
+            H -->> UI: error event
+        else
+            opt conversation provided
+                H ->> DB: insert Summary message, record summary size as token usage
+            end
+            H -->> UI: usage event, then complete
+        end
+    end
+```
+
+Compaction summarizes the user and assistant messages since the last summary and stores
+the result as one `Summary`-role message. The summary prompt is bounded: the newest messages
+that fit `CompactionMaxInputCharacters` are kept, older ones are dropped with a note to the
+model, and a single newest message that exceeds the budget on its own is truncated. Every
+failure (nothing to compact, a stream error, or a summary that comes back empty because
+reasoning used up the output budget) ends the stream with an `error` event and saves nothing;
+the Interface shows the message and removes the placeholder summary. After a successful
+compaction the conversation's token usage is the summary's size, because the summary is the
+whole context the next turn starts from.
 
 The Interface folds the events into the shared assistant turn UI. Saved replies render from
 their parts; older messages without parts fall back to `<think>` tag parsing.
 
-## 6.2 Image Generation
+## 6.3 Image Generation
 
 ```mermaid
 sequenceDiagram
