@@ -1,4 +1,5 @@
 using Ardalis.GuardClauses;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
@@ -23,7 +24,7 @@ public class ModelConfig : BaseEntity<Id<ModelConfig>>
 
     public int? MaxTokens { get; private set; }
 
-    public bool IsToolCallingEnabled { get; private set; }
+    public Id<ToolSet>? DefaultToolSetId { get; private set; }
 
     public int? ContextWindow { get; private set; }
 
@@ -40,7 +41,7 @@ public class ModelConfig : BaseEntity<Id<ModelConfig>>
         string systemPrompt,
         float? temperature = null,
         int? maxTokens = null,
-        bool isToolCallingEnabled = false,
+        Id<ToolSet>? defaultToolSetId = null,
         int? contextWindow = null,
         bool isDefault = false,
         bool isPublic = true
@@ -57,7 +58,7 @@ public class ModelConfig : BaseEntity<Id<ModelConfig>>
             SystemPrompt = systemPrompt,
             Temperature = temperature,
             MaxTokens = maxTokens,
-            IsToolCallingEnabled = isToolCallingEnabled,
+            DefaultToolSetId = defaultToolSetId,
             ContextWindow = contextWindow,
             IsDefault = isDefault,
             IsPublic = isPublic,
@@ -71,7 +72,7 @@ public class ModelConfig : BaseEntity<Id<ModelConfig>>
         string systemPrompt,
         float? temperature = null,
         int? maxTokens = null,
-        bool isToolCallingEnabled = false,
+        Id<ToolSet>? defaultToolSetId = null,
         int? contextWindow = null,
         bool isDefault = false,
         bool isPublic = true
@@ -86,7 +87,7 @@ public class ModelConfig : BaseEntity<Id<ModelConfig>>
         SystemPrompt = systemPrompt;
         Temperature = temperature;
         MaxTokens = maxTokens;
-        IsToolCallingEnabled = isToolCallingEnabled;
+        DefaultToolSetId = defaultToolSetId;
         ContextWindow = contextWindow;
         IsDefault = isDefault;
         IsPublic = isPublic;

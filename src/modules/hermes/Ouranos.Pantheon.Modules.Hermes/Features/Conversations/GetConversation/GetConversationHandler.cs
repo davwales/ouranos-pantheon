@@ -71,6 +71,7 @@ public sealed class GetConversationHandler(
             conversation.IsPublic,
             conversation.FolderId,
             conversation.ReasoningEffort,
+            conversation.ToolSetId,
             new GetConversationPersonaResponse(
                 conversation.Persona.Id,
                 conversation.Persona.Name,
@@ -85,7 +86,7 @@ public sealed class GetConversationHandler(
                 conversation.ModelConfig.SystemPrompt,
                 conversation.ModelConfig.Temperature,
                 conversation.ModelConfig.MaxTokens,
-                conversation.ModelConfig.IsToolCallingEnabled,
+                conversation.ModelConfig.DefaultToolSetId,
                 conversation.ModelConfig.ContextWindow
             ),
             [

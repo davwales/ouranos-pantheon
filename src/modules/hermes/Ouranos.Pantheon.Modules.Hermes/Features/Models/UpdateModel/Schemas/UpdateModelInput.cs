@@ -1,4 +1,5 @@
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Models.UpdateModel.Schemas;
@@ -10,7 +11,7 @@ public sealed record UpdateModelInput(
     string SystemPrompt,
     float? Temperature = null,
     int? MaxTokens = null,
-    bool IsToolCallingEnabled = false,
+    Id<ToolSet>? DefaultToolSetId = null,
     int? ContextWindow = null,
     bool IsDefault = false,
     bool IsPublic = true

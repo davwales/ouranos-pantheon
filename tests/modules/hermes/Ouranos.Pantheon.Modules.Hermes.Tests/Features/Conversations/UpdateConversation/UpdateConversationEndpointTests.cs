@@ -4,8 +4,10 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.UpdateConversation.
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
 using Wolverine;
 
@@ -27,7 +29,8 @@ public sealed class UpdateConversationEndpointTests
             new Id<ModelConfig>(Guid.NewGuid().ToString()),
             [],
             true,
-            ReasoningEffort: ReasoningEffort.Low
+            ReasoningEffort: ReasoningEffort.Low,
+            ToolSetId: DatabaseExtensions.CreateId<ToolSet>()
         );
         var expectedInput = new UpdateConversationInput(
             conversationId,
@@ -59,6 +62,7 @@ public sealed class UpdateConversationEndpointTests
                     && i.Messages == body.Messages
                     && i.IsPublic == body.IsPublic
                     && i.ReasoningEffort == body.ReasoningEffort
+                    && i.ToolSetId == body.ToolSetId
                 ),
                 ct
             );

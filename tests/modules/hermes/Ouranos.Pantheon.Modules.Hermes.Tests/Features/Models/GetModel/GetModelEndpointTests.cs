@@ -25,7 +25,7 @@ public sealed class GetModelEndpointTests
             "You are helpful.",
             null,
             null,
-            false,
+            null,
             null,
             false,
             true,

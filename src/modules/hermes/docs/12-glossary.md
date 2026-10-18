@@ -6,7 +6,7 @@ the [platform glossary](../../../../docs/architecture/12-glossary.md).
 | Term | Definition |
 |------|------------|
 | **Persona** | A reusable assistant personality (name, description, personality, scenario) selected when a conversation is created |
-| **Model config** | A named configuration of an available model (system prompt, sampling settings and tool calling); marked unavailable when the model disappears from OuranosMl |
+| **Model config** | A named configuration of an available model (system prompt, sampling settings and default tool set); marked unavailable when the model disappears from OuranosMl |
 | **Trait** | A named, reusable system-prompt fragment attached to a conversation and merged with the persona and model config when the system prompt is built |
 | **Conversation** | A chat thread with an LLM using one persona and model config at a chosen reasoning effort; tracks token usage and may sit in a folder |
 | **Message** | An individual message within a conversation (system, user, assistant or summary role) |
@@ -14,7 +14,7 @@ the [platform glossary](../../../../docs/architecture/12-glossary.md).
 | **Tool set** | A named collection of enabled tools, each with optional additional description appended to the tool's own, plus optional instructions appended to the system prompt when its tools are offered |
 | **Tool source** | Where a tool set's tools come from (`ToolSource`); only `Native` exists today |
 | **Native tool** | A tool implemented in Hermes itself and registered in code (today only `generate_image`), as opposed to tools from external sources such as MCP servers |
-| **Tool calling** | A model config setting that lets the chat model call registered tools during a reply |
+| **Active tool set** | The one tool set a conversation currently offers the model (or none); starts as the model config's default tool set and can be switched mid-chat |
 | **Generated image** | An image the chat model drew with the `generate_image` tool, stored in `generated_images` and kept only while a saved conversation references it |
 | **Image part** | The message part that places a generated image in a reply |
 | **LoRA** | A user-registered SwarmUI LoRA (identifier and weight) that a conversation can switch on; its tag is appended to every image prompt in that conversation |

@@ -38,9 +38,9 @@ export function useMessageController(params: {
     systemPrompt: string;
     temperature?: number | null;
     maxTokens?: number | null;
-    isToolCallingEnabled: boolean;
   };
   reasoningEffort: ReasoningEffort | null;
+  toolSetId: string | null;
   persona: {
     name: string;
     description: string;
@@ -74,6 +74,7 @@ export function useMessageController(params: {
     initialTokenUsage,
     model,
     reasoningEffort,
+    toolSetId,
     persona,
     activeTraits,
     activeLoras,
@@ -138,7 +139,6 @@ export function useMessageController(params: {
                 systemPrompt: model.systemPrompt,
                 temperature: model.temperature,
                 maxTokens: model.maxTokens,
-                isToolCallingEnabled: model.isToolCallingEnabled,
               },
               persona: {
                 name: persona.name,
@@ -162,6 +162,7 @@ export function useMessageController(params: {
                 identifier: l.identifier,
                 weight: l.weight,
               })),
+              toolSetId,
             },
             ...(conversationId ? { conversationId } : {}),
           },
@@ -225,6 +226,7 @@ export function useMessageController(params: {
       getMessagesForLlm,
       model,
       reasoningEffort,
+      toolSetId,
       persona,
       activeTraits,
       activeLoras,

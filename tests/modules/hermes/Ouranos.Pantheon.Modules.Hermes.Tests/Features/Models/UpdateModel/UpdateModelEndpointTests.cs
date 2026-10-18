@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.UpdateModel;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.UpdateModel.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.Models.UpdateModel;
@@ -17,13 +19,19 @@ public sealed class UpdateModelEndpointTests
         // Arrange
         var ct = CancellationToken.None;
         var modelId = new Id<ModelConfig>(Guid.NewGuid().ToString());
-        var body = new UpdateModelBody("GPT-4", "gpt-4", "You are helpful.");
+        var body = new UpdateModelBody(
+            "GPT-4",
+            "gpt-4",
+            "You are helpful.",
+            DefaultToolSetId: DatabaseExtensions.CreateId<ToolSet>()
+        );
         var expected = new UpdateModelResponse(modelId);
         var expectedInput = new UpdateModelInput(
             modelId,
             body.Name,
             body.ModelIdentifier,
-            body.SystemPrompt
+            body.SystemPrompt,
+            DefaultToolSetId: body.DefaultToolSetId
         );
 
         _bus.InvokeAsync<UpdateModelResponse>(Arg.Any<object>(), Arg.Any<CancellationToken>())

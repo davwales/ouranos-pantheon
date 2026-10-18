@@ -33,7 +33,8 @@ public static class UpdateConversationEndpoint
             body.Messages,
             body.FolderId,
             body.ReasoningEffort,
-            body.LoraIds
+            body.LoraIds,
+            body.ToolSetId
         );
         return Results.Ok(await bus.InvokeAsync<IdResponse<Conversation>>(input, ct));
     }

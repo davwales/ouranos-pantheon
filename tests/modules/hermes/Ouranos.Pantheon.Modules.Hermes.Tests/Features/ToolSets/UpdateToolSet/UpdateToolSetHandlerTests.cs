@@ -7,7 +7,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.ToolSets.UpdateToolSet;
 using Ouranos.Pantheon.Modules.Hermes.Features.ToolSets.UpdateToolSet.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
-using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
 
@@ -143,10 +143,7 @@ public sealed class UpdateToolSetHandlerTests
     public async Task Handle_WhenToolSetNotFound_ShouldThrowNotFoundException()
     {
         // Arrange
-        var command = new UpdateToolSetInput(
-            new Id<ToolSet>(Guid.NewGuid().ToString()),
-            "Research"
-        );
+        var command = new UpdateToolSetInput(DatabaseExtensions.CreateId<ToolSet>(), "Research");
 
         // Act
         var handle = async () => await _handler.Handle(command, CancellationToken.None);
@@ -159,10 +156,7 @@ public sealed class UpdateToolSetHandlerTests
     public async Task Handle_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange
-        var command = new UpdateToolSetInput(
-            new Id<ToolSet>(Guid.NewGuid().ToString()),
-            "Research"
-        );
+        var command = new UpdateToolSetInput(DatabaseExtensions.CreateId<ToolSet>(), "Research");
         var cancellationToken = new CancellationToken(true);
 
         // Act
@@ -176,7 +170,7 @@ public sealed class UpdateToolSetHandlerTests
         params (string Name, string? AdditionalDescription)[] tools
     )
     {
-        var id = new Id<ToolSet>(Guid.NewGuid().ToString());
+        var id = DatabaseExtensions.CreateId<ToolSet>();
 
         var toolSet = ToolSet.Create(
             id,
@@ -185,7 +179,7 @@ public sealed class UpdateToolSetHandlerTests
             "Instr",
             tools.Select(t =>
                 ToolSetTool.Create(
-                    new Id<ToolSetTool>(Guid.NewGuid().ToString()),
+                    DatabaseExtensions.CreateId<ToolSetTool>(),
                     id,
                     ToolSource.Native,
                     t.Name,

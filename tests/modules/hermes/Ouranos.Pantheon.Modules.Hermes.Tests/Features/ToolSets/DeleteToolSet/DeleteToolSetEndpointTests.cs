@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Ouranos.Pantheon.Modules.Hermes.Features.ToolSets.DeleteToolSet;
 using Ouranos.Pantheon.Modules.Hermes.Features.ToolSets.DeleteToolSet.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
-using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.ToolSets.DeleteToolSet;
@@ -16,7 +16,7 @@ public sealed class DeleteToolSetEndpointTests
     {
         // Arrange
         var ct = CancellationToken.None;
-        var toolSetId = new Id<ToolSet>(Guid.NewGuid().ToString());
+        var toolSetId = DatabaseExtensions.CreateId<ToolSet>();
         var expected = new DeleteToolSetResponse(toolSetId);
 
         _bus.InvokeAsync<DeleteToolSetResponse>(Arg.Any<object>(), Arg.Any<CancellationToken>())

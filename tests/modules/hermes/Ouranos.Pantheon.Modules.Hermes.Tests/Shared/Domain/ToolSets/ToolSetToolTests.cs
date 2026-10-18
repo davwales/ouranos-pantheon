@@ -1,5 +1,6 @@
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Tests.Shared.Domain.ToolSets;
 
@@ -11,7 +12,7 @@ public sealed class ToolSetToolTests
     public void Create_WhenHappyPath_ShouldSetExpectedProperties()
     {
         // Arrange
-        var id = new Id<ToolSetTool>(Guid.NewGuid().ToString());
+        var id = DatabaseExtensions.CreateId<ToolSetTool>();
 
         // Act
         var tool = ToolSetTool.Create(id, _toolSetId, ToolSource.Native, "echo", "Be brief.");
@@ -28,7 +29,7 @@ public sealed class ToolSetToolTests
     public void Create_WhenValuesPadded_ShouldTrimThem()
     {
         // Arrange
-        var id = new Id<ToolSetTool>(Guid.NewGuid().ToString());
+        var id = DatabaseExtensions.CreateId<ToolSetTool>();
 
         // Act
         var tool = ToolSetTool.Create(
@@ -51,7 +52,7 @@ public sealed class ToolSetToolTests
     public void Create_WhenAdditionalDescriptionBlank_ShouldStoreNull(string? additionalDescription)
     {
         // Arrange
-        var id = new Id<ToolSetTool>(Guid.NewGuid().ToString());
+        var id = DatabaseExtensions.CreateId<ToolSetTool>();
 
         // Act
         var tool = ToolSetTool.Create(
@@ -70,7 +71,7 @@ public sealed class ToolSetToolTests
     public void Create_WhenAdditionalDescriptionAtMaxLength_ShouldSucceed()
     {
         // Arrange
-        var id = new Id<ToolSetTool>(Guid.NewGuid().ToString());
+        var id = DatabaseExtensions.CreateId<ToolSetTool>();
         var additionalDescription = new string('a', ToolSetTool.MaxAdditionalDescriptionLength);
 
         // Act
@@ -90,7 +91,7 @@ public sealed class ToolSetToolTests
     public void Create_WhenAdditionalDescriptionTooLong_ShouldThrowArgumentException()
     {
         // Arrange
-        var id = new Id<ToolSetTool>(Guid.NewGuid().ToString());
+        var id = DatabaseExtensions.CreateId<ToolSetTool>();
         var additionalDescription = new string('a', ToolSetTool.MaxAdditionalDescriptionLength + 1);
 
         // Act
@@ -108,7 +109,7 @@ public sealed class ToolSetToolTests
     public void Create_WhenInvalidName_ShouldThrowArgumentException(string? name)
     {
         // Arrange
-        var id = new Id<ToolSetTool>(Guid.NewGuid().ToString());
+        var id = DatabaseExtensions.CreateId<ToolSetTool>();
 
         // Act
         var create = () => ToolSetTool.Create(id, _toolSetId, ToolSource.Native, name!);
@@ -121,7 +122,7 @@ public sealed class ToolSetToolTests
     public void Create_WhenSourceOutOfRange_ShouldThrowArgumentException()
     {
         // Arrange
-        var id = new Id<ToolSetTool>(Guid.NewGuid().ToString());
+        var id = DatabaseExtensions.CreateId<ToolSetTool>();
 
         // Act
         var create = () => ToolSetTool.Create(id, _toolSetId, (ToolSource)999, "echo");
@@ -217,7 +218,7 @@ public sealed class ToolSetToolTests
     private ToolSetTool CreateTool(string name, string? additionalDescription = null)
     {
         return ToolSetTool.Create(
-            new Id<ToolSetTool>(Guid.NewGuid().ToString()),
+            DatabaseExtensions.CreateId<ToolSetTool>(),
             _toolSetId,
             ToolSource.Native,
             name,

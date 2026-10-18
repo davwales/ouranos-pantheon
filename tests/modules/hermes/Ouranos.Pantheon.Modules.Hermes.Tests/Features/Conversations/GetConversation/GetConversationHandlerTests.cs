@@ -11,8 +11,10 @@ using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Loras;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
@@ -435,6 +437,9 @@ public sealed class GetConversationHandlerTests
     public async Task Handle_WhenConversationHasAllFields_ShouldReturnResponseWithAllProperties()
     {
         // Arrange
+        var defaultToolSetId = DatabaseExtensions.CreateId<ToolSet>();
+        var toolSetId = DatabaseExtensions.CreateId<ToolSet>();
+
         var persona = Persona.Create(
             new Id<Persona>(Guid.NewGuid().ToString()),
             _fixture.Create<string>(),
@@ -442,6 +447,7 @@ public sealed class GetConversationHandlerTests
             personality: "Friendly",
             scenario: "In a chat"
         );
+
         var modelConfig = ModelConfig.Create(
             new Id<ModelConfig>(Guid.NewGuid().ToString()),
             _fixture.Create<string>(),
@@ -449,8 +455,9 @@ public sealed class GetConversationHandlerTests
             _fixture.Create<string>(),
             temperature: 0.7f,
             maxTokens: 512,
-            isToolCallingEnabled: true
+            defaultToolSetId: defaultToolSetId
         );
+
         var conversation = Conversation.Create(
             new Id<Conversation>(Guid.NewGuid().ToString()),
             persona.Id,
@@ -458,7 +465,8 @@ public sealed class GetConversationHandlerTests
             [],
             [],
             _fixture.Create<string>(),
-            reasoningEffort: ReasoningEffort.High
+            reasoningEffort: ReasoningEffort.High,
+            toolSetId: toolSetId
         );
 
         await _dbContext.SeedData(persona);
@@ -478,6 +486,7 @@ public sealed class GetConversationHandlerTests
         result.Model.Temperature.ShouldBe(0.7f);
         result.Model.MaxTokens.ShouldBe(512);
         result.ReasoningEffort.ShouldBe(ReasoningEffort.High);
-        result.Model.IsToolCallingEnabled.ShouldBeTrue();
+        result.Model.DefaultToolSetId.ShouldBe(defaultToolSetId);
+        result.ToolSetId.ShouldBe(toolSetId);
     }
 }

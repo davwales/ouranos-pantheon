@@ -23,12 +23,21 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useApi } from "@/hooks/use-api";
-import { hermesApi, type ReasoningEffort } from "@/lib/api/hermes";
+import {
+  hermesApi,
+  type ReasoningEffort,
+  type ToolSetSummary,
+} from "@/lib/api/hermes";
 import { generateID } from "@/lib/utils";
 import { ChevronDown, Minimize2, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { SystemPromptView } from "@/app/(hermes)/hermes/components/system-prompt-view";
 import { ReasoningEffortSelect } from "@/app/(hermes)/hermes/components/reasoning-effort-select";
+import {
+  GENERATE_IMAGE_TOOL,
+  toolSetEnables,
+} from "@/app/(hermes)/hermes/components/tool-set-constants";
+import { ToolSetSelect } from "@/app/(hermes)/hermes/components/tool-set-select";
 
 export function ConversationConfigSheet({
   open,
@@ -38,11 +47,13 @@ export function ConversationConfigSheet({
   activeTraits,
   activeLoras,
   reasoningEffort,
+  toolSetId,
   onPersonaChange,
   onModelChange,
   onTraitsChange,
   onLorasChange,
   onReasoningEffortChange,
+  onToolSetChange,
   conversationName,
   conversationIsPublic,
   onRename,
@@ -61,11 +72,13 @@ export function ConversationConfigSheet({
   activeTraits: TraitFormInput[];
   activeLoras: LoraFormInput[];
   reasoningEffort: ReasoningEffort | null;
+  toolSetId: string | null;
   onPersonaChange?: (persona: PersonaFormInput) => void;
   onModelChange?: (model: ModelFormInput) => void;
   onTraitsChange?: (traits: TraitFormInput[]) => void;
   onLorasChange?: (loras: LoraFormInput[]) => void;
   onReasoningEffortChange?: (effort: ReasoningEffort | null) => void;
+  onToolSetChange?: (toolSetId: string | null) => void;
   conversationName?: string;
   conversationIsPublic?: boolean;
   onRename?: (name: string) => void;
@@ -84,6 +97,10 @@ export function ConversationConfigSheet({
   const [personasState] = useApi(() => hermesApi.getAllPersonas());
   const [modelsState] = useApi(() => hermesApi.getAllModels());
   const [traitsState] = useApi(() => hermesApi.getAllTraits());
+  const [toolSetsState] = useApi(() => hermesApi.getAllToolSets());
+
+  const toolSets = toolSetsState.data ?? [];
+  const activeToolSet = toolSets.find((s) => s.id === toolSetId);
 
   const availableModels = modelsState.data?.filter((m) => !m.isUnavailable) ?? [];
   const [personasOpen, setPersonasOpen] = useState(false);
@@ -199,6 +216,11 @@ export function ConversationConfigSheet({
             value={reasoningEffort}
             onChange={onReasoningEffortChange}
           />
+          <ToolSetField
+            value={toolSetId}
+            toolSets={toolSets}
+            onChange={onToolSetChange}
+          />
 
           <Collapsible open={traitsOpen} onOpenChange={setTraitsOpen}>
             <CollapsibleTrigger className="flex items-center justify-between w-full rounded-md px-2 py-2 hover:bg-accent transition-colors">
@@ -274,7 +296,7 @@ export function ConversationConfigSheet({
             </CollapsibleContent>
           </Collapsible>
 
-          {model.isToolCallingEnabled && (
+          {toolSetEnables(activeToolSet, GENERATE_IMAGE_TOOL) && (
             <ImageLorasPanel
               activeLoras={activeLoras}
               onLorasChange={onLorasChange}
@@ -415,6 +437,31 @@ function ReasoningEffortField({
       <ReasoningEffortSelect
         value={value}
         onChange={(effort) => onChange?.(effort)}
+        disabled={!onChange}
+        className="w-36 shrink-0"
+      />
+    </div>
+  );
+}
+
+function ToolSetField({
+  value,
+  toolSets,
+  onChange,
+}: {
+  value: string | null;
+  toolSets: ToolSetSummary[];
+  onChange?: (toolSetId: string | null) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 px-2">
+      <div>
+        <p className="text-sm font-medium">Tool Set</p>
+      </div>
+      <ToolSetSelect
+        value={value}
+        toolSets={toolSets}
+        onChange={(toolSetId) => onChange?.(toolSetId)}
         disabled={!onChange}
         className="w-36 shrink-0"
       />

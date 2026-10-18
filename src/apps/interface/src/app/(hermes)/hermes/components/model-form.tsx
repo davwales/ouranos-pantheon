@@ -17,6 +17,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { useApi } from "@/hooks/use-api";
 import React, { ChangeEvent, useMemo, useState } from "react";
+import { ToolSetSelect } from "@/app/(hermes)/hermes/components/tool-set-select";
 
 export function ModelForm({
   onSave,
@@ -39,13 +40,14 @@ export function ModelForm({
       systemPrompt: "",
       temperature: null,
       maxTokens: null,
-      isToolCallingEnabled: false,
+      defaultToolSetId: null,
       contextWindow: null,
       isDefault: false,
       isPublic: true,
     },
   );
   const [availableModelsState] = useApi(() => hermesApi.getAvailableModels());
+  const [toolSetsState] = useApi(() => hermesApi.getAllToolSets());
 
   const modelOptions = useMemo(() => {
     const models = availableModelsState.data ?? [];
@@ -169,18 +171,21 @@ export function ModelForm({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 items-center">
-        <Typography variant="h4">Tool Calling</Typography>
-        <input
-          type="checkbox"
-          checked={model.isToolCallingEnabled}
+        <div>
+          <Typography variant="h4">Default Tool Set</Typography>
+          <Typography variant="muted">
+            Preselected for new conversations; can be changed per conversation.
+          </Typography>
+        </div>
+        <ToolSetSelect
+          value={model.defaultToolSetId}
+          toolSets={toolSetsState.data ?? []}
           disabled={isReadOnly}
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            setModel((prev) => ({
-              ...prev,
-              isToolCallingEnabled: e.target.checked,
-            }))
+          aria-label="Default tool set"
+          onChange={(defaultToolSetId) =>
+            setModel((prev) => ({ ...prev, defaultToolSetId }))
           }
-          className="h-5 w-5 cursor-pointer"
+          className="w-full"
         />
       </div>
 

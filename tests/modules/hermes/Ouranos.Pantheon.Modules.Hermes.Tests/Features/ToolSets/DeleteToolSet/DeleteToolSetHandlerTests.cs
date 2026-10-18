@@ -4,7 +4,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.ToolSets.DeleteToolSet;
 using Ouranos.Pantheon.Modules.Hermes.Features.ToolSets.DeleteToolSet.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
-using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
 
@@ -28,10 +28,10 @@ public sealed class DeleteToolSetHandlerTests
     public async Task Handle_WhenHappyPath_ShouldDeleteToolSetWithToolsAndReturnId()
     {
         // Arrange
-        var toolSetId = new Id<ToolSet>(Guid.NewGuid().ToString());
+        var toolSetId = DatabaseExtensions.CreateId<ToolSet>();
 
         var tool = ToolSetTool.Create(
-            new Id<ToolSetTool>(Guid.NewGuid().ToString()),
+            DatabaseExtensions.CreateId<ToolSetTool>(),
             toolSetId,
             ToolSource.Native,
             "echo"
@@ -56,7 +56,7 @@ public sealed class DeleteToolSetHandlerTests
     public async Task Handle_WhenToolSetNotFound_ShouldThrowNotFoundException()
     {
         // Arrange
-        var command = new DeleteToolSetInput(new Id<ToolSet>(Guid.NewGuid().ToString()));
+        var command = new DeleteToolSetInput(DatabaseExtensions.CreateId<ToolSet>());
 
         // Act
         var handle = async () => await _handler.Handle(command, CancellationToken.None);
@@ -69,7 +69,7 @@ public sealed class DeleteToolSetHandlerTests
     public async Task Handle_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange
-        var command = new DeleteToolSetInput(new Id<ToolSet>(Guid.NewGuid().ToString()));
+        var command = new DeleteToolSetInput(DatabaseExtensions.CreateId<ToolSet>());
         var cancellationToken = new CancellationToken(true);
 
         // Act

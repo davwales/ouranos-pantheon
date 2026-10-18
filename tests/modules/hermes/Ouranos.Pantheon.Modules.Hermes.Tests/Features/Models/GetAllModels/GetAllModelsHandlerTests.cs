@@ -5,7 +5,9 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Models.GetAllModels.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
@@ -133,6 +135,7 @@ public sealed class GetAllModelsHandlerTests
     public async Task Handle_WhenModelsExist_ShouldReturnResponseWithAllProperties()
     {
         // Arrange
+        var defaultToolSetId = DatabaseExtensions.CreateId<ToolSet>();
         var model = ModelConfig.Create(
             new Id<ModelConfig>(Guid.NewGuid().ToString()),
             _fixture.Create<string>(),
@@ -140,7 +143,7 @@ public sealed class GetAllModelsHandlerTests
             _fixture.Create<string>(),
             temperature: 0.7f,
             maxTokens: 512,
-            isToolCallingEnabled: true,
+            defaultToolSetId: defaultToolSetId,
             isDefault: true,
             isPublic: false
         );
@@ -156,7 +159,7 @@ public sealed class GetAllModelsHandlerTests
         var item = result[0];
         item.Temperature.ShouldBe(0.7f);
         item.MaxTokens.ShouldBe(512);
-        item.IsToolCallingEnabled.ShouldBeTrue();
+        item.DefaultToolSetId.ShouldBe(defaultToolSetId);
         item.IsDefault.ShouldBeTrue();
         item.IsPublic.ShouldBeFalse();
     }

@@ -40,6 +40,9 @@ export default function ResumeConversationPage() {
   const [reasoningEffort, setReasoningEffort] = useState<
     ReasoningEffort | null | undefined
   >(undefined);
+  const [toolSetId, setToolSetId] = useState<string | null | undefined>(
+    undefined,
+  );
 
   const [state] = useApi(
     () => hermesApi.getConversation(conversationId),
@@ -52,6 +55,8 @@ export default function ResumeConversationPage() {
 
   const resolvedReasoningEffort =
     reasoningEffort !== undefined ? reasoningEffort : saved?.reasoningEffort ?? null;
+  const resolvedToolSetId =
+    toolSetId !== undefined ? toolSetId : saved?.toolSetId ?? null;
 
   const resolvedFolderId = useMemo(
     () => (folderId !== undefined ? folderId : saved?.folderId ?? null),
@@ -92,7 +97,7 @@ export default function ResumeConversationPage() {
       systemPrompt: saved.model.systemPrompt,
       temperature: saved.model.temperature,
       maxTokens: saved.model.maxTokens,
-      isToolCallingEnabled: saved.model.isToolCallingEnabled,
+      defaultToolSetId: saved.model.defaultToolSetId,
       contextWindow: saved.model.contextWindow,
       isDefault: false,
       isPublic: false,
@@ -137,6 +142,7 @@ export default function ResumeConversationPage() {
         isPublic: isPublic ?? saved.isPublic,
         folderId: targetFolderId,
         reasoningEffort: resolvedReasoningEffort,
+        toolSetId: resolvedToolSetId,
       });
       setFolderId(targetFolderId);
     },
@@ -150,6 +156,7 @@ export default function ResumeConversationPage() {
       resolvedLoraIds,
       isPublic,
       resolvedReasoningEffort,
+      resolvedToolSetId,
     ],
   );
 
@@ -195,11 +202,13 @@ export default function ResumeConversationPage() {
         activeTraits={resolvedTraits}
         activeLoras={resolvedLoras}
         reasoningEffort={resolvedReasoningEffort}
+        toolSetId={resolvedToolSetId}
         onPersonaChange={setPersona}
         onModelChange={setModel}
         onTraitsChange={setActiveTraits}
         onLorasChange={setActiveLoras}
         onReasoningEffortChange={setReasoningEffort}
+        onToolSetChange={setToolSetId}
         initialMessages={saved.messages}
         initialTokenUsage={saved.tokenUsage}
         conversationId={savedConversationId}
@@ -222,6 +231,7 @@ export default function ResumeConversationPage() {
             isPublic: isPublic ?? saved.isPublic,
             folderId: resolvedFolderId,
             reasoningEffort: resolvedReasoningEffort,
+            toolSetId: resolvedToolSetId,
           });
           setConversationName(name);
         }}
@@ -241,6 +251,7 @@ export default function ResumeConversationPage() {
             isPublic: value,
             folderId: resolvedFolderId,
             reasoningEffort: resolvedReasoningEffort,
+            toolSetId: resolvedToolSetId,
           });
           setIsPublic(value);
         }}

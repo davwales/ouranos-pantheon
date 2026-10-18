@@ -7,7 +7,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.ToolSets.GetAllToolSets.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
-using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
 
@@ -161,7 +161,7 @@ public sealed class GetAllToolSetsHandlerTests
         params (string Name, string? AdditionalDescription)[] tools
     )
     {
-        var id = new Id<ToolSet>(Guid.NewGuid().ToString());
+        var id = DatabaseExtensions.CreateId<ToolSet>();
 
         var toolSet = ToolSet.Create(
             id,
@@ -170,7 +170,7 @@ public sealed class GetAllToolSetsHandlerTests
             null,
             tools.Select(t =>
                 ToolSetTool.Create(
-                    new Id<ToolSetTool>(Guid.NewGuid().ToString()),
+                    DatabaseExtensions.CreateId<ToolSetTool>(),
                     id,
                     ToolSource.Native,
                     t.Name,

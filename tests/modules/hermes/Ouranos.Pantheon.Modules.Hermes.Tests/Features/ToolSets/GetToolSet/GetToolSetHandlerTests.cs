@@ -8,7 +8,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.ToolSets.GetToolSet.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
-using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
 
@@ -60,7 +60,7 @@ public sealed class GetToolSetHandlerTests
     public async Task Handle_WhenToolSetNotFound_ShouldThrowNotFoundException()
     {
         // Arrange
-        var query = new GetToolSetInput(new Id<ToolSet>(Guid.NewGuid().ToString()));
+        var query = new GetToolSetInput(DatabaseExtensions.CreateId<ToolSet>());
 
         // Act
         var handle = async () => await _handler.Handle(query, CancellationToken.None);
@@ -118,7 +118,7 @@ public sealed class GetToolSetHandlerTests
     public async Task Handle_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange
-        var query = new GetToolSetInput(new Id<ToolSet>(Guid.NewGuid().ToString()));
+        var query = new GetToolSetInput(DatabaseExtensions.CreateId<ToolSet>());
         var cancellationToken = new CancellationToken(true);
 
         // Act
@@ -140,7 +140,7 @@ public sealed class GetToolSetHandlerTests
         params (string Name, string? AdditionalDescription)[] tools
     )
     {
-        var id = new Id<ToolSet>(Guid.NewGuid().ToString());
+        var id = DatabaseExtensions.CreateId<ToolSet>();
         var toolSet = ToolSet.Create(
             id,
             "Research",
@@ -148,7 +148,7 @@ public sealed class GetToolSetHandlerTests
             "Instr",
             tools.Select(t =>
                 ToolSetTool.Create(
-                    new Id<ToolSetTool>(Guid.NewGuid().ToString()),
+                    DatabaseExtensions.CreateId<ToolSetTool>(),
                     id,
                     ToolSource.Native,
                     t.Name,

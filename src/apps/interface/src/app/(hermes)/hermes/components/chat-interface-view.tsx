@@ -29,11 +29,13 @@ export default function ChatInterfaceView({
   activeTraits,
   activeLoras,
   reasoningEffort = null,
+  toolSetId = null,
   onPersonaChange,
   onModelChange,
   onTraitsChange,
   onLorasChange,
   onReasoningEffortChange,
+  onToolSetChange,
   conversationId,
   conversationName,
   conversationIsPublic = true,
@@ -51,11 +53,13 @@ export default function ChatInterfaceView({
   activeTraits: TraitFormInput[];
   activeLoras: LoraFormInput[];
   reasoningEffort?: ReasoningEffort | null;
+  toolSetId?: string | null;
   onPersonaChange?: (persona: PersonaFormInput) => void;
   onModelChange?: (model: ModelFormInput) => void;
   onTraitsChange?: (traits: TraitFormInput[]) => void;
   onLorasChange?: (loras: LoraFormInput[]) => void;
   onReasoningEffortChange?: (effort: ReasoningEffort | null) => void;
+  onToolSetChange?: (toolSetId: string | null) => void;
   conversationId?: string;
   conversationName?: string;
   conversationIsPublic?: boolean;
@@ -100,6 +104,7 @@ export default function ChatInterfaceView({
     initialTokenUsage: initialTokenUsage ?? null,
     model,
     reasoningEffort,
+    toolSetId,
     persona,
     activeTraits,
     activeLoras,
@@ -127,6 +132,7 @@ export default function ChatInterfaceView({
       traitIds?: string[];
       loraIds?: string[];
       reasoningEffort?: ReasoningEffort | null;
+      toolSetId?: string | null;
     }): UpdateConversationInput => ({
       name: conversationName ?? "New Conversation",
       personaId: overrides.personaId ?? persona.id!,
@@ -142,12 +148,15 @@ export default function ChatInterfaceView({
         overrides.reasoningEffort !== undefined
           ? overrides.reasoningEffort
           : reasoningEffort,
+      toolSetId:
+        overrides.toolSetId !== undefined ? overrides.toolSetId : toolSetId,
     }),
     [
       conversationName,
       conversationIsPublic,
       conversationFolderId,
       reasoningEffort,
+      toolSetId,
       persona.id,
       model.id,
       activeTraits,
@@ -169,6 +178,7 @@ export default function ChatInterfaceView({
         outputTokenCount: tokenUsage?.outputTokens ?? null,
         totalTokenCount: tokenUsage?.totalTokens ?? null,
         reasoningEffort,
+        toolSetId,
       });
       onConversationSaved?.(result.id, result.name);
     } catch (error) {
@@ -182,6 +192,7 @@ export default function ChatInterfaceView({
     messages,
     tokenUsage,
     reasoningEffort,
+    toolSetId,
     onConversationSaved,
   ]);
 
@@ -307,6 +318,7 @@ export default function ChatInterfaceView({
         activeTraits={activeTraits}
         activeLoras={activeLoras}
         reasoningEffort={reasoningEffort}
+        toolSetId={toolSetId}
         conversationName={conversationName}
         conversationIsPublic={conversationIsPublic}
         onRename={onRename}
@@ -332,11 +344,15 @@ export default function ChatInterfaceView({
         }}
         onModelChange={(m) => {
           onModelChange?.(m);
+          onToolSetChange?.(m.defaultToolSetId);
           if (conversationId && m.id) {
             hermesApi
               .updateConversation(
                 conversationId,
-                buildUpdatePayload({ modelConfigId: m.id }),
+                buildUpdatePayload({
+                  modelConfigId: m.id,
+                  toolSetId: m.defaultToolSetId,
+                }),
               )
               .catch((err) =>
                 console.error("Failed to update conversation:", err),
@@ -350,6 +366,19 @@ export default function ChatInterfaceView({
               .updateConversation(
                 conversationId,
                 buildUpdatePayload({ reasoningEffort: effort }),
+              )
+              .catch((err) =>
+                console.error("Failed to update conversation:", err),
+              );
+          }
+        }}
+        onToolSetChange={(id) => {
+          onToolSetChange?.(id);
+          if (conversationId) {
+            hermesApi
+              .updateConversation(
+                conversationId,
+                buildUpdatePayload({ toolSetId: id }),
               )
               .catch((err) =>
                 console.error("Failed to update conversation:", err),

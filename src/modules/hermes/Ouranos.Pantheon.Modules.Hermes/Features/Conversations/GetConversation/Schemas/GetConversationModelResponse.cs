@@ -1,4 +1,5 @@
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GetConversation.Schemas;
@@ -10,6 +11,6 @@ public sealed record GetConversationModelResponse(
     string SystemPrompt,
     float? Temperature,
     int? MaxTokens,
-    bool IsToolCallingEnabled,
+    Id<ToolSet>? DefaultToolSetId,
     int? ContextWindow
 );

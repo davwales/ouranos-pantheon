@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Ouranos.Pantheon.Modules.Hermes.Features.ToolSets.CreateToolSet;
 using Ouranos.Pantheon.Modules.Hermes.Features.ToolSets.CreateToolSet.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
-using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.ToolSets.CreateToolSet;
@@ -20,7 +20,7 @@ public sealed class CreateToolSetEndpointTests
             "Research",
             Tools: [new CreateToolSetToolInput(ToolSource.Native, "echo")]
         );
-        var expected = new CreateToolSetResponse(new Id<ToolSet>(Guid.NewGuid().ToString()));
+        var expected = new CreateToolSetResponse(DatabaseExtensions.CreateId<ToolSet>());
 
         _bus.InvokeAsync<CreateToolSetResponse>(Arg.Any<object>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expected));

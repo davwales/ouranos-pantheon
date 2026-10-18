@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.CreateModel.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application;
 using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 
@@ -31,6 +32,12 @@ public sealed class CreateModelHandler : IPantheonHandler<CreateModelInput, Crea
         _logger.LogTrace("Attempting to handle create model command '{@command}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
+        await ToolSetValidation.ValidateToolSetExistsAsync(
+            _dbContext,
+            command.DefaultToolSetId,
+            cancellationToken
+        );
+
         if (command.IsDefault)
         {
             var existingDefaults = await _dbContext
@@ -45,7 +52,7 @@ public sealed class CreateModelHandler : IPantheonHandler<CreateModelInput, Crea
                     existing.SystemPrompt,
                     existing.Temperature,
                     existing.MaxTokens,
-                    existing.IsToolCallingEnabled,
+                    existing.DefaultToolSetId,
                     existing.ContextWindow,
                     false,
                     existing.IsPublic
@@ -60,7 +67,7 @@ public sealed class CreateModelHandler : IPantheonHandler<CreateModelInput, Crea
             command.SystemPrompt,
             command.Temperature,
             command.MaxTokens,
-            command.IsToolCallingEnabled,
+            command.DefaultToolSetId,
             command.ContextWindow,
             command.IsDefault,
             command.IsPublic

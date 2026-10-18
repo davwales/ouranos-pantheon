@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.UpdateModel.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Models.UpdateModel;
@@ -36,6 +37,12 @@ public sealed class UpdateModelHandler : IPantheonHandler<UpdateModelInput, Upda
 
         Guard.Against.NotFound(command.ModelId, model);
 
+        await ToolSetValidation.ValidateToolSetExistsAsync(
+            _dbContext,
+            command.DefaultToolSetId,
+            cancellationToken
+        );
+
         if (command.IsDefault)
         {
             var existingDefaults = await _dbContext
@@ -50,7 +57,7 @@ public sealed class UpdateModelHandler : IPantheonHandler<UpdateModelInput, Upda
                     existing.SystemPrompt,
                     existing.Temperature,
                     existing.MaxTokens,
-                    existing.IsToolCallingEnabled,
+                    existing.DefaultToolSetId,
                     existing.ContextWindow,
                     false,
                     existing.IsPublic
@@ -64,7 +71,7 @@ public sealed class UpdateModelHandler : IPantheonHandler<UpdateModelInput, Upda
             command.SystemPrompt,
             command.Temperature,
             command.MaxTokens,
-            command.IsToolCallingEnabled,
+            command.DefaultToolSetId,
             command.ContextWindow,
             command.IsDefault,
             command.IsPublic

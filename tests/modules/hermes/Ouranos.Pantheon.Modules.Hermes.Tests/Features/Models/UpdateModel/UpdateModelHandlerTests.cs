@@ -5,7 +5,9 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Models.UpdateModel.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.AvailableModels;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
@@ -14,7 +16,7 @@ namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.Models.UpdateModel;
 
 public sealed class UpdateModelHandlerTests
 {
-    private readonly IFixture _fixture = new Fixture();
+    private readonly Fixture _fixture = new();
     private readonly UpdateModelHandler _handler;
     private readonly ILogger<UpdateModelHandler> _logger = Substitute.For<
         ILogger<UpdateModelHandler>
@@ -278,5 +280,79 @@ public sealed class UpdateModelHandlerTests
         var updatedModel = await _dbContext.ModelConfigs.FindAsync(existingModel.Id);
         updatedModel.ShouldNotBeNull();
         updatedModel.IsUnavailable.ShouldBeTrue();
+    }
+
+    private async Task<Id<ToolSet>> SeedToolSetAsync()
+    {
+        var toolSet = ToolSet.Create(
+            DatabaseExtensions.CreateId<ToolSet>(),
+            _fixture.Create<string>(),
+            null,
+            null,
+            []
+        );
+        await _dbContext.SeedData(toolSet);
+
+        return toolSet.Id;
+    }
+
+    [Fact]
+    public async Task Handle_WhenDefaultToolSetIdProvided_ShouldSaveIt()
+    {
+        // Arrange
+        var modelIdentifier = _fixture.Create<string>();
+        await SeedAvailableModel(modelIdentifier);
+        var toolSetId = await SeedToolSetAsync();
+
+        var existingModel = ModelConfig.Create(
+            DatabaseExtensions.CreateId<ModelConfig>(),
+            _fixture.Create<string>(),
+            modelIdentifier,
+            _fixture.Create<string>()
+        );
+        await _dbContext.SeedData(existingModel);
+
+        var command = new UpdateModelInput(
+            existingModel.Id,
+            _fixture.Create<string>(),
+            modelIdentifier,
+            _fixture.Create<string>(),
+            DefaultToolSetId: toolSetId
+        );
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var updatedModel = await _dbContext.ModelConfigs.FindAsync(existingModel.Id);
+        updatedModel.ShouldNotBeNull();
+        updatedModel.DefaultToolSetId.ShouldBe(toolSetId);
+    }
+
+    [Fact]
+    public async Task Handle_WhenDefaultToolSetDoesNotExist_ShouldThrowNotFoundException()
+    {
+        // Arrange
+        var existingModel = ModelConfig.Create(
+            DatabaseExtensions.CreateId<ModelConfig>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
+        await _dbContext.SeedData(existingModel);
+
+        var command = new UpdateModelInput(
+            existingModel.Id,
+            _fixture.Create<string>(),
+            existingModel.ModelIdentifier,
+            _fixture.Create<string>(),
+            DefaultToolSetId: DatabaseExtensions.CreateId<ToolSet>()
+        );
+
+        // Act
+        var handle = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await handle.ShouldThrowAsync<NotFoundException>();
     }
 }

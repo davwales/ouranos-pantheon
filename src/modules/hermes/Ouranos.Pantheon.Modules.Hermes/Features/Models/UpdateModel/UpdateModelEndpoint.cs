@@ -28,7 +28,7 @@ public static class UpdateModelEndpoint
             body.SystemPrompt,
             body.Temperature,
             body.MaxTokens,
-            body.IsToolCallingEnabled,
+            body.DefaultToolSetId,
             body.ContextWindow,
             body.IsDefault,
             body.IsPublic

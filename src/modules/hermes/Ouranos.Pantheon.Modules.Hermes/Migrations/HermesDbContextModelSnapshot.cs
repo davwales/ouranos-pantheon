@@ -138,6 +138,10 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
                         .HasColumnType("text")
                         .HasColumnName("reasoning_effort");
 
+                    b.Property<Guid?>("ToolSetId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tool_set_id");
+
                     b.Property<int?>("TotalTokenCount")
                         .HasColumnType("integer")
                         .HasColumnName("total_token_count");
@@ -157,6 +161,9 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
 
                     b.HasIndex("PersonaId")
                         .HasDatabaseName("ix_conversations_persona_id");
+
+                    b.HasIndex("ToolSetId")
+                        .HasDatabaseName("ix_conversations_tool_set_id");
 
                     b.ToTable("conversations", "hermes");
                 });
@@ -390,6 +397,10 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<Guid?>("DefaultToolSetId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("default_tool_set_id");
+
                     b.Property<bool>("IsDefault")
                         .HasColumnType("boolean")
                         .HasColumnName("is_default");
@@ -397,10 +408,6 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
                     b.Property<bool>("IsPublic")
                         .HasColumnType("boolean")
                         .HasColumnName("is_public");
-
-                    b.Property<bool>("IsToolCallingEnabled")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_tool_calling_enabled");
 
                     b.Property<bool>("IsUnavailable")
                         .HasColumnType("boolean")
@@ -435,6 +442,9 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_model_configs");
+
+                    b.HasIndex("DefaultToolSetId")
+                        .HasDatabaseName("ix_model_configs_default_tool_set_id");
 
                     b.ToTable("model_configs", "hermes");
                 });
@@ -757,6 +767,12 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_conversations_personas_persona_id");
 
+                    b.HasOne("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets.ToolSet", null)
+                        .WithMany()
+                        .HasForeignKey("ToolSetId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_conversations_tool_sets_tool_set_id");
+
                     b.Navigation("Folder");
 
                     b.Navigation("ModelConfig");
@@ -793,6 +809,15 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
                         .HasConstraintName("fk_folders_folders_parent_folder_id");
 
                     b.Navigation("ParentFolder");
+                });
+
+            modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models.ModelConfig", b =>
+                {
+                    b.HasOne("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets.ToolSet", null)
+                        .WithMany()
+                        .HasForeignKey("DefaultToolSetId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_model_configs_tool_sets_default_tool_set_id");
                 });
 
             modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets.ToolSetTool", b =>

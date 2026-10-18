@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres.Converters;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres.Extensions;
 
@@ -41,5 +42,11 @@ public sealed class ConversationConfiguration : IEntityTypeConfiguration<Convers
             .WithMany(f => f.Conversations)
             .HasForeignKey(c => c.FolderId)
             .OnDelete(DeleteBehavior.Cascade);
+        builder.Property(c => c.ToolSetId).HasConversion<IdConverter<ToolSet>>();
+        builder
+            .HasOne<ToolSet>()
+            .WithMany()
+            .HasForeignKey(c => c.ToolSetId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }
