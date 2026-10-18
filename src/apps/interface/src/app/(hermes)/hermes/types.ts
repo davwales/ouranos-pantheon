@@ -1,3 +1,5 @@
+import { type ToolSource } from "@/lib/api/hermes";
+
 export interface PersonaFormInput {
   id?: string;
   name: string;
@@ -35,6 +37,20 @@ export type LoraFormInput = {
   name: string;
   identifier: string;
   weight: number;
+  isPublic: boolean;
+};
+
+export type ToolSetToolFormInput = {
+  source: ToolSource;
+  name: string;
+  additionalDescription: string;
+};
+
+export type ToolSetFormInput = {
+  name: string;
+  description: string;
+  instructions: string;
+  tools: ToolSetToolFormInput[];
   isPublic: boolean;
 };
 

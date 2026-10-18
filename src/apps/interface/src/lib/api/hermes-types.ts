@@ -269,3 +269,44 @@ export type Lora = {
   weight: number;
   isPublic: boolean;
 };
+
+export type ToolSource = "Native";
+
+export type AvailableTool = {
+  source: ToolSource;
+  name: string;
+  description: string;
+};
+
+export type ToolSetToolInput = {
+  source: ToolSource;
+  name: string;
+  additionalDescription?: string | null;
+};
+
+export type ToolSetTool = {
+  source: ToolSource;
+  name: string;
+  additionalDescription: string | null;
+  isAvailable: boolean;
+};
+
+export type ToolSetSummary = {
+  id: string;
+  name: string;
+  description: string | null;
+  tools: ToolSetTool[];
+  isPublic: boolean;
+};
+
+export type ToolSet = ToolSetSummary & {
+  instructions: string | null;
+};
+
+export type SaveToolSetInput = {
+  name: string;
+  description?: string | null;
+  instructions?: string | null;
+  tools: ToolSetToolInput[];
+  isPublic: boolean;
+};

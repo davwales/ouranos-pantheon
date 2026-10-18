@@ -29,6 +29,13 @@ export type {
   CompletionChunk,
   Trait,
   Lora,
+  ToolSource,
+  AvailableTool,
+  ToolSetToolInput,
+  ToolSetTool,
+  ToolSetSummary,
+  ToolSet,
+  SaveToolSetInput,
   FolderSummary,
   UpdateFolderInput,
 } from "./hermes-types";
@@ -50,6 +57,10 @@ import type {
   CompactConversationInput,
   Trait,
   Lora,
+  AvailableTool,
+  ToolSetSummary,
+  ToolSet,
+  SaveToolSetInput,
   FolderSummary,
   UpdateFolderInput,
 } from "./hermes-types";
@@ -147,6 +158,23 @@ export const hermesApi = {
 
   deleteLora: (loraId: string) =>
     api.del<{ loraId: string }>(`/api/hermes/loras/${loraId}`),
+
+  getAvailableTools: () => api.get<AvailableTool[]>("/api/hermes/tools"),
+
+  getAllToolSets: (params?: { filter?: string[] }) =>
+    api.get<ToolSetSummary[]>("/api/hermes/tool-sets", params),
+
+  getToolSet: (toolSetId: string) =>
+    api.get<ToolSet>(`/api/hermes/tool-sets/${toolSetId}`),
+
+  createToolSet: (input: SaveToolSetInput) =>
+    api.post<{ toolSetId: string }>("/api/hermes/tool-sets", input),
+
+  updateToolSet: (toolSetId: string, input: SaveToolSetInput) =>
+    api.put<{ toolSetId: string }>(`/api/hermes/tool-sets/${toolSetId}`, input),
+
+  deleteToolSet: (toolSetId: string) =>
+    api.del<{ toolSetId: string }>(`/api/hermes/tool-sets/${toolSetId}`),
 
   getAllConversations: (params?: { folderId?: string }) =>
     api.get<ConversationSummary[]>("/api/hermes/conversations", {
