@@ -119,7 +119,7 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
         string name,
         Id<Persona> personaId,
         Id<ModelConfig> modelConfigId,
-        IEnumerable<Message> messages,
+        IEnumerable<Message>? messages,
         IEnumerable<Trait> traits,
         bool isPublic,
         Id<Folder>? folderId,
@@ -133,7 +133,11 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
         Name = string.IsNullOrWhiteSpace(name) ? DefaultName : name.Trim();
         PersonaId = personaId;
         ModelConfigId = modelConfigId;
-        Messages = [.. messages];
+        if (messages is not null)
+        {
+            Messages = [.. messages];
+        }
+
         Traits = [.. traits];
         IsPublic = isPublic;
         FolderId = folderId;

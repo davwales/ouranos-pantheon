@@ -12,7 +12,13 @@ import {
   PersonaFormInput,
   TraitFormInput,
 } from "@/app/(hermes)/hermes/types";
-import { hermesApi, MessageInput, type ReasoningEffort, Role } from "@/lib/api/hermes";
+import {
+  hermesApi,
+  MessageInput,
+  type ReasoningEffort,
+  Role,
+  type UpdateConversationInput,
+} from "@/lib/api/hermes";
 import { useMessageController } from "@/hooks/use-message-controller";
 import { Bookmark, SlidersHorizontal } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -31,6 +37,7 @@ export default function ChatInterfaceView({
   conversationId,
   conversationName,
   conversationIsPublic = true,
+  conversationFolderId = null,
   initialMessages,
   initialTokenUsage,
   onConversationSaved,
@@ -52,6 +59,7 @@ export default function ChatInterfaceView({
   conversationId?: string;
   conversationName?: string;
   conversationIsPublic?: boolean;
+  conversationFolderId?: string | null;
   initialMessages?: MessageInput[];
   initialTokenUsage?: {
     inputTokens: number;
@@ -119,7 +127,7 @@ export default function ChatInterfaceView({
       traitIds?: string[];
       loraIds?: string[];
       reasoningEffort?: ReasoningEffort | null;
-    }) => ({
+    }): UpdateConversationInput => ({
       name: conversationName ?? "New Conversation",
       personaId: overrides.personaId ?? persona.id!,
       modelConfigId: overrides.modelConfigId ?? model.id!,
@@ -127,8 +135,9 @@ export default function ChatInterfaceView({
         overrides.traitIds ??
         activeTraits.filter((t) => t.id && !t.isEphemeral).map((t) => t.id!),
       loraIds: overrides.loraIds ?? loraIdsOf(activeLoras),
-      messages: overrides.messages ?? messages,
+      messages: overrides.messages,
       isPublic: conversationIsPublic,
+      folderId: conversationFolderId,
       reasoningEffort:
         overrides.reasoningEffort !== undefined
           ? overrides.reasoningEffort
@@ -137,12 +146,12 @@ export default function ChatInterfaceView({
     [
       conversationName,
       conversationIsPublic,
+      conversationFolderId,
       reasoningEffort,
       persona.id,
       model.id,
       activeTraits,
       activeLoras,
-      messages,
     ],
   );
 

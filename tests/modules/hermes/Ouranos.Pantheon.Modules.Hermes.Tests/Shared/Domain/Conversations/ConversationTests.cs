@@ -254,6 +254,42 @@ public sealed class ConversationTests
         conversation.Loras.ShouldBe([newLora]);
     }
 
+    [Fact]
+    public void Update_WhenMessagesAreNull_ShouldKeepTheMessages()
+    {
+        // Arrange
+        var id = new Id<Conversation>(Guid.NewGuid().ToString());
+        var message = Message.Create(
+            new Id<Message>(Guid.NewGuid().ToString()),
+            id,
+            "Hello",
+            Role.User,
+            0
+        );
+        var conversation = Conversation.Create(
+            id,
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [message],
+            []
+        );
+
+        // Act
+        conversation.Update(
+            "Renamed",
+            conversation.PersonaId,
+            conversation.ModelConfigId,
+            null,
+            [],
+            false,
+            null
+        );
+
+        // Assert
+        conversation.Messages.ShouldBe([message]);
+        conversation.Name.ShouldBe("Renamed");
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]

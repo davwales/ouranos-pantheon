@@ -62,7 +62,9 @@ ordered parts in `message_parts`, one table for every part kind (table-per-hiera
 `kind`). Generated images are stored as `bytea` in `generated_images` and served by
 `GET /api/hermes/images/{imageId}`; see [8.4](08-concepts.md#84-generated-images) for their
 lifetime. User-registered LoRAs live in `loras` and attach to conversations through the
-`conversation_lora` join table, like traits.
+`conversation_lora` join table, like traits. `PUT /api/hermes/conversations/{id}` sets every
+metadata field exactly (a `null` `folderId` means the root folder) but replaces the messages only
+when `messages` is supplied, so metadata updates leave turns persisted by completions untouched.
 
 ## Configuration
 

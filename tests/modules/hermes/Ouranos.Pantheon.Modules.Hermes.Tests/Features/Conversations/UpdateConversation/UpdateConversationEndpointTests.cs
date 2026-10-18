@@ -26,7 +26,6 @@ public sealed class UpdateConversationEndpointTests
             new Id<Persona>(Guid.NewGuid().ToString()),
             new Id<ModelConfig>(Guid.NewGuid().ToString()),
             [],
-            [],
             true,
             ReasoningEffort: ReasoningEffort.Low
         );
@@ -36,8 +35,8 @@ public sealed class UpdateConversationEndpointTests
             body.PersonaId,
             body.ModelConfigId,
             body.TraitIds,
-            body.Messages,
-            body.IsPublic
+            body.IsPublic,
+            body.Messages
         );
         var expected = new IdResponse<Conversation>(conversationId);
 

@@ -226,6 +226,18 @@ export interface CreateConversationInput {
   loraIds?: string[];
 }
 
+export type UpdateConversationInput = {
+  name: string;
+  personaId: string;
+  modelConfigId: string;
+  traitIds: string[];
+  isPublic: boolean;
+  folderId: string | null;
+  messages?: MessageInput[];
+  reasoningEffort?: ReasoningEffort | null;
+  loraIds?: string[];
+};
+
 export type CompletionChunk = AssistantEvent;
 
 export interface UpdateFolderInput {

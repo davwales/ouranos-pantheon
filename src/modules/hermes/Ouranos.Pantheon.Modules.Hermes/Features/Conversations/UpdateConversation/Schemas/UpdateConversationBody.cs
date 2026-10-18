@@ -13,8 +13,8 @@ public sealed record UpdateConversationBody(
     Id<Persona> PersonaId,
     Id<ModelConfig> ModelConfigId,
     Id<Trait>[] TraitIds,
-    List<UpdateConversationMessageInput> Messages,
     bool IsPublic,
+    List<UpdateConversationMessageInput>? Messages = null,
     Id<Folder>? FolderId = null,
     ReasoningEffort? ReasoningEffort = null,
     Id<Lora>[]? LoraIds = null

@@ -6,6 +6,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.UpdateConversation;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.UpdateConversation.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Loras;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
@@ -56,7 +57,6 @@ public sealed class UpdateConversationHandlerTests
             newName,
             newPersonaId,
             newModelConfigId,
-            [],
             [],
             true
         );
@@ -111,7 +111,6 @@ public sealed class UpdateConversationHandlerTests
             conversation.PersonaId,
             conversation.ModelConfigId,
             [],
-            [],
             true,
             LoraIds: [newLora.Id]
         );
@@ -149,7 +148,6 @@ public sealed class UpdateConversationHandlerTests
             conversation.PersonaId,
             conversation.ModelConfigId,
             [],
-            [],
             true,
             ReasoningEffort: ReasoningEffort.None
         );
@@ -167,35 +165,138 @@ public sealed class UpdateConversationHandlerTests
     public async Task Handle_WhenMessagesProvided_ShouldReplaceMessages()
     {
         // Arrange
+        var conversationId = new Id<Conversation>(Guid.NewGuid().ToString());
+        var existingMessage = Message.Create(
+            new Id<Message>(Guid.NewGuid().ToString()),
+            conversationId,
+            "Old message",
+            Role.User,
+            0
+        );
         var conversation = Conversation.Create(
-            new Id<Conversation>(Guid.NewGuid().ToString()),
+            conversationId,
             new Id<Persona>(Guid.NewGuid().ToString()),
             new Id<ModelConfig>(Guid.NewGuid().ToString()),
-            [],
+            [existingMessage],
             [],
             _fixture.Create<string>()
         );
         await _dbContext.SeedData(conversation);
 
-        var messageInput = new UpdateConversationMessageInput("Hello World", Role.User);
         var command = new UpdateConversationInput(
             conversation.Id,
             _fixture.Create<string>(),
-            new Id<Persona>(Guid.NewGuid().ToString()),
-            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            conversation.PersonaId,
+            conversation.ModelConfigId,
             [],
-            [messageInput],
-            true
+            true,
+            [new UpdateConversationMessageInput("Hello World", Role.User)]
         );
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        result.ShouldBeOfType<IdResponse<Conversation>>();
         result.Id.ShouldBe(conversation.Id);
-        messageInput.Content.ShouldBe("Hello World");
-        messageInput.Role.ShouldBe(Role.User);
+
+        var messages = await _dbContext
+            .Messages.Where(m => m.ConversationId == conversation.Id)
+            .ToListAsync();
+        var message = messages.ShouldHaveSingleItem();
+        message.Content.ShouldBe("Hello World");
+        message.Role.ShouldBe(Role.User);
+    }
+
+    [Fact]
+    public async Task Handle_WhenMessagesAreNull_ShouldKeepTheExistingMessages()
+    {
+        // Arrange
+        var conversationId = new Id<Conversation>(Guid.NewGuid().ToString());
+        var conversation = Conversation.Create(
+            conversationId,
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [
+                Message.Create(
+                    new Id<Message>(Guid.NewGuid().ToString()),
+                    conversationId,
+                    "Hi",
+                    Role.User,
+                    0
+                ),
+                Message.Create(
+                    new Id<Message>(Guid.NewGuid().ToString()),
+                    conversationId,
+                    "Hello",
+                    Role.Assistant,
+                    1
+                ),
+            ],
+            [],
+            _fixture.Create<string>()
+        );
+        await _dbContext.SeedData(conversation);
+
+        var newName = _fixture.Create<string>();
+        var command = new UpdateConversationInput(
+            conversation.Id,
+            newName,
+            conversation.PersonaId,
+            conversation.ModelConfigId,
+            [],
+            false
+        );
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var updated = await _dbContext
+            .Conversations.Include(c => c.Messages)
+            .SingleAsync(c => c.Id == conversation.Id);
+        updated.Name.ShouldBe(newName);
+        updated.IsPublic.ShouldBeFalse();
+        updated.Messages.OrderBy(m => m.SortOrder).Select(m => m.Content).ShouldBe(["Hi", "Hello"]);
+    }
+
+    [Fact]
+    public async Task Handle_WhenFolderIdIsUnchanged_ShouldKeepTheFolder()
+    {
+        // Arrange
+        var folder = Folder.Create(
+            new Id<Folder>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>()
+        );
+        await _dbContext.SeedData(folder);
+
+        var conversation = Conversation.Create(
+            new Id<Conversation>(Guid.NewGuid().ToString()),
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [],
+            [],
+            _fixture.Create<string>(),
+            folderId: folder.Id
+        );
+        await _dbContext.SeedData(conversation);
+
+        var command = new UpdateConversationInput(
+            conversation.Id,
+            _fixture.Create<string>(),
+            conversation.PersonaId,
+            conversation.ModelConfigId,
+            [],
+            true,
+            FolderId: folder.Id
+        );
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var updated = await _dbContext.Conversations.FindAsync(conversation.Id);
+        updated.ShouldNotBeNull();
+        updated.FolderId.ShouldBe(folder.Id);
     }
 
     [Fact]
@@ -219,6 +320,7 @@ public sealed class UpdateConversationHandlerTests
             conversation.PersonaId,
             conversation.ModelConfigId,
             [],
+            true,
             [
                 new UpdateConversationMessageInput("Hi", Role.User),
                 new UpdateConversationMessageInput(
@@ -226,8 +328,7 @@ public sealed class UpdateConversationHandlerTests
                     Role.Assistant,
                     [new ReasoningMessagePartDto("Thinking"), new TextMessagePartDto("Hello")]
                 ),
-            ],
-            true
+            ]
         );
 
         // Act
@@ -253,7 +354,6 @@ public sealed class UpdateConversationHandlerTests
             new Id<Persona>(Guid.NewGuid().ToString()),
             new Id<ModelConfig>(Guid.NewGuid().ToString()),
             [],
-            [],
             true
         );
 
@@ -273,7 +373,6 @@ public sealed class UpdateConversationHandlerTests
             _fixture.Create<string>(),
             new Id<Persona>(Guid.NewGuid().ToString()),
             new Id<ModelConfig>(Guid.NewGuid().ToString()),
-            [],
             [],
             true
         );

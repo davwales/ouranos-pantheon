@@ -29,8 +29,8 @@ public static class UpdateConversationEndpoint
             body.PersonaId,
             body.ModelConfigId,
             body.TraitIds,
-            body.Messages,
             body.IsPublic,
+            body.Messages,
             body.FolderId,
             body.ReasoningEffort,
             body.LoraIds
