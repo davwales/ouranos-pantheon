@@ -28,7 +28,7 @@ These constraints are inputs to the decisions recorded in [Section 4](04-solutio
 
 Enforced by CI and repository hooks (see `.github/workflows/ci.yml`, `automation/`):
 
-- Central package management (`Directory.Packages.props`)
+- Central package management (`Directory.Packages.props`) with transitive pinning, so central versions also apply to transitive dependencies
 - `.editorconfig` style rules (file-scoped namespaces, braces, sealed types; CI fails on warnings via `dotnet format`)
 - CSharpier formatting checked pre-commit; `dotnet format style` / `dotnet format analyzers` verified with no changes
 - Pre-push `dotnet build`
