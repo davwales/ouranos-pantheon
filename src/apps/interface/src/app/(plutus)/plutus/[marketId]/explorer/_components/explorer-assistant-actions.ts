@@ -7,6 +7,7 @@ import {
   type FilterOperator,
 } from "@/components/shared/responsive-data-table/types";
 import { type AssistantActionHandler } from "@/lib/api/assistant";
+import { type RowData } from "@tanstack/react-table";
 import { type SetExplorerViewAction } from "@/lib/api/plutus-types";
 
 const OPERATORS: Record<string, FilterOperator> = {
@@ -19,7 +20,7 @@ const OPERATORS: Record<string, FilterOperator> = {
   like: "contains",
 };
 
-function toFilterGroup<TData>(
+function toFilterGroup<TData extends RowData>(
   action: SetExplorerViewAction,
   columns: ExtendedColumnDef<TData>[],
 ): FilterGroup {
@@ -38,7 +39,7 @@ function toFilterGroup<TData>(
   return { logic: "and", items: conditions };
 }
 
-export function applyExplorerView<TData>(
+export function applyExplorerView<TData extends RowData>(
   state: DataTableState,
   action: SetExplorerViewAction,
   columns: ExtendedColumnDef<TData>[],
@@ -56,7 +57,7 @@ export function applyExplorerView<TData>(
   };
 }
 
-export function explorerViewHandler<TData>(
+export function explorerViewHandler<TData extends RowData>(
   columns: ExtendedColumnDef<TData>[],
   apply: (action: SetExplorerViewAction) => void,
 ): AssistantActionHandler<SetExplorerViewAction> {

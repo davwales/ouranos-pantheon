@@ -153,14 +153,12 @@ export function makePositionColumns(
       header: "Target",
       accessorFn: (row) => row.targetPrice,
       cell: ({ row }) => <TargetPriceCell position={row.original} />,
-      enableSorting: false,
     },
     {
       id: "total",
       header: "Total",
       accessorFn: (row) => row.cost * row.quantity,
       cell: ({ getValue }) => <PrettyNumber number={getValue<number>()} />,
-      enableSorting: false,
     },
     {
       id: "createdAt",
@@ -175,7 +173,6 @@ export function makePositionColumns(
       id: "actions",
       header: "",
       accessorFn: () => "",
-      enableSorting: false,
       cell: ({ row }) => (
         <PositionActions
           position={row.original}

@@ -1,3 +1,4 @@
+import { type RowData } from "@tanstack/react-table";
 import {
   Content,
   ResponsiveContent,
@@ -11,7 +12,7 @@ import {
 } from "@/components/shared/skeletons/data-table-skeleton";
 import React from "react";
 
-export default function ResponsiveDataTable<TData>({
+export default function ResponsiveDataTable<TData extends RowData>({
   loading = false,
   skeletonRows = 3,
   ...props

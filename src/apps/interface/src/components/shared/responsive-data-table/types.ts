@@ -1,4 +1,10 @@
-import { ColumnDef } from "@tanstack/react-table";
+import {
+  type ColumnDef,
+  type RowData,
+  tableFeatures,
+} from "@tanstack/react-table";
+
+export const dataTableFeatures = tableFeatures({});
 
 export type SortDirection = "ASC" | "DESC";
 
@@ -66,13 +72,16 @@ export interface FilterConfig {
 export type SortValue = SortDirection | Record<string, SortDirection>;
 export type SortArgs = Record<string, SortValue>;
 
-export type ExtendedColumnDef<TData> = ColumnDef<TData> & {
+export type ExtendedColumnDef<TData extends RowData> = ColumnDef<
+  typeof dataTableFeatures,
+  TData
+> & {
   id: string;
   header: string;
   filterConfig?: FilterConfig;
 };
 
-export interface DataTableProps<TData> {
+export interface DataTableProps<TData extends RowData> {
   columns: ExtendedColumnDef<TData>[];
   data: TData[] | null | undefined;
   loading?: boolean;

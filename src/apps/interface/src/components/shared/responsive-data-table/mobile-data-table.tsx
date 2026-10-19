@@ -3,6 +3,7 @@ import { DataTablePagination } from "@/components/shared/responsive-data-table/d
 import { DataTableSorting } from "@/components/shared/responsive-data-table/data-table-sorting";
 import {
   DataTableProps,
+  dataTableFeatures,
   ExtendedColumnDef,
   PaginationArgs,
   SortArgs,
@@ -10,14 +11,10 @@ import {
 } from "@/components/shared/responsive-data-table/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
+import { flexRender, type RowData, useTable } from "@tanstack/react-table";
 import React, { useMemo, useRef } from "react";
 
-export default function MobileDataTable<TData>({
+export default function MobileDataTable<TData extends RowData>({
   columns,
   data,
   scrollTop = true,
@@ -33,17 +30,10 @@ export default function MobileDataTable<TData>({
   const tableData = useMemo(() => data ?? [], [data]);
   const topRef = useRef<HTMLDivElement>(null);
 
-  const table = useReactTable({
+  const table = useTable({
+    features: dataTableFeatures,
     data: tableData,
     columns: columns,
-    getCoreRowModel: getCoreRowModel(),
-    columnResizeMode: "onChange",
-    state: {
-      sorting: Object.entries(state?.sort ?? {}).map(([id, value]) => ({
-        id,
-        desc: value === "DESC",
-      })),
-    },
   });
 
   const handleScrollToTop = () => {
@@ -99,14 +89,14 @@ export default function MobileDataTable<TData>({
                 <CardTitle>
                   {flexRender(
                     columns[0].cell,
-                    row.getVisibleCells()[0].getContext(),
+                    row.getAllCells()[0].getContext(),
                   )}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
                   {row
-                    .getVisibleCells()
+                    .getAllCells()
                     .slice(1)
                     .map((cell) =>
                       cell.column.columnDef.header ? (

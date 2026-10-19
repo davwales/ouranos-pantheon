@@ -3,6 +3,7 @@ import { DataTablePagination } from "@/components/shared/responsive-data-table/d
 import { DataTableSorting } from "@/components/shared/responsive-data-table/data-table-sorting";
 import {
   DataTableProps,
+  dataTableFeatures,
   ExtendedColumnDef,
   PaginationArgs,
   SortArgs,
@@ -16,14 +17,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
+import { flexRender, type RowData, useTable } from "@tanstack/react-table";
 import { useMemo } from "react";
 
-export default function DesktopDataTable<TData>({
+export default function DesktopDataTable<TData extends RowData>({
   columns,
   data,
   state,
@@ -38,17 +35,10 @@ export default function DesktopDataTable<TData>({
   "use no memo";
   const tableData = useMemo(() => data ?? [], [data]);
 
-  const table = useReactTable({
+  const table = useTable({
+    features: dataTableFeatures,
     data: tableData,
     columns: columns,
-    getCoreRowModel: getCoreRowModel(),
-    columnResizeMode: "onChange",
-    state: {
-      sorting: Object.entries(state?.sort ?? {}).map(([id, value]) => ({
-        id,
-        desc: value === "DESC",
-      })),
-    },
   });
 
   const handleSortChange = (sort: SortArgs) => {
@@ -106,11 +96,8 @@ export default function DesktopDataTable<TData>({
         <TableBody>
           {table.getRowModel().rows?.length ? (
             table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                data-state={row.getIsSelected() && "selected"}
-              >
-                {row.getVisibleCells().map((cell) => (
+              <TableRow key={row.id}>
+                {row.getAllCells().map((cell) => (
                   <TableCell key={cell.id}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>

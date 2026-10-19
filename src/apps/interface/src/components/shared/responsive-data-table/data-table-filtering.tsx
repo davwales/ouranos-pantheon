@@ -1,12 +1,13 @@
 "use client";
 
 import { FilterChips, SearchFilterInput } from "@/components/shared/search-filter";
+import { type RowData } from "@tanstack/react-table";
 import { type ComponentProps } from "react";
 import { FilterBuilderDialog } from "./filter-builder-dialog";
 import { filterGroupToQuery, removeFilterItem } from "./filter-group-converters";
 import { type DataTableState, EMPTY_FILTER, type ExtendedColumnDef, type FilterGroup } from "./types";
 
-export function DataTableFiltering<TData>({
+export function DataTableFiltering<TData extends RowData>({
   columns,
   state,
   onStateChange,

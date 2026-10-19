@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { getSearchSuggestions } from "./search-suggestions";
 import { type ExtendedColumnDef } from "./types";
 
-const columns: ExtendedColumnDef<unknown>[] = [
+const columns: ExtendedColumnDef<Record<string, unknown>>[] = [
   {
     id: "symbolName",
     header: "Name",
