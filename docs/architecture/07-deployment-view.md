@@ -88,6 +88,8 @@ graph LR
 ```
 
 The lint and build jobs also run the frontend steps (`npm run lint`, `npm run build`).
+Dependabot (`.github/dependabot.yml`) opens grouped update PRs for NuGet (including local
+tools), npm, GitHub Actions and Docker base images. They go through the same pipeline.
 There is no automated deployment step: promoting a release (pulling new images on the
 homelab host) is a manual operation, consistent with the single-operator constraint of
 [Section 2](02-architecture-constraints.md).
