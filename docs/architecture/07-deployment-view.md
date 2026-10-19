@@ -92,6 +92,8 @@ Dependabot (`.github/dependabot.yml`) opens grouped update PRs for NuGet (includ
 tools), npm, GitHub Actions and Docker base images. They go through the same pipeline.
 Majors are not proposed for the Node base image or for packages tied to the .NET runtime
 major (EF Core, `Microsoft.Extensions.*`, Npgsql); those move by hand with the next LTS.
+Minor and patch updates are set to auto-merge (`.github/workflows/dependabot-auto-merge.yml`)
+and land once lint, build and test pass; majors wait for review.
 There is no automated deployment step: promoting a release (pulling new images on the
 homelab host) is a manual operation, consistent with the single-operator constraint of
 [Section 2](02-architecture-constraints.md).
