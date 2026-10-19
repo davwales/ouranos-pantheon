@@ -26,7 +26,7 @@ updates:
           - "coverlet.*"
           - "NSubstitute"
           - "Shouldly"
-          - "Autofixture"
+          - "AutoFixture"
           - "dotnet-reportgenerator-globaltool"
       wolverine:
         patterns:
@@ -51,6 +51,24 @@ updates:
       minor-and-patch:
         patterns:
           - "*"
+        exclude-patterns:
+          - "xunit*"
+          - "Microsoft.NET.Test.Sdk"
+          - "coverlet.*"
+          - "NSubstitute"
+          - "Shouldly"
+          - "AutoFixture"
+          - "dotnet-reportgenerator-globaltool"
+          - "WolverineFx*"
+          - "Marten"
+          - "TickerQ*"
+          - "Microsoft.EntityFrameworkCore*"
+          - "Microsoft.Extensions.*"
+          - "Npgsql*"
+          - "EFCore.NamingConventions"
+          - "dotnet-ef"
+          - "OpenTelemetry*"
+          - "Serilog*"
         update-types:
           - minor
           - patch
@@ -86,6 +104,21 @@ updates:
       minor-and-patch:
         patterns:
           - "*"
+        exclude-patterns:
+          - "next"
+          - "eslint-config-next"
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+          - "@radix-ui/*"
+          - "radix-ui"
+          - "tailwindcss"
+          - "@tailwindcss/*"
+          - "vitest"
+          - "@vitejs/*"
+          - "@testing-library/*"
+          - "jsdom"
         update-types:
           - minor
           - patch
