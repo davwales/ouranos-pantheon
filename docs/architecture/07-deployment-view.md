@@ -93,7 +93,8 @@ tools), npm, GitHub Actions and Docker base images. They go through the same pip
 Majors are not proposed for the Node base image or for packages tied to the .NET runtime
 major (EF Core, `Microsoft.Extensions.*`, Npgsql); those move by hand with the next LTS.
 Minor and patch updates are set to auto-merge (`.github/workflows/dependabot-auto-merge.yml`)
-and land once lint, build and test pass; majors wait for review.
+and land once lint, build and test pass; majors wait for review. Auto-merge is enabled with the
+`AUTO_MERGE_TOKEN` Dependabot secret so those merges trigger the publish run like a manual merge.
 There is no automated deployment step: promoting a release (pulling new images on the
 homelab host) is a manual operation, consistent with the single-operator constraint of
 [Section 2](02-architecture-constraints.md).
