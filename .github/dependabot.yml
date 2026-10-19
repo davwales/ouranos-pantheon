@@ -6,6 +6,18 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    # Majors of these track the .NET runtime major; move them with the SDK and base images.
+    ignore:
+      - dependency-name: "Microsoft.EntityFrameworkCore*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "Microsoft.Extensions.*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "Npgsql*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "EFCore.NamingConventions"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "dotnet-ef"
+        update-types: ["version-update:semver-major"]
     groups:
       test:
         patterns:
@@ -37,6 +49,8 @@ updates:
         patterns:
           - "Serilog*"
       minor-and-patch:
+        patterns:
+          - "*"
         update-types:
           - minor
           - patch
@@ -70,6 +84,8 @@ updates:
           - "@testing-library/*"
           - "jsdom"
       minor-and-patch:
+        patterns:
+          - "*"
         update-types:
           - minor
           - patch
@@ -89,3 +105,7 @@ updates:
       - /src/apps/interface
     schedule:
       interval: monthly
+    # Node majors alternate between LTS and short-lived releases; move to the next LTS by hand.
+    ignore:
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
