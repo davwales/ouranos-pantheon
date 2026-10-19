@@ -23,24 +23,24 @@
     <PackageVersion Include="WolverineFx.Marten" Version="6.51.0" />
     <PackageVersion Include="WolverineFx.RabbitMq" Version="6.51.0" />
     <PackageVersion Include="WolverineFx.RuntimeCompilation" Version="6.51.0" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.13" />
     <PackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.13" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="10.0.12" />
     <PackageVersion
       Include="Microsoft.Extensions.Options.ConfigurationExtensions"
-      Version="10.0.12"
+      Version="10.0.13"
     />
     <PackageVersion Include="Marten" Version="9.50.3" />
     <PackageVersion Include="Microsoft.Security.AntiSSRF" Version="1.0.1" />

@@ -13,6 +13,10 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="CsvHelper" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" VersionOverride="10.0.13" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" VersionOverride="10.0.13" />
     <PackageReference Include="TickerQ" />
     <PackageReference Include="WolverineFx" />
     <PackageReference Include="WolverineFx.RabbitMq" />

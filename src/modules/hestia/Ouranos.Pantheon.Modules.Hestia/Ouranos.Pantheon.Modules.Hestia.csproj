@@ -9,6 +9,10 @@
 
   <ItemGroup>
     <PackageReference Include="Marten" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" VersionOverride="10.0.13" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" VersionOverride="10.0.13" />
     <PackageReference Include="Microsoft.Security.AntiSSRF" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <PrivateAssets>all</PrivateAssets>
