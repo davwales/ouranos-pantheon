@@ -20,10 +20,10 @@
     <PackageVersion Include="CsvHelper" Version="33.1.0" />
     <PackageVersion Include="Flagsmith" Version="9.0.0" />
     <PackageVersion Include="EFCore.NamingConventions" Version="10.0.1" />
-    <PackageVersion Include="WolverineFx" Version="6.51.0" />
-    <PackageVersion Include="WolverineFx.Marten" Version="6.51.0" />
-    <PackageVersion Include="WolverineFx.RabbitMq" Version="6.51.0" />
-    <PackageVersion Include="WolverineFx.RuntimeCompilation" Version="6.51.0" />
+    <PackageVersion Include="WolverineFx" Version="6.51.1" />
+    <PackageVersion Include="WolverineFx.Marten" Version="6.51.1" />
+    <PackageVersion Include="WolverineFx.RabbitMq" Version="6.51.1" />
+    <PackageVersion Include="WolverineFx.RuntimeCompilation" Version="6.51.1" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.13" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.13" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.13" />
