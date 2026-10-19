@@ -1,0 +1,91 @@
+version: 2
+
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      test:
+        patterns:
+          - "xunit*"
+          - "Microsoft.NET.Test.Sdk"
+          - "coverlet.*"
+          - "NSubstitute"
+          - "Shouldly"
+          - "Autofixture"
+          - "dotnet-reportgenerator-globaltool"
+      wolverine:
+        patterns:
+          - "WolverineFx*"
+          - "Marten"
+      tickerq:
+        patterns:
+          - "TickerQ*"
+      dotnet-platform:
+        patterns:
+          - "Microsoft.EntityFrameworkCore*"
+          - "Microsoft.Extensions.*"
+          - "Npgsql*"
+          - "EFCore.NamingConventions"
+          - "dotnet-ef"
+      opentelemetry:
+        patterns:
+          - "OpenTelemetry*"
+      serilog:
+        patterns:
+          - "Serilog*"
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: npm
+    directory: /src/apps/interface
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      next-react:
+        patterns:
+          - "next"
+          - "eslint-config-next"
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+      radix:
+        patterns:
+          - "@radix-ui/*"
+          - "radix-ui"
+      tailwind:
+        patterns:
+          - "tailwindcss"
+          - "@tailwindcss/*"
+      test:
+        patterns:
+          - "vitest"
+          - "@vitejs/*"
+          - "@testing-library/*"
+          - "jsdom"
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns:
+          - "*"
+
+  - package-ecosystem: docker
+    directories:
+      - /src/apps/gateway
+      - /src/apps/interface
+    schedule:
+      interval: monthly
