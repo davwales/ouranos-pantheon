@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { DataTableFiltering } from "./data-table-filtering";
 import { type DataTableState, type ExtendedColumnDef } from "./types";
 
-const columns: ExtendedColumnDef<unknown>[] = [
+const columns: ExtendedColumnDef<Record<string, unknown>>[] = [
   {
     id: "symbolName",
     header: "Name",

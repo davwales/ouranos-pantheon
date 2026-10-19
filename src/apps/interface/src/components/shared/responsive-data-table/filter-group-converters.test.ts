@@ -22,7 +22,7 @@ const numeric: FilterConfig = {
   operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
 };
 
-const columns: ExtendedColumnDef<unknown>[] = [
+const columns: ExtendedColumnDef<Record<string, unknown>>[] = [
   { id: "name", header: "Name", filterConfig: { ...text, searchable: true } },
   { id: "type", header: "Type", filterConfig: text },
   { id: "limit", header: "Limit", filterConfig: numeric },
