@@ -410,7 +410,10 @@ CLAUDE.md
 .memory/
 .prompt_history/
 memory/*.md
-AGENTS.md
+AGENTS.local.md
+CLAUDE.local.md
+/src/apps/interface/AGENTS.md
+.claude/worktrees/
 context.md
 plan.md
 
