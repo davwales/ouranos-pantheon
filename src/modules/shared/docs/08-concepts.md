@@ -100,9 +100,12 @@ Each module documents its own assistants and tools in its module docs.
   fills), `error`, `done`. Tool events let the user inspect what each call asked and
   returned; they are a debugging view, not data for the page. `reasoning` carries the model's
   thinking and is never resent as history. Errors before the first event surface as
-  ProblemDetails; LLM failures mid-stream, and replies that finish without any content
-  (e.g. reasoning exhausted the token budget), become an `error` event with a generic
-  message.
+  ProblemDetails; LLM failures mid-stream (including timeouts), and replies that finish
+  without any content (e.g. reasoning exhausted the token budget), become an `error` event
+  with a generic message. Only the request's own cancellation ends the stream without one,
+  and a tool that times out fails like any other tool. Completions are never resent
+  automatically (the OpenAI client's retry policy is disabled), since a retry would run a
+  second generation.
 - **Stateless, trimmed history**: the client resends the whole conversation on every turn;
   nothing is persisted. Assistant messages carry typed `actions` outcomes (`name`, the page's
   `description`, `status` `Pending | Applied | Rejected | Failed`), because pages apply

@@ -290,15 +290,33 @@ public sealed class AssistantToolLoopTests
     public async Task RunAsync_WhenStreamIsCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange
+        SetupStream(CreateStream([new ResponseStreamChunk("Hi", null, null)]));
+
+        // Act & Assert
+        await Should.ThrowAsync<OperationCanceledException>(() =>
+            RunAsync([], cancellationToken: new CancellationToken(canceled: true))
+        );
+    }
+
+    [Fact]
+    public async Task RunAsync_WhenStreamTimesOut_ShouldYieldErrorEventAndStop()
+    {
+        // Arrange
         SetupStream(
             CreateStream(
-                [new ResponseStreamChunk("Hi", null, null)],
-                new OperationCanceledException()
+                [new ResponseStreamChunk("Partial", null, null)],
+                new TaskCanceledException("The request timed out.")
             )
         );
 
-        // Act & Assert
-        await Should.ThrowAsync<OperationCanceledException>(() => RunAsync([]));
+        // Act
+        var events = await RunAsync([]);
+
+        // Assert
+        events.ShouldBe([
+            new AssistantContentEvent("Partial"),
+            new AssistantErrorEvent(AssistantToolLoop<TestContext>.GenerationFailedMessage),
+        ]);
     }
 
     [Fact]
@@ -494,6 +512,57 @@ public sealed class AssistantToolLoopTests
                     AssistantToolLoop<TestContext>.ToolFailedOutput
                 )
             );
+    }
+
+    [Fact]
+    public async Task RunAsync_WhenToolTimesOut_ShouldTellTheModelTheToolFailed()
+    {
+        // Arrange
+        SetupStream(
+            CreateStream([Call("call-1", """{"query":"x"}""")]),
+            CreateStream([new ResponseStreamChunk("Sorry.", null, null)])
+        );
+
+        // Act
+        var events = await RunAsync([
+            new LookupTool((_, _) => throw new TaskCanceledException("The request timed out.")),
+        ]);
+
+        // Assert
+        events.ShouldContain(
+            new AssistantToolResultEvent(
+                "call-1",
+                AssistantToolStatus.Failed,
+                AssistantToolLoop<TestContext>.ToolFailedOutput,
+                false,
+                0
+            )
+        );
+        events.ShouldContain(new AssistantContentEvent("Sorry."));
+    }
+
+    [Fact]
+    public async Task RunAsync_WhenToolIsCancelled_ShouldThrowOperationCanceledException()
+    {
+        // Arrange
+        using var cts = new CancellationTokenSource();
+        SetupStream(CreateStream([Call("call-1", """{"query":"x"}""")]));
+
+        // Act & Assert
+        await Should.ThrowAsync<OperationCanceledException>(() =>
+            RunAsync(
+                [
+                    new LookupTool(
+                        (_, _) =>
+                        {
+                            cts.Cancel();
+                            throw new OperationCanceledException(cts.Token);
+                        }
+                    ),
+                ],
+                cancellationToken: cts.Token
+            )
+        );
     }
 
     [Fact]

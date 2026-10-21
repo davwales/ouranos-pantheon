@@ -1,4 +1,5 @@
 using System.ClientModel;
+using System.ClientModel.Primitives;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -25,10 +26,7 @@ public static class OuranosMachineLearningModule
                 throw new InvalidOperationException("Invalid Ouranos Machine Learning URL.");
             }
 
-            return new OpenAIClient(
-                new ApiKeyCredential(opts.ApiKey),
-                new OpenAIClientOptions { Endpoint = new Uri(opts.ConnectionString) }
-            );
+            return new OpenAIClient(new ApiKeyCredential(opts.ApiKey), CreateClientOptions(opts));
         });
 
         services.AddHttpClient<IOuranosMachineLearningClient, OuranosMachineLearningClient>(
@@ -45,5 +43,16 @@ public static class OuranosMachineLearningModule
         );
 
         return services;
+    }
+
+    // Completions are not idempotent: the SDK's default retry policy would resend a request the
+    // model may already be generating, so failures surface to the caller instead.
+    internal static OpenAIClientOptions CreateClientOptions(OuranosMachineLearningOptions options)
+    {
+        return new OpenAIClientOptions
+        {
+            Endpoint = new Uri(options.ConnectionString),
+            RetryPolicy = new ClientRetryPolicy(maxRetries: 0),
+        };
     }
 }
