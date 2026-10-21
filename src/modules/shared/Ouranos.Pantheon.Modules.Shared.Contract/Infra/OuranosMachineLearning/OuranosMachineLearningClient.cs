@@ -218,7 +218,7 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
             "Successfully generated structured response using model '{Model}'.",
             model
         );
-        return StructuredCompletionParser.Parse<T>(result.Value.GetOutputText());
+        return StructuredCompletionParser.Parse<T>(result.Value.GetOutputText(), _logger);
     }
 
     public async Task<List<List<ForecastPoint>>> GetPlutusForecasts(

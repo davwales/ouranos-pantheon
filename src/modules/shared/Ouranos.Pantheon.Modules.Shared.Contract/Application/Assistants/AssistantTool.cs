@@ -45,7 +45,8 @@ public abstract class AssistantTool<TContext, TArguments>(ILogger logger) : IAss
 
         // Models often send nothing at all for a tool without parameters.
         var parsed = StructuredCompletionParser.Parse<TArguments>(
-            string.IsNullOrWhiteSpace(arguments) ? "{}" : arguments
+            string.IsNullOrWhiteSpace(arguments) ? "{}" : arguments,
+            _logger
         );
 
         if (parsed is null)

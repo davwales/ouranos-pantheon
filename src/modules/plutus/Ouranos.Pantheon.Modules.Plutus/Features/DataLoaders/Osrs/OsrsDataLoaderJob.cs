@@ -75,6 +75,7 @@ public sealed class OsrsDataLoaderJob
                 await SaveLastProcessed(timestamp, ct);
             },
             StaleDataRetryDelays,
+            _logger,
             cancellationToken
         );
     }

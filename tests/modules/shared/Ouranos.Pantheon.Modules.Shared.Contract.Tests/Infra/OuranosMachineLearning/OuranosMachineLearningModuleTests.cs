@@ -1,5 +1,10 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System.ClientModel;
+using System.ClientModel.Primitives;
+using System.Net;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using OpenAI;
+using OpenAI.Chat;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Tests.Utils.Shouldly;
 
@@ -75,5 +80,39 @@ public sealed class OuranosMachineLearningModuleTests
 
         // Assert
         act.ShouldThrow<Exception>();
+    }
+
+    [Fact]
+    public async Task CreateClientOptions_WhenRequestFails_ShouldNotResendIt()
+    {
+        // Arrange
+        var handler = new CountingHandler(HttpStatusCode.ServiceUnavailable);
+        var options = OuranosMachineLearningModule.CreateClientOptions(
+            new OuranosMachineLearningOptions { ConnectionString = "http://localhost:5000/" }
+        );
+        options.Transport = new HttpClientPipelineTransport(new HttpClient(handler));
+        var client = new OpenAIClient(new ApiKeyCredential("test-api-key"), options);
+
+        // Act
+        var act = () =>
+            client.GetChatClient("model").CompleteChatAsync([new UserChatMessage("Hi")]);
+
+        // Assert
+        await act.ShouldThrowAsync<ClientResultException>();
+        handler.Requests.ShouldBe(1);
+    }
+
+    private sealed class CountingHandler(HttpStatusCode statusCode) : HttpMessageHandler
+    {
+        public int Requests { get; private set; }
+
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken
+        )
+        {
+            Requests++;
+            return Task.FromResult(new HttpResponseMessage(statusCode));
+        }
     }
 }
