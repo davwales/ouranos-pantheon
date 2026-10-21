@@ -151,4 +151,53 @@ public sealed class RsiSignalComputerTests
         computer.Description.ShouldNotBeNullOrEmpty();
         computer.Intents.ShouldNotBeEmpty();
     }
+
+    [Fact]
+    public async Task ComputeAsync_WhenPricesAreFlat_ReturnsNeutral()
+    {
+        // Arrange
+        var buckets = Enumerable.Range(0, 20).Select(_ => Bucket(100m)).ToList();
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            0m,
+            1000m,
+            null,
+            null,
+            null,
+            buckets
+        );
+
+        // Act
+        var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(0m);
+    }
+
+    [Fact]
+    public async Task ComputeAsync_WhenPricesOnlyRiseAfterAFlatStart_ReturnsFullyBearish()
+    {
+        // Arrange
+        var buckets = Enumerable
+            .Range(0, 20)
+            .Select(i => Bucket(i < 15 ? 100m : 100m + i))
+            .ToList();
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            0m,
+            1000m,
+            null,
+            null,
+            null,
+            buckets
+        );
+
+        // Act
+        var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(-1m);
+    }
 }
