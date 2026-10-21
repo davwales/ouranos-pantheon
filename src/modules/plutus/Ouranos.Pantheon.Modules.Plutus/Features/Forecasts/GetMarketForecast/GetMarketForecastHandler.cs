@@ -78,7 +78,12 @@ public sealed class GetMarketForecastHandler
 
         Guard.Against.NotFound(input.MarketId, market);
 
-        var taxRate = (market.Taxes.Flat ?? new FlatTax(0, 0, 0)).Rate;
+        // Mirrors MarketRules.UnitTax inline, because the margins are sorted in SQL and EF cannot
+        // translate a call into it.
+        var tax = market.Taxes.Flat ?? new FlatTax(0, 0, 0);
+        var taxRate = tax.Rate;
+        var taxMinimum = tax.Minimum;
+        var taxMaximum = tax.Maximum;
 
         var forecasts = _dbContext
             .Forecasts.AsNoTracking()
@@ -98,16 +103,38 @@ public sealed class GetMarketForecastHandler
                 SymbolSubcode = f.Symbol.Subcode,
                 f.Latest,
                 DayOneMargin = f.Predictions.First().AveragePrice
-                    - Math.Min(0, f.Predictions.First().AveragePrice * taxRate)
+                    - (
+                        Math.Floor(f.Predictions.First().AveragePrice * taxRate) < taxMinimum
+                            ? 0m
+                            : Math.Min(
+                                Math.Floor(f.Predictions.First().AveragePrice * taxRate),
+                                taxMaximum
+                            )
+                    )
                     - f.Latest.AveragePrice,
                 DayOneGain = (
                     f.Predictions.First().AveragePrice
-                    - Math.Min(0, f.Predictions.First().AveragePrice * taxRate)
+                    - (
+                        Math.Floor(f.Predictions.First().AveragePrice * taxRate) < taxMinimum
+                            ? 0m
+                            : Math.Min(
+                                Math.Floor(f.Predictions.First().AveragePrice * taxRate),
+                                taxMaximum
+                            )
+                    )
                     - f.Latest.AveragePrice
                 ) * f.Predictions.First().Volume,
                 DayTwoGain = (
                     f.Predictions.Skip(1).First().AveragePrice
-                    - Math.Min(0, f.Predictions.Skip(1).First().AveragePrice * taxRate)
+                    - (
+                        Math.Floor(f.Predictions.Skip(1).First().AveragePrice * taxRate)
+                        < taxMinimum
+                            ? 0m
+                            : Math.Min(
+                                Math.Floor(f.Predictions.Skip(1).First().AveragePrice * taxRate),
+                                taxMaximum
+                            )
+                    )
                     - f.Latest.AveragePrice
                 ) * f.Predictions.Skip(1).First().Volume,
                 Predictions = f
@@ -117,11 +144,19 @@ public sealed class GetMarketForecastHandler
                         p.MaxPrice,
                         p.Volume,
                         p.AveragePrice
-                            - Math.Min(0, p.AveragePrice * taxRate)
+                            - (
+                                Math.Floor(p.AveragePrice * taxRate) < taxMinimum
+                                    ? 0m
+                                    : Math.Min(Math.Floor(p.AveragePrice * taxRate), taxMaximum)
+                            )
                             - f.Latest.AveragePrice,
                         (
                             p.AveragePrice
-                            - Math.Min(0, p.AveragePrice * taxRate)
+                            - (
+                                Math.Floor(p.AveragePrice * taxRate) < taxMinimum
+                                    ? 0m
+                                    : Math.Min(Math.Floor(p.AveragePrice * taxRate), taxMaximum)
+                            )
                             - f.Latest.AveragePrice
                         ) * p.Volume,
                         p.AveragePrice - f.Latest.AveragePrice,
