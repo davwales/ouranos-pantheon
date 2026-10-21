@@ -40,7 +40,12 @@ public sealed class RsiSignalComputer : ISignalComputer
         }
 
         decimal rsi;
-        if (avgLoss == 0)
+        if (avgGain == 0 && avgLoss == 0)
+        {
+            // A price that never moved is neither overbought nor oversold.
+            rsi = 50m;
+        }
+        else if (avgLoss == 0)
         {
             rsi = 100m;
         }
