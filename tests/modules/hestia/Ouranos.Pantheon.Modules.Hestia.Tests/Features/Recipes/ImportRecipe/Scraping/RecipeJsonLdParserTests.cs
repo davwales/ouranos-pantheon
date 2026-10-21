@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.ImportRecipe.Scraping;
+using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes.ValueTypes;
 
 namespace Ouranos.Pantheon.Modules.Hestia.Tests.Features.Recipes.ImportRecipe.Scraping;
 
@@ -45,6 +46,72 @@ public sealed class RecipeJsonLdParserTests
         NameFromRaw(recipe.RawJson).ShouldBe("Chocolate Cake");
         recipe.RawJson.ShouldContain("recipeIngredient");
         recipe.RawJson.ShouldContain("recipeInstructions");
+    }
+
+    [Fact]
+    public void TryExtractRecipe_WhenRecipeHasReviewsAndMedia_ShouldStripThemFromRawJson()
+    {
+        // Arrange
+        var html = JsonLdHtml(
+            """
+            {
+              "@type": "Recipe",
+              "name": "Reviewed Cake",
+              "recipeIngredient": ["½ cup sugar"],
+              "recipeInstructions": ["Bake."],
+              "review": [{ "@type": "Review", "reviewBody": "Great!" }],
+              "comment": [{ "@type": "Comment", "text": "Yum" }],
+              "aggregateRating": { "ratingValue": 5 },
+              "interactionStatistic": { "userInteractionCount": 10 },
+              "video": { "contentUrl": "https://example.com/video.mp4" },
+              "image": "https://example.com/cake.jpg",
+              "nutrition": { "calories": "300 kcal" }
+            }
+            """
+        );
+
+        // Act
+        var result = RecipeJsonLdParser.TryExtractRecipe(html);
+
+        // Assert
+        var recipe = result.ShouldBeOfType<ScrapedJsonLdRecipe>();
+        using var document = JsonDocument.Parse(recipe.RawJson);
+        document
+            .RootElement.EnumerateObject()
+            .Select(p => p.Name)
+            .ShouldBe(["@type", "name", "recipeIngredient", "recipeInstructions"]);
+        recipe.RawJson.ShouldContain("½ cup sugar");
+    }
+
+    [Fact]
+    public void TryExtractRecipe_WhenRecipeHasYieldTimesAndImage_ShouldReturnDetails()
+    {
+        // Arrange
+        var html = JsonLdHtml(
+            """
+            {
+              "@type": "Recipe",
+              "name": "Detailed Cake",
+              "recipeIngredient": ["1 egg"],
+              "recipeInstructions": ["Bake."],
+              "recipeYield": ["8", "8 slices"],
+              "prepTime": "PT15M",
+              "cookTime": "PT30M",
+              "totalTime": "PT45M",
+              "image": { "@type": "ImageObject", "url": "https://example.com/cake.jpg" }
+            }
+            """
+        );
+
+        // Act
+        var result = RecipeJsonLdParser.TryExtractRecipe(html);
+
+        // Assert
+        result
+            .ShouldBeOfType<ScrapedJsonLdRecipe>()
+            .Details.ShouldBe(
+                new RecipeDetails("8 slices", 15, 30, 45, "https://example.com/cake.jpg")
+            );
     }
 
     [Fact]

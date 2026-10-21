@@ -38,7 +38,14 @@ http:
             "isOptional": false
           }
         ],
-        "notes": "Season to taste."
+        "notes": "Season to taste.",
+        "details": {
+          "yield": "4 servings",
+          "prepMinutes": 10,
+          "cookMinutes": 20,
+          "totalMinutes": 30,
+          "imageUrl": null
+        }
       }
   auth: inherit
 

@@ -45,11 +45,20 @@ public sealed class ImportRecipeConsumerTests
         );
     }
 
+    private static readonly RecipeDetails ScrapedDetails = new(
+        "8 slices",
+        15,
+        30,
+        45,
+        "https://example.com/cake.jpg"
+    );
+
     private static ScrapedJsonLdRecipe ValidScrapedRecipe()
     {
         return new ScrapedJsonLdRecipe(
             "Chocolate Cake",
-            """{"@type":"Recipe","name":"Chocolate Cake","recipeIngredient":["2 cups flour","1/2 tsp salt","3 eggs"],"recipeInstructions":["Mix everything.","Bake at 350°F."]}"""
+            """{"@type":"Recipe","name":"Chocolate Cake","recipeIngredient":["2 cups flour","1/2 tsp salt","3 eggs"],"recipeInstructions":["Mix everything.","Bake at 350°F."]}""",
+            ScrapedDetails
         );
     }
 
@@ -168,6 +177,7 @@ public sealed class ImportRecipeConsumerTests
         @event.Ingredients[0].ShouldBe(new Ingredient(2m, "cup", "flour"));
         @event.Ingredients[1].ShouldBe(new Ingredient(0.5m, "tsp", "salt"));
         @event.Ingredients[2].ShouldBe(new Ingredient(3m, "whole", "eggs"));
+        @event.Details.ShouldBe(ScrapedDetails);
         @event.ImportedAt.ShouldNotBe(default);
 
         await _session.Received(1).SaveChangesAsync(CancellationToken.None);

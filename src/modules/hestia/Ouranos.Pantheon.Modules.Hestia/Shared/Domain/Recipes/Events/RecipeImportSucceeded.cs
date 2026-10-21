@@ -8,5 +8,6 @@ public sealed record RecipeImportSucceeded(
     List<Step> Steps,
     List<Ingredient> Ingredients,
     string Notes,
-    DateTimeOffset ImportedAt
+    DateTimeOffset ImportedAt,
+    RecipeDetails? Details = null
 ) : IDomainEvent;

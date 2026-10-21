@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using System.Text;
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
@@ -106,7 +107,10 @@ public sealed class RecipeScraper(HttpClient httpClient, ILogger<RecipeScraper> 
         CancellationToken cancellationToken
     )
     {
-        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        await using var stream = Decompress(
+            await response.Content.ReadAsStreamAsync(cancellationToken),
+            response.Content.Headers.ContentEncoding.LastOrDefault()
+        );
         using var reader = new StreamReader(stream);
         var buffer = new char[ReadBufferSize];
         var builder = new StringBuilder();
@@ -127,5 +131,18 @@ public sealed class RecipeScraper(HttpClient httpClient, ILogger<RecipeScraper> 
         }
 
         return builder.ToString();
+    }
+
+    // The AntiSSRF handler does not decompress, and some sites compress responses even when the
+    // request does not advertise Accept-Encoding. The size limit applies to the decompressed text.
+    private static Stream Decompress(Stream stream, string? contentEncoding)
+    {
+        return contentEncoding?.Trim().ToLowerInvariant() switch
+        {
+            "gzip" or "x-gzip" => new GZipStream(stream, CompressionMode.Decompress),
+            "deflate" => new ZLibStream(stream, CompressionMode.Decompress),
+            "br" => new BrotliStream(stream, CompressionMode.Decompress),
+            _ => stream,
+        };
     }
 }

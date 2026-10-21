@@ -10,5 +10,6 @@ public sealed record RecipeReverted(
     List<Step> Steps,
     List<Ingredient> Ingredients,
     string Notes,
-    DateTimeOffset RevertedAt
+    DateTimeOffset RevertedAt,
+    RecipeDetails? Details = null
 ) : IDomainEvent;

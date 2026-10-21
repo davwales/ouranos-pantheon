@@ -183,4 +183,52 @@ public sealed class CreateRecipeHandlerTests
         // Assert
         await act.ShouldThrowAsync<ArgumentOutOfRangeException>();
     }
+
+    [Fact]
+    public async Task Handle_WhenDetailsProvided_ShouldStoreDetailsOnCreatedEvent()
+    {
+        // Arrange
+        var input = ValidInput() with
+        {
+            Details = new RecipeDetailsInput(
+                "8 slices",
+                15,
+                30,
+                45,
+                "https://example.com/cake.jpg"
+            ),
+        };
+        object[]? capturedEvents = null;
+        _events
+            .When(e => e.StartStream(Arg.Any<Guid>(), Arg.Any<object[]>()))
+            .Do(call => capturedEvents = call.Arg<object[]>());
+
+        // Act
+        await _handler.Handle(input, CancellationToken.None);
+
+        // Assert
+        capturedEvents.ShouldNotBeNull();
+        capturedEvents!
+            [0]
+            .ShouldBeOfType<RecipeCreated>()
+            .Details.ShouldBe(
+                new RecipeDetails("8 slices", 15, 30, 45, "https://example.com/cake.jpg")
+            );
+    }
+
+    [Fact]
+    public async Task Handle_WhenDetailsInvalid_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var input = ValidInput() with
+        {
+            Details = new RecipeDetailsInput(null, -5, null, null, null),
+        };
+
+        // Act
+        var act = async () => await _handler.Handle(input, CancellationToken.None);
+
+        // Assert
+        await act.ShouldThrowAsync<ArgumentOutOfRangeException>();
+    }
 }

@@ -26,6 +26,14 @@ export type Step = {
   text: string;
 };
 
+export type RecipeDetails = {
+  yield: string | null;
+  prepMinutes: number | null;
+  cookMinutes: number | null;
+  totalMinutes: number | null;
+  imageUrl: string | null;
+};
+
 export type RecipeImportStatus = "None" | "Importing" | "Imported" | "Failed";
 
 export type Recipe = {
@@ -38,6 +46,7 @@ export type Recipe = {
   createdAt: string;
   importStatus: RecipeImportStatus;
   importFailureReason: string | null;
+  details: RecipeDetails | null;
 };
 
 export type ImportRecipeInput = {
@@ -58,6 +67,7 @@ export type CreateRecipeInput = {
   steps: Step[];
   ingredients: IngredientInput[];
   notes: string;
+  details?: RecipeDetails;
 };
 
 export type CreateRecipeResponse = {
@@ -70,6 +80,7 @@ export type UpdateRecipeInput = {
   steps: Step[];
   ingredients: IngredientInput[];
   notes: string;
+  details?: RecipeDetails;
 };
 
 export type UpdateRecipeResponse = {

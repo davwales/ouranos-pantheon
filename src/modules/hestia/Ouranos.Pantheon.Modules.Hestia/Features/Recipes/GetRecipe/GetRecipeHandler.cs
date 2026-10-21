@@ -51,7 +51,16 @@ public sealed class GetRecipeHandler(ILogger<GetRecipeHandler> logger, IHestiaMa
             recipe.Notes,
             recipe.CreatedAt,
             recipe.ImportStatus,
-            recipe.ImportFailureReason
+            recipe.ImportFailureReason,
+            recipe.Details is { } details
+                ? new RecipeDetailsResponse(
+                    details.Yield,
+                    details.PrepMinutes,
+                    details.CookMinutes,
+                    details.TotalMinutes,
+                    details.ImageUrl
+                )
+                : null
         );
     }
 }

@@ -18,6 +18,11 @@ export type RecipeFormState = {
   ingredients: IngredientFormRow[];
   steps: InstructionStepFormRow[];
   notes: string;
+  yield: string;
+  prepMinutes: string;
+  cookMinutes: string;
+  totalMinutes: string;
+  imageUrl: string;
 };
 
 export type FormErrors = {
@@ -25,5 +30,10 @@ export type FormErrors = {
   sourceUrl?: string;
   steps?: Array<{ text?: string }>;
   notes?: string;
+  yield?: string;
+  prepMinutes?: string;
+  cookMinutes?: string;
+  totalMinutes?: string;
+  imageUrl?: string;
   ingredients?: Array<{ quantity?: string; unit?: string; name?: string }>;
 };

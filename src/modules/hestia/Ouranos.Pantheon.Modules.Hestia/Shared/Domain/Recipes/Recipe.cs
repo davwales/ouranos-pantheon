@@ -19,6 +19,7 @@ public sealed record Recipe : BaseEventSourcedEntity
     public List<Step> Steps { get; init; } = [];
     public List<Ingredient> Ingredients { get; init; } = [];
     public string Notes { get; init; } = string.Empty;
+    public RecipeDetails? Details { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
     public RecipeImportStatus ImportStatus { get; init; }
     public string? ImportFailureReason { get; init; }
@@ -38,6 +39,7 @@ public sealed record Recipe : BaseEventSourcedEntity
             Steps = @event.Steps,
             Ingredients = @event.Ingredients,
             Notes = @event.Notes,
+            Details = @event.Details,
             CreatedAt = @event.CreatedAt,
             ImportStatus = RecipeImportStatus.None,
         };
@@ -54,7 +56,8 @@ public sealed record Recipe : BaseEventSourcedEntity
         string? sourceUrl,
         List<Step> steps,
         List<Ingredient> ingredients,
-        string notes
+        string notes,
+        RecipeDetails? details = null
     )
     {
         GuardValidFields(title, sourceUrl, steps, ingredients, notes);
@@ -66,7 +69,8 @@ public sealed record Recipe : BaseEventSourcedEntity
             steps,
             ingredients,
             notes,
-            DateTimeOffset.UtcNow
+            DateTimeOffset.UtcNow,
+            details ?? RecipeDetails.Empty
         );
 
         return OperationResult<Recipe>.Of(Create(@event), @event);
@@ -105,14 +109,16 @@ public sealed record Recipe : BaseEventSourcedEntity
     /// Command factory: validates the proposed fields and emits a
     /// <see cref="IDomainEvent"/> per field whose value differs from the
     /// current state, returning the resulting state. No-op fields produce no
-    /// events, so the event history shows exactly what changed.
+    /// events, so the event history shows exactly what changed. A null
+    /// <paramref name="details"/> leaves the current details unchanged.
     /// </summary>
     public OperationResult<Recipe> Update(
         string title,
         string? sourceUrl,
         List<Step> steps,
         List<Ingredient> ingredients,
-        string notes
+        string notes,
+        RecipeDetails? details = null
     )
     {
         GuardValidFields(title, sourceUrl, steps, ingredients, notes);
@@ -151,6 +157,13 @@ public sealed record Recipe : BaseEventSourcedEntity
         if (notes != Notes)
         {
             var @event = new RecipeNotesChanged(notes);
+            events.Add(@event);
+            state = Apply(@event, state);
+        }
+
+        if (details is not null && details != (Details ?? RecipeDetails.Empty))
+        {
+            var @event = new RecipeDetailsChanged(details);
             events.Add(@event);
             state = Apply(@event, state);
         }
@@ -203,7 +216,8 @@ public sealed record Recipe : BaseEventSourcedEntity
             historical.Steps,
             historical.Ingredients,
             historical.Notes,
-            revertedAt
+            revertedAt,
+            historical.Details
         );
 
         return OperationResult<Recipe>.Of(Apply(@event, this), @event);
@@ -217,7 +231,8 @@ public sealed record Recipe : BaseEventSourcedEntity
         string title,
         List<Step> steps,
         List<Ingredient> ingredients,
-        string notes
+        string notes,
+        RecipeDetails? details = null
     )
     {
         GuardValidFields(title, null, steps, ingredients, notes);
@@ -227,7 +242,8 @@ public sealed record Recipe : BaseEventSourcedEntity
             steps,
             ingredients,
             notes,
-            DateTimeOffset.UtcNow
+            DateTimeOffset.UtcNow,
+            details ?? RecipeDetails.Empty
         );
 
         return OperationResult<Recipe>.Of(Apply(@event, this), @event);
@@ -277,6 +293,7 @@ public sealed record Recipe : BaseEventSourcedEntity
             Steps = @event.Steps,
             Ingredients = @event.Ingredients,
             Notes = @event.Notes,
+            Details = @event.Details,
             CreatedAt = @event.CreatedAt,
         };
     }
@@ -333,6 +350,16 @@ public sealed record Recipe : BaseEventSourcedEntity
 
     /// <summary>
     /// Marten convention: evolve the aggregate by applying a
+    /// <see cref="RecipeDetailsChanged"/> event to the current state
+    /// (functional fold).
+    /// </summary>
+    public static Recipe Apply(RecipeDetailsChanged @event, Recipe current)
+    {
+        return current with { Details = @event.Details };
+    }
+
+    /// <summary>
+    /// Marten convention: evolve the aggregate by applying a
     /// <see cref="RecipeReverted"/> event to the current state
     /// (functional fold). No validation - events are historical truth.
     /// </summary>
@@ -345,6 +372,7 @@ public sealed record Recipe : BaseEventSourcedEntity
             Steps = @event.Steps,
             Ingredients = @event.Ingredients,
             Notes = @event.Notes,
+            Details = @event.Details,
         };
     }
 
@@ -375,6 +403,7 @@ public sealed record Recipe : BaseEventSourcedEntity
             Steps = @event.Steps,
             Ingredients = @event.Ingredients,
             Notes = @event.Notes,
+            Details = @event.Details,
             ImportStatus = RecipeImportStatus.Imported,
             ImportFailureReason = null,
         };

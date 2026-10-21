@@ -25,6 +25,7 @@ function mockRecipe(overrides: Partial<Recipe> = {}): Recipe {
     createdAt: "2025-01-01T00:00:00.000Z",
     importStatus: "None",
     importFailureReason: null,
+    details: null,
     ...overrides,
   };
 }
@@ -54,8 +55,19 @@ describe("RecipeEditView", () => {
     const onSaved = vi.fn();
     vi.mocked(hestiaApi.updateRecipe).mockResolvedValueOnce({ id: "test-recipe-1" });
 
+    const details = {
+      yield: "8 slices",
+      prepMinutes: 15,
+      cookMinutes: 30,
+      totalMinutes: 45,
+      imageUrl: "https://example.com/cake.jpg",
+    };
     render(
-      <RecipeEditView data={mockRecipe()} onCancel={vi.fn()} onSaved={onSaved} />,
+      <RecipeEditView
+        data={mockRecipe({ details })}
+        onCancel={vi.fn()}
+        onSaved={onSaved}
+      />,
     );
 
     fireEvent.change(screen.getByLabelText(/title/i), {
@@ -74,6 +86,7 @@ describe("RecipeEditView", () => {
         ],
         steps: [{ text: "Mix and bake for 30 minutes." }],
         notes: "Best served warm.",
+        details,
       });
     });
 

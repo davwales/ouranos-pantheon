@@ -6,6 +6,7 @@ import { ApiError } from "@/lib/api-client";
 import type { Recipe } from "@/lib/api/hestia-types";
 import type { RecipeFormState } from "./recipe-form-types";
 import { useRecipeFormState } from "./use-recipe-form-state";
+import { toRecipeDetailsInput } from "./to-recipe-details-input";
 import { validateRecipeForm } from "./validate-recipe-form";
 
 function toFormState(data: Recipe): RecipeFormState {
@@ -20,6 +21,11 @@ function toFormState(data: Recipe): RecipeFormState {
     })),
     steps: data.steps.map((step) => ({ id: generateID(), text: step.text })),
     notes: data.notes,
+    yield: data.details?.yield ?? "",
+    prepMinutes: data.details?.prepMinutes?.toString() ?? "",
+    cookMinutes: data.details?.cookMinutes?.toString() ?? "",
+    totalMinutes: data.details?.totalMinutes?.toString() ?? "",
+    imageUrl: data.details?.imageUrl ?? "",
   };
 }
 
@@ -85,6 +91,7 @@ export function useRecipeEditForm({
         steps,
         ingredients,
         notes: form.notes.trim(),
+        details: toRecipeDetailsInput(form),
       });
       onSaved();
     } catch (error) {

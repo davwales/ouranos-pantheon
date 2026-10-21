@@ -80,7 +80,7 @@ internal static class ExtractedRecipeMapper
             ingredients.Add(
                 new Ingredient(
                     ResolveQuantity(rawIngredient.Quantity),
-                    ResolveUnit(rawIngredient.Unit),
+                    ResolveUnit(rawIngredient.Unit, rawIngredient.Quantity),
                     name,
                     rawIngredient.IsOptional
                 )
@@ -100,11 +100,12 @@ internal static class ExtractedRecipeMapper
         return quantity.Value;
     }
 
-    private static string ResolveUnit(string? unit)
+    private static string ResolveUnit(string? unit, decimal? quantity)
     {
         if (string.IsNullOrWhiteSpace(unit))
         {
-            return "whole";
+            // A counted item ("3 eggs") is "whole"; a line without an amount ("salt") is not.
+            return quantity is null or <= 0 ? "as needed" : "whole";
         }
 
         var normalized = unit.Trim().ToLowerInvariant();

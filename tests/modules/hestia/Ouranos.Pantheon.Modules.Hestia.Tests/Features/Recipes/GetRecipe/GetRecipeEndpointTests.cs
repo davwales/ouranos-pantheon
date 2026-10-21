@@ -27,7 +27,8 @@ public sealed class GetRecipeEndpointTests
             "Best served warm.",
             DateTimeOffset.UtcNow,
             RecipeImportStatus.Imported,
-            null
+            null,
+            new RecipeDetailsResponse("8 slices", 15, 30, 45, "https://example.com/cake.jpg")
         );
 
         _bus.InvokeAsync<GetRecipeResponse>(Arg.Any<object>(), Arg.Any<CancellationToken>())

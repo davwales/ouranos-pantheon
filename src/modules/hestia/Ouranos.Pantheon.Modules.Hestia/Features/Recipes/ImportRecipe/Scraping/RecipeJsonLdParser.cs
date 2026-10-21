@@ -1,4 +1,6 @@
+using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 
 namespace Ouranos.Pantheon.Modules.Hestia.Features.Recipes.ImportRecipe.Scraping;
@@ -10,6 +12,25 @@ internal static partial class RecipeJsonLdParser
         RegexOptions.IgnoreCase | RegexOptions.Singleline
     )]
     private static partial Regex JsonLdScriptRegex();
+
+    // Properties the extraction model never needs. Review arrays alone are often most of the
+    // payload, so dropping them keeps large pages under the extractor's size limit.
+    private static readonly string[] IgnoredProperties =
+    [
+        "review",
+        "comment",
+        "aggregateRating",
+        "interactionStatistic",
+        "video",
+        "image",
+        "nutrition",
+    ];
+
+    // Keep fractions and accented names ("½", "crème") readable to the model instead of \u escapes.
+    private static readonly JsonSerializerOptions RawJsonOptions = new()
+    {
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+    };
 
     public static ScrapedJsonLdRecipe? TryExtractRecipe(string html)
     {
@@ -103,7 +124,22 @@ internal static partial class RecipeJsonLdParser
             return null;
         }
 
-        return new ScrapedJsonLdRecipe(title, element.GetRawText());
+        return new ScrapedJsonLdRecipe(
+            title,
+            StripIgnoredProperties(element),
+            RecipeJsonLdDetailsParser.Parse(element)
+        );
+    }
+
+    private static string StripIgnoredProperties(JsonElement element)
+    {
+        var node = JsonObject.Create(element)!;
+        foreach (var property in IgnoredProperties)
+        {
+            node.Remove(property);
+        }
+
+        return node.ToJsonString(RawJsonOptions);
     }
 
     private static bool MatchesRecipeType(JsonElement node)
