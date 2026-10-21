@@ -5,6 +5,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetMarketForecast.Schem
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Trading;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
@@ -296,6 +297,68 @@ public sealed class GetMarketForecastHandlerTests
         items[1].DayOne.Gain.ShouldBe(4000m);
     }
 
+    [Theory]
+    [InlineData(1000, 900)]
+    [InlineData(1025.5, 1000)]
+    [InlineData(40, 30)]
+    [InlineData(300000000, 290000000)]
+    public async Task Handle_WhenMarketIsTaxed_ShouldSubtractTheSalesTaxFromMarginsAndGains(
+        decimal predictedPrice,
+        decimal latestPrice
+    )
+    {
+        // Arrange
+        var tax = new FlatTax(Minimum: 1m, Maximum: 5_000_000m, Rate: 0.02m);
+        var market = Market.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            new Taxes(tax)
+        );
+        await _dbContext.SeedData(market);
+        await SeedForecast(market.Id, "Gold", predictedPrice, latestPrice);
+
+        var expectedMargin =
+            predictedPrice - new MarketRules(tax).UnitTax(predictedPrice) - latestPrice;
+
+        // Act
+        var result = await _handler.Handle(
+            new GetMarketForecastInput(market.Id, Take: 10),
+            CancellationToken.None
+        );
+
+        // Assert
+        var item = result.Items.Single();
+        item.DayOne.Margin.ShouldBe(expectedMargin);
+        item.DayOne.Gain.ShouldBe(expectedMargin * 400m);
+        item.DayTwo.Margin.ShouldBe(expectedMargin);
+        item.DayTwo.Gain.ShouldBe(expectedMargin * 400m);
+    }
+
+    [Fact]
+    public async Task Handle_WhenMarketIsTaxed_ShouldSortByTheTaxedGain()
+    {
+        // Arrange
+        var market = Market.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            new Taxes(new FlatTax(Minimum: 1m, Maximum: 5_000_000m, Rate: 0.02m))
+        );
+        await _dbContext.SeedData(market);
+
+        // Untaxed, the expensive symbol gains more (40 vs 30 per unit); taxed, it gains less (20 vs 28).
+        var expensive = await SeedForecast(market.Id, "Gold", 1040m, latestAveragePrice: 1000m);
+        var cheap = await SeedForecast(market.Id, "Silver", 130m, latestAveragePrice: 100m);
+
+        // Act
+        var result = await _handler.Handle(
+            new GetMarketForecastInput(market.Id, Take: 10),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.Items.Select(i => i.SymbolId).ShouldBe([cheap.SymbolId, expensive.SymbolId]);
+    }
+
     [Fact]
     public async Task Handle_WhenNoSortField_ShouldDefaultToDayOneGainDescending()
     {
@@ -352,7 +415,8 @@ public sealed class GetMarketForecastHandlerTests
     private async Task<Forecast> SeedForecast(
         Id<Market> marketId,
         string symbolName,
-        decimal dayOneAveragePrice
+        decimal dayOneAveragePrice,
+        decimal latestAveragePrice = 100m
     )
     {
         var symbol = Symbol.Create(
@@ -378,7 +442,7 @@ public sealed class GetMarketForecastHandlerTests
             new Id<Forecast>(Guid.NewGuid().ToString()),
             marketId,
             symbol.Id,
-            new ForecastPoint(100m, 90m, 110m, 500m),
+            new ForecastPoint(latestAveragePrice, 90m, 110m, 500m),
             predictions
         );
 

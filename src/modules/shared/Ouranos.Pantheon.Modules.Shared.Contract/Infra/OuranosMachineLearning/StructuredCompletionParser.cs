@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres.Converters;
 
 namespace Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
@@ -14,7 +15,7 @@ internal static class StructuredCompletionParser
         Converters = { new IdJsonConverterFactory(), new JsonStringEnumConverter() },
     };
 
-    public static T? Parse<T>(string? content)
+    public static T? Parse<T>(string? content, ILogger logger)
         where T : class
     {
         if (string.IsNullOrWhiteSpace(content))
@@ -28,8 +29,9 @@ internal static class StructuredCompletionParser
         {
             return JsonSerializer.Deserialize<T>(json, ParseOptions);
         }
-        catch (JsonException)
+        catch (JsonException ex)
         {
+            logger.LogWarning(ex, "Could not parse structured output as '{type}'.", typeof(T).Name);
             return null;
         }
     }

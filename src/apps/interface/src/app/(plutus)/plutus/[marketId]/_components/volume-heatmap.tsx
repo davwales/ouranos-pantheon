@@ -31,11 +31,12 @@ const DAY_LABELS = Array.from({ length: 7 }, (_, i) => {
   return new Intl.DateTimeFormat(undefined, { weekday: "short" }).format(d);
 });
 
-const HOUR_LABELS = Array.from({ length: 24 }, (_, i) => {
-  const d = new Date(2025, 0, 1);
-  d.setHours(i, 0, 0, 0);
-  return new Intl.DateTimeFormat(undefined, { hour: "numeric" }).format(d);
-});
+// The heatmap buckets trades by UTC day and hour, so the hours are labelled in UTC too.
+const HOUR_LABELS = Array.from({ length: 24 }, (_, i) =>
+  new Intl.DateTimeFormat(undefined, { hour: "numeric", timeZone: "UTC" }).format(
+    new Date(Date.UTC(2025, 0, 1, i)),
+  ),
+);
 
 function toHeatmapChartCells(
   rows: GetVolumeHeatmapResponse["rows"],
@@ -117,7 +118,7 @@ export default function VolumeHeatmap({ marketId }: { marketId: string }) {
       <CardHeader>
         <CardTitle>Volume Heatmap</CardTitle>
         <CardDescription>
-          Percentage of each day&apos;s trades - last {lookbackDays} days
+          Percentage of each day’s trades by UTC hour - last {lookbackDays} days
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

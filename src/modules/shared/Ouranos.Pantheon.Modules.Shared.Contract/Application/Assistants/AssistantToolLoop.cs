@@ -84,7 +84,7 @@ public sealed class AssistantToolLoop<TContext>(
 
             while (true)
             {
-                var (hasNext, error) = await TryMoveNextAsync(stream);
+                var (hasNext, error) = await TryMoveNextAsync(stream, cancellationToken);
 
                 if (error is not null)
                 {
@@ -245,7 +245,7 @@ public sealed class AssistantToolLoop<TContext>(
         {
             return await tool.InvokeAsync(context, call.Arguments, cancellationToken);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex) when (!IsCancellation(ex, cancellationToken))
         {
             _logger.LogError(ex, "Assistant tool '{name}' failed.", call.Name);
             return new AssistantToolResult(ToolFailedOutput, IsError: true);
@@ -273,16 +273,24 @@ public sealed class AssistantToolLoop<TContext>(
     // C# forbids yield inside a try with a catch, so stream failures are returned instead of
     // thrown and turned into an error event by the caller.
     private static async Task<(bool HasNext, Exception? Error)> TryMoveNextAsync(
-        IAsyncEnumerator<ResponseStreamChunk> stream
+        IAsyncEnumerator<ResponseStreamChunk> stream,
+        CancellationToken cancellationToken
     )
     {
         try
         {
             return (await stream.MoveNextAsync(), null);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex) when (!IsCancellation(ex, cancellationToken))
         {
             return (false, ex);
         }
+    }
+
+    // HttpClient timeouts also throw TaskCanceledException, so only the caller's token marks a
+    // real cancellation; anything else is a failure the user must see.
+    private static bool IsCancellation(Exception ex, CancellationToken cancellationToken)
+    {
+        return ex is OperationCanceledException && cancellationToken.IsCancellationRequested;
     }
 }

@@ -47,8 +47,7 @@ public sealed class GenerateImageTool(
     public override string Description =>
         """
             Draw the current scene or subject.
-            Write the prompt in English as a detailed visual description: subject, style, composition and lighting.
-            Every call draws a new image from scratch, so to change an earlier image call again with a full revised prompt.
+            To change an earlier image, call again with a full revised prompt.
             The image is shown to the user automatically; never add links or markdown images to your reply.
             """;
 

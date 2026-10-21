@@ -115,7 +115,9 @@ export default function BacktestDetailPage() {
     }
   }, [backtest, strategy, strategyId, marketId, router]);
 
-  if (backtestState.status === "error") {
+  const refreshFailed = backtestState.status === "error";
+
+  if (refreshFailed && !backtest) {
     return <NotFoundCard title="Backtest not found" message="This backtest doesn\u0027t exist or has been removed." backHref={`/plutus/${marketId}/strategies/${strategyId}/backtests`} backLabel="Back to Backtests" />;
   }
 
@@ -127,6 +129,14 @@ export default function BacktestDetailPage() {
 
   return (
     <div className="space-y-6">
+      {refreshFailed && (
+        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+          {isPolling
+            ? "Couldn’t refresh this backtest. Retrying…"
+            : "Couldn’t refresh this backtest."}
+        </div>
+      )}
+
       {actionError && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
           {actionError}

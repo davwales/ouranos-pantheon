@@ -26,7 +26,10 @@ Each module documents its own assistants and tools in its module docs.
 - **Tools**: each assistant can offer the model function tools. A tool derives from
   `AssistantTool<TContext, TArguments>`; the arguments record is exported as the tool's JSON
   schema (every property required, optional arguments nullable, enums as names, `Id<T>` as a
-  string) and parsed back from the model's call. Tools take names, or ids that another tool
+  string) and parsed back from the model's call. Guidance for an argument goes in
+  `[Description]` on the arguments record (a positional parameter or property, or an enum
+  type), which the schema emits as that property's `description`; the tool description keeps
+  only what the tool does and when to call it. Tools take names, or ids that another tool
   returned (never ids from the prompt), and reuse the module's query handlers.
 - **Layout**: everything assistant-related sits in its module's `Features/Assistants/`. Each
   assistant has an `Ask<Assistant>/` folder (endpoint, assistant, prompt, context), next to the
@@ -100,9 +103,12 @@ Each module documents its own assistants and tools in its module docs.
   fills), `error`, `done`. Tool events let the user inspect what each call asked and
   returned; they are a debugging view, not data for the page. `reasoning` carries the model's
   thinking and is never resent as history. Errors before the first event surface as
-  ProblemDetails; LLM failures mid-stream, and replies that finish without any content
-  (e.g. reasoning exhausted the token budget), become an `error` event with a generic
-  message.
+  ProblemDetails; LLM failures mid-stream (including timeouts), and replies that finish
+  without any content (e.g. reasoning exhausted the token budget), become an `error` event
+  with a generic message. Only the request's own cancellation ends the stream without one,
+  and a tool that times out fails like any other tool. Completions are never resent
+  automatically (the OpenAI client's retry policy is disabled), since a retry would run a
+  second generation.
 - **Stateless, trimmed history**: the client resends the whole conversation on every turn;
   nothing is persisted. Assistant messages carry typed `actions` outcomes (`name`, the page's
   `description`, `status` `Pending | Applied | Rejected | Failed`), because pages apply

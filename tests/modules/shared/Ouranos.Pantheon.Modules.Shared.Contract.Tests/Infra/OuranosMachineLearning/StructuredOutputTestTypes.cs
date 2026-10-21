@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Text.Json.Serialization;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 
@@ -31,3 +32,22 @@ internal sealed record TestIdArguments(
     Id<TestIngredient> IngredientId,
     Id<TestIngredient>? ParentId
 );
+
+[Description("How the ingredient is prepared.")]
+internal enum TestPreparation
+{
+    Raw,
+    Cooked,
+}
+
+internal sealed record TestDescribedArguments(
+    [Description("The ingredient name.")] string Name,
+    string? Note,
+    [Description("The ingredient to replace.")] Id<TestIngredient> IngredientId,
+    [Description("The parent ingredient, if any.")] Id<TestIngredient>? ParentId,
+    TestPreparation Preparation
+)
+{
+    [property: Description("Ignored by the exporter otherwise.")]
+    public int Servings { get; init; }
+}

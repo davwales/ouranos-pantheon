@@ -92,4 +92,116 @@ public sealed class StructuredOutputSchemaTests
             .ToArray()
             .ShouldBe(["string", "null"]);
     }
+
+    [Fact]
+    public void For_WhenParameterIsDescribed_ShouldExportItsDescription()
+    {
+        // Arrange
+        var schema = StructuredOutputSchema.For<TestDescribedArguments>().ToString();
+
+        // Act
+        using var document = JsonDocument.Parse(schema);
+        var properties = document.RootElement.GetProperty("properties");
+
+        // Assert
+        properties
+            .GetProperty("name")
+            .GetProperty("description")
+            .GetString()
+            .ShouldBe("The ingredient name.");
+    }
+
+    [Fact]
+    public void For_WhenPropertyIsDescribed_ShouldExportItsDescription()
+    {
+        // Arrange
+        var schema = StructuredOutputSchema.For<TestDescribedArguments>().ToString();
+
+        // Act
+        using var document = JsonDocument.Parse(schema);
+        var properties = document.RootElement.GetProperty("properties");
+
+        // Assert
+        properties
+            .GetProperty("servings")
+            .GetProperty("description")
+            .GetString()
+            .ShouldBe("Ignored by the exporter otherwise.");
+    }
+
+    [Fact]
+    public void For_WhenPropertyIsNotDescribed_ShouldExportNoDescription()
+    {
+        // Arrange
+        var schema = StructuredOutputSchema.For<TestDescribedArguments>().ToString();
+
+        // Act
+        using var document = JsonDocument.Parse(schema);
+        var properties = document.RootElement.GetProperty("properties");
+
+        // Assert
+        properties.GetProperty("note").TryGetProperty("description", out _).ShouldBeFalse();
+        document.RootElement.TryGetProperty("description", out _).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void For_WhenEnumIsDescribed_ShouldExportItsDescription()
+    {
+        // Arrange
+        var schema = StructuredOutputSchema.For<TestDescribedArguments>().ToString();
+
+        // Act
+        using var document = JsonDocument.Parse(schema);
+        var preparation = document.RootElement.GetProperty("properties").GetProperty("preparation");
+
+        // Assert
+        preparation
+            .GetProperty("description")
+            .GetString()
+            .ShouldBe("How the ingredient is prepared.");
+        preparation.GetProperty("enum").GetArrayLength().ShouldBe(2);
+    }
+
+    [Fact]
+    public void For_WhenIdIsDescribed_ShouldKeepItsDescription()
+    {
+        // Arrange
+        var schema = StructuredOutputSchema.For<TestDescribedArguments>().ToString();
+
+        // Act
+        using var document = JsonDocument.Parse(schema);
+        var properties = document.RootElement.GetProperty("properties");
+
+        // Assert
+        var ingredientId = properties.GetProperty("ingredientId");
+        ingredientId.GetProperty("type").GetString().ShouldBe("string");
+        ingredientId.GetProperty("description").GetString().ShouldBe("The ingredient to replace.");
+        properties
+            .GetProperty("parentId")
+            .GetProperty("description")
+            .GetString()
+            .ShouldBe("The parent ingredient, if any.");
+    }
+
+    [Fact]
+    public void For_WhenArgumentsAreDescribed_ShouldKeepTheStrictShape()
+    {
+        // Arrange
+        var schema = StructuredOutputSchema.For<TestDescribedArguments>().ToString();
+
+        // Act
+        using var document = JsonDocument.Parse(schema);
+        var root = document.RootElement;
+
+        // Assert
+        root.GetProperty("additionalProperties").GetBoolean().ShouldBeFalse();
+        root.GetProperty("required")
+            .EnumerateArray()
+            .Select(node => node.GetString())
+            .ToArray()
+            .ShouldBe(
+                ["servings", "name", "note", "ingredientId", "parentId", "preparation"],
+                ignoreOrder: true
+            );
+    }
 }

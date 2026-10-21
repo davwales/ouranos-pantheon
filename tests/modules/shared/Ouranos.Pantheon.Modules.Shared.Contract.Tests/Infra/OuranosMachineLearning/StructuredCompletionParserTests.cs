@@ -1,9 +1,13 @@
+using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
 
 namespace Ouranos.Pantheon.Modules.Shared.Contract.Tests.Infra.OuranosMachineLearning;
 
 public sealed class StructuredCompletionParserTests
 {
+    private readonly ILogger _logger = Substitute.For<ILogger>();
+
     private const string ValidJson =
         """{"title":"Chocolate Cake","description":"Rich.","ingredients":[{"quantity":2,"name":"flour"}],"steps":["Mix.","Bake."]}""";
 
@@ -11,7 +15,7 @@ public sealed class StructuredCompletionParserTests
     public void Parse_WhenContentIsValidJson_ShouldReturnTypedValue()
     {
         // Arrange & Act
-        var result = StructuredCompletionParser.Parse<TestDocument>(ValidJson);
+        var result = StructuredCompletionParser.Parse<TestDocument>(ValidJson, _logger);
 
         // Assert
         var parsed = result.ShouldBeOfType<TestDocument>();
@@ -30,7 +34,7 @@ public sealed class StructuredCompletionParserTests
         var content = $"```json\n{ValidJson}\n```";
 
         // Act
-        var result = StructuredCompletionParser.Parse<TestDocument>(content);
+        var result = StructuredCompletionParser.Parse<TestDocument>(content, _logger);
 
         // Assert
         result.ShouldNotBeNull();
@@ -45,7 +49,7 @@ public sealed class StructuredCompletionParserTests
             """{"title":"Loose","description":null,"ingredients":[{"quantity":1,"name":"egg",},],"steps":["Bake.",]}""";
 
         // Act
-        var result = StructuredCompletionParser.Parse<TestDocument>(content);
+        var result = StructuredCompletionParser.Parse<TestDocument>(content, _logger);
 
         // Assert
         var parsed = result.ShouldBeOfType<TestDocument>();
@@ -61,7 +65,7 @@ public sealed class StructuredCompletionParserTests
             "{\"title\":\"Commented\",\"description\":null,// note\n\"ingredients\":[{\"quantity\":1,\"name\":\"egg\"}],\"steps\":[\"Bake.\"]}";
 
         // Act
-        var result = StructuredCompletionParser.Parse<TestDocument>(content);
+        var result = StructuredCompletionParser.Parse<TestDocument>(content, _logger);
 
         // Assert
         var parsed = result.ShouldBeOfType<TestDocument>();
@@ -76,7 +80,7 @@ public sealed class StructuredCompletionParserTests
             """{"Title":"Casey","Description":null,"Ingredients":[{"Quantity":1,"Name":"egg"}],"Steps":["Bake."]}""";
 
         // Act
-        var result = StructuredCompletionParser.Parse<TestDocument>(content);
+        var result = StructuredCompletionParser.Parse<TestDocument>(content, _logger);
 
         // Assert
         var parsed = result.ShouldBeOfType<TestDocument>();
@@ -92,7 +96,7 @@ public sealed class StructuredCompletionParserTests
             """{"description":null,"ingredients":[{"quantity":1,"name":"egg"}],"steps":["Bake."]}""";
 
         // Act
-        var result = StructuredCompletionParser.Parse<TestDocument>(content);
+        var result = StructuredCompletionParser.Parse<TestDocument>(content, _logger);
 
         // Assert
         var parsed = result.ShouldBeOfType<TestDocument>();
@@ -107,7 +111,7 @@ public sealed class StructuredCompletionParserTests
             """{"title":"Known","description":null,"ingredients":[],"steps":[],"extra":"ignored"}""";
 
         // Act
-        var result = StructuredCompletionParser.Parse<TestDocument>(content);
+        var result = StructuredCompletionParser.Parse<TestDocument>(content, _logger);
 
         // Assert
         var parsed = result.ShouldBeOfType<TestDocument>();
@@ -118,7 +122,7 @@ public sealed class StructuredCompletionParserTests
     public void Parse_WhenContentIsBlank_ShouldReturnNull()
     {
         // Arrange & Act
-        var result = StructuredCompletionParser.Parse<TestDocument>("   ");
+        var result = StructuredCompletionParser.Parse<TestDocument>("   ", _logger);
 
         // Assert
         result.ShouldBeNull();
@@ -128,7 +132,7 @@ public sealed class StructuredCompletionParserTests
     public void Parse_WhenContentIsNull_ShouldReturnNull()
     {
         // Arrange & Act
-        var result = StructuredCompletionParser.Parse<TestDocument>(null);
+        var result = StructuredCompletionParser.Parse<TestDocument>(null, _logger);
 
         // Assert
         result.ShouldBeNull();
@@ -141,7 +145,7 @@ public sealed class StructuredCompletionParserTests
         const string content = """{"title": "Chocolate Cake" ,,, }""";
 
         // Act
-        var result = StructuredCompletionParser.Parse<TestDocument>(content);
+        var result = StructuredCompletionParser.Parse<TestDocument>(content, _logger);
 
         // Assert
         result.ShouldBeNull();
@@ -152,12 +156,33 @@ public sealed class StructuredCompletionParserTests
     {
         // Act
         var result = StructuredCompletionParser.Parse<TestIdArguments>(
-            """{"ingredientId":"abc","parentId":null}"""
+            """{"ingredientId":"abc","parentId":null}""",
+            _logger
         );
 
         // Assert
         var parsed = result.ShouldBeOfType<TestIdArguments>();
         parsed.IngredientId.Value.ShouldBe("abc");
         parsed.ParentId.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Parse_WhenContentIsInvalidJson_ShouldLogAWarning()
+    {
+        // Arrange
+        const string content = """{"title": "Chocolate Cake" ,,, }""";
+
+        // Act
+        StructuredCompletionParser.Parse<TestDocument>(content, _logger);
+
+        // Assert
+        _logger
+            .ReceivedCalls()
+            .Count(call =>
+                call.GetMethodInfo().Name == nameof(ILogger.Log)
+                && (LogLevel?)call.GetArguments()[0] == LogLevel.Warning
+                && call.GetArguments()[3] is JsonException
+            )
+            .ShouldBe(1);
     }
 }
