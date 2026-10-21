@@ -959,4 +959,159 @@ public sealed class RecipeTests
         result.ImportStatus.ShouldBe(RecipeImportStatus.Failed);
         result.ImportFailureReason.ShouldBe("The page contains no usable recipe metadata.");
     }
+
+    private static readonly RecipeDetails SampleDetails = new(
+        "8 slices",
+        15,
+        30,
+        45,
+        "https://example.com/cake.jpg"
+    );
+
+    private static Recipe BuildRecipe(RecipeDetails? details = null)
+    {
+        return Recipe
+            .Create(
+                Guid.NewGuid(),
+                "Chocolate Cake",
+                null,
+                ValidSteps(),
+                ValidIngredients(),
+                string.Empty,
+                details
+            )
+            .State;
+    }
+
+    [Fact]
+    public void Create_WhenDetailsProvided_ShouldStoreOnStateAndEvent()
+    {
+        // Act
+        var result = Recipe.Create(
+            Guid.NewGuid(),
+            "Chocolate Cake",
+            null,
+            ValidSteps(),
+            ValidIngredients(),
+            string.Empty,
+            SampleDetails
+        );
+
+        // Assert
+        result.State.Details.ShouldBe(SampleDetails);
+        result.Events[0].ShouldBeOfType<RecipeCreated>().Details.ShouldBe(SampleDetails);
+    }
+
+    [Fact]
+    public void Create_WhenDetailsOmitted_ShouldStoreEmptyDetails()
+    {
+        // Act
+        var recipe = BuildRecipe();
+
+        // Assert
+        recipe.Details.ShouldBe(RecipeDetails.Empty);
+    }
+
+    [Fact]
+    public void Update_WhenDetailsChanged_ShouldEmitRecipeDetailsChangedEvent()
+    {
+        // Arrange
+        var recipe = BuildRecipe();
+
+        // Act
+        var result = recipe.Update(
+            recipe.Title,
+            recipe.SourceUrl,
+            recipe.Steps,
+            recipe.Ingredients,
+            recipe.Notes,
+            SampleDetails
+        );
+
+        // Assert
+        result.Events.Count.ShouldBe(1);
+        result.Events[0].ShouldBeOfType<RecipeDetailsChanged>().Details.ShouldBe(SampleDetails);
+        result.State.Details.ShouldBe(SampleDetails);
+    }
+
+    [Fact]
+    public void Update_WhenDetailsNull_ShouldLeaveDetailsUnchanged()
+    {
+        // Arrange
+        var recipe = BuildRecipe(SampleDetails);
+
+        // Act
+        var result = recipe.Update(
+            recipe.Title,
+            recipe.SourceUrl,
+            recipe.Steps,
+            recipe.Ingredients,
+            recipe.Notes,
+            null
+        );
+
+        // Assert
+        result.Events.ShouldBeEmpty();
+        result.State.Details.ShouldBe(SampleDetails);
+    }
+
+    [Fact]
+    public void Update_WhenEmptyDetailsOnRecipeWithoutDetails_ShouldNotEmitEvent()
+    {
+        // Arrange: recipes created before details existed project a null Details.
+        var recipe = BuildRecipe() with
+        {
+            Details = null,
+        };
+
+        // Act
+        var result = recipe.Update(
+            recipe.Title,
+            recipe.SourceUrl,
+            recipe.Steps,
+            recipe.Ingredients,
+            recipe.Notes,
+            RecipeDetails.Empty
+        );
+
+        // Assert
+        result.Events.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void CompleteImport_WhenDetailsProvided_ShouldCarryDetailsToEventAndState()
+    {
+        // Arrange
+        var recipe = Recipe
+            .CreateImport(Guid.NewGuid(), "https://example.com/cake", DateTimeOffset.UtcNow)
+            .State;
+
+        // Act
+        var result = recipe.CompleteImport(
+            "Chocolate Cake",
+            ValidSteps(),
+            ValidIngredients(),
+            string.Empty,
+            SampleDetails
+        );
+
+        // Assert
+        result.Events[0].ShouldBeOfType<RecipeImportSucceeded>().Details.ShouldBe(SampleDetails);
+        result.State.Details.ShouldBe(SampleDetails);
+    }
+
+    [Fact]
+    public void Revert_WhenHistoricalStateHasDifferentDetails_ShouldRestoreThem()
+    {
+        // Arrange
+        var historical = BuildRecipe();
+        var current = BuildRecipe(SampleDetails);
+
+        // Act
+        var result = current.Revert(1, historical, DateTimeOffset.UtcNow);
+
+        // Assert
+        result.Events[0].ShouldBeOfType<RecipeReverted>().Details.ShouldBe(RecipeDetails.Empty);
+        result.State.Details.ShouldBe(RecipeDetails.Empty);
+    }
 }

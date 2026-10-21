@@ -19,6 +19,7 @@ const RECIPE: Recipe = {
   createdAt: "2026-10-01T00:00:00Z",
   importStatus: "None",
   importFailureReason: null,
+  details: null,
 };
 
 function setup(isEditing = false) {

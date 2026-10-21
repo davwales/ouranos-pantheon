@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Recipe } from "@/lib/api/hestia-types";
 import { IngredientsView } from "./ingredients-view";
+import { RecipeDetailsView } from "./recipe-details-view";
 
 export type RecipeReadOnlyViewProps = {
   data: Recipe;
@@ -9,6 +10,8 @@ export type RecipeReadOnlyViewProps = {
 export function RecipeReadOnlyView({ data }: RecipeReadOnlyViewProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2">
+      <RecipeDetailsView details={data.details} />
+
       <IngredientsView ingredients={data.ingredients} />
 
       <Card>

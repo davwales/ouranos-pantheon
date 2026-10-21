@@ -6,6 +6,7 @@ import { ApiError } from "@/lib/api-client";
 import { useRouter } from "next/navigation";
 import type { RecipeFormState } from "./recipe-form-types";
 import { useRecipeFormState } from "./use-recipe-form-state";
+import { toRecipeDetailsInput } from "./to-recipe-details-input";
 import { validateRecipeForm } from "./validate-recipe-form";
 
 const initialState: RecipeFormState = {
@@ -14,6 +15,11 @@ const initialState: RecipeFormState = {
   ingredients: [{ quantity: "", unit: "", name: "", isOptional: false }],
   steps: [{ id: generateID(), text: "" }],
   notes: "",
+  yield: "",
+  prepMinutes: "",
+  cookMinutes: "",
+  totalMinutes: "",
+  imageUrl: "",
 };
 
 export function useRecipeForm() {
@@ -73,6 +79,7 @@ export function useRecipeForm() {
         steps,
         ingredients,
         notes: form.notes.trim(),
+        details: toRecipeDetailsInput(form),
       });
       router.push("/hestia/recipes");
     } catch (error) {

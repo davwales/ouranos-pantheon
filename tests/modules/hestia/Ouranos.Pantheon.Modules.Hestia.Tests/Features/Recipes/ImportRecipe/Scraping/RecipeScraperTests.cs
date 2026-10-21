@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using System.Net;
 using System.Text;
 using Microsoft.Extensions.Logging;
@@ -59,6 +60,38 @@ public sealed class RecipeScraperTests
         recipe.Title.ShouldBe("Test Recipe");
         recipe.RawJson.ShouldContain("\"recipeIngredient\"");
         recipe.RawJson.ShouldContain("\"recipeInstructions\"");
+    }
+
+    [Fact]
+    public async Task ScrapeAsync_WhenResponseIsGzipEncoded_ShouldDecompressAndReturnRecipe()
+    {
+        // Arrange
+        var html =
+            """<script type="application/ld+json">{"@type":"Recipe","name":"Gzip Recipe","recipeIngredient":["1 cup flour"],"recipeInstructions":["Mix."]}</script>""";
+        using var compressed = new MemoryStream();
+        await using (
+            var gzip = new GZipStream(compressed, CompressionMode.Compress, leaveOpen: true)
+        )
+        {
+            await gzip.WriteAsync(Encoding.UTF8.GetBytes(html));
+        }
+
+        var scraper = CreateScraper(_ =>
+        {
+            var content = new ByteArrayContent(compressed.ToArray());
+            content.Headers.ContentType = new("text/html") { CharSet = "utf-8" };
+            content.Headers.ContentEncoding.Add("gzip");
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content = content };
+        });
+
+        // Act
+        var result = await scraper.ScrapeAsync(
+            "https://example.com/recipe",
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBeOfType<ScrapedJsonLdRecipe>().Title.ShouldBe("Gzip Recipe");
     }
 
     [Fact]

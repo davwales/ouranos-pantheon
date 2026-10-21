@@ -15,6 +15,12 @@ import { InstructionStepRow } from "./instruction-step-row";
 import { RecipeFormField } from "./recipe-form-field";
 import type { FormErrors, IngredientTextField, RecipeFormState } from "./recipe-form-types";
 
+const MINUTE_FIELDS = [
+  { field: "prepMinutes", label: "Prep time (minutes)" },
+  { field: "cookMinutes", label: "Cook time (minutes)" },
+  { field: "totalMinutes", label: "Total time (minutes)" },
+] as const;
+
 export type RecipeFormFieldsProps = {
   form: RecipeFormState;
   errors: FormErrors;
@@ -162,6 +168,41 @@ export function RecipeFormFields({
               disabled={isSubmitting}
             />
           </RecipeFormField>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <RecipeFormField label="Yield" error={errors.yield}>
+              <Input
+                type="text"
+                value={form.yield}
+                onChange={(e) => updateField("yield", e.target.value)}
+                placeholder="e.g., 4 servings"
+                disabled={isSubmitting}
+              />
+            </RecipeFormField>
+            <RecipeFormField label="Image URL" error={errors.imageUrl}>
+              <Input
+                type="url"
+                value={form.imageUrl}
+                onChange={(e) => updateField("imageUrl", e.target.value)}
+                placeholder="https://…"
+                disabled={isSubmitting}
+              />
+            </RecipeFormField>
+          </div>
+          <div className="mt-4 grid gap-4 sm:grid-cols-3">
+            {MINUTE_FIELDS.map(({ field, label }) => (
+              <RecipeFormField key={field} label={label} error={errors[field]}>
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  step={1}
+                  value={form[field]}
+                  onChange={(e) => updateField(field, e.target.value)}
+                  disabled={isSubmitting}
+                />
+              </RecipeFormField>
+            ))}
+          </div>
         </CollapsibleContent>
       </Collapsible>
     </CardContent>

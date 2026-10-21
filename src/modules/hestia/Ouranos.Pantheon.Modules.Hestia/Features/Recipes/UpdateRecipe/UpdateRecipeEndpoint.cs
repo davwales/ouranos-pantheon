@@ -28,7 +28,8 @@ public static class UpdateRecipeEndpoint
             body.SourceUrl,
             body.Steps,
             body.Ingredients,
-            body.Notes
+            body.Notes,
+            body.Details
         );
 
         return Results.Ok(await bus.InvokeAsync<IdResponse<Recipe>>(input, ct));

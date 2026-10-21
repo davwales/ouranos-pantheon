@@ -191,6 +191,13 @@ describe("RecipeForm", () => {
         ],
         steps: [{ text: "Boil pasta. Mix eggs." }],
         notes: "",
+        details: {
+          yield: null,
+          prepMinutes: null,
+          cookMinutes: null,
+          totalMinutes: null,
+          imageUrl: null,
+        },
       });
     });
 

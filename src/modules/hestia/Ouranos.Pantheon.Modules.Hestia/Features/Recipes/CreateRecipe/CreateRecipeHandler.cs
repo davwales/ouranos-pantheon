@@ -38,7 +38,16 @@ public sealed class CreateRecipeHandler(
                     i.IsOptional
                 )),
             ],
-            command.Notes ?? string.Empty
+            command.Notes ?? string.Empty,
+            command.Details is { } details
+                ? new RecipeDetails(
+                    details.Yield,
+                    details.PrepMinutes,
+                    details.CookMinutes,
+                    details.TotalMinutes,
+                    details.ImageUrl
+                )
+                : RecipeDetails.Empty
         );
 
         using var session = _store.LightweightSession();

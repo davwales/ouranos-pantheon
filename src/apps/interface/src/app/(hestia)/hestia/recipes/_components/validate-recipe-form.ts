@@ -1,5 +1,18 @@
 import type { FormErrors, RecipeFormState } from "./recipe-form-types";
 
+const MAX_YIELD_LENGTH = 100;
+const MAX_MINUTES = 10_080;
+const MINUTE_FIELDS = ["prepMinutes", "cookMinutes", "totalMinutes"] as const;
+
+function isHttpUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 export function validateRecipeForm(form: RecipeFormState): FormErrors {
   const next: FormErrors = {};
 
@@ -78,6 +91,22 @@ export function validateRecipeForm(form: RecipeFormState): FormErrors {
 
   if (ingredientErrors.some((e) => Object.keys(e).length > 0)) {
     next.ingredients = ingredientErrors;
+  }
+
+  if (form.yield.trim().length > MAX_YIELD_LENGTH) {
+    next.yield = `Yield must be ${MAX_YIELD_LENGTH} characters or less`;
+  }
+
+  for (const field of MINUTE_FIELDS) {
+    const value = form[field].trim();
+    if (value !== "" && (!/^\d+$/.test(value) || Number(value) > MAX_MINUTES)) {
+      next[field] = `Enter whole minutes up to ${MAX_MINUTES}`;
+    }
+  }
+
+  const imageUrl = form.imageUrl.trim();
+  if (imageUrl !== "" && (!isHttpUrl(imageUrl) || imageUrl.length > 2000)) {
+    next.imageUrl = "Enter a valid http(s) URL";
   }
 
   return next;

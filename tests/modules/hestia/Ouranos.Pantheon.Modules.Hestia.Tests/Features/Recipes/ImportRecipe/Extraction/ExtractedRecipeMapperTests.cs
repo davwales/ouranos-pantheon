@@ -144,7 +144,7 @@ public sealed class ExtractedRecipeMapperTests
     }
 
     [Fact]
-    public void TryMap_WhenQuantityIsNull_ShouldDefaultToZero()
+    public void TryMap_WhenQuantityAndUnitAreNull_ShouldDefaultToZeroAsNeeded()
     {
         // Arrange
         var extracted = ValidExtractedRecipe() with
@@ -157,7 +157,24 @@ public sealed class ExtractedRecipeMapperTests
 
         // Assert
         var mapped = result.ShouldBeOfType<MappedRecipe>();
-        mapped.Ingredients.ShouldBe([new Ingredient(0m, "whole", "salt")]);
+        mapped.Ingredients.ShouldBe([new Ingredient(0m, "as needed", "salt")]);
+    }
+
+    [Fact]
+    public void TryMap_WhenQuantityIsNullWithUnitPhrase_ShouldKeepThePhrase()
+    {
+        // Arrange
+        var extracted = ValidExtractedRecipe() with
+        {
+            Ingredients = [new ExtractedIngredient(null, "To Taste", "black pepper")],
+        };
+
+        // Act
+        var result = ExtractedRecipeMapper.TryMap(extracted);
+
+        // Assert
+        var mapped = result.ShouldBeOfType<MappedRecipe>();
+        mapped.Ingredients.ShouldBe([new Ingredient(0m, "to taste", "black pepper")]);
     }
 
     [Fact]

@@ -12,5 +12,6 @@ public sealed record GetRecipeResponse(
     string Notes,
     DateTimeOffset CreatedAt,
     RecipeImportStatus ImportStatus,
-    string? ImportFailureReason
+    string? ImportFailureReason,
+    RecipeDetailsResponse? Details
 );

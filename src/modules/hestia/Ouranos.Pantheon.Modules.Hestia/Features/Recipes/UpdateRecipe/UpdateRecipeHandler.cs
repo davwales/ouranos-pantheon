@@ -47,7 +47,16 @@ public sealed class UpdateRecipeHandler(
                     i.IsOptional
                 )),
             ],
-            command.Notes ?? string.Empty
+            command.Notes ?? string.Empty,
+            command.Details is { } details
+                ? new RecipeDetails(
+                    details.Yield,
+                    details.PrepMinutes,
+                    details.CookMinutes,
+                    details.TotalMinutes,
+                    details.ImageUrl
+                )
+                : null
         );
 
         if (result.Events.Count > 0)

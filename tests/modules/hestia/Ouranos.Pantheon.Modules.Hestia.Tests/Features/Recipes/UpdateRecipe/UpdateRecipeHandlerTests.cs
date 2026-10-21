@@ -274,4 +274,48 @@ public sealed class UpdateRecipeHandlerTests
         // Assert
         await update.ShouldThrowAsync<OperationCanceledException>();
     }
+
+    [Fact]
+    public async Task Handle_WhenDetailsProvided_ShouldAppendRecipeDetailsChangedEvent()
+    {
+        // Arrange
+        var id = Guid.NewGuid();
+        var recipe = BuildRecipe(id);
+        _session
+            .LoadAsync<Recipe>(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<Recipe?>(recipe));
+
+        var input = new UpdateRecipeInput(
+            recipe.RecipeId,
+            recipe.Title,
+            recipe.SourceUrl,
+            [.. recipe.Steps.Select(s => new StepInput(s.Text))],
+            [
+                .. recipe.Ingredients.Select(i => new IngredientInput(
+                    i.Quantity,
+                    i.Unit,
+                    i.Name,
+                    i.IsOptional
+                )),
+            ],
+            recipe.Notes,
+            new RecipeDetailsInput("8 slices", 15, 30, 45, "https://example.com/cake.jpg")
+        );
+        object[]? capturedEvents = null;
+        _events
+            .When(e => e.Append(Arg.Any<Guid>(), Arg.Any<object[]>()))
+            .Do(call => capturedEvents = call.Arg<object[]>());
+
+        // Act
+        await _handler.Handle(input, CancellationToken.None);
+
+        // Assert
+        capturedEvents.ShouldNotBeNull();
+        capturedEvents!.Length.ShouldBe(1);
+        capturedEvents[0]
+            .ShouldBeOfType<RecipeDetailsChanged>()
+            .Details.ShouldBe(
+                new RecipeDetails("8 slices", 15, 30, 45, "https://example.com/cake.jpg")
+            );
+    }
 }

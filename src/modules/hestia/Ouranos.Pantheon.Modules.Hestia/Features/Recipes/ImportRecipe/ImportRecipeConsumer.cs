@@ -116,7 +116,8 @@ public sealed class ImportRecipeConsumer(
                 mapped.Title,
                 mapped.Steps,
                 mapped.Ingredients,
-                mapped.Notes
+                mapped.Notes,
+                scraped.Details
             );
         }
         catch (OperationCanceledException)

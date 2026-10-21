@@ -26,11 +26,16 @@ public sealed class RecipeExtractor(
         - description: The recipe's summary or introduction. Use null when absent or meaningless.
         - ingredients: One entry per distinct ingredient. Parse each source line into:
           - quantity: the numeric amount as a decimal. Convert fractions and unicode numerals
-            ("1/2" -> 0.5, "½" -> 0.5, "2-3" -> 3, "one" -> 1). Use null when the line has no amount
-            (for example "to taste" or "a pinch").
+            ("1/2" -> 0.5, "½" -> 0.5, "one" -> 1, "a pinch" -> 1). For a range such as "2-3" or
+            "2 to 3", use the lower bound (2). Use null when the line has no amount, for example
+            "salt, to taste" or "lemon wedges, for serving".
           - unit: the measurement unit in lowercase singular form (cup, tbsp, tsp, g, kg, ml, oz,
-            clove, slice, pinch). Use null for countable or unitless items, such as "3 eggs".
+            clove, slice, pinch). Use null for countable items with an amount, such as "3 eggs".
+            When the line has no amount, use the short phrase that says how much to use, such as
+            "to taste", "to serve" or "for garnish", or null when the line gives none.
           - name: the ingredient name only, without the amount, unit, or trailing preparation notes.
+            When the amount is a range, append the original range in parentheses, for example
+            "eggs (2-3)".
           - isOptional: true only when the source marks the ingredient as optional, for example
             "(optional)" or "to serve, if you like"; otherwise false.
           - When one line lists multiple distinct ingredients (for example "2 cups flour, plus more

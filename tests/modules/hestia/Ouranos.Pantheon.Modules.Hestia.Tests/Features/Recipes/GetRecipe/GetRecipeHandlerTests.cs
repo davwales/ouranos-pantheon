@@ -146,4 +146,49 @@ public sealed class GetRecipeHandlerTests
         // Assert
         await get.ShouldThrowAsync<OperationCanceledException>();
     }
+
+    [Fact]
+    public async Task Handle_WhenRecipeHasDetails_ShouldReturnDetails()
+    {
+        // Arrange
+        var id = Guid.NewGuid();
+        var recipe = BuildRecipe(id) with
+        {
+            Details = new RecipeDetails("8 slices", 15, 30, 45, "https://example.com/cake.jpg"),
+        };
+        _session
+            .LoadAsync<Recipe>(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<Recipe?>(recipe));
+
+        // Act
+        var result = await _handler.Handle(
+            new GetRecipeInput(new Id<Recipe>(id.ToString())),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.Details.ShouldBe(
+            new RecipeDetailsResponse("8 slices", 15, 30, 45, "https://example.com/cake.jpg")
+        );
+    }
+
+    [Fact]
+    public async Task Handle_WhenRecipePredatesDetails_ShouldReturnNullDetails()
+    {
+        // Arrange
+        var id = Guid.NewGuid();
+        var recipe = BuildRecipe(id) with { Details = null };
+        _session
+            .LoadAsync<Recipe>(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<Recipe?>(recipe));
+
+        // Act
+        var result = await _handler.Handle(
+            new GetRecipeInput(new Id<Recipe>(id.ToString())),
+            CancellationToken.None
+        );
+
+        // Assert
+        result.Details.ShouldBeNull();
+    }
 }

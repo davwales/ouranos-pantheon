@@ -9,5 +9,6 @@ public sealed record UpdateRecipeInput(
     string? SourceUrl,
     IReadOnlyList<StepInput> Steps,
     IReadOnlyList<IngredientInput> Ingredients,
-    string Notes
+    string Notes,
+    RecipeDetailsInput? Details = null
 );

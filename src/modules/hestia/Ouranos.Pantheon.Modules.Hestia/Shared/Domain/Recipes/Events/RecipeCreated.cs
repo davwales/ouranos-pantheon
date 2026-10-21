@@ -10,5 +10,6 @@ public sealed record RecipeCreated(
     List<Step> Steps,
     List<Ingredient> Ingredients,
     string Notes,
-    DateTimeOffset CreatedAt
+    DateTimeOffset CreatedAt,
+    RecipeDetails? Details = null
 ) : IDomainEvent;
