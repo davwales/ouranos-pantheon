@@ -26,7 +26,10 @@ Each module documents its own assistants and tools in its module docs.
 - **Tools**: each assistant can offer the model function tools. A tool derives from
   `AssistantTool<TContext, TArguments>`; the arguments record is exported as the tool's JSON
   schema (every property required, optional arguments nullable, enums as names, `Id<T>` as a
-  string) and parsed back from the model's call. Tools take names, or ids that another tool
+  string) and parsed back from the model's call. Guidance for an argument goes in
+  `[Description]` on the arguments record (a positional parameter or property, or an enum
+  type), which the schema emits as that property's `description`; the tool description keeps
+  only what the tool does and when to call it. Tools take names, or ids that another tool
   returned (never ids from the prompt), and reuse the module's query handlers.
 - **Layout**: everything assistant-related sits in its module's `Features/Assistants/`. Each
   assistant has an `Ask<Assistant>/` folder (endpoint, assistant, prompt, context), next to the

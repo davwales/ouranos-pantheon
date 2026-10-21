@@ -1,5 +1,6 @@
 using System.Net;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.Scopes;
@@ -362,5 +363,23 @@ public sealed class GenerateImageToolTests
     {
         // Arrange & Act & Assert
         CreateTool().IsSingleDeliveryPerReply.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ParametersSchema_ShouldDescribeThePrompt()
+    {
+        // Arrange
+        var tool = CreateTool();
+
+        // Act
+        using var schema = JsonDocument.Parse(tool.ParametersSchema.ToString());
+
+        // Assert
+        schema
+            .RootElement.GetProperty("properties")
+            .GetProperty("prompt")
+            .GetProperty("description")
+            .GetString()
+            .ShouldStartWith("A detailed visual description");
     }
 }
