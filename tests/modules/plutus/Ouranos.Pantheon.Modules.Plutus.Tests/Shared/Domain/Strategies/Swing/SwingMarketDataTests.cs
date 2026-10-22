@@ -131,6 +131,51 @@ public sealed class SwingMarketDataTests
         shortResult.TotalVolume.ShouldBe(1000m * 60m / 1440m, 0.01m);
     }
 
+    [Theory]
+    [InlineData(40, 0)]
+    [InlineData(1025.5, 20)]
+    [InlineData(300000000, 5000000)]
+    public void GetSnapshotsForSymbol_WhenMarketIsTaxed_ShouldChargeTheUnitTaxOnTheMaxPrice(
+        decimal maxPrice,
+        decimal expectedTax
+    )
+    {
+        // Arrange
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var market = Market.Create(
+            _fixture.Create<Id<Market>>(),
+            "Test Market",
+            new Taxes(new FlatTax(Minimum: 1m, Maximum: 5_000_000m, Rate: 0.02m))
+        );
+        var asOfDate = DateTimeOffset.UtcNow;
+        var dateOnly = DateOnly.FromDateTime(asOfDate.UtcDateTime);
+
+        var dailyAggregates = Enumerable
+            .Range(0, 30)
+            .Select(i => new DailyTradeAggregate(
+                symbolId,
+                dateOnly.AddDays(-i),
+                maxPrice,
+                maxPrice,
+                maxPrice,
+                1000m
+            ))
+            .ToList();
+
+        var data = SwingMarketData.FromRaw(market, [], dailyAggregates);
+
+        // Act
+        var (shortResult, mediumResult, longResult) = data.GetSnapshotsForSymbol(
+            symbolId,
+            asOfDate
+        );
+
+        // Assert
+        shortResult.ShouldNotBeNull().Tax.ShouldBe(expectedTax);
+        mediumResult.ShouldNotBeNull().Tax.ShouldBe(expectedTax);
+        longResult.ShouldNotBeNull().Tax.ShouldBe(expectedTax);
+    }
+
     [Fact]
     public void GetSnapshotsForSymbol_WhenNoSnapshotsForSymbol_ReturnsAllNull()
     {

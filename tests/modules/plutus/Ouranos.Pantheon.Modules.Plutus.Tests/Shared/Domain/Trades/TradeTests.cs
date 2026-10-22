@@ -1,6 +1,7 @@
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Trading;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
@@ -179,7 +180,7 @@ public sealed class TradeTests
         var context = new SignalComputeContext(
             symbolId,
             marketId,
-            0.05m,
+            MarketRules.TaxFree,
             500m,
             snapshot,
             snapshot,
@@ -190,7 +191,7 @@ public sealed class TradeTests
         // Assert
         context.SymbolId.ShouldBe(symbolId);
         context.MarketId.ShouldBe(marketId);
-        context.TaxRate.ShouldBe(0.05m);
+        context.Rules.ShouldBe(MarketRules.TaxFree);
         context.Limit.ShouldBe(500m);
         context.ShortSnapshot.ShouldNotBeNull();
         context.MediumSnapshot.ShouldNotBeNull();

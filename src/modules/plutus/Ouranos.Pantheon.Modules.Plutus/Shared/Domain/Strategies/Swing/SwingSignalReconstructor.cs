@@ -73,7 +73,7 @@ public sealed class SwingSignalReconstructor(IEnumerable<ISignalComputer> signal
             var context = new SignalComputeContext(
                 symbol.Id,
                 Short?.MarketId ?? default,
-                data.Rules.TaxRate,
+                data.Rules,
                 symbol.AdditionalFields.Limit ?? 0m,
                 Short,
                 Medium,

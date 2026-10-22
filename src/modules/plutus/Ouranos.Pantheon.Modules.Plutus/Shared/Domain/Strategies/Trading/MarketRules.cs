@@ -8,8 +8,6 @@ public sealed record MarketRules(FlatTax? Tax)
 {
     public static readonly MarketRules TaxFree = new(Tax: null);
 
-    public decimal TaxRate => Tax?.Rate ?? 0m;
-
     public static MarketRules For(Market market)
     {
         Guard.Against.Null(market);
@@ -53,7 +51,7 @@ public sealed record MarketRules(FlatTax? Tax)
         var low = Math.Ceiling(unitCost);
 
         var high = Math.Min(
-            Math.Ceiling(unitCost / (1 - TaxRate)),
+            Math.Ceiling(unitCost / (1 - (Tax?.Rate ?? 0m))),
             Math.Ceiling(unitCost + (Tax?.Maximum ?? 0m))
         );
 

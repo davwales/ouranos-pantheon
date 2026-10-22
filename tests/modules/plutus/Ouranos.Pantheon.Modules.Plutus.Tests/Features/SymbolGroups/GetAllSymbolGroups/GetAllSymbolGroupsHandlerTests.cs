@@ -149,6 +149,8 @@ public sealed class GetAllSymbolGroupsHandlerTests
         var item = result.Items.First();
         item.SymbolCount.ShouldBe(1);
         item.TotalVolume.ShouldNotBeNull();
+        item.TotalGain.ShouldBe((110m - 90m - 1m) * 100m);
+        item.AverageRoi.ShouldBe((110m - 90m - 1m) / 90m);
     }
 
     [Fact]

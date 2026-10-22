@@ -28,7 +28,7 @@ public sealed class TaxAdjustedRoiSignalComputer : ISignalComputer
             return Task.FromResult<decimal?>(null);
         }
 
-        var tax = snapshot.MaxPrice * context.TaxRate;
+        var tax = context.Rules.UnitTax(snapshot.MaxPrice);
         var roi = (snapshot.MaxPrice - snapshot.MinPrice - tax) / snapshot.MinPrice;
         var value = Math.Clamp(roi / _options.Value.RoiThreshold, -1m, 1m);
 

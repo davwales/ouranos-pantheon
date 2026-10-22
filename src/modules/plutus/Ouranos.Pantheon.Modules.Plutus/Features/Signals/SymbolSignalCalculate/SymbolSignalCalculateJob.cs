@@ -6,6 +6,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Signals.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Features.Signals.SymbolSignalCalculate.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Trading;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres.Extensions;
@@ -66,9 +67,9 @@ public class SymbolSignalCalculateJob
                 .Where(s => s.TimeFrame == _options.Value.LongTimeFrame)
                 .ToDictionaryAsync(s => s.SymbolId, ct);
 
-            var taxRates = await _dbContext
+            var marketRules = await _dbContext
                 .Markets.AsNoTracking()
-                .ToDictionaryAsync(m => m.Id, m => m.Taxes.Flat?.Rate ?? 0m, ct);
+                .ToDictionaryAsync(m => m.Id, MarketRules.For, ct);
 
             var symbols = await _dbContext.Symbols.AsNoTracking().ToListAsync(ct);
 
@@ -81,7 +82,7 @@ public class SymbolSignalCalculateJob
 
             foreach (var symbol in symbols)
             {
-                var taxRate = taxRates.GetValueOrDefault(symbol.MarketId, 0m);
+                var rules = marketRules.GetValueOrDefault(symbol.MarketId, MarketRules.TaxFree);
                 var limit = symbol.AdditionalFields.Limit ?? 0m;
 
                 shortSnapshots.TryGetValue(symbol.Id, out var shortSnap);
@@ -92,7 +93,7 @@ public class SymbolSignalCalculateJob
                 var context = new SignalComputeContext(
                     symbol.Id,
                     symbol.MarketId,
-                    taxRate,
+                    rules,
                     limit,
                     shortSnap,
                     primarySnap,

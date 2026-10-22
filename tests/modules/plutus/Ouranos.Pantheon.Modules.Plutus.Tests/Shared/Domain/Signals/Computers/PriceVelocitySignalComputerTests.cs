@@ -3,6 +3,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Signals.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals.Computers;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Trading;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 
@@ -31,7 +32,7 @@ public sealed class PriceVelocitySignalComputerTests
         var context = new SignalComputeContext(
             SymbolId,
             MarketId,
-            0m,
+            MarketRules.TaxFree,
             1000m,
             null,
             null,
@@ -54,7 +55,7 @@ public sealed class PriceVelocitySignalComputerTests
         var context = new SignalComputeContext(
             SymbolId,
             MarketId,
-            0m,
+            MarketRules.TaxFree,
             1000m,
             null,
             null,
@@ -77,7 +78,7 @@ public sealed class PriceVelocitySignalComputerTests
         var context = new SignalComputeContext(
             SymbolId,
             MarketId,
-            0m,
+            MarketRules.TaxFree,
             1000m,
             null,
             null,
@@ -100,7 +101,7 @@ public sealed class PriceVelocitySignalComputerTests
         var context = new SignalComputeContext(
             SymbolId,
             MarketId,
-            0m,
+            MarketRules.TaxFree,
             1000m,
             null,
             null,
@@ -124,7 +125,7 @@ public sealed class PriceVelocitySignalComputerTests
         var context = new SignalComputeContext(
             SymbolId,
             MarketId,
-            0m,
+            MarketRules.TaxFree,
             1000m,
             null,
             null,
@@ -148,7 +149,7 @@ public sealed class PriceVelocitySignalComputerTests
         var context = new SignalComputeContext(
             SymbolId,
             MarketId,
-            0m,
+            MarketRules.TaxFree,
             1000m,
             null,
             null,
