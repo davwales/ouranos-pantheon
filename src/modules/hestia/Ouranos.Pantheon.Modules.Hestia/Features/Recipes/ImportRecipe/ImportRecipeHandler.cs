@@ -48,7 +48,21 @@ public sealed class ImportRecipeHandler(
         await session.SaveChangesAsync(cancellationToken);
 
         var id = new Id<Recipe>(recipeId.ToString());
-        await _bus.PublishAsync(new ImportRecipeRequested(id, command.Url, DateTimeOffset.UtcNow));
+        try
+        {
+            await _bus.PublishAsync(
+                new ImportRecipeRequested(id, command.Url, DateTimeOffset.UtcNow)
+            );
+        }
+        catch (Exception ex)
+        {
+            // Without a durable outbox the stream is already saved, so record the failure rather
+            // than leave the recipe importing forever.
+            _logger.LogError(ex, "Failed to queue the import of recipe '{recipeId}'.", id);
+            var failure = result.State.FailImport(RecipeImportFailureReasons.NotQueued);
+            session.Events.Append(recipeId, [.. failure.Events]);
+            await session.SaveChangesAsync(CancellationToken.None);
+        }
 
         var response = new IdResponse<Recipe>(id);
 

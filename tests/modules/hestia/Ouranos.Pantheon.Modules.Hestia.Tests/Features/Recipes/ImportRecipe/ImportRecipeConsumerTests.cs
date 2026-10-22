@@ -333,7 +333,7 @@ public sealed class ImportRecipeConsumerTests
         capturedEvents.ShouldNotBeNull();
         capturedEvents!.Length.ShouldBe(1);
         var @event = capturedEvents[0].ShouldBeOfType<RecipeImportFailed>();
-        @event.Reason.ShouldBe("Network unavailable");
+        @event.Reason.ShouldBe("The recipe page could not be loaded.");
         await _session.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
@@ -367,7 +367,7 @@ public sealed class ImportRecipeConsumerTests
         capturedEvents.ShouldNotBeNull();
         capturedEvents!.Length.ShouldBe(1);
         var @event = capturedEvents[0].ShouldBeOfType<RecipeImportFailed>();
-        @event.Reason.ShouldBe("ML service unavailable");
+        @event.Reason.ShouldBe("The recipe could not be read from the page.");
         await _session.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
@@ -426,5 +426,124 @@ public sealed class ImportRecipeConsumerTests
         // Assert
         await act.ShouldThrowAsync<OperationCanceledException>();
         await _scraper.DidNotReceiveWithAnyArgs().ScrapeAsync(default!, default);
+    }
+
+    [Fact]
+    public async Task Handle_WhenScraperTimesOut_ShouldAppendRecipeImportFailedEventAndNotRethrow()
+    {
+        // Arrange
+        var message = ValidMessage();
+        StubRecipe(Guid.Parse(message.RecipeId.Value));
+        _scraper
+            .ScrapeAsync(message.Url, Arg.Any<CancellationToken>())
+            .Returns(Task.FromException<ScrapedJsonLdRecipe?>(new TaskCanceledException()));
+        var capturedEvents = CaptureAppendedEvents();
+
+        // Act
+        var act = async () => await _consumer.Handle(message, CancellationToken.None);
+
+        // Assert
+        await act.ShouldNotThrowAsync();
+        var @event = capturedEvents().ShouldHaveSingleItem().ShouldBeOfType<RecipeImportFailed>();
+        @event.Reason.ShouldBe("The recipe site took too long to respond.");
+    }
+
+    [Fact]
+    public async Task Handle_WhenExtractorTimesOut_ShouldAppendRecipeImportFailedEventAndNotRethrow()
+    {
+        // Arrange
+        var message = ValidMessage();
+        StubRecipe(Guid.Parse(message.RecipeId.Value));
+        _scraper
+            .ScrapeAsync(message.Url, Arg.Any<CancellationToken>())
+            .Returns(ValidScrapedRecipe());
+        _extractor
+            .ExtractAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromException<ExtractedRecipe?>(new TaskCanceledException()));
+        var capturedEvents = CaptureAppendedEvents();
+
+        // Act
+        var act = async () => await _consumer.Handle(message, CancellationToken.None);
+
+        // Assert
+        await act.ShouldNotThrowAsync();
+        var @event = capturedEvents().ShouldHaveSingleItem().ShouldBeOfType<RecipeImportFailed>();
+        @event.Reason.ShouldBe("Reading the recipe took too long.");
+    }
+
+    [Fact]
+    public async Task Handle_WhenExceptionHasNoMessage_ShouldStillAppendRecipeImportFailedEvent()
+    {
+        // Arrange
+        var message = ValidMessage();
+        StubRecipe(Guid.Parse(message.RecipeId.Value));
+        _scraper
+            .ScrapeAsync(message.Url, Arg.Any<CancellationToken>())
+            .Returns(Task.FromException<ScrapedJsonLdRecipe?>(new HttpRequestException(" ")));
+        var capturedEvents = CaptureAppendedEvents();
+
+        // Act
+        var act = async () => await _consumer.Handle(message, CancellationToken.None);
+
+        // Assert
+        await act.ShouldNotThrowAsync();
+        capturedEvents().ShouldHaveSingleItem().ShouldBeOfType<RecipeImportFailed>();
+    }
+
+    [Fact]
+    public async Task Handle_WhenCancelledDuringScrape_ShouldRethrowWithoutAppending()
+    {
+        // Arrange
+        var message = ValidMessage();
+        StubRecipe(Guid.Parse(message.RecipeId.Value));
+        using var cts = new CancellationTokenSource();
+        _scraper
+            .ScrapeAsync(message.Url, Arg.Any<CancellationToken>())
+            .Returns(_ =>
+            {
+                cts.Cancel();
+                return Task.FromException<ScrapedJsonLdRecipe?>(
+                    new OperationCanceledException(cts.Token)
+                );
+            });
+
+        // Act
+        var act = async () => await _consumer.Handle(message, cts.Token);
+
+        // Assert
+        await act.ShouldThrowAsync<OperationCanceledException>();
+        _events.DidNotReceive().Append(Arg.Any<Guid>(), Arg.Any<object[]>());
+    }
+
+    [Theory]
+    [InlineData(RecipeImportStatus.Failed)]
+    [InlineData(RecipeImportStatus.None)]
+    public async Task Handle_WhenRecipeIsNotImporting_ShouldSkipWithoutScraping(
+        RecipeImportStatus status
+    )
+    {
+        // Arrange
+        var message = ValidMessage();
+        var recipeId = Guid.Parse(message.RecipeId.Value);
+        var importing = Recipe.CreateImport(recipeId, message.Url, DateTimeOffset.UtcNow).State;
+        _session
+            .LoadAsync<Recipe>(recipeId, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<Recipe?>(importing with { ImportStatus = status }));
+
+        // Act
+        await _consumer.Handle(message, CancellationToken.None);
+
+        // Assert
+        await _scraper.DidNotReceiveWithAnyArgs().ScrapeAsync(default!, default);
+        await _session.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    private Func<object[]> CaptureAppendedEvents()
+    {
+        object[] captured = [];
+        _events
+            .When(e => e.Append(Arg.Any<Guid>(), Arg.Any<object[]>()))
+            .Do(call => captured = call.Arg<object[]>());
+        return () => captured;
     }
 }

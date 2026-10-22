@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using Ardalis.GuardClauses;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes.Events;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes.ValueTypes;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 
 namespace Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes;
@@ -23,6 +24,7 @@ public sealed record Recipe : BaseEventSourcedEntity
     public DateTimeOffset CreatedAt { get; init; }
     public RecipeImportStatus ImportStatus { get; init; }
     public string? ImportFailureReason { get; init; }
+    public DateTimeOffset? ImportStartedAt { get; init; }
 
     /// <summary>
     /// Marten convention: project a <see cref="RecipeCreated"/> event into the
@@ -265,13 +267,18 @@ public sealed record Recipe : BaseEventSourcedEntity
     /// <summary>
     /// Command factory: re-imports the recipe from its source URL by emitting a
     /// <see cref="RecipeImportStarted"/> event, resetting the import status to
-    /// importing. Requires the recipe to have a source URL.
+    /// importing. Requires the recipe to have a source URL and no import in flight.
     /// </summary>
     public OperationResult<Recipe> Reimport(DateTimeOffset startedAt)
     {
         if (string.IsNullOrWhiteSpace(SourceUrl))
         {
             throw new InvalidOperationException("Recipe has no source URL to reimport from.");
+        }
+
+        if (ImportStatus == RecipeImportStatus.Importing)
+        {
+            throw new ConflictException("The recipe is already being imported.");
         }
 
         var @event = new RecipeImportStarted(startedAt);
@@ -381,12 +388,13 @@ public sealed record Recipe : BaseEventSourcedEntity
     /// <see cref="RecipeImportStarted"/> event to the current state
     /// (functional fold).
     /// </summary>
-    public static Recipe Apply(RecipeImportStarted _, Recipe current)
+    public static Recipe Apply(RecipeImportStarted @event, Recipe current)
     {
         return current with
         {
             ImportStatus = RecipeImportStatus.Importing,
             ImportFailureReason = null,
+            ImportStartedAt = @event.StartedAt,
         };
     }
 

@@ -94,10 +94,16 @@ module README.
 - No FluentValidation. Guards are `Ardalis.GuardClauses` in constructors/handlers
   (`Guard.Against.Null`, `Guard.Against.NotFound`, …) plus domain invariants.
 - `services.AddProblemDetails()` is registered, and `UseExceptionHandler()` turns unhandled
-  exceptions into ProblemDetails responses. The only mapped exception is
-  `InvalidFilterException`, which `FilterBy` raises for a filter it cannot parse, a filter on
-  an unregistered field, or a value it cannot convert. `InvalidFilterExceptionHandler`
-  returns it as **400 Bad Request**; everything else stays 500.
+  exceptions into ProblemDetails responses. Two exceptions are mapped:
+  - `InvalidFilterException`, which `FilterBy` raises for a filter it cannot parse, a filter on
+    an unregistered field, or a value it cannot convert. `InvalidFilterExceptionHandler`
+    returns it as **400 Bad Request**.
+  - `ConflictException` (`Shared.Contract`, `Application.Common`), which a domain operation
+    throws when the request conflicts with the resource's current state (e.g. reimporting a
+    recipe that is still importing). `ConflictExceptionHandler` returns it as
+    **409 Conflict**.
+
+  Everything else stays 500.
 - The messaging error policy above handles async failure classification.
 
 ## 8.7 Logging
