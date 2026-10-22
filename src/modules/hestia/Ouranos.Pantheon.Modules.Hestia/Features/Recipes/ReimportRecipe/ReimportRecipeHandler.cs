@@ -47,9 +47,25 @@ public sealed class ReimportRecipeHandler(
         session.Events.Append(streamId, [.. result.Events]);
         await session.SaveChangesAsync(cancellationToken);
 
-        await _bus.PublishAsync(
-            new ImportRecipeRequested(command.RecipeId, recipe.SourceUrl, DateTimeOffset.UtcNow)
-        );
+        try
+        {
+            await _bus.PublishAsync(
+                new ImportRecipeRequested(command.RecipeId, recipe.SourceUrl, DateTimeOffset.UtcNow)
+            );
+        }
+        catch (Exception ex)
+        {
+            // Without a durable outbox the stream is already saved, so record the failure rather
+            // than leave the recipe importing forever.
+            _logger.LogError(
+                ex,
+                "Failed to queue the reimport of recipe '{recipeId}'.",
+                command.RecipeId
+            );
+            var failure = result.State.FailImport(RecipeImportFailureReasons.NotQueued);
+            session.Events.Append(streamId, [.. failure.Events]);
+            await session.SaveChangesAsync(CancellationToken.None);
+        }
 
         _logger.LogDebug("Successfully reimported recipe '{recipeId}'.", command.RecipeId);
         return new IdResponse<Recipe>(command.RecipeId);

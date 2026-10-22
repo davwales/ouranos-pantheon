@@ -17,4 +17,7 @@ public sealed record RecipeImportOptions(
             Temperature: 0f,
             ReasoningEffort: ReasoningEffort.Low
         ) { }
+
+    /// <summary>How long an import may stay in progress before the sweeper marks it failed.</summary>
+    public TimeSpan StaleImportTimeout { get; init; } = TimeSpan.FromMinutes(15);
 }

@@ -179,4 +179,36 @@ public sealed class ImportRecipeHandlerTests
         await _bus.DidNotReceive().PublishAsync(Arg.Any<ImportRecipeRequested>());
         _store.DidNotReceive().LightweightSession();
     }
+
+    [Fact]
+    public async Task Handle_WhenPublishFails_ShouldRecordImportFailedInsteadOfLeavingItImporting()
+    {
+        // Arrange
+        var input = ValidInput();
+        Guid? startedStreamId = null;
+        Guid? appendedStreamId = null;
+        object[]? appendedEvents = null;
+        _bus.PublishAsync(Arg.Any<ImportRecipeRequested>())
+            .Returns(ValueTask.FromException(new InvalidOperationException("Broker unreachable")));
+        _events
+            .When(e => e.StartStream(Arg.Any<Guid>(), Arg.Any<object[]>()))
+            .Do(call => startedStreamId = call.Arg<Guid>());
+        _events
+            .When(e => e.Append(Arg.Any<Guid>(), Arg.Any<object[]>()))
+            .Do(call =>
+            {
+                appendedStreamId = call.Arg<Guid>();
+                appendedEvents = call.Arg<object[]>();
+            });
+
+        // Act
+        var result = await _handler.Handle(input, CancellationToken.None);
+
+        // Assert
+        result.Id.Value.ShouldBe(startedStreamId.ToString());
+        appendedStreamId.ShouldBe(startedStreamId);
+        var failed = appendedEvents.ShouldHaveSingleItem().ShouldBeOfType<RecipeImportFailed>();
+        failed.Reason.ShouldBe(RecipeImportFailureReasons.NotQueued);
+        await _session.Received(2).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
 }

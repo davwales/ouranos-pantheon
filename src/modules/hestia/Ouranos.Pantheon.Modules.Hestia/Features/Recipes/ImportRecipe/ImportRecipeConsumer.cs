@@ -53,12 +53,15 @@ public sealed class ImportRecipeConsumer(
             return;
         }
 
-        if (recipe.ImportStatus == RecipeImportStatus.Imported)
+        // A redelivered message, or one for an import the sweeper already failed, must not run the
+        // model again.
+        if (recipe.ImportStatus != RecipeImportStatus.Importing)
         {
             _logger.LogDebug(
-                "Skipped importing recipe '{recipeId}' from '{url}': the recipe is already imported.",
+                "Skipped importing recipe '{recipeId}' from '{url}': the recipe is not importing ({status}).",
                 message.RecipeId,
-                message.Url
+                message.Url,
+                recipe.ImportStatus
             );
             return;
         }
@@ -92,9 +95,10 @@ public sealed class ImportRecipeConsumer(
         CancellationToken cancellationToken
     )
     {
+        ScrapedJsonLdRecipe? scraped = null;
         try
         {
-            var scraped = await _scraper.ScrapeAsync(message.Url, cancellationToken);
+            scraped = await _scraper.ScrapeAsync(message.Url, cancellationToken);
             if (scraped is null)
             {
                 return recipe.FailImport("The page contains no usable recipe metadata.");
@@ -120,11 +124,7 @@ public sealed class ImportRecipeConsumer(
                 scraped.Details
             );
         }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch (Exception ex)
+        catch (Exception ex) when (!IsCancellation(ex, cancellationToken))
         {
             _logger.LogError(
                 ex,
@@ -132,7 +132,26 @@ public sealed class ImportRecipeConsumer(
                 message.RecipeId,
                 message.Url
             );
-            return recipe.FailImport(ex.Message);
+            return recipe.FailImport(FailureReason(ex, downloaded: scraped is not null));
         }
+    }
+
+    // HttpClient and model timeouts also throw TaskCanceledException, so only the caller's token
+    // marks a real cancellation; a timeout must end the import, not be retried and dead-lettered.
+    private static bool IsCancellation(Exception ex, CancellationToken cancellationToken)
+    {
+        return ex is OperationCanceledException && cancellationToken.IsCancellationRequested;
+    }
+
+    // Exception text is not fit for users and lives forever in the event stream.
+    private static string FailureReason(Exception ex, bool downloaded)
+    {
+        return (ex, downloaded) switch
+        {
+            (OperationCanceledException, false) => "The recipe site took too long to respond.",
+            (OperationCanceledException, true) => "Reading the recipe took too long.",
+            (_, false) => "The recipe page could not be loaded.",
+            _ => "The recipe could not be read from the page.",
+        };
     }
 }

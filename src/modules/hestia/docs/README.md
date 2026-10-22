@@ -53,12 +53,14 @@ Module-internal; no message crosses a module boundary.
 |---------|----------|-------|-----|
 | `ImportRecipeRequested` | `hestia.recipe` | `hestia.recipe.import` | `hestia.recipe.import.dlq` |
 
-The import consumer records failures as `RecipeImportFailed` events instead of throwing, so
-the DLQ only sees infrastructure faults.
+The import consumer records failures (timeouts included) as `RecipeImportFailed` events
+instead of throwing, so the DLQ only sees infrastructure faults.
 
 ### Scheduled Jobs
 
-None.
+| Job | Schedule | Purpose |
+|-----|----------|---------|
+| `SweepStaleImportsJob` | every 5 minutes | Fails imports stuck in progress longer than `RecipeImport.StaleImportTimeout` |
 
 ## Persistence
 
@@ -69,5 +71,6 @@ document. `HestiaDbContext` is registered but empty (see
 
 ## Configuration
 
-`Ouranos:Hestia` (`HestiaOptions`): `RecipeImport` (model settings for normalization; low
-reasoning effort) and `KitchenAssistant` (assistant prompt and model overrides).
+`Ouranos:Hestia` (`HestiaOptions`): `RecipeImport` (model settings for normalization with low
+reasoning effort, plus `StaleImportTimeout`, default 15 minutes, after which the sweeper fails
+an import) and `KitchenAssistant` (assistant prompt and model overrides).

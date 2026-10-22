@@ -25,8 +25,23 @@ sequenceDiagram
     C ->> M: append import succeeded / failed events
 ```
 
-Import failures are appended to the stream as `RecipeImportFailed` events. `ReimportRecipe`
-reruns the same flow for an existing recipe.
+Import failures are appended to the stream as `RecipeImportFailed` events. Their reasons are
+short user-facing messages (the exception is logged, never stored). `ReimportRecipe` reruns the
+same flow for an existing recipe, and returns 409 while an import is still in progress.
+
+Every import ends as imported or failed, never stuck importing:
+
+- **Timeouts:** scraper and model timeouts are failures, not cancellation. Only the consumer's
+  own token cancels, so a slow site or model fails the import instead of being retried and
+  dead-lettered.
+- **Duplicate messages:** the consumer skips a recipe that is no longer importing, so a
+  redelivered message never runs the model twice.
+- **Publish failures:** the stream is saved before the message is published (there is no durable
+  outbox yet). If publishing fails, the handler appends `RecipeImportFailed` straight away.
+- **Sweeper:** `SweepStaleImportsJob` runs every 5 minutes and fails imports older than
+  `RecipeImport.StaleImportTimeout` (15 minutes by default). This covers a crash between saving
+  and publishing, and a message lost in the broker. It writes with optimistic concurrency, so an
+  import that finishes during the sweep is left alone.
 
 The scraper decompresses responses itself (gzip, deflate, brotli), because the anti-SSRF
 handler does not and some sites compress without being asked. Yield, prep/cook/total times and

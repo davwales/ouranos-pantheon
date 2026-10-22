@@ -1,6 +1,7 @@
 using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes.Events;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes.ValueTypes;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 
 namespace Ouranos.Pantheon.Modules.Hestia.Tests.Shared.Domain.Recipes;
@@ -893,6 +894,21 @@ public sealed class RecipeTests
     }
 
     [Fact]
+    public void Reimport_WhenImportIsInProgress_ShouldThrowConflictException()
+    {
+        // Arrange
+        var importing = Recipe
+            .CreateImport(Guid.NewGuid(), "https://example.com/cake", DateTimeOffset.UtcNow)
+            .State;
+
+        // Act
+        Action act = () => importing.Reimport(DateTimeOffset.UtcNow);
+
+        // Assert
+        act.ShouldThrow<ConflictException>();
+    }
+
+    [Fact]
     public void Apply_WhenApplyingRecipeImportStartedEvent_ShouldSetImportingStatus()
     {
         // Arrange
@@ -909,6 +925,7 @@ public sealed class RecipeTests
         result.Id.ShouldBe(current.Id);
         result.ImportStatus.ShouldBe(RecipeImportStatus.Importing);
         result.ImportFailureReason.ShouldBeNull();
+        result.ImportStartedAt.ShouldBe(@event.StartedAt);
     }
 
     [Fact]

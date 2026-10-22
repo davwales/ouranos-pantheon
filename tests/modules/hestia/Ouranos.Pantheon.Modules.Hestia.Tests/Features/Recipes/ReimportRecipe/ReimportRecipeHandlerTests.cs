@@ -167,4 +167,50 @@ public sealed class ReimportRecipeHandlerTests
         await reimport.ShouldThrowAsync<OperationCanceledException>();
         await _bus.DidNotReceive().PublishAsync(Arg.Any<ImportRecipeRequested>());
     }
+
+    [Fact]
+    public async Task Handle_WhenImportIsAlreadyInProgress_ShouldThrowConflictWithoutPublishing()
+    {
+        // Arrange
+        var id = Guid.NewGuid();
+        var importing = Recipe.CreateImport(id, "https://example.com/cake", DateTimeOffset.UtcNow);
+        _session
+            .LoadAsync<Recipe>(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<Recipe?>(importing.State));
+
+        // Act
+        var act = async () => await _handler.Handle(ValidInput(id), CancellationToken.None);
+
+        // Assert
+        await act.ShouldThrowAsync<ConflictException>();
+        await _session.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+        await _bus.DidNotReceive().PublishAsync(Arg.Any<ImportRecipeRequested>());
+    }
+
+    [Fact]
+    public async Task Handle_WhenPublishFails_ShouldRecordImportFailedInsteadOfLeavingItImporting()
+    {
+        // Arrange
+        var id = Guid.NewGuid();
+        _session
+            .LoadAsync<Recipe>(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<Recipe?>(BuildRecipe(id)));
+        _bus.PublishAsync(Arg.Any<ImportRecipeRequested>())
+            .Returns(ValueTask.FromException(new InvalidOperationException("Broker unreachable")));
+        var appended = new List<object[]>();
+        _events
+            .When(e => e.Append(Arg.Any<Guid>(), Arg.Any<object[]>()))
+            .Do(call => appended.Add(call.Arg<object[]>()));
+
+        // Act
+        var result = await _handler.Handle(ValidInput(id), CancellationToken.None);
+
+        // Assert
+        result.Id.Value.ShouldBe(id.ToString());
+        appended.Count.ShouldBe(2);
+        appended[0].ShouldHaveSingleItem().ShouldBeOfType<RecipeImportStarted>();
+        var failed = appended[1].ShouldHaveSingleItem().ShouldBeOfType<RecipeImportFailed>();
+        failed.Reason.ShouldBe(RecipeImportFailureReasons.NotQueued);
+        await _session.Received(2).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
 }
