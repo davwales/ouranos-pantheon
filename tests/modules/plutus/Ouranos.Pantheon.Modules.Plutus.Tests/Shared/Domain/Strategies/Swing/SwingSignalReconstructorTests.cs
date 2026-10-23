@@ -81,7 +81,7 @@ public sealed class SwingSignalReconstructorTests
         _contexts.Count.ShouldBe(2);
         _contexts.Single(c => c.SymbolId == limited.Id).Limit.ShouldBe(70m);
         _contexts.Single(c => c.SymbolId == unlimited.Id).Limit.ShouldBe(0m);
-        _contexts.ShouldAllBe(c => c.TaxRate == 0.02m);
+        _contexts.ShouldAllBe(c => c.Rules == data.Rules);
     }
 
     [Fact]

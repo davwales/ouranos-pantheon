@@ -100,7 +100,6 @@ public sealed class MarketRulesTests
 
         // Assert
         rules.Tax.ShouldBe(FlipTestData.OsrsTax);
-        rules.TaxRate.ShouldBe(0.02m);
     }
 
     [Fact]
@@ -118,7 +117,6 @@ public sealed class MarketRulesTests
 
         // Assert
         rules.ShouldBe(MarketRules.TaxFree);
-        rules.TaxRate.ShouldBe(0m);
     }
 
     [Fact]

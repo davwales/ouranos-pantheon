@@ -273,7 +273,7 @@ public sealed class SwingMarketData
         var scaledVolume = totalVolume * volumeScale;
         var scaledSpent = totalSpent * volumeScale;
 
-        var tax = maxPrice * Rules.TaxRate;
+        var tax = Rules.UnitTax(maxPrice);
 
         _symbolsById.TryGetValue(symbolId, out var symbol);
         var limit = symbol?.AdditionalFields.Limit ?? totalVolume;

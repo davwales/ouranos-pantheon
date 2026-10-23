@@ -11,7 +11,7 @@ the [platform glossary](../../../../docs/architecture/12-glossary.md).
 | **Trade** | A price/volume/timestamp row for a symbol. FFXIV and stock trades are individual sales from the WebSocket feeds; OSRS trades are 5-minute average price/volume buckets from the Wiki prices API |
 | **Producer** | The data source tag on a `TradeMessage` (`Ffxiv`, `Osrs`, `Stocks`); the consumer maps it to a market |
 | **Data loader** | An ingestion component: WebSocket listeners (FFXIV, Alpaca), the OSRS poller, and the trade consumer that persists `TradeMessage`s; each can be toggled in configuration |
-| **Taxes** | Per-market sale tax model; today a `FlatTax` (rate with minimum and maximum), e.g. the OSRS Grand Exchange 2% capped tax. Used by tax-adjusted ROI and, through `MarketRules`, by every simulator and recommendation (charged per unit) |
+| **Taxes** | Per-market sale tax model; today a `FlatTax` (rate with minimum and maximum), e.g. the OSRS Grand Exchange 2% capped tax. Charged per unit by one rule everywhere: the rate applied to the price, rounded down, waived below the minimum and capped at the maximum. C# goes through `MarketRules.UnitTax` (simulators, recommendations, tax-adjusted ROI, forecasts); SQL goes through `plutus.unit_tax` (the `market_trade_snapshots` tax read by the explorer and symbol groups) |
 | **Time frame** | The window a trade query or snapshot covers, from minutes up to unbounded (`AllTime`) |
 | **Market overview** | Bucketed price/volume time series for a market |
 | **Volume heatmap** | Share of a market's trades by day of week and hour |

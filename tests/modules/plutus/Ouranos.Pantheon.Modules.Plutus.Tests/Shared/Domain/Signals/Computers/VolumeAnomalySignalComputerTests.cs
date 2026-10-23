@@ -4,6 +4,7 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals.Computers;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies.Trading;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
@@ -49,7 +50,7 @@ public sealed class VolumeAnomalySignalComputerTests
         var context = new SignalComputeContext(
             SymbolId,
             MarketId,
-            0m,
+            MarketRules.TaxFree,
             1000m,
             shortSnap,
             null,
@@ -74,7 +75,7 @@ public sealed class VolumeAnomalySignalComputerTests
         var context = new SignalComputeContext(
             SymbolId,
             MarketId,
-            0m,
+            MarketRules.TaxFree,
             1000m,
             shortSnap,
             null,
@@ -93,7 +94,16 @@ public sealed class VolumeAnomalySignalComputerTests
     public async Task ComputeAsync_WhenShortSnapshotIsMissing_ReturnsNull()
     {
         // Arrange
-        var context = new SignalComputeContext(SymbolId, MarketId, 0m, 1000m, null, null, null, []);
+        var context = new SignalComputeContext(
+            SymbolId,
+            MarketId,
+            MarketRules.TaxFree,
+            1000m,
+            null,
+            null,
+            null,
+            []
+        );
 
         // Act
         var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
@@ -111,7 +121,7 @@ public sealed class VolumeAnomalySignalComputerTests
         var context = new SignalComputeContext(
             SymbolId,
             MarketId,
-            0m,
+            MarketRules.TaxFree,
             1000m,
             shortSnap,
             null,
@@ -135,7 +145,7 @@ public sealed class VolumeAnomalySignalComputerTests
         var context = new SignalComputeContext(
             SymbolId,
             MarketId,
-            0m,
+            MarketRules.TaxFree,
             1000m,
             shortSnap,
             null,
@@ -160,7 +170,7 @@ public sealed class VolumeAnomalySignalComputerTests
         var context = new SignalComputeContext(
             SymbolId,
             MarketId,
-            0m,
+            MarketRules.TaxFree,
             1000m,
             shortSnap,
             null,
@@ -194,7 +204,7 @@ public sealed class VolumeAnomalySignalComputerTests
         var context = new SignalComputeContext(
             SymbolId,
             MarketId,
-            0m,
+            MarketRules.TaxFree,
             1000m,
             shortSnap,
             null,
