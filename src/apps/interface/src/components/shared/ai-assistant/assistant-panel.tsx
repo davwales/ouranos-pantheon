@@ -18,6 +18,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { useKeyboardInset } from "@/hooks/use-keyboard-inset";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   type AssistantActionHandlers,
@@ -53,6 +54,7 @@ export function AssistantPanel<TContext>({
   onOpenChange,
 }: AssistantPanelProps<TContext>) {
   const isMobile = useIsMobile();
+  const keyboardInset = useKeyboardInset(isMobile && open);
   const {
     messages,
     isStreaming,
@@ -96,8 +98,20 @@ export function AssistantPanel<TContext>({
 
   if (isMobile) {
     return (
-      <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className="h-[85dvh] data-[vaul-drawer-direction=bottom]:max-h-[85dvh]">
+      // vaul's own keyboard handling ignores iOS panning the visual viewport, which can push the
+      // input off the top of the screen; instead keep the drawer within the visible area.
+      <Drawer open={open} onOpenChange={onOpenChange} repositionInputs={false}>
+        <DrawerContent
+          className="h-[85dvh] data-[vaul-drawer-direction=bottom]:max-h-[85dvh]"
+          style={
+            keyboardInset
+              ? {
+                  bottom: keyboardInset.bottom,
+                  height: `min(85dvh, ${keyboardInset.height}px)`,
+                }
+              : undefined
+          }
+        >
           <DrawerHeader className="gap-1 border-b text-left">
             <div className="flex h-8 items-center justify-between gap-2">
               <DrawerTitle className="truncate">{title}</DrawerTitle>
