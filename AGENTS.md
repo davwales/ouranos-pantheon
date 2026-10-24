@@ -52,7 +52,7 @@ npm ci              # install (always use ci, even locally)
 npm run dev         # dev server (bound to 0.0.0.0)
 npm run build       # also the only type check - there is no typecheck script (or: npx tsc --noEmit)
 npm run lint        # eslint src
-npm run test        # vitest run (jsdom + Testing Library); not run in CI
+npm run test        # vitest run (jsdom + Testing Library)
 ```
 
 Next.js writes its own `src/apps/interface/AGENTS.md` (gitignored) pointing at the bundled Next 16
@@ -108,14 +108,21 @@ after every build. **Pre-commit** checks .NET formatting only (CSharpier + style
 
 `.github/workflows/ci.yml` runs on pushes to `main` and all PRs:
 
-- **lint:** CSharpier check, `dotnet format style` / `analyzers --verify-no-changes`, `npm run lint`
+- **lint:** CSharpier check, `dotnet format style` / `analyzers --verify-no-changes`, `npm run lint`,
+  plus High/Critical audits (`dotnet list package --vulnerable`, `npm audit --omit=dev`)
 - **build:** `dotnet build Ouranos.Pantheon.sln`, `npm run build`
 - **test:** `dotnet test --collect:"XPlat Code Coverage"` merged with reportgenerator; fails below
-  **85% line coverage**. Frontend tests are **not** run - run `npm run test` locally.
+  **85% line coverage**. Then `npm run test` (no frontend coverage gate).
 - **publish** (`main` only): gateway/interface images to GHCR
-  (`ghcr.io/<owner>/ouranos-pantheon/<name>`)
+  (`ghcr.io/<owner>/ouranos-pantheon/<name>`), tagged `latest` and `sha-<short>`
 
-`dependabot-auto-merge.yml` auto-merges minor/patch Dependabot PRs.
+Actions are pinned by commit SHA with a `# vX.Y.Z` comment; keep that form when adding a step.
+`codeql.yml` scans C#, TypeScript and workflows. `dependabot-auto-merge.yml` auto-merges
+minor/patch Dependabot PRs.
+
+Images: both Dockerfiles build from the repo root and run as non-root with a `HEALTHCHECK`; the
+interface uses Next.js `output: "standalone"`. `.dockerignore` excludes local settings, so a file
+the image needs at runtime must not match it.
 
 ## Architecture
 

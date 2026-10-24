@@ -43,10 +43,15 @@ live in `ouranos-infrastructure`.
 - Releasing is merging to `main`; no registry secrets exist outside GitHub
 - The application repository stays free of host-specific configuration
 - Images are tagged `:latest` only, so there is no rollback target and no link from a
-  running container back to a commit ([D13](../architecture/11-risks-and-technical-debt.md))
+  running container back to a commit
 - `NEXT_PUBLIC_*` values are inlined when the interface image is built, so the API
   base URL is fixed at build time rather than set at deploy time
 - Runtime configuration is split across two repositories; a new setting needs a change
   in both, and nothing checks they agree
 - Promotion onto the host is manual
   ([D6](../architecture/11-risks-and-technical-debt.md))
+
+Update (2026-10-23): images are also tagged `sha-<short commit>`, giving every `main` build a
+rollback target. The interface no longer inlines the API base URL: the browser targets port 8300
+on the host that served the page and server rendering reads `API_BASE` at runtime
+([Section 7.3](../architecture/07-deployment-view.md#73-configuration-surface)).

@@ -8,21 +8,31 @@ on:
 
 env:
   DOTNET_INSTALL_DIR: "./.dotnet"
+  NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-dotnet@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: "10.0.x"
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.NUGET_PACKAGES }}
+          key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props', '**/*.csproj', '.config/dotnet-tools.json') }}
+          restore-keys: nuget-${{ runner.os }}-
       - run: dotnet restore --verbosity quiet
       - run: dotnet tool restore
       - run: dotnet csharpier check .
       - run: dotnet format style --verify-no-changes --no-restore
       - run: dotnet format analyzers --verify-no-changes --no-restore
-      - uses: actions/setup-node@v7
+      - name: Vulnerable NuGet packages
+        run: |
+          dotnet list package --vulnerable --include-transitive | tee vulnerable.txt
+          ! grep -qE '\b(High|Critical)\b' vulnerable.txt
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "26"
           cache: "npm"
@@ -31,18 +41,26 @@ jobs:
         working-directory: src/apps/interface
       - run: npm run lint
         working-directory: src/apps/interface
+      # Dev-only advisories (D18) never reach the image, so only runtime dependencies gate the build.
+      - run: npm audit --omit=dev --audit-level=high
+        working-directory: src/apps/interface
 
   build:
     needs: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-dotnet@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: "10.0.x"
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.NUGET_PACKAGES }}
+          key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props', '**/*.csproj', '.config/dotnet-tools.json') }}
+          restore-keys: nuget-${{ runner.os }}-
       - run: dotnet restore --verbosity quiet
       - run: dotnet build Ouranos.Pantheon.sln --no-restore
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "26"
           cache: "npm"
@@ -56,21 +74,35 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-dotnet@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: "10.0.x"
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.NUGET_PACKAGES }}
+          key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props', '**/*.csproj', '.config/dotnet-tools.json') }}
+          restore-keys: nuget-${{ runner.os }}-
       - run: dotnet restore --verbosity quiet
       - run: dotnet tool restore
-      - run: dotnet test --collect:"XPlat Code Coverage"
+      - run: dotnet test --no-restore --collect:"XPlat Code Coverage"
       - run: dotnet tool run reportgenerator -reports:"**/TestResults/**/coverage.cobertura.xml" -targetdir:coverage-merged -reporttypes:Cobertura
       - name: code coverage
-        uses: irongut/CodeCoverageSummary@v1.3.0
+        uses: irongut/CodeCoverageSummary@51cc3a756ddcd398d447c044c02cb6aa83fdae95 # v1.3.0
         with:
           filename: "coverage-merged/Cobertura.xml"
           fail_below_min: true
           thresholds: "85 100"
           output: "console"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "26"
+          cache: "npm"
+          cache-dependency-path: src/apps/interface/package-lock.json
+      - run: npm ci
+        working-directory: src/apps/interface
+      - run: npm run test
+        working-directory: src/apps/interface
 
   publish:
     needs: test
@@ -87,20 +119,29 @@ jobs:
           - name: interface
             dockerfile: src/apps/interface/Dockerfile
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Lowercase repository
         run: echo "IMAGE_BASE=ghcr.io/${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
-      - uses: docker/login-action@v4
+      - id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ${{ env.IMAGE_BASE }}/${{ matrix.name }}
+          # sha-<short> is the rollback target; latest is what the host auto-updates to.
+          tags: |
+            type=sha,format=short
+            type=raw,value=latest
+      - uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/setup-buildx-action@v4
-      - uses: docker/build-push-action@v7
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           file: ${{ matrix.dockerfile }}
           push: true
-          tags: ${{ env.IMAGE_BASE }}/${{ matrix.name }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=${{ env.IMAGE_BASE }}/${{ matrix.name }}:cache
           cache-to: type=registry,ref=${{ env.IMAGE_BASE }}/${{ matrix.name }}:cache,mode=max
