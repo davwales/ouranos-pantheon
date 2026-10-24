@@ -5,10 +5,18 @@
 Exactly two container images are built and published (`.github/workflows/ci.yml`,
 `publish` job, `main` branch only; [ADR 0011](../adr/0011-container-images-on-ghcr.md)):
 
-| Image | Base | Port | Source |
-|-------|------|------|--------|
-| `ghcr.io/davwales/ouranos-pantheon/gateway` | `aspnet:10.0` | 8300 | `src/apps/gateway/Dockerfile` |
-| `ghcr.io/davwales/ouranos-pantheon/interface` | `node:22-alpine` | 3000 | `src/apps/interface/Dockerfile` |
+| Image | Base | Port | User | Health check | Source |
+|-------|------|------|------|--------------|--------|
+| `ghcr.io/davwales/ouranos-pantheon/gateway` | `aspnet:10.0` | 8300 | `app` | `GET /health` | `src/apps/gateway/Dockerfile` |
+| `ghcr.io/davwales/ouranos-pantheon/interface` | `node:26-alpine` (Next.js standalone) | 3000 | `node` | `GET /` | `src/apps/interface/Dockerfile` |
+
+Each `main` build is tagged `latest` and `sha-<short commit>`; the SHA tag is the rollback target.
+Both images are multi-stage and run as a non-root user. The gateway image sets
+`ASPNETCORE_HTTP_PORTS=8300` itself. The gateway health check fails while `GET /health` reports
+Unhealthy ([Shared module](../../src/modules/shared/docs/README.md)), so an outage of any checked
+dependency, including the separate OuranosMl host, marks the container unhealthy. `.dockerignore` keeps local settings
+(`appsettings.Development.json`, `.env*`), build logs and non-build folders out of the build
+context.
 
 Pushes use buildx with a registry cache (`:cache` tag) and `GITHUB_TOKEN`, so there are no registry
 secrets.
@@ -76,18 +84,23 @@ graph TB
 | Module settings | `Ouranos:<Module>` section per module (e.g. Plutus data-loader enable flags), documented in each module's README ([Section 5.3](05-building-block-view.md#53-blackboxes-modules)) |
 | Feature flags | Flagsmith environments (dev at `ouranos.local:8001`), see [ADR 0012](../adr/0012-feature-flags-via-flagsmith.md) |
 | Trace and metric export | `Ouranos:Observability` section (`ObservabilityOptions`): endpoint/protocol/sampling, see [ADR 0009](../adr/0009-opentelemetry-observability-via-otlp.md) |
-| Frontend API base | `NEXT_PUBLIC_API_BASE` / `NEXT_PUBLIC_API_HOST` (default `http://localhost:8300`), inlined at build time |
+| Frontend API base | Browser: port 8300 on the host that served the page. Server rendering: `API_BASE` at runtime (default `http://localhost:8300`; in a container, the gateway's network name). `NEXT_PUBLIC_API_BASE` / `NEXT_PUBLIC_API_HOST`, inlined at build time, override both (local development only) |
 
 ## 7.4 CI/CD
 
 ```mermaid
 graph LR
-    lint["lint: csharpier check +<br/>dotnet format (verify-no-changes)"] --> build["build:<br/>dotnet build"]
+    lint["lint: csharpier check +<br/>dotnet format (verify-no-changes)<br/>+ dependency audit"] --> build["build:<br/>dotnet build"]
     build --> test["test: 85% coverage<br/>+ reportgenerator"]
     test --> publish["publish (main only):<br/>GHCR images"]
 ```
 
-The lint and build jobs also run the frontend steps (`npm run lint`, `npm run build`).
+Each job also runs the matching frontend step (`npm run lint`, `npm run build`, `npm run test`).
+The lint job fails on High or Critical advisories in NuGet packages (including transitive ones) and
+in the interface's runtime npm dependencies (`npm audit --omit=dev`). Jobs share a NuGet package
+cache keyed on the project and central package files. Actions are pinned to commit SHAs, with the
+version in a comment for Dependabot. A separate CodeQL workflow (`.github/workflows/codeql.yml`)
+scans C#, TypeScript and the workflows on PRs, on `main` and weekly.
 Dependabot (`.github/dependabot.yml`) opens grouped update PRs for NuGet (including local
 tools), npm, GitHub Actions and Docker base images. They go through the same pipeline.
 Majors are not proposed for the Node base image or for packages tied to the .NET runtime

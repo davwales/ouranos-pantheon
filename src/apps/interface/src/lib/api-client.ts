@@ -1,10 +1,22 @@
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE ??
-  process.env.NEXT_PUBLIC_API_HOST ??
-  "http://localhost:8300";
+const GATEWAY_PORT = 8300;
+
+// Resolved per call so one image runs anywhere: the browser targets the gateway on the host that
+// served the page, server rendering uses API_BASE from the container environment, and
+// NEXT_PUBLIC_API_BASE / NEXT_PUBLIC_API_HOST (inlined at build time) override both.
+function apiBase(): string {
+  const override =
+    process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_HOST;
+  if (override) {
+    return override;
+  }
+  if (typeof window !== "undefined") {
+    return `${window.location.protocol}//${window.location.hostname}:${GATEWAY_PORT}`;
+  }
+  return process.env.API_BASE || `http://localhost:${GATEWAY_PORT}`;
+}
 
 export function apiUrl(path: string): string {
-  return `${API_BASE}${path}`;
+  return `${apiBase()}${path}`;
 }
 
 export class ApiError extends Error {
@@ -17,7 +29,7 @@ export class ApiError extends Error {
 }
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(apiUrl(path), {
     headers: { "Content-Type": "application/json", ...options?.headers },
     ...options,
   });
@@ -40,7 +52,7 @@ export async function* streamSse<T>(
   body: unknown,
   signal?: AbortSignal,
 ): AsyncGenerator<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(apiUrl(path), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
