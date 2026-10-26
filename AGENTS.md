@@ -124,6 +124,17 @@ Images: both Dockerfiles build from the repo root and run as non-root with a `HE
 interface uses Next.js `output: "standalone"`. `.dockerignore` excludes local settings, so a file
 the image needs at runtime must not match it.
 
+### Issues and Pull Requests
+
+Write every issue and PR from the platform templates in [`docs/templates/`](docs/templates/README.md):
+`issues/feature.md`, `issues/bug.md`, `issues/tech-debt.md` and `pull-request.md`.
+
+- **Issue titles:** `<Module> | <Title>` (`Core`, `Hermes`, `Hestia`, `Plutus`), plus the module
+  label and `bug` / `enhancement` where it applies.
+- **PR titles:** Conventional Commits, `<type>(<scope>): <summary>`.
+- **Keep them minimal:** a few bullets per section, nothing the diff already shows. Older issues and
+  PRs are too verbose to use as examples.
+
 ## Architecture
 
 ### IPantheonModule Composition
