@@ -3,7 +3,7 @@
 ## 7.1 Deployment Artifacts
 
 Exactly two container images are built and published (`.github/workflows/ci.yml`,
-`publish` job, `main` branch only; [ADR 0011](../adr/0011-container-images-on-ghcr.md)):
+`publish` job: built on every run, pushed from `main` only; [ADR 0011](../adr/0011-container-images-on-ghcr.md)):
 
 | Image | Base | Port | User | Health check | Source |
 |-------|------|------|------|--------------|--------|
@@ -92,7 +92,7 @@ graph TB
 graph LR
     lint["lint: csharpier check +<br/>dotnet format (verify-no-changes)<br/>+ dependency audit"] --> build["build:<br/>dotnet build"]
     build --> test["test: 85% coverage<br/>+ reportgenerator"]
-    test --> publish["publish (main only):<br/>GHCR images"]
+    test --> publish["publish (push on main):<br/>GHCR images"]
 ```
 
 Each job also runs the matching frontend step (`npm run lint`, `npm run build`, `npm run test`).

@@ -113,7 +113,7 @@ after every build. **Pre-commit** checks .NET formatting only (CSharpier + style
 - **build:** `dotnet build Ouranos.Pantheon.sln`, `npm run build`
 - **test:** `dotnet test --collect:"XPlat Code Coverage"` merged with reportgenerator; fails below
   **85% line coverage**. Then `npm run test` (no frontend coverage gate).
-- **publish** (`main` only): gateway/interface images to GHCR
+- **publish**: builds gateway/interface images on every run; pushes to GHCR from `main` only
   (`ghcr.io/<owner>/ouranos-pantheon/<name>`), tagged `latest` and `sha-<short>`
 
 Actions are pinned by commit SHA with a `# vX.Y.Z` comment; keep that form when adding a step.
