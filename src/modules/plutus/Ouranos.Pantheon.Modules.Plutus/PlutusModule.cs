@@ -53,6 +53,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Signals.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.CancelBacktest;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.CreateStrategy;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.DeleteStrategy;
+using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetActiveBacktests;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetAllBacktests;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetAllStrategies;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetBacktest;
@@ -209,6 +210,7 @@ public sealed class PlutusModule : IPantheonModule
         SetStrategyActiveEndpoint.Map(app);
 
         GetAllBacktestsEndpoint.Map(app);
+        GetActiveBacktestsEndpoint.Map(app);
         GetBacktestEndpoint.Map(app);
         CancelBacktestEndpoint.Map(app);
         RestartBacktestEndpoint.Map(app);
