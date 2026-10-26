@@ -10,7 +10,7 @@ reused.
 
 | # | Item | Where | Risk / impact | Proposed severity |
 |---|------|-------|---------------|-------------------|
-| D1 | **Secrets in plaintext config**: API keys, service credentials and connection details sit unencrypted in local configuration (the development file is gitignored) | gateway `appsettings.Development.json`; `ouranos-infrastructure` repo, `stacks/pantheon/.env` | No secrets manager anywhere in the stack; exposure via host compromise, environment inspection, or a locally built image (D13); key rotation is manual | High |
+| D1 | **Secrets in plaintext config**: API keys, service credentials and connection details sit unencrypted in local configuration (the development file is gitignored) | gateway `appsettings.Development.json`; `ouranos-infrastructure` repo, `stacks/pantheon/.env` | No secrets manager anywhere in the stack; exposure via host compromise or environment inspection (`.dockerignore` keeps the development file out of images); key rotation is manual | High |
 | D2 | **No authentication**: gateway is open by design ([security posture](08-crosscutting-concepts.md#813-security)) | [ADR 0008](../adr/0008-no-authentication-single-user.md) | Any host on the home network has full write access (delete strategies, import recipes); acceptable while network is trusted | Accepted (documented) |
 | D4 | **No exception→status mapping**: only the framework's `AddProblemDetails()` is registered and there is no `UseExceptionHandler`; guard exceptions are unmapped, so a missing entity returns a bare 500 with no problem-details body instead of 404 | [Section 8.6](08-crosscutting-concepts.md#86-errors-and-validation) | Client errors are indistinguishable from server faults; the error contract stays accidental as the API grows | Medium |
 | D5 | **Folder-enforced module boundaries**: single assembly per module; internal layering not compiler-enforced | [Section 5](05-building-block-view.md); trade-off in [4.2](04-solution-strategy.md#42-trade-offs-accepted) | A shortcut could couple module internals without failing the build | Low (accepted trade-off) |
@@ -18,9 +18,8 @@ reused.
 | D7 | *Moved*: local Plutus data | [Plutus docs](../../src/modules/plutus/docs/README.md) as PLUTUS-D1 | - | - |
 | D8 | **Unused scaffolding**: frontend `src/proxy.ts` is a pass-through. The Shared and Hestia parts moved to [Shared docs](../../src/modules/shared/docs/README.md) (SHARED-D1) and [Hestia docs](../../src/modules/hestia/docs/README.md) (HESTIA-D2) | interface | Readers assume capabilities that do not exist; dead code carries test and maintenance cost | Low |
 | D10 | *Moved*: cross-slice type imports | [Plutus docs](../../src/modules/plutus/docs/README.md) as PLUTUS-D2; [Hestia docs](../../src/modules/hestia/docs/README.md) as HESTIA-D1 | - | - |
-| D11 | **Test gaps**: unit tests only (EF InMemory, substitutes), no integration tests against Postgres/TimescaleDB, RabbitMQ or Marten; frontend Vitest suite is not run in CI; the 85% gate covers .NET only | `tests/`, `.github/workflows/ci.yml` | Raw SQL, CAGG/materialized-view queries, messaging topology and frontend regressions can ship green | Medium |
+| D11 | **Test gaps**: unit tests only (EF InMemory, substitutes), no integration tests against Postgres/TimescaleDB, RabbitMQ or Marten; the frontend Vitest suite runs in CI but has no coverage gate (the 85% gate covers .NET only) | `tests/`, `.github/workflows/ci.yml` | Raw SQL, CAGG/materialized-view queries, messaging topology and frontend regressions can ship green | Medium |
 | D12 | **Single-instance assumptions**: TickerQ runs in-process, output cache and `IMemoryCache` are per-process, overlap guards use in-memory flags | Shared `CoreExtensions`; module jobs and caches | A second gateway replica would run every job twice and serve inconsistent cached data | Low (accepted while single host) |
-| D13 | **Container image reproducibility**: images are tagged `:latest` only; the interface's API base URL is inlined at build time from the tracked `.env.production`; the gateway port is supplied by the infrastructure stack, not the image; `.dockerignore` does not exclude `appsettings.Development.json` | `src/apps/*/Dockerfile`, `.dockerignore`, `.github/workflows/ci.yml` | No rollback to a known build; runtime correctness depends on settings in the infrastructure repo; local builds can bake secrets (D1) | Medium |
 | D14 | *Moved*: dependence on free external APIs | [Plutus docs](../../src/modules/plutus/docs/README.md) as PLUTUS-D3 | - | - |
 | D15 | **Wolverine runtime code generation** (`UseRuntimeCompilation`) | Shared `CoreExtensions` | Slower cold start and handler codegen failures surface at runtime, not build time; mitigated by `WolverineCodegenValidationTests` | Low |
 | D16 | *Moved*: ineffective signal-job overlap guard | [Plutus docs](../../src/modules/plutus/docs/README.md) as PLUTUS-D4 | - | - |
@@ -50,7 +49,6 @@ quadrantChart
     D8 scaffolding: [0.35, 0.1]
     D11 test gaps: [0.65, 0.65]
     D12 single instance: [0.1, 0.45]
-    D13 images: [0.7, 0.55]
     D15 runtime codegen: [0.2, 0.15]
     D17 dashboard: [0.55, 0.75]
     D18 braces advisory: [0.15, 0.1]

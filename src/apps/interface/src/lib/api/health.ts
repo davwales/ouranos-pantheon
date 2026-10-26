@@ -1,4 +1,4 @@
-import { api } from "@/lib/api-client";
+import { ApiError, apiUrl } from "@/lib/api-client";
 
 export type HealthStatus = "Healthy" | "Degraded" | "Unhealthy" | "NotConfigured";
 
@@ -28,5 +28,12 @@ export interface HealthSummary {
 }
 
 export const healthApi = {
-  getHealthSummary: () => api.get<GetHealthResponseDto>("/health"),
+  getHealthSummary: async (): Promise<GetHealthResponseDto> => {
+    const res = await fetch(apiUrl("/health"));
+    // 503 means a dependency is unhealthy; the body still carries the per-check report.
+    if (!res.ok && res.status !== 503) {
+      throw new ApiError(res.status, res.statusText);
+    }
+    return res.json() as Promise<GetHealthResponseDto>;
+  },
 };

@@ -40,7 +40,8 @@ in the [platform documentation](../../../../docs/architecture/README.md), mainly
 
 ## Provided Interfaces
 
-- **REST**: `GET /health` (unprefixed), TickerQ dashboard at `/tickerq/dashboard`.
+- **REST**: `GET /health` (unprefixed; 503 when any check is Unhealthy, otherwise 200 with the
+  same per-check report), TickerQ dashboard at `/tickerq/dashboard`.
 - **Kernel API** for modules: see the [building block view](05-building-block-view.md).
 - **Messages**: none.
 
