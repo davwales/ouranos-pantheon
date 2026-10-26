@@ -34,6 +34,27 @@ public sealed class ImageGenerationMappingTests
         body["previews"]!.GetValue<bool>().ShouldBeFalse();
     }
 
+    [Fact]
+    public async Task ToContent_WhenEditing_ShouldSendTheImageAndStrengthWithoutASize()
+    {
+        // Act
+        using var content = ImageGenerationMapping.ToContent(
+            new EditImageRequest("A fox at night", [1, 2, 3], 0.3f, "flux")
+        );
+
+        // Assert
+        var body = JsonNode.Parse(await content.ReadAsStringAsync()).ShouldNotBeNull();
+        body["prompt"]!.GetValue<string>().ShouldBe("A fox at night");
+        body["model"]!.GetValue<string>().ShouldBe("flux");
+        body["image"]!.GetValue<string>().ShouldBe(Convert.ToBase64String([1, 2, 3]));
+        body["strength"]!.GetValue<float>().ShouldBe(0.3f);
+        body["n"]!.GetValue<int>().ShouldBe(1);
+        body["stream"]!.GetValue<bool>().ShouldBeTrue();
+        body["save"]!.GetValue<bool>().ShouldBeFalse();
+        body["previews"]!.GetValue<bool>().ShouldBeFalse();
+        body.AsObject().ContainsKey("size").ShouldBeFalse();
+    }
+
     [Theory]
     [InlineData("png", "image/png")]
     [InlineData("JPG", "image/jpeg")]

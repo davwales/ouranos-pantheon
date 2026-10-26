@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Images;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres.Converters;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Shared.Database.ModelConfigurations;
@@ -12,6 +13,8 @@ public sealed class GeneratedImageConfiguration : IEntityTypeConfiguration<Gener
         builder.HasKey(i => i.Id);
 
         builder.Property(i => i.Id).HasIdConversion();
+
+        builder.Property(i => i.SourceImageId).HasConversion<IdConverter<GeneratedImage>>();
 
         builder.HasIndex(i => i.CreatedAt);
     }

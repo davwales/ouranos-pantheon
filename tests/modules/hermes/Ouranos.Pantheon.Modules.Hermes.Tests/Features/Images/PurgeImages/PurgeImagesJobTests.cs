@@ -93,6 +93,46 @@ public sealed class PurgeImagesJobTests
     }
 
     [Fact]
+    public async Task Expired_WhenOnlyAUserMessageReferencesAnImage_ShouldKeepIt()
+    {
+        // Arrange
+        var attached = Image(TimeSpan.FromDays(30));
+
+        await using (var dbContext = DbContextExtensions.Mock<HermesDbContext>(_dbName))
+        {
+            await dbContext.SeedData(attached);
+            await dbContext.SeedData(
+                Message.Create(
+                    new Id<Message>(Guid.NewGuid().ToString()),
+                    new Id<Conversation>(Guid.NewGuid().ToString()),
+                    "Make it night",
+                    Role.User,
+                    0,
+                    [
+                        ImageMessagePart.Create(
+                            new Id<MessagePart>(Guid.NewGuid().ToString()),
+                            attached.Id,
+                            64,
+                            64,
+                            "A fox"
+                        ),
+                    ]
+                )
+            );
+        }
+
+        // Act
+        await using var queryContext = DbContextExtensions.Mock<HermesDbContext>(_dbName);
+
+        var expired = PurgeImagesJob
+            .Expired(queryContext, DateTimeOffset.UtcNow - TimeSpan.FromHours(24))
+            .ToList();
+
+        // Assert
+        expired.ShouldBeEmpty();
+    }
+
+    [Fact]
     public async Task Execute_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange

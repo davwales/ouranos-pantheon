@@ -12,6 +12,7 @@ export function toolKey(tool: { source: ToolSource; name: string }): string {
 }
 
 export const GENERATE_IMAGE_TOOL = "generate_image";
+export const EDIT_IMAGE_TOOL = "edit_image";
 
 export function toolSetEnables(
   toolSet: ToolSetSummary | undefined,

@@ -49,7 +49,15 @@ export type MessagePart =
       isTruncated: boolean;
       durationMs?: number | null;
     }
-  | { $type: "image"; imageId: string; width: number; height: number; altText: string };
+  | ImageMessagePart;
+
+export type ImageMessagePart = {
+  $type: "image";
+  imageId: string;
+  width: number;
+  height: number;
+  altText: string;
+};
 
 export interface MessageInput {
   role: Role;
@@ -63,12 +71,25 @@ export type CompletionToolCallInput = {
   name: string;
   arguments: string;
   output: string;
+  imageId?: string;
 };
 
 export type CompletionMessageInput = {
   role: Role;
   content: string;
   toolCalls?: CompletionToolCallInput[];
+  images?: ImageMessagePart[];
+};
+
+export type ImageDetails = {
+  id: string;
+  width: number;
+  height: number;
+  prompt: string;
+  model: string;
+  seed: number | null;
+  sourceImageId: string | null;
+  createdAt: string;
 };
 
 export interface PersonaInput {

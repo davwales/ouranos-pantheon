@@ -47,6 +47,11 @@ public interface IOuranosMachineLearningClient
         CancellationToken cancellationToken = default
     );
 
+    IAsyncEnumerable<ImageGenerationEventDto> StreamImageEditAsync(
+        EditImageRequest payload,
+        CancellationToken cancellationToken = default
+    );
+
     Task<List<AvailableModelDto>> GetAvailableModelsAsync(
         CancellationToken cancellationToken = default
     );

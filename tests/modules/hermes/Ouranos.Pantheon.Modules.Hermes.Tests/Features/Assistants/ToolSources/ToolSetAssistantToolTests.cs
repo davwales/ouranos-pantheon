@@ -1,3 +1,4 @@
+using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.Scopes;
 using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.ToolSources;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion.Schemas;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
@@ -110,7 +111,7 @@ public sealed class ToolSetAssistantToolTests
     public void IsAvailable_ShouldDelegateToInner(bool expected)
     {
         // Arrange
-        var context = new HermesChatContext(null, []);
+        var context = new HermesChatContext(null, [], ConversationImages.Empty);
         _inner.IsAvailable(context).Returns(expected);
         var tool = new ToolSetAssistantTool(_inner, null);
 
@@ -126,7 +127,7 @@ public sealed class ToolSetAssistantToolTests
     public async Task InvokeAsync_ShouldDelegateToInner()
     {
         // Arrange
-        var context = new HermesChatContext(null, []);
+        var context = new HermesChatContext(null, [], ConversationImages.Empty);
         var expected = new AssistantToolResult("done");
         var ct = CancellationToken.None;
         _inner.InvokeAsync(context, "{}", ct).Returns(ValueTask.FromResult(expected));

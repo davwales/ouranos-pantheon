@@ -262,8 +262,55 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
         );
         cancellationToken.ThrowIfCancellationRequested();
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, "images/generations");
-        request.Content = ImageGenerationMapping.ToContent(payload);
+        await foreach (
+            var imageEvent in StreamImageEventsAsync(
+                "images/generations",
+                ImageGenerationMapping.ToContent(payload),
+                cancellationToken
+            )
+        )
+        {
+            yield return imageEvent;
+        }
+
+        _logger.LogDebug("Successfully generated an image using Ouranos ML.");
+    }
+
+    public async IAsyncEnumerable<ImageGenerationEventDto> StreamImageEditAsync(
+        EditImageRequest payload,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
+    )
+    {
+        _logger.LogTrace(
+            "Attempting to edit an image at strength {Strength} using model '{Model}'.",
+            payload.Strength,
+            payload.Model
+        );
+        cancellationToken.ThrowIfCancellationRequested();
+
+        await foreach (
+            var imageEvent in StreamImageEventsAsync(
+                "images/edits",
+                ImageGenerationMapping.ToContent(payload),
+                cancellationToken
+            )
+        )
+        {
+            yield return imageEvent;
+        }
+
+        _logger.LogDebug("Successfully edited an image using Ouranos ML.");
+    }
+
+    // Generations and edits stream the same events, ending with done.
+    private async IAsyncEnumerable<ImageGenerationEventDto> StreamImageEventsAsync(
+        string path,
+        HttpContent content,
+        [EnumeratorCancellation] CancellationToken cancellationToken
+    )
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, path);
+        request.Content = content;
 
         using var response = await _httpClient.SendAsync(
             request,
@@ -303,8 +350,6 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
                 "The image stream ended before the image was finished."
             );
         }
-
-        _logger.LogDebug("Successfully generated an image using Ouranos ML.");
     }
 
     public async Task<List<AvailableModelDto>> GetAvailableModelsAsync(

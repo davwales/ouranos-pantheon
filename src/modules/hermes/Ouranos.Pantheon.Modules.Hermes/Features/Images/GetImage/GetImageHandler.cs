@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Hermes.Features.Images.GetImage.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
-using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Images;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application;
 
@@ -32,7 +31,7 @@ public sealed class GetImageHandler(
         var flags = await _flagsmith.GetEnvironmentFlags();
         if (
             await flags.IsFeatureEnabled(HermesFeatureFlags.PublicMode)
-            && await IsInPrivateConversationAsync(query, cancellationToken)
+            && await _dbContext.IsImageInPrivateConversationAsync(query.ImageId, cancellationToken)
         )
         {
             throw new NotFoundException(query.ImageId.ToString(), nameof(GeneratedImage));
@@ -48,23 +47,5 @@ public sealed class GetImageHandler(
 
         _logger.LogDebug("Successfully handled get image request.");
         return image;
-    }
-
-    private async Task<bool> IsInPrivateConversationAsync(
-        GetImageInput query,
-        CancellationToken cancellationToken
-    )
-    {
-        return await _dbContext
-            .Conversations.AsNoTracking()
-            .Where(c =>
-                c.Messages.Any(m =>
-                    m.Parts.OfType<ImageMessagePart>().Any(p => p.ImageId == query.ImageId)
-                )
-            )
-            .AnyAsync(
-                c => !c.IsPublic || _dbContext.Folders.Any(f => f.Id == c.FolderId && !f.IsPublic),
-                cancellationToken
-            );
     }
 }

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useStreamingMessage } from "@/hooks/use-streaming-message";
 import { streamCompletion, streamCompact } from "@/lib/api/hermes";
 import {
+  type ImageMessagePart,
   type MessageInput,
   type ReasoningEffort,
   Role,
@@ -16,6 +17,7 @@ import {
   textOf,
 } from "@/components/shared/ai-assistant/assistant-chat-parts";
 import {
+  imagesOf,
   toMessageParts,
   toolCallsOf,
   withEditedText,
@@ -62,7 +64,7 @@ export function useMessageController(params: {
   isCompacting: boolean;
   compactionError: string | null;
   tokenUsage: TokenUsage | null;
-  addUserMessage: (content: string) => Promise<void>;
+  addUserMessage: (content: string, image?: ImageMessagePart) => Promise<void>;
   updateMessageContent: (index: number, content: string) => void;
   deleteMessage: (index: number) => void;
   retryMessage: (index: number) => Promise<void>;
@@ -155,6 +157,7 @@ export function useMessageController(params: {
                   role,
                   content,
                   toolCalls: toolCallsOf(messageParts),
+                  images: role === Role.User ? imagesOf(messageParts) : undefined,
                 }),
               ),
               reasoningEffort,
@@ -241,10 +244,12 @@ export function useMessageController(params: {
   }, []);
 
   const addUserMessage = useCallback(
-    async (content: string) => {
+    async (content: string, image?: ImageMessagePart) => {
       if (!content.trim() || isCompacting || isGenerating) return;
 
-      const userMessage: MessageInput = { role: Role.User, content };
+      const userMessage: MessageInput = image
+        ? { role: Role.User, content, parts: [image] }
+        : { role: Role.User, content };
       const updatedMessages = [...messages, userMessage];
       setMessages(updatedMessages);
       await generateCompletion(updatedMessages);

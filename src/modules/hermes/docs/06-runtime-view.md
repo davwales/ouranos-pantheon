@@ -114,3 +114,34 @@ through a model load and sampling; it uses only the completed image for now. The
 only the tool's short output text, never the image. Stopping the reply cancels the request,
 OuranosMl interrupts SwarmUI and nothing is stored. While the tool runs, the Interface shows
 the tool block with its elapsed time.
+
+### Image Editing
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant UI as Interface
+    participant H as GenerateCompletionHandler
+    participant T as EditImageTool
+    participant ML as OuranosMl (/images/edits)
+    participant DB as Postgres (schema hermes)
+
+    UI ->> UI: Edit (chip) or More like this on an image
+    UI ->> H: completion request, user message with an image part
+    H ->> DB: load prompts of the referenced images
+    H ->> H: number images (image 1, image 2, ...), replay refs and the attached prompt
+    H ->> T: invoke (prompt, change, image?)
+    T ->> T: source = attached image, else named ref, else latest image
+    T ->> DB: load the source image
+    T ->> ML: POST /images/edits (image, strength, prompt + LoRA tags, no size)
+    ML -->> T: completed (base64 image), done
+    T ->> DB: insert generated_images row with source_image_id
+    T -->> UI: toolResult event, then image event
+```
+
+**Edit** attaches the image to the composer as a removable chip; the user then describes the
+change. **More like this** sends "More like this" with the image attached straight away, and
+the tool description asks the model to reuse the prompt with `change: subtle`. Without `size`,
+OuranosMl keeps the source's aspect ratio, and its random seed makes each variation differ.
+The image dialog shows "Edited from" for an edited image (`GET /api/hermes/images/{id}/details`)
+and can step back through the sources.

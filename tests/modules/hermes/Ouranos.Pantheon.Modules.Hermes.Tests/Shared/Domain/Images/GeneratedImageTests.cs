@@ -23,6 +23,29 @@ public sealed class GeneratedImageTests
         image.Prompt.ShouldBe("A fox");
         image.Model.ShouldBe("flux");
         image.Seed.ShouldBe(7);
+        image.SourceImageId.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Create_WhenEditedFromAnotherImage_ShouldKeepItsSource()
+    {
+        // Arrange
+        var sourceId = new Id<GeneratedImage>(Guid.NewGuid().ToString());
+
+        // Act
+        var image = GeneratedImage.Create(
+            new Id<GeneratedImage>(Guid.NewGuid().ToString()),
+            [1],
+            "image/png",
+            64,
+            64,
+            "A fox at night",
+            "flux",
+            sourceImageId: sourceId
+        );
+
+        // Assert
+        image.SourceImageId.ShouldBe(sourceId);
     }
 
     [Fact]

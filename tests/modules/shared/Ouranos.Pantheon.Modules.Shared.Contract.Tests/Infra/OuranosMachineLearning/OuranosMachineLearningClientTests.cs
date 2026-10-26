@@ -456,6 +456,72 @@ public sealed class OuranosMachineLearningClientTests
     }
 
     [Fact]
+    public async Task StreamImageEditAsync_WhenStreamCompletes_ShouldYieldTheImageAndPostToEdits()
+    {
+        // Arrange
+        var content = Convert.ToBase64String([4, 5, 6]);
+        var handler = new RecordingHttpMessageHandler(
+            "text/event-stream",
+            Sse(
+                (
+                    "image_generation.completed",
+                    $$"""{"type":"image_generation.completed","sequence_number":0,"image_index":0,"b64_json":"{{content}}","seed":7,"size":"832x1216","output_format":"png"}"""
+                ),
+                (
+                    "image_generation.done",
+                    """{"type":"image_generation.done","sequence_number":1,"created":1700000000,"model":"flux","count":1}"""
+                )
+            )
+        );
+
+        var client = CreateImageClient(handler);
+
+        // Act
+        var events = await CollectAsync(
+            client.StreamImageEditAsync(new EditImageRequest("A fox at night", [1, 2, 3], 0.3f))
+        );
+
+        // Assert
+        events.Count.ShouldBe(2);
+        var completed = events[0].ShouldBeOfType<ImageGenerationCompletedDto>();
+        completed.Content.ShouldBe(new byte[] { 4, 5, 6 });
+        completed.Width.ShouldBe(832);
+        events[1].ShouldBe(new ImageGenerationDoneDto("flux"));
+
+        handler.RequestUri.ShouldBe(new Uri("http://test.com/v1/images/edits"));
+        var body = handler.RequestBody.ShouldNotBeNull();
+        body["image"]!.GetValue<string>().ShouldBe(Convert.ToBase64String([1, 2, 3]));
+        body["strength"]!.GetValue<float>().ShouldBe(0.3f);
+    }
+
+    [Fact]
+    public async Task StreamImageEditAsync_WhenStreamEndsWithoutDone_ShouldThrow()
+    {
+        // Arrange
+        var handler = new RecordingHttpMessageHandler(
+            "text/event-stream",
+            Sse(
+                (
+                    "image_generation.status",
+                    """{"type":"image_generation.status","sequence_number":0,"stage":"queued","waiting_gens":0,"loading_models":0,"live_gens":0}"""
+                )
+            )
+        );
+
+        var client = CreateImageClient(handler);
+
+        // Act
+        var act = () =>
+            CollectAsync(
+                client.StreamImageEditAsync(new EditImageRequest("A fox", [1, 2, 3], 0.5f))
+            );
+
+        // Assert
+        var exception = await act.ShouldThrowAsync<OuranosMlRequestException>();
+        exception.Type.ShouldBe("incomplete_stream");
+    }
+
+    [Fact]
     public async Task StreamImageGenerationAsync_WhenRequestFails_ShouldThrowWithOuranosMlsError()
     {
         // Arrange

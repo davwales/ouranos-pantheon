@@ -28,6 +28,12 @@ public sealed class GeneratedImage : BaseEntity<Id<GeneratedImage>>
 
     public long? Seed { get; private set; }
 
+    /// <summary>
+    /// The image this one was edited from, or null for an image drawn from scratch. There is no
+    /// foreign key: the source may be purged while the edit is still referenced.
+    /// </summary>
+    public Id<GeneratedImage>? SourceImageId { get; private set; }
+
     public static GeneratedImage Create(
         Id<GeneratedImage> id,
         byte[] content,
@@ -36,7 +42,8 @@ public sealed class GeneratedImage : BaseEntity<Id<GeneratedImage>>
         int height,
         string prompt,
         string model,
-        long? seed = null
+        long? seed = null,
+        Id<GeneratedImage>? sourceImageId = null
     )
     {
         Guard.Against.NullOrEmpty(content);
@@ -55,6 +62,7 @@ public sealed class GeneratedImage : BaseEntity<Id<GeneratedImage>>
             Prompt = prompt,
             Model = model,
             Seed = seed,
+            SourceImageId = sourceImageId,
         };
     }
 }
