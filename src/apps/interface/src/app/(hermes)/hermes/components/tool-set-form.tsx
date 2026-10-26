@@ -24,6 +24,8 @@ import {
   type ToolSource,
 } from "@/lib/api/hermes";
 import React, { type ChangeEvent, useMemo, useState } from "react";
+import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
+import { hasChanges } from "@/lib/has-changes";
 
 type ToolRow = {
   source: ToolSource;
@@ -95,15 +97,18 @@ export function ToolSetForm({
   availableTools: AvailableTool[];
   loading?: boolean;
 }) {
-  const [toolSet, setToolSet] = useState<ToolSetFormInput>(
-    initial ?? {
-      name: "",
-      description: "",
-      instructions: "",
-      tools: [],
-      isPublic: true,
-    },
+  const [baseline] = useState<ToolSetFormInput>(
+    () =>
+      initial ?? {
+        name: "",
+        description: "",
+        instructions: "",
+        tools: [],
+        isPublic: true,
+      },
   );
+  const [toolSet, setToolSet] = useState<ToolSetFormInput>(baseline);
+  useUnsavedChangesGuard(hasChanges(toolSet, baseline));
   const [drafts, setDrafts] = useState<Record<string, string>>(() =>
     Object.fromEntries(
       (initial?.tools ?? []).map((t) => [toolKey(t), t.additionalDescription]),

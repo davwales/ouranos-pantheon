@@ -18,6 +18,8 @@ import { Separator } from "@/components/ui/separator";
 import { useApi } from "@/hooks/use-api";
 import React, { ChangeEvent, useMemo, useState } from "react";
 import { ToolSetSelect } from "@/app/(hermes)/hermes/components/tool-set-select";
+import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
+import { hasChanges } from "@/lib/has-changes";
 
 export function ModelForm({
   onSave,
@@ -33,19 +35,22 @@ export function ModelForm({
   initial?: ModelFormInput;
   loading?: boolean;
 }) {
-  const [model, setModel] = useState<ModelFormInput>(
-    initial || {
-      name: "",
-      modelIdentifier: "",
-      systemPrompt: "",
-      temperature: null,
-      maxTokens: null,
-      defaultToolSetId: null,
-      contextWindow: null,
-      isDefault: false,
-      isPublic: true,
-    },
+  const [baseline] = useState<ModelFormInput>(
+    () =>
+      initial || {
+        name: "",
+        modelIdentifier: "",
+        systemPrompt: "",
+        temperature: null,
+        maxTokens: null,
+        defaultToolSetId: null,
+        contextWindow: null,
+        isDefault: false,
+        isPublic: true,
+      },
   );
+  const [model, setModel] = useState<ModelFormInput>(baseline);
+  useUnsavedChangesGuard(hasChanges(model, baseline));
   const [availableModelsState] = useApi(() => hermesApi.getAvailableModels());
   const [toolSetsState] = useApi(() => hermesApi.getAllToolSets());
 

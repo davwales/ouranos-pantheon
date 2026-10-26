@@ -10,6 +10,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { RecipeForm } from "../_components/recipe-form";
 import { RecipeSymbol } from "../types";
+import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
+import { hasChanges } from "@/lib/has-changes";
 
 export default function CreateRecipePage() {
   const { marketId } = useParams<{ marketId: string }>();
@@ -22,6 +24,10 @@ export default function CreateRecipePage() {
   const [isInputDialogOpen, setIsInputDialogOpen] = useState(false);
   const [isOutputDialogOpen, setIsOutputDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  const editable = { name, cost, inputs, outputs };
+  const [baseline] = useState(editable);
+  useUnsavedChangesGuard(hasChanges(editable, baseline));
 
   const handleSubmit = async () => {
     setIsProcessing(true);

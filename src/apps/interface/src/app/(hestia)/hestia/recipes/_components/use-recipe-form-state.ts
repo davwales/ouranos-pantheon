@@ -3,12 +3,16 @@
 import { generateID } from "@/lib/utils";
 import { useState } from "react";
 import type { FormErrors, IngredientTextField, RecipeFormState } from "./recipe-form-types";
+import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
+import { hasChanges } from "@/lib/has-changes";
 
 export function useRecipeFormState(initialForm: RecipeFormState) {
-  const [form, setForm] = useState<RecipeFormState>(initialForm);
+  const [baseline] = useState<RecipeFormState>(initialForm);
+  const [form, setForm] = useState<RecipeFormState>(baseline);
   const [errors, setErrors] = useState<FormErrors>({});
   const [genericError, setGenericError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  useUnsavedChangesGuard(hasChanges(form, baseline));
 
   const clearFieldError = (field: keyof Omit<RecipeFormState, "ingredients" | "steps">) => {
     if (errors[field]) {

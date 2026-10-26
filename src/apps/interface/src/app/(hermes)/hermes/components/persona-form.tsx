@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import React, { ChangeEvent, useMemo, useState } from "react";
+import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
+import { hasChanges } from "@/lib/has-changes";
 
 export function PersonaForm({
   onSave,
@@ -23,16 +25,19 @@ export function PersonaForm({
   initial?: PersonaFormInput;
   loading?: boolean;
 }) {
-  const [persona, setPersona] = useState<PersonaFormInput>(
-    initial || {
-      name: "",
-      description: "",
-      personality: null,
-      scenario: null,
-      isDefault: false,
-      isPublic: true,
-    },
+  const [baseline] = useState<PersonaFormInput>(
+    () =>
+      initial || {
+        name: "",
+        description: "",
+        personality: null,
+        scenario: null,
+        isDefault: false,
+        isPublic: true,
+      },
   );
+  const [persona, setPersona] = useState<PersonaFormInput>(baseline);
+  useUnsavedChangesGuard(hasChanges(persona, baseline));
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();

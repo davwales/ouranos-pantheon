@@ -115,6 +115,23 @@ describe("RecipeForm", () => {
     expect(titleInput).toHaveValue("Spaghetti Carbonara");
   });
 
+  it("guards against leaving the page only once the form has unsaved changes", () => {
+    render(<RecipeForm />);
+    const unload = () => {
+      const event = new Event("beforeunload", { cancelable: true });
+      window.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+
+    expect(unload()).toBe(false);
+
+    fireEvent.change(screen.getByLabelText(/title/i), {
+      target: { value: "Spaghetti Carbonara" },
+    });
+
+    expect(unload()).toBe(true);
+  });
+
   it("shows inline errors and does not submit when required fields are empty", async () => {
     render(<RecipeForm />);
 

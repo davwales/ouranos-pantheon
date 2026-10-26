@@ -176,10 +176,12 @@ export const hermesApi = {
   deleteToolSet: (toolSetId: string) =>
     api.del<{ toolSetId: string }>(`/api/hermes/tool-sets/${toolSetId}`),
 
-  getAllConversations: (params?: { folderId?: string }) =>
-    api.get<ConversationSummary[]>("/api/hermes/conversations", {
-      folderId: params?.folderId,
-    }),
+  getAllConversations: (params?: {
+    folderId?: string;
+    sortField?: string;
+    sortDirection?: string;
+    filter?: string[];
+  }) => api.get<ConversationSummary[]>("/api/hermes/conversations", params),
 
   getConversation: (id: string) =>
     api.get<SavedConversation>(`/api/hermes/conversations/${id}`),

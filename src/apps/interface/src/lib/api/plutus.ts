@@ -40,6 +40,7 @@ export type {
   CreateStrategyRequest,
   UpdateStrategyRequest,
   BacktestSummary,
+  ActiveBacktest,
   BacktestPosition,
   BacktestResults,
   BacktestDetail,
@@ -84,6 +85,7 @@ import type {
   Strategy,
   StrategyDetail,
   BacktestSummary,
+  ActiveBacktest,
   BacktestDetail,
   RunBacktestResponse,
   CancelBacktestResponse,
@@ -337,6 +339,16 @@ export const plutusApi = {
       {
         ...page,
       },
+    ),
+
+  getActiveBacktests: (params?: {
+    marketId?: string;
+    skip?: number;
+    take?: number;
+  }) =>
+    api.get<PagedResponse<ActiveBacktest>>(
+      "/api/plutus/backtests/active",
+      params,
     ),
 
   getBacktest: (backtestId: string) =>

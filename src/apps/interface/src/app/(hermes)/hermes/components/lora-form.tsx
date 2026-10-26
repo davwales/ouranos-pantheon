@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import React, { ChangeEvent, useState } from "react";
+import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
+import { hasChanges } from "@/lib/has-changes";
 
 export const MIN_LORA_WEIGHT = -2;
 export const MAX_LORA_WEIGHT = 2;
@@ -23,9 +25,12 @@ export function LoraForm({
   initial?: LoraFormInput;
   loading?: boolean;
 }) {
-  const [lora, setLora] = useState<LoraFormInput>(
-    initial ?? { name: "", identifier: "", weight: 1, isPublic: true },
+  const [baseline] = useState<LoraFormInput>(
+    () =>
+      initial ?? { name: "", identifier: "", weight: 1, isPublic: true },
   );
+  const [lora, setLora] = useState<LoraFormInput>(baseline);
+  useUnsavedChangesGuard(hasChanges(lora, baseline));
 
   const isValid =
     lora.name.trim() !== "" &&
