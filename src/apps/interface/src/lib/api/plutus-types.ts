@@ -377,6 +377,18 @@ export interface BacktestSummary {
   createdAt: string;
 }
 
+export type ActiveBacktest = {
+  id: string;
+  strategyId: string;
+  strategyName: string;
+  marketId: string;
+  kind: BacktestKind;
+  status: BacktestStatus;
+  progressPercent: number;
+  progressMessage?: string | null;
+  createdAt: string;
+};
+
 export interface BacktestPosition {
   symbolId: string;
   symbolName: string;

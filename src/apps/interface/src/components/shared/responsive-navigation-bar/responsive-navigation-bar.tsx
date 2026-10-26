@@ -15,10 +15,12 @@ import React from "react";
 export default function ResponsiveNavigationBar({
   items,
   iconSrc,
+  utilities,
   ...props
 }: React.ComponentProps<"div"> & {
   items: NavigationBarItem[];
   iconSrc?: string;
+  utilities?: React.ReactNode;
 }) {
   const { actions } = useNavBarActions();
 
@@ -36,9 +38,12 @@ export default function ResponsiveNavigationBar({
         </Content>
       </ResponsiveContent>
 
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center gap-2 md:gap-3">
+        {utilities}
         {actions}
-        <Typography variant="h3">Ouranos</Typography>
+        <Typography variant="h3" className="hidden sm:block">
+          Ouranos
+        </Typography>
         <Avatar>
           <AvatarImage src={iconSrc || "/ouranos-icon.png"} />
         </Avatar>

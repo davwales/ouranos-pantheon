@@ -29,6 +29,8 @@ import { FormSkeleton } from "@/components/shared/skeletons/form-skeleton";
 import { DataTableSkeleton } from "@/components/shared/skeletons/data-table-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { NotFoundCard } from "@/components/shared/not-found-card";
+import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
+import { hasChanges } from "@/lib/has-changes";
 
 export default function GroupDetailPage() {
   const { marketId, groupId } = useParams<{
@@ -55,6 +57,16 @@ export default function GroupDetailPage() {
   const group = state.data;
   useBreadcrumbLabel(groupId, group?.name, state.status === "error");
 
+  const editable = {
+    name,
+    description,
+    symbolIds: symbols.map((s) => s.symbolId),
+  };
+  const [savedGroup, setSavedGroup] = useState<typeof editable>();
+  useUnsavedChangesGuard(
+    savedGroup !== undefined && hasChanges(editable, savedGroup),
+  );
+
   const [syncedGroup, setSyncedGroup] = useState(group);
   if (group !== syncedGroup) {
     setSyncedGroup(group);
@@ -62,6 +74,11 @@ export default function GroupDetailPage() {
       setName(group.name);
       setDescription(group.description ?? "");
       setSymbols(group.symbols);
+      setSavedGroup({
+        name: group.name,
+        description: group.description ?? "",
+        symbolIds: group.symbols.map((s) => s.symbolId),
+      });
     }
   }
 

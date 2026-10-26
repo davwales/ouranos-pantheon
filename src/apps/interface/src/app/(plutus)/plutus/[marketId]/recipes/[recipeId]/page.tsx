@@ -20,6 +20,8 @@ import { DetailSkeleton } from "@/components/shared/skeletons/detail-skeleton";
 import { FormSkeleton } from "@/components/shared/skeletons/form-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { NotFoundCard } from "@/components/shared/not-found-card";
+import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
+import { hasChanges } from "@/lib/has-changes";
 
 export default function RecipeDetailPage() {
   const { marketId, recipeId } = useParams<{
@@ -49,6 +51,12 @@ export default function RecipeDetailPage() {
   const recipe = state.data;
   useBreadcrumbLabel(recipeId, recipe?.name, state.status === "error");
 
+  const editable = { name, cost, inputs, outputs };
+  const [savedRecipe, setSavedRecipe] = useState<typeof editable>();
+  useUnsavedChangesGuard(
+    savedRecipe !== undefined && hasChanges(editable, savedRecipe),
+  );
+
   const [syncedRecipe, setSyncedRecipe] = useState(recipe);
   if (recipe !== syncedRecipe) {
     setSyncedRecipe(recipe);
@@ -57,6 +65,12 @@ export default function RecipeDetailPage() {
       setCost(recipe.cost);
       setInputs(recipe.inputs);
       setOutputs(recipe.outputs);
+      setSavedRecipe({
+        name: recipe.name,
+        cost: recipe.cost,
+        inputs: recipe.inputs,
+        outputs: recipe.outputs,
+      });
     }
   }
 
@@ -91,6 +105,7 @@ export default function RecipeDetailPage() {
           quantity: output.quantity,
         })),
       });
+      setSavedRecipe(editable);
     } catch (error) {
       console.error("Failed to save recipe:", error);
     } finally {

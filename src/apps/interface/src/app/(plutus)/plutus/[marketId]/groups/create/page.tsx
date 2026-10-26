@@ -8,6 +8,8 @@ import { plutusApi } from "@/lib/api/plutus";
 import { RefreshCw } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
+import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
+import { hasChanges } from "@/lib/has-changes";
 
 export default function CreateGroupPage() {
   const { marketId } = useParams<{ marketId: string }>();
@@ -15,6 +17,10 @@ export default function CreateGroupPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+
+  const editable = { name, description };
+  const [baseline] = useState(editable);
+  useUnsavedChangesGuard(hasChanges(editable, baseline));
 
   const handleSubmit = async () => {
     setIsProcessing(true);

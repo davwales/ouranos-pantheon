@@ -302,6 +302,14 @@ touched code**; existing violations are known and are not a licence to copy the 
   any other nav-bar actions the page sets). Only set it while the assistant is usable, and key it by
   the context id so the conversation resets per entity. Never place assistant triggers in page
   content.
+- **Editors guard unsaved changes** - a form that edits an entity calls
+  `useUnsavedChangesGuard(isDirty)` (`src/hooks/`) with `hasChanges(current, baseline)`
+  (`src/lib/has-changes.ts`). Keep the baseline as the last saved values, not the mount-time
+  state, when the page stays mounted after saving.
+- **Global navigation is data** - nav-bar entries live in `NAVIGATION_ITEMS`
+  (`components/shared/responsive-navigation-bar/navigation-items.ts`) and per-market pages in
+  `MARKET_FEATURES` (`plutus/constants/market-features.ts`); the command palette
+  (`app/_components/command-palette/`) builds its pages from both, so add new pages there.
 - **Backtest/Optimization UI pattern** - trigger dialogs from the strategy detail page
   (`RunBacktestDialog`, `OptimizeDialog`), both using `ResponsiveDialog`. After submission
   (HTTP 202 Accepted), navigate to `/plutus/[marketId]/strategies/[strategyId]/backtests`. Backtest

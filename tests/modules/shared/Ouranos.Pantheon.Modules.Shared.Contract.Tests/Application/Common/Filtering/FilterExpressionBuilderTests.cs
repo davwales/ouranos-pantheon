@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Filtering;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 
@@ -42,6 +43,53 @@ public sealed class FilterExpressionBuilderTests
         // Assert
         result.Count.ShouldBe(1);
         result[0].Name.ShouldBe("Bow");
+    }
+
+    [Fact]
+    public void FilterBy_WhenCaseInsensitiveLikeOnNullableProperty_ShouldSkipNullsAndIgnoreCasing()
+    {
+        // Arrange
+        var items = new Item[]
+        {
+            new("Sword", 100, true, "Weapon"),
+            new("Rock", 1, true, null),
+        }.AsQueryable();
+        var builder = new FilterBuilder<Item>().On(
+            nameof(Item.Category),
+            x => x.Category,
+            caseInsensitive: true
+        );
+
+        // Act
+        var result = items.FilterBy(["Category:like:WEAP"], builder).ToList();
+
+        // Assert
+        result.Count.ShouldBe(1);
+        result[0].Name.ShouldBe("Sword");
+    }
+
+    [Theory]
+    [InlineData("like")]
+    [InlineData("startswith")]
+    [InlineData("endswith")]
+    public void FilterBy_WhenCaseInsensitiveStringOperator_ShouldNotEmitConditionalExpression(
+        string op
+    )
+    {
+        // Arrange
+        var builder = new FilterBuilder<Item>().On(
+            nameof(Item.Name),
+            x => x.Name,
+            caseInsensitive: true
+        );
+
+        // Act
+        var result = _items.FilterBy([$"Name:{op}:s"], builder);
+
+        // Assert
+        new ConditionalExpressionFinder()
+            .Contains(result.Expression)
+            .ShouldBeFalse();
     }
 
     [Fact]
@@ -249,5 +297,23 @@ public sealed class FilterExpressionBuilderTests
         // Assert
         result.Count.ShouldBe(1);
         result[0].Name.ShouldBe("Alpha");
+    }
+
+    private sealed class ConditionalExpressionFinder : ExpressionVisitor
+    {
+        private bool _found;
+
+        public bool Contains(Expression expression)
+        {
+            _found = false;
+            Visit(expression);
+            return _found;
+        }
+
+        protected override Expression VisitConditional(ConditionalExpression node)
+        {
+            _found = true;
+            return node;
+        }
     }
 }

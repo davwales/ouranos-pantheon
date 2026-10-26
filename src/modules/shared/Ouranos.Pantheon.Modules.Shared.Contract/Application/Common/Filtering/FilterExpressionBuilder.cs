@@ -62,14 +62,19 @@ internal static class FilterExpressionBuilder
             throw new InvalidOperationException($"Operator '{op}' requires a value.");
         }
 
-        var effectivePropAccess =
-            caseInsensitive && underlyingType == typeof(string)
-                ? Expression.Condition(
-                    Expression.Equal(propAccess, NullString),
-                    NullString,
-                    Expression.Call(propAccess, ToLowerMethod)
-                )
-                : propAccess;
+        var lowerCase = caseInsensitive && underlyingType == typeof(string);
+
+        // String operators null-check the property themselves, so they lower-case it without
+        // the null conditional: Marten cannot translate a conditional inside a where clause.
+        var stringOpTarget = lowerCase ? Expression.Call(propAccess, ToLowerMethod) : propAccess;
+
+        var effectivePropAccess = lowerCase
+            ? Expression.Condition(
+                Expression.Equal(propAccess, NullString),
+                NullString,
+                Expression.Call(propAccess, ToLowerMethod)
+            )
+            : propAccess;
 
         var effectiveValue =
             caseInsensitive && underlyingType == typeof(string) ? value.ToLower() : value;
@@ -77,19 +82,22 @@ internal static class FilterExpressionBuilder
         return op switch
         {
             FilterOperator.Like => BuildStringOp(
-                effectivePropAccess,
+                propAccess,
+                stringOpTarget,
                 underlyingType,
                 effectiveValue,
                 nameof(string.Contains)
             ),
             FilterOperator.StartsWith => BuildStringOp(
-                effectivePropAccess,
+                propAccess,
+                stringOpTarget,
                 underlyingType,
                 effectiveValue,
                 nameof(string.StartsWith)
             ),
             FilterOperator.EndsWith => BuildStringOp(
-                effectivePropAccess,
+                propAccess,
+                stringOpTarget,
                 underlyingType,
                 effectiveValue,
                 nameof(string.EndsWith)
@@ -133,6 +141,7 @@ internal static class FilterExpressionBuilder
 
     private static BinaryExpression BuildStringOp(
         Expression propAccess,
+        Expression callTarget,
         Type underlyingType,
         string value,
         string methodName
@@ -152,7 +161,7 @@ internal static class FilterExpressionBuilder
 
         return Expression.AndAlso(
             Expression.NotEqual(propAccess, NullString),
-            Expression.Call(propAccess, method, Expression.Constant(value))
+            Expression.Call(callTarget, method, Expression.Constant(value))
         );
     }
 

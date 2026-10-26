@@ -35,6 +35,9 @@ every module follows; how a module applies them is documented by that module (se
   conditions (`Volume > 1000`) are mixed in and implicitly ANDed. The result is sent through
   the same filter language, so search needs no backend changes. The visual filter builder
   edits the same tree from a dialog.
+- **Global search**: the top-bar command palette (Ctrl/⌘+K) has no search endpoint either.
+  It sends a `name:like:term` filter to the existing list endpoints of every module, drops
+  any source that fails, and adds static pages and actions filtered in the browser.
 - **Step pipeline**: `IStep`/`StepRegistry` abstractions in the kernel compose a chain of
   responsibility pipeline. No module uses it today
 - **Polymorphic JSON columns**: a configuration whose shape depends on a discriminator is

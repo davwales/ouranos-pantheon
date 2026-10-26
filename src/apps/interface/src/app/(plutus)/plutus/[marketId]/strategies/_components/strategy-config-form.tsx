@@ -23,6 +23,8 @@ import {
   withAllInputKinds,
   withoutZeroWeights,
 } from "./swing-constants";
+import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
+import { hasChanges } from "@/lib/has-changes";
 
 type ConfigurationDrafts = {
   Swing: SwingConfiguration;
@@ -96,6 +98,10 @@ export function StrategyConfigForm({
   );
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const editable = { name, description, strategyMode, drafts };
+  const [baseline] = useState(editable);
+  useUnsavedChangesGuard(hasChanges(editable, baseline));
 
   const handleModeChange = (next: StrategyMode) => {
     setStrategyMode(next);

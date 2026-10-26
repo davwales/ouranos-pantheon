@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import React, { ChangeEvent, useMemo, useState } from "react";
+import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
+import { hasChanges } from "@/lib/has-changes";
 
 export function TraitForm({
   onSave,
@@ -23,13 +25,16 @@ export function TraitForm({
   initial?: TraitFormInput;
   loading?: boolean;
 }) {
-  const [trait, setTrait] = useState<TraitFormInput>(
-    initial || {
-      name: "",
-      content: "",
-      isPublic: true,
-    },
+  const [baseline] = useState<TraitFormInput>(
+    () =>
+      initial || {
+        name: "",
+        content: "",
+        isPublic: true,
+      },
   );
+  const [trait, setTrait] = useState<TraitFormInput>(baseline);
+  useUnsavedChangesGuard(hasChanges(trait, baseline));
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
