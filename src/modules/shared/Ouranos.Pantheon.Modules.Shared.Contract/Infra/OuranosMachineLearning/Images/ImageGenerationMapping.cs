@@ -8,7 +8,7 @@ namespace Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.
 
 /// <summary>
 /// Converts between Pantheon's image types and OuranosMl's streamed
-/// <c>POST /images/generations</c> wire format.
+/// <c>POST /images/generations</c> and <c>POST /images/edits</c> wire formats.
 /// </summary>
 internal static class ImageGenerationMapping
 {
@@ -29,11 +29,23 @@ internal static class ImageGenerationMapping
             Previews: false
         );
 
-        return new StringContent(
-            JsonSerializer.Serialize(body, SnakeCaseLenientOptions),
-            Encoding.UTF8,
-            MediaTypeNames.Application.Json
+        return ToJsonContent(body);
+    }
+
+    public static HttpContent ToContent(EditImageRequest request)
+    {
+        var body = new EditImagesBody(
+            request.Prompt,
+            request.Model,
+            N: 1,
+            Image: Convert.ToBase64String(request.Image),
+            Strength: request.Strength,
+            Stream: true,
+            Save: false,
+            Previews: false
         );
+
+        return ToJsonContent(body);
     }
 
     /// <summary>
@@ -80,6 +92,15 @@ internal static class ImageGenerationMapping
             error?.Type ?? "http_error",
             error?.Message ?? $"OuranosMl returned {(int)response.StatusCode}.",
             response.StatusCode
+        );
+    }
+
+    private static StringContent ToJsonContent<T>(T body)
+    {
+        return new StringContent(
+            JsonSerializer.Serialize(body, SnakeCaseLenientOptions),
+            Encoding.UTF8,
+            MediaTypeNames.Application.Json
         );
     }
 
