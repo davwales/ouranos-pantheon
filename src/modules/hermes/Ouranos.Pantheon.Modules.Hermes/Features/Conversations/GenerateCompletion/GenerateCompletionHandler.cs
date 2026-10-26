@@ -6,8 +6,10 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.Scopes;
 using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.ToolSources;
 using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.ToolSources.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion.Schemas;
+using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Images;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.SystemPrompt;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
@@ -69,6 +71,8 @@ public sealed class GenerateCompletionHandler
 
         var model = command.Conversation.Model;
 
+        var images = await LoadImagesAsync(command.Conversation.Messages, cancellationToken);
+
         var context = new HermesChatContext(
             command.ConversationId,
             [
@@ -76,7 +80,8 @@ public sealed class GenerateCompletionHandler
                     l.Identifier,
                     l.Weight
                 )),
-            ]
+            ],
+            images
         );
 
         var toolSet = await _toolSetResolver.ResolveAsync(
@@ -105,7 +110,7 @@ public sealed class GenerateCompletionHandler
             var assistantEvent in _loop.RunAsync(
                 prompt,
                 instructions,
-                BuildInput(command.Conversation.Messages, prompt.MaxToolOutputCharacters),
+                BuildInput(command.Conversation.Messages, images, prompt.MaxToolOutputCharacters),
                 toolSet.Tools,
                 context,
                 cancellationToken
@@ -178,9 +183,11 @@ public sealed class GenerateCompletionHandler
     }
 
     // Earlier tool calls are replayed before the reply that made them so the model can build on
-    // what its tools returned; reasoning is not replayed.
+    // what its tools returned; reasoning is not replayed. Images are replayed as their short refs,
+    // with the prompt of an image the user attached so the model can revise it.
     internal static List<ResponseInputItemDto> BuildInput(
         IEnumerable<CompletionMessageInput> messages,
+        ConversationImages images,
         int maxToolOutputCharacters
     )
     {
@@ -192,31 +199,111 @@ public sealed class GenerateCompletionHandler
             {
                 foreach (var call in message.ToolCalls ?? [])
                 {
+                    var output = Truncate(call.Output, maxToolOutputCharacters);
+                    if (call.ImageId is { } imageId && images.Find(imageId) is { } image)
+                    {
+                        output = $"{output} It is image {image.Ref}.";
+                    }
+
                     input.Add(
                         new FunctionCallInputItemDto(
                             new FunctionCallDto(call.CallId, call.Name, call.Arguments)
                         )
                     );
-                    input.Add(
-                        new FunctionCallOutputInputItemDto(
-                            call.CallId,
-                            Truncate(call.Output, maxToolOutputCharacters)
-                        )
-                    );
+                    input.Add(new FunctionCallOutputInputItemDto(call.CallId, output));
                 }
             }
 
-            if (string.IsNullOrWhiteSpace(message.Content))
+            var attachments = (message.Images ?? [])
+                .Select(i => images.Find(i.ImageId))
+                .OfType<ConversationImage>()
+                .Select(i => $"[Attached image {i.Ref}: \"{i.Prompt}\"]");
+            var content = string.Join('\n', [.. attachments, message.Content]).Trim();
+
+            if (string.IsNullOrWhiteSpace(content))
             {
                 continue;
             }
 
-            input.Add(
-                new MessageInputItemDto(new MessageDto(message.Content, MapRole(message.Role)))
-            );
+            input.Add(new MessageInputItemDto(new MessageDto(content, MapRole(message.Role))));
         }
 
         return input;
+    }
+
+    // Numbers each image by where it first appears in the history; images that no longer exist
+    // get no number.
+    private async Task<ConversationImages> LoadImagesAsync(
+        IReadOnlyList<CompletionMessageInput> messages,
+        CancellationToken cancellationToken
+    )
+    {
+        var referenced = messages.SelectMany(ImageIdsOf).ToList();
+        if (referenced.Count == 0)
+        {
+            return ConversationImages.Empty;
+        }
+
+        var ids = referenced.Distinct().ToList();
+
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        var prompts = await dbContext
+            .GeneratedImages.AsNoTracking()
+            .Where(i => ids.Contains(i.Id))
+            .Select(i => new { i.Id, i.Prompt })
+            .ToDictionaryAsync(i => i.Id, i => i.Prompt, cancellationToken);
+
+        return ToConversationImages(messages, prompts);
+    }
+
+    internal static ConversationImages ToConversationImages(
+        IReadOnlyList<CompletionMessageInput> messages,
+        IReadOnlyDictionary<Id<GeneratedImage>, string> prompts
+    )
+    {
+        var images = new Dictionary<Id<GeneratedImage>, ConversationImage>();
+        ConversationImage? latest = null;
+        foreach (var id in messages.SelectMany(ImageIdsOf))
+        {
+            if (!prompts.TryGetValue(id, out var prompt))
+            {
+                continue;
+            }
+
+            if (!images.TryGetValue(id, out var image))
+            {
+                image = new ConversationImage(images.Count + 1, id, prompt);
+                images.Add(id, image);
+            }
+
+            latest = image;
+        }
+
+        var last = messages.Count > 0 ? messages[^1] : null;
+        var attached =
+            last?.Role == Role.User
+                ? (last.Images ?? [])
+                    .Select(i => images.GetValueOrDefault(i.ImageId))
+                    .FirstOrDefault(i => i is not null)
+                : null;
+
+        return new ConversationImages([.. images.Values], attached, latest);
+    }
+
+    private static IEnumerable<Id<GeneratedImage>> ImageIdsOf(CompletionMessageInput message)
+    {
+        foreach (var call in message.ToolCalls ?? [])
+        {
+            if (call.ImageId is { } imageId)
+            {
+                yield return imageId;
+            }
+        }
+
+        foreach (var image in message.Images ?? [])
+        {
+            yield return image.ImageId;
+        }
     }
 
     private async Task PersistTurnAsync(
@@ -250,7 +337,8 @@ public sealed class GenerateCompletionHandler
                     conversationId,
                     userInput.Content,
                     Role.User,
-                    existingCount
+                    existingCount,
+                    [.. (userInput.Images ?? []).Select(MessagePartMapping.ToEntity)]
                 ),
                 cancellationToken
             );

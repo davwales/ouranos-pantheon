@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.Scopes;
 using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.ToolSources;
 using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.ToolSources.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion.Schemas;
@@ -18,7 +19,7 @@ public sealed class ToolSetResolverTests
     private readonly ILogger<ToolSetResolver> _logger = Substitute.For<ILogger<ToolSetResolver>>();
     private readonly string _dbName = Guid.NewGuid().ToString();
     private readonly IDbContextFactory<HermesDbContext> _dbContextFactory;
-    private readonly HermesChatContext _context = new(null, []);
+    private readonly HermesChatContext _context = new(null, [], ConversationImages.Empty);
 
     public ToolSetResolverTests()
     {

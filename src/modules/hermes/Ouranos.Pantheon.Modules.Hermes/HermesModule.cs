@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.Tools.EditImage;
 using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.Tools.GenerateImage;
 using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.ToolSources;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.CompactConversation;
@@ -18,6 +19,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Folders.GetAllFolders;
 using Ouranos.Pantheon.Modules.Hermes.Features.Folders.GetFolder;
 using Ouranos.Pantheon.Modules.Hermes.Features.Folders.UpdateFolder;
 using Ouranos.Pantheon.Modules.Hermes.Features.Images.GetImage;
+using Ouranos.Pantheon.Modules.Hermes.Features.Images.GetImageDetails;
 using Ouranos.Pantheon.Modules.Hermes.Features.Loras.CreateLora;
 using Ouranos.Pantheon.Modules.Hermes.Features.Loras.DeleteLora;
 using Ouranos.Pantheon.Modules.Hermes.Features.Loras.GetAllLoras;
@@ -77,6 +79,7 @@ public sealed class HermesModule : IPantheonModule
     private static void ConfigureAssistantTools(IHostApplicationBuilder builder)
     {
         builder.Services.AddAssistantTool<HermesChatContext, GenerateImageTool>();
+        builder.Services.AddAssistantTool<HermesChatContext, EditImageTool>();
         builder.Services.AddScoped<IHermesToolSource, NativeToolSource>();
         builder.Services.AddScoped<ToolSetResolver>();
     }
@@ -115,6 +118,7 @@ public sealed class HermesModule : IPantheonModule
         UpdateConversationEndpoint.Map(app);
         DeleteConversationEndpoint.Map(app);
         GetImageEndpoint.Map(app);
+        GetImageDetailsEndpoint.Map(app);
 
         GetAllTraitsEndpoint.Map(app);
         GetTraitEndpoint.Map(app);

@@ -6,5 +6,6 @@ namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateComplet
 
 public sealed record HermesChatContext(
     Id<Conversation>? ConversationId,
-    IReadOnlyList<ImageLora> ImageLoras
+    IReadOnlyList<ImageLora> ImageLoras,
+    ConversationImages Images
 ) : IConversationScope;

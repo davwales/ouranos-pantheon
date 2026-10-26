@@ -6,8 +6,10 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.ToolSources;
 using Ouranos.Pantheon.Modules.Hermes.Features.Assistants.ToolSources.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion.Schemas;
+using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Images;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
@@ -530,7 +532,7 @@ public sealed class GenerateCompletionHandlerTests
         ];
 
         // Act
-        var input = GenerateCompletionHandler.BuildInput(messages, 4);
+        var input = GenerateCompletionHandler.BuildInput(messages, ConversationImages.Empty, 4);
 
         // Assert
         input[1].ShouldBe(new FunctionCallOutputInputItemDto("call-1", "aaaa…"));
@@ -550,13 +552,176 @@ public sealed class GenerateCompletionHandlerTests
         ];
 
         // Act
-        var input = GenerateCompletionHandler.BuildInput(messages, 100);
+        var input = GenerateCompletionHandler.BuildInput(messages, ConversationImages.Empty, 100);
 
         // Assert
         input.ShouldBe([
             new FunctionCallInputItemDto(new FunctionCallDto("call-1", "generate_image", "{}")),
             new FunctionCallOutputInputItemDto("call-1", "Shown."),
         ]);
+    }
+
+    private static readonly Id<GeneratedImage> FoxId = new("6f9619ff-8b86-d011-b42d-00c04fc964ff");
+    private static readonly Id<GeneratedImage> OwlId = new("7c9e6679-7425-40de-944b-e07fc1f90ae7");
+
+    private static ImageMessagePartDto ImagePart(Id<GeneratedImage> id)
+    {
+        return new ImageMessagePartDto(id, 64, 64, "alt");
+    }
+
+    private static CompletionToolCallInput ImageCall(string callId, Id<GeneratedImage> imageId)
+    {
+        return new CompletionToolCallInput(callId, "generate_image", "{}", "Shown.", imageId);
+    }
+
+    private async Task SeedImagesAsync(params (Id<GeneratedImage> Id, string Prompt)[] images)
+    {
+        await using var seedContext = DbContextExtensions.Mock<HermesDbContext>(_dbName);
+        await seedContext.SeedData([
+            .. images.Select(i =>
+                GeneratedImage.Create(i.Id, [1], "image/png", 64, 64, i.Prompt, "flux")
+            ),
+        ]);
+    }
+
+    [Fact]
+    public void ToConversationImages_ShouldNumberImagesByFirstAppearanceAndSkipUnknownOnes()
+    {
+        // Arrange
+        var missingId = new Id<GeneratedImage>("missing");
+        CompletionMessageInput[] messages =
+        [
+            new("", Role.Assistant, [ImageCall("call-1", missingId), ImageCall("call-2", FoxId)]),
+            new("", Role.Assistant, [ImageCall("call-3", OwlId)]),
+            new("Again", Role.User, Images: [ImagePart(FoxId)]),
+        ];
+        var prompts = new Dictionary<Id<GeneratedImage>, string>
+        {
+            [FoxId] = "A fox",
+            [OwlId] = "An owl",
+        };
+
+        // Act
+        var images = GenerateCompletionHandler.ToConversationImages(messages, prompts);
+
+        // Assert
+        images.Images.ShouldBe([
+            new ConversationImage(1, FoxId, "A fox"),
+            new ConversationImage(2, OwlId, "An owl"),
+        ]);
+        images.Attached.ShouldBe(new ConversationImage(1, FoxId, "A fox"));
+        images.Latest.ShouldBe(new ConversationImage(1, FoxId, "A fox"));
+        images.Find(missingId).ShouldBeNull();
+    }
+
+    [Fact]
+    public void ToConversationImages_WhenLastMessageIsNotFromTheUser_ShouldHaveNoAttachment()
+    {
+        // Arrange
+        CompletionMessageInput[] messages =
+        [
+            new("Edit this", Role.User, Images: [ImagePart(FoxId)]),
+            new("", Role.Assistant, [ImageCall("call-1", OwlId)]),
+        ];
+        var prompts = new Dictionary<Id<GeneratedImage>, string>
+        {
+            [FoxId] = "A fox",
+            [OwlId] = "An owl",
+        };
+
+        // Act
+        var images = GenerateCompletionHandler.ToConversationImages(messages, prompts);
+
+        // Assert
+        images.Attached.ShouldBeNull();
+        images.Latest.ShouldBe(new ConversationImage(2, OwlId, "An owl"));
+    }
+
+    [Fact]
+    public void BuildInput_WhenHistoryHasImages_ShouldReplayTheirRefsAndAttachedPrompts()
+    {
+        // Arrange
+        CompletionMessageInput[] messages =
+        [
+            new("", Role.Assistant, [ImageCall("call-1", FoxId)]),
+            new("Make it night", Role.User, Images: [ImagePart(FoxId)]),
+        ];
+        var images = new ConversationImages([new ConversationImage(1, FoxId, "A fox")], null, null);
+
+        // Act
+        var input = GenerateCompletionHandler.BuildInput(messages, images, 100);
+
+        // Assert
+        input.ShouldBe([
+            new FunctionCallInputItemDto(new FunctionCallDto("call-1", "generate_image", "{}")),
+            new FunctionCallOutputInputItemDto("call-1", "Shown. It is image 1."),
+            new MessageInputItemDto(
+                new MessageDto("[Attached image 1: \"A fox\"]\nMake it night", RoleDto.User)
+            ),
+        ]);
+    }
+
+    [Fact]
+    public async Task Handle_WhenUserAttachedAnImage_ShouldPassItToTheToolContext()
+    {
+        // Arrange
+        await SeedImagesAsync((FoxId, "A fox"));
+        SetupStream(CreateStream([Text("Ok")]));
+        HermesChatContext? context = null;
+        var tool = Substitute.For<IAssistantTool<HermesChatContext>>();
+        tool.Name.Returns("echo");
+        tool.IsAvailable(Arg.Do<HermesChatContext>(c => context = c)).Returns(false);
+
+        var toolSetId = await SeedToolSetAsync();
+        var handler = CreateHandler([tool]);
+        var conversation = CreateCommand(toolSetId).Conversation with
+        {
+            Messages =
+            [
+                new CompletionMessageInput("More like this", Role.User, Images: [ImagePart(FoxId)]),
+            ],
+        };
+
+        // Act
+        await CollectAsync(
+            handler.Handle(new GenerateCompletionInput(conversation), CancellationToken.None)
+        );
+
+        // Assert
+        context.ShouldNotBeNull();
+        context.Images.Attached.ShouldBe(new ConversationImage(1, FoxId, "A fox"));
+    }
+
+    [Fact]
+    public async Task Handle_WhenUserMessageHasImages_ShouldPersistThemAsParts()
+    {
+        // Arrange
+        var conversationId = await SeedConversationAsync();
+        await SeedImagesAsync((FoxId, "A fox"));
+        SetupStream(CreateStream([Text("Done.")]));
+
+        var command = new GenerateCompletionInput(
+            CreateConversation(
+                messages: new CompletionMessageInput(
+                    "Make it night",
+                    Role.User,
+                    Images: [ImagePart(FoxId)]
+                )
+            ),
+            conversationId
+        );
+
+        // Act
+        await CollectAsync(_handler.Handle(command, CancellationToken.None));
+
+        // Assert
+        await using var checkContext = DbContextExtensions.Mock<HermesDbContext>(_dbName);
+        var userMessage = await checkContext
+            .Messages.Include(m => m.Parts)
+            .SingleAsync(m => m.Role == Role.User);
+        userMessage.Content.ShouldBe("Make it night");
+        var part = userMessage.Parts.ShouldHaveSingleItem().ShouldBeOfType<ImageMessagePart>();
+        part.ImageId.ShouldBe(FoxId);
     }
 
     [Fact]

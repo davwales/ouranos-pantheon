@@ -18,7 +18,7 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("hermes")
-                .HasAnnotation("ProductVersion", "10.0.12")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -323,6 +323,10 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
                     b.Property<long?>("Seed")
                         .HasColumnType("bigint")
                         .HasColumnName("seed");
+
+                    b.Property<Guid?>("SourceImageId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("source_image_id");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")

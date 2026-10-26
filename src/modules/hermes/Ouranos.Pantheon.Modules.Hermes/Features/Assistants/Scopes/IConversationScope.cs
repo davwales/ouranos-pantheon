@@ -11,4 +11,6 @@ public interface IConversationScope
     Id<Conversation>? ConversationId { get; }
 
     IReadOnlyList<ImageLora> ImageLoras { get; }
+
+    ConversationImages Images { get; }
 }

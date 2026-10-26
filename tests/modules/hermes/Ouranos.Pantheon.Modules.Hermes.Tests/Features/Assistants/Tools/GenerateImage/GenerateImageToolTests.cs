@@ -17,7 +17,7 @@ namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.Assistants.Tools.Genera
 
 public sealed class GenerateImageToolTests
 {
-    private static readonly HermesChatContext Context = new(null, []);
+    private static readonly HermesChatContext Context = new(null, [], ConversationImages.Empty);
 
     private readonly IOuranosMachineLearningClient _mlClient =
         Substitute.For<IOuranosMachineLearningClient>();
@@ -223,7 +223,8 @@ public sealed class GenerateImageToolTests
 
         var context = new HermesChatContext(
             null,
-            [new ImageLora("add-detail", 0.8f), new ImageLora("pixel-art", 1f)]
+            [new ImageLora("add-detail", 0.8f), new ImageLora("pixel-art", 1f)],
+            ConversationImages.Empty
         );
 
         // Act
@@ -254,7 +255,11 @@ public sealed class GenerateImageToolTests
         // Arrange
         SetupStream(new ImageGenerationDoneDto("flux"));
         var tool = CreateTool(new HermesImageGenerationOptions { MaxPromptLength = 5 });
-        var context = new HermesChatContext(null, [new ImageLora("detail", -0.25f)]);
+        var context = new HermesChatContext(
+            null,
+            [new ImageLora("detail", -0.25f)],
+            ConversationImages.Empty
+        );
 
         // Act
         await tool.InvokeAsync(

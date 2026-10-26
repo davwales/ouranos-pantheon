@@ -26,4 +26,6 @@ public sealed record HermesImageGenerationOptions
     public HermesImageSize PortraitSize { get; init; } = new(832, 1216);
 
     public HermesImageSize LandscapeSize { get; init; } = new(1216, 832);
+
+    public HermesImageEditStrengths EditStrengths { get; init; } = new();
 }
