@@ -61,7 +61,7 @@ shared kernel.
 Schema `hermes` (EF Core, `HermesDbContext`), plain relational. Assistant replies keep their
 ordered parts in `message_parts`, one table for every part kind (table-per-hierarchy on
 `kind`). Generated images are stored as `bytea` in `generated_images` and served by
-`GET /api/hermes/images/{imageId}`; see [8.4](08-concepts.md#84-generated-images) for their
+`GET /api/hermes/images/{imageId}`, and an edited image keeps its source in `source_image_id`; see [8.4](08-concepts.md#84-generated-images) for their
 lifetime. User-registered LoRAs live in `loras` and attach to conversations through the
 `conversation_lora` join table, like traits. Tool sets live in `tool_sets`, with their enabled
 tools in `tool_set_tools` (unique per set on source and name). `PUT /api/hermes/conversations/{id}` sets every
@@ -80,7 +80,9 @@ and the model are set.
 true), `Model` (null uses OuranosMl's default image model), `UnsavedRetention` (default
 24 hours), `MaxPromptLength` (default 1000) and `SquareSize`, `PortraitSize` and
 `LandscapeSize` (`Width`/`Height` per orientation; defaults 1024x1024, 832x1216 and
-1216x832, which suit SDXL- and Flux-class models).
+1216x832, which suit SDXL- and Flux-class models). `EditStrengths` sets the img2img
+strength `edit_image` uses for each change: `Subtle` (0.3), `Moderate` (0.55) and `Strong`
+(0.75).
 
 Per-chat model settings live on each model config, not in configuration: system prompt,
 temperature, max tokens, context window and the default tool set. Reasoning effort is a

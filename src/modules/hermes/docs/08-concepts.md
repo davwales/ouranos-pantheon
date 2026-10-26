@@ -14,7 +14,8 @@ limited to public entities instead of failing.
 ## 8.2 Reply Parts and History Replay
 
 An assistant reply is saved as `Message.Content` plus its ordered `MessagePart`s: reasoning,
-text and tool calls (with status and output). `Content` is the source of truth for the
+text, tool calls (with status and output) and images. A user message has only image parts,
+for the earlier images it refers to. `Content` is the source of truth for the
 reply's text: compaction, naming and editing use it, and text parts exist only so a reloaded
 reply renders with its reasoning and tool calls in the order they streamed. Parts are typed
 rows in one table-per-hierarchy table rather than JSON, because EF Core's JSON columns cannot
@@ -24,6 +25,14 @@ When a conversation is resent, each earlier reply's tool calls are replayed to t
 `function_call` / `function_call_output` items before the reply's text, with outputs capped
 like live tool output, so the model can build on what its tools returned. Reasoning is not
 replayed.
+
+**Image refs.** The model never sees image ids. Each completion numbers the images in the
+history by first appearance (`image 1`, `image 2`, ...): an image a tool call showed (the
+client sends its id with the replayed call) and an image a user message refers to (its image
+parts). A replayed tool output gains ` It is image N.`, and a user message with an image is
+replayed as `[Attached image N: "<prompt>"]` before its text, so the model can revise the
+prompt. Refs are computed on every turn and never stored, so they stay right after messages
+are edited or deleted; images that no longer exist get no number.
 
 ## 8.3 Tool Calling
 
@@ -64,16 +73,26 @@ The `generate_image` tool asks OuranosMl for one image per call and stores it in
 `generated_images`; the reply references it with an image part (`ImageMessagePart`) placed
 after the tool call. The tool delivers at most one image per reply
 (`IsSingleDeliveryPerReply`), because each generation can take minutes. Every call draws from
-scratch: a follow-up such as "make it bluer" works because the replayed tool call carries the
-earlier prompt.
+scratch; changing an image keeps its composition only through `edit_image`.
+
+**Editing.** The `edit_image` tool redraws an earlier image from a revised prompt with
+OuranosMl's img2img (`POST /images/edits`). Its source is the image the user attached to the
+message, else the ref the model names, else the latest image. SwarmUI's img2img does not follow
+instructions, so the prompt describes the whole desired image, not just the change. The model
+picks `change: subtle | moderate | strong` instead of a float, mapped to strengths in
+`ImageGeneration:EditStrengths` (0.3, 0.55 and 0.75 by default). The new image records its
+source in `SourceImageId`, without a foreign key, so the dialog can link to it while it exists.
+`edit_image` is separate from `generate_image` so tool sets can enable either; both deliver at
+most one image per reply each.
 
 An image can be the whole reply, for example to illustrate a scene the model has already
 described. The tool's output tells the model the user already sees the image and not to
 describe it unless asked, and a reply with an image but no text is saved with empty content;
 history replay then sends only its tool call.
 
-**Lifetime.** An image is kept only while a message part references it, and unsaved chats
-have no message rows, so their images are unreferenced. `PurgeImagesJob` deletes every
+**Lifetime.** An image is kept only while a message part references it, from an assistant
+reply or a user message that attached it, and unsaved chats have no message rows, so their
+images are unreferenced. `PurgeImagesJob` deletes every
 unreferenced image older than `UnsavedRetention` (24 hours by default). That one rule covers
 abandoned unsaved chats, replies dropped by retry, edit or delete, and deleted conversations.
 Saving an unsaved chat within the window writes its image parts, which keeps the images.
@@ -83,7 +102,8 @@ Image parts have no foreign key to `generated_images`: saving a chat whose image
 expired must still succeed, so the part stays and the Interface shows "This image is no
 longer available" when the image returns 404.
 
-**Access.** `GET /api/hermes/images/{imageId}` serves the bytes with a one-day private cache.
+**Access.** `GET /api/hermes/images/{imageId}` serves the bytes with a one-day private cache,
+and `GET /api/hermes/images/{imageId}/details` its prompt, model, seed and source.
 In public mode an image referenced by a private conversation, or one in a private folder, is
 treated as not found; an unreferenced image belongs to an unsaved chat and is reachable only
 by its unguessable id.
@@ -96,12 +116,12 @@ image URL cannot make the page load third-party content.
 OuranosMl cannot list the LoRAs SwarmUI has installed, so users register them by hand
 (`/api/hermes/loras`): a display name, the SwarmUI identifier, a default weight between -2 and
 2, and the public flag. The conversation settings list the registered LoRAs whenever the
-active tool set enables `generate_image`; the ones the user switches on are saved with the
+active tool set enables `generate_image` or `edit_image`; the ones the user switches on are saved with the
 conversation (`conversation_lora`) and sent with every completion request, the same way
 traits are.
 
 The completion handler puts the active LoRAs on the tool context (`IConversationScope.ImageLoras`),
-and `generate_image` appends `<lora:identifier:weight>` for each one to the prompt it sends to
+and both image tools append `<lora:identifier:weight>` for each one to the prompt they send to
 OuranosMl, which passes it to SwarmUI unchanged. The chat model never sees the LoRAs: the
 tags are added after the prompt is capped at `MaxPromptLength`, so they are never cut, and the
 stored prompt and alt text keep the model's own wording. Hermes does not check identifiers
