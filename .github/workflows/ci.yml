@@ -106,7 +106,6 @@ jobs:
 
   publish:
     needs: test
-    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -140,8 +139,9 @@ jobs:
         with:
           context: .
           file: ${{ matrix.dockerfile }}
-          push: true
+          # PRs build without pushing so buildx-only Dockerfile errors surface before merge.
+          push: ${{ github.ref == 'refs/heads/main' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=${{ env.IMAGE_BASE }}/${{ matrix.name }}:cache
-          cache-to: type=registry,ref=${{ env.IMAGE_BASE }}/${{ matrix.name }}:cache,mode=max
+          cache-to: ${{ github.ref == 'refs/heads/main' && format('type=registry,ref={0}/{1}:cache,mode=max', env.IMAGE_BASE, matrix.name) || '' }}
