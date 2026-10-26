@@ -59,6 +59,8 @@ export const ImageBlock = memo(function ImageBlock({
         style={{ aspectRatio }}
         className="w-full cursor-zoom-in overflow-hidden rounded-lg border bg-muted outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
       >
+        {/* Generated images come from the gateway on a host resolved at runtime, which next/image cannot allow-list. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={src}
           alt={image.altText}

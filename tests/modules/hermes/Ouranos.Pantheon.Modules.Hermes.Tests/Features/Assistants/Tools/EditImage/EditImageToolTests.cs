@@ -411,6 +411,7 @@ public sealed class EditImageToolTests
             .GetProperty("prompt")
             .GetProperty("description")
             .GetString()
+            .ShouldNotBeNull()
             .ShouldContain("whole image");
     }
 }

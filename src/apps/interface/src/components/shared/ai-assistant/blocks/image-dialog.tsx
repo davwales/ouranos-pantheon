@@ -75,6 +75,8 @@ export function ImageDialog({
           )}
           <DialogTitle>{trail.length > 0 ? "Source image" : "Generated image"}</DialogTitle>
         </div>
+        {/* Generated images come from the gateway on a host resolved at runtime, which next/image cannot allow-list. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={src}
           alt={shown.altText}
@@ -89,6 +91,8 @@ export function ImageDialog({
             onClick={() => setTrail((prev) => [...prev, shownSource])}
             className="flex w-fit items-center gap-3 rounded-md border p-1.5 pr-3 text-left text-sm hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/50 outline-none"
           >
+            {/* Generated images come from the gateway on a host resolved at runtime, which next/image cannot allow-list. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={apiUrl(shownSource.url)}
               alt=""

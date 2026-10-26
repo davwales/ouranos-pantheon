@@ -84,6 +84,8 @@ export default function ChatInput({
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         {attachment && !isEditing && (
           <div className="flex w-fit max-w-full items-center gap-2 rounded-lg border bg-muted/40 p-1 pr-1.5 text-sm">
+            {/* Generated images come from the gateway on a host resolved at runtime, which next/image cannot allow-list. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={apiUrl(attachment.url)}
               alt=""
