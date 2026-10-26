@@ -45,7 +45,7 @@
     />
     <PackageVersion Include="Marten" Version="9.50.3" />
     <PackageVersion Include="Microsoft.Security.AntiSSRF" Version="1.0.1" />
-    <PackageVersion Include="MongoDB.Bson" Version="3.12.0" />
+    <PackageVersion Include="MongoDB.Bson" Version="3.13.0" />
     <PackageVersion Include="coverlet.collector" Version="10.1.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
