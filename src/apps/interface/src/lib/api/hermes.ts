@@ -6,6 +6,8 @@ export type {
   AvailableModel,
   MessageInput,
   MessagePart,
+  ImageMessagePart,
+  ImageDetails,
   ReasoningEffort,
   CompletionMessageInput,
   CompletionToolCallInput,
@@ -63,6 +65,7 @@ import type {
   SaveToolSetInput,
   FolderSummary,
   UpdateFolderInput,
+  ImageDetails,
 } from "./hermes-types";
 import type { CompletionChunk, CompactChunk } from "./hermes-types";
 
@@ -158,6 +161,9 @@ export const hermesApi = {
 
   deleteLora: (loraId: string) =>
     api.del<{ loraId: string }>(`/api/hermes/loras/${loraId}`),
+
+  getImageDetails: (imageId: string) =>
+    api.get<ImageDetails>(`${hermesImagePath(imageId)}/details`),
 
   getAvailableTools: () => api.get<AvailableTool[]>("/api/hermes/tools"),
 

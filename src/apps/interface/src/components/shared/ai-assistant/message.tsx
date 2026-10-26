@@ -2,7 +2,10 @@ import {
   AssistantTurn,
   type AssistantTurnProps,
 } from "@/components/shared/ai-assistant/assistant-turn";
-import { type AssistantChatPart } from "@/components/shared/ai-assistant/assistant-chat-parts";
+import {
+  type AssistantChatImagePart,
+  type AssistantChatPart,
+} from "@/components/shared/ai-assistant/assistant-chat-parts";
 import { parseSegments } from "@/components/shared/ai-assistant/parse-segments";
 import { UserMessage } from "@/components/shared/ai-assistant/user-message";
 import { type AssistantRole } from "@/lib/api/assistant";
@@ -26,7 +29,8 @@ export function Message({
   parts?: AssistantChatPart[];
 }) {
   if (role === "User") {
-    return <UserMessage content={content} {...props} />;
+    const images = parts?.filter((part): part is AssistantChatImagePart => part.kind === "image");
+    return <UserMessage content={content} images={images} {...props} />;
   }
 
   return (

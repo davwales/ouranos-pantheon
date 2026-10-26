@@ -1,5 +1,7 @@
 import {
+  imagesOf,
   toChatParts,
+  toImagePart,
   toMessageParts,
   toolCallsOf,
   withEditedText,
@@ -132,6 +134,67 @@ describe("message parts", () => {
     // Arrange & Act & Assert
     expect(toolCallsOf(undefined)).toBeUndefined();
     expect(toolCallsOf([{ $type: "text", content: "Hi" }])).toBeUndefined();
+  });
+
+  it("toolCallsOf_WhenACallShowedAnImage_ShouldNameTheImage", () => {
+    // Arrange
+    const image: MessagePart = {
+      $type: "image",
+      imageId: "img-1",
+      width: 64,
+      height: 64,
+      altText: "A fox",
+    };
+
+    // Act
+    const result = toolCallsOf([
+      TOOL_CALL,
+      { ...TOOL_CALL, callId: "call-2", name: "generate_image" },
+      image,
+      { $type: "text", content: "Here it is." },
+    ]);
+
+    // Assert
+    expect(result?.map((call) => call.imageId)).toEqual([undefined, "img-1"]);
+  });
+
+  it("imagesOf_ShouldReturnOnlyImagePartsOrUndefined", () => {
+    // Arrange
+    const image: MessagePart = {
+      $type: "image",
+      imageId: "img-1",
+      width: 64,
+      height: 64,
+      altText: "A fox",
+    };
+
+    // Act & Assert
+    expect(imagesOf([{ $type: "text", content: "Hi" }, image])).toEqual([image]);
+    expect(imagesOf([{ $type: "text", content: "Hi" }])).toBeUndefined();
+    expect(imagesOf(undefined)).toBeUndefined();
+  });
+
+  it("toImagePart_ShouldKeepTheImageAndDropChatOnlyFields", () => {
+    // Act
+    const result = toImagePart({
+      kind: "image",
+      id: "part-1",
+      callId: "call-1",
+      imageId: "img-1",
+      url: "/api/hermes/images/img-1",
+      width: 64,
+      height: 32,
+      altText: "A fox",
+    });
+
+    // Assert
+    expect(result).toEqual({
+      $type: "image",
+      imageId: "img-1",
+      width: 64,
+      height: 32,
+      altText: "A fox",
+    });
   });
 
   it("withEditedText_WhenReplyHasParts_ShouldReplaceTextAndKeepTheRest", () => {

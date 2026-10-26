@@ -6,6 +6,17 @@ import ChatInput from "@/app/(hermes)/hermes/components/chat-input";
 import ChatMessageList from "@/app/(hermes)/hermes/components/chat-message-list";
 import { ContextUsageBar } from "@/app/(hermes)/hermes/components/context-usage-bar";
 import { ConversationConfigSheet } from "@/app/(hermes)/hermes/components/conversation-config-sheet";
+import { toImagePart } from "@/app/(hermes)/hermes/components/message-parts";
+import {
+  EDIT_IMAGE_TOOL,
+  toolSetEnables,
+} from "@/app/(hermes)/hermes/components/tool-set-constants";
+import { type AssistantChatImagePart } from "@/components/shared/ai-assistant/assistant-chat-parts";
+import {
+  type ImageActions,
+  ImageActionsContext,
+} from "@/components/shared/ai-assistant/image-actions-context";
+import { useApi } from "@/hooks/use-api";
 import {
   type LoraFormInput,
   ModelFormInput,
@@ -14,6 +25,7 @@ import {
 } from "@/app/(hermes)/hermes/types";
 import {
   hermesApi,
+  hermesImagePath,
   MessageInput,
   type ReasoningEffort,
   Role,
@@ -21,7 +33,7 @@ import {
 } from "@/lib/api/hermes";
 import { useMessageController } from "@/hooks/use-message-controller";
 import { Bookmark, SlidersHorizontal } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 export default function ChatInterfaceView({
   persona,
@@ -79,6 +91,7 @@ export default function ChatInterfaceView({
   const [editingMessageIndex, setEditingMessageIndex] = useState<number | null>(
     null,
   );
+  const [attachedImage, setAttachedImage] = useState<AssistantChatImagePart | null>(null);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [composedSystemPrompt, setComposedSystemPrompt] = useState<
     string | null
@@ -229,6 +242,26 @@ export default function ChatInterfaceView({
     isGenerating,
   ]);
 
+  const [toolSetsState] = useApi(() => hermesApi.getAllToolSets());
+  const canEditImages = toolSetEnables(
+    toolSetsState.data?.find((set) => set.id === toolSetId),
+    EDIT_IMAGE_TOOL,
+  );
+
+  const imageActions = useMemo((): ImageActions => {
+    const canAct = canEditImages && !isGenerating && !isCompacting;
+    return {
+      loadSource,
+      onEdit: canAct ? setAttachedImage : undefined,
+      onMoreLikeThis: canAct
+        ? (image) => {
+            setAttachedImage(null);
+            void addUserMessage("More like this", toImagePart(image));
+          }
+        : undefined,
+    };
+  }, [canEditImages, isGenerating, isCompacting, addUserMessage]);
+
   const handleUpdateMessage = () => {
     if (editingMessageIndex === null || !inputText.trim()) return;
     updateMessageContent(editingMessageIndex, inputText);
@@ -238,8 +271,10 @@ export default function ChatInterfaceView({
 
   const handleNewMessage = async () => {
     const text = inputText;
+    const image = attachedImage;
     setInputText("");
-    await addUserMessage(text);
+    setAttachedImage(null);
+    await addUserMessage(text, image ? toImagePart(image) : undefined);
   };
 
   const handleMessageEdit = (index: number) => {
@@ -262,26 +297,28 @@ export default function ChatInterfaceView({
 
   return (
     <div {...props}>
-      <ChatMessageList
-        messages={messages}
-        streamingParts={streamingParts}
-        personaName={persona.name}
-        onDeleteMessage={handleMessageDeleted}
-        onEditMessage={handleMessageEdit}
-        onRetryMessage={handleMessageRetry}
-        isGenerating={isGenerating}
-        isCompacting={isCompacting}
-        compactionError={compactionError}
-        onRetryCompact={() => {
-          const lastSummaryIndex = messages.findLastIndex(
-            (m) => m.role === Role.Summary,
-          );
-          if (lastSummaryIndex !== -1) {
-            retryMessage(lastSummaryIndex);
-          }
-        }}
-        className="mb-2"
-      />
+      <ImageActionsContext.Provider value={imageActions}>
+        <ChatMessageList
+          messages={messages}
+          streamingParts={streamingParts}
+          personaName={persona.name}
+          onDeleteMessage={handleMessageDeleted}
+          onEditMessage={handleMessageEdit}
+          onRetryMessage={handleMessageRetry}
+          isGenerating={isGenerating}
+          isCompacting={isCompacting}
+          compactionError={compactionError}
+          onRetryCompact={() => {
+            const lastSummaryIndex = messages.findLastIndex(
+              (m) => m.role === Role.Summary,
+            );
+            if (lastSummaryIndex !== -1) {
+              retryMessage(lastSummaryIndex);
+            }
+          }}
+          className="mb-2"
+        />
+      </ImageActionsContext.Provider>
       {generationError && (
         <p role="alert" className="mx-auto w-full max-w-3xl px-2 text-sm text-destructive">
           {generationError}
@@ -305,6 +342,8 @@ export default function ChatInterfaceView({
             onUpdateMessage={handleUpdateMessage}
             onCancelEdit={handleCancelEdit}
             onStop={stop}
+            attachment={canEditImages ? attachedImage : null}
+            onRemoveAttachment={() => setAttachedImage(null)}
             className="flex-1"
           />
         </div>
@@ -418,6 +457,25 @@ export default function ChatInterfaceView({
       />
     </div>
   );
+}
+
+async function loadSource(image: AssistantChatImagePart): Promise<AssistantChatImagePart | null> {
+  const details = await hermesApi.getImageDetails(image.imageId);
+  if (!details.sourceImageId) {
+    return null;
+  }
+
+  const source = await hermesApi.getImageDetails(details.sourceImageId);
+  return {
+    kind: "image",
+    id: source.id,
+    callId: "",
+    imageId: source.id,
+    url: hermesImagePath(source.id),
+    width: source.width,
+    height: source.height,
+    altText: source.prompt,
+  };
 }
 
 function loraIdsOf(loras: LoraFormInput[]): string[] {

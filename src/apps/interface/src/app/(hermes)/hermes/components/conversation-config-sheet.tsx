@@ -34,6 +34,7 @@ import { useState } from "react";
 import { SystemPromptView } from "@/app/(hermes)/hermes/components/system-prompt-view";
 import { ReasoningEffortSelect } from "@/app/(hermes)/hermes/components/reasoning-effort-select";
 import {
+  EDIT_IMAGE_TOOL,
   GENERATE_IMAGE_TOOL,
   toolSetEnables,
 } from "@/app/(hermes)/hermes/components/tool-set-constants";
@@ -296,7 +297,8 @@ export function ConversationConfigSheet({
             </CollapsibleContent>
           </Collapsible>
 
-          {toolSetEnables(activeToolSet, GENERATE_IMAGE_TOOL) && (
+          {(toolSetEnables(activeToolSet, GENERATE_IMAGE_TOOL) ||
+            toolSetEnables(activeToolSet, EDIT_IMAGE_TOOL)) && (
             <ImageLorasPanel
               activeLoras={activeLoras}
               onLorasChange={onLorasChange}
