@@ -117,6 +117,17 @@ after every build. **Pre-commit** checks .NET formatting only (CSharpier + style
 
 `dependabot-auto-merge.yml` auto-merges minor/patch Dependabot PRs.
 
+### Issues and Pull Requests
+
+Write every issue and PR from the platform templates in [`docs/templates/`](docs/templates/README.md):
+`issues/feature.md`, `issues/bug.md`, `issues/tech-debt.md` and `pull-request.md`.
+
+- **Issue titles:** `<Module> | <Title>` (`Core`, `Hermes`, `Hestia`, `Plutus`), plus the module
+  label and `bug` / `enhancement` where it applies.
+- **PR titles:** Conventional Commits, `<type>(<scope>): <summary>`.
+- **Keep them minimal:** a few bullets per section, nothing the diff already shows. Older issues and
+  PRs are too verbose to use as examples.
+
 ## Architecture
 
 ### IPantheonModule Composition
