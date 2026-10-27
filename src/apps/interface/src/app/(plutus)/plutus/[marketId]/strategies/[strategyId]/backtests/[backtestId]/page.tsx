@@ -118,7 +118,7 @@ export default function BacktestDetailPage() {
   const refreshFailed = backtestState.status === "error";
 
   if (refreshFailed && !backtest) {
-    return <NotFoundCard title="Backtest not found" message="This backtest doesn\u0027t exist or has been removed." backHref={`/plutus/${marketId}/strategies/${strategyId}/backtests`} backLabel="Back to Backtests" />;
+    return <NotFoundCard title="Backtest not found" message="This backtest doesn’t exist or has been removed." backHref={`/plutus/${marketId}/strategies/${strategyId}/backtests`} backLabel="Back to Backtests" />;
   }
 
   if (!backtest) {
