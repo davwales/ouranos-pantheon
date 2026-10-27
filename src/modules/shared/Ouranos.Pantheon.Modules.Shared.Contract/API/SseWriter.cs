@@ -15,6 +15,22 @@ public static class SseWriter
     };
 
     /// <summary>
+    /// Streams every event to the response as Server-Sent Events, the body of an SSE endpoint.
+    /// </summary>
+    public static async Task WriteStreamAsync<T>(
+        HttpResponse response,
+        IAsyncEnumerable<T> events,
+        CancellationToken cancellationToken = default
+    )
+    {
+        SetSseHeaders(response);
+        await foreach (var data in events.WithCancellation(cancellationToken))
+        {
+            await WriteEventAsync(response, data, cancellationToken);
+        }
+    }
+
+    /// <summary>
     /// Writes a Server-Sent Event to the HTTP response stream with the given data object
     /// serialized as JSON.
     /// </summary>

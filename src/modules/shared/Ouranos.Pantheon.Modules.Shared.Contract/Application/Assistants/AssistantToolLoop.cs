@@ -4,6 +4,8 @@ using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
 
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
+
 namespace Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
 
 /// <summary>
@@ -187,7 +189,8 @@ public sealed class AssistantToolLoop<TContext>(
                     }
                 }
 
-                var (output, isTruncated) = Truncate(result.Output, prompt.MaxToolOutputCharacters);
+                var isTruncated = result.Output.Length > prompt.MaxToolOutputCharacters;
+                var output = result.Output.TruncateWithEllipsis(prompt.MaxToolOutputCharacters);
 
                 input.Add(new FunctionCallInputItemDto(call));
                 input.Add(new FunctionCallOutputInputItemDto(call.CallId, output));
@@ -250,13 +253,6 @@ public sealed class AssistantToolLoop<TContext>(
             _logger.LogError(ex, "Assistant tool '{name}' failed.", call.Name);
             return new AssistantToolResult(ToolFailedOutput, IsError: true);
         }
-    }
-
-    private static (string Output, bool IsTruncated) Truncate(string output, int maxCharacters)
-    {
-        return output.Length <= maxCharacters
-            ? (output, false)
-            : ($"{output[..maxCharacters]}…", true);
     }
 
     private static ChatCompletionUsage Add(ChatCompletionUsage? total, ChatCompletionUsage round)

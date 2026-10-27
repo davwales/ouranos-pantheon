@@ -31,12 +31,7 @@ public static class AssistantEndpointExtensions
     )
         where TContext : class
     {
-        SseWriter.SetSseHeaders(httpContext.Response);
-
         var stream = await bus.InvokeAsync<IAsyncEnumerable<AssistantEvent>>(input, ct);
-        await foreach (var assistantEvent in stream.WithCancellation(ct))
-        {
-            await SseWriter.WriteEventAsync(httpContext.Response, assistantEvent, ct);
-        }
+        await SseWriter.WriteStreamAsync(httpContext.Response, stream, ct);
     }
 }

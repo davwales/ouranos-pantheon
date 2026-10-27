@@ -154,7 +154,7 @@ public sealed class CreateConversationHandler
             List<ResponseInputItemDto> input =
             [
                 .. command.Messages.Select(m => new MessageInputItemDto(
-                    new MessageDto(m.Content, MapRole(m.Role))
+                    new MessageDto(m.Content, m.Role.ToRoleDto())
                 )),
             ];
 
@@ -209,17 +209,5 @@ public sealed class CreateConversationHandler
             );
             return null;
         }
-    }
-
-    private static RoleDto MapRole(Role role)
-    {
-        return role switch
-        {
-            Role.System => RoleDto.System,
-            Role.Assistant => RoleDto.Assistant,
-            Role.User => RoleDto.User,
-            Role.Summary => RoleDto.Assistant,
-            _ => throw new ArgumentException($"Unsupported role: {role}", nameof(role)),
-        };
     }
 }
