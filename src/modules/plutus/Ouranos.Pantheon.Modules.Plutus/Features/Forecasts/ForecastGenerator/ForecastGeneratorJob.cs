@@ -5,10 +5,10 @@ using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.ForecastGenerator.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Database.Functions;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
-using Ouranos.Pantheon.Modules.Plutus.Shared.Database.Functions;
 using TickerQ.Utilities.Base;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.ForecastGenerator;

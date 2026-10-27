@@ -385,5 +385,4 @@ public sealed class GenerateCompletionHandler
 
         await dbContext.SaveChangesAsync(cancellationToken);
     }
-
 }

@@ -56,7 +56,8 @@ sequenceDiagram
     J ->> DB: refresh materialized view plutus.latest_signals
 ```
 
-The daily `ForecastGenerator` job calls OuranosMl (`POST /plutus/forecast`) in batches for
+The daily `ForecastGenerator` job calls OuranosMl (`POST /plutus/forecast`, through Plutus's own
+`ForecastModelClient`) in batches for
 markets with forecasting enabled and persists a `ForecastRun` with its `Forecast` and
 `ForecastRecord` rows. No job evaluates forecasts: efficacy is computed on request by
 joining forecast records to realized daily prices.

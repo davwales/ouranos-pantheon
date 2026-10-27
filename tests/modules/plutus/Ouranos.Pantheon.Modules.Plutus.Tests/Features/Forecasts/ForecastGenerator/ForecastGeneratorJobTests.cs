@@ -159,9 +159,7 @@ public sealed class ForecastGeneratorJobTests
         await _mlClient
             .Received(1)
             .ForecastAsync(
-                Arg.Is<ForecastModelRequest>(r =>
-                    r.Points.Count == 2 && r.NumPredictions == 7
-                ),
+                Arg.Is<ForecastModelRequest>(r => r.Points.Count == 2 && r.NumPredictions == 7),
                 Arg.Any<CancellationToken>()
             );
 

@@ -32,7 +32,6 @@ using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes.Events;
 using Ouranos.Pantheon.Modules.Shared.Contract;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
-using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres;
 using Wolverine;
 using Wolverine.RabbitMQ;
@@ -46,7 +45,9 @@ public sealed class HestiaModule : IPantheonModule
     public IHostApplicationBuilder Build(IHostApplicationBuilder builder)
     {
         builder
-            .Services.Configure<HestiaOptions>(builder.Configuration.GetSection(HestiaOptions.SectionName))
+            .Services.Configure<HestiaOptions>(
+                builder.Configuration.GetSection(HestiaOptions.SectionName)
+            )
             .AddScoped<IRecipeExtractor, RecipeExtractor>()
             .AddAssistantTool<KitchenAssistantContext, AddNoteTool>()
             .AddAssistantTool<KitchenAssistantContext, AddIngredientTool>()
@@ -55,14 +56,14 @@ public sealed class HestiaModule : IPantheonModule
             .AddAssistantTool<KitchenAssistantContext, UpdateStepTool>();
 
         builder.Services.AddCoreMartenModule<IHestiaMartenStore>(
-                builder.Configuration,
-                SchemaName,
-                options =>
-                {
-                    options.Projections.Snapshot<Recipe>(SnapshotLifecycle.Inline);
-                },
-                initialData: [new HestiaRecipeSeedData()]
-            );
+            builder.Configuration,
+            SchemaName,
+            options =>
+            {
+                options.Projections.Snapshot<Recipe>(SnapshotLifecycle.Inline);
+            },
+            initialData: [new HestiaRecipeSeedData()]
+        );
 
         builder
             .Services.AddHttpClient<IRecipeScraper, RecipeScraper>(static client =>

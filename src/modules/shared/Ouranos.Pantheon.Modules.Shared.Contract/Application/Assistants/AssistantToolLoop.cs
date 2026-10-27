@@ -1,10 +1,9 @@
 using System.Runtime.CompilerServices;
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
-
-using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 
 namespace Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
 

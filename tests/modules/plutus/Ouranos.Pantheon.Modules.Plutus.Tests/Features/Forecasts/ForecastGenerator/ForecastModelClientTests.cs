@@ -15,7 +15,9 @@ public sealed class ForecastModelClientTests
 
     private static readonly ForecastModelRequest Request = new(
         2,
-        [[new ForecastModelPoint(100m, 90m, 110m, 5m)]]
+        [
+            [new ForecastModelPoint(100m, 90m, 110m, 5m)],
+        ]
     );
 
     private ForecastModelClient CreateClient(RecordingHandler handler)

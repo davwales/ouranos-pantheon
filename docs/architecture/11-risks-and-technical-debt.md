@@ -16,7 +16,7 @@ reused.
 | D5 | **Folder-enforced module boundaries**: single assembly per module; internal layering not compiler-enforced | [Section 5](05-building-block-view.md); trade-off in [4.2](04-solution-strategy.md#42-trade-offs-accepted) | A shortcut could couple module internals without failing the build | Low (accepted trade-off) |
 | D6 | **Manual deployment step**: images are published by CI but promotion to the homelab is manual | [Section 7.4](07-deployment-view.md#74-cicd) | Deploy drift, forgotten migrations (mitigated: migrations run at startup) | Low |
 | D7 | *Moved*: local Plutus data | [Plutus docs](../../src/modules/plutus/docs/README.md) as PLUTUS-D1 | - | - |
-| D8 | **Unused scaffolding**: frontend `src/proxy.ts` is a pass-through. The Shared and Hestia parts moved to [Shared docs](../../src/modules/shared/docs/README.md) (SHARED-D1) and [Hestia docs](../../src/modules/hestia/docs/README.md) (HESTIA-D2) | interface | Readers assume capabilities that do not exist; dead code carries test and maintenance cost | Low |
+| D8 | *Resolved*: unused scaffolding (the frontend `src/proxy.ts` pass-through) was removed; the notification outbox remains as SHARED-D1 in the [Shared docs](../../src/modules/shared/docs/README.md) | - | - | - |
 | D10 | *Moved*: cross-slice type imports | [Plutus docs](../../src/modules/plutus/docs/README.md) as PLUTUS-D2; [Hestia docs](../../src/modules/hestia/docs/README.md) as HESTIA-D1 | - | - |
 | D11 | **Test gaps**: unit tests only (EF InMemory, substitutes), no integration tests against Postgres/TimescaleDB, RabbitMQ or Marten; the frontend Vitest suite runs in CI but has no coverage gate (the 85% gate covers .NET only) | `tests/`, `.github/workflows/ci.yml` | Raw SQL, CAGG/materialized-view queries, messaging topology and frontend regressions can ship green | Medium |
 | D12 | **Single-instance assumptions**: TickerQ runs in-process, output cache and `IMemoryCache` are per-process, overlap guards use in-memory flags | Shared `CoreExtensions`; module jobs and caches | A second gateway replica would run every job twice and serve inconsistent cached data | Low (accepted while single host) |
@@ -46,7 +46,6 @@ quadrantChart
     D4 error mapping: [0.6, 0.55]
     D5 boundaries: [0.1, 0.35]
     D6 manual deploy: [0.25, 0.2]
-    D8 scaffolding: [0.35, 0.1]
     D11 test gaps: [0.65, 0.65]
     D12 single instance: [0.1, 0.45]
     D15 runtime codegen: [0.2, 0.15]

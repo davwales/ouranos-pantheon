@@ -90,7 +90,10 @@ public sealed class OuranosMachineLearningModuleTests
         var services = new ServiceCollection()
             .AddSingleton(
                 Options.Create(
-                    new OuranosMachineLearningOptions { ConnectionString = "http://localhost:5000/" }
+                    new OuranosMachineLearningOptions
+                    {
+                        ConnectionString = "http://localhost:5000/",
+                    }
                 )
             )
             .BuildServiceProvider();

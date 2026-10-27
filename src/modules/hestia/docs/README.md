@@ -66,8 +66,7 @@ instead of throwing, so the DLQ only sees infrastructure faults.
 
 Marten on PostgreSQL ([ADR 0004](../../../../docs/adr/0004-polyglot-persistence-on-postgresql.md)):
 one event stream per recipe with inline snapshots, and the shopping list as a plain Marten
-document. `HestiaDbContext` is registered but empty (see
-[HESTIA-D2](11-risks-and-technical-debt.md)).
+document. Hestia has no EF Core context.
 
 ## Configuration
 

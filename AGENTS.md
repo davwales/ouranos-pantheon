@@ -87,8 +87,7 @@ dotnet ef migrations add <Name> \
 | `SharedDbContext` | `Modules.Shared` | `Migrations/Shared/` (pass `--output-dir Migrations/Shared`) |
 | `TickerQDbContext` | `Modules.Shared` | `Migrations/TickerQ/` (pass `--output-dir Migrations/TickerQ`) |
 
-Hestia has no EF migrations or design-time factory: `HestiaDbContext` is empty and its data lives
-in Marten. Keep EF migrations schema-only and fast - see [Heavy Data Fixes](#heavy-data-fixes).
+Hestia has no EF context: its data lives in Marten. Keep EF migrations schema-only and fast - see [Heavy Data Fixes](#heavy-data-fixes).
 
 ### Running Locally
 
