@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 
-namespace Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres.Functions;
+namespace Ouranos.Pantheon.Modules.Plutus.Shared.Database.Functions;
 
 public static class TimescaleDbFunctions
 {

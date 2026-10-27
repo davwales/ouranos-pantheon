@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres.Functions;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Database.Functions;
 
-namespace Ouranos.Pantheon.Modules.Shared.Tests.Infra.Postgres;
+namespace Ouranos.Pantheon.Modules.Plutus.Tests.Shared.Database.Functions;
 
 public sealed class TimescaleDbFunctionsTests
 {

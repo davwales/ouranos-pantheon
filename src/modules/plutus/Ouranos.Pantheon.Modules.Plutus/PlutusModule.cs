@@ -27,6 +27,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Osrs;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Stocks;
 using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Stocks.Messages;
+using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.ForecastGenerator;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetAllForecasts;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetForecastEfficacy;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetMarketForecast;
@@ -111,8 +112,7 @@ public sealed class PlutusModule : IPantheonModule
         var plutusOptionsSection = builder.Configuration.GetSection(PlutusOptions.SectionName);
 
         builder
-            .Services.AddCoreOuranosMachineLearningModule(builder.Configuration)
-            .AddCorePostgresModule<PlutusDbContext>(
+            .Services.AddCorePostgresModule<PlutusDbContext>(
                 builder.Configuration,
                 typeof(PlutusModule).Assembly
             )
@@ -125,6 +125,10 @@ public sealed class PlutusModule : IPantheonModule
             .Configure<FlipDataOptions>(
                 plutusOptionsSection.GetSection(FlipDataOptions.SectionName)
             );
+
+        builder.Services.AddHttpClient<IForecastModelClient, ForecastModelClient>(
+            OuranosMachineLearningModule.ConfigureHttpClient
+        );
 
         ConfigureDataLoaders(builder);
         ConfigureSignalComputers(builder);

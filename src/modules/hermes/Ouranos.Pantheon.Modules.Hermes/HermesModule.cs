@@ -66,7 +66,6 @@ public sealed class HermesModule : IPantheonModule
             .Services.Configure<HermesOptions>(
                 builder.Configuration.GetSection(HermesOptions.SectionName)
             )
-            .AddCoreOuranosMachineLearningModule(builder.Configuration)
             .AddCorePostgresModule<HermesDbContext>(
                 builder.Configuration,
                 typeof(HermesModule).Assembly

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Database.Functions;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.DataLoaders;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
@@ -57,6 +58,7 @@ public class PlutusDbContext(DbContextOptions<PlutusDbContext> options)
     {
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.HasTimescaleDbFunctions();
         modelBuilder.Entity<OsrsDataLoaderState>();
         modelBuilder.Entity<Forecast>();
         modelBuilder.Entity<ForecastRecord>();

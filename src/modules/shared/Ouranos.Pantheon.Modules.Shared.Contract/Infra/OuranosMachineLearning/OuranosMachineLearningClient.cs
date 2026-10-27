@@ -221,34 +221,6 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
         return StructuredCompletionParser.Parse<T>(result.Value.GetOutputText(), _logger);
     }
 
-    public async Task<List<List<ForecastPoint>>> GetPlutusForecasts(
-        GetPlutusForecastsRequest payload,
-        CancellationToken cancellationToken = default
-    )
-    {
-        _logger.LogTrace(
-            "Attempting to generate plutus forecasts using Ouranos ML with payload '{@payload}'.",
-            payload
-        );
-        cancellationToken.ThrowIfCancellationRequested();
-
-        var json = JsonSerializer.Serialize(payload, SnakeCaseOptions);
-        using var request = new HttpRequestMessage(HttpMethod.Post, "plutus/forecast");
-        request.Content = new StringContent(json, Encoding.UTF8, "application/json");
-
-        using var response = await _httpClient.SendAsync(request, cancellationToken);
-        response.EnsureSuccessStatusCode();
-
-        var result =
-            await response.Content.ReadFromJsonAsync<List<List<ForecastPoint>>>(
-                SnakeCaseOptions,
-                cancellationToken
-            ) ?? throw new InvalidOperationException("Failed to parse plutus forecast response.");
-
-        _logger.LogDebug("Successfully generated plutus forecasts using Ouranos ML.");
-        return result;
-    }
-
     public async IAsyncEnumerable<ImageGenerationEventDto> StreamImageGenerationAsync(
         GenerateImageRequest payload,
         [EnumeratorCancellation] CancellationToken cancellationToken = default

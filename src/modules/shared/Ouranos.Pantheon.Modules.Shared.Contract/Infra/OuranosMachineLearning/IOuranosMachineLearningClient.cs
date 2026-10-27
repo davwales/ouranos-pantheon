@@ -37,11 +37,6 @@ public interface IOuranosMachineLearningClient
     )
         where T : class;
 
-    Task<List<List<ForecastPoint>>> GetPlutusForecasts(
-        GetPlutusForecastsRequest payload,
-        CancellationToken cancellationToken = default
-    );
-
     IAsyncEnumerable<ImageGenerationEventDto> StreamImageGenerationAsync(
         GenerateImageRequest payload,
         CancellationToken cancellationToken = default

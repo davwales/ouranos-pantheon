@@ -30,19 +30,25 @@ public static class OuranosMachineLearningModule
         });
 
         services.AddHttpClient<IOuranosMachineLearningClient, OuranosMachineLearningClient>(
-            (sp, client) =>
-            {
-                var opts = sp.GetRequiredService<IOptions<OuranosMachineLearningOptions>>().Value;
-                if (string.IsNullOrWhiteSpace(opts.ConnectionString))
-                {
-                    throw new InvalidOperationException("Invalid Ouranos Machine Learning URL.");
-                }
-
-                client.BaseAddress = new Uri(opts.ConnectionString);
-            }
+            ConfigureHttpClient
         );
 
         return services;
+    }
+
+    /// <summary>
+    /// Points an <see cref="HttpClient"/> at OuranosMl, for module-specific clients of its
+    /// non-OpenAI endpoints.
+    /// </summary>
+    public static void ConfigureHttpClient(IServiceProvider services, HttpClient client)
+    {
+        var opts = services.GetRequiredService<IOptions<OuranosMachineLearningOptions>>().Value;
+        if (string.IsNullOrWhiteSpace(opts.ConnectionString))
+        {
+            throw new InvalidOperationException("Invalid Ouranos Machine Learning URL.");
+        }
+
+        client.BaseAddress = new Uri(opts.ConnectionString);
     }
 
     // Completions are not idempotent: the SDK's default retry policy would resend a request the

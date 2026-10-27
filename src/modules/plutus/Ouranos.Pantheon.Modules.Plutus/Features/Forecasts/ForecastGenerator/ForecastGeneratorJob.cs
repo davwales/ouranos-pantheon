@@ -8,11 +8,8 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
-using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
-using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Requests;
-using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres.Functions;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Database.Functions;
 using TickerQ.Utilities.Base;
-using MlForecastPoint = Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos.ForecastPoint;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.ForecastGenerator;
 
@@ -20,24 +17,24 @@ public sealed class ForecastGeneratorJob
 {
     private readonly ILogger<ForecastGeneratorJob> _logger;
     private readonly PlutusDbContext _dbContext;
-    private readonly IOuranosMachineLearningClient _mlClient;
+    private readonly IForecastModelClient _forecastModelClient;
     private readonly IOptions<PlutusOptions> _options;
 
     public ForecastGeneratorJob(
         ILogger<ForecastGeneratorJob> logger,
         PlutusDbContext dbContext,
-        IOuranosMachineLearningClient mlClient,
+        IForecastModelClient forecastModelClient,
         IOptions<PlutusOptions> options
     )
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(dbContext);
-        Guard.Against.Null(mlClient);
+        Guard.Against.Null(forecastModelClient);
         Guard.Against.Null(options);
 
         _logger = logger;
         _dbContext = dbContext;
-        _mlClient = mlClient;
+        _forecastModelClient = forecastModelClient;
         _options = options;
     }
 
@@ -80,8 +77,8 @@ public sealed class ForecastGeneratorJob
                 continue;
             }
 
-            var predictions = await _mlClient.GetPlutusForecasts(
-                new GetPlutusForecastsRequest(
+            var predictions = await _forecastModelClient.ForecastAsync(
+                new ForecastModelRequest(
                     _options.Value.Forecasting.NumPredictions,
                     [.. inputs.Select(i => i.HistoricalPoints)]
                 ),
@@ -222,7 +219,7 @@ public sealed class ForecastGeneratorJob
                 .Select(kvp => new SymbolForecastInput(
                     symbolDict[kvp.Key],
                     [
-                        .. kvp.Value.Select(b => new MlForecastPoint(
+                        .. kvp.Value.Select(b => new ForecastModelPoint(
                             b.AveragePrice,
                             b.MinPrice,
                             b.MaxPrice,

@@ -46,8 +46,7 @@ public sealed class HestiaModule : IPantheonModule
     public IHostApplicationBuilder Build(IHostApplicationBuilder builder)
     {
         builder
-            .Services.AddCoreOuranosMachineLearningModule(builder.Configuration)
-            .Configure<HestiaOptions>(builder.Configuration.GetSection(HestiaOptions.SectionName))
+            .Services.Configure<HestiaOptions>(builder.Configuration.GetSection(HestiaOptions.SectionName))
             .AddScoped<IRecipeExtractor, RecipeExtractor>()
             .AddAssistantTool<KitchenAssistantContext, AddNoteTool>()
             .AddAssistantTool<KitchenAssistantContext, AddIngredientTool>()

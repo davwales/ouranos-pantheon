@@ -3,6 +3,7 @@ using System.ClientModel.Primitives;
 using System.Net;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using OpenAI;
 using OpenAI.Chat;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
@@ -80,6 +81,43 @@ public sealed class OuranosMachineLearningModuleTests
 
         // Assert
         act.ShouldThrow<Exception>();
+    }
+
+    [Fact]
+    public void ConfigureHttpClient_ShouldPointTheClientAtOuranosMl()
+    {
+        // Arrange
+        var services = new ServiceCollection()
+            .AddSingleton(
+                Options.Create(
+                    new OuranosMachineLearningOptions { ConnectionString = "http://localhost:5000/" }
+                )
+            )
+            .BuildServiceProvider();
+        using var client = new HttpClient();
+
+        // Act
+        OuranosMachineLearningModule.ConfigureHttpClient(services, client);
+
+        // Assert
+        client.BaseAddress.ShouldBe(new Uri("http://localhost:5000/"));
+    }
+
+    [Fact]
+    public void ConfigureHttpClient_WhenConnectionStringEmpty_ShouldThrow()
+    {
+        // Arrange
+        var services = new ServiceCollection()
+            .AddSingleton(
+                Options.Create(new OuranosMachineLearningOptions { ConnectionString = "" })
+            )
+            .BuildServiceProvider();
+        using var client = new HttpClient();
+
+        // Act & Assert
+        Should.Throw<InvalidOperationException>(() =>
+            OuranosMachineLearningModule.ConfigureHttpClient(services, client)
+        );
     }
 
     [Fact]
