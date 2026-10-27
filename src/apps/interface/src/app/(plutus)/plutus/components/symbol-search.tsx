@@ -7,10 +7,10 @@ import { plutusApi } from "@/lib/api/plutus";
 import { Check } from "lucide-react";
 import { useMemo, useState } from "react";
 
-export interface SelectedSymbol {
+export type SelectedSymbol = {
   id: string;
   name: string;
-}
+};
 
 export function SymbolSearch({
   marketId,

@@ -1,12 +1,12 @@
 import { Typography } from "@/components/shared/typography";
 
-interface TickerQData {
+type TickerQData = {
   healthy: number;
   failed: number;
   overdue: number;
   neverRan: number;
   total: number;
-}
+};
 
 const DATA_KEYS: (keyof TickerQData)[] = ["healthy", "total", "overdue", "failed", "neverRan"];
 

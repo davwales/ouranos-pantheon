@@ -9,10 +9,10 @@ export type TimeFrameKey =
   | "OneYear"
   | "AllTime";
 
-export interface TimeFrame {
+export type TimeFrame = {
   key: TimeFrameKey;
   name: string;
-}
+};
 
 export const timeFrames: TimeFrame[] = [
   { key: "FifteenMinutes", name: "15 Minutes" },

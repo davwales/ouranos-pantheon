@@ -5,9 +5,9 @@ import { SignalsSectionSkeleton } from "./signal-card-skeleton";
 import { ForecastEfficacySkeleton } from "./forecast-efficacy-skeleton";
 import { DataTableSkeleton } from "@/components/shared/skeletons/data-table-skeleton";
 
-interface SymbolDetailSkeletonProps {
+type SymbolDetailSkeletonProps = {
   className?: string;
-}
+};
 
 export function SymbolDetailSkeleton({ className }: SymbolDetailSkeletonProps) {
   return (

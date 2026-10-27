@@ -2,11 +2,11 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMemo } from "react";
 
-interface InfoCardSkeletonProps {
+type InfoCardSkeletonProps = {
   hasIcon?: boolean;
   descriptionLines?: number;
   className?: string;
-}
+};
 
 export function InfoCardSkeleton({
   hasIcon = false,
@@ -57,12 +57,12 @@ const LG_COL_MAP: Record<number, string> = {
   6: "lg:grid-cols-6",
 };
 
-interface InfoCardGridSkeletonProps {
+type InfoCardGridSkeletonProps = {
   count?: number;
   hasIcon?: boolean;
   cols?: { md?: number; lg?: number };
   className?: string;
-}
+};
 
 export function InfoCardGridSkeleton({
   count = 6,

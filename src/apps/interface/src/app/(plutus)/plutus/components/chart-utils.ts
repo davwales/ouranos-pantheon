@@ -1,13 +1,13 @@
-export interface GapInfo {
+export type GapInfo = {
   afterIndex: number;
   durationMs: number;
-}
+};
 
-export interface ProcessedChartData<T extends { date: Date }> {
+export type ProcessedChartData<T extends { date: Date }> = {
   data: Array<T & { _chartIndex: number }>;
   gaps: GapInfo[];
   medianIntervalMs: number;
-}
+};
 
 export function processChartData<T extends { date: Date }>(
   rawData: T[],

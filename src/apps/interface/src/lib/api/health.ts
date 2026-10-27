@@ -2,30 +2,30 @@ import { ApiError, apiUrl } from "@/lib/api-client";
 
 export type HealthStatus = "Healthy" | "Degraded" | "Unhealthy" | "NotConfigured";
 
-export interface HealthCheckResultDto {
+export type HealthCheckResultDto = {
   status: HealthStatus;
   description: string;
   timestamp: string;
   data?: Record<string, unknown>;
-}
+};
 
-export interface GetHealthResponseDto {
+export type GetHealthResponseDto = {
   status: HealthStatus;
   checks: Record<string, HealthCheckResultDto>;
-}
+};
 
-export interface HealthCheckRow {
+export type HealthCheckRow = {
   resource: string;
   status: HealthStatus;
   detail: string;
   data?: Record<string, unknown>;
-}
+};
 
-export interface HealthSummary {
+export type HealthSummary = {
   overallStatus: HealthStatus;
   checks: HealthCheckRow[];
   lastCheckedAt: string;
-}
+};
 
 export const healthApi = {
   getHealthSummary: async (): Promise<GetHealthResponseDto> => {

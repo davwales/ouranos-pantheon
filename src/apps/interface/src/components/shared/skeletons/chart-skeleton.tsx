@@ -1,10 +1,10 @@
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
-interface ChartSkeletonProps {
+type ChartSkeletonProps = {
   className?: string;
   legendCount?: number;
-}
+};
 
 export function ChartSkeleton({ className, legendCount = 3 }: ChartSkeletonProps) {
   return (

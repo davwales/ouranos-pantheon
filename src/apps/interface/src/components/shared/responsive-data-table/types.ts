@@ -8,20 +8,20 @@ export const dataTableFeatures = tableFeatures({});
 
 export type SortDirection = "ASC" | "DESC";
 
-export interface PaginationArgs {
+export type PaginationArgs = {
   pageSize?: number;
   pageSizes?: number[];
   skip?: number;
   take?: number;
-}
+};
 
-export interface PageInfo {
+export type PageInfo = {
   totalCount?: number;
   skip?: number;
   take?: number;
   hasNextPage?: boolean | null | undefined;
   hasPreviousPage?: boolean | null | undefined;
-}
+};
 
 export type FilterOperator =
   | "eq"
@@ -46,11 +46,11 @@ export const OPERATOR_LABELS: Record<FilterOperator, string> = {
   endsWith: "Ends With",
 };
 
-export interface FilterCondition {
+export type FilterCondition = {
   field: string;
   operator: FilterOperator;
   value: any;
-}
+};
 
 export type FilterGroup = {
   logic: "and" | "or";
@@ -62,12 +62,12 @@ export type FilterGroupItem = FilterCondition | FilterGroup;
 
 export type FilterType = "string" | "number" | "boolean" | "date" | "enum";
 
-export interface FilterConfig {
+export type FilterConfig = {
   type: FilterType;
   operators: FilterOperator[];
   enumValues?: string[];
   searchable?: boolean;
-}
+};
 
 export type SortValue = SortDirection | Record<string, SortDirection>;
 export type SortArgs = Record<string, SortValue>;
@@ -81,7 +81,7 @@ export type ExtendedColumnDef<TData extends RowData> = ColumnDef<
   filterConfig?: FilterConfig;
 };
 
-export interface DataTableProps<TData extends RowData> {
+export type DataTableProps<TData extends RowData> = {
   columns: ExtendedColumnDef<TData>[];
   data: TData[] | null | undefined;
   loading?: boolean;
@@ -93,14 +93,14 @@ export interface DataTableProps<TData extends RowData> {
   disablePagination?: boolean;
   disableSorting?: boolean;
   disableFiltering?: boolean;
-}
+};
 
-export interface DataTableState {
+export type DataTableState = {
   pagination?: PaginationArgs;
   filter?: FilterGroup;
   sort?: SortArgs;
   searchQuery?: string;
-}
+};
 
 /** Maps frontend FilterOperator values to the backend filter operator strings */
 export const BACKEND_OPERATOR: Record<FilterOperator, string> = {

@@ -5,12 +5,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { FileQuestion } from "lucide-react";
 import Link from "next/link";
 
-interface NotFoundCardProps {
+type NotFoundCardProps = {
   title?: string;
   message?: string;
   backHref: string;
   backLabel?: string;
-}
+};
 
 export function NotFoundCard({
   title = "Not found",

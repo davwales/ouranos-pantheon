@@ -2,9 +2,9 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
-interface StrategyDetailSkeletonProps {
+type StrategyDetailSkeletonProps = {
   className?: string;
-}
+};
 
 function ConfigRowSkeleton() {
   return (

@@ -1,10 +1,10 @@
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
-interface ChatMessageSkeletonProps {
+type ChatMessageSkeletonProps = {
   pairCount?: number;
   className?: string;
-}
+};
 
 export function ChatMessageSkeleton({
   pairCount = 3,

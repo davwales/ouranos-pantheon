@@ -1,13 +1,13 @@
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
-interface FormSkeletonProps {
+type FormSkeletonProps = {
   fields?: number;
   hasTitle?: boolean;
   checkboxes?: number;
   textareas?: number;
   className?: string;
-}
+};
 
 export function FormSkeleton({
   fields = 4,

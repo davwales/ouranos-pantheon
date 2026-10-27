@@ -5,7 +5,7 @@ import {
 import { TimeFrameKey } from "@/app/(plutus)/plutus/constants/time-frames";
 import { create } from "zustand";
 
-export interface PlutusState {
+export type PlutusState = {
   timeFrameKey: TimeFrameKey;
   setTimeFrameKey: (key: TimeFrameKey) => void;
   explorerTableState: DataTableState;
@@ -28,7 +28,7 @@ export interface PlutusState {
   setOpenPositionsTableState: (state: DataTableState) => void;
   closedPositionsTableState: DataTableState;
   setClosedPositionsTableState: (state: DataTableState) => void;
-}
+};
 
 export const usePlutusStore = create<PlutusState>((set) => ({
   timeFrameKey: "OneHour",

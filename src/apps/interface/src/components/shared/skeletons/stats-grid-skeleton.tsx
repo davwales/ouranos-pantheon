@@ -1,11 +1,11 @@
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
-interface StatsGridSkeletonProps {
+type StatsGridSkeletonProps = {
   items?: number;
   columns?: string;
   className?: string;
-}
+};
 
 export function StatsGridSkeleton({
   items = 4,

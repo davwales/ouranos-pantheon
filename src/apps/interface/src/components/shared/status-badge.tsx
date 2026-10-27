@@ -2,9 +2,9 @@ import { Badge } from "@/components/ui/badge";
 import type { HealthStatus } from "@/lib/api/health";
 import { cn } from "@/lib/utils";
 
-interface StatusBadgeProps {
+type StatusBadgeProps = {
   status: HealthStatus | null;
-}
+};
 
 const STATUS_CLASSES: Record<HealthStatus, string> = {
   Healthy: "bg-green-500/15 text-green-700 dark:bg-green-500/20 dark:text-green-300",

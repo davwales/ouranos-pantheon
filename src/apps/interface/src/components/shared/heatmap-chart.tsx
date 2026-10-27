@@ -10,14 +10,14 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-export interface HeatmapChartCell {
+export type HeatmapChartCell = {
   x: number;
   y: number;
   value: number;
   percentage: number;
-}
+};
 
-export interface HeatmapChartProps {
+export type HeatmapChartProps = {
   data: HeatmapChartCell[];
   xLabels: string[];
   yLabels: string[];
@@ -29,7 +29,7 @@ export interface HeatmapChartProps {
   highlightX?: number;
   highlightY?: number;
   className?: string;
-}
+};
 
 function buildGrid(
   data: HeatmapChartCell[],

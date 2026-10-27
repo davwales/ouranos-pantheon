@@ -3,12 +3,12 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TextSkeleton } from "./text-skeleton";
 
-interface CardSkeletonProps {
+type CardSkeletonProps = {
   hasHeader?: boolean;
   contentLines?: number;
   hasFooter?: boolean;
   className?: string;
-}
+};
 
 export function CardSkeleton({
   hasHeader = true,

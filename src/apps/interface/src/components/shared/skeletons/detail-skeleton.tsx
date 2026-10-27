@@ -4,7 +4,7 @@ import { HeadingSkeleton } from "./heading-skeleton";
 import { TextSkeleton } from "./text-skeleton";
 import { DataTableSkeleton } from "./data-table-skeleton";
 
-interface DetailSkeletonProps {
+type DetailSkeletonProps = {
   sections?: ("header" | "stats" | "chart" | "table" | "content")[];
   statCount?: number;
   tableColumns?: number;
@@ -12,7 +12,7 @@ interface DetailSkeletonProps {
   hasTableFilters?: boolean;
   hasTablePagination?: boolean;
   className?: string;
-}
+};
 
 export function DetailSkeleton({
   sections = ["header", "stats", "content"],

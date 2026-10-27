@@ -16,20 +16,20 @@ import {
 
 const MAX_DEPTH = 3;
 
-interface FilterGroupBuilderProps {
+type FilterGroupBuilderProps = {
   group: FilterGroup;
   columns: ExtendedColumnDef<any>[];
   onChange: (group: FilterGroup) => void;
   onRemove?: () => void;
   depth: number;
-}
+};
 
-interface GroupActionRowProps {
+type GroupActionRowProps = {
   onAddCondition: () => void;
   onAddGroup: () => void;
   columns: ExtendedColumnDef<any>[];
   depth: number;
-}
+};
 
 function createEmptyCondition(
   columns: ExtendedColumnDef<any>[],

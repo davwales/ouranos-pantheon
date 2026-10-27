@@ -1,9 +1,9 @@
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
-interface SignalCardSkeletonProps {
+type SignalCardSkeletonProps = {
   className?: string;
-}
+};
 
 export function SignalCardSkeleton({ className }: SignalCardSkeletonProps) {
   return (
@@ -38,9 +38,9 @@ export function SignalCardSkeleton({ className }: SignalCardSkeletonProps) {
   );
 }
 
-interface SignalsSectionSkeletonProps {
+type SignalsSectionSkeletonProps = {
   className?: string;
-}
+};
 
 export function SignalsSectionSkeleton({ className }: SignalsSectionSkeletonProps) {
   return (

@@ -29,13 +29,13 @@ import { useShallow } from "zustand/react/shallow";
 import { SymbolDetailSkeleton } from "@/app/(plutus)/plutus/[marketId]/[symbolId]/_components/symbol-detail-skeleton";
 import { NotFoundCard } from "@/components/shared/not-found-card";
 
-interface SymbolDetails {
+type SymbolDetails = {
   symbol: Symbol;
   trades: GetSymbolTradesResponse;
   summary: GetDailySymbolSummaryResponse;
   latestTrade?: { price: number; volume: number };
   forecast?: GetMarketForecastRow;
-}
+};
 
 function PriceChange({
   label,
