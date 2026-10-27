@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Hermes.Features.Loras.UpdateLora.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Loras;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Loras.UpdateLora;
@@ -36,7 +37,20 @@ public sealed class UpdateLoraHandler : IPantheonHandler<UpdateLoraInput, Update
 
         Guard.Against.NotFound(command.LoraId, lora);
 
-        lora.Update(command.Name, command.Identifier, command.Weight, command.IsPublic);
+        await LoraValidation.ValidateIdentifierIsFreeAsync(
+            _dbContext,
+            command.Identifier,
+            command.LoraId,
+            cancellationToken
+        );
+
+        lora.Update(
+            command.Name,
+            command.Identifier,
+            command.Weight,
+            command.IsPublic,
+            command.TriggerPhrase
+        );
 
         _dbContext.Loras.Update(lora);
         await _dbContext.SaveChangesAsync(cancellationToken);

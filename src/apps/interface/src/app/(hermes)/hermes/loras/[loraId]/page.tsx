@@ -2,6 +2,7 @@
 
 import { Typography } from "@/components/shared/typography";
 import { LoraForm } from "@/app/(hermes)/hermes/components/lora-form";
+import { LoraStatusBadge } from "@/app/(hermes)/hermes/components/lora-status-badge";
 import { type LoraFormInput } from "@/app/(hermes)/hermes/types";
 import { useBreadcrumbLabel } from "@/components/shared/breadcrumbs";
 import { FormSkeleton } from "@/components/shared/skeletons/form-skeleton";
@@ -49,6 +50,7 @@ export default function EditLoraPage() {
         identifier: input.identifier,
         weight: input.weight,
         isPublic: input.isPublic,
+        triggerPhrase: input.triggerPhrase?.trim() || null,
       });
       router.push("/hermes/loras");
     } catch (err) {
@@ -61,16 +63,19 @@ export default function EditLoraPage() {
   if (state.status === "loading" || !state.data) {
     return (
       <div className="m-4">
-        <FormSkeleton fields={3} hasTitle checkboxes={1} />
+        <FormSkeleton fields={4} hasTitle checkboxes={1} />
       </div>
     );
   }
 
   return (
     <div className="m-4">
-      <Typography variant="h2" className="border-b-0">
-        Edit LoRA
-      </Typography>
+      <div className="flex items-center gap-3">
+        <Typography variant="h2" className="border-b-0">
+          Edit LoRA
+        </Typography>
+        <LoraStatusBadge lora={state.data} />
+      </div>
 
       <LoraForm
         initial={state.data}

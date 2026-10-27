@@ -14,6 +14,6 @@ are relative to `Ouranos.Pantheon.Modules.Hermes/`.
 | `Features/Images/` | Serving generated images and their details, and the scheduled purge of unreferenced ones |
 | `Features/Personas/` | Reusable assistant personality definitions applied to conversations |
 | `Features/Traits/` | Attachable traits that merge with the conversation's persona at prompt-build time |
-| `Features/Loras/` | Manually registered LoRAs that a conversation can switch on to restyle generated images |
+| `Features/Loras/` | The LoRA catalogue synced from OuranosMl (`SyncLorasJob`, `GET /api/hermes/available-loras`) and the LoRA configs a conversation can switch on to restyle generated images |
 | `Features/Models/` | Model configuration CRUD and the hourly available-model sync from OuranosMl |
 | `Features/Folders/` | Folders for organizing conversations |

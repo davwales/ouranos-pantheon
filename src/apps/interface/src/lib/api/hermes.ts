@@ -14,7 +14,6 @@ export type {
   PersonaInput,
   ModelInput,
   TraitInput,
-  LoraInput,
   ConversationInput,
   GenerateCompletionInput,
   ConversationSummary,
@@ -31,6 +30,8 @@ export type {
   CompletionChunk,
   Trait,
   Lora,
+  SaveLoraInput,
+  AvailableLora,
   ToolSource,
   AvailableTool,
   ToolSetToolInput,
@@ -59,6 +60,8 @@ import type {
   CompactConversationInput,
   Trait,
   Lora,
+  SaveLoraInput,
+  AvailableLora,
   AvailableTool,
   ToolSetSummary,
   ToolSet,
@@ -153,10 +156,13 @@ export const hermesApi = {
 
   getLora: (loraId: string) => api.get<Lora>(`/api/hermes/loras/${loraId}`),
 
-  createLora: (input: Omit<Lora, "id">) =>
+  getAvailableLoras: () =>
+    api.get<AvailableLora[]>("/api/hermes/available-loras"),
+
+  createLora: (input: SaveLoraInput) =>
     api.post<{ loraId: string }>("/api/hermes/loras", input),
 
-  updateLora: (loraId: string, input: Omit<Lora, "id">) =>
+  updateLora: (loraId: string, input: SaveLoraInput) =>
     api.put<{ loraId: string }>(`/api/hermes/loras/${loraId}`, input),
 
   deleteLora: (loraId: string) =>

@@ -30,12 +30,20 @@ public sealed class CreateLoraHandler : IPantheonHandler<CreateLoraInput, Create
         _logger.LogTrace("Attempting to handle create LoRA command '{@command}'.", command);
         cancellationToken.ThrowIfCancellationRequested();
 
+        await LoraValidation.ValidateIdentifierIsFreeAsync(
+            _dbContext,
+            command.Identifier,
+            loraId: null,
+            cancellationToken
+        );
+
         var lora = Lora.Create(
             DatabaseExtensions.CreateId<Lora>(),
             command.Name,
             command.Identifier,
             command.Weight,
-            command.IsPublic
+            command.IsPublic,
+            command.TriggerPhrase
         );
 
         await _dbContext.Loras.AddAsync(lora, cancellationToken);

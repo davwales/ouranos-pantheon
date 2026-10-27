@@ -11,12 +11,15 @@ using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Requests;
+using Ouranos.Pantheon.Tests.Utils.NSubstitute;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.Assistants.Tools.GenerateImage;
 
 public sealed class GenerateImageToolTests
 {
+    private static readonly List<ImageLoraRequest> NoLoras = [];
+
     private static readonly HermesChatContext Context = new(null, [], ConversationImages.Empty);
 
     private readonly IOuranosMachineLearningClient _mlClient =
@@ -104,7 +107,9 @@ public sealed class GenerateImageToolTests
         _mlClient
             .Received(1)
             .StreamImageGenerationAsync(
-                new GenerateImageRequest("A red fox", 1216, 832, null),
+                ArgExtensions.IsEquivalent(
+                    new GenerateImageRequest("A red fox", 1216, 832, null, NoLoras)
+                ),
                 Arg.Any<CancellationToken>()
             );
     }
@@ -133,7 +138,9 @@ public sealed class GenerateImageToolTests
         _mlClient
             .Received(1)
             .StreamImageGenerationAsync(
-                new GenerateImageRequest("A fox", width, height, "flux"),
+                ArgExtensions.IsEquivalent(
+                    new GenerateImageRequest("A fox", width, height, "flux", NoLoras)
+                ),
                 Arg.Any<CancellationToken>()
             );
     }
@@ -158,7 +165,9 @@ public sealed class GenerateImageToolTests
         _mlClient
             .Received(1)
             .StreamImageGenerationAsync(
-                new GenerateImageRequest("A fox", 512, 768, null),
+                ArgExtensions.IsEquivalent(
+                    new GenerateImageRequest("A fox", 512, 768, null, NoLoras)
+                ),
                 Arg.Any<CancellationToken>()
             );
     }
@@ -211,7 +220,7 @@ public sealed class GenerateImageToolTests
     }
 
     [Fact]
-    public async Task InvokeAsync_WhenLorasAreActive_ShouldAppendTheirTagsToTheRequestPromptOnly()
+    public async Task InvokeAsync_WhenLorasAreActive_ShouldSendThemAndPrependTheirTriggerPhrasesToTheRequestPromptOnly()
     {
         // Arrange
         SetupStream(
@@ -223,7 +232,7 @@ public sealed class GenerateImageToolTests
 
         var context = new HermesChatContext(
             null,
-            [new ImageLora("add-detail", 0.8f), new ImageLora("pixel-art", 1f)],
+            [new ImageLora("add-detail", 0.8f, "detailed"), new ImageLora("pixel-art", 1f)],
             ConversationImages.Empty
         );
 
@@ -238,8 +247,14 @@ public sealed class GenerateImageToolTests
         _mlClient
             .Received(1)
             .StreamImageGenerationAsync(
-                Arg.Is<GenerateImageRequest>(r =>
-                    r.Prompt == "A fox <lora:add-detail:0.8> <lora:pixel-art:1>"
+                ArgExtensions.IsEquivalent(
+                    new GenerateImageRequest(
+                        "detailed, A fox",
+                        1024,
+                        1024,
+                        null,
+                        new List<ImageLoraRequest> { new("add-detail", 0.8f), new("pixel-art", 1f) }
+                    )
                 ),
                 Arg.Any<CancellationToken>()
             );
@@ -257,7 +272,7 @@ public sealed class GenerateImageToolTests
         var tool = CreateTool(new HermesImageGenerationOptions { MaxPromptLength = 5 });
         var context = new HermesChatContext(
             null,
-            [new ImageLora("detail", -0.25f)],
+            [new ImageLora("detail", -0.25f, "fine detail")],
             ConversationImages.Empty
         );
 
@@ -272,7 +287,7 @@ public sealed class GenerateImageToolTests
         _mlClient
             .Received(1)
             .StreamImageGenerationAsync(
-                Arg.Is<GenerateImageRequest>(r => r.Prompt == "A red <lora:detail:-0.25>"),
+                Arg.Is<GenerateImageRequest>(r => r.Prompt == "fine detail, A red"),
                 Arg.Any<CancellationToken>()
             );
     }
@@ -386,5 +401,33 @@ public sealed class GenerateImageToolTests
             .GetProperty("description")
             .GetString()
             .ShouldStartWith("A detailed visual description");
+    }
+
+    [Fact]
+    public async Task InvokeAsync_WhenThePromptAlreadyHasATriggerPhrase_ShouldNotRepeatIt()
+    {
+        // Arrange
+        SetupStream(new ImageGenerationDoneDto("flux"));
+        var tool = CreateTool();
+        var context = new HermesChatContext(
+            null,
+            [new ImageLora("pixel-art", 1f, "Pixel Art")],
+            ConversationImages.Empty
+        );
+
+        // Act
+        await tool.InvokeAsync(
+            context,
+            """{"prompt":"pixel art of a fox","orientation":null}""",
+            CancellationToken.None
+        );
+
+        // Assert
+        _mlClient
+            .Received(1)
+            .StreamImageGenerationAsync(
+                Arg.Is<GenerateImageRequest>(r => r.Prompt == "pixel art of a fox"),
+                Arg.Any<CancellationToken>()
+            );
     }
 }

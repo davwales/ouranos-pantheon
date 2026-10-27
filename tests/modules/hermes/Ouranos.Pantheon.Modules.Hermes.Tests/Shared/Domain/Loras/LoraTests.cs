@@ -188,4 +188,40 @@ public sealed class LoraTests
         // Assert
         update.ShouldThrow<ArgumentException>();
     }
+
+    [Theory]
+    [InlineData("  detailed  ", "detailed")]
+    [InlineData("   ", null)]
+    [InlineData(null, null)]
+    public void Create_ShouldTrimTheTriggerPhraseAndDropABlankOne(string? phrase, string? expected)
+    {
+        // Act
+        var lora = Lora.Create(
+            new Id<Lora>(Guid.NewGuid().ToString()),
+            "Detail",
+            "add-detail",
+            triggerPhrase: phrase
+        );
+
+        // Assert
+        lora.TriggerPhrase.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void Update_ShouldReplaceTheTriggerPhrase()
+    {
+        // Arrange
+        var lora = Lora.Create(
+            new Id<Lora>(Guid.NewGuid().ToString()),
+            "Detail",
+            "add-detail",
+            triggerPhrase: "old"
+        );
+
+        // Act
+        lora.Update("Detail", "add-detail", 1f, triggerPhrase: " new ");
+
+        // Assert
+        lora.TriggerPhrase.ShouldBe("new");
+    }
 }

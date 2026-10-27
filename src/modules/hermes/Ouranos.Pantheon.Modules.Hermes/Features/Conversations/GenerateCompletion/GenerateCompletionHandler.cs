@@ -10,6 +10,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Images;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Loras;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.SystemPrompt;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
@@ -72,17 +73,9 @@ public sealed class GenerateCompletionHandler
         var model = command.Conversation.Model;
 
         var images = await LoadImagesAsync(command.Conversation.Messages, cancellationToken);
+        var loras = await LoadImageLorasAsync(command.Conversation.LoraIds, cancellationToken);
 
-        var context = new HermesChatContext(
-            command.ConversationId,
-            [
-                .. (command.Conversation.Loras ?? []).Select(l => new ImageLora(
-                    l.Identifier,
-                    l.Weight
-                )),
-            ],
-            images
-        );
+        var context = new HermesChatContext(command.ConversationId, loras, images);
 
         var toolSet = await _toolSetResolver.ResolveAsync(
             command.Conversation.ToolSetId,
@@ -233,6 +226,29 @@ public sealed class GenerateCompletionHandler
 
     // Numbers each image by where it first appears in the history; images that no longer exist
     // get no number.
+    // A LoRA gone from the image server is skipped: OuranosMl rejects unknown LoRAs, which would
+    // fail the whole image, and the UI already shows it as unavailable.
+    private async Task<List<ImageLora>> LoadImageLorasAsync(
+        List<Id<Lora>>? loraIds,
+        CancellationToken cancellationToken
+    )
+    {
+        if (loraIds is not { Count: > 0 })
+        {
+            return [];
+        }
+
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        return await dbContext
+            .Loras.AsNoTracking()
+            .Where(l =>
+                loraIds.Contains(l.Id)
+                && dbContext.AvailableLoras.Any(a => a.Identifier == l.Identifier)
+            )
+            .Select(l => new ImageLora(l.Identifier, l.Weight, l.TriggerPhrase))
+            .ToListAsync(cancellationToken);
+    }
+
     private async Task<ConversationImages> LoadImagesAsync(
         IReadOnlyList<CompletionMessageInput> messages,
         CancellationToken cancellationToken

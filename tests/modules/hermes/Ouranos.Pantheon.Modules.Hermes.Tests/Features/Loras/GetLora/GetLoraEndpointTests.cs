@@ -17,7 +17,16 @@ public sealed class GetLoraEndpointTests
         // Arrange
         var ct = CancellationToken.None;
         var loraId = new Id<Lora>(Guid.NewGuid().ToString());
-        var expected = new GetLoraResponse(loraId, "Detail", "add-detail-xl", 0.8f, true);
+        var expected = new GetLoraResponse(
+            loraId,
+            "Detail",
+            "add-detail-xl",
+            0.8f,
+            true,
+            "detailed",
+            IsUnavailable: false,
+            IsIncompatible: false
+        );
 
         _bus.InvokeAsync<GetLoraResponse>(Arg.Any<object>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expected));

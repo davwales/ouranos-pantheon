@@ -352,6 +352,47 @@ public sealed class OuranosMachineLearningClient : IOuranosMachineLearningClient
         }
     }
 
+    public async Task<ImageModelsDto> GetImageModelsAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        _logger.LogTrace("Attempting to fetch image models from Ouranos ML.");
+        cancellationToken.ThrowIfCancellationRequested();
+
+        using var response = await _httpClient.GetAsync("images/models", cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        var result = await ImageGenerationMapping.ToImageModelsAsync(
+            response.Content,
+            cancellationToken
+        );
+
+        _logger.LogDebug(
+            "Successfully fetched {Count} image models from Ouranos ML.",
+            result.Models.Count
+        );
+        return result;
+    }
+
+    public async Task<List<ImageLoraDto>> GetImageLorasAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        _logger.LogTrace("Attempting to fetch image LoRAs from Ouranos ML.");
+        cancellationToken.ThrowIfCancellationRequested();
+
+        using var response = await _httpClient.GetAsync("images/loras", cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        var result = await ImageGenerationMapping.ToImageLorasAsync(
+            response.Content,
+            cancellationToken
+        );
+
+        _logger.LogDebug("Successfully fetched {Count} image LoRAs from Ouranos ML.", result.Count);
+        return result;
+    }
+
     public async Task<List<AvailableModelDto>> GetAvailableModelsAsync(
         CancellationToken cancellationToken = default
     )

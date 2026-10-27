@@ -327,7 +327,7 @@ public sealed class EditImageToolTests
     }
 
     [Fact]
-    public async Task InvokeAsync_WhenLorasAreActive_ShouldAppendTheirTagsToTheRequestPrompt()
+    public async Task InvokeAsync_WhenLorasAreActive_ShouldSendThemAndPrependTheirTriggerPhrases()
     {
         // Arrange
         var source = await SaveImageAsync(1, [1]);
@@ -336,13 +336,15 @@ public sealed class EditImageToolTests
 
         // Act
         await tool.InvokeAsync(
-            ContextWith([source], loras: [new ImageLora("pixel-art", 0.8f)]),
+            ContextWith([source], loras: [new ImageLora("pixel-art", 0.8f, "pixel art")]),
             """{"prompt":"A fox","change":"Subtle"}""",
             CancellationToken.None
         );
 
         // Assert
-        ReceivedRequest().Prompt.ShouldBe("A fox <lora:pixel-art:0.8>");
+        var request = ReceivedRequest();
+        request.Prompt.ShouldBe("pixel art, A fox");
+        request.Loras.ShouldBe([new ImageLoraRequest("pixel-art", 0.8f)]);
     }
 
     [Fact]

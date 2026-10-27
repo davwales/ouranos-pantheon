@@ -8,5 +8,8 @@ public sealed record GetLoraResponse(
     string Name,
     string Identifier,
     float Weight,
-    bool IsPublic
+    bool IsPublic,
+    string? TriggerPhrase,
+    bool IsUnavailable,
+    bool IsIncompatible
 );

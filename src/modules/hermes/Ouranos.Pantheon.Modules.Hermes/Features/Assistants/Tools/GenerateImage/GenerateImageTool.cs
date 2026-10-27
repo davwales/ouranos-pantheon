@@ -49,10 +49,11 @@ public sealed class GenerateImageTool(
         return await DeliverAsync(
             _mlClient.StreamImageGenerationAsync(
                 new GenerateImageRequest(
-                    WithLoras(prompt, context.ImageLoras),
+                    WithTriggerPhrases(prompt, context.ImageLoras),
                     size.Width,
                     size.Height,
-                    Options.Model
+                    Options.Model,
+                    ToLoraRequests(context.ImageLoras)
                 ),
                 cancellationToken
             ),

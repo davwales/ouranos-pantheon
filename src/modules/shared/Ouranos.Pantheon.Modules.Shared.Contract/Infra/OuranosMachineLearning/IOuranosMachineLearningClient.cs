@@ -52,6 +52,10 @@ public interface IOuranosMachineLearningClient
         CancellationToken cancellationToken = default
     );
 
+    Task<ImageModelsDto> GetImageModelsAsync(CancellationToken cancellationToken = default);
+
+    Task<List<ImageLoraDto>> GetImageLorasAsync(CancellationToken cancellationToken = default);
+
     Task<List<AvailableModelDto>> GetAvailableModelsAsync(
         CancellationToken cancellationToken = default
     );

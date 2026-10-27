@@ -9,6 +9,7 @@ using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Loras;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application;
 using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
@@ -77,11 +78,11 @@ public sealed class CreateConversationHandler
                 .ToListAsync(cancellationToken)
             : [];
 
-        var loras = command.LoraIds is { Length: > 0 }
-            ? await _dbContext
-                .Loras.Where(l => command.LoraIds.Contains(l.Id))
-                .ToListAsync(cancellationToken)
-            : [];
+        var loras = await LoraValidation.LoadByIdsAsync(
+            _dbContext,
+            command.LoraIds,
+            cancellationToken
+        );
 
         var folder = await FolderValidation.ValidateFolderExistsAsync(
             _dbContext,

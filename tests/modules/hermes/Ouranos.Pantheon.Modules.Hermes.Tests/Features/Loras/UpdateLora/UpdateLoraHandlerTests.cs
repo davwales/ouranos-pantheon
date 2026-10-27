@@ -4,6 +4,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Loras.UpdateLora;
 using Ouranos.Pantheon.Modules.Hermes.Features.Loras.UpdateLora.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Loras;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
@@ -91,5 +92,40 @@ public sealed class UpdateLoraHandlerTests
 
         // Assert
         await handle.ShouldThrowAsync<OperationCanceledException>();
+    }
+
+    [Fact]
+    public async Task Handle_WhenAnotherConfigHasTheIdentifier_ShouldThrowConflictException()
+    {
+        // Arrange
+        var lora = Lora.Create(new Id<Lora>(Guid.NewGuid().ToString()), "Detail", "add-detail");
+        var other = Lora.Create(new Id<Lora>(Guid.NewGuid().ToString()), "Pixel", "pixel-art");
+        await _dbContext.SeedData(lora, other);
+
+        // Act & Assert
+        await Should.ThrowAsync<ConflictException>(() =>
+            _handler.Handle(
+                new UpdateLoraInput(lora.Id, "Detail", "pixel-art"),
+                CancellationToken.None
+            )
+        );
+    }
+
+    [Fact]
+    public async Task Handle_WhenTriggerPhraseIsGiven_ShouldSaveIt()
+    {
+        // Arrange
+        var lora = Lora.Create(new Id<Lora>(Guid.NewGuid().ToString()), "Detail", "add-detail");
+        await _dbContext.SeedData(lora);
+
+        // Act
+        await _handler.Handle(
+            new UpdateLoraInput(lora.Id, "Detail", "add-detail", TriggerPhrase: "detailed"),
+            CancellationToken.None
+        );
+
+        // Assert
+        var updated = await _dbContext.Loras.FindAsync(lora.Id);
+        updated.ShouldNotBeNull().TriggerPhrase.ShouldBe("detailed");
     }
 }

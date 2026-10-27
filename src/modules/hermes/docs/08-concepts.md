@@ -113,18 +113,27 @@ image URL cannot make the page load third-party content.
 
 ## 8.5 Image LoRAs
 
-OuranosMl cannot list the LoRAs SwarmUI has installed, so users register them by hand
-(`/api/hermes/loras`): a display name, the SwarmUI identifier, a default weight between -2 and
-2, and the public flag. The conversation settings list the registered LoRAs whenever the
-active tool set enables `generate_image` or `edit_image`; the ones the user switches on are saved with the
-conversation (`conversation_lora`) and sent with every completion request, the same way
-traits are.
+**Catalogue.** `SyncLorasJob` mirrors OuranosMl's `GET /images/loras` into `available_loras`
+every hour: id, title, compat class, default weight, trigger phrase and usage hint. It also reads
+`GET /images/models` and marks each LoRA compatible unless its compat class differs from the
+configured image model's (`ImageGeneration:Model`, else OuranosMl's default); an unknown class on
+either side counts as compatible. An empty list or a failed call leaves the catalogue as it was,
+because that is likelier a restarting image server than every LoRA being removed.
 
-The completion handler puts the active LoRAs on the tool context (`IConversationScope.ImageLoras`),
-and both image tools append `<lora:identifier:weight>` for each one to the prompt they send to
-OuranosMl, which passes it to SwarmUI unchanged. The chat model never sees the LoRAs: the
-tags are added after the prompt is capped at `MaxPromptLength`, so they are never cut, and the
-stored prompt and alt text keep the model's own wording. Hermes does not check identifiers
-against SwarmUI or match a LoRA to the configured image model's base; registering the right
-one is the user's responsibility.
+**Configs.** A LoRA config (`/api/hermes/loras`) picks one catalogue LoRA (at most one config each,
+409 otherwise) and adds a display name, a weight between -2 and 2, an editable trigger phrase and
+the public flag; the form prefills them from the catalogue. Configs are never deleted by the
+sync: reads join the catalogue on the identifier and report `isUnavailable` (no longer listed)
+and `isIncompatible`. The conversation settings list the configs whenever the active tool set
+enables `generate_image` or `edit_image`, with the same badges; an unavailable one can only be
+switched off. The active ones are saved with the conversation (`conversation_lora`), and the
+completion request sends their ids.
+
+**Generation.** The completion handler loads the active configs, skips unavailable ones (OuranosMl
+rejects unknown LoRAs, which would fail the whole image) and puts the rest on the tool context
+(`IConversationScope.ImageLoras`). Both image tools send them in OuranosMl's typed `loras` field
+and prepend each trigger phrase the prompt doesn't already contain. The chat model never sees the
+LoRAs: phrases are added after the prompt is capped at `MaxPromptLength`, and the stored prompt
+and alt text keep the model's own wording, so "more like this" doesn't repeat them. An
+incompatible LoRA is still sent if the user switched it on; OuranosMl only logs a warning.
 

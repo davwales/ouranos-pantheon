@@ -51,12 +51,7 @@ http:
           "traits": [],
           "reasoningEffort": "Medium",
           "toolSetId": "{{TOOL_SET_ID}}",
-          "loras": [
-            {
-              "identifier": "add-detail-xl",
-              "weight": 0.8
-            }
-          ]
+          "loraIds": ["{{LORA_ID}}"]
         }
       }
   auth: inherit

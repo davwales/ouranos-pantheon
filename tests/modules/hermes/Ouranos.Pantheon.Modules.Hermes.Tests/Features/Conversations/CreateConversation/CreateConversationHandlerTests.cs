@@ -644,4 +644,23 @@ public sealed class CreateConversationHandlerTests
         await handle.ShouldThrowAsync<NotFoundException>();
         _dbContext.Conversations.ShouldBeEmpty();
     }
+
+    [Fact]
+    public async Task Handle_WhenALoraIdIsUnknown_ShouldThrowNotFoundException()
+    {
+        // Arrange
+        var command = new CreateConversationInput(
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [],
+            [],
+            _fixture.Create<string>(),
+            LoraIds: [new Id<Lora>(Guid.NewGuid().ToString())]
+        );
+
+        // Act & Assert
+        await Should.ThrowAsync<NotFoundException>(() =>
+            _handler.Handle(command, CancellationToken.None)
+        );
+    }
 }

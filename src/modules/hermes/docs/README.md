@@ -27,14 +27,14 @@ down. Platform-wide concepts are described in the
 - Stream chat replies (reasoning, text and tool calls) and conversation compaction from
   OuranosMl over SSE
 - Generate images for the chat model through OuranosMl and serve them to the Interface
-- Keep the list of available models in sync with OuranosMl
+- Keep the lists of available models and image LoRAs in sync with OuranosMl
 - Limit reads to public entities while public mode is on
 
 ## Context
 
 | Neighbour | Channel | Purpose | Code entry point |
 |-----------|---------|---------|------------------|
-| OuranosMl | Outbound HTTP (OpenAI-compatible Responses, model list, streamed `/images/generations`) | Chat, compaction, conversation naming, model sync, image generation | `Features/Conversations/`, `Features/Models/`, `Features/Assistants/Tools/GenerateImage/` |
+| OuranosMl | Outbound HTTP (OpenAI-compatible Responses, model list, streamed `/images/generations` and `/images/edits`, `/images/loras`, `/images/models`) | Chat, compaction, conversation naming, model and LoRA sync, image generation and editing | `Features/Conversations/`, `Features/Models/`, `Features/Loras/`, `Features/Assistants/Tools/` |
 | Flagsmith | Outbound HTTP (via the Shared module's client) | `hermes.public_mode` flag | Read handlers |
 | Interface | Inbound REST + SSE | Hermes pages under `src/apps/interface/src/app/hermes/` | Every `*Endpoint.cs` |
 
@@ -54,6 +54,7 @@ shared kernel.
 | Job | Schedule | Purpose |
 |-----|----------|---------|
 | `SyncModelsJob` | hourly | Sync available LLM models from OuranosMl |
+| `SyncLorasJob` | hourly | Sync the image server's LoRAs into the available-LoRA catalogue; keeps it when OuranosMl lists none |
 | `PurgeImagesJob` | hourly (minute 15) | Delete generated images no saved conversation references once older than the unsaved retention |
 
 ## Persistence
@@ -62,7 +63,8 @@ Schema `hermes` (EF Core, `HermesDbContext`), plain relational. Assistant replie
 ordered parts in `message_parts`, one table for every part kind (table-per-hierarchy on
 `kind`). Generated images are stored as `bytea` in `generated_images` and served by
 `GET /api/hermes/images/{imageId}`, and an edited image keeps its source in `source_image_id`; see [8.4](08-concepts.md#84-generated-images) for their
-lifetime. User-registered LoRAs live in `loras` and attach to conversations through the
+lifetime. The synced LoRA catalogue lives in `available_loras`; LoRA configs live in `loras`
+(matched to the catalogue by `identifier`) and attach to conversations through the
 `conversation_lora` join table, like traits. Tool sets live in `tool_sets`, with their enabled
 tools in `tool_set_tools` (unique per set on source and name). `PUT /api/hermes/conversations/{id}` sets every
 metadata field exactly (a `null` `folderId` means the root folder) but replaces the messages only
@@ -77,7 +79,8 @@ conversation history sent for compaction. Conversation naming is off unless both
 and the model are set.
 
 `Ouranos:Hermes:ImageGeneration` (`HermesImageGenerationOptions`): `IsEnabled` (default
-true), `Model` (null uses OuranosMl's default image model), `UnsavedRetention` (default
+true; off also skips the LoRA sync), `Model` (null uses OuranosMl's default image model; LoRA
+compatibility is judged against it), `UnsavedRetention` (default
 24 hours), `MaxPromptLength` (default 1000) and `SquareSize`, `PortraitSize` and
 `LandscapeSize` (`Width`/`Height` per orientation; defaults 1024x1024, 832x1216 and
 1216x832, which suit SDXL- and Flux-class models). `EditStrengths` sets the img2img

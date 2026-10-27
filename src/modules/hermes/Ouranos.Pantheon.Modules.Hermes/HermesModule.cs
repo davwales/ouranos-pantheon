@@ -23,6 +23,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Images.GetImageDetails;
 using Ouranos.Pantheon.Modules.Hermes.Features.Loras.CreateLora;
 using Ouranos.Pantheon.Modules.Hermes.Features.Loras.DeleteLora;
 using Ouranos.Pantheon.Modules.Hermes.Features.Loras.GetAllLoras;
+using Ouranos.Pantheon.Modules.Hermes.Features.Loras.GetAvailableLoras;
 using Ouranos.Pantheon.Modules.Hermes.Features.Loras.GetLora;
 using Ouranos.Pantheon.Modules.Hermes.Features.Loras.UpdateLora;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.CreateModel;
@@ -127,6 +128,7 @@ public sealed class HermesModule : IPantheonModule
         DeleteTraitEndpoint.Map(app);
 
         GetAllLorasEndpoint.Map(app);
+        GetAvailableLorasEndpoint.Map(app);
         GetLoraEndpoint.Map(app);
         CreateLoraEndpoint.Map(app);
         UpdateLoraEndpoint.Map(app);

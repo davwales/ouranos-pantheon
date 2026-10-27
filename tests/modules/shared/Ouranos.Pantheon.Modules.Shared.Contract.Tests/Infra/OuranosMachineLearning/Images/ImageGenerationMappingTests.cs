@@ -55,6 +55,43 @@ public sealed class ImageGenerationMappingTests
         body.AsObject().ContainsKey("size").ShouldBeFalse();
     }
 
+    [Fact]
+    public async Task ToContent_WhenLorasAreGiven_ShouldSendThemTyped()
+    {
+        // Act
+        using var content = ImageGenerationMapping.ToContent(
+            new GenerateImageRequest(
+                "A fox",
+                832,
+                1216,
+                Loras: [new ImageLoraRequest("detail", 0.8f)]
+            )
+        );
+
+        // Assert
+        var body = JsonNode.Parse(await content.ReadAsStringAsync()).ShouldNotBeNull();
+        var lora = body["loras"]
+            .ShouldNotBeNull()
+            .AsArray()
+            .ShouldHaveSingleItem()
+            .ShouldNotBeNull();
+        lora["name"]!.GetValue<string>().ShouldBe("detail");
+        lora["weight"]!.GetValue<float>().ShouldBe(0.8f);
+    }
+
+    [Fact]
+    public async Task ToContent_WhenEditingWithoutLoras_ShouldSendAnEmptyList()
+    {
+        // Act
+        using var content = ImageGenerationMapping.ToContent(
+            new EditImageRequest("A fox", [1], 0.3f)
+        );
+
+        // Assert
+        var body = JsonNode.Parse(await content.ReadAsStringAsync()).ShouldNotBeNull();
+        body["loras"].ShouldNotBeNull().AsArray().ShouldBeEmpty();
+    }
+
     [Theory]
     [InlineData("png", "image/png")]
     [InlineData("JPG", "image/jpeg")]

@@ -8,5 +8,6 @@ public sealed record EditImageRequest(
     string Prompt,
     byte[] Image,
     float Strength,
-    string? Model = null
+    string? Model = null,
+    IReadOnlyList<ImageLoraRequest>? Loras = null
 );

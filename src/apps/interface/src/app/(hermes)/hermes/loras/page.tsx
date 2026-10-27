@@ -1,5 +1,6 @@
 "use client";
 
+import { LoraStatusBadge } from "@/app/(hermes)/hermes/components/lora-status-badge";
 import { InfoCard } from "@/components/shared/info-card";
 import { InfoCardGridSkeleton } from "@/components/shared/skeletons/info-card-skeleton";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,9 @@ export default function LorasPage() {
                 label={lora.name}
                 description={`${lora.identifier} · weight ${lora.weight}`}
                 className="hover:bg-accent h-full w-full"
-              />
+              >
+                <LoraStatusBadge lora={lora} className="mt-1" />
+              </InfoCard>
             </Link>
           ))}
         </div>

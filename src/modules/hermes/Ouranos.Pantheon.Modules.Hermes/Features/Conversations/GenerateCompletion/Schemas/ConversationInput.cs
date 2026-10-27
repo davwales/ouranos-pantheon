@@ -1,3 +1,4 @@
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Loras;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
@@ -10,6 +11,6 @@ public sealed record ConversationInput(
     List<CompletionMessageInput> Messages,
     List<TraitInput>? Traits = null,
     ReasoningEffort? ReasoningEffort = null,
-    List<LoraInput>? Loras = null,
+    List<Id<Lora>>? LoraIds = null,
     Id<ToolSet>? ToolSetId = null
 );

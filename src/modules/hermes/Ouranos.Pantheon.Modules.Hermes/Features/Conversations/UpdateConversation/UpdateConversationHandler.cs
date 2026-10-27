@@ -6,6 +6,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.UpdateConversation.
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Loras;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
@@ -63,11 +64,11 @@ public sealed class UpdateConversationHandler
             .Traits.Where(t => command.TraitIds.Contains(t.Id))
             .ToListAsync(cancellationToken);
 
-        var loras = command.LoraIds is { Length: > 0 }
-            ? await _dbContext
-                .Loras.Where(l => command.LoraIds.Contains(l.Id))
-                .ToListAsync(cancellationToken)
-            : [];
+        var loras = await LoraValidation.LoadByIdsAsync(
+            _dbContext,
+            command.LoraIds,
+            cancellationToken
+        );
 
         await ToolSetValidation.ValidateToolSetExistsAsync(
             _dbContext,

@@ -2,7 +2,11 @@ using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Hermes.Features.Loras.CreateLora;
 using Ouranos.Pantheon.Modules.Hermes.Features.Loras.CreateLora.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Loras;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
+using Ouranos.Pantheon.Tests.Utils.Extensions;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Tests.Features.Loras.CreateLora;
@@ -54,5 +58,33 @@ public sealed class CreateLoraHandlerTests
 
         // Assert
         await handle.ShouldThrowAsync<OperationCanceledException>();
+    }
+
+    [Fact]
+    public async Task Handle_WhenTriggerPhraseIsGiven_ShouldSaveIt()
+    {
+        // Arrange
+        var command = new CreateLoraInput("Detail", "add-detail", TriggerPhrase: "detailed");
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var savedLora = await _dbContext.Loras.FindAsync(result.LoraId);
+        savedLora.ShouldNotBeNull().TriggerPhrase.ShouldBe("detailed");
+    }
+
+    [Fact]
+    public async Task Handle_WhenTheLoraAlreadyHasAConfig_ShouldThrowConflictException()
+    {
+        // Arrange
+        await _dbContext.SeedData(
+            Lora.Create(DatabaseExtensions.CreateId<Lora>(), "Detail", "add-detail")
+        );
+
+        // Act & Assert
+        await Should.ThrowAsync<ConflictException>(() =>
+            _handler.Handle(new CreateLoraInput("Again", "add-detail"), CancellationToken.None)
+        );
     }
 }

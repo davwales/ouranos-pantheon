@@ -17,7 +17,8 @@ http:
         "name": "Detail",
         "identifier": "add-detail-xl",
         "weight": 0.8,
-        "isPublic": true
+        "isPublic": true,
+        "triggerPhrase": "highly detailed"
       }
   auth: inherit
 

@@ -24,6 +24,11 @@ public class Lora : BaseEntity<Id<Lora>>
 
     public float Weight { get; private set; }
 
+    /// <summary>
+    /// Added to the image prompt while the LoRA is active; prefilled from the synced LoRA.
+    /// </summary>
+    public string? TriggerPhrase { get; private set; }
+
     public bool IsPublic { get; private set; }
 
     public static Lora Create(
@@ -31,7 +36,8 @@ public class Lora : BaseEntity<Id<Lora>>
         string name,
         string identifier,
         float weight = DefaultWeight,
-        bool isPublic = true
+        bool isPublic = true,
+        string? triggerPhrase = null
     )
     {
         Guard.Against.NullOrWhiteSpace(name);
@@ -44,10 +50,17 @@ public class Lora : BaseEntity<Id<Lora>>
             Identifier = identifier.Trim(),
             Weight = weight,
             IsPublic = isPublic,
+            TriggerPhrase = NormalizeTriggerPhrase(triggerPhrase),
         };
     }
 
-    public void Update(string name, string identifier, float weight, bool isPublic = true)
+    public void Update(
+        string name,
+        string identifier,
+        float weight,
+        bool isPublic = true,
+        string? triggerPhrase = null
+    )
     {
         Guard.Against.NullOrWhiteSpace(name);
         Guard.Against.NullOrWhiteSpace(identifier);
@@ -57,6 +70,12 @@ public class Lora : BaseEntity<Id<Lora>>
         Identifier = identifier.Trim();
         Weight = weight;
         IsPublic = isPublic;
+        TriggerPhrase = NormalizeTriggerPhrase(triggerPhrase);
         Update();
+    }
+
+    private static string? NormalizeTriggerPhrase(string? triggerPhrase)
+    {
+        return string.IsNullOrWhiteSpace(triggerPhrase) ? null : triggerPhrase.Trim();
     }
 }
