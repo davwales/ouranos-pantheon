@@ -9,14 +9,10 @@ import { BacktestDetailSkeleton } from "@/app/(plutus)/plutus/[marketId]/strateg
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { RunBacktestDialog } from "../../../_components/run-backtest-dialog";
-import { BacktestMetricsGrid } from "../_components/backtest-metrics-grid";
-import { BacktestPositionsTable } from "../_components/backtest-positions-table";
-import { BacktestResultHeader } from "../_components/backtest-result-header";
-import { BacktestStatisticsGrid } from "../_components/backtest-statistics-grid";
 import { CancelledBacktestView } from "../_components/cancelled-backtest-view";
+import { CompletedBacktestView } from "../_components/completed-backtest-view";
 import { FailedBacktestView } from "../_components/failed-backtest-view";
 import { InProgressBacktestView } from "../_components/in-progress-backtest-view";
-import { OptimizedConfigurationCard } from "../_components/optimized-configuration-card";
 import { NotFoundCard } from "@/components/shared/not-found-card";
 
 export default function BacktestDetailPage() {
@@ -182,31 +178,16 @@ export default function BacktestDetailPage() {
       )}
 
       {backtest.status === "Completed" && results && (
-        <>
-          <BacktestResultHeader
-            backtest={backtest}
-            marketId={marketId}
-            strategy={strategy}
-            onRefresh={reexecute}
-            onRunAgain={() => setRunAgainOpen(true)}
-          />
-
-          <BacktestMetricsGrid results={results} />
-
-          <BacktestStatisticsGrid results={results} />
-
-          {results.optimizedConfiguration != null && (
-            <OptimizedConfigurationCard
-              results={results}
-              isApplying={isApplyingConfig}
-              onApplyToStrategy={strategy ? handleApplyToStrategy : undefined}
-            />
-          )}
-
-          {backtest.positions && backtest.positions.length > 0 && (
-            <BacktestPositionsTable positions={backtest.positions} />
-          )}
-        </>
+        <CompletedBacktestView
+          backtest={backtest}
+          results={results}
+          marketId={marketId}
+          strategy={strategy}
+          isApplyingConfig={isApplyingConfig}
+          onRefresh={reexecute}
+          onRunAgain={() => setRunAgainOpen(true)}
+          onApplyToStrategy={strategy ? handleApplyToStrategy : undefined}
+        />
       )}
 
       <RunBacktestDialog

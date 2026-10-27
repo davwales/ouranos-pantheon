@@ -1,7 +1,5 @@
 "use client";
 
-import { PrettyNumber } from "@/components/shared/pretty-number";
-import { ExtendedColumnDef } from "@/components/shared/responsive-data-table";
 import ResponsiveDataTable from "@/components/shared/responsive-data-table/responsive-data-table";
 import {
   extractFilter,
@@ -9,15 +7,16 @@ import {
 } from "@/components/shared/responsive-data-table/types";
 import { Typography } from "@/components/shared/typography";
 import TimeFrameSelection from "@/app/(plutus)/plutus/components/time-frame-selection";
-import { PlutusState, usePlutusStore } from "@/stores/plutus-store";
+import { type PlutusState, usePlutusStore } from "@/stores/plutus-store";
 import { Button } from "@/components/ui/button";
 import { useApi } from "@/hooks/use-api";
-import { SymbolGroup, plutusApi } from "@/lib/api/plutus";
+import { plutusApi } from "@/lib/api/plutus";
 import { Plus, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
+import { makeSymbolGroupColumns } from "./_components/symbol-group-columns";
 
 export default function GroupsPage() {
   const { marketId } = useParams<{ marketId: string }>();
@@ -65,106 +64,8 @@ export default function GroupsPage() {
       }
     : undefined;
 
-  const columns: ExtendedColumnDef<SymbolGroup>[] = useMemo(
-    () => [
-      {
-        id: "name",
-        header: "Name",
-        accessorFn: (row) => row.name,
-        cell: ({ cell, row }) => (
-          <Link
-            href={`/plutus/${marketId}/groups/${row.original.id}`}
-            className="hover:underline"
-          >
-            {cell.getValue<string>()}
-          </Link>
-        ),
-        filterConfig: {
-          type: "string",
-          operators: ["eq", "neq", "contains", "startsWith", "endsWith"],
-          searchable: true,
-        },
-      },
-      {
-        id: "symbolCount",
-        header: "Symbols",
-        accessorFn: (row) => row.symbolCount,
-        filterConfig: {
-          type: "number",
-          operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
-        },
-      },
-      {
-        id: "totalVolume",
-        header: "Total Volume",
-        accessorFn: (row) => row.totalVolume,
-        cell: ({ getValue }) => {
-          const val = getValue<number | null>();
-          return val != null ? <PrettyNumber number={val} /> : "-";
-        },
-        filterConfig: {
-          type: "number",
-          operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
-        },
-      },
-      {
-        id: "totalGain",
-        header: "Total Gain",
-        accessorFn: (row) => row.totalGain,
-        cell: ({ getValue }) => {
-          const val = getValue<number | null>();
-          return val != null ? <PrettyNumber number={val} /> : "-";
-        },
-        filterConfig: {
-          type: "number",
-          operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
-        },
-      },
-      {
-        id: "averageRoi",
-        header: "Avg ROI",
-        accessorFn: (row) => row.averageRoi,
-        cell: ({ getValue }) => {
-          const val = getValue<number | null>();
-          return val != null ? `${(val * 100).toFixed(2)}%` : "-";
-        },
-        filterConfig: {
-          type: "number",
-          operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
-        },
-      },
-      {
-        id: "averageOverallScore",
-        header: "Avg Signal",
-        accessorFn: (row) => row.averageOverallScore,
-        cell: ({ getValue }) => {
-          const val = getValue<number | null>();
-          return val != null ? val.toFixed(3) : "-";
-        },
-        filterConfig: {
-          type: "number",
-          operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
-        },
-      },
-      {
-        id: "bullishCount",
-        header: "Bullish",
-        accessorFn: (row) => row.bullishCount,
-        filterConfig: {
-          type: "number",
-          operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
-        },
-      },
-      {
-        id: "bearishCount",
-        header: "Bearish",
-        accessorFn: (row) => row.bearishCount,
-        filterConfig: {
-          type: "number",
-          operators: ["eq", "neq", "gt", "gte", "lt", "lte"],
-        },
-      },
-    ],
+  const columns = useMemo(
+    () => makeSymbolGroupColumns(marketId),
     [marketId],
   );
 

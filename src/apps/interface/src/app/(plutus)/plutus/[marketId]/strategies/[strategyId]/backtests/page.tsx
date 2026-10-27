@@ -1,30 +1,22 @@
 "use client";
 
-import { PrettyNumber } from "@/components/shared/pretty-number";
-import { ExtendedColumnDef } from "@/components/shared/responsive-data-table";
 import ResponsiveDataTable from "@/components/shared/responsive-data-table/responsive-data-table";
 import {
   extractFilter,
   extractSort,
 } from "@/components/shared/responsive-data-table/types";
 import { Typography } from "@/components/shared/typography";
-import { PlutusState, usePlutusStore } from "@/stores/plutus-store";
+import { type PlutusState, usePlutusStore } from "@/stores/plutus-store";
 import { Button } from "@/components/ui/button";
 import { useBreadcrumbLabel } from "@/components/shared/breadcrumbs";
 import { useApi } from "@/hooks/use-api";
-import {
-  BacktestKind,
-  BacktestStatus,
-  BacktestSummary,
-  StrategyDetail,
-  plutusApi,
-} from "@/lib/api/plutus";
+import { type StrategyDetail, plutusApi } from "@/lib/api/plutus";
 import { Play, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { StatusChip } from "./_components/status-chip";
+import { makeBacktestColumns } from "./_components/backtest-columns";
 
 function BacktestsActions({
   marketId,
@@ -126,108 +118,8 @@ export default function BacktestsPage() {
       }
     : undefined;
 
-  const columns: ExtendedColumnDef<BacktestSummary>[] = useMemo(
-    () => [
-      {
-        id: "status",
-        header: "Status",
-        accessorFn: (row) => row.status,
-        cell: ({ row, getValue }) => (
-          <Link
-            href={`/plutus/${marketId}/strategies/${strategyId}/backtests/${row.original.id}`}
-            className="hover:underline"
-          >
-            <StatusChip status={getValue<BacktestStatus>()} />
-          </Link>
-        ),
-      },
-      {
-        id: "kind",
-        header: "Kind",
-        accessorFn: (row) => row.kind,
-        cell: ({ row, getValue }) => {
-          const kind = getValue<BacktestKind>();
-          return (
-            <Link
-              href={`/plutus/${marketId}/strategies/${strategyId}/backtests/${row.original.id}`}
-              className="hover:underline"
-            >
-              <span
-                className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                  kind === "Optimization"
-                    ? "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400"
-                    : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400"
-                }`}
-              >
-                {kind}
-              </span>
-            </Link>
-          );
-        },
-      },
-      {
-        id: "startDate",
-        header: "Start Date",
-        accessorFn: (row) => row.startDate,
-        cell: ({ getValue }) =>
-          new Date(getValue<string>()).toLocaleDateString(),
-      },
-      {
-        id: "endDate",
-        header: "End Date",
-        accessorFn: (row) => row.endDate,
-        cell: ({ getValue }) =>
-          new Date(getValue<string>()).toLocaleDateString(),
-      },
-      {
-        id: "budget",
-        header: "Budget",
-        accessorFn: (row) => row.budget,
-        cell: ({ getValue }) => <PrettyNumber number={getValue<number>()} />,
-      },
-      {
-        id: "totalReturnPercent",
-        header: "Return %",
-        accessorFn: (row) => row.totalReturnPercent,
-        cell: ({ getValue }) => {
-          const val = getValue<number | null>();
-          if (val == null) return "-";
-          const color = val >= 0 ? "text-green-600" : "text-red-600";
-          return <span className={color}>{(val * 100).toFixed(2)}%</span>;
-        },
-      },
-      {
-        id: "winRate",
-        header: "Win Rate",
-        accessorFn: (row) => row.winRate,
-        cell: ({ getValue }) => {
-          const val = getValue<number | null>();
-          return val != null ? `${(val * 100).toFixed(1)}%` : "-";
-        },
-      },
-      {
-        id: "sharpeRatio",
-        header: "Sharpe",
-        accessorFn: (row) => row.sharpeRatio,
-        cell: ({ getValue }) => {
-          const val = getValue<number | null>();
-          return val != null ? val.toFixed(2) : "-";
-        },
-      },
-      {
-        id: "totalTrades",
-        header: "Trades",
-        accessorFn: (row) => row.totalTrades,
-        cell: ({ getValue }) => getValue<number | null>() ?? "-",
-      },
-      {
-        id: "createdAt",
-        header: "Created",
-        accessorFn: (row) => row.createdAt,
-        cell: ({ getValue }) =>
-          new Date(getValue<string>()).toLocaleDateString(),
-      },
-    ],
+  const columns = useMemo(
+    () => makeBacktestColumns(marketId, strategyId),
     [marketId, strategyId],
   );
 
