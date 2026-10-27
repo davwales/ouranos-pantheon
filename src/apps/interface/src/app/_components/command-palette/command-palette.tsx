@@ -10,6 +10,9 @@ import {
   CommandList,
   CommandLoading,
 } from "@/components/ui/command";
+import { useKeyboardInset } from "@/hooks/use-keyboard-inset";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -25,6 +28,9 @@ export function CommandPalette() {
   const [isActivated, setIsActivated] = useState(false);
   const [query, setQuery] = useState("");
   const { groups, isSearching } = useCommandPaletteData(isActivated, query);
+  const isMobile = useIsMobile();
+  const keyboardInset = useKeyboardInset(isMobile && open);
+  const visibleHeight = keyboardInset ? `${keyboardInset.height}px` : "100dvh";
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next);
@@ -65,15 +71,26 @@ export function CommandPalette() {
         onOpenChange={handleOpenChange}
         title="Command Palette"
         description="Search markets, symbols, strategies, recipes and conversations, or run an action."
-        showCloseButton={false}
+        // On phones the on-screen keyboard covers the lower half of the screen, so the palette is
+        // pinned to the top and sized to the visible area, keeping the whole list scrollable.
+        className={cn(isMobile && "top-2 flex translate-y-0 flex-col")}
+        style={
+          isMobile ? { maxHeight: `calc(${visibleHeight} - 1rem)` } : undefined
+        }
+        showCloseButton={isMobile}
       >
-        <Command shouldFilter={false}>
+        <Command shouldFilter={false} className={cn(isMobile && "min-h-0")}>
           <CommandInput
             value={query}
             onValueChange={setQuery}
             placeholder="Search markets, symbols, recipes, chats…"
+            className={cn(isMobile && "pr-6")}
           />
-          <CommandList>
+          <CommandList
+            className={cn(
+              isMobile && "max-h-none min-h-0 flex-1 overscroll-contain",
+            )}
+          >
             {isSearching && <CommandLoading>Searching…</CommandLoading>}
             {!isSearching && <CommandEmpty>No results found.</CommandEmpty>}
             {groups.map((group) => (

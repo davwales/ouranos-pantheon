@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CommandPalette } from "./command-palette";
 
 const push = vi.hoisted(() => vi.fn());
@@ -100,5 +100,43 @@ describe("CommandPalette", () => {
       take: 5,
     });
     expect(push).toHaveBeenCalledWith("/plutus/m1/s1");
+  });
+
+  describe("on a phone", () => {
+    const desktopWidth = window.innerWidth;
+
+    beforeEach(() => {
+      window.innerWidth = 390;
+    });
+
+    afterEach(() => {
+      window.innerWidth = desktopWidth;
+    });
+
+    it("pins the palette to the top and closes from its close button", async () => {
+      render(<CommandPalette />);
+      pressShortcut();
+
+      const dialog = await screen.findByRole("dialog");
+      expect(dialog).toHaveClass("top-2", "translate-y-0");
+      expect(dialog.style.maxHeight).toBe("calc(100dvh - 1rem)");
+
+      fireEvent.click(screen.getByRole("button", { name: "Close" }));
+
+      await waitFor(() =>
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+      );
+    });
+  });
+
+  it("stays centred without a close button on a wide screen", async () => {
+    render(<CommandPalette />);
+    pressShortcut();
+
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog).not.toHaveClass("top-2");
+    expect(
+      screen.queryByRole("button", { name: "Close" }),
+    ).not.toBeInTheDocument();
   });
 });
