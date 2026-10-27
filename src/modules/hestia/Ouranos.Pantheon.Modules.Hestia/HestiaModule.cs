@@ -41,6 +41,8 @@ namespace Ouranos.Pantheon.Modules.Hestia;
 
 public sealed class HestiaModule : IPantheonModule
 {
+    private const string SchemaName = "hestia";
+
     public IHostApplicationBuilder Build(IHostApplicationBuilder builder)
     {
         builder
@@ -53,14 +55,9 @@ public sealed class HestiaModule : IPantheonModule
             .AddAssistantTool<KitchenAssistantContext, RemoveIngredientTool>()
             .AddAssistantTool<KitchenAssistantContext, UpdateStepTool>();
 
-        builder
-            .Services.AddCorePostgresModule<HestiaDbContext>(
+        builder.Services.AddCoreMartenModule<IHestiaMartenStore>(
                 builder.Configuration,
-                typeof(HestiaModule).Assembly
-            )
-            .AddCoreMartenModule<IHestiaMartenStore>(
-                builder.Configuration,
-                HestiaDbContext.SchemaName,
+                SchemaName,
                 options =>
                 {
                     options.Projections.Snapshot<Recipe>(SnapshotLifecycle.Inline);
@@ -86,10 +83,9 @@ public sealed class HestiaModule : IPantheonModule
         return builder;
     }
 
-    public async Task<IHost> Configure(IHost host)
+    public Task<IHost> Configure(IHost host)
     {
-        await host.Services.ApplyCorePostgresMigrations<HestiaDbContext>();
-        return host;
+        return Task.FromResult(host);
     }
 
     public void MapEndpoints(WebApplication app)
