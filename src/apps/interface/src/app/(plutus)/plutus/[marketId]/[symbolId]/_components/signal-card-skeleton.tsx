@@ -38,11 +38,11 @@ export function SignalCardSkeleton({ className }: SignalCardSkeletonProps) {
   );
 }
 
-type SignalsSectionSkeletonProps = {
+type SymbolSignalsViewSkeletonProps = {
   className?: string;
 };
 
-export function SignalsSectionSkeleton({ className }: SignalsSectionSkeletonProps) {
+export function SymbolSignalsViewSkeleton({ className }: SymbolSignalsViewSkeletonProps) {
   return (
     <div className={cn("mt-8", className)} aria-hidden="true">
       <Skeleton className="h-8 w-24 border-b pb-2" />

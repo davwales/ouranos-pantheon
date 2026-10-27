@@ -41,7 +41,7 @@ export function TickerQHealthDetail({ data }: { data: Record<string, unknown> })
     >
       {presentKeys.map((key, index) => (
         <span key={key} className="flex items-center gap-2">
-          {index > 0 && <span className="text-muted-foreground" aria-hidden="true">&middot;</span>}
+          {index > 0 && <span className="text-muted-foreground" aria-hidden="true">·</span>}
           <Typography variant="small" className={KEY_COLORS[key]}>
             {tickerData[key]} {KEY_LABELS[key]}
           </Typography>

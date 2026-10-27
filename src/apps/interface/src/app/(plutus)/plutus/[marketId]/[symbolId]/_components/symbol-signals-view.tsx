@@ -6,7 +6,7 @@ import { useApi } from "@/hooks/use-api";
 import { GetSymbolSignalHistoryResponse, plutusApi } from "@/lib/api/plutus";
 import { useState } from "react";
 import { SignalCard } from "./signal-card";
-import { SignalsSectionSkeleton } from "@/app/(plutus)/plutus/[marketId]/[symbolId]/_components/signal-card-skeleton";
+import { SymbolSignalsViewSkeleton } from "@/app/(plutus)/plutus/[marketId]/[symbolId]/_components/signal-card-skeleton";
 
 const INTENTS = ["All", "Buy", "Sell", "Flip", "Merch"] as const;
 type IntentFilter = (typeof INTENTS)[number];
@@ -32,7 +32,7 @@ function SummaryBar({ value }: { value: number }) {
   );
 }
 
-function SignalSummarySection({
+function SignalSummaryCard({
   data,
 }: {
   data: GetSymbolSignalHistoryResponse["summary"];
@@ -92,7 +92,7 @@ function SignalSummarySection({
   );
 }
 
-export function SignalsSection({ symbolId }: { symbolId: string }) {
+export function SymbolSignalsView({ symbolId }: { symbolId: string }) {
   const [intent, setIntent] = useState<IntentFilter>("All");
 
   const [state] = useApi<GetSymbolSignalHistoryResponse>(
@@ -107,14 +107,14 @@ export function SignalsSection({ symbolId }: { symbolId: string }) {
   const data = state.data;
 
   if (state.status === "loading" && !data) {
-    return <SignalsSectionSkeleton />;
+    return <SymbolSignalsViewSkeleton />;
   }
 
   return (
     <div className="mt-8">
       <Typography variant="h2">Signals</Typography>
 
-      {data?.summary && <SignalSummarySection data={data.summary} />}
+      {data?.summary && <SignalSummaryCard data={data.summary} />}
 
       <div className="flex gap-2 mt-4 flex-wrap">
         {INTENTS.map((i) => (

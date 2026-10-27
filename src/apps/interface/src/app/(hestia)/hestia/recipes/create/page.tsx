@@ -1,5 +1,3 @@
-"use client";
-
 import { Typography } from "@/components/shared/typography";
 import { RecipeForm } from "../_components/recipe-form";
 

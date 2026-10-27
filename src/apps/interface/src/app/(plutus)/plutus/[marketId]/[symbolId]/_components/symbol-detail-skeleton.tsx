@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChartSkeleton } from "@/components/shared/skeletons/chart-skeleton";
-import { SignalsSectionSkeleton } from "./signal-card-skeleton";
+import { SymbolSignalsViewSkeleton } from "./signal-card-skeleton";
 import { ForecastEfficacySkeleton } from "./forecast-efficacy-skeleton";
 import { DataTableSkeleton } from "@/components/shared/skeletons/data-table-skeleton";
 
@@ -34,7 +34,7 @@ export function SymbolDetailSkeleton({ className }: SymbolDetailSkeletonProps) {
       </div>
       <ChartSkeleton className="mt-8" legendCount={4} />
       <ChartSkeleton className="mt-4" legendCount={2} />
-      <SignalsSectionSkeleton />
+      <SymbolSignalsViewSkeleton />
       <ForecastEfficacySkeleton />
 
       {/* Open Positions */}

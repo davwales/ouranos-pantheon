@@ -11,7 +11,7 @@ export default function RootNotFound() {
           <FileQuestion className="h-10 w-10 text-muted-foreground" />
           <h2 className="text-lg font-semibold">Page not found</h2>
           <p className="text-sm text-muted-foreground">
-            The page you&apos;re looking for doesn&apos;t exist or has been moved.
+            The page you’re looking for doesn’t exist or has been moved.
           </p>
           <Button asChild variant="outline">
             <Link href="/">Go home</Link>
