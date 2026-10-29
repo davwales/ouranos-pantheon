@@ -12,20 +12,17 @@ import { useShallow } from "zustand/react/shallow";
 import { RecipeForm } from "../_components/recipe-form";
 import { type RecipeSymbol } from "../types";
 import { NotFoundCard } from "@/components/shared/not-found-card";
-import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
-import { hasChanges } from "@/lib/has-changes";
+import { useSyncedDraft, withRefreshedRows } from "@/hooks/use-synced-draft";
 import { RecipeDetailHeader } from "./_components/recipe-detail-header";
 import { RecipeDetailSkeleton } from "./_components/recipe-detail-skeleton";
+
+const keepQuantity = (row: RecipeSymbol) => ({ quantity: row.quantity });
 
 export default function RecipeDetailPage() {
   const { marketId, recipeId } = useParams<{
     marketId: string;
     recipeId: string;
   }>();
-  const [name, setName] = useState("");
-  const [cost, setCost] = useState(0);
-  const [inputs, setInputs] = useState<RecipeSymbol[]>([]);
-  const [outputs, setOutputs] = useState<RecipeSymbol[]>([]);
   const [selectedSymbols, setSelectedSymbols] = useState<SelectedSymbol[]>([]);
   const [isInputDialogOpen, setIsInputDialogOpen] = useState(false);
   const [isOutputDialogOpen, setIsOutputDialogOpen] = useState(false);
@@ -45,28 +42,34 @@ export default function RecipeDetailPage() {
   const recipe = state.data;
   useBreadcrumbLabel(recipeId, recipe?.name, state.status === "error");
 
-  const editable = { name, cost, inputs, outputs };
-  const [savedRecipe, setSavedRecipe] = useState<typeof editable>();
-  useUnsavedChangesGuard(
-    savedRecipe !== undefined && hasChanges(editable, savedRecipe),
+  const { draft, setDraft, markSaved } = useSyncedDraft(
+    recipe,
+    (fetched) => ({
+      name: fetched.name,
+      cost: fetched.cost,
+      inputs: fetched.inputs,
+      outputs: fetched.outputs,
+    }),
+    (current, fetched) => ({
+      ...current,
+      inputs: withRefreshedRows(current.inputs, fetched.inputs, keepQuantity),
+      outputs: withRefreshedRows(
+        current.outputs,
+        fetched.outputs,
+        keepQuantity,
+      ),
+    }),
+    { name: "", cost: 0, inputs: [] as RecipeSymbol[], outputs: [] as RecipeSymbol[] },
   );
-
-  const [syncedRecipe, setSyncedRecipe] = useState(recipe);
-  if (recipe !== syncedRecipe) {
-    setSyncedRecipe(recipe);
-    if (recipe) {
-      setName(recipe.name);
-      setCost(recipe.cost);
-      setInputs(recipe.inputs);
-      setOutputs(recipe.outputs);
-      setSavedRecipe({
-        name: recipe.name,
-        cost: recipe.cost,
-        inputs: recipe.inputs,
-        outputs: recipe.outputs,
-      });
-    }
-  }
+  const { name, cost, inputs, outputs } = draft;
+  const setName = (value: string) =>
+    setDraft((prev) => ({ ...prev, name: value }));
+  const setCost = (value: number) =>
+    setDraft((prev) => ({ ...prev, cost: value }));
+  const setInputs = (value: RecipeSymbol[]) =>
+    setDraft((prev) => ({ ...prev, inputs: value }));
+  const setOutputs = (value: RecipeSymbol[]) =>
+    setDraft((prev) => ({ ...prev, outputs: value }));
 
   const handleDelete = async () => {
     setIsProcessing(true);
@@ -99,7 +102,7 @@ export default function RecipeDetailPage() {
           quantity: output.quantity,
         })),
       });
-      setSavedRecipe(editable);
+      markSaved();
     } catch (error) {
       console.error("Failed to save recipe:", error);
     } finally {
