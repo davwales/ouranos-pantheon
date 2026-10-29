@@ -260,6 +260,54 @@ public sealed class ForecastGeneratorJobTests
         _dbContext.ForecastRecords.Count().ShouldBe(0);
     }
 
+    [Fact]
+    public async Task Execute_WhenDayHasOnlyZeroVolumeTrades_ShouldUsePlainAveragePrice()
+    {
+        // Arrange
+        var market = CreateMarket(isForecastingEnabled: true);
+        var symbol = CreateSymbol(market.Id);
+        var trades = CreateTrades(symbol.Id);
+        var zeroVolumeDay = trades[^1].Timestamp;
+        trades[^1] = Trade.Create(
+            new Id<Trade>(Guid.NewGuid().ToString()),
+            symbol.Id,
+            100m,
+            0m,
+            zeroVolumeDay
+        );
+        var secondZeroVolumeTrade = Trade.Create(
+            new Id<Trade>(Guid.NewGuid().ToString()),
+            symbol.Id,
+            200m,
+            0m,
+            zeroVolumeDay.AddHours(1)
+        );
+
+        await _dbContext.SeedData(market);
+        await _dbContext.SeedData(symbol);
+        await _dbContext.SeedData([.. trades, secondZeroVolumeTrade]);
+
+        var mlPredictions = CreateMlPredictions(count: 7);
+        _mlClient
+            .ForecastAsync(Arg.Any<ForecastModelRequest>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new List<List<MlForecastPoint>> { mlPredictions }));
+
+        // Act
+        await _job.Execute(_tickerFunctionContext, CancellationToken.None);
+
+        // Assert
+        await _mlClient
+            .Received(1)
+            .ForecastAsync(
+                Arg.Is<ForecastModelRequest>(r =>
+                    r.Points.Count == 1
+                    && r.Points[0][r.Points[0].Count - 1].AveragePrice == 150m
+                    && r.Points[0][r.Points[0].Count - 1].Volume == 0m
+                ),
+                Arg.Any<CancellationToken>()
+            );
+    }
+
     private static Market CreateMarket(bool isForecastingEnabled)
     {
         return Market.Create(

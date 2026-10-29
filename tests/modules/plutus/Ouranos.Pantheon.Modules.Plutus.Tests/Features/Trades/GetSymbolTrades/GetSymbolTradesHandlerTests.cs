@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetSymbolTrades;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetSymbolTrades.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Database.Functions;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
@@ -16,7 +17,7 @@ namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Trades.GetSymbolTrades;
 public sealed class GetSymbolTradesHandlerTests
 {
     private readonly IFixture _fixture = new Fixture();
-    private readonly GetSymbolTradesHandler _handler;
+    private readonly TestableGetSymbolTradesHandler _handler;
     private readonly ILogger<GetSymbolTradesHandler> _logger = Substitute.For<
         ILogger<GetSymbolTradesHandler>
     >();
@@ -27,7 +28,7 @@ public sealed class GetSymbolTradesHandlerTests
         _fixture.Customize(new IdCustomization());
 
         _dbContext = DbContextExtensions.Mock<PlutusDbContext>();
-        _handler = new GetSymbolTradesHandler(_logger, _dbContext);
+        _handler = new TestableGetSymbolTradesHandler(_logger, _dbContext);
     }
 
     [Fact]
@@ -294,7 +295,47 @@ public sealed class GetSymbolTradesHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenDatabaseDoesNotSupportRawSql_ShouldReturnBucketsWithDefaultOpenClose()
+    public async Task Handle_WhenOpenCloseAvailable_ShouldApplyThemToMatchingBuckets()
+    {
+        // Arrange
+        var (symbol, trades) = await SeedTwoBucketTrades();
+        _handler.OpenClose = interval =>
+        {
+            var bucketStart = TimescaleDbFunctions.TimeBucket(interval, trades[0].Timestamp);
+            return new() { [bucketStart] = new BucketOpenClose(bucketStart, 91m, 99m) };
+        };
+
+        var query = new GetSymbolTradesInput(symbol.Id, TimeFrame.AllTime, NumBuckets: 10);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Trades.Count.ShouldBe(2);
+        result.Trades[0].OpenPrice.ShouldBe(91m);
+        result.Trades[0].ClosePrice.ShouldBe(99m);
+        result.Trades[1].OpenPrice.ShouldBe(0m);
+        result.Trades[1].ClosePrice.ShouldBe(0m);
+    }
+
+    [Fact]
+    public async Task Handle_WhenOpenCloseQueryFails_ShouldPropagateException()
+    {
+        // Arrange
+        var (symbol, _) = await SeedTwoBucketTrades();
+        _handler.OpenClose = _ => throw new InvalidOperationException("query failed");
+
+        var query = new GetSymbolTradesInput(symbol.Id, TimeFrame.AllTime, NumBuckets: 10);
+
+        // Act
+        var get = async () => await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        await get.ShouldThrowAsync<InvalidOperationException>();
+    }
+
+    [Fact]
+    public async Task Handle_WhenBucketHasOnlyZeroVolumeTrades_ShouldUsePlainAveragePrice()
     {
         // Arrange
         var market = Market.Create(
@@ -311,25 +352,32 @@ public sealed class GetSymbolTradesHandlerTests
             new AdditionalFields()
         );
 
-        var now = DateTimeOffset.UtcNow;
+        var start = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
         var trade1 = Trade.Create(
             new Id<Trade>(Guid.NewGuid().ToString()),
             symbol.Id,
             90m,
-            5m,
-            now.AddHours(-2)
+            0m,
+            start
         );
         var trade2 = Trade.Create(
             new Id<Trade>(Guid.NewGuid().ToString()),
             symbol.Id,
             110m,
-            3m,
-            now
+            0m,
+            start.AddSeconds(1)
+        );
+        var trade3 = Trade.Create(
+            new Id<Trade>(Guid.NewGuid().ToString()),
+            symbol.Id,
+            200m,
+            4m,
+            start.AddHours(2)
         );
 
         await _dbContext.SeedData(market);
         await _dbContext.SeedData(symbol);
-        await _dbContext.SeedData(trade1, trade2);
+        await _dbContext.SeedData(trade1, trade2, trade3);
 
         var query = new GetSymbolTradesInput(symbol.Id, TimeFrame.AllTime, NumBuckets: 10);
 
@@ -337,10 +385,10 @@ public sealed class GetSymbolTradesHandlerTests
         var result = await _handler.Handle(query, CancellationToken.None);
 
         // Assert
-        result.ShouldNotBeNull();
-        result.Trades.ShouldNotBeEmpty();
-        result.Trades.ShouldAllBe(b => b.OpenPrice == 0m);
-        result.Trades.ShouldAllBe(b => b.ClosePrice == 0m);
+        result.Trades.Count.ShouldBe(2);
+        result.Trades[0].Volume.ShouldBe(0m);
+        result.Trades[0].Price.ShouldBe(100m);
+        result.Trades[1].Price.ShouldBe(200m);
     }
 
     [Fact]
@@ -404,5 +452,60 @@ public sealed class GetSymbolTradesHandlerTests
         response.Date.ShouldBe(date);
         response.OpenPrice.ShouldBe(92m);
         response.ClosePrice.ShouldBe(108m);
+    }
+
+    private async Task<(Symbol Symbol, Trade[] Trades)> SeedTwoBucketTrades()
+    {
+        var market = Market.Create(
+            new Id<Market>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<Taxes>()
+        );
+        var symbol = Symbol.Create(
+            new Id<Symbol>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            null,
+            _fixture.Create<string>(),
+            market.Id,
+            new AdditionalFields()
+        );
+
+        var now = DateTimeOffset.UtcNow;
+        Trade[] trades =
+        [
+            Trade.Create(
+                new Id<Trade>(Guid.NewGuid().ToString()),
+                symbol.Id,
+                90m,
+                5m,
+                now.AddHours(-2)
+            ),
+            Trade.Create(new Id<Trade>(Guid.NewGuid().ToString()), symbol.Id, 110m, 3m, now),
+        ];
+
+        await _dbContext.SeedData(market);
+        await _dbContext.SeedData(symbol);
+        await _dbContext.SeedData(trades);
+
+        return (symbol, trades);
+    }
+
+    private sealed class TestableGetSymbolTradesHandler(
+        ILogger<GetSymbolTradesHandler> logger,
+        PlutusDbContext dbContext
+    ) : GetSymbolTradesHandler(logger, dbContext)
+    {
+        public Func<TimeSpan, Dictionary<DateTimeOffset, BucketOpenClose>> OpenClose { get; set; } =
+            _ => [];
+
+        internal override Task<Dictionary<DateTimeOffset, BucketOpenClose>> GetOpenCloseAsync(
+            Id<Symbol> symbolId,
+            DateTimeOffset? since,
+            TimeSpan interval,
+            CancellationToken cancellationToken
+        )
+        {
+            return Task.FromResult(OpenClose(interval));
+        }
     }
 }
