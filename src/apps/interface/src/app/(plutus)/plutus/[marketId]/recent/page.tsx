@@ -6,7 +6,7 @@ import { ExtendedColumnDef } from "@/components/shared/responsive-data-table";
 import ResponsiveDataTable from "@/components/shared/responsive-data-table/responsive-data-table";
 import { Typography } from "@/components/shared/typography";
 import { PlutusState, usePlutusStore } from "@/stores/plutus-store";
-import { useApi } from "@/hooks/use-api";
+import { errorOf, useApi } from "@/hooks/use-api";
 import useInterval from "@/hooks/use-interval";
 import { Trade, plutusApi } from "@/lib/api/plutus";
 import { formatDistance } from "date-fns";
@@ -14,6 +14,9 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
+
+// Matches the output cache on /api/plutus/trades; polling faster only re-reads the cached page.
+const POLL_INTERVAL_MS = 30_000;
 
 export default function RecentMarketTrades() {
   const { marketId } = useParams<{ marketId: string }>();
@@ -42,7 +45,7 @@ export default function RecentMarketTrades() {
     [marketId, take],
   );
 
-  useInterval(() => reexecute(), 15000);
+  useInterval(() => reexecute(), POLL_INTERVAL_MS);
 
   const columns: ExtendedColumnDef<Trade>[] = useMemo(
     () => [
@@ -103,6 +106,8 @@ export default function RecentMarketTrades() {
         columns={columns}
         data={state.data}
         loading={state.status === "loading" && !state.data}
+        error={errorOf(state)}
+        onRetry={reexecute}
         state={tableState}
         onStateChange={setTableState}
         disableFiltering

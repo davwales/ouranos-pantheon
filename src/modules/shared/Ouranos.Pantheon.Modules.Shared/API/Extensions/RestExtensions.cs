@@ -18,6 +18,7 @@ public static class RestExtensions
         services.AddExceptionHandler<InvalidFilterExceptionHandler>();
         services.AddExceptionHandler<ConflictExceptionHandler>();
         services.AddExceptionHandler<BadRequestExceptionHandler>();
+        services.AddExceptionHandler<NotFoundExceptionHandler>();
 
         services.ConfigureHttpJsonOptions(options =>
         {

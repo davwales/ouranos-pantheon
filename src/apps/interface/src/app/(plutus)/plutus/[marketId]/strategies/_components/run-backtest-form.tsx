@@ -54,7 +54,7 @@ export function RunBacktestForm({
     setIsSubmitting(true);
     setError(null);
     try {
-      await plutusApi.runBacktest(strategyId, {
+      const { backtestId } = await plutusApi.runBacktest(strategyId, {
         marketId,
         startDate,
         endDate,
@@ -63,7 +63,9 @@ export function RunBacktestForm({
         slippageMultiplier,
       });
       onDone();
-      router.push(`/plutus/${marketId}/strategies/${strategyId}/backtests`);
+      router.push(
+        `/plutus/${marketId}/strategies/${strategyId}/backtests/${backtestId}`,
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to run backtest");
     } finally {

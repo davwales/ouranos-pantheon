@@ -8,6 +8,10 @@ export type ApiState<T> =
   | { status: "success"; data: T }
   | { status: "error"; data: T | undefined; error: Error };
 
+export function errorOf<T>(state: ApiState<T>): Error | undefined {
+  return state.status === "error" ? state.error : undefined;
+}
+
 export function useApi<T>(
   fetcher: () => Promise<T>,
   deps: React.DependencyList = [],

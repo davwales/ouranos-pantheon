@@ -1,4 +1,8 @@
 import { DataTableFiltering } from "@/components/shared/responsive-data-table/data-table-filtering";
+import {
+  DataTableEmptyState,
+  DataTableRefreshError,
+} from "@/components/shared/responsive-data-table/data-table-status";
 import { DataTablePagination } from "@/components/shared/responsive-data-table/data-table-pagination";
 import { DataTableSorting } from "@/components/shared/responsive-data-table/data-table-sorting";
 import {
@@ -17,6 +21,8 @@ import React, { useMemo, useRef } from "react";
 export default function MobileDataTable<TData extends RowData>({
   columns,
   data,
+  error,
+  onRetry,
   scrollTop = true,
   state,
   onStateChange,
@@ -72,6 +78,12 @@ export default function MobileDataTable<TData extends RowData>({
           onStateChange={onStateChange}
         />
       )}
+
+      <DataTableRefreshError
+        error={error}
+        onRetry={onRetry}
+        hasRows={tableData.length > 0}
+      />
 
       {!disableSorting && (
         <DataTableSorting
@@ -131,7 +143,7 @@ export default function MobileDataTable<TData extends RowData>({
         ) : (
           <Card>
             <CardContent className="h-24 flex items-center justify-center">
-              No results.
+              <DataTableEmptyState error={error} onRetry={onRetry} />
             </CardContent>
           </Card>
         )}

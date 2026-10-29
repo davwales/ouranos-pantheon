@@ -1,4 +1,8 @@
 import { DataTableFiltering } from "@/components/shared/responsive-data-table/data-table-filtering";
+import {
+  DataTableEmptyState,
+  DataTableRefreshError,
+} from "@/components/shared/responsive-data-table/data-table-status";
 import { DataTablePagination } from "@/components/shared/responsive-data-table/data-table-pagination";
 import { DataTableSorting } from "@/components/shared/responsive-data-table/data-table-sorting";
 import {
@@ -23,6 +27,8 @@ import { useMemo } from "react";
 export default function DesktopDataTable<TData extends RowData>({
   columns,
   data,
+  error,
+  onRetry,
   state,
   onStateChange,
   pageInfo,
@@ -64,6 +70,12 @@ export default function DesktopDataTable<TData extends RowData>({
           onStateChange={onStateChange}
         />
       )}
+
+      <DataTableRefreshError
+        error={error}
+        onRetry={onRetry}
+        hasRows={tableData.length > 0}
+      />
 
       <Table className="rounded-md border mt-2">
         <TableHeader>
@@ -110,7 +122,7 @@ export default function DesktopDataTable<TData extends RowData>({
                 colSpan={table.getAllColumns().length}
                 className="h-24 text-center"
               >
-                No results.
+                <DataTableEmptyState error={error} onRetry={onRetry} />
               </TableCell>
             </TableRow>
           )}

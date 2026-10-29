@@ -8,14 +8,13 @@ import { explorerColumns } from "@/app/(plutus)/plutus/[marketId]/explorer/_comp
 import { MarketAnalystButton } from "@/app/(plutus)/plutus/[marketId]/_components/market-analyst-button";
 import TimeFrameSelection from "@/app/(plutus)/plutus/components/time-frame-selection";
 import { useNavBarActions } from "@/components/shared/nav-bar-actions-context";
-import { NotFoundCard } from "@/components/shared/not-found-card";
 import ResponsiveDataTable from "@/components/shared/responsive-data-table/responsive-data-table";
 import {
   extractFilter,
   extractSort,
 } from "@/components/shared/responsive-data-table/types";
 import { Typography } from "@/components/shared/typography";
-import { useApi } from "@/hooks/use-api";
+import { errorOf, useApi } from "@/hooks/use-api";
 import { plutusApi } from "@/lib/api/plutus";
 import { type SetExplorerViewAction } from "@/lib/api/plutus-types";
 import { PlutusState, usePlutusStore } from "@/stores/plutus-store";
@@ -100,7 +99,7 @@ export default function MarketDetail() {
   useEffect(() => {
     setActions(
       <MarketAnalystButton
-        key={`${marketId}:${timeFrameKey}`}
+        key={marketId}
         context={{
           marketId,
           timeFrame: timeFrameKey,
@@ -124,10 +123,6 @@ export default function MarketDetail() {
     clearActions,
   ]);
 
-  if (state.status === "error" && !data) {
-    return <NotFoundCard title="Explorer data not found" backHref={`/plutus/${marketId}`} backLabel="Back to Market" />;
-  }
-
   return (
     <div>
       <div className="flex items-center gap-2 justify-between">
@@ -148,6 +143,8 @@ export default function MarketDetail() {
         columns={columns}
         data={data?.items}
         loading={fetching && !data}
+        error={errorOf(state)}
+        onRetry={reexecute}
         state={tableState}
         onStateChange={setTableState}
         pageInfo={pageInfo}

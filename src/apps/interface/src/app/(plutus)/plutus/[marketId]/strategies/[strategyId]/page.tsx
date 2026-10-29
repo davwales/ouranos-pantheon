@@ -87,6 +87,8 @@ export default function StrategyDetailPage() {
         title="Strategy not found"
         backHref={`/plutus/${marketId}/strategies`}
         backLabel="Back to Strategies"
+        error={strategy.error}
+        onRetry={reexecute}
       />
     );
   }

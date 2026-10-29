@@ -18,7 +18,7 @@ export function MarketAnalystActions({ marketId }: { marketId: string }) {
   useEffect(() => {
     setActions(
       <MarketAnalystButton
-        key={`${marketId}:${timeFrameKey}`}
+        key={marketId}
         context={{ marketId, timeFrame: timeFrameKey }}
         suggestions={SUGGESTIONS}
       />,

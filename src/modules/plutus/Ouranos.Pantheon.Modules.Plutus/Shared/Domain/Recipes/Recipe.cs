@@ -14,9 +14,9 @@ public class Recipe : BaseEntity<Id<Recipe>>
 
     public Id<Market> MarketId { get; init; }
 
-    public string Name { get; init; }
+    public string Name { get; private set; }
 
-    public decimal Cost { get; init; }
+    public decimal Cost { get; private set; }
 
     private ICollection<RecipeComponent>? _inputs;
 
@@ -59,5 +59,23 @@ public class Recipe : BaseEntity<Id<Recipe>>
             _outputs = outputs,
             _market = market,
         };
+    }
+
+    public void Update(
+        string name,
+        decimal cost,
+        ICollection<RecipeComponent> inputs,
+        ICollection<RecipeComponent> outputs
+    )
+    {
+        Guard.Against.NullOrWhiteSpace(name);
+        Guard.Against.Null(inputs);
+        Guard.Against.Null(outputs);
+
+        Name = name;
+        Cost = cost;
+        _inputs = inputs;
+        _outputs = outputs;
+        Update();
     }
 }

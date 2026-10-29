@@ -1,3 +1,4 @@
+using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.UpdateRecipe;
 using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.UpdateRecipe.Schemas;
@@ -45,6 +46,9 @@ public sealed class UpdateRecipeHandlerTests
         );
 
         await _dbContext.SeedData(existingRecipe);
+        var originalCreatedAt = existingRecipe.CreatedAt;
+        var originalUpdatedAt = existingRecipe.UpdatedAt;
+        SpinWait.SpinUntil(() => DateTimeOffset.UtcNow > originalUpdatedAt);
 
         var command = new UpdateRecipeInput(
             market.Id,
@@ -66,6 +70,41 @@ public sealed class UpdateRecipeHandlerTests
         updatedRecipe.ShouldNotBeNull();
         updatedRecipe.Name.ShouldBe(command.Name);
         updatedRecipe.Cost.ShouldBe(command.Cost);
+        updatedRecipe.Inputs.ShouldBe(command.Inputs, ignoreOrder: true);
+        updatedRecipe.Outputs.ShouldBe(command.Outputs, ignoreOrder: true);
+        updatedRecipe.CreatedAt.ShouldBe(originalCreatedAt);
+        updatedRecipe.UpdatedAt.ShouldBeGreaterThan(originalUpdatedAt);
+    }
+
+    [Fact]
+    public async Task Handle_WhenRecipeBelongsToAnotherMarket_ShouldThrowNotFoundException()
+    {
+        // Arrange
+        var existingRecipe = Recipe.Create(
+            _fixture.Create<Id<Recipe>>(),
+            _fixture.Create<Id<Market>>(),
+            _fixture.Create<string>(),
+            _fixture.Create<decimal>(),
+            _fixture.CreateMany<RecipeComponent>().ToList(),
+            _fixture.CreateMany<RecipeComponent>().ToList()
+        );
+
+        await _dbContext.SeedData(existingRecipe);
+
+        var command = new UpdateRecipeInput(
+            _fixture.Create<Id<Market>>(),
+            existingRecipe.Id,
+            _fixture.Create<string>(),
+            _fixture.Create<decimal>(),
+            [],
+            []
+        );
+
+        // Act
+        var update = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await update.ShouldThrowAsync<NotFoundException>();
     }
 
     [Fact]

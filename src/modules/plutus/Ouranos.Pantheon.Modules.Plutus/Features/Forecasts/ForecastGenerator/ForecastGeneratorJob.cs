@@ -200,7 +200,9 @@ public sealed class ForecastGeneratorJob
                 g.Key.SymbolId,
                 g.Key.Bucket,
                 Volume = g.Sum(t => t.Volume),
-                AveragePrice = g.Sum(t => t.Price * t.Volume) / g.Sum(t => t.Volume),
+                AveragePrice = g.Sum(t => t.Volume) > 0
+                    ? g.Sum(t => t.Price * t.Volume) / g.Sum(t => t.Volume)
+                    : g.Average(t => t.Price),
                 MinPrice = g.Min(t => t.Price),
                 MaxPrice = g.Max(t => t.Price),
             })

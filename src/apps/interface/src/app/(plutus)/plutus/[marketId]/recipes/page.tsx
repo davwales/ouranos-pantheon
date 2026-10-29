@@ -11,7 +11,7 @@ import { Typography } from "@/components/shared/typography";
 import TimeFrameSelection from "@/app/(plutus)/plutus/components/time-frame-selection";
 import { PlutusState, usePlutusStore } from "@/stores/plutus-store";
 import { Button } from "@/components/ui/button";
-import { useApi } from "@/hooks/use-api";
+import { errorOf, useApi } from "@/hooks/use-api";
 import { GetRecipeTradesRow, plutusApi } from "@/lib/api/plutus";
 import { Plus, RefreshCw } from "lucide-react";
 import Link from "next/link";
@@ -175,6 +175,8 @@ export default function RecipesPage() {
         columns={columns}
         data={data?.items}
         loading={fetching && !data}
+        error={errorOf(state)}
+        onRetry={reexecute}
         state={tableState}
         onStateChange={setTableState}
         pageInfo={pageInfo}

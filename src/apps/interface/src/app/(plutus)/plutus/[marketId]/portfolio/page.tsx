@@ -42,6 +42,7 @@ export default function PortfolioPage() {
   const {
     data: openData,
     fetching: fetchingOpen,
+    error: openError,
     pageInfo: openPageInfo,
     reexecute: reexecuteOpen,
   } = usePositionsQuery(marketId, openTableState, "status:eq:Pending");
@@ -49,6 +50,7 @@ export default function PortfolioPage() {
   const {
     data: closedData,
     fetching: fetchingClosed,
+    error: closedError,
     pageInfo: closedPageInfo,
     reexecute: reexecuteClosed,
   } = usePositionsQuery(marketId, closedTableState, "status:neq:Pending");
@@ -134,6 +136,8 @@ export default function PortfolioPage() {
         columns={openColumns}
         data={openData?.items}
         loading={fetchingOpen && !openData}
+        error={openError}
+        onRetry={reexecuteOpen}
         state={openTableState}
         onStateChange={setOpenTableState}
         pageInfo={openPageInfo}
@@ -147,6 +151,8 @@ export default function PortfolioPage() {
         columns={closedColumns}
         data={closedData?.items}
         loading={fetchingClosed && !closedData}
+        error={closedError}
+        onRetry={reexecuteClosed}
         state={closedTableState}
         onStateChange={setClosedTableState}
         pageInfo={closedPageInfo}

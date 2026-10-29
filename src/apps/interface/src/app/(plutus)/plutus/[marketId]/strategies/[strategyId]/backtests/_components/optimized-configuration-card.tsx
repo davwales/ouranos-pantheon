@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { ConfirmationButton } from "@/components/shared/confirmation-button";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -45,14 +45,17 @@ export function OptimizedConfigurationCard({
               {results.isValidated ? "Validated" : "Not Validated"}
             </Badge>
             {onApplyToStrategy && (
-              <Button
-                onClick={onApplyToStrategy}
+              <ConfirmationButton
+                title="Apply Optimized Configuration"
+                description="This overwrites the strategy's current configuration with the optimized one."
+                onConfirm={onApplyToStrategy}
+                confirmProps={{ children: "Apply", size: "lg" }}
                 disabled={isApplying}
                 size="sm"
               >
                 <ArrowRight className="w-4 h-4 mr-1" />
                 {isApplying ? "Applying..." : "Apply to Strategy"}
-              </Button>
+              </ConfirmationButton>
             )}
           </div>
         </div>

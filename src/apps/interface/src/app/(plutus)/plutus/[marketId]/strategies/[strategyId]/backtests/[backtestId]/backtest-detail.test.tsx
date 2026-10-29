@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import { ApiError } from "@/lib/api-client";
 import { plutusApi } from "@/lib/api/plutus";
 import type { BacktestDetail } from "@/lib/api/plutus-types";
 import BacktestDetailPage from "./page";
@@ -106,9 +107,9 @@ describe("BacktestDetailPage", () => {
     expect(screen.queryByText(/Couldn’t refresh/)).toBeNull();
   });
 
-  it("shows not found when the first load fails", async () => {
+  it("shows not found when the first load returns 404", async () => {
     // Arrange
-    vi.mocked(plutusApi.getBacktest).mockRejectedValueOnce(new Error("Not found"));
+    vi.mocked(plutusApi.getBacktest).mockRejectedValueOnce(new ApiError(404, "Not Found"));
 
     // Act
     render(<BacktestDetailPage />);
@@ -116,5 +117,23 @@ describe("BacktestDetailPage", () => {
 
     // Assert
     expect(screen.getByText("Backtest not found")).toBeTruthy();
+  });
+
+  it("shows a retryable error when the first load fails otherwise", async () => {
+    // Arrange
+    vi.mocked(plutusApi.getBacktest)
+      .mockRejectedValueOnce(new ApiError(500, "Server error"))
+      .mockResolvedValueOnce(runningBacktest());
+    render(<BacktestDetailPage />);
+    await flush();
+    expect(screen.queryByText("Backtest not found")).toBeNull();
+    expect(screen.getByText("Server error")).toBeTruthy();
+
+    // Act
+    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+    await flush();
+
+    // Assert
+    expect(screen.getByText("Progress 40%")).toBeTruthy();
   });
 });

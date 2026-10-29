@@ -64,5 +64,6 @@ public class Symbol : BaseEntity<Id<Symbol>>
 
         Name = name;
         AdditionalFields = additionalFields;
+        Update();
     }
 }

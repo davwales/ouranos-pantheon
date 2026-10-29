@@ -4,7 +4,7 @@ import {
   useNavBarActions,
 } from "@/components/shared/nav-bar-actions-context";
 import { usePlutusStore } from "@/stores/plutus-store";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/api/plutus", () => ({
@@ -55,5 +55,24 @@ describe("MarketAnalystActions", () => {
 
     // Assert
     expect(screen.getByTestId("nav-bar-actions")).toBeEmptyDOMElement();
+  });
+
+  it("WhenTimeFrameChanges_ShouldKeepTheAnalystOpen", async () => {
+    // Arrange
+    usePlutusStore.setState({ timeFrameKey: "OneDay" });
+    render(
+      <NavBarActionsProvider>
+        <NavBarActionsOutlet />
+        <MarketAnalystActions marketId="market-1" />
+      </NavBarActionsProvider>,
+    );
+    fireEvent.click(await screen.findByRole("button", { name: "Open Market Analyst" }));
+    await screen.findByRole("heading", { name: "Market Analyst" });
+
+    // Act
+    act(() => usePlutusStore.setState({ timeFrameKey: "OneWeek" }));
+
+    // Assert
+    expect(await screen.findByRole("heading", { name: "Market Analyst" })).toBeInTheDocument();
   });
 });

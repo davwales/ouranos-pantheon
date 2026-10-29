@@ -5,9 +5,8 @@ import TimeFrameSelection from "@/app/(plutus)/plutus/components/time-frame-sele
 import { useBreadcrumbLabel } from "@/components/shared/breadcrumbs";
 import { NotFoundCard } from "@/components/shared/not-found-card";
 import { useApi } from "@/hooks/use-api";
-import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
+import { useSyncedDraft, withRefreshedRows } from "@/hooks/use-synced-draft";
 import { type SymbolGroupSymbol, plutusApi } from "@/lib/api/plutus";
-import { hasChanges } from "@/lib/has-changes";
 import { type PlutusState, usePlutusStore } from "@/stores/plutus-store";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -29,9 +28,6 @@ export default function GroupDetailPage() {
     useShallow((state: PlutusState) => [state.timeFrameKey]),
   );
 
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [symbols, setSymbols] = useState<SymbolGroupSymbol[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [state, reexecute] = useApi(
     () => plutusApi.getSymbolGroup(groupId, timeFrameKey),
@@ -41,30 +37,27 @@ export default function GroupDetailPage() {
   const group = state.data;
   useBreadcrumbLabel(groupId, group?.name, state.status === "error");
 
-  const editable = {
-    name,
-    description,
-    symbolIds: symbols.map((s) => s.symbolId),
-  };
-  const [savedGroup, setSavedGroup] = useState<typeof editable>();
-  useUnsavedChangesGuard(
-    savedGroup !== undefined && hasChanges(editable, savedGroup),
+  const { draft, setDraft } = useSyncedDraft(
+    group,
+    (fetched) => ({
+      name: fetched.name,
+      description: fetched.description ?? "",
+      symbols: fetched.symbols,
+    }),
+    (current, fetched) => ({
+      ...current,
+      symbols: withRefreshedRows(current.symbols, fetched.symbols),
+    }),
+    { name: "", description: "", symbols: [] as SymbolGroupSymbol[] },
   );
-
-  const [syncedGroup, setSyncedGroup] = useState(group);
-  if (group !== syncedGroup) {
-    setSyncedGroup(group);
-    if (group) {
-      setName(group.name);
-      setDescription(group.description ?? "");
-      setSymbols(group.symbols);
-      setSavedGroup({
-        name: group.name,
-        description: group.description ?? "",
-        symbolIds: group.symbols.map((s) => s.symbolId),
-      });
-    }
-  }
+  const { name, description, symbols } = draft;
+  const setName = (value: string) =>
+    setDraft((prev) => ({ ...prev, name: value }));
+  const setDescription = (value: string) =>
+    setDraft((prev) => ({ ...prev, description: value }));
+  const setSymbols = (
+    update: (prev: SymbolGroupSymbol[]) => SymbolGroupSymbol[],
+  ) => setDraft((prev) => ({ ...prev, symbols: update(prev.symbols) }));
 
   const handleSave = async () => {
     setIsProcessing(true);
@@ -116,7 +109,7 @@ export default function GroupDetailPage() {
   };
 
   if (state.status === "error" && !group) {
-    return <NotFoundCard title="Group not found" backHref={`/plutus/${marketId}/groups`} backLabel="Back to Groups" />;
+    return <NotFoundCard title="Group not found" backHref={`/plutus/${marketId}/groups`} backLabel="Back to Groups" error={state.error} onRetry={reexecute} />;
   }
 
   if (state.status === "loading" && !group) {

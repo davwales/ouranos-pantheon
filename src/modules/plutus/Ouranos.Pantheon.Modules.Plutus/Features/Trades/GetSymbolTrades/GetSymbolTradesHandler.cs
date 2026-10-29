@@ -21,7 +21,7 @@ internal sealed record BucketOpenClose(
     decimal ClosePrice
 );
 
-public sealed class GetSymbolTradesHandler
+public class GetSymbolTradesHandler
     : IPantheonHandler<GetSymbolTradesInput, GetSymbolTradesResponse>
 {
     private readonly PlutusDbContext _dbContext;
@@ -78,37 +78,29 @@ public sealed class GetSymbolTradesHandler
 
         if (buckets.Count > 0 && interval.HasValue)
         {
-            try
-            {
-                var openClose = await GetOpenCloseAsync(
-                    _dbContext,
-                    query.SymbolId,
-                    since,
-                    interval.Value,
-                    cancellationToken
-                );
+            var openClose = await GetOpenCloseAsync(
+                query.SymbolId,
+                since,
+                interval.Value,
+                cancellationToken
+            );
 
-                buckets =
-                [
-                    .. buckets.Select(b =>
+            buckets =
+            [
+                .. buckets.Select(b =>
+                {
+                    if (!openClose.TryGetValue(b.BucketStart, out var oc))
                     {
-                        if (!openClose.TryGetValue(b.BucketStart, out var oc))
-                        {
-                            return b;
-                        }
+                        return b;
+                    }
 
-                        return b with
-                        {
-                            OpenPrice = oc.OpenPrice,
-                            ClosePrice = oc.ClosePrice,
-                        };
-                    }),
-                ];
-            }
-            catch (InvalidOperationException)
-            {
-                _logger.LogDebug("Open/close prices unavailable for this query.");
-            }
+                    return b with
+                    {
+                        OpenPrice = oc.OpenPrice,
+                        ClosePrice = oc.ClosePrice,
+                    };
+                }),
+            ];
         }
 
         var response = new GetSymbolTradesResponse(
@@ -137,8 +129,7 @@ public sealed class GetSymbolTradesHandler
         return response;
     }
 
-    private static async Task<Dictionary<DateTimeOffset, BucketOpenClose>> GetOpenCloseAsync(
-        PlutusDbContext dbContext,
+    internal virtual async Task<Dictionary<DateTimeOffset, BucketOpenClose>> GetOpenCloseAsync(
         Id<Symbol> symbolId,
         DateTimeOffset? since,
         TimeSpan interval,
@@ -174,7 +165,7 @@ public sealed class GetSymbolTradesHandler
                 )
                 .WithId("@symbolId", symbolId);
 
-        var results = await dbContext.Database.ExecuteQueryAsync<BucketOpenClose>(
+        var results = await _dbContext.Database.ExecuteQueryAsync<BucketOpenClose>(
             command,
             cancellationToken
         );
@@ -215,7 +206,9 @@ public sealed class GetSymbolTradesHandler
                 group.Min(x => x.Price),
                 group.Max(x => x.Price),
                 group.Count(),
-                group.Sum(x => x.Price * x.Volume) / group.Sum(x => x.Volume),
+                group.Sum(x => x.Volume) > 0
+                    ? group.Sum(x => x.Price * x.Volume) / group.Sum(x => x.Volume)
+                    : group.Average(x => x.Price),
                 group.Max(x => x.Price) - group.Min(x => x.Price),
                 0m,
                 0m

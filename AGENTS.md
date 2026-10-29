@@ -322,9 +322,10 @@ touched code**; existing violations are known and are not a licence to copy the 
   (`app/_components/command-palette/`) builds its pages from both, so add new pages there.
 - **Backtest/Optimization UI pattern** - trigger dialogs from the strategy detail page
   (`RunBacktestDialog`, `OptimizeDialog`), both using `ResponsiveDialog`. After submission
-  (HTTP 202 Accepted), navigate to `/plutus/[marketId]/strategies/[strategyId]/backtests`. Backtest
-  detail (`.../backtests/[backtestId]`) shows status-dependent views (Pending/Running with spinner,
-  Failed with error, Cancelled, Completed with results dashboard).
+  (HTTP 202 Accepted), navigate to the new backtest's detail page
+  (`/plutus/[marketId]/strategies/[strategyId]/backtests/[backtestId]`, using the returned
+  `backtestId`), which shows status-dependent views (Pending/Running with spinner, Failed with
+  error, Cancelled, Completed with results dashboard).
 
 ## Bruno API Collection
 
