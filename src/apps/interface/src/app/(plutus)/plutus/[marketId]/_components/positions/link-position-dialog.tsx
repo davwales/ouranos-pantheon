@@ -7,12 +7,12 @@ import { type Position, plutusApi } from "@/lib/api/plutus";
 import { useState } from "react";
 
 export function LinkPositionDialog({
-  positionId,
+  sellPosition,
   marketId,
   open,
   onOpenChange,
 }: {
-  positionId: string;
+  sellPosition: Position;
   marketId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -28,14 +28,12 @@ export function LinkPositionDialog({
       plutusApi.getAllPositions(marketId, {
         skip: 0,
         take: 100,
-        filter: ["side:eq:Buy", "status:eq:Bought"],
+        filter: linkableBuyFilter(sellPosition),
       }),
-    [marketId, open],
+    [marketId, sellPosition.symbolId, sellPosition.quantity, open],
   );
 
-  const buyPositions = (state.data?.items ?? []).filter(
-    (p: Position) => p.id !== positionId,
-  );
+  const buyPositions = state.data?.items ?? [];
 
   const handleLink = async () => {
     if (!selectedBuyPositionId) return;
@@ -43,7 +41,7 @@ export function LinkPositionDialog({
     setIsSubmitting(true);
     setError(null);
     try {
-      await plutusApi.linkPosition(positionId, selectedBuyPositionId);
+      await plutusApi.linkPosition(sellPosition.id, selectedBuyPositionId);
       onOpenChange(false);
       setSelectedBuyPositionId(null);
     } catch (err) {
@@ -73,7 +71,8 @@ export function LinkPositionDialog({
         <div className="space-y-2">
           {buyPositions.length === 0 && (
             <p className="text-sm text-muted-foreground">
-              No bought buy positions available.
+              No bought {sellPosition.symbolName} positions with{" "}
+              {sellPosition.quantity} unsold.
             </p>
           )}
           {buyPositions.map((position) => (
@@ -89,7 +88,8 @@ export function LinkPositionDialog({
             >
               <div className="font-medium text-sm">{position.symbolName}</div>
               <div className="text-xs text-muted-foreground">
-                {position.quantity} @ {position.cost}
+                {position.quantity} @ {position.cost} ·{" "}
+                {position.unsoldQuantity ?? position.quantity} unsold
               </div>
             </button>
           ))}
@@ -104,4 +104,14 @@ export function LinkPositionDialog({
       </div>
     </ResponsiveDialog>
   );
+}
+
+/** Server-side filter for the Bought buys this sell can close out: same symbol, enough unsold. */
+export function linkableBuyFilter(sellPosition: Position): string[] {
+  return [
+    "side:eq:Buy",
+    "status:eq:Bought",
+    `symbolId:eq:${sellPosition.symbolId}`,
+    `unsoldQuantity:gte:${sellPosition.quantity}`,
+  ];
 }

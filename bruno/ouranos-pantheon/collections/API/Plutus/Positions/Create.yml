@@ -21,7 +21,8 @@ http:
         "quantity": 2,
         "strategyId": null,
         "notes": "Position created from Bruno",
-        "targetPrice": 120.0
+        "targetPrice": 120.0,
+        "linkedBuyPositionId": null
       }
   auth: inherit
 

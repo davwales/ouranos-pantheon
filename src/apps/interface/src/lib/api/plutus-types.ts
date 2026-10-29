@@ -499,6 +499,8 @@ export type Position = {
   symbolName: string;
   cost: number;
   quantity: number;
+  /** Buy quantity not yet covered by linked sells; only the list endpoint returns it, and only for buys. */
+  unsoldQuantity?: number | null;
   targetPrice: number | null;
   linkedBuyPositionId: string | null;
   strategyId: string | null;

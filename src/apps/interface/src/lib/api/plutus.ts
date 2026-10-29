@@ -417,6 +417,7 @@ export const plutusApi = {
     strategyId?: string | null;
     notes?: string | null;
     targetPrice?: number | null;
+    linkedBuyPositionId?: string | null;
   }) => api.post<IdResponse>("/api/plutus/positions", input),
 
   updatePosition: (

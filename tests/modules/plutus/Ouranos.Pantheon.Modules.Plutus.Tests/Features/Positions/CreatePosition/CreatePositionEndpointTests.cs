@@ -39,4 +39,37 @@ public sealed class CreatePositionEndpointTests
         await _bus.Received(1)
             .InvokeAsync<IdResponse<Position>>(Arg.Any<CreatePositionInput>(), ct);
     }
+
+    [Fact]
+    public async Task Handle_WhenLinkedBuyPositionGiven_ShouldPassItToTheHandler()
+    {
+        // Arrange
+        var ct = CancellationToken.None;
+        var buyPositionId = new Id<Position>(Guid.NewGuid().ToString());
+        var body = new CreatePositionBody(
+            PositionSide.Sell,
+            new Id<Market>(Guid.NewGuid().ToString()),
+            new Id<Symbol>(Guid.NewGuid().ToString()),
+            155.00m,
+            10m,
+            LinkedBuyPositionId: buyPositionId
+        );
+
+        _bus.InvokeAsync<IdResponse<Position>>(Arg.Any<object>(), Arg.Any<CancellationToken>())
+            .Returns(
+                Task.FromResult(
+                    new IdResponse<Position>(new Id<Position>(Guid.NewGuid().ToString()))
+                )
+            );
+
+        // Act
+        await CreatePositionEndpoint.Handle(body, _bus, ct);
+
+        // Assert
+        await _bus.Received(1)
+            .InvokeAsync<IdResponse<Position>>(
+                Arg.Is<CreatePositionInput>(i => i.LinkedBuyPositionId == buyPositionId),
+                ct
+            );
+    }
 }
