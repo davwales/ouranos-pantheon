@@ -4,5 +4,6 @@ public sealed record GenerateImageRequest(
     string Prompt,
     int Width,
     int Height,
-    string? Model = null
+    string? Model = null,
+    IReadOnlyList<ImageLoraRequest>? Loras = null
 );

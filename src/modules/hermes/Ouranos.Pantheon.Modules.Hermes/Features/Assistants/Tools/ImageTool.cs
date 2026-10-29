@@ -1,4 +1,3 @@
-using System.Globalization;
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -12,6 +11,7 @@ using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
+using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Requests;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Assistants.Tools;
 
@@ -131,17 +131,22 @@ public abstract class ImageTool<TArguments>(
         );
     }
 
-    // SwarmUI applies LoRAs written into the prompt as <lora:name:weight>.
-    protected static string WithLoras(string prompt, IReadOnlyList<ImageLora> loras)
+    // A LoRA only takes effect when its trigger phrase is in the prompt; it goes first, as LoRA
+    // authors write it. The stored prompt stays the model's own, so edits and "more like this"
+    // don't repeat the phrase.
+    protected static string WithTriggerPhrases(string prompt, IReadOnlyList<ImageLora> loras)
     {
-        if (loras.Count == 0)
-        {
-            return prompt;
-        }
+        var phrases = loras
+            .Select(l => l.TriggerPhrase)
+            .OfType<string>()
+            .Where(p => !prompt.Contains(p, StringComparison.OrdinalIgnoreCase))
+            .ToList();
 
-        var tags = loras.Select(l =>
-            string.Create(CultureInfo.InvariantCulture, $"<lora:{l.Identifier}:{l.Weight:0.##}>")
-        );
-        return $"{prompt} {string.Join(' ', tags)}";
+        return phrases.Count == 0 ? prompt : $"{string.Join(", ", phrases)}, {prompt}";
+    }
+
+    protected static List<ImageLoraRequest> ToLoraRequests(IReadOnlyList<ImageLora> loras)
+    {
+        return [.. loras.Select(l => new ImageLoraRequest(l.Identifier, l.Weight))];
     }
 }

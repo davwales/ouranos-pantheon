@@ -4,6 +4,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Loras.GetAllLoras;
 using Ouranos.Pantheon.Modules.Hermes.Features.Loras.GetAllLoras.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.AvailableLoras;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
@@ -147,5 +148,43 @@ public sealed class GetAllLorasHandlerTests
         // Assert
         result.Count.ShouldBe(1);
         result[0].IsPublic.ShouldBeFalse();
+    }
+
+    private static AvailableLora Available(string identifier, bool isCompatible)
+    {
+        return AvailableLora.Create(
+            new Id<AvailableLora>(Guid.NewGuid().ToString()),
+            identifier,
+            null,
+            null,
+            null,
+            null,
+            null,
+            isCompatible
+        );
+    }
+
+    [Fact]
+    public async Task Handle_ShouldReportWhichLorasAreUnavailableOrIncompatible()
+    {
+        // Arrange
+        await _dbContext.SeedData(
+            Lora.Create(new Id<Lora>(Guid.NewGuid().ToString()), "A", "ok", triggerPhrase: "ok"),
+            Lora.Create(new Id<Lora>(Guid.NewGuid().ToString()), "B", "gone"),
+            Lora.Create(new Id<Lora>(Guid.NewGuid().ToString()), "C", "mismatch")
+        );
+        await _dbContext.SeedData(Available("ok", true), Available("mismatch", false));
+
+        // Act
+        var result = await _handler.Handle(new GetAllLorasInput(), CancellationToken.None);
+
+        // Assert
+        result
+            .Select(l => (l.Identifier, l.TriggerPhrase, l.IsUnavailable, l.IsIncompatible))
+            .ShouldBe([
+                ("ok", "ok", false, false),
+                ("gone", null, true, false),
+                ("mismatch", null, false, true),
+            ]);
     }
 }

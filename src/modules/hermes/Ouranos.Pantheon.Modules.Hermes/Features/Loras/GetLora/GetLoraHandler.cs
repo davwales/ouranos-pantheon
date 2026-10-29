@@ -55,7 +55,20 @@ public sealed class GetLoraHandler : IPantheonHandler<GetLoraInput, GetLoraRespo
             }
         }
 
+        var available = await _dbContext
+            .AvailableLoras.AsNoTracking()
+            .FirstOrDefaultAsync(a => a.Identifier == lora.Identifier, cancellationToken);
+
         _logger.LogDebug("Successfully handled get LoRA request.");
-        return new GetLoraResponse(lora.Id, lora.Name, lora.Identifier, lora.Weight, lora.IsPublic);
+        return new GetLoraResponse(
+            lora.Id,
+            lora.Name,
+            lora.Identifier,
+            lora.Weight,
+            lora.IsPublic,
+            lora.TriggerPhrase,
+            IsUnavailable: available is null,
+            IsIncompatible: available is { IsCompatible: false }
+        );
     }
 }

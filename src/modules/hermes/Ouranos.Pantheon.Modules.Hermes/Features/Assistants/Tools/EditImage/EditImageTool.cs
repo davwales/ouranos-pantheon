@@ -95,10 +95,11 @@ public sealed partial class EditImageTool(
         return await DeliverAsync(
             _mlClient.StreamImageEditAsync(
                 new EditImageRequest(
-                    WithLoras(prompt, context.ImageLoras),
+                    WithTriggerPhrases(prompt, context.ImageLoras),
                     content,
                     StrengthFor(arguments.Change),
-                    Options.Model
+                    Options.Model,
+                    ToLoraRequests(context.ImageLoras)
                 ),
                 cancellationToken
             ),

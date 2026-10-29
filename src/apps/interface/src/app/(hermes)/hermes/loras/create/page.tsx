@@ -19,6 +19,7 @@ export default function CreateLoraPage() {
         identifier: input.identifier,
         weight: input.weight,
         isPublic: input.isPublic,
+        triggerPhrase: input.triggerPhrase?.trim() || null,
       });
       router.push("/hermes/loras");
     } catch (err) {

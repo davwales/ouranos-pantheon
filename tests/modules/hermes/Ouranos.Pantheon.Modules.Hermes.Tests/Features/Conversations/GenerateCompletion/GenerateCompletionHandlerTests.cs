@@ -8,8 +8,10 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.AvailableLoras;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Images;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Loras;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
@@ -442,9 +444,34 @@ public sealed class GenerateCompletionHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenLorasAreSelected_ShouldPassThemToTheToolContext()
+    public async Task Handle_WhenLorasAreSelected_ShouldPassTheAvailableOnesToTheToolContext()
     {
         // Arrange
+        var available = Lora.Create(
+            DatabaseExtensions.CreateId<Lora>(),
+            "Detail",
+            "add-detail",
+            0.8f,
+            triggerPhrase: "detailed"
+        );
+        var removed = Lora.Create(DatabaseExtensions.CreateId<Lora>(), "Gone", "gone-lora");
+        await using (var seedContext = DbContextExtensions.Mock<HermesDbContext>(_dbName))
+        {
+            await seedContext.SeedData(available, removed);
+            await seedContext.SeedData(
+                AvailableLora.Create(
+                    DatabaseExtensions.CreateId<AvailableLora>(),
+                    "add-detail",
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    isCompatible: true
+                )
+            );
+        }
+
         SetupStream(CreateStream([Text("Ok")]));
         HermesChatContext? context = null;
         var tool = Substitute.For<IAssistantTool<HermesChatContext>>();
@@ -455,7 +482,7 @@ public sealed class GenerateCompletionHandlerTests
         var handler = CreateHandler([tool]);
         var conversation = CreateCommand(toolSetId).Conversation with
         {
-            Loras = [new LoraInput("add-detail", 0.8f)],
+            LoraIds = [available.Id, removed.Id],
         };
 
         // Act
@@ -465,7 +492,7 @@ public sealed class GenerateCompletionHandlerTests
 
         // Assert
         context.ShouldNotBeNull();
-        context.ImageLoras.ShouldBe([new ImageLora("add-detail", 0.8f)]);
+        context.ImageLoras.ShouldBe([new ImageLora("add-detail", 0.8f, "detailed")]);
     }
 
     [Fact]

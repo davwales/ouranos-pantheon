@@ -499,4 +499,34 @@ public sealed class UpdateConversationHandlerTests
         // Assert
         await handle.ShouldThrowAsync<NotFoundException>();
     }
+
+    [Fact]
+    public async Task Handle_WhenALoraIdIsUnknown_ShouldThrowNotFoundException()
+    {
+        // Arrange
+        var conversation = Conversation.Create(
+            new Id<Conversation>(Guid.NewGuid().ToString()),
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [],
+            [],
+            _fixture.Create<string>()
+        );
+        await _dbContext.SeedData(conversation);
+
+        var command = new UpdateConversationInput(
+            conversation.Id,
+            conversation.Name,
+            conversation.PersonaId,
+            conversation.ModelConfigId,
+            [],
+            true,
+            LoraIds: [new Id<Lora>(Guid.NewGuid().ToString())]
+        );
+
+        // Act & Assert
+        await Should.ThrowAsync<NotFoundException>(() =>
+            _handler.Handle(command, CancellationToken.None)
+        );
+    }
 }

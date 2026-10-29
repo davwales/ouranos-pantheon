@@ -111,18 +111,13 @@ export interface TraitInput {
   content: string;
 }
 
-export type LoraInput = {
-  identifier: string;
-  weight: number;
-};
-
 export interface ConversationInput {
   model: ModelInput;
   persona: PersonaInput;
   messages: CompletionMessageInput[];
   traits?: TraitInput[];
   reasoningEffort?: ReasoningEffort | null;
-  loras?: LoraInput[];
+  loraIds?: string[];
   toolSetId?: string | null;
 }
 
@@ -292,6 +287,25 @@ export type Lora = {
   identifier: string;
   weight: number;
   isPublic: boolean;
+  triggerPhrase: string | null;
+  isUnavailable: boolean;
+  isIncompatible: boolean;
+};
+
+export type SaveLoraInput = Pick<
+  Lora,
+  "name" | "identifier" | "weight" | "isPublic" | "triggerPhrase"
+>;
+
+export type AvailableLora = {
+  id: string;
+  identifier: string;
+  title: string | null;
+  compatClass: string | null;
+  defaultWeight: number | null;
+  triggerPhrase: string | null;
+  usageHint: string | null;
+  isCompatible: boolean;
 };
 
 export type ToolSource = "Native";

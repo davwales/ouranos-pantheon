@@ -23,7 +23,14 @@ public static class UpdateLoraEndpoint
     {
         return Results.Ok(
             await bus.InvokeAsync<UpdateLoraResponse>(
-                new UpdateLoraInput(loraId, body.Name, body.Identifier, body.Weight, body.IsPublic),
+                new UpdateLoraInput(
+                    loraId,
+                    body.Name,
+                    body.Identifier,
+                    body.Weight,
+                    body.IsPublic,
+                    body.TriggerPhrase
+                ),
                 ct
             )
         );

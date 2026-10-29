@@ -9,6 +9,9 @@ const detail: Lora = {
   identifier: "add-detail",
   weight: 0.8,
   isPublic: true,
+  triggerPhrase: null,
+  isUnavailable: false,
+  isIncompatible: false,
 };
 
 const pixel: Lora = {
@@ -17,10 +20,24 @@ const pixel: Lora = {
   identifier: "pixel-art",
   weight: 1,
   isPublic: true,
+  triggerPhrase: "pixel art",
+  isUnavailable: false,
+  isIncompatible: true,
+};
+
+const removed: Lora = {
+  id: "lora-3",
+  name: "Removed",
+  identifier: "removed",
+  weight: 1,
+  isPublic: true,
+  triggerPhrase: null,
+  isUnavailable: true,
+  isIncompatible: false,
 };
 
 vi.mock("@/lib/api/hermes", () => ({
-  hermesApi: { getAllLoras: () => Promise.resolve([detail, pixel]) },
+  hermesApi: { getAllLoras: () => Promise.resolve([detail, pixel, removed]) },
 }));
 
 async function openPanel() {
@@ -59,5 +76,41 @@ describe("ImageLorasPanel", () => {
 
     // Assert
     expect(screen.getByText("1 active")).toBeInTheDocument();
+  });
+
+  it("WhenAnUnavailableLoraIsInactive_ShouldNotAddIt", async () => {
+    // Arrange
+    const onLorasChange = vi.fn();
+    render(<ImageLorasPanel activeLoras={[]} onLorasChange={onLorasChange} />);
+    await openPanel();
+
+    // Act
+    fireEvent.click(screen.getByText("Removed"));
+
+    // Assert
+    expect(onLorasChange).not.toHaveBeenCalled();
+    expect(screen.getByText("Unavailable")).toBeInTheDocument();
+  });
+
+  it("WhenAnUnavailableLoraIsActive_ShouldStillRemoveIt", async () => {
+    // Arrange
+    const onLorasChange = vi.fn();
+    render(<ImageLorasPanel activeLoras={[removed]} onLorasChange={onLorasChange} />);
+    await openPanel();
+
+    // Act
+    fireEvent.click(screen.getByText("Removed"));
+
+    // Assert
+    expect(onLorasChange).toHaveBeenCalledWith([]);
+  });
+
+  it("WhenALoraIsIncompatible_ShouldWarnAboutIt", async () => {
+    // Arrange & Act
+    render(<ImageLorasPanel activeLoras={[]} />);
+    await openPanel();
+
+    // Assert
+    expect(screen.getByText("Incompatible")).toBeInTheDocument();
   });
 });

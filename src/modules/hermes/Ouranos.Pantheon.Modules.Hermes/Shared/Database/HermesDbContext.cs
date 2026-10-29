@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.AvailableLoras;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.AvailableModels;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
@@ -25,6 +26,8 @@ public sealed class HermesDbContext(DbContextOptions<HermesDbContext> options)
 
     public DbSet<Lora> Loras { get; set; }
 
+    public DbSet<AvailableLora> AvailableLoras { get; set; }
+
     public DbSet<Conversation> Conversations { get; set; }
 
     public DbSet<Folder> Folders { get; set; }
@@ -48,6 +51,7 @@ public sealed class HermesDbContext(DbContextOptions<HermesDbContext> options)
         modelBuilder.Entity<AvailableModel>();
         modelBuilder.Entity<Trait>();
         modelBuilder.Entity<Lora>();
+        modelBuilder.Entity<AvailableLora>();
         modelBuilder.Entity<Conversation>();
         modelBuilder.Entity<Folder>();
         modelBuilder.Entity<Message>();

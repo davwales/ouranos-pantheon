@@ -161,10 +161,7 @@ export function useMessageController(params: {
                 }),
               ),
               reasoningEffort,
-              loras: activeLoras.map((l) => ({
-                identifier: l.identifier,
-                weight: l.weight,
-              })),
+              loraIds: activeLoras.flatMap((l) => (l.id ? [l.id] : [])),
               toolSetId,
             },
             ...(conversationId ? { conversationId } : {}),

@@ -61,6 +61,59 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
                     b.ToTable("conversation_trait", "hermes");
                 });
 
+            modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.AvailableLoras.AvailableLora", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CompatClass")
+                        .HasColumnType("text")
+                        .HasColumnName("compat_class");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<float?>("DefaultWeight")
+                        .HasColumnType("real")
+                        .HasColumnName("default_weight");
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("identifier");
+
+                    b.Property<bool>("IsCompatible")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_compatible");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("text")
+                        .HasColumnName("title");
+
+                    b.Property<string>("TriggerPhrase")
+                        .HasColumnType("text")
+                        .HasColumnName("trigger_phrase");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UsageHint")
+                        .HasColumnType("text")
+                        .HasColumnName("usage_hint");
+
+                    b.HasKey("Id")
+                        .HasName("pk_available_loras");
+
+                    b.HasIndex("Identifier")
+                        .IsUnique()
+                        .HasDatabaseName("ix_available_loras_identifier");
+
+                    b.ToTable("available_loras", "hermes");
+                });
+
             modelBuilder.Entity("Ouranos.Pantheon.Modules.Hermes.Shared.Domain.AvailableModels.AvailableModel", b =>
                 {
                     b.Property<Guid>("Id")
@@ -368,6 +421,10 @@ namespace Ouranos.Pantheon.Hermes.Service.Infra.Postgres.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("name");
+
+                    b.Property<string>("TriggerPhrase")
+                        .HasColumnType("text")
+                        .HasColumnName("trigger_phrase");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")

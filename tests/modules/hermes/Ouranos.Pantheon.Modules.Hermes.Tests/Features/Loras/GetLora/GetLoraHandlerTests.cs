@@ -5,6 +5,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Loras.GetLora;
 using Ouranos.Pantheon.Modules.Hermes.Features.Loras.GetLora.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.AvailableLoras;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
@@ -130,5 +131,45 @@ public sealed class GetLoraHandlerTests
 
         // Assert
         await handle.ShouldThrowAsync<OperationCanceledException>();
+    }
+
+    private static AvailableLora Available(string identifier, bool isCompatible)
+    {
+        return AvailableLora.Create(
+            new Id<AvailableLora>(Guid.NewGuid().ToString()),
+            identifier,
+            null,
+            null,
+            null,
+            null,
+            null,
+            isCompatible
+        );
+    }
+
+    [Theory]
+    [InlineData(null, true, false)]
+    [InlineData(true, false, false)]
+    [InlineData(false, false, true)]
+    public async Task Handle_ShouldReportWhetherTheLoraIsUnavailableOrIncompatible(
+        bool? isCompatible,
+        bool isUnavailable,
+        bool isIncompatible
+    )
+    {
+        // Arrange
+        var lora = Lora.Create(new Id<Lora>(Guid.NewGuid().ToString()), "Detail", "add-detail");
+        await _dbContext.SeedData(lora);
+        if (isCompatible is { } compatible)
+        {
+            await _dbContext.SeedData(Available("add-detail", compatible));
+        }
+
+        // Act
+        var result = await _handler.Handle(new GetLoraInput(lora.Id), CancellationToken.None);
+
+        // Assert
+        result.IsUnavailable.ShouldBe(isUnavailable);
+        result.IsIncompatible.ShouldBe(isIncompatible);
     }
 }

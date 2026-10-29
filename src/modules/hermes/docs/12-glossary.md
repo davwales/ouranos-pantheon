@@ -20,7 +20,8 @@ the [platform glossary](../../../../docs/architecture/12-glossary.md).
 | **Image ref** | The short name (`image 3`) the model uses for an image in the chat, numbered by first appearance on every turn instead of exposing ids |
 | **Source image** | The image an edited image was redrawn from (`GeneratedImage.SourceImageId`), shown as "Edited from" in the image dialog |
 | **Edit strength** | How far `edit_image` may move away from its source (0-1), configured per named change: subtle, moderate or strong |
-| **LoRA** | A user-registered SwarmUI LoRA (identifier and weight) that a conversation can switch on; its tag is appended to every image prompt in that conversation |
+| **LoRA** | A config for one available LoRA (name, weight, trigger phrase) that a conversation can switch on to restyle its images; reads as unavailable when its LoRA leaves the image server |
+| **Available LoRA** | A LoRA on the image server, discovered by the hourly sync job, with its compat class and whether it suits the configured image model |
 | **Unsaved retention** | How long an image no saved conversation references survives before `PurgeImagesJob` deletes it (24 hours by default) |
 | **Folder** | Nestable container for conversations (`ParentFolderId`) |
 | **Compaction** | Summarizing a conversation's messages since the last summary into a single `Summary`-role message so long chats fit the context window; streamed over SSE |

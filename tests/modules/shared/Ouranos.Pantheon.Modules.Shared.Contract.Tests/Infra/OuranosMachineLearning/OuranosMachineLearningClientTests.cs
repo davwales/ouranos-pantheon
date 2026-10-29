@@ -622,6 +622,60 @@ public sealed class OuranosMachineLearningClientTests
         exception.Type.ShouldBe("incomplete_stream");
     }
 
+    [Fact]
+    public async Task GetImageLorasAsync_WhenListed_ShouldReturnTheLorasIgnoringUnknownFields()
+    {
+        // Arrange
+        var handler = new RecordingHttpMessageHandler(
+            "application/json",
+            """{"object":"list","data":[{"id":"NSFW/detail","title":"Detail","architecture":"flux/lora","compat_class":"flux-1","default_weight":0.7,"trigger_phrase":"detailed","usage_hint":null}]}"""
+        );
+        var client = CreateImageClient(handler);
+
+        // Act
+        var loras = await client.GetImageLorasAsync();
+
+        // Assert
+        handler.RequestUri.ShouldBe(new Uri("http://test.com/v1/images/loras"));
+        loras.ShouldBe([
+            new ImageLoraDto("NSFW/detail", "Detail", "flux-1", 0.7f, "detailed", null),
+        ]);
+    }
+
+    [Fact]
+    public async Task GetImageModelsAsync_WhenListed_ShouldReturnTheModelsAndTheDefault()
+    {
+        // Arrange
+        var handler = new RecordingHttpMessageHandler(
+            "application/json",
+            """{"object":"list","default_model":"flux","data":[{"id":"flux","title":"Flux","compat_class":"flux-1","default_size":"1024x1024","loaded":true}]}"""
+        );
+        var client = CreateImageClient(handler);
+
+        // Act
+        var models = await client.GetImageModelsAsync();
+
+        // Assert
+        handler.RequestUri.ShouldBe(new Uri("http://test.com/v1/images/models"));
+        models.DefaultModel.ShouldBe("flux");
+        models.Models.ShouldBe([new ImageModelDto("flux", "flux-1")]);
+    }
+
+    [Fact]
+    public async Task GetImageLorasAsync_WhenRequestFails_ShouldThrow()
+    {
+        // Arrange
+        var handler = new RecordingHttpMessageHandler(
+            "application/json",
+            "{}",
+            HttpStatusCode.BadGateway
+        );
+        var client = CreateImageClient(handler);
+
+        // Act & Assert
+        await Should.ThrowAsync<HttpRequestException>(() => client.GetImageLorasAsync());
+    }
+
     private OuranosMachineLearningClient CreateImageClient(HttpMessageHandler handler)
     {
         var httpClient = new HttpClient(handler) { BaseAddress = new Uri("http://test.com/v1/") };

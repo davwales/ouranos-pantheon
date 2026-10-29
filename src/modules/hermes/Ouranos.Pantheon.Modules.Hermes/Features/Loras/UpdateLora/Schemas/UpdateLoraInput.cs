@@ -8,5 +8,6 @@ public sealed record UpdateLoraInput(
     string Name,
     string Identifier,
     float Weight = Lora.DefaultWeight,
-    bool IsPublic = true
+    bool IsPublic = true,
+    string? TriggerPhrase = null
 );

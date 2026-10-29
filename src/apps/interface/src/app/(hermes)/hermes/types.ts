@@ -38,6 +38,7 @@ export type LoraFormInput = {
   identifier: string;
   weight: number;
   isPublic: boolean;
+  triggerPhrase?: string | null;
 };
 
 export type ToolSetToolFormInput = {

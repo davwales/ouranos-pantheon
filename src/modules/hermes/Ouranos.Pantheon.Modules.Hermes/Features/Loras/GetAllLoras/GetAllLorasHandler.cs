@@ -65,7 +65,16 @@ public sealed class GetAllLorasHandler
         var loras = await dbQuery
             .FilterBy(query.Filter, FilterBuilder)
             .SortBy(query.SortField, query.SortDirection, SortBuilder)
-            .Select(l => new GetAllLorasResponse(l.Id, l.Name, l.Identifier, l.Weight, l.IsPublic))
+            .Select(l => new GetAllLorasResponse(
+                l.Id,
+                l.Name,
+                l.Identifier,
+                l.Weight,
+                l.IsPublic,
+                l.TriggerPhrase,
+                !_dbContext.AvailableLoras.Any(a => a.Identifier == l.Identifier),
+                _dbContext.AvailableLoras.Any(a => a.Identifier == l.Identifier && !a.IsCompatible)
+            ))
             .ToListAsync(cancellationToken);
 
         _logger.LogDebug("Successfully handled get all LoRAs request.");

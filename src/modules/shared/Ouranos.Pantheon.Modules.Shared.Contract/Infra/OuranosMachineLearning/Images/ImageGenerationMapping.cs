@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
@@ -7,8 +8,8 @@ using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Requ
 namespace Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Images;
 
 /// <summary>
-/// Converts between Pantheon's image types and OuranosMl's streamed
-/// <c>POST /images/generations</c> and <c>POST /images/edits</c> wire formats.
+/// Converts between Pantheon's image types and OuranosMl's image wire formats: the streamed
+/// <c>POST /images/generations</c> and <c>POST /images/edits</c>, and the model and LoRA lists.
 /// </summary>
 internal static class ImageGenerationMapping
 {
@@ -24,6 +25,7 @@ internal static class ImageGenerationMapping
             request.Model,
             N: 1,
             Size: $"{request.Width}x{request.Height}",
+            Loras: request.Loras ?? [],
             Stream: true,
             Save: false,
             Previews: false
@@ -40,12 +42,30 @@ internal static class ImageGenerationMapping
             N: 1,
             Image: Convert.ToBase64String(request.Image),
             Strength: request.Strength,
+            Loras: request.Loras ?? [],
             Stream: true,
             Save: false,
             Previews: false
         );
 
         return ToJsonContent(body);
+    }
+
+    public static async Task<ImageModelsDto> ToImageModelsAsync(
+        HttpContent content,
+        CancellationToken cancellationToken
+    )
+    {
+        var response = await DeserializeAsync<ImageModelsListResponse>(content, cancellationToken);
+        return new ImageModelsDto(response.DefaultModel, response.Data);
+    }
+
+    public static async Task<List<ImageLoraDto>> ToImageLorasAsync(
+        HttpContent content,
+        CancellationToken cancellationToken
+    )
+    {
+        return (await DeserializeAsync<ImageLorasListResponse>(content, cancellationToken)).Data;
     }
 
     /// <summary>
@@ -108,6 +128,16 @@ internal static class ImageGenerationMapping
         where T : class
     {
         return JsonSerializer.Deserialize<T>(data, SnakeCaseLenientOptions)
+            ?? throw new JsonException($"OuranosMl sent an empty {typeof(T).Name}.");
+    }
+
+    private static async Task<T> DeserializeAsync<T>(
+        HttpContent content,
+        CancellationToken cancellationToken
+    )
+        where T : class
+    {
+        return await content.ReadFromJsonAsync<T>(SnakeCaseLenientOptions, cancellationToken)
             ?? throw new JsonException($"OuranosMl sent an empty {typeof(T).Name}.");
     }
 

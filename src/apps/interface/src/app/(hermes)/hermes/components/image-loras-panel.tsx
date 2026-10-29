@@ -1,5 +1,6 @@
 "use client";
 
+import { LoraStatusBadge } from "@/app/(hermes)/hermes/components/lora-status-badge";
 import { type LoraFormInput } from "@/app/(hermes)/hermes/types";
 import { InfoCard } from "@/components/shared/info-card";
 import {
@@ -8,7 +9,8 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useApi } from "@/hooks/use-api";
-import { hermesApi } from "@/lib/api/hermes";
+import { hermesApi, type Lora } from "@/lib/api/hermes";
+import { cn } from "@/lib/utils";
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -25,9 +27,11 @@ export function ImageLorasPanel({
 
   const loras = lorasState.data ?? [];
 
-  const handleToggle = (lora: LoraFormInput) => {
+  const handleToggle = (lora: Lora) => {
     if (!onLorasChange) return;
     const isActive = activeLoras.some((l) => l.id === lora.id);
+    // An unavailable LoRA is never applied, so it can only be switched off.
+    if (!isActive && lora.isUnavailable) return;
     onLorasChange(
       isActive
         ? activeLoras.filter((l) => l.id !== lora.id)
@@ -53,16 +57,24 @@ export function ImageLorasPanel({
       <CollapsibleContent className="grid grid-cols-1 gap-3 mt-2">
         {loras.map((lora) => {
           const isActive = activeLoras.some((l) => l.id === lora.id);
+          const isDisabled = !isActive && lora.isUnavailable;
           return (
             <InfoCard
               key={lora.id}
               label={lora.name}
               description={`${lora.identifier} · weight ${lora.weight}`}
               onClick={() => handleToggle(lora)}
-              className={`hover:bg-accent hover:cursor-pointer w-full ${
-                isActive ? "border-accent-foreground" : ""
-              }`}
-            />
+              aria-disabled={isDisabled}
+              className={cn(
+                "w-full",
+                isDisabled
+                  ? "opacity-60"
+                  : "hover:bg-accent hover:cursor-pointer",
+                isActive && "border-accent-foreground",
+              )}
+            >
+              <LoraStatusBadge lora={lora} className="mt-1" />
+            </InfoCard>
           );
         })}
         {lorasState.status !== "loading" && loras.length === 0 && (
