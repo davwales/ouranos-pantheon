@@ -100,7 +100,7 @@ export default function MarketDetail() {
   useEffect(() => {
     setActions(
       <MarketAnalystButton
-        key={`${marketId}:${timeFrameKey}`}
+        key={marketId}
         context={{
           marketId,
           timeFrame: timeFrameKey,

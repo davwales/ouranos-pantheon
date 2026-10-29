@@ -5,7 +5,7 @@ import {
 import { streamAssistant } from "@/lib/api/assistant";
 import { plutusApi } from "@/lib/api/plutus";
 import { usePlutusStore } from "@/stores/plutus-store";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import MarketDetail from "./page";
 
@@ -92,5 +92,26 @@ describe("MarketDetail (Explorer)", () => {
         expect.any(AbortSignal),
       ),
     );
+  });
+
+  it("WhenTimeFrameChanges_ShouldKeepTheAnalystConversation", async () => {
+    // Arrange
+    const question = "Which of these is the best opportunity?";
+    render(
+      <NavBarActionsProvider>
+        <NavBarActionsOutlet />
+        <MarketDetail />
+      </NavBarActionsProvider>,
+    );
+    fireEvent.click(await screen.findByRole("button", { name: "Open Market Analyst" }));
+    fireEvent.click(await screen.findByRole("button", { name: question }));
+    await waitFor(() => expect(streamAssistant).toHaveBeenCalled());
+
+    // Act
+    act(() => usePlutusStore.setState({ timeFrameKey: "OneWeek" }));
+
+    // Assert
+    expect(await screen.findByRole("heading", { name: "Market Analyst" })).toBeInTheDocument();
+    expect(screen.getByText(question)).toBeInTheDocument();
   });
 });
