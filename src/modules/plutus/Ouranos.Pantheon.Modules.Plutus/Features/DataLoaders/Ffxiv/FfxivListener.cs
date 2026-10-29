@@ -56,13 +56,12 @@ public sealed class FfxivListener : IListener<SaleMessage>
         }
 
         var itemCode = message.Item.ToString();
-        var itemDtos = await _getItems.GetItemsAsync(cancellationToken);
 
         const string hqCode = "hq";
-        var hqItem = itemDtos.FirstOrDefault(i => i.SymbolCode == itemCode && i.IsHighQuality);
+        var hqItem = await _getItems.GetItemAsync(itemCode, true, cancellationToken);
 
         const string nqCode = "nq";
-        var nqItem = itemDtos.FirstOrDefault(i => i.SymbolCode == itemCode && !i.IsHighQuality);
+        var nqItem = await _getItems.GetItemAsync(itemCode, false, cancellationToken);
 
         var messages = sales
             .Select(sale =>

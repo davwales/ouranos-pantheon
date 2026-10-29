@@ -42,15 +42,12 @@ public sealed class FfxivListenerTests
         var message = new SaleMessage("sales/add", itemCode, 34, [sale]);
 
         _getItems
-            .GetItemsAsync(Arg.Any<CancellationToken>())
+            .GetItemAsync(itemCode.ToString(), false, Arg.Any<CancellationToken>())
+            .Returns(new ItemDto(itemCode.ToString(), false, "Some Item", new AdditionalFields()));
+        _getItems
+            .GetItemAsync(itemCode.ToString(), true, Arg.Any<CancellationToken>())
             .Returns(
-                Task.FromResult(
-                    new List<ItemDto>
-                    {
-                        new(itemCode.ToString(), false, "Some Item", new AdditionalFields()),
-                        new(itemCode.ToString(), true, "Some Item HQ", new AdditionalFields()),
-                    }
-                )
+                new ItemDto(itemCode.ToString(), true, "Some Item HQ", new AdditionalFields())
             );
 
         // Act
@@ -64,6 +61,51 @@ public sealed class FfxivListenerTests
                     msgs.Count == 1
                     && msgs.First().Producer == Producer.Ffxiv
                     && msgs.First().SymbolCode == itemCode.ToString()
+                    && msgs.First().SymbolName == "Some Item"
+                ),
+                Arg.Any<CancellationToken>()
+            );
+    }
+
+    [Fact]
+    public async Task HandleMessageAsync_WhenSaleIsHighQuality_ShouldUseHighQualityItem()
+    {
+        // Arrange
+        var itemCode = 1234;
+        var sale = new SaleDetail(
+            Hq: true,
+            PricePerUnit: 100,
+            Quantity: 5,
+            Timestamp: (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+            OnMannequin: false,
+            WorldName: null,
+            WorldId: null,
+            BuyerName: "Buyer",
+            Total: 500
+        );
+
+        var message = new SaleMessage("sales/add", itemCode, 34, [sale]);
+
+        _getItems
+            .GetItemAsync(itemCode.ToString(), false, Arg.Any<CancellationToken>())
+            .Returns(new ItemDto(itemCode.ToString(), false, "Some Item", new AdditionalFields()));
+        _getItems
+            .GetItemAsync(itemCode.ToString(), true, Arg.Any<CancellationToken>())
+            .Returns(
+                new ItemDto(itemCode.ToString(), true, "Some Item HQ", new AdditionalFields())
+            );
+
+        // Act
+        await _listener.HandleMessageAsync(message, _client, CancellationToken.None);
+
+        // Assert
+        await _queue
+            .Received(1)
+            .QueueMessages(
+                Arg.Is<IReadOnlyCollection<TradeMessage>>(msgs =>
+                    msgs.Count == 1
+                    && msgs.First().SymbolSubcode == "hq"
+                    && msgs.First().SymbolName == "Some Item HQ"
                 ),
                 Arg.Any<CancellationToken>()
             );
@@ -85,7 +127,9 @@ public sealed class FfxivListenerTests
                 Arg.Any<IReadOnlyCollection<TradeMessage>>(),
                 Arg.Any<CancellationToken>()
             );
-        await _getItems.DidNotReceive().GetItemsAsync(Arg.Any<CancellationToken>());
+        await _getItems
+            .DidNotReceive()
+            .GetItemAsync(Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -107,15 +151,8 @@ public sealed class FfxivListenerTests
         var message = new SaleMessage("sales/add", itemCode, 34, [sale]);
 
         _getItems
-            .GetItemsAsync(Arg.Any<CancellationToken>())
-            .Returns(
-                Task.FromResult(
-                    new List<ItemDto>
-                    {
-                        new("1111", false, "Different Item", new AdditionalFields()),
-                    }
-                )
-            );
+            .GetItemAsync(Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
+            .Returns((ItemDto?)null);
 
         // Act
         await _listener.HandleMessageAsync(message, _client, CancellationToken.None);
