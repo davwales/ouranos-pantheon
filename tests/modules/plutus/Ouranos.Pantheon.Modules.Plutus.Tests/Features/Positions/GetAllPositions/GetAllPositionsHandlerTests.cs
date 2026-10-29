@@ -218,6 +218,117 @@ public sealed class GetAllPositionsHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenBuyHasLinkedSells_ShouldReturnUnsoldQuantity()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var symbol = Symbol.Create(
+            symbolId,
+            "TEST",
+            null,
+            "Test Symbol",
+            marketId,
+            new AdditionalFields()
+        );
+        var buyPosition = Position.Create(
+            PositionSide.Buy,
+            marketId,
+            symbolId,
+            150.50m,
+            10m,
+            symbol: symbol
+        );
+        buyPosition.Close(PositionStatus.Bought);
+        var soldPosition = Position.Create(
+            PositionSide.Sell,
+            marketId,
+            symbolId,
+            155.00m,
+            4m,
+            linkedBuyPosition: buyPosition,
+            symbol: symbol
+        );
+        soldPosition.Close(PositionStatus.Sold);
+        var unsoldPosition = Position.Create(
+            PositionSide.Sell,
+            marketId,
+            symbolId,
+            160.00m,
+            6m,
+            linkedBuyPosition: buyPosition,
+            symbol: symbol
+        );
+        unsoldPosition.Close(PositionStatus.DidNotSell);
+        await _dbContext.Symbols.AddAsync(symbol);
+        await _dbContext.Positions.AddRangeAsync(buyPosition, soldPosition, unsoldPosition);
+        await _dbContext.SaveChangesAsync();
+
+        var query = new GetAllPositionsInput(marketId);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Items.Single(p => p.Id == buyPosition.Id).UnsoldQuantity.ShouldBe(6m);
+        result.Items.Single(p => p.Id == soldPosition.Id).UnsoldQuantity.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Handle_WhenFilteredByUnsoldQuantity_ShouldExcludeFullySoldBuys()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var symbol = Symbol.Create(
+            symbolId,
+            "TEST",
+            null,
+            "Test Symbol",
+            marketId,
+            new AdditionalFields()
+        );
+        var openBuy = Position.Create(
+            PositionSide.Buy,
+            marketId,
+            symbolId,
+            150.50m,
+            5m,
+            symbol: symbol
+        );
+        openBuy.Close(PositionStatus.Bought);
+        var soldBuy = Position.Create(
+            PositionSide.Buy,
+            marketId,
+            symbolId,
+            150.50m,
+            5m,
+            symbol: symbol
+        );
+        soldBuy.Close(PositionStatus.Bought);
+        var sellPosition = Position.Create(
+            PositionSide.Sell,
+            marketId,
+            symbolId,
+            155.00m,
+            5m,
+            linkedBuyPosition: soldBuy,
+            symbol: symbol
+        );
+        await _dbContext.Symbols.AddAsync(symbol);
+        await _dbContext.Positions.AddRangeAsync(openBuy, soldBuy, sellPosition);
+        await _dbContext.SaveChangesAsync();
+
+        var query = new GetAllPositionsInput(marketId, Filter: ["unsoldQuantity:gte:1"]);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Items.Select(p => p.Id).ShouldBe([openBuy.Id]);
+    }
+
+    [Fact]
     public async Task Handle_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange

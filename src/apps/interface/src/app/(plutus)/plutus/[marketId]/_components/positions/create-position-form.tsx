@@ -51,7 +51,7 @@ export function CreatePositionForm({
     setIsSubmitting(true);
     setError(null);
     try {
-      const result = await plutusApi.createPosition({
+      await plutusApi.createPosition({
         side,
         marketId,
         symbolId: selectedSymbolId,
@@ -60,11 +60,8 @@ export function CreatePositionForm({
         strategyId: defaults?.strategyId ?? null,
         notes: notes.trim() || null,
         targetPrice: side === "Buy" ? targetPrice : null,
+        linkedBuyPositionId: linkedBuyPositionId ?? null,
       });
-
-      if (linkedBuyPositionId && result.id) {
-        await plutusApi.linkPosition(result.id, linkedBuyPositionId);
-      }
 
       onDone();
     } catch (err) {

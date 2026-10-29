@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Plutus.Features.Positions.CreatePosition.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Database.Querying;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Positions;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
@@ -34,6 +35,26 @@ public sealed class CreatePositionHandler
 
         await EnsureReferencesBelongToMarketAsync(command, cancellationToken);
 
+        Position? linkedBuyPosition = null;
+        decimal committedSellQuantity = 0;
+        if (command.LinkedBuyPositionId is { } linkedBuyPositionId)
+        {
+            linkedBuyPosition =
+                await _dbContext.Positions.FirstOrDefaultAsync(
+                    p => p.Id == linkedBuyPositionId,
+                    cancellationToken
+                )
+                ?? throw new BadRequestException(
+                    $"Buy position '{linkedBuyPositionId}' does not exist."
+                );
+
+            committedSellQuantity = await _dbContext.Positions.CommittedSellQuantityAsync(
+                linkedBuyPositionId,
+                null,
+                cancellationToken
+            );
+        }
+
         var position = Position.Create(
             command.Side,
             command.MarketId,
@@ -42,7 +63,9 @@ public sealed class CreatePositionHandler
             command.Quantity,
             command.StrategyId,
             command.Notes,
-            targetPrice: command.TargetPrice
+            linkedBuyPosition,
+            targetPrice: command.TargetPrice,
+            committedSellQuantity: committedSellQuantity
         );
 
         await _dbContext.Positions.AddAsync(position, cancellationToken);

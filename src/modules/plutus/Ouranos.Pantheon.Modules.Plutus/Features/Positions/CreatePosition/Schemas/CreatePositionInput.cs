@@ -14,5 +14,6 @@ public sealed record CreatePositionInput(
     decimal Quantity,
     Id<Strategy>? StrategyId = null,
     string? Notes = null,
-    decimal? TargetPrice = null
+    decimal? TargetPrice = null,
+    Id<Position>? LinkedBuyPositionId = null
 );

@@ -188,6 +188,90 @@ public sealed class CreatePositionHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenLinkedBuyPositionGiven_ShouldCreateLinkedSell()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var symbol = await AddSymbolAsync(marketId);
+        var buyPosition = await AddBoughtBuyAsync(marketId, symbol.Id, 10m);
+        var command = new CreatePositionInput(
+            PositionSide.Sell,
+            marketId,
+            symbol.Id,
+            155.00m,
+            10m,
+            LinkedBuyPositionId: buyPosition.Id
+        );
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var position = await _dbContext.Positions.FindAsync(result.Id);
+        position.ShouldNotBeNull();
+        position.LinkedBuyPositionId.ShouldBe(buyPosition.Id);
+        _dbContext.Positions.Count().ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task Handle_WhenLinkedBuyPositionDoesNotExist_ShouldThrowBadRequestException()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var symbol = await AddSymbolAsync(marketId);
+        var command = new CreatePositionInput(
+            PositionSide.Sell,
+            marketId,
+            symbol.Id,
+            155.00m,
+            10m,
+            LinkedBuyPositionId: _fixture.Create<Id<Position>>()
+        );
+
+        // Act
+        var create = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await create.ShouldThrowAsync<BadRequestException>();
+        _dbContext.Positions.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Handle_WhenLinkedBuyAlreadySold_ShouldThrowBadRequestAndCreateNothing()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var symbol = await AddSymbolAsync(marketId);
+        var buyPosition = await AddBoughtBuyAsync(marketId, symbol.Id, 10m);
+        var soldPosition = Position.Create(
+            PositionSide.Sell,
+            marketId,
+            symbol.Id,
+            155.00m,
+            10m,
+            linkedBuyPosition: buyPosition
+        );
+        await _dbContext.Positions.AddAsync(soldPosition);
+        await _dbContext.SaveChangesAsync();
+
+        var command = new CreatePositionInput(
+            PositionSide.Sell,
+            marketId,
+            symbol.Id,
+            155.00m,
+            1m,
+            LinkedBuyPositionId: buyPosition.Id
+        );
+
+        // Act
+        var create = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await create.ShouldThrowAsync<BadRequestException>();
+        _dbContext.Positions.Count().ShouldBe(2);
+    }
+
+    [Fact]
     public async Task Handle_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange
@@ -220,6 +304,19 @@ public sealed class CreatePositionHandlerTests
         await _dbContext.Symbols.AddAsync(symbol);
         await _dbContext.SaveChangesAsync();
         return symbol;
+    }
+
+    private async Task<Position> AddBoughtBuyAsync(
+        Id<Market> marketId,
+        Id<Symbol> symbolId,
+        decimal quantity
+    )
+    {
+        var buyPosition = Position.Create(PositionSide.Buy, marketId, symbolId, 150m, quantity);
+        buyPosition.Close(PositionStatus.Bought);
+        await _dbContext.Positions.AddAsync(buyPosition);
+        await _dbContext.SaveChangesAsync();
+        return buyPosition;
     }
 
     private async Task<Strategy> AddStrategyAsync(Id<Market> marketId)

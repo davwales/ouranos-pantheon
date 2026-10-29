@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Plutus.Features.Positions.GetAllPositions.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Positions;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Filtering;
@@ -26,7 +27,8 @@ public sealed class GetAllPositionsHandler
             .On(nameof(GetAllPositionsResponse.Side), x => x.Side)
             .On(nameof(GetAllPositionsResponse.Status), x => x.Status)
             .On(nameof(GetAllPositionsResponse.Cost), x => x.Cost)
-            .On(nameof(GetAllPositionsResponse.Quantity), x => x.Quantity);
+            .On(nameof(GetAllPositionsResponse.Quantity), x => x.Quantity)
+            .On(nameof(GetAllPositionsResponse.UnsoldQuantity), x => x.UnsoldQuantity);
 
     private static readonly SortBuilder<GetAllPositionsResponse> SortBuilder =
         new SortBuilder<GetAllPositionsResponse>()
@@ -36,6 +38,7 @@ public sealed class GetAllPositionsHandler
             .On(nameof(GetAllPositionsResponse.Status), x => x.Status)
             .On(nameof(GetAllPositionsResponse.Cost), x => x.Cost)
             .On(nameof(GetAllPositionsResponse.Quantity), x => x.Quantity)
+            .On(nameof(GetAllPositionsResponse.UnsoldQuantity), x => x.UnsoldQuantity)
             .On(nameof(GetAllPositionsResponse.CreatedAt), x => x.CreatedAt)
             .Default(x => x.CreatedAt);
 
@@ -97,6 +100,16 @@ public sealed class GetAllPositionsHandler
                 p.Symbol.Name,
                 p.Cost,
                 p.Quantity,
+                // A sell that did not sell leaves its quantity available, matching the link rules.
+                p.Side == PositionSide.Buy
+                    ? p.Quantity
+                        - _dbContext
+                            .Positions.Where(s =>
+                                s.LinkedBuyPositionId == p.Id
+                                && s.Status != PositionStatus.DidNotSell
+                            )
+                            .Sum(s => s.Quantity)
+                    : (decimal?)null,
                 p.TargetPrice,
                 p.LinkedBuyPositionId,
                 p.StrategyId,

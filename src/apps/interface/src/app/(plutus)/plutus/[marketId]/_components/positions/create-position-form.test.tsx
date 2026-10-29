@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CreatePositionForm } from "./create-position-form";
 
 vi.mock("@/lib/api/plutus", () => ({
-  plutusApi: { createPosition: vi.fn(), linkPosition: vi.fn() },
+  plutusApi: { createPosition: vi.fn() },
 }));
 
 describe("CreatePositionForm", () => {
@@ -44,11 +44,12 @@ describe("CreatePositionForm", () => {
         strategyId: "strategy-1",
         notes: null,
         targetPrice: 120,
+        linkedBuyPositionId: null,
       }),
     );
   });
 
-  it("WhenCreatingLinkedSell_ShouldPrefillQuantityAndOmitTarget", async () => {
+  it("WhenCreatingLinkedSell_ShouldCreateAndLinkInOneRequest", async () => {
     // Arrange
     render(
       <CreatePositionForm
@@ -72,12 +73,11 @@ describe("CreatePositionForm", () => {
           cost: 130,
           quantity: 7,
           targetPrice: null,
+          linkedBuyPositionId: "buy-1",
         }),
       ),
     );
+    expect(plutusApi.createPosition).toHaveBeenCalledTimes(1);
     expect(screen.queryByText("Target sell price")).toBeNull();
-    await waitFor(() =>
-      expect(plutusApi.linkPosition).toHaveBeenCalledWith("new", "buy-1"),
-    );
   });
 });

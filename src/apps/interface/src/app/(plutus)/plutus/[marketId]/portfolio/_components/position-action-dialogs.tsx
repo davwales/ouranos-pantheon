@@ -86,7 +86,7 @@ export function PositionActionDialogs({
 
       {linkSellPosition && (
         <LinkPositionDialog
-          positionId={linkSellPosition.id}
+          sellPosition={linkSellPosition}
           marketId={marketId}
           open={!!linkSellPosition}
           onOpenChange={(v) => {
