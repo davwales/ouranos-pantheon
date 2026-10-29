@@ -58,5 +58,6 @@ public class SymbolGroup : BaseEntity<Id<SymbolGroup>>
 
         Name = name;
         Description = description;
+        Update();
     }
 }

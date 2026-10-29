@@ -151,4 +151,83 @@ public sealed class RecipeTests
         // Assert
         create.ShouldThrow<ArgumentException>();
     }
+
+    [Fact]
+    public void Update_WhenHappyPath_ShouldUpdatePropertiesAndKeepCreatedAt()
+    {
+        // Arrange
+        var recipe = CreateRecipe();
+        var originalCreatedAt = recipe.CreatedAt;
+        var originalUpdatedAt = recipe.UpdatedAt;
+        var name = _fixture.Create<string>();
+        var cost = _fixture.Create<decimal>();
+        var inputs = _fixture.CreateMany<RecipeComponent>().ToList();
+        var outputs = _fixture.CreateMany<RecipeComponent>().ToList();
+        SpinWait.SpinUntil(() => DateTimeOffset.UtcNow > originalUpdatedAt);
+
+        // Act
+        recipe.Update(name, cost, inputs, outputs);
+
+        // Assert
+        recipe.Name.ShouldBe(name);
+        recipe.Cost.ShouldBe(cost);
+        recipe.Inputs.ShouldBe(inputs);
+        recipe.Outputs.ShouldBe(outputs);
+        recipe.CreatedAt.ShouldBe(originalCreatedAt);
+        recipe.UpdatedAt.ShouldBeGreaterThan(originalUpdatedAt);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" ")]
+    public void Update_WhenInvalidName_ShouldThrowArgumentException(string? name)
+    {
+        // Arrange
+        var recipe = CreateRecipe();
+
+        // Act
+        var update = () => recipe.Update(name!, 0m, [], []);
+
+        // Assert
+        update.ShouldThrow<ArgumentException>();
+    }
+
+    [Fact]
+    public void Update_WhenNullInputs_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var recipe = CreateRecipe();
+
+        // Act
+        var update = () => recipe.Update(_fixture.Create<string>(), 0m, null!, []);
+
+        // Assert
+        update.ShouldThrow<ArgumentException>();
+    }
+
+    [Fact]
+    public void Update_WhenNullOutputs_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var recipe = CreateRecipe();
+
+        // Act
+        var update = () => recipe.Update(_fixture.Create<string>(), 0m, [], null!);
+
+        // Assert
+        update.ShouldThrow<ArgumentException>();
+    }
+
+    private Recipe CreateRecipe()
+    {
+        return Recipe.Create(
+            _fixture.Create<Id<Recipe>>(),
+            _fixture.Create<Id<Market>>(),
+            _fixture.Create<string>(),
+            _fixture.Create<decimal>(),
+            _fixture.CreateMany<RecipeComponent>().ToList(),
+            _fixture.CreateMany<RecipeComponent>().ToList()
+        );
+    }
 }

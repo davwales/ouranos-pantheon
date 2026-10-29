@@ -91,6 +91,26 @@ public sealed class SymbolGroupTests
         group.Description.ShouldBe(newDescription);
     }
 
+    [Fact]
+    public void Update_WhenHappyPath_ShouldBumpUpdatedAt()
+    {
+        // Arrange
+        var group = SymbolGroup.Create(
+            _fixture.Create<Id<SymbolGroup>>(),
+            _fixture.Create<string>(),
+            null,
+            _fixture.Create<Id<Market>>()
+        );
+        var originalUpdatedAt = group.UpdatedAt;
+        SpinWait.SpinUntil(() => DateTimeOffset.UtcNow > originalUpdatedAt);
+
+        // Act
+        group.Update(_fixture.Create<string>(), null);
+
+        // Assert
+        group.UpdatedAt.ShouldBeGreaterThan(originalUpdatedAt);
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]

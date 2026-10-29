@@ -108,6 +108,28 @@ public sealed class SymbolTests
         symbol.AdditionalFields.ShouldBe(newFields);
     }
 
+    [Fact]
+    public void Update_WhenHappyPath_ShouldBumpUpdatedAt()
+    {
+        // Arrange
+        var symbol = Symbol.Create(
+            _fixture.Create<Id<Symbol>>(),
+            _fixture.Create<string>(),
+            null,
+            _fixture.Create<string>(),
+            _fixture.Create<Id<Market>>(),
+            new AdditionalFields()
+        );
+        var originalUpdatedAt = symbol.UpdatedAt;
+        SpinWait.SpinUntil(() => DateTimeOffset.UtcNow > originalUpdatedAt);
+
+        // Act
+        symbol.Update(_fixture.Create<string>(), new AdditionalFields());
+
+        // Assert
+        symbol.UpdatedAt.ShouldBeGreaterThan(originalUpdatedAt);
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]
