@@ -64,7 +64,7 @@ export function OptimizeForm({
     setIsSubmitting(true);
     setError(null);
     try {
-      await plutusApi.optimizeStrategy(strategyId, {
+      const { backtestId } = await plutusApi.optimizeStrategy(strategyId, {
         marketId,
         startDate,
         endDate,
@@ -78,7 +78,9 @@ export function OptimizeForm({
         slippageMultiplier,
       });
       onDone();
-      router.push(`/plutus/${marketId}/strategies/${strategyId}/backtests`);
+      router.push(
+        `/plutus/${marketId}/strategies/${strategyId}/backtests/${backtestId}`,
+      );
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to optimize strategy",
