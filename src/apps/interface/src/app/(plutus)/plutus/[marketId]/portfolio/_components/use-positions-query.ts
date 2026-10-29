@@ -3,7 +3,7 @@ import {
   extractFilter,
   extractSort,
 } from "@/components/shared/responsive-data-table/types";
-import { useApi } from "@/hooks/use-api";
+import { errorOf, useApi } from "@/hooks/use-api";
 import { plutusApi } from "@/lib/api/plutus";
 import { useMemo } from "react";
 
@@ -54,6 +54,7 @@ export function usePositionsQuery(
   return {
     data,
     fetching: state.status === "loading",
+    error: errorOf(state),
     pageInfo,
     reexecute,
   };

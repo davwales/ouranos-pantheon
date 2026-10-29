@@ -109,7 +109,7 @@ export default function GroupDetailPage() {
   };
 
   if (state.status === "error" && !group) {
-    return <NotFoundCard title="Group not found" backHref={`/plutus/${marketId}/groups`} backLabel="Back to Groups" />;
+    return <NotFoundCard title="Group not found" backHref={`/plutus/${marketId}/groups`} backLabel="Back to Groups" error={state.error} onRetry={reexecute} />;
   }
 
   if (state.status === "loading" && !group) {
