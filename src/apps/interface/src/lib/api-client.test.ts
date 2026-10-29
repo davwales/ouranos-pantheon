@@ -1,5 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { apiUrl } from "./api-client";
+import { ApiError, apiUrl, isNotFound } from "./api-client";
+
+describe("isNotFound", () => {
+  it("is true only for a 404 ApiError", () => {
+    expect(isNotFound(new ApiError(404, "Not Found"))).toBe(true);
+    expect(isNotFound(new ApiError(500, "Server error"))).toBe(false);
+    expect(isNotFound(new Error("Network error"))).toBe(false);
+  });
+});
 
 describe("apiUrl", () => {
   afterEach(() => {

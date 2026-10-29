@@ -9,7 +9,7 @@ import { Typography } from "@/components/shared/typography";
 import { type PlutusState, usePlutusStore } from "@/stores/plutus-store";
 import { Button } from "@/components/ui/button";
 import { useBreadcrumbLabel } from "@/components/shared/breadcrumbs";
-import { useApi } from "@/hooks/use-api";
+import { errorOf, useApi } from "@/hooks/use-api";
 import { type StrategyDetail, plutusApi } from "@/lib/api/plutus";
 import { Play, RefreshCw } from "lucide-react";
 import Link from "next/link";
@@ -139,6 +139,8 @@ export default function BacktestsPage() {
           columns={columns}
           data={data?.items}
           loading={fetching && !data}
+          error={errorOf(backtestsState)}
+          onRetry={reexecute}
           state={tableState}
           onStateChange={setTableState}
           pageInfo={pageInfo}

@@ -28,6 +28,10 @@ export class ApiError extends Error {
   }
 }
 
+export function isNotFound(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 404;
+}
+
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(apiUrl(path), {
     headers: { "Content-Type": "application/json", ...options?.headers },

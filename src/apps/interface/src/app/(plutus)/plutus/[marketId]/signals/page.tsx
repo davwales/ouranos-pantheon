@@ -7,7 +7,7 @@ import {
 } from "@/components/shared/responsive-data-table/types";
 import { Typography } from "@/components/shared/typography";
 import { type PlutusState, usePlutusStore } from "@/stores/plutus-store";
-import { useApi } from "@/hooks/use-api";
+import { errorOf, useApi } from "@/hooks/use-api";
 import { plutusApi } from "@/lib/api/plutus";
 import { RefreshCw } from "lucide-react";
 import { useParams } from "next/navigation";
@@ -76,6 +76,8 @@ export default function SignalRankingsDetail() {
         columns={columns}
         data={data?.items}
         loading={fetching && !data}
+        error={errorOf(state)}
+        onRetry={reexecute}
         state={tableState}
         onStateChange={setTableState}
         pageInfo={pageInfo}

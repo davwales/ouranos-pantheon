@@ -85,6 +85,9 @@ export type DataTableProps<TData extends RowData> = {
   columns: ExtendedColumnDef<TData>[];
   data: TData[] | null | undefined;
   loading?: boolean;
+  /** The last fetch failed; shown instead of "No results", or as a warning above stale rows. */
+  error?: Error;
+  onRetry?: () => void;
   skeletonRows?: number;
   scrollTop?: boolean;
   state?: DataTableState;

@@ -37,7 +37,7 @@ export default function RecipeDetailPage() {
     useShallow((state: PlutusState) => [state.timeFrameKey]),
   );
 
-  const [state] = useApi(
+  const [state, reexecute] = useApi(
     () => plutusApi.getRecipe(recipeId, timeFrameKey),
     [recipeId, timeFrameKey],
   );
@@ -108,7 +108,7 @@ export default function RecipeDetailPage() {
   };
 
   if (state.status === "error" && !recipe) {
-    return <NotFoundCard title="Recipe not found" backHref={`/plutus/${marketId}/recipes`} backLabel="Back to Recipes" />;
+    return <NotFoundCard title="Recipe not found" backHref={`/plutus/${marketId}/recipes`} backLabel="Back to Recipes" error={state.error} onRetry={reexecute} />;
   }
 
   if (state.status === "loading" && !recipe) {

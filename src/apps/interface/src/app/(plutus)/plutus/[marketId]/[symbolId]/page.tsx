@@ -132,7 +132,7 @@ export default function SymbolDetail() {
   }, [isAssistantAvailable, marketId, symbolId, timeFrameKey, setActions, clearActions]);
 
   if (state.status === "error" && !data) {
-    return <NotFoundCard title="Symbol not found" backHref={`/plutus/${marketId}`} backLabel="Back to Market" />;
+    return <NotFoundCard title="Symbol not found" backHref={`/plutus/${marketId}`} backLabel="Back to Market" error={state.error} onRetry={reexecuteQuery} />;
   }
 
   if (state.status === "loading" && !data) {

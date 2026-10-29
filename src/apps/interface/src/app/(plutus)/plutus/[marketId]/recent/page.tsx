@@ -6,7 +6,7 @@ import { ExtendedColumnDef } from "@/components/shared/responsive-data-table";
 import ResponsiveDataTable from "@/components/shared/responsive-data-table/responsive-data-table";
 import { Typography } from "@/components/shared/typography";
 import { PlutusState, usePlutusStore } from "@/stores/plutus-store";
-import { useApi } from "@/hooks/use-api";
+import { errorOf, useApi } from "@/hooks/use-api";
 import useInterval from "@/hooks/use-interval";
 import { Trade, plutusApi } from "@/lib/api/plutus";
 import { formatDistance } from "date-fns";
@@ -103,6 +103,8 @@ export default function RecentMarketTrades() {
         columns={columns}
         data={state.data}
         loading={state.status === "loading" && !state.data}
+        error={errorOf(state)}
+        onRetry={reexecute}
         state={tableState}
         onStateChange={setTableState}
         disableFiltering
