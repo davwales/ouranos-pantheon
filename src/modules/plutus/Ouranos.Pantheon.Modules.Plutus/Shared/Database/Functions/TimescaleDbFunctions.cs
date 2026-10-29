@@ -19,22 +19,24 @@ public static class TimescaleDbFunctions
 
     public static string ToTimescaleInterval(this TimeSpan timeSpan)
     {
-        if (timeSpan.TotalDays >= 1)
+        // Use the largest unit that represents the span exactly: truncating (e.g. 43 hours to
+        // "1 days") would bucket differently from the TimeBucket translation of the same span.
+        if (timeSpan.Ticks % TimeSpan.TicksPerDay == 0)
         {
-            return $"{(int)timeSpan.TotalDays} days";
+            return $"{(long)timeSpan.TotalDays} days";
         }
 
-        if (timeSpan.TotalHours >= 1)
+        if (timeSpan.Ticks % TimeSpan.TicksPerHour == 0)
         {
-            return $"{(int)timeSpan.TotalHours} hours";
+            return $"{(long)timeSpan.TotalHours} hours";
         }
 
-        if (timeSpan.TotalMinutes >= 1)
+        if (timeSpan.Ticks % TimeSpan.TicksPerMinute == 0)
         {
-            return $"{(int)timeSpan.TotalMinutes} minutes";
+            return $"{(long)timeSpan.TotalMinutes} minutes";
         }
 
-        return $"{(int)timeSpan.TotalSeconds} seconds";
+        return $"{(long)timeSpan.TotalSeconds} seconds";
     }
 
     public static void HasTimescaleDbFunctions(this ModelBuilder modelBuilder)

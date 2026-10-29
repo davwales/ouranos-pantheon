@@ -76,6 +76,32 @@ public sealed class TimescaleDbFunctionsTests
         result.ShouldBe("30 seconds");
     }
 
+    [Theory]
+    [InlineData(43 * 60, "43 hours")]
+    [InlineData((24 * 60) + 30, "1470 minutes")]
+    [InlineData(90, "90 minutes")]
+    public void ToTimescaleInterval_WhenNotAWholeLargerUnit_ShouldNotTruncate(
+        int minutes,
+        string expected
+    )
+    {
+        // Act
+        var result = TimeSpan.FromMinutes(minutes).ToTimescaleInterval();
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void ToTimescaleInterval_WhenFractionalMinutes_ShouldReturnExactSeconds()
+    {
+        // Act
+        var result = TimeSpan.FromDays(1).Divide(25).ToTimescaleInterval();
+
+        // Assert
+        result.ShouldBe("3456 seconds");
+    }
+
     [Fact]
     public void HasTimescaleDbFunctions_ShouldRegisterBothOverloads()
     {
