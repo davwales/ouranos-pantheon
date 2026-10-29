@@ -1,6 +1,6 @@
 import { type AssistantEvent, type AssistantToolStatus } from "@/lib/api/assistant-types";
 
-export interface Persona {
+export type Persona = {
   id: string;
   name: string;
   description: string;
@@ -10,9 +10,9 @@ export interface Persona {
   isPublic: boolean;
   createdAt?: string;
   updatedAt?: string;
-}
+};
 
-export interface ModelConfig {
+export type ModelConfig = {
   id: string;
   name: string;
   modelIdentifier: string;
@@ -26,13 +26,13 @@ export interface ModelConfig {
   isUnavailable: boolean;
   createdAt?: string;
   updatedAt?: string;
-}
+};
 
-export interface AvailableModel {
+export type AvailableModel = {
   id: string;
   modelIdentifier: string;
   ownedBy: string;
-}
+};
 
 export type ReasoningEffort = "None" | "Low" | "Medium" | "High";
 
@@ -59,12 +59,12 @@ export type ImageMessagePart = {
   altText: string;
 };
 
-export interface MessageInput {
+export type MessageInput = {
   role: Role;
   content: string;
   sortOrder?: number;
   parts?: MessagePart[];
-}
+};
 
 export type CompletionToolCallInput = {
   callId: string;
@@ -92,26 +92,26 @@ export type ImageDetails = {
   createdAt: string;
 };
 
-export interface PersonaInput {
+export type PersonaInput = {
   name: string;
   description: string;
   personality?: string | null;
   scenario?: string | null;
-}
+};
 
-export interface ModelInput {
+export type ModelInput = {
   modelIdentifier: string;
   systemPrompt: string;
   temperature?: number | null;
   maxTokens?: number | null;
-}
+};
 
-export interface TraitInput {
+export type TraitInput = {
   name: string;
   content: string;
-}
+};
 
-export interface ConversationInput {
+export type ConversationInput = {
   model: ModelInput;
   persona: PersonaInput;
   messages: CompletionMessageInput[];
@@ -119,12 +119,12 @@ export interface ConversationInput {
   reasoningEffort?: ReasoningEffort | null;
   loraIds?: string[];
   toolSetId?: string | null;
-}
+};
 
-export interface GenerateCompletionInput {
+export type GenerateCompletionInput = {
   conversation: ConversationInput;
   conversationId?: string;
-}
+};
 
 export type FolderSummary = {
   id: string;
@@ -137,24 +137,24 @@ export type FolderSummary = {
   updatedAt: string;
 };
 
-export interface ConversationSummary {
+export type ConversationSummary = {
   id: string;
   name: string;
   isPublic: boolean;
   folderId: string | null;
   createdAt: string;
   updatedAt: string;
-}
+};
 
-export interface SavedConversationPersona {
+export type SavedConversationPersona = {
   id: string;
   name: string;
   description: string;
   personality?: string | null;
   scenario?: string | null;
-}
+};
 
-export interface SavedConversationModel {
+export type SavedConversationModel = {
   id: string;
   name: string;
   modelIdentifier: string;
@@ -163,13 +163,13 @@ export interface SavedConversationModel {
   maxTokens?: number | null;
   defaultToolSetId: string | null;
   contextWindow?: number | null;
-}
+};
 
-export interface SavedConversationTrait {
+export type SavedConversationTrait = {
   id: string;
   name: string;
   content: string;
-}
+};
 
 export type SavedConversationLora = {
   id: string;
@@ -178,14 +178,14 @@ export type SavedConversationLora = {
   weight: number;
 };
 
-export interface SavedConversationMessage {
+export type SavedConversationMessage = {
   content: string;
   role: Role;
   sortOrder: number;
   parts: MessagePart[];
-}
+};
 
-export interface SavedConversation {
+export type SavedConversation = {
   id: string;
   name: string;
   isPublic: boolean;
@@ -204,15 +204,15 @@ export interface SavedConversation {
   } | null;
   createdAt: string;
   updatedAt: string;
-}
+};
 
-export interface CompactConversationInput {
+export type CompactConversationInput = {
   conversationId?: string;
   modelIdentifier: string;
   personaName: string;
   personaDescription: string;
   messages: MessageInput[];
-}
+};
 
 export type CompactChunk =
   | { $type: "content"; content: string }
@@ -228,7 +228,7 @@ export type CompactChunk =
     }
   | { $type: "error"; message: string };
 
-export interface CreateConversationInput {
+export type CreateConversationInput = {
   personaId: string;
   modelConfigId: string;
   traitIds: string[];
@@ -242,7 +242,7 @@ export interface CreateConversationInput {
   reasoningEffort?: ReasoningEffort | null;
   loraIds?: string[];
   toolSetId?: string | null;
-}
+};
 
 export type UpdateConversationInput = {
   name: string;
@@ -259,11 +259,11 @@ export type UpdateConversationInput = {
 
 export type CompletionChunk = AssistantEvent;
 
-export interface UpdateFolderInput {
+export type UpdateFolderInput = {
   name: string;
   isPublic: boolean;
   parentFolderId?: string | null;
-}
+};
 
 export enum Role {
   System = "System",
@@ -272,14 +272,14 @@ export enum Role {
   Summary = "Summary",
 }
 
-export interface Trait {
+export type Trait = {
   id: string;
   name: string;
   content: string;
   isPublic: boolean;
   createdAt?: string;
   updatedAt?: string;
-}
+};
 
 export type Lora = {
   id: string;

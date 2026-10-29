@@ -3,17 +3,26 @@
 import ChatInterfaceView from "@/app/(hermes)/hermes/components/chat-interface-view";
 import {
   type LoraFormInput,
-  ModelFormInput,
-  PersonaFormInput,
-  TraitFormInput,
+  type ModelFormInput,
+  type PersonaFormInput,
+  type TraitFormInput,
 } from "@/app/(hermes)/hermes/types";
-import { MoveToFolderDropdown } from "@/app/(hermes)/hermes/conversations/components/move-to-folder-dropdown";
+import { ConversationHeader } from "@/app/(hermes)/hermes/conversations/components/conversation-header";
 import { useBreadcrumbLabel } from "@/components/shared/breadcrumbs";
 import { useApi } from "@/hooks/use-api";
-import { hermesApi, type ReasoningEffort } from "@/lib/api/hermes";
+import {
+  hermesApi,
+  type ReasoningEffort,
+  type UpdateConversationInput,
+} from "@/lib/api/hermes";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import { buildFolderTree, flattenFolders } from "../lib/folder-utils";
+import {
+  toModelFormInput,
+  toPersonaFormInput,
+  toTraitFormInputs,
+} from "../lib/saved-conversation-inputs";
 import { ChatMessageSkeleton } from "@/components/shared/skeletons/chat-message-skeleton";
 import { NotFoundCard } from "@/components/shared/not-found-card";
 
@@ -76,45 +85,18 @@ export default function ResumeConversationPage() {
   const resolvedPersona = useMemo<PersonaFormInput | undefined>(() => {
     if (persona) return persona;
     if (!saved) return undefined;
-    return {
-      id: saved.persona.id,
-      name: saved.persona.name,
-      description: saved.persona.description,
-      personality: saved.persona.personality,
-      scenario: saved.persona.scenario,
-      isDefault: false,
-      isPublic: false,
-    };
+    return toPersonaFormInput(saved.persona);
   }, [persona, saved]);
 
   const resolvedModel = useMemo<ModelFormInput | undefined>(() => {
     if (model) return model;
     if (!saved) return undefined;
-    return {
-      id: saved.model.id,
-      name: saved.model.name,
-      modelIdentifier: saved.model.modelIdentifier,
-      systemPrompt: saved.model.systemPrompt,
-      temperature: saved.model.temperature,
-      maxTokens: saved.model.maxTokens,
-      defaultToolSetId: saved.model.defaultToolSetId,
-      contextWindow: saved.model.contextWindow,
-      isDefault: false,
-      isPublic: false,
-    };
+    return toModelFormInput(saved.model);
   }, [model, saved]);
 
   const resolvedTraits = useMemo<TraitFormInput[]>(() => {
     if (activeTraits) return activeTraits;
-    return (
-      saved?.traits.map((t) => ({
-        id: t.id,
-        name: t.name,
-        content: t.content,
-        isPublic: false,
-        isEphemeral: false,
-      })) ?? []
-    );
+    return saved ? toTraitFormInputs(saved.traits) : [];
   }, [activeTraits, saved]);
 
   const resolvedLoras = useMemo<LoraFormInput[]>(() => {
@@ -127,8 +109,9 @@ export default function ResumeConversationPage() {
     [resolvedLoras],
   );
 
-  const handleMoveToFolder = useCallback(
-    async (targetFolderId: string | null) => {
+  /** Saves the conversation's current settings, with the given fields overridden. */
+  const updateConversation = useCallback(
+    async (overrides: Partial<UpdateConversationInput>) => {
       if (!saved || !resolvedPersona || !resolvedModel) return;
 
       await hermesApi.updateConversation(savedConversationId, {
@@ -140,11 +123,11 @@ export default function ResumeConversationPage() {
           .map((t) => t.id!),
         loraIds: resolvedLoraIds,
         isPublic: isPublic ?? saved.isPublic,
-        folderId: targetFolderId,
+        folderId: resolvedFolderId,
         reasoningEffort: resolvedReasoningEffort,
         toolSetId: resolvedToolSetId,
+        ...overrides,
       });
-      setFolderId(targetFolderId);
     },
     [
       saved,
@@ -155,9 +138,20 @@ export default function ResumeConversationPage() {
       resolvedTraits,
       resolvedLoraIds,
       isPublic,
+      resolvedFolderId,
       resolvedReasoningEffort,
       resolvedToolSetId,
     ],
+  );
+
+  const handleMoveToFolder = useCallback(
+    async (targetFolderId: string | null) => {
+      if (!saved || !resolvedPersona || !resolvedModel) return;
+
+      await updateConversation({ folderId: targetFolderId });
+      setFolderId(targetFolderId);
+    },
+    [saved, resolvedPersona, resolvedModel, updateConversation],
   );
 
   if (state.status === "loading") {
@@ -186,16 +180,13 @@ export default function ResumeConversationPage() {
 
   return (
     <>
-      <div className="flex items-center justify-between m-4 mb-0">
-        <h1 className="text-lg font-semibold truncate">
-          {conversationName ?? saved.name}
-        </h1>
-        <MoveToFolderDropdown
-          folders={allFolders}
-          currentFolderId={resolvedFolderId}
-          onMove={handleMoveToFolder}
-        />
-      </div>
+      <ConversationHeader
+        name={conversationName ?? saved.name}
+        folders={allFolders}
+        currentFolderId={resolvedFolderId}
+        onMove={handleMoveToFolder}
+      />
+
       <ChatInterfaceView
         persona={resolvedPersona}
         model={resolvedModel}
@@ -220,19 +211,7 @@ export default function ResumeConversationPage() {
           setConversationName(name);
         }}
         onRename={async (name) => {
-          await hermesApi.updateConversation(savedConversationId, {
-            name,
-            personaId: resolvedPersona.id!,
-            modelConfigId: resolvedModel.id!,
-            traitIds: resolvedTraits
-              .filter((t) => t.id && !t.isEphemeral)
-              .map((t) => t.id!),
-            loraIds: resolvedLoraIds,
-            isPublic: isPublic ?? saved.isPublic,
-            folderId: resolvedFolderId,
-            reasoningEffort: resolvedReasoningEffort,
-            toolSetId: resolvedToolSetId,
-          });
+          await updateConversation({ name });
           setConversationName(name);
         }}
         onDelete={async () => {
@@ -240,19 +219,7 @@ export default function ResumeConversationPage() {
           router.push("/hermes/conversations");
         }}
         onVisibilityChange={async (value) => {
-          await hermesApi.updateConversation(savedConversationId, {
-            name: conversationName ?? saved.name,
-            personaId: resolvedPersona.id!,
-            modelConfigId: resolvedModel.id!,
-            traitIds: resolvedTraits
-              .filter((t) => t.id && !t.isEphemeral)
-              .map((t) => t.id!),
-            loraIds: resolvedLoraIds,
-            isPublic: value,
-            folderId: resolvedFolderId,
-            reasoningEffort: resolvedReasoningEffort,
-            toolSetId: resolvedToolSetId,
-          });
+          await updateConversation({ isPublic: value });
           setIsPublic(value);
         }}
       />

@@ -3,13 +3,13 @@ import { Typography } from "@/components/shared/typography";
 import type { HealthStatus } from "@/lib/api/health";
 import { TickerQHealthDetail } from "./ticker-q-health-detail";
 
-interface HealthCheckCardProps {
+type HealthCheckCardProps = {
   resource: string;
   label: string;
   status: HealthStatus;
   detail: string;
   data?: Record<string, unknown>;
-}
+};
 
 export function HealthCheckCard({
   resource,

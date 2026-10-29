@@ -59,7 +59,7 @@ or repo-relative for apps.
 | External system | Channel | Protocol / format | Purpose | Code entry point |
 |-----------------|---------|-------------------|---------|------------------|
 | Market data providers (Universalis, XIVAPI, OSRS Wiki, Alpaca) | Outbound WSS / HTTPS | Per provider | Market data ingestion | Plutus: `Features/DataLoaders/` |
-| OuranosMl | Outbound HTTP | OpenAI-compatible: Responses (Hermes chat and module assistants with streamed reasoning and function tools, structured output), model list, streamed `POST /images/generations` and `POST /images/edits`, `GET /images/loras` and `GET /images/models` (Hermes image tools and LoRA sync) + `POST /plutus/forecast` | LLM chat, image generation, recipe normalization, price forecasting | Shared.Contract: `Infra/OuranosMachineLearning/` |
+| OuranosMl | Outbound HTTP | OpenAI-compatible: Responses (Hermes chat and module assistants with streamed reasoning and function tools, structured output), model list, streamed `POST /images/generations` and `POST /images/edits`, `GET /images/loras` and `GET /images/models` (Hermes image tools and LoRA sync) + `POST /plutus/forecast` | LLM chat, image generation, recipe normalization, price forecasting | Shared.Contract: `Infra/OuranosMachineLearning/` (registered once by the core); the forecast call is Plutus's own client ([Plutus docs](../../src/modules/plutus/docs/README.md)) |
 | Flagsmith | Outbound HTTP | REST | Feature flags | Shared: `Infra/Flagsmith/` |
 | Recipe websites | Outbound HTTPS | HTML with JSON-LD metadata | Recipe import | Hestia: `Features/Recipes/ImportRecipe/` |
 | Grafana Loki | Outbound HTTP | Push API | Production log sink | Gateway: `appsettings.Production.json` |

@@ -1,6 +1,6 @@
 import { type ToolSource } from "@/lib/api/hermes";
 
-export interface PersonaFormInput {
+export type PersonaFormInput = {
   id?: string;
   name: string;
   description: string;
@@ -8,9 +8,9 @@ export interface PersonaFormInput {
   scenario?: string | null;
   isDefault: boolean;
   isPublic: boolean;
-}
+};
 
-export interface ModelFormInput {
+export type ModelFormInput = {
   id?: string;
   name: string;
   modelIdentifier: string;
@@ -22,15 +22,15 @@ export interface ModelFormInput {
   isDefault: boolean;
   isPublic: boolean;
   isUnavailable?: boolean;
-}
+};
 
-export interface TraitFormInput {
+export type TraitFormInput = {
   id?: string;
   name: string;
   content: string;
   isPublic: boolean;
   isEphemeral?: boolean;
-}
+};
 
 export type LoraFormInput = {
   id?: string;
@@ -55,7 +55,7 @@ export type ToolSetFormInput = {
   isPublic: boolean;
 };
 
-export interface ConversationConfig {
+export type ConversationConfig = {
   persona: PersonaFormInput;
   model: ModelFormInput;
-}
+};

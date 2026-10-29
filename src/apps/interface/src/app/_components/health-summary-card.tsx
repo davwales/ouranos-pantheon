@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button";
 import type { HealthStatus, HealthCheckRow } from "@/lib/api/health";
 import { HealthCheckCard } from "./health-check-card";
 
-interface HealthSummaryCardProps {
+type HealthSummaryCardProps = {
   overallStatus: HealthStatus | null;
   checks: HealthCheckRow[] | null;
   isLoading: boolean;
   error: Error | null;
   onRetry: () => void;
   lastCheckedAt?: string | null;
-}
+};
 
 const RESOURCE_LABELS: Record<string, string> = {
   postgres: "PostgreSQL",

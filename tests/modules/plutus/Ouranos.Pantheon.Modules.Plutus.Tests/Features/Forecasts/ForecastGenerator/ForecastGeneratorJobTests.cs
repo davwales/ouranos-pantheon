@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.ForecastGenerator;
+using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.ForecastGenerator.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Forecasts;
@@ -8,12 +9,10 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
-using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
-using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Requests;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
 using TickerQ.Utilities.Base;
 using DbContextExtensions = Ouranos.Pantheon.Tests.Utils.Extensions.DbContextExtensions;
-using MlForecastPoint = Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos.ForecastPoint;
+using MlForecastPoint = Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.ForecastGenerator.Schemas.ForecastModelPoint;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Tests.Features.Forecasts.ForecastGenerator;
 
@@ -23,8 +22,7 @@ public sealed class ForecastGeneratorJobTests
         ILogger<ForecastGeneratorJob>
     >();
     private readonly PlutusDbContext _dbContext;
-    private readonly IOuranosMachineLearningClient _mlClient =
-        Substitute.For<IOuranosMachineLearningClient>();
+    private readonly IForecastModelClient _mlClient = Substitute.For<IForecastModelClient>();
     private readonly TickerFunctionContext _tickerFunctionContext;
     private readonly ForecastGeneratorJob _job;
 
@@ -65,7 +63,7 @@ public sealed class ForecastGeneratorJobTests
         // Assert
         await _mlClient
             .DidNotReceive()
-            .GetPlutusForecasts(Arg.Any<GetPlutusForecastsRequest>(), Arg.Any<CancellationToken>());
+            .ForecastAsync(Arg.Any<ForecastModelRequest>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -83,7 +81,7 @@ public sealed class ForecastGeneratorJobTests
         // Assert
         await _mlClient
             .DidNotReceive()
-            .GetPlutusForecasts(Arg.Any<GetPlutusForecastsRequest>(), Arg.Any<CancellationToken>());
+            .ForecastAsync(Arg.Any<ForecastModelRequest>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -100,7 +98,7 @@ public sealed class ForecastGeneratorJobTests
 
         var mlPredictions = CreateMlPredictions(count: 7);
         _mlClient
-            .GetPlutusForecasts(Arg.Any<GetPlutusForecastsRequest>(), Arg.Any<CancellationToken>())
+            .ForecastAsync(Arg.Any<ForecastModelRequest>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new List<List<MlForecastPoint>> { mlPredictions }));
 
         // Act
@@ -109,7 +107,7 @@ public sealed class ForecastGeneratorJobTests
         // Assert
         await _mlClient
             .Received(1)
-            .GetPlutusForecasts(Arg.Any<GetPlutusForecastsRequest>(), Arg.Any<CancellationToken>());
+            .ForecastAsync(Arg.Any<ForecastModelRequest>(), Arg.Any<CancellationToken>());
 
         _dbContext.Forecasts.Count().ShouldBe(1);
 
@@ -149,7 +147,7 @@ public sealed class ForecastGeneratorJobTests
 
         var mlPredictions = CreateMlPredictions(count: 7);
         _mlClient
-            .GetPlutusForecasts(Arg.Any<GetPlutusForecastsRequest>(), Arg.Any<CancellationToken>())
+            .ForecastAsync(Arg.Any<ForecastModelRequest>(), Arg.Any<CancellationToken>())
             .Returns(
                 Task.FromResult(new List<List<MlForecastPoint>> { mlPredictions, mlPredictions })
             );
@@ -160,10 +158,8 @@ public sealed class ForecastGeneratorJobTests
         // Assert
         await _mlClient
             .Received(1)
-            .GetPlutusForecasts(
-                Arg.Is<GetPlutusForecastsRequest>(r =>
-                    r.Points.Count == 2 && r.NumPredictions == 7
-                ),
+            .ForecastAsync(
+                Arg.Is<ForecastModelRequest>(r => r.Points.Count == 2 && r.NumPredictions == 7),
                 Arg.Any<CancellationToken>()
             );
 
@@ -185,7 +181,7 @@ public sealed class ForecastGeneratorJobTests
 
         var mlPredictions = CreateMlPredictions(count: 7);
         _mlClient
-            .GetPlutusForecasts(Arg.Any<GetPlutusForecastsRequest>(), Arg.Any<CancellationToken>())
+            .ForecastAsync(Arg.Any<ForecastModelRequest>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new List<List<MlForecastPoint>> { mlPredictions }));
 
         // Act
@@ -194,8 +190,8 @@ public sealed class ForecastGeneratorJobTests
         // Assert
         await _mlClient
             .Received(1)
-            .GetPlutusForecasts(
-                Arg.Is<GetPlutusForecastsRequest>(r => r.Points.Count == 1),
+            .ForecastAsync(
+                Arg.Is<ForecastModelRequest>(r => r.Points.Count == 1),
                 Arg.Any<CancellationToken>()
             );
 
@@ -226,7 +222,7 @@ public sealed class ForecastGeneratorJobTests
 
         var mlPredictions = CreateMlPredictions(count: 7);
         _mlClient
-            .GetPlutusForecasts(Arg.Any<GetPlutusForecastsRequest>(), Arg.Any<CancellationToken>())
+            .ForecastAsync(Arg.Any<ForecastModelRequest>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new List<List<MlForecastPoint>> { mlPredictions }));
 
         // Act
@@ -253,7 +249,7 @@ public sealed class ForecastGeneratorJobTests
         var mlPredictions = CreateMlPredictions(count: 7);
         mlPredictions[3] = mlPredictions[3] with { AveragePrice = 0m };
         _mlClient
-            .GetPlutusForecasts(Arg.Any<GetPlutusForecastsRequest>(), Arg.Any<CancellationToken>())
+            .ForecastAsync(Arg.Any<ForecastModelRequest>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new List<List<MlForecastPoint>> { mlPredictions }));
 
         // Act

@@ -1,4 +1,4 @@
-export interface RecipeSymbol {
+export type RecipeSymbol = {
   name: string;
   quantity: number;
   symbolId: string;
@@ -6,12 +6,12 @@ export interface RecipeSymbol {
   averagePrice?: number | null;
   totalValue?: number | null;
   volume?: number | null;
-}
+};
 
-export interface Recipe {
+export type Recipe = {
   id: string;
   name: string;
   cost: number;
   inputs: RecipeSymbol[];
   outputs: RecipeSymbol[];
-}
+};

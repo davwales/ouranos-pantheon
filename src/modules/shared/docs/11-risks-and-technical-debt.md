@@ -6,4 +6,4 @@ code generation, the unauthenticated TickerQ dashboard) stay in
 
 | # | Item | Where | Risk / impact | Proposed severity |
 |---|------|-------|---------------|-------------------|
-| SHARED-D1 (was D8, Shared part) | **Unused scaffolding**: the notification outbox and its every-minute job have no sender implementation; the Shared module's WebSocket builders are used only by tests | `Infra/Postgres/Notifications/`, Shared WebSocket builders | Readers assume capabilities that do not exist; dead code carries test and maintenance cost | Low |
+| SHARED-D1 (was D8, Shared part) | **Unused scaffolding**: the notification outbox and its every-minute job have no sender implementation (tracked in #7) | `Infra/Postgres/Notifications/` | Readers assume capabilities that do not exist; dead code carries test and maintenance cost | Low |

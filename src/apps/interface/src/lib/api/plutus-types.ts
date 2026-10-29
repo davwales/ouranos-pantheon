@@ -1,15 +1,15 @@
 import { type TimeFrameKey } from "@/app/(plutus)/plutus/constants/time-frames";
 
-export interface Market {
+export type Market = {
   id: string;
   name: string;
   description?: string | null;
   icon?: string | null;
   taxes: unknown;
   isForecastingEnabled: boolean;
-}
+};
 
-export interface Symbol {
+export type Symbol = {
   id: string;
   marketId: string;
   name: string;
@@ -17,9 +17,9 @@ export interface Symbol {
   subcode?: string | null;
   createdAt: string;
   updatedAt: string;
-}
+};
 
-export interface Trade {
+export type Trade = {
   id: string;
   symbolId: string;
   marketId: string;
@@ -28,9 +28,9 @@ export interface Trade {
   price: number;
   volume: number;
   timestamp: string;
-}
+};
 
-export interface GetMarketTradesRow {
+export type GetMarketTradesRow = {
   symbolId: string;
   symbolName: string;
   symbolSubcode?: string | null;
@@ -45,9 +45,9 @@ export interface GetMarketTradesRow {
   averagePrice: number;
   roi: number;
   totalGain: number;
-}
+};
 
-export interface GetRecipeTradesRow {
+export type GetRecipeTradesRow = {
   recipeId: string;
   recipeName: string;
   latestBuyPrice: number;
@@ -56,9 +56,9 @@ export interface GetRecipeTradesRow {
   averageBuyPrice: number;
   averageSellPrice: number;
   averageMargin: number;
-}
+};
 
-export interface TradeBucket {
+export type TradeBucket = {
   date: string;
   maxPrice: number;
   minPrice: number;
@@ -68,9 +68,9 @@ export interface TradeBucket {
   volume: number;
   openPrice: number;
   closePrice: number;
-}
+};
 
-export interface GetSymbolTradesResponse {
+export type GetSymbolTradesResponse = {
   minPrice: number;
   maxPrice: number;
   averagePrice: number;
@@ -78,50 +78,50 @@ export interface GetSymbolTradesResponse {
   volume: number;
   numTransactions: number;
   trades: TradeBucket[];
-}
+};
 
-export interface MarketOverviewBucket {
+export type MarketOverviewBucket = {
   date: string;
   numTransactions: number;
   price: number;
   totalSpent: number;
   volume: number;
-}
+};
 
-export interface GetMarketOverviewResponse {
+export type GetMarketOverviewResponse = {
   averagePrice: number;
   totalSpent: number;
   volume: number;
   numTransactions: number;
   trades: MarketOverviewBucket[];
-}
+};
 
-export interface HeatmapCell {
+export type HeatmapCell = {
   dayOfWeek: number;
   hour: number;
   totalTrades: number;
   percentage: number;
-}
+};
 
-export interface GetVolumeHeatmapResponse {
+export type GetVolumeHeatmapResponse = {
   rows: HeatmapCell[];
-}
+};
 
-export interface GetDailySymbolSummaryResponse {
+export type GetDailySymbolSummaryResponse = {
   averagePrice: number;
   minPrice: number;
   maxPrice: number;
   volume: number;
-}
+};
 
-export interface ForecastPoint {
+export type ForecastPoint = {
   averagePrice: number;
   minPrice: number;
   maxPrice: number;
   volume: number;
-}
+};
 
-export interface ForecastPrediction {
+export type ForecastPrediction = {
   averagePrice: number;
   minPrice: number;
   maxPrice: number;
@@ -133,9 +133,9 @@ export interface ForecastPrediction {
   maxPriceDelta: number;
   volumeDelta: number;
   gainDelta: number;
-}
+};
 
-export interface GetMarketForecastRow {
+export type GetMarketForecastRow = {
   id: string;
   marketId: string;
   symbolId: string;
@@ -149,18 +149,18 @@ export interface GetMarketForecastRow {
   dayFive: ForecastPrediction;
   daySix: ForecastPrediction;
   daySeven: ForecastPrediction;
-}
+};
 
-export interface Recipe {
+export type Recipe = {
   id: string;
   name: string;
   cost: number;
   marketId: string;
   inputs: RecipeComponent[];
   outputs: RecipeComponent[];
-}
+};
 
-export interface RecipeComponent {
+export type RecipeComponent = {
   symbolId: string;
   name: string;
   quantity: number;
@@ -168,9 +168,9 @@ export interface RecipeComponent {
   averagePrice?: number | null;
   totalValue?: number | null;
   volume?: number | null;
-}
+};
 
-export interface SignalResponse {
+export type SignalResponse = {
   type: string;
   label: string;
   description: string;
@@ -178,23 +178,23 @@ export interface SignalResponse {
   value: number;
   direction: string;
   strength: string;
-}
+};
 
-export interface SignalSummary {
+export type SignalSummary = {
   aggregatedScore: number;
   bullishCount: number;
   bearishCount: number;
   neutralCount: number;
   isFlipFavourable: boolean;
   isMerchFavourable: boolean;
-}
+};
 
-export interface SignalHistoryPoint {
+export type SignalHistoryPoint = {
   value: number;
   computedAt: string;
-}
+};
 
-export interface SignalHistoryResponse {
+export type SignalHistoryResponse = {
   type: string;
   label: string;
   description: string;
@@ -203,21 +203,21 @@ export interface SignalHistoryResponse {
   direction: string;
   strength: string;
   history: SignalHistoryPoint[];
-}
+};
 
-export interface GetSymbolSignalHistoryResponse {
+export type GetSymbolSignalHistoryResponse = {
   symbolId: string;
   symbolName: string;
   signals: SignalHistoryResponse[];
   summary: SignalSummary;
-}
+};
 
-export interface GetSymbolSignalsResponse {
+export type GetSymbolSignalsResponse = {
   signals: SignalResponse[];
   summary: SignalSummary;
-}
+};
 
-export interface GetSignalRankingsRow {
+export type GetSignalRankingsRow = {
   symbolId: string;
   symbolName: string;
   symbolSubcode?: string | null;
@@ -231,9 +231,9 @@ export interface GetSignalRankingsRow {
   signalCount: number;
   bullishCount: number;
   bearishCount: number;
-}
+};
 
-export interface SymbolGroup {
+export type SymbolGroup = {
   id: string;
   marketId: string;
   name: string;
@@ -245,17 +245,17 @@ export interface SymbolGroup {
   averageOverallScore?: number | null;
   bullishCount: number;
   bearishCount: number;
-}
+};
 
-export interface SymbolGroupDetail {
+export type SymbolGroupDetail = {
   id: string;
   marketId: string;
   name: string;
   description?: string | null;
   symbols: SymbolGroupSymbol[];
-}
+};
 
-export interface SymbolGroupSymbol {
+export type SymbolGroupSymbol = {
   symbolId: string;
   code: string;
   subcode?: string | null;
@@ -265,11 +265,11 @@ export interface SymbolGroupSymbol {
   gain?: number | null;
   roi?: number | null;
   signalScore?: number | null;
-}
+};
 
-export interface IdResponse {
+export type IdResponse = {
   id: string;
-}
+};
 
 export type BacktestStatus =
   | "Pending"
@@ -289,10 +289,10 @@ export type InputKind =
   | "SignalMovingAverageCrossover"
   | "SignalPriceVelocity";
 
-export interface InputWeight {
+export type InputWeight = {
   kind: InputKind;
   weight: number;
-}
+};
 
 export type SwingConfiguration = {
   mode: "Swing";
@@ -324,7 +324,7 @@ export type StrategyConfiguration = SwingConfiguration | FlipConfiguration;
 
 export type StrategyMode = StrategyConfiguration["mode"];
 
-export interface Strategy {
+export type Strategy = {
   id: string;
   marketId: string;
   name: string;
@@ -336,7 +336,7 @@ export interface Strategy {
   lastBacktestWinRate?: number | null;
   lastBacktestBudget?: number | null;
   lastBacktestAt?: string | null;
-}
+};
 
 export type StrategyDetail = {
   id: string;
@@ -362,7 +362,7 @@ export type UpdateStrategyRequest = {
   configuration: StrategyConfiguration;
 };
 
-export interface BacktestSummary {
+export type BacktestSummary = {
   id: string;
   marketId: string;
   startDate: string;
@@ -375,7 +375,7 @@ export interface BacktestSummary {
   sharpeRatio?: number | null;
   totalTrades?: number | null;
   createdAt: string;
-}
+};
 
 export type ActiveBacktest = {
   id: string;
@@ -389,7 +389,7 @@ export type ActiveBacktest = {
   createdAt: string;
 };
 
-export interface BacktestPosition {
+export type BacktestPosition = {
   symbolId: string;
   symbolName: string;
   entryPrice: number;
@@ -399,7 +399,7 @@ export interface BacktestPosition {
   returnPercent: number;
   entryTime: string;
   exitTime: string;
-}
+};
 
 export type BacktestResults = {
   totalReturn: number;
@@ -426,7 +426,7 @@ export type BacktestResults = {
   optimizedConfiguration?: StrategyConfiguration | null;
 };
 
-export interface BacktestDetail {
+export type BacktestDetail = {
   id: string;
   strategyId: string;
   marketId: string;
@@ -442,23 +442,23 @@ export interface BacktestDetail {
   errorMessage?: string | null;
   createdAt: string;
   updatedAt: string;
-}
+};
 
-export interface RunBacktestResponse {
+export type RunBacktestResponse = {
   backtestId: string;
-}
+};
 
-export interface CancelBacktestResponse {
-  backtestId: string;
-  status: BacktestStatus;
-}
-
-export interface RestartBacktestResponse {
+export type CancelBacktestResponse = {
   backtestId: string;
   status: BacktestStatus;
-}
+};
 
-export interface StrategyRecommendation {
+export type RestartBacktestResponse = {
+  backtestId: string;
+  status: BacktestStatus;
+};
+
+export type StrategyRecommendation = {
   symbolId: string;
   symbolName: string;
   symbolSubcode?: string | null;
@@ -473,13 +473,13 @@ export interface StrategyRecommendation {
   sellPrice?: number | null;
   netMargin?: number | null;
   expectedProfit?: number | null;
-}
+};
 
 export type PositionLimit = "Budget" | "Liquidity" | "BuyLimit";
 
-export interface GetRecommendationsResponse {
+export type GetRecommendationsResponse = {
   recommendations: StrategyRecommendation[];
-}
+};
 
 export type PositionSide = "Buy" | "Sell";
 
@@ -490,7 +490,7 @@ export type PositionStatus =
   | "DidNotSell"
   | "Sold";
 
-export interface Position {
+export type Position = {
   id: string;
   side: PositionSide;
   status: PositionStatus;
@@ -505,14 +505,14 @@ export interface Position {
   notes: string | null;
   createdAt: string;
   updatedAt: string;
-}
+};
 
-export interface ClosePositionResponse {
+export type ClosePositionResponse = {
   positionId: string;
   status: PositionStatus;
-}
+};
 
-export interface ForecastEfficacyRow {
+export type ForecastEfficacyRow = {
   symbolId: string;
   symbolName: string;
   marketId: string;
@@ -524,16 +524,16 @@ export interface ForecastEfficacyRow {
   meanBias: number | null;
   firstGeneratedAt: string | null;
   lastGeneratedAt: string | null;
-}
+};
 
-export interface PageParams {
+export type PageParams = {
   skip?: number;
   take?: number;
   sortField?: string;
   sortDirection?: string;
   filter?: string[];
   [key: string]: string | number | boolean | string[] | undefined;
-}
+};
 
 export type SymbolAnalystContext = {
   marketId: string;

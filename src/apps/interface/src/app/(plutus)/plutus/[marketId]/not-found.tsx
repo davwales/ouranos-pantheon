@@ -11,7 +11,7 @@ export default function MarketNotFound() {
           <FileQuestion className="h-10 w-10 text-muted-foreground" />
           <h2 className="text-lg font-semibold">Market not found</h2>
           <p className="text-sm text-muted-foreground">
-            The market you&apos;re looking for doesn&apos;t exist or has been removed.
+            The market you’re looking for doesn’t exist or has been removed.
           </p>
           <Button asChild variant="outline">
             <Link href="/plutus">Back to Markets</Link>

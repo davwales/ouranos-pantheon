@@ -3,11 +3,11 @@ export type Segment =
   | { type: "thinking"; content: string; isStreaming: boolean }
   | { type: "text"; content: string };
 
-interface TagDefinition {
+type TagDefinition = {
   openTag: string;
   closeTag: string;
   createSegment: (content: string, isStreaming: boolean) => Segment;
-}
+};
 
 const TAG_DEFINITIONS: TagDefinition[] = [
   {

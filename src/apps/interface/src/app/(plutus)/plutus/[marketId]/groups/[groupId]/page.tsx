@@ -1,36 +1,22 @@
 "use client";
 
-import { ConfirmationButton } from "@/components/shared/confirmation-button";
-import { PrettyNumber } from "@/components/shared/pretty-number";
-import { ExtendedColumnDef } from "@/components/shared/responsive-data-table";
-import ResponsiveDataTable from "@/components/shared/responsive-data-table/responsive-data-table";
-import { ResponsiveDialog } from "@/components/shared/responsive-dialog/responsive-dialog";
-import { ResponsiveDropdownMenu } from "@/components/shared/responsive-dropdown-menu/responsive-dropdown-menu";
-import { Typography } from "@/components/shared/typography";
-import {
-  SelectedSymbol,
-  SymbolSearch,
-} from "@/app/(plutus)/plutus/components/symbol-search";
+import { type SelectedSymbol } from "@/app/(plutus)/plutus/components/symbol-search";
 import TimeFrameSelection from "@/app/(plutus)/plutus/components/time-frame-selection";
-import { PlutusState, usePlutusStore } from "@/stores/plutus-store";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { useBreadcrumbLabel } from "@/components/shared/breadcrumbs";
-import { useApi } from "@/hooks/use-api";
-import { SymbolGroupSymbol, plutusApi } from "@/lib/api/plutus";
-import { MoreHorizontal, Plus, RefreshCw, Trash2 } from "lucide-react";
-import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
-import { useShallow } from "zustand/react/shallow";
-import { DetailSkeleton } from "@/components/shared/skeletons/detail-skeleton";
-import { FormSkeleton } from "@/components/shared/skeletons/form-skeleton";
-import { DataTableSkeleton } from "@/components/shared/skeletons/data-table-skeleton";
-import { Skeleton } from "@/components/ui/skeleton";
 import { NotFoundCard } from "@/components/shared/not-found-card";
+import { useApi } from "@/hooks/use-api";
 import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
+import { type SymbolGroupSymbol, plutusApi } from "@/lib/api/plutus";
 import { hasChanges } from "@/lib/has-changes";
+import { type PlutusState, usePlutusStore } from "@/stores/plutus-store";
+import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
+import { useShallow } from "zustand/react/shallow";
+import { AddGroupSymbolDialog } from "./_components/add-group-symbol-dialog";
+import { GroupDetailHeader } from "./_components/group-detail-header";
+import { GroupDetailSkeleton } from "./_components/group-detail-skeleton";
+import { GroupDetailsForm } from "./_components/group-details-form";
+import { GroupSymbolsTable } from "./_components/group-symbols-table";
 
 export default function GroupDetailPage() {
   const { marketId, groupId } = useParams<{
@@ -47,8 +33,6 @@ export default function GroupDetailPage() {
   const [description, setDescription] = useState("");
   const [symbols, setSymbols] = useState<SymbolGroupSymbol[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [selectedSymbols, setSelectedSymbols] = useState<SelectedSymbol[]>([]);
   const [state, reexecute] = useApi(
     () => plutusApi.getSymbolGroup(groupId, timeFrameKey),
     [groupId, timeFrameKey],
@@ -111,8 +95,7 @@ export default function GroupDetailPage() {
     }
   };
 
-  const handleAddSymbol = () => {
-    if (selectedSymbols.length === 0) return;
+  const handleAddSymbols = (selectedSymbols: SelectedSymbol[]) => {
     const existingIds = new Set(symbols.map((s) => s.symbolId));
     const newSymbols = selectedSymbols
       .filter((s) => !existingIds.has(s.id))
@@ -126,163 +109,35 @@ export default function GroupDetailPage() {
     if (newSymbols.length > 0) {
       setSymbols((prev) => [...prev, ...newSymbols]);
     }
-    setIsAddDialogOpen(false);
-    setSelectedSymbols([]);
   };
 
   const handleRemoveSymbol = (symbolId: string) => {
     setSymbols((prev) => prev.filter((s) => s.symbolId !== symbolId));
   };
 
-  const columns: ExtendedColumnDef<SymbolGroupSymbol>[] = useMemo(
-    () => [
-      {
-        id: "name",
-        header: "Symbol",
-        accessorFn: (row) => row.name,
-        cell: ({ row, getValue }) => (
-          <Link
-            href={`/plutus/${marketId}/${row.original.symbolId}`}
-            className="hover:underline"
-          >
-            {getValue<string>()}
-            {row.original.subcode && (
-              <span className="text-muted-foreground ml-2 text-sm">
-                {row.original.subcode}
-              </span>
-            )}
-          </Link>
-        ),
-      },
-      {
-        id: "volume",
-        header: "Volume",
-        accessorFn: (row) => row.volume,
-        cell: ({ getValue }) => {
-          const val = getValue<number | null>();
-          return val != null ? <PrettyNumber number={val} /> : "-";
-        },
-      },
-      {
-        id: "gain",
-        header: "Gain",
-        accessorFn: (row) => row.gain,
-        cell: ({ getValue }) => {
-          const val = getValue<number | null>();
-          return val != null ? <PrettyNumber number={val} /> : "-";
-        },
-      },
-      {
-        id: "roi",
-        header: "ROI",
-        accessorFn: (row) => row.roi,
-        cell: ({ getValue }) => {
-          const val = getValue<number | null>();
-          return val != null ? `${(val * 100).toFixed(2)}%` : "-";
-        },
-      },
-      {
-        id: "signalScore",
-        header: "Signal",
-        accessorFn: (row) => row.signalScore,
-        cell: ({ getValue }) => {
-          const val = getValue<number | null>();
-          return val != null ? val.toFixed(3) : "-";
-        },
-      },
-      {
-        id: "actions",
-        header: "",
-        cell: ({ row }) => (
-          <ResponsiveDropdownMenu
-            title="Symbol Actions"
-            description="Available actions for this symbol"
-            actions={[
-              {
-                label: "Remove",
-                icon: <Trash2 className="h-4 w-4 text-destructive" />,
-                onClick: () => handleRemoveSymbol(row.original.symbolId),
-              },
-            ]}
-          >
-            <div className="border rounded-md">
-              <Button variant="ghost" className="w-full">
-                <MoreHorizontal className="m-auto" />
-              </Button>
-            </div>
-          </ResponsiveDropdownMenu>
-        ),
-      },
-    ],
-    [marketId],
-  );
-
   if (state.status === "error" && !group) {
     return <NotFoundCard title="Group not found" backHref={`/plutus/${marketId}/groups`} backLabel="Back to Groups" />;
   }
 
   if (state.status === "loading" && !group) {
-    return (
-      <div aria-hidden="true">
-        <DetailSkeleton sections={["header"]} />
-        <FormSkeleton fields={2} hasTitle={false} className="mt-4 max-w-lg" />
-        <div className="mt-8">
-          <div className="flex items-center justify-between mb-1">
-            <Skeleton className="h-5 w-32" />
-            <Skeleton className="h-9 w-40" />
-          </div>
-          <DataTableSkeleton columns={5} rows={3} hasFilters={false} hasPagination={false} />
-        </div>
-      </div>
-    );
+    return <GroupDetailSkeleton />;
   }
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <Typography variant="h2" className="border-b-0">
-          Group Details
-        </Typography>
-        <div className="flex items-center gap-2">
-          {isProcessing && <RefreshCw className="animate-spin" />}
-          <Button onClick={handleSave} disabled={isProcessing || !name.trim()}>
-            Save
-          </Button>
-          <ConfirmationButton
-            title="Delete Group"
-            description="Are you sure you want to delete this group? This action cannot be undone."
-            onConfirm={handleDelete}
-            disabled={isProcessing}
-            variant="destructive"
-          >
-            Delete
-          </ConfirmationButton>
-        </div>
-      </div>
+      <GroupDetailHeader
+        isProcessing={isProcessing}
+        canSave={!!name.trim()}
+        onSave={handleSave}
+        onDelete={handleDelete}
+      />
 
-      <div className="mt-4 space-y-4 max-w-lg">
-        <div className="space-y-1">
-          <label htmlFor="name" className="text-sm font-medium">
-            Name
-          </label>
-          <Input
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="description" className="text-sm font-medium">
-            Description (optional)
-          </label>
-          <Textarea
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={3}
-          />
-        </div>
-      </div>
+      <GroupDetailsForm
+        name={name}
+        description={description}
+        onNameChange={setName}
+        onDescriptionChange={setDescription}
+      />
 
       <div className="mt-8">
         <div className="flex items-center justify-between mb-1">
@@ -291,49 +146,21 @@ export default function GroupDetailPage() {
             <div className="hidden sm:block">
               <TimeFrameSelection />
             </div>
-            <ResponsiveDialog
-              title="Add Symbol"
-              description="Search for a symbol to add to this group"
-              open={isAddDialogOpen}
-              onOpenChange={setIsAddDialogOpen}
-              trigger={
-                <Button variant="ghost">
-                  <Plus className="w-4 h-4 mr-1" />
-                  Add Symbol
-                </Button>
-              }
-            >
-              <div>
-                <SymbolSearch
-                  marketId={marketId}
-                  excludeIds={symbols.map((s) => s.symbolId)}
-                  onSymbolsChanged={setSelectedSymbols}
-                />
-                <Button
-                  onClick={handleAddSymbol}
-                  disabled={selectedSymbols.length === 0}
-                  className="mt-2 w-full"
-                >
-                  {selectedSymbols.length > 0
-                    ? `Add (${selectedSymbols.length})`
-                    : "Add"}
-                </Button>
-              </div>
-            </ResponsiveDialog>
+            <AddGroupSymbolDialog
+              marketId={marketId}
+              excludeIds={symbols.map((s) => s.symbolId)}
+              onAdd={handleAddSymbols}
+            />
           </div>
         </div>
         <div className="sm:hidden mb-2 w-full">
           <TimeFrameSelection className="w-full" triggerClassName="w-full" />
         </div>
 
-        <ResponsiveDataTable
-          columns={columns}
-          data={symbols}
-          scrollTop={false}
-          disablePagination
-          disableFiltering
-          disableSorting
-          className="my-2"
+        <GroupSymbolsTable
+          marketId={marketId}
+          symbols={symbols}
+          onRemoveSymbol={handleRemoveSymbol}
         />
       </div>
     </div>

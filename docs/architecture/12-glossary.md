@@ -36,7 +36,6 @@ determines which is meant.
 | **Hypertable** | TimescaleDB table partitioned by time, used for trades, signals, and forecasts |
 | **Continuous aggregate (cagg)** | TimescaleDB materialized view maintained incrementally over a hypertable |
 | **Output cache** | ASP.NET Core server-side HTTP response cache, enabled per endpoint on hot reads |
-| **Step pipeline** | `IStep`/`StepRegistry` chain of responsibility in the kernel; currently unused by the modules |
 | **Genetic algorithm** | Generic evolutionary search in the kernel (`Algorithms/Genetic`) |
 | **OuranosMl** | Self-hosted ML inference service exposing an OpenAI-compatible API and a custom forecasting endpoint |
 | **Flagsmith** | Feature-flag service |

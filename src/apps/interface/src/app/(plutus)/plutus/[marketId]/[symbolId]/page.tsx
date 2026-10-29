@@ -6,7 +6,7 @@ import PriceChart from "@/app/(plutus)/plutus/components/price-chart";
 import TimeFrameSelection from "@/app/(plutus)/plutus/components/time-frame-selection";
 import { ForecastEfficacyView } from "./_components/forecast-efficacy-view";
 import PercentChange from "./_components/percent-change";
-import { SignalsSection } from "./_components/signals-section";
+import { SymbolSignalsView } from "./_components/symbol-signals-view";
 import { SymbolAnalystButton } from "./_components/symbol-analyst-button";
 import { SymbolPositionsView } from "./_components/symbol-positions-view";
 import { SymbolStatsGrid } from "./_components/symbol-stats-grid";
@@ -29,13 +29,13 @@ import { useShallow } from "zustand/react/shallow";
 import { SymbolDetailSkeleton } from "@/app/(plutus)/plutus/[marketId]/[symbolId]/_components/symbol-detail-skeleton";
 import { NotFoundCard } from "@/components/shared/not-found-card";
 
-interface SymbolDetails {
+type SymbolDetails = {
   symbol: Symbol;
   trades: GetSymbolTradesResponse;
   summary: GetDailySymbolSummaryResponse;
   latestTrade?: { price: number; volume: number };
   forecast?: GetMarketForecastRow;
-}
+};
 
 function PriceChange({
   label,
@@ -177,7 +177,7 @@ export default function SymbolDetail() {
         data={formattedTrades}
         className="mt-4 max-h-96 w-full"
       />
-      <SignalsSection symbolId={symbolId} />
+      <SymbolSignalsView symbolId={symbolId} />
       <ForecastEfficacyView symbolId={symbolId} />
       <SymbolPositionsView marketId={marketId} symbol={data?.symbol} />
     </div>

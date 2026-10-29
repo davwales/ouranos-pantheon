@@ -1,27 +1,21 @@
 "use client";
 
-import { ConfirmationButton } from "@/components/shared/confirmation-button";
-import { Typography } from "@/components/shared/typography";
 import { SymbolTable } from "@/app/(plutus)/plutus/[marketId]/recipes/_components/symbol-table";
-import { SelectedSymbol } from "@/app/(plutus)/plutus/components/symbol-search";
-import TimeFrameSelection from "@/app/(plutus)/plutus/components/time-frame-selection";
-import { PlutusState, usePlutusStore } from "@/stores/plutus-store";
-import { Button } from "@/components/ui/button";
+import { type SelectedSymbol } from "@/app/(plutus)/plutus/components/symbol-search";
+import { type PlutusState, usePlutusStore } from "@/stores/plutus-store";
 import { useBreadcrumbLabel } from "@/components/shared/breadcrumbs";
 import { useApi } from "@/hooks/use-api";
 import { plutusApi } from "@/lib/api/plutus";
-import { RefreshCw } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { RecipeForm } from "../_components/recipe-form";
-import { RecipeSymbol } from "../types";
-import { DetailSkeleton } from "@/components/shared/skeletons/detail-skeleton";
-import { FormSkeleton } from "@/components/shared/skeletons/form-skeleton";
-import { Skeleton } from "@/components/ui/skeleton";
+import { type RecipeSymbol } from "../types";
 import { NotFoundCard } from "@/components/shared/not-found-card";
 import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes-guard";
 import { hasChanges } from "@/lib/has-changes";
+import { RecipeDetailHeader } from "./_components/recipe-detail-header";
+import { RecipeDetailSkeleton } from "./_components/recipe-detail-skeleton";
 
 export default function RecipeDetailPage() {
   const { marketId, recipeId } = useParams<{
@@ -118,70 +112,16 @@ export default function RecipeDetailPage() {
   }
 
   if (state.status === "loading" && !recipe) {
-    return (
-      <div aria-hidden="true">
-        <DetailSkeleton sections={["header"]} />
-        <FormSkeleton fields={2} hasTitle={false} className="mt-4 max-w-lg" />
-        <div className="space-y-6 mt-4">
-          <div>
-            <Skeleton className="h-5 w-24 mb-2" />
-            <div className="border rounded-lg">
-              <div className="border-b p-3">
-                <Skeleton className="h-4 w-full" />
-              </div>
-              <div className="p-3">
-                <div className="grid grid-cols-3 gap-4">
-                  <Skeleton className="h-4 w-20" />
-                  <Skeleton className="h-4 w-16" />
-                  <Skeleton className="h-4 w-16" />
-                </div>
-              </div>
-            </div>
-          </div>
-          <div>
-            <Skeleton className="h-5 w-24 mb-2" />
-            <div className="border rounded-lg">
-              <div className="border-b p-3">
-                <Skeleton className="h-4 w-full" />
-              </div>
-              <div className="p-3">
-                <div className="grid grid-cols-3 gap-4">
-                  <Skeleton className="h-4 w-20" />
-                  <Skeleton className="h-4 w-16" />
-                  <Skeleton className="h-4 w-16" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <RecipeDetailSkeleton />;
   }
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <Typography variant="h2" className="border-b-0">
-          Recipe Details
-        </Typography>
-
-        <div className="flex items-center gap-2">
-          <TimeFrameSelection />
-          {isProcessing && <RefreshCw className="animate-spin" />}
-          <Button onClick={handleSave} disabled={isProcessing}>
-            Save
-          </Button>
-          <ConfirmationButton
-            title="Delete Recipe"
-            description="Are you sure you want to delete this recipe? This action cannot be undone."
-            onConfirm={handleDelete}
-            disabled={isProcessing}
-            variant="destructive"
-          >
-            Delete
-          </ConfirmationButton>
-        </div>
-      </div>
+      <RecipeDetailHeader
+        isProcessing={isProcessing}
+        onSave={handleSave}
+        onDelete={handleDelete}
+      />
 
       <RecipeForm
         name={name}

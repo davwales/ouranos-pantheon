@@ -1,13 +1,13 @@
 import type { GapInfo } from "./chart-utils";
 
-interface GapAxisTickProps {
+type GapAxisTickProps = {
   x?: number | string;
   y?: number | string;
   payload?: { value: number };
   gaps: GapInfo[];
   tickFormatter: (index: number) => string;
   [key: string]: unknown;
-}
+};
 
 export function GapAxisTick({
   x: rawX = 0,

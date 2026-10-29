@@ -18,12 +18,12 @@ import {
   OPERATOR_LABELS,
 } from "./types";
 
-interface FilterInputProps {
+type FilterInputProps = {
   columns: ExtendedColumnDef<any>[];
   value: FilterCondition;
   onChange: (value: FilterCondition) => void;
   onRemove: () => void;
-}
+};
 
 export function FilterInput({
   columns,

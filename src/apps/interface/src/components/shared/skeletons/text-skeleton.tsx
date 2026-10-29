@@ -1,12 +1,12 @@
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
-interface TextSkeletonProps {
+type TextSkeletonProps = {
   lines?: number;
   gap?: number;
   lastLineWidth?: string;
   className?: string;
-}
+};
 
 const GAP_CLASSES: Record<number, string> = {
   1: "space-y-1",

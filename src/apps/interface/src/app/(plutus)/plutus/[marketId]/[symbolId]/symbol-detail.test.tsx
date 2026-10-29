@@ -33,8 +33,8 @@ vi.mock("@/app/(plutus)/plutus/components/candlestick-chart", () => ({
 vi.mock("@/app/(plutus)/plutus/components/time-frame-selection", () => ({
   default: () => null,
 }));
-vi.mock("./_components/signals-section", () => ({
-  SignalsSection: () => null,
+vi.mock("./_components/symbol-signals-view", () => ({
+  SymbolSignalsView: () => null,
 }));
 vi.mock("./_components/forecast-efficacy-view", () => ({
   ForecastEfficacyView: () => null,

@@ -1,5 +1,3 @@
-"use client";
-
 import { AssistantButton } from "@/components/shared/ai-assistant";
 import { Typography } from "@/components/shared/typography";
 import { type AssistantActionHandlers } from "@/lib/api/assistant";

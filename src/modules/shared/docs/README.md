@@ -66,4 +66,6 @@ Platform sections under `Ouranos:` (`RabbitMq`, `Postgres`, `Query`, `Health`, `
 map of flag name to the enabled state used when Flagsmith is unreachable or the flag is
 unknown (unlisted flags read as disabled).
 Global model defaults for every assistant and LLM feature are code, in `ModelDefaults`
-(`Shared.Contract/Infra/OuranosMachineLearning/`).
+(`Shared.Contract/Infra/OuranosMachineLearning/`). `AddOuranosCore` registers the OuranosMl
+client once for every module; a module calling a non-OpenAI OuranosMl endpoint registers its own
+typed `HttpClient` with `OuranosMachineLearningModule.ConfigureHttpClient`.

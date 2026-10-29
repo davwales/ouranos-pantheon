@@ -20,15 +20,10 @@ public static class CompactConversationEndpoint
         CancellationToken ct
     )
     {
-        SseWriter.SetSseHeaders(httpContext.Response);
-
         var stream = await bus.InvokeAsync<IAsyncEnumerable<CompactConversationResponse>>(
             input,
             ct
         );
-        await foreach (var chunk in stream.WithCancellation(ct))
-        {
-            await SseWriter.WriteEventAsync(httpContext.Response, chunk, ct);
-        }
+        await SseWriter.WriteStreamAsync(httpContext.Response, stream, ct);
     }
 }

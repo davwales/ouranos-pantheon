@@ -4,13 +4,13 @@ using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetSymbolTrades.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Database.Functions;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Trades;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres.Extensions;
-using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres.Functions;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres.Querying;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetSymbolTrades;

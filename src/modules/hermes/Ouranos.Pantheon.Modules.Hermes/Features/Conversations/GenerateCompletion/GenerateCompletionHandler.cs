@@ -192,7 +192,7 @@ public sealed class GenerateCompletionHandler
             {
                 foreach (var call in message.ToolCalls ?? [])
                 {
-                    var output = Truncate(call.Output, maxToolOutputCharacters);
+                    var output = call.Output.TruncateWithEllipsis(maxToolOutputCharacters);
                     if (call.ImageId is { } imageId && images.Find(imageId) is { } image)
                     {
                         output = $"{output} It is image {image.Ref}.";
@@ -218,7 +218,7 @@ public sealed class GenerateCompletionHandler
                 continue;
             }
 
-            input.Add(new MessageInputItemDto(new MessageDto(content, MapRole(message.Role))));
+            input.Add(new MessageInputItemDto(new MessageDto(content, message.Role.ToRoleDto())));
         }
 
         return input;
@@ -384,22 +384,5 @@ public sealed class GenerateCompletionHandler
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
-    }
-
-    private static string Truncate(string output, int maxCharacters)
-    {
-        return output.Length <= maxCharacters ? output : $"{output[..maxCharacters]}…";
-    }
-
-    private static RoleDto MapRole(Role role)
-    {
-        return role switch
-        {
-            Role.System => RoleDto.System,
-            Role.User => RoleDto.User,
-            Role.Assistant => RoleDto.Assistant,
-            Role.Summary => RoleDto.Assistant,
-            _ => throw new InvalidOperationException($"Unknown role: {role}"),
-        };
     }
 }

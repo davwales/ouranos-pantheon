@@ -50,6 +50,7 @@ public static class CoreExtensions
             configuration.GetSection(QueryOptions.SectionName)
         );
         builder.Services.AddCoreFlagsmithModule(configuration);
+        builder.Services.AddCoreOuranosMachineLearningModule(configuration);
         builder.Services.AddCoreObservabilityModule(configuration, builder.Environment);
 
         var rabbit = configuration.GetSection(RabbitMqOptions.SectionName).Get<RabbitMqOptions>();

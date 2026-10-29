@@ -13,7 +13,7 @@ import {
   SymbolSearch,
 } from "@/app/(plutus)/plutus/components/symbol-search";
 
-interface TableSymbol {
+type TableSymbol = {
   name: string;
   quantity: number;
   symbolId: string;
@@ -21,7 +21,7 @@ interface TableSymbol {
   averagePrice?: number | null;
   totalValue?: number | null;
   volume?: number | null;
-}
+};
 
 function QuantityInput({
   initialValue,

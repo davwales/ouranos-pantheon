@@ -4,13 +4,13 @@ import { Progress } from "@/components/ui/progress";
 import { BacktestStatus } from "@/lib/api/plutus";
 import { X } from "lucide-react";
 
-interface InProgressBacktestViewProps {
+type InProgressBacktestViewProps = {
   status: BacktestStatus;
   progressPercent: number;
   progressMessage: string;
   onCancel?: () => void;
   isCancelling?: boolean;
-}
+};
 
 export function InProgressBacktestView({
   status,

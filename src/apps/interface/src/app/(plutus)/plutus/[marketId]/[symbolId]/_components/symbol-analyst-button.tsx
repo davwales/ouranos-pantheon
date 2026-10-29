@@ -1,5 +1,3 @@
-"use client";
-
 import { type TimeFrameKey } from "@/app/(plutus)/plutus/constants/time-frames";
 import { AssistantButton } from "@/components/shared/ai-assistant";
 import { Typography } from "@/components/shared/typography";

@@ -8,11 +8,11 @@ const VARIANT_HEIGHTS: Record<string, string> = {
   h4: "h-5",
 };
 
-interface HeadingSkeletonProps {
+type HeadingSkeletonProps = {
   variant?: keyof typeof VARIANT_HEIGHTS;
   width?: string;
   className?: string;
-}
+};
 
 export function HeadingSkeleton({
   variant = "h2",

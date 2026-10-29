@@ -3,9 +3,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { HeadingSkeleton } from "@/components/shared/skeletons/heading-skeleton";
 import { StatsGridSkeleton } from "@/components/shared/skeletons/stats-grid-skeleton";
 
-interface BacktestDetailSkeletonProps {
+type BacktestDetailSkeletonProps = {
   className?: string;
-}
+};
 
 export function BacktestDetailSkeleton({
   className,

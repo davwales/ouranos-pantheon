@@ -100,4 +100,30 @@ public sealed class SseWriterTests
     }
 
     private sealed record TestPerson(int Age, string FirstName = "");
+
+    [Fact]
+    public async Task WriteStreamAsync_ShouldSetSseHeadersAndWriteEveryEvent()
+    {
+        // Arrange
+        var response = new DefaultHttpContext().Response;
+        response.Body = new MemoryStream();
+
+        // Act
+        await SseWriter.WriteStreamAsync(response, Events("a", "b"));
+
+        // Assert
+        response.Headers.ContentType.ToString().ShouldBe("text/event-stream");
+        response.Body.Seek(0, SeekOrigin.Begin);
+        using var reader = new StreamReader(response.Body);
+        (await reader.ReadToEndAsync()).ShouldBe("data: \"a\"\n\ndata: \"b\"\n\n");
+    }
+
+    private static async IAsyncEnumerable<string> Events(params string[] values)
+    {
+        foreach (var value in values)
+        {
+            await Task.Yield();
+            yield return value;
+        }
+    }
 }

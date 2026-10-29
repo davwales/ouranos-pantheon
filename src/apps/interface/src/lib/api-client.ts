@@ -40,12 +40,12 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export interface PagedResponse<T> {
+export type PagedResponse<T> = {
   items: T[];
   totalCount: number;
   skip: number;
   take: number;
-}
+};
 
 export async function* streamSse<T>(
   path: string,

@@ -40,7 +40,7 @@ not repeated here.
 | XIVAPI item data | Outbound HTTPS (CSV on `raw.githubusercontent.com`, fetched lazily and cached) | FFXIV item names for incoming sale events | `Features/DataLoaders/Ffxiv/XivApi/` |
 | OSRS Wiki API | Outbound HTTPS (JSON, polled every 5 minutes) | OSRS prices and item mappings | `Features/DataLoaders/Osrs/OsrsWikiClient.cs` |
 | Alpaca (IEX feed) | Outbound WSS (`wss://stream.data.alpaca.markets/v2/iex`, JSON) | Real-time US equity trades | `Features/DataLoaders/Stocks/` |
-| OuranosMl | Outbound HTTP (`POST /plutus/forecast`; Responses API for the analysts) | Price forecasting and analyst assistants | `Features/Forecasts/`, `Features/Assistants/` |
+| OuranosMl | Outbound HTTP (`POST /plutus/forecast`; Responses API for the analysts) | Price forecasting (`ForecastModelClient`) and analyst assistants | `Features/Forecasts/`, `Features/Assistants/` |
 | Interface | Inbound REST + SSE | Plutus pages under `src/apps/interface/src/app/plutus/` | Every `*Endpoint.cs` |
 
 Code paths are relative to `Ouranos.Pantheon.Modules.Plutus/`. Plutus depends only on the

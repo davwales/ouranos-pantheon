@@ -14,13 +14,13 @@ import {
   ResponsiveContent,
 } from "@/components/shared/responsive-content";
 
-interface DataTableSkeletonProps {
+type DataTableSkeletonProps = {
   columns?: number;
   rows?: number;
   hasFilters?: boolean;
   hasPagination?: boolean;
   className?: string;
-}
+};
 
 const COLUMN_WIDTHS = [
   "w-24",

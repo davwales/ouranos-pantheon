@@ -1,10 +1,10 @@
-export interface NavigationBarItemOption {
+export type NavigationBarItemOption = {
     label: string;
     description?: string;
     href: string;
-}
+};
 
-export interface NavigationBarItem {
+export type NavigationBarItem = {
     label: string;
     options: NavigationBarItemOption[];
-}
+};

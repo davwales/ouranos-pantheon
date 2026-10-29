@@ -2,11 +2,11 @@
 
 import React, { createContext, useCallback, useContext, useState } from "react";
 
-interface NavBarActionsContextValue {
+type NavBarActionsContextValue = {
   actions: React.ReactNode;
   setActions: (actions: React.ReactNode) => void;
   clearActions: () => void;
-}
+};
 
 const NavBarActionsContext = createContext<NavBarActionsContextValue>({
   actions: null,

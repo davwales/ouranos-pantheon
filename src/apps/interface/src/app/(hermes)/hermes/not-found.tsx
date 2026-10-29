@@ -11,7 +11,7 @@ export default function HermesNotFound() {
           <FileQuestion className="h-10 w-10 text-muted-foreground" />
           <h2 className="text-lg font-semibold">Not found</h2>
           <p className="text-sm text-muted-foreground">
-            The Hermes page you&apos;re looking for doesn&apos;t exist.
+            The Hermes page you’re looking for doesn’t exist.
           </p>
           <Button asChild variant="outline">
             <Link href="/hermes">Back to Hermes</Link>

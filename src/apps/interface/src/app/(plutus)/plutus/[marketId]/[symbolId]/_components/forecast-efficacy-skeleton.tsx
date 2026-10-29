@@ -1,10 +1,10 @@
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
-interface ForecastEfficacySkeletonProps {
+type ForecastEfficacySkeletonProps = {
   modelCount?: number;
   className?: string;
-}
+};
 
 export function ForecastEfficacySkeleton({
   modelCount = 2,

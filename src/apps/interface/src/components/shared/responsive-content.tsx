@@ -5,9 +5,9 @@ import React from "react";
 
 type ContentType = "mobile" | "desktop";
 
-interface ContentProps extends React.ComponentProps<"div"> {
+type ContentProps = React.ComponentProps<"div"> & {
     type: ContentType;
-}
+};
 
 export function Content({ type, children, ...props }: ContentProps) {
     return <div {...props}>{children}</div>;

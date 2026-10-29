@@ -6,10 +6,10 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { type Symbol, plutusApi } from "@/lib/api/plutus";
 import { useMemo, useRef, useState } from "react";
 
-export interface SelectedSymbol {
+export type SelectedSymbol = {
   id: string;
   name: string;
-}
+};
 
 export function SymbolSelect({
   marketId,

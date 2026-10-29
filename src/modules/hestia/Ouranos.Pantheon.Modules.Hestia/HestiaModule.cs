@@ -32,7 +32,6 @@ using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes;
 using Ouranos.Pantheon.Modules.Hestia.Shared.Domain.Recipes.Events;
 using Ouranos.Pantheon.Modules.Shared.Contract;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
-using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres;
 using Wolverine;
 using Wolverine.RabbitMQ;
@@ -41,11 +40,14 @@ namespace Ouranos.Pantheon.Modules.Hestia;
 
 public sealed class HestiaModule : IPantheonModule
 {
+    private const string SchemaName = "hestia";
+
     public IHostApplicationBuilder Build(IHostApplicationBuilder builder)
     {
         builder
-            .Services.AddCoreOuranosMachineLearningModule(builder.Configuration)
-            .Configure<HestiaOptions>(builder.Configuration.GetSection(HestiaOptions.SectionName))
+            .Services.Configure<HestiaOptions>(
+                builder.Configuration.GetSection(HestiaOptions.SectionName)
+            )
             .AddScoped<IRecipeExtractor, RecipeExtractor>()
             .AddAssistantTool<KitchenAssistantContext, AddNoteTool>()
             .AddAssistantTool<KitchenAssistantContext, AddIngredientTool>()
@@ -53,20 +55,15 @@ public sealed class HestiaModule : IPantheonModule
             .AddAssistantTool<KitchenAssistantContext, RemoveIngredientTool>()
             .AddAssistantTool<KitchenAssistantContext, UpdateStepTool>();
 
-        builder
-            .Services.AddCorePostgresModule<HestiaDbContext>(
-                builder.Configuration,
-                typeof(HestiaModule).Assembly
-            )
-            .AddCoreMartenModule<IHestiaMartenStore>(
-                builder.Configuration,
-                HestiaDbContext.SchemaName,
-                options =>
-                {
-                    options.Projections.Snapshot<Recipe>(SnapshotLifecycle.Inline);
-                },
-                initialData: [new HestiaRecipeSeedData()]
-            );
+        builder.Services.AddCoreMartenModule<IHestiaMartenStore>(
+            builder.Configuration,
+            SchemaName,
+            options =>
+            {
+                options.Projections.Snapshot<Recipe>(SnapshotLifecycle.Inline);
+            },
+            initialData: [new HestiaRecipeSeedData()]
+        );
 
         builder
             .Services.AddHttpClient<IRecipeScraper, RecipeScraper>(static client =>
@@ -86,10 +83,9 @@ public sealed class HestiaModule : IPantheonModule
         return builder;
     }
 
-    public async Task<IHost> Configure(IHost host)
+    public Task<IHost> Configure(IHost host)
     {
-        await host.Services.ApplyCorePostgresMigrations<HestiaDbContext>();
-        return host;
+        return Task.FromResult(host);
     }
 
     public void MapEndpoints(WebApplication app)
