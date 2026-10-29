@@ -66,4 +66,18 @@ public sealed class RestExtensionsTests
         // Assert
         services.ShouldContain(d => d.ImplementationType == typeof(ConflictExceptionHandler));
     }
+
+    [Fact]
+    public void ConfigureRest_ShouldRegisterBadRequestExceptionHandler()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder().Build();
+
+        // Act
+        services.ConfigureRest(configuration);
+
+        // Assert
+        services.ShouldContain(d => d.ImplementationType == typeof(BadRequestExceptionHandler));
+    }
 }

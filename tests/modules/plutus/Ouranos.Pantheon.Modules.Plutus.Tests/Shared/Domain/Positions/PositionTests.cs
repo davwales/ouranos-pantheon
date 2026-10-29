@@ -2,6 +2,7 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Positions;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 
@@ -154,7 +155,7 @@ public sealed class PositionTests
     }
 
     [Fact]
-    public void Create_WhenLinkedBuyPositionIsNotBoughtBuy_ShouldThrowArgumentException()
+    public void Create_WhenLinkedBuyPositionIsNotBoughtBuy_ShouldThrowBadRequestException()
     {
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
@@ -182,7 +183,7 @@ public sealed class PositionTests
             );
 
         // Assert
-        create.ShouldThrow<ArgumentException>();
+        create.ShouldThrow<BadRequestException>();
     }
 
     [Fact]
@@ -853,59 +854,310 @@ public sealed class PositionTests
     }
 
     [Fact]
-    public void LinkPosition_WhenHappyPath_ShouldSetLinkedBuyPositionId()
+    public void Create_WhenLinkedBuyPositionIsForAnotherSymbol_ShouldThrowBadRequestException()
     {
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
-        var symbolId = _fixture.Create<Id<Symbol>>();
-        var cost = _fixture.Create<decimal>();
-        var quantity = _fixture.Create<decimal>();
-
-        var sellPosition = Position.Create(PositionSide.Sell, marketId, symbolId, cost, quantity);
-        var buyPositionId = _fixture.Create<Id<Position>>();
+        var buyPosition = BoughtBuy(marketId, _fixture.Create<Id<Symbol>>(), 5m);
 
         // Act
-        sellPosition.LinkPosition(buyPositionId);
+        var create = () =>
+            Position.Create(
+                PositionSide.Sell,
+                marketId,
+                _fixture.Create<Id<Symbol>>(),
+                10m,
+                5m,
+                linkedBuyPosition: buyPosition
+            );
 
         // Assert
-        sellPosition.LinkedBuyPositionId.ShouldBe(buyPositionId);
+        create.ShouldThrow<BadRequestException>();
     }
 
     [Fact]
-    public void LinkPosition_WhenBuyPosition_ShouldThrowInvalidOperationException()
+    public void Create_WhenQuantityExceedsLinkedBuyRemainingQuantity_ShouldThrowBadRequestException()
     {
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
         var symbolId = _fixture.Create<Id<Symbol>>();
-        var cost = _fixture.Create<decimal>();
-        var quantity = _fixture.Create<decimal>();
-
-        var buyPosition = Position.Create(PositionSide.Buy, marketId, symbolId, cost, quantity);
-        var buyPositionId = _fixture.Create<Id<Position>>();
+        var buyPosition = BoughtBuy(marketId, symbolId, 5m);
 
         // Act
-        var link = () => buyPosition.LinkPosition(buyPositionId);
+        var create = () =>
+            Position.Create(
+                PositionSide.Sell,
+                marketId,
+                symbolId,
+                10m,
+                3m,
+                linkedBuyPosition: buyPosition,
+                committedSellQuantity: 3m
+            );
 
         // Assert
-        link.ShouldThrow<InvalidOperationException>();
+        create.ShouldThrow<BadRequestException>();
     }
 
     [Fact]
-    public void LinkPosition_WhenDefaultBuyPositionId_ShouldThrowArgumentException()
+    public void Create_WhenBuyHasLinkedBuyPosition_ShouldThrowBadRequestException()
     {
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
         var symbolId = _fixture.Create<Id<Symbol>>();
-        var cost = _fixture.Create<decimal>();
-        var quantity = _fixture.Create<decimal>();
-
-        var sellPosition = Position.Create(PositionSide.Sell, marketId, symbolId, cost, quantity);
+        var buyPosition = BoughtBuy(marketId, symbolId, 5m);
 
         // Act
-        var link = () => sellPosition.LinkPosition(default);
+        var create = () =>
+            Position.Create(
+                PositionSide.Buy,
+                marketId,
+                symbolId,
+                10m,
+                5m,
+                linkedBuyPosition: buyPosition
+            );
 
         // Assert
-        link.ShouldThrow<ArgumentException>();
+        create.ShouldThrow<BadRequestException>();
+    }
+
+    [Theory]
+    [InlineData(0, 5)]
+    [InlineData(2, 3)]
+    public void LinkPosition_WhenHappyPath_ShouldSetLinkedBuyPositionId(
+        int committedSellQuantity,
+        int sellQuantity
+    )
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var buyPosition = BoughtBuy(marketId, symbolId, 5m);
+        var sellPosition = Position.Create(
+            PositionSide.Sell,
+            marketId,
+            symbolId,
+            10m,
+            sellQuantity
+        );
+
+        // Act
+        sellPosition.LinkPosition(buyPosition, committedSellQuantity);
+
+        // Assert
+        sellPosition.LinkedBuyPositionId.ShouldBe(buyPosition.Id);
+    }
+
+    [Fact]
+    public void LinkPosition_WhenSellAndBuyShareStrategy_ShouldSetLinkedBuyPositionId()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var strategyId = _fixture.Create<Id<Strategy>>();
+        var buyPosition = BoughtBuy(marketId, symbolId, 5m, strategyId);
+        var sellPosition = Position.Create(
+            PositionSide.Sell,
+            marketId,
+            symbolId,
+            10m,
+            5m,
+            strategyId
+        );
+
+        // Act
+        sellPosition.LinkPosition(buyPosition, 0m);
+
+        // Assert
+        sellPosition.LinkedBuyPositionId.ShouldBe(buyPosition.Id);
+    }
+
+    [Fact]
+    public void LinkPosition_WhenPositionIsBuy_ShouldThrowBadRequestException()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var buyPosition = BoughtBuy(marketId, symbolId, 5m);
+        var otherBuyPosition = Position.Create(PositionSide.Buy, marketId, symbolId, 10m, 5m);
+
+        // Act
+        var link = () => otherBuyPosition.LinkPosition(buyPosition, 0m);
+
+        // Assert
+        link.ShouldThrow<BadRequestException>();
+    }
+
+    [Theory]
+    [InlineData(PositionStatus.Pending)]
+    [InlineData(PositionStatus.DidNotBuy)]
+    public void LinkPosition_WhenBuyPositionIsNotBought_ShouldThrowBadRequestException(
+        PositionStatus status
+    )
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var buyPosition = Position.Create(PositionSide.Buy, marketId, symbolId, 10m, 5m);
+        if (status != PositionStatus.Pending)
+        {
+            buyPosition.Close(status);
+        }
+
+        var sellPosition = Position.Create(PositionSide.Sell, marketId, symbolId, 10m, 5m);
+
+        // Act
+        var link = () => sellPosition.LinkPosition(buyPosition, 0m);
+
+        // Assert
+        link.ShouldThrow<BadRequestException>();
+    }
+
+    [Fact]
+    public void LinkPosition_WhenTargetIsSellPosition_ShouldThrowBadRequestException()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var targetSellPosition = Position.Create(PositionSide.Sell, marketId, symbolId, 10m, 5m);
+        var sellPosition = Position.Create(PositionSide.Sell, marketId, symbolId, 10m, 5m);
+
+        // Act
+        var link = () => sellPosition.LinkPosition(targetSellPosition, 0m);
+
+        // Assert
+        link.ShouldThrow<BadRequestException>();
+    }
+
+    [Fact]
+    public void LinkPosition_WhenLinkingToItself_ShouldThrowBadRequestException()
+    {
+        // Arrange
+        var sellPosition = Position.Create(
+            PositionSide.Sell,
+            _fixture.Create<Id<Market>>(),
+            _fixture.Create<Id<Symbol>>(),
+            10m,
+            5m
+        );
+
+        // Act
+        var link = () => sellPosition.LinkPosition(sellPosition, 0m);
+
+        // Assert
+        link.ShouldThrow<BadRequestException>();
+    }
+
+    [Fact]
+    public void LinkPosition_WhenBuyIsForAnotherSymbol_ShouldThrowBadRequestException()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var buyPosition = BoughtBuy(marketId, _fixture.Create<Id<Symbol>>(), 5m);
+        var sellPosition = Position.Create(
+            PositionSide.Sell,
+            marketId,
+            _fixture.Create<Id<Symbol>>(),
+            10m,
+            5m
+        );
+
+        // Act
+        var link = () => sellPosition.LinkPosition(buyPosition, 0m);
+
+        // Assert
+        link.ShouldThrow<BadRequestException>();
+    }
+
+    [Fact]
+    public void LinkPosition_WhenBuyIsInAnotherMarket_ShouldThrowBadRequestException()
+    {
+        // Arrange
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var buyPosition = BoughtBuy(_fixture.Create<Id<Market>>(), symbolId, 5m);
+        var sellPosition = Position.Create(
+            PositionSide.Sell,
+            _fixture.Create<Id<Market>>(),
+            symbolId,
+            10m,
+            5m
+        );
+
+        // Act
+        var link = () => sellPosition.LinkPosition(buyPosition, 0m);
+
+        // Assert
+        link.ShouldThrow<BadRequestException>();
+    }
+
+    [Fact]
+    public void LinkPosition_WhenBuyHasAnotherStrategy_ShouldThrowBadRequestException()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var buyPosition = BoughtBuy(marketId, symbolId, 5m, _fixture.Create<Id<Strategy>>());
+        var sellPosition = Position.Create(
+            PositionSide.Sell,
+            marketId,
+            symbolId,
+            10m,
+            5m,
+            _fixture.Create<Id<Strategy>>()
+        );
+
+        // Act
+        var link = () => sellPosition.LinkPosition(buyPosition, 0m);
+
+        // Assert
+        link.ShouldThrow<BadRequestException>();
+    }
+
+    [Theory]
+    [InlineData(0, 6)]
+    [InlineData(3, 3)]
+    public void LinkPosition_WhenQuantityExceedsRemaining_ShouldThrowBadRequestException(
+        int committedSellQuantity,
+        int sellQuantity
+    )
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var buyPosition = BoughtBuy(marketId, symbolId, 5m);
+        var sellPosition = Position.Create(
+            PositionSide.Sell,
+            marketId,
+            symbolId,
+            10m,
+            sellQuantity
+        );
+
+        // Act
+        var link = () => sellPosition.LinkPosition(buyPosition, committedSellQuantity);
+
+        // Assert
+        link.ShouldThrow<BadRequestException>();
+    }
+
+    [Fact]
+    public void LinkPosition_WhenBuyPositionIsNull_ShouldThrowArgumentNullException()
+    {
+        // Arrange
+        var sellPosition = Position.Create(
+            PositionSide.Sell,
+            _fixture.Create<Id<Market>>(),
+            _fixture.Create<Id<Symbol>>(),
+            10m,
+            5m
+        );
+
+        // Act
+        var link = () => sellPosition.LinkPosition(null!, 0m);
+
+        // Assert
+        link.ShouldThrow<ArgumentNullException>();
     }
 
     [Fact]
@@ -914,12 +1166,9 @@ public sealed class PositionTests
         // Arrange
         var marketId = _fixture.Create<Id<Market>>();
         var symbolId = _fixture.Create<Id<Symbol>>();
-        var cost = _fixture.Create<decimal>();
-        var quantity = _fixture.Create<decimal>();
-
-        var sellPosition = Position.Create(PositionSide.Sell, marketId, symbolId, cost, quantity);
-        var buyPositionId = _fixture.Create<Id<Position>>();
-        sellPosition.LinkPosition(buyPositionId);
+        var buyPosition = BoughtBuy(marketId, symbolId, 5m);
+        var sellPosition = Position.Create(PositionSide.Sell, marketId, symbolId, 10m, 5m);
+        sellPosition.LinkPosition(buyPosition, 0m);
 
         // Act
         var access = () => sellPosition.LinkedBuyPosition;
@@ -944,5 +1193,24 @@ public sealed class PositionTests
 
         // Assert
         linkedBuyPosition.ShouldBeNull();
+    }
+
+    private static Position BoughtBuy(
+        Id<Market> marketId,
+        Id<Symbol> symbolId,
+        decimal quantity,
+        Id<Strategy>? strategyId = null
+    )
+    {
+        var buyPosition = Position.Create(
+            PositionSide.Buy,
+            marketId,
+            symbolId,
+            10m,
+            quantity,
+            strategyId
+        );
+        buyPosition.Close(PositionStatus.Bought);
+        return buyPosition;
     }
 }

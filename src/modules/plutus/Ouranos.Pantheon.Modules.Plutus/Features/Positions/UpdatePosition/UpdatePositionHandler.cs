@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Plutus.Features.Positions.UpdatePosition.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Database.Querying;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Positions;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
@@ -42,6 +43,7 @@ public sealed class UpdatePositionHandler
         if (position.Status == PositionStatus.Pending)
         {
             position.Modify(command.Cost, command.Quantity, command.Notes, command.TargetPrice);
+            await RevalidateLinkAsync(position, cancellationToken);
         }
         else
         {
@@ -52,5 +54,29 @@ public sealed class UpdatePositionHandler
 
         _logger.LogDebug("Successfully handled update position command.");
         return new IdResponse<Position>(position.Id);
+    }
+
+    private async Task RevalidateLinkAsync(Position position, CancellationToken cancellationToken)
+    {
+        if (position.LinkedBuyPositionId is not { } buyPositionId)
+        {
+            return;
+        }
+
+        var buyPosition = await _dbContext.Positions.FirstOrDefaultAsync(
+            p => p.Id == buyPositionId,
+            cancellationToken
+        );
+
+        Guard.Against.NotFound(buyPositionId, buyPosition);
+
+        var committedSellQuantity = await _dbContext.Positions.CommittedSellQuantityAsync(
+            buyPositionId,
+            position.Id,
+            cancellationToken
+        );
+
+        // Re-linking re-checks the changed quantity against what the buy has left.
+        position.LinkPosition(buyPosition, committedSellQuantity);
     }
 }

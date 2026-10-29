@@ -4,6 +4,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Positions.CreatePosition.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Positions;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
@@ -32,12 +33,9 @@ public sealed class CreatePositionHandlerTests
     public async Task Handle_WhenHappyPath_ShouldCreatePositionAndReturnId()
     {
         // Arrange
-        var market = _fixture.Create<Market>();
-        await _dbContext.Markets.AddAsync(market);
-        await _dbContext.SaveChangesAsync();
-
-        var symbolId = _fixture.Create<Id<Symbol>>();
-        var command = new CreatePositionInput(PositionSide.Buy, market.Id, symbolId, 150.50m, 10m);
+        var marketId = _fixture.Create<Id<Market>>();
+        var symbol = await AddSymbolAsync(marketId);
+        var command = new CreatePositionInput(PositionSide.Buy, marketId, symbol.Id, 150.50m, 10m);
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -49,10 +47,10 @@ public sealed class CreatePositionHandlerTests
         var position = await _dbContext.Positions.FindAsync(result.Id);
         position.ShouldNotBeNull();
         position.Side.ShouldBe(PositionSide.Buy);
-        position.SymbolId.ShouldBe(symbolId);
+        position.SymbolId.ShouldBe(symbol.Id);
         position.Cost.ShouldBe(150.50m);
         position.Quantity.ShouldBe(10m);
-        position.MarketId.ShouldBe(market.Id);
+        position.MarketId.ShouldBe(marketId);
         position.Status.ShouldBe(PositionStatus.Pending);
     }
 
@@ -60,10 +58,12 @@ public sealed class CreatePositionHandlerTests
     public async Task Handle_WhenTargetPriceProvided_ShouldPersistTargetPrice()
     {
         // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var symbol = await AddSymbolAsync(marketId);
         var command = new CreatePositionInput(
             PositionSide.Buy,
-            _fixture.Create<Id<Market>>(),
-            _fixture.Create<Id<Symbol>>(),
+            marketId,
+            symbol.Id,
             150.50m,
             10m,
             TargetPrice: 180m
@@ -82,12 +82,9 @@ public sealed class CreatePositionHandlerTests
     public async Task Handle_WhenCreatingSellPosition_ShouldCreateSellWithNoLink()
     {
         // Arrange
-        var market = _fixture.Create<Market>();
-        await _dbContext.Markets.AddAsync(market);
-        await _dbContext.SaveChangesAsync();
-
-        var symbolId = _fixture.Create<Id<Symbol>>();
-        var command = new CreatePositionInput(PositionSide.Sell, market.Id, symbolId, 155.00m, 10m);
+        var marketId = _fixture.Create<Id<Market>>();
+        var symbol = await AddSymbolAsync(marketId);
+        var command = new CreatePositionInput(PositionSide.Sell, marketId, symbol.Id, 155.00m, 10m);
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -99,6 +96,95 @@ public sealed class CreatePositionHandlerTests
         position.ShouldNotBeNull();
         position.Side.ShouldBe(PositionSide.Sell);
         position.LinkedBuyPositionId.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Handle_WhenStrategyInMarket_ShouldPersistStrategyId()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var symbol = await AddSymbolAsync(marketId);
+        var strategy = await AddStrategyAsync(marketId);
+        var command = new CreatePositionInput(
+            PositionSide.Buy,
+            marketId,
+            symbol.Id,
+            150.50m,
+            10m,
+            strategy.Id
+        );
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var position = await _dbContext.Positions.FindAsync(result.Id);
+        position.ShouldNotBeNull();
+        position.StrategyId.ShouldBe(strategy.Id);
+    }
+
+    [Fact]
+    public async Task Handle_WhenSymbolInAnotherMarket_ShouldThrowBadRequestException()
+    {
+        // Arrange
+        var symbol = await AddSymbolAsync(_fixture.Create<Id<Market>>());
+        var command = new CreatePositionInput(
+            PositionSide.Buy,
+            _fixture.Create<Id<Market>>(),
+            symbol.Id,
+            150.50m,
+            10m
+        );
+
+        // Act
+        var create = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await create.ShouldThrowAsync<BadRequestException>();
+        _dbContext.Positions.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Handle_WhenSymbolDoesNotExist_ShouldThrowBadRequestException()
+    {
+        // Arrange
+        var command = new CreatePositionInput(
+            PositionSide.Buy,
+            _fixture.Create<Id<Market>>(),
+            _fixture.Create<Id<Symbol>>(),
+            150.50m,
+            10m
+        );
+
+        // Act
+        var create = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await create.ShouldThrowAsync<BadRequestException>();
+    }
+
+    [Fact]
+    public async Task Handle_WhenStrategyInAnotherMarket_ShouldThrowBadRequestException()
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var symbol = await AddSymbolAsync(marketId);
+        var strategy = await AddStrategyAsync(_fixture.Create<Id<Market>>());
+        var command = new CreatePositionInput(
+            PositionSide.Buy,
+            marketId,
+            symbol.Id,
+            150.50m,
+            10m,
+            strategy.Id
+        );
+
+        // Act
+        var create = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await create.ShouldThrowAsync<BadRequestException>();
+        _dbContext.Positions.ShouldBeEmpty();
     }
 
     [Fact]
@@ -119,5 +205,28 @@ public sealed class CreatePositionHandlerTests
 
         // Assert
         await create.ShouldThrowAsync<OperationCanceledException>();
+    }
+
+    private async Task<Symbol> AddSymbolAsync(Id<Market> marketId)
+    {
+        var symbol = Symbol.Create(
+            _fixture.Create<Id<Symbol>>(),
+            "TEST",
+            null,
+            "Test Symbol",
+            marketId,
+            new AdditionalFields()
+        );
+        await _dbContext.Symbols.AddAsync(symbol);
+        await _dbContext.SaveChangesAsync();
+        return symbol;
+    }
+
+    private async Task<Strategy> AddStrategyAsync(Id<Market> marketId)
+    {
+        var strategy = Strategy.Create(marketId, "Test", null, StrategyTestFactory.Swing());
+        await _dbContext.Strategies.AddAsync(strategy);
+        await _dbContext.SaveChangesAsync();
+        return strategy;
     }
 }
