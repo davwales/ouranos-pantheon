@@ -118,6 +118,67 @@ public sealed class BacktestMetricsTests
     }
 
     [Fact]
+    public void Compute_WhenBreakevenTrade_CountsItAsNeitherWinNorLoss()
+    {
+        // Arrange
+        var closedPositions = new List<BacktestPosition>
+        {
+            new(
+                "s1",
+                "WIN",
+                100m,
+                150m,
+                10m,
+                500m,
+                0.5m,
+                DateTimeOffset.UtcNow,
+                DateTimeOffset.UtcNow
+            ),
+            new(
+                "s2",
+                "LOSS",
+                100m,
+                80m,
+                10m,
+                -200m,
+                -0.2m,
+                DateTimeOffset.UtcNow,
+                DateTimeOffset.UtcNow
+            ),
+            new(
+                "s3",
+                "EVEN",
+                100m,
+                100m,
+                10m,
+                0m,
+                0m,
+                DateTimeOffset.UtcNow,
+                DateTimeOffset.UtcNow
+            ),
+        };
+
+        // Act
+        var results = BacktestMetrics.Compute(
+            10000m,
+            10300m,
+            0m,
+            10300m,
+            closedPositions,
+            [10000m, 10300m],
+            10
+        );
+
+        // Assert
+        results.TotalTrades.ShouldBe(3);
+        results.WinningTrades.ShouldBe(1);
+        results.LosingTrades.ShouldBe(1);
+        results.WinRate.ShouldBe(1m / 3m);
+        results.ProfitFactor.ShouldBe(2.5m);
+        results.Expectancy.ShouldNotBeNull().ShouldBe(100m, 0.000001m);
+    }
+
+    [Fact]
     public void Compute_WhenNoTrades_ReturnsZeroMetrics()
     {
         // Arrange

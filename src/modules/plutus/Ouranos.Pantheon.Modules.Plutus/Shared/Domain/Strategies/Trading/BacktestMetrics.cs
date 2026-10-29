@@ -17,7 +17,7 @@ public static class BacktestMetrics
         var totalReturn = balance - budget;
         var totalReturnPercent = budget > 0 ? totalReturn / budget : 0;
         var winningTrades = closedPositions.Count(p => p.ProfitLoss > 0);
-        var losingTrades = closedPositions.Count(p => p.ProfitLoss <= 0);
+        var losingTrades = closedPositions.Count(p => p.ProfitLoss < 0);
 
         var winRate =
             closedPositions.Count > 0 ? (decimal)winningTrades / closedPositions.Count : 0;
@@ -40,7 +40,10 @@ public static class BacktestMetrics
 
         var avgWin = winningTrades > 0 ? grossProfit / winningTrades : 0;
         var avgLoss = losingTrades > 0 ? grossLoss / losingTrades : 0;
-        var expectancy = (winRate * avgWin) - ((1 - winRate) * avgLoss);
+        var lossRate =
+            closedPositions.Count > 0 ? (decimal)losingTrades / closedPositions.Count : 0;
+
+        var expectancy = (winRate * avgWin) - (lossRate * avgLoss);
 
         return new BacktestResults
         {
