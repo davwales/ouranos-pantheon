@@ -15,6 +15,9 @@ import { useParams } from "next/navigation";
 import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 
+// Matches the output cache on /api/plutus/trades; polling faster only re-reads the cached page.
+const POLL_INTERVAL_MS = 30_000;
+
 export default function RecentMarketTrades() {
   const { marketId } = useParams<{ marketId: string }>();
   const [tableState, setTableState] = usePlutusStore(
@@ -42,7 +45,7 @@ export default function RecentMarketTrades() {
     [marketId, take],
   );
 
-  useInterval(() => reexecute(), 15000);
+  useInterval(() => reexecute(), POLL_INTERVAL_MS);
 
   const columns: ExtendedColumnDef<Trade>[] = useMemo(
     () => [
