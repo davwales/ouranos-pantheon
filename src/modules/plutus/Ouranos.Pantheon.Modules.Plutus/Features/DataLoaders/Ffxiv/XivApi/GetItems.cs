@@ -12,13 +12,13 @@ public sealed class GetItems : IGetItems
     private readonly IMemoryCache _cache;
     private readonly IGithubClient _githubClient;
     private readonly ILogger<GetItems> _logger;
-    private readonly IOptions<XivApiOptions> _options;
+    private readonly IOptions<FfxivDataLoaderOptions> _options;
 
     public GetItems(
         IMemoryCache cache,
         ILogger<GetItems> logger,
         IGithubClient githubClient,
-        IOptions<XivApiOptions> options
+        IOptions<FfxivDataLoaderOptions> options
     )
     {
         Guard.Against.Null(cache);
@@ -32,30 +32,49 @@ public sealed class GetItems : IGetItems
         _options = options;
     }
 
-    public async Task<List<ItemDto>> GetItemsAsync(CancellationToken cancellationToken = default)
+    public async Task<ItemDto?> GetItemAsync(
+        string symbolCode,
+        bool isHighQuality,
+        CancellationToken cancellationToken = default
+    )
     {
-        _logger.LogTrace("Attempting to get items from XivApi.");
+        _logger.LogTrace(
+            "Attempting to get item '{symbolCode}' '{isHighQuality}' from XivApi.",
+            symbolCode,
+            isHighQuality
+        );
 
-        var xivItems =
+        var items =
             await _cache.GetOrCreateAsync(
                 CacheKey,
                 async entry =>
                 {
                     entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(
-                        _options.Value.ItemCacheMinutes
+                        _options.Value.XivApi.ItemCacheMinutes
                     );
-                    return await _githubClient.GetItems(cancellationToken);
+                    return BuildLookup(await _githubClient.GetItems(cancellationToken));
                 }
             ) ?? [];
 
-        // We must add items for both lq and hq (if possible).
+        return items.GetValueOrDefault((symbolCode, isHighQuality));
+    }
+
+    private static Dictionary<(string SymbolCode, bool IsHighQuality), ItemDto> BuildLookup(
+        List<ItemResponse> xivItems
+    )
+    {
+        // We must add items for both lq and hq (if possible). The first entry per key wins.
+        var lookup = new Dictionary<(string SymbolCode, bool IsHighQuality), ItemDto>();
         var items = xivItems
             .Select(x => ConvertItem(x, false))
-            .Union(xivItems.Where(x => x.CanBeHq).Select(x => ConvertItem(x, true)))
-            .ToList();
+            .Concat(xivItems.Where(x => x.CanBeHq).Select(x => ConvertItem(x, true)));
 
-        _logger.LogDebug("Successfully retrieved items from XivApi.");
-        return items;
+        foreach (var item in items)
+        {
+            lookup.TryAdd((item.SymbolCode, item.IsHighQuality), item);
+        }
+
+        return lookup;
     }
 
     private static ItemDto ConvertItem(ItemResponse itemResponse, bool isHighQuality)
