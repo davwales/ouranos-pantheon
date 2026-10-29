@@ -95,21 +95,28 @@ export function StrategyHeader({
                 <Pencil className="size-4 mr-1" />
                 Edit
               </Button>
-              <Button
-                className="w-full sm:w-auto"
-                onClick={onToggleActive}
-                disabled={toggling}
-                variant={data.isActive ? "destructive" : "default"}
-                size="sm"
-              >
-                {toggling
-                  ? data.isActive
-                    ? "Deactivating..."
-                    : "Activating..."
-                  : data.isActive
-                    ? "Deactivate"
-                    : "Activate"}
-              </Button>
+              {data.isActive ? (
+                <ConfirmationButton
+                  className="w-full sm:w-auto"
+                  title="Deactivate Strategy"
+                  description="Are you sure you want to deactivate this strategy? You can activate it again later."
+                  onConfirm={onToggleActive}
+                  disabled={toggling}
+                  variant="destructive"
+                  size="sm"
+                >
+                  {toggling ? "Deactivating..." : "Deactivate"}
+                </ConfirmationButton>
+              ) : (
+                <Button
+                  className="w-full sm:w-auto"
+                  onClick={onToggleActive}
+                  disabled={toggling}
+                  size="sm"
+                >
+                  {toggling ? "Activating..." : "Activate"}
+                </Button>
+              )}
               <Button
                 className="w-full sm:w-auto"
                 variant="outline"
