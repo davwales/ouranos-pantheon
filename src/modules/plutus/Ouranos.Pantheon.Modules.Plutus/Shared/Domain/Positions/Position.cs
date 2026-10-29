@@ -2,6 +2,7 @@ using Ardalis.GuardClauses;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Strategies;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 
@@ -55,7 +56,8 @@ public sealed class Position : BaseEntity<Id<Position>>
         string? notes = null,
         Position? linkedBuyPosition = null,
         Symbol? symbol = null,
-        decimal? targetPrice = null
+        decimal? targetPrice = null,
+        decimal committedSellQuantity = 0
     )
     {
         Guard.Against.NegativeOrZero(cost);
@@ -64,11 +66,14 @@ public sealed class Position : BaseEntity<Id<Position>>
 
         if (linkedBuyPosition is not null)
         {
-            Guard.Against.InvalidInput(
+            GuardLink(
+                side,
+                marketId,
+                symbolId,
+                strategyId,
+                quantity,
                 linkedBuyPosition,
-                nameof(linkedBuyPosition),
-                p => p.CanBeLinkedAsTarget(),
-                "Linked buy position must be a Bought Buy position."
+                committedSellQuantity
             );
         }
 
@@ -165,23 +170,81 @@ public sealed class Position : BaseEntity<Id<Position>>
         return Side == PositionSide.Buy && Status == PositionStatus.Bought;
     }
 
-    public void LinkPosition(Id<Position> buyPositionId)
+    /// <param name="buyPosition">The Bought buy position this sell closes out.</param>
+    /// <param name="committedSellQuantity">
+    /// Quantity of the buy already covered by its other linked sells (excluding this one and any
+    /// that did not sell).
+    /// </param>
+    public void LinkPosition(Position buyPosition, decimal committedSellQuantity)
     {
-        if (Side != PositionSide.Sell)
+        Guard.Against.Null(buyPosition);
+
+        if (buyPosition.Id == Id)
         {
-            throw new InvalidOperationException(
-                $"Cannot link a '{Side}' position to a buy position."
+            throw new BadRequestException("Cannot link a position to itself.");
+        }
+
+        GuardLink(
+            Side,
+            MarketId,
+            SymbolId,
+            StrategyId,
+            Quantity,
+            buyPosition,
+            committedSellQuantity
+        );
+
+        LinkedBuyPositionId = buyPosition.Id;
+        Update();
+    }
+
+    private static void GuardLink(
+        PositionSide side,
+        Id<Market> marketId,
+        Id<Symbol> symbolId,
+        Id<Strategy>? strategyId,
+        decimal quantity,
+        Position buyPosition,
+        decimal committedSellQuantity
+    )
+    {
+        if (side != PositionSide.Sell)
+        {
+            throw new BadRequestException($"Cannot link a '{side}' position to a buy position.");
+        }
+
+        if (!buyPosition.CanBeLinkedAsTarget())
+        {
+            throw new BadRequestException(
+                $"Cannot link to a '{buyPosition.Side}' position with status '{buyPosition.Status}'; it must be a Bought buy position."
             );
         }
 
-        if (buyPositionId == Id)
+        if (buyPosition.MarketId != marketId || buyPosition.SymbolId != symbolId)
         {
-            throw new InvalidOperationException("Cannot link a position to itself.");
+            throw new BadRequestException(
+                "The buy position must be for the same market and symbol as the sell position."
+            );
         }
 
-        Guard.Against.NullOrWhiteSpace(buyPositionId.Value, nameof(buyPositionId));
-        LinkedBuyPositionId = buyPositionId;
-        Update();
+        if (
+            strategyId is not null
+            && buyPosition.StrategyId is not null
+            && buyPosition.StrategyId != strategyId
+        )
+        {
+            throw new BadRequestException(
+                "The buy position belongs to a different strategy than the sell position."
+            );
+        }
+
+        var remainingQuantity = buyPosition.Quantity - committedSellQuantity;
+        if (quantity > remainingQuantity)
+        {
+            throw new BadRequestException(
+                $"The sell quantity {quantity} exceeds the buy position's remaining quantity {remainingQuantity}."
+            );
+        }
     }
 
     private static void GuardTargetPrice(PositionSide side, decimal? targetPrice)

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Plutus.Features.Positions.LinkPosition.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
+using Ouranos.Pantheon.Modules.Plutus.Shared.Database.Querying;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Positions;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
@@ -38,20 +39,20 @@ public sealed class LinkPositionHandler : IPantheonHandler<LinkPositionInput, Id
 
         Guard.Against.NotFound(command.PositionId, position);
 
-        var targetPosition = await _dbContext
-            .Positions.AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == command.TargetPositionId, cancellationToken);
+        var targetPosition = await _dbContext.Positions.FirstOrDefaultAsync(
+            p => p.Id == command.TargetPositionId,
+            cancellationToken
+        );
 
         Guard.Against.NotFound(command.TargetPositionId, targetPosition);
 
-        if (!targetPosition.CanBeLinkedAsTarget())
-        {
-            throw new InvalidOperationException(
-                $"Cannot link to position '{command.TargetPositionId}' with side '{targetPosition.Side}' and status '{targetPosition.Status}'."
-            );
-        }
+        var committedSellQuantity = await _dbContext.Positions.CommittedSellQuantityAsync(
+            targetPosition.Id,
+            position.Id,
+            cancellationToken
+        );
 
-        position.LinkPosition(command.TargetPositionId);
+        position.LinkPosition(targetPosition, committedSellQuantity);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 

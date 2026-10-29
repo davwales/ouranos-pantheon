@@ -103,6 +103,10 @@ module README.
     throws when the request conflicts with the resource's current state (e.g. reimporting a
     recipe that is still importing). `ConflictExceptionHandler` returns it as
     **409 Conflict**.
+  - `BadRequestException` (`Shared.Contract`, `Application.Common`), which a handler or domain
+    operation throws when the request breaks a business rule that spans entities (e.g. linking
+    a sell position to a buy of another symbol). `BadRequestExceptionHandler` returns it as
+    **400 Bad Request**.
   - `NotFoundException` (Ardalis), which `Guard.Against.NotFound` throws for a missing entity.
     `NotFoundExceptionHandler` returns it as **404 Not Found**, so the interface can tell a
     removed resource from a failed request.

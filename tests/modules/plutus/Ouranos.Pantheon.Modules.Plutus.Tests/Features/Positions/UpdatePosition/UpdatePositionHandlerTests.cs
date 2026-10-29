@@ -93,6 +93,46 @@ public sealed class UpdatePositionHandlerTests
         updated.Quantity.ShouldBe(10m);
     }
 
+    [Theory]
+    [InlineData(10, true)]
+    [InlineData(11, false)]
+    public async Task Handle_WhenLinkedSellQuantityChanges_ShouldCheckBuyRemainingQuantity(
+        int quantity,
+        bool shouldSucceed
+    )
+    {
+        // Arrange
+        var marketId = _fixture.Create<Id<Market>>();
+        var symbolId = _fixture.Create<Id<Symbol>>();
+        var buyPosition = Position.Create(PositionSide.Buy, marketId, symbolId, 150.50m, 10m);
+        buyPosition.Close(PositionStatus.Bought);
+        var sellPosition = Position.Create(
+            PositionSide.Sell,
+            marketId,
+            symbolId,
+            155.00m,
+            5m,
+            linkedBuyPosition: buyPosition
+        );
+        await _dbContext.Positions.AddRangeAsync(buyPosition, sellPosition);
+        await _dbContext.SaveChangesAsync();
+
+        var command = new UpdatePositionInput(sellPosition.Id, 155.00m, quantity, null);
+
+        // Act
+        var update = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        if (shouldSucceed)
+        {
+            await update.ShouldNotThrowAsync();
+        }
+        else
+        {
+            await update.ShouldThrowAsync<BadRequestException>();
+        }
+    }
+
     [Fact]
     public async Task Handle_WhenPositionNotFound_ShouldThrowNotFoundException()
     {
