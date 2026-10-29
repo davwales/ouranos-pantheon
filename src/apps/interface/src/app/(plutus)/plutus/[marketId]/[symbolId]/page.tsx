@@ -179,7 +179,11 @@ export default function SymbolDetail() {
       />
       <SymbolSignalsView symbolId={symbolId} />
       <ForecastEfficacyView symbolId={symbolId} />
-      <SymbolPositionsView marketId={marketId} symbol={data?.symbol} />
+      <SymbolPositionsView
+        marketId={marketId}
+        symbolId={symbolId}
+        symbolName={data?.symbol.name}
+      />
     </div>
   );
 }

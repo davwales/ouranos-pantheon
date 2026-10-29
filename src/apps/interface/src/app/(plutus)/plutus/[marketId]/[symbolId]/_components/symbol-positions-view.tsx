@@ -11,17 +11,24 @@ import { EditPositionDialog } from "@/app/(plutus)/plutus/[marketId]/_components
 import { defaultsForSellOf } from "@/app/(plutus)/plutus/[marketId]/_components/positions/position-defaults";
 import { LinkPositionDialog } from "@/app/(plutus)/plutus/[marketId]/_components/positions/link-position-dialog";
 import { makePositionColumns } from "@/app/(plutus)/plutus/[marketId]/_components/positions/position-columns";
+import { usePositionsQuery } from "@/app/(plutus)/plutus/[marketId]/portfolio/_components/use-positions-query";
+import { type DataTableState } from "@/components/shared/responsive-data-table/types";
 import { Button } from "@/components/ui/button";
-import { useApi } from "@/hooks/use-api";
-import { type PagedResponse } from "@/lib/api-client";
-import { type Position, type Symbol, plutusApi } from "@/lib/api/plutus";
+import { type Position } from "@/lib/api/plutus";
+
+const INITIAL_TABLE_STATE: DataTableState = {
+  pagination: { pageSize: 10, skip: 0, take: 10 },
+  sort: { createdAt: "DESC" },
+};
 
 export function SymbolPositionsView({
   marketId,
-  symbol,
+  symbolId,
+  symbolName,
 }: {
   marketId: string;
-  symbol: Symbol | undefined;
+  symbolId: string;
+  symbolName: string | undefined;
 }) {
   const [createOpen, setCreateOpen] = useState(false);
   const [editPosition, setEditPosition] = useState<Position | null>(null);
@@ -33,59 +40,26 @@ export function SymbolPositionsView({
     null,
   );
 
-  const [openState, reexecuteOpen] = useApi<PagedResponse<Position>>(
-    () =>
-      symbol?.id
-        ? plutusApi.getAllPositions(marketId, {
-            filter: [`and(symbolId:eq:${symbol.id}|status:eq:Pending)`],
-            skip: 0,
-            take: 50,
-            sortField: "createdAt",
-            sortDirection: "desc",
-          })
-        : Promise.resolve({ items: [], totalCount: 0, skip: 0, take: 0 }),
-    [marketId, symbol?.id],
+  const [openTableState, setOpenTableState] =
+    useState<DataTableState>(INITIAL_TABLE_STATE);
+  const [closedTableState, setClosedTableState] =
+    useState<DataTableState>(INITIAL_TABLE_STATE);
+
+  const open = usePositionsQuery(
+    marketId,
+    openTableState,
+    `and(symbolId:eq:${symbolId}|status:eq:Pending)`,
+  );
+  const closed = usePositionsQuery(
+    marketId,
+    closedTableState,
+    `and(symbolId:eq:${symbolId}|status:neq:Pending)`,
   );
 
-  const [closedState, reexecuteClosed] = useApi<PagedResponse<Position>>(
-    () =>
-      symbol?.id
-        ? plutusApi.getAllPositions(marketId, {
-            filter: [`and(symbolId:eq:${symbol.id}|status:neq:Pending)`],
-            skip: 0,
-            take: 50,
-            sortField: "createdAt",
-            sortDirection: "desc",
-          })
-        : Promise.resolve({ items: [], totalCount: 0, skip: 0, take: 0 }),
-    [marketId, symbol?.id],
-  );
-
-  const openPositions = openState.data?.items ?? [];
-  const closedPositions = closedState.data?.items ?? [];
-
-  const openPageInfo = openState.data
-    ? {
-        totalCount: openState.data.totalCount,
-        skip: openState.data.skip,
-        take: openState.data.take,
-        hasNextPage:
-          openState.data.skip + openState.data.take < openState.data.totalCount,
-        hasPreviousPage: openState.data.skip > 0,
-      }
-    : undefined;
-
-  const closedPageInfo = closedState.data
-    ? {
-        totalCount: closedState.data.totalCount,
-        skip: closedState.data.skip,
-        take: closedState.data.take,
-        hasNextPage:
-          closedState.data.skip + closedState.data.take <
-          closedState.data.totalCount,
-        hasPreviousPage: closedState.data.skip > 0,
-      }
-    : undefined;
+  const openLoading = open.fetching && !open.data;
+  const closedLoading = closed.fetching && !closed.data;
+  const hasNoPositions =
+    open.data?.totalCount === 0 && closed.data?.totalCount === 0;
 
   const openColumns = useMemo(
     () =>
@@ -115,8 +89,8 @@ export function SymbolPositionsView({
   );
 
   const refreshAll = () => {
-    reexecuteOpen();
-    reexecuteClosed();
+    open.reexecute();
+    closed.reexecute();
   };
 
   return (
@@ -129,22 +103,24 @@ export function SymbolPositionsView({
         </Button>
       </div>
 
-      {openPositions.length === 0 && closedPositions.length === 0 ? (
+      {hasNoPositions ? (
         <p className="mt-4 text-sm text-muted-foreground">
           No positions for this symbol.
         </p>
       ) : (
         <>
-          {openPositions.length > 0 && (
+          {(openLoading || !!open.data?.totalCount) && (
             <div className="mt-4">
               <Typography variant="h4" className="text-muted-foreground mb-2">
                 Open
               </Typography>
               <ResponsiveDataTable
                 columns={openColumns}
-                data={openPositions}
-                pageInfo={openPageInfo}
-                disablePagination
+                data={open.data?.items}
+                loading={openLoading}
+                state={openTableState}
+                onStateChange={setOpenTableState}
+                pageInfo={open.pageInfo}
                 disableSorting
                 disableFiltering
                 className="overflow-hidden"
@@ -152,16 +128,18 @@ export function SymbolPositionsView({
             </div>
           )}
 
-          {closedPositions.length > 0 && (
+          {(closedLoading || !!closed.data?.totalCount) && (
             <div className="mt-4">
               <Typography variant="h4" className="text-muted-foreground mb-2">
                 Closed
               </Typography>
               <ResponsiveDataTable
                 columns={closedColumns}
-                data={closedPositions}
-                pageInfo={closedPageInfo}
-                disablePagination
+                data={closed.data?.items}
+                loading={closedLoading}
+                state={closedTableState}
+                onStateChange={setClosedTableState}
+                pageInfo={closed.pageInfo}
                 disableSorting
                 disableFiltering
                 className="overflow-hidden"
@@ -178,8 +156,8 @@ export function SymbolPositionsView({
           setCreateOpen(v);
           if (!v) refreshAll();
         }}
-        defaultSymbolId={symbol?.id}
-        defaultSymbolName={symbol?.name}
+        defaultSymbolId={symbolId}
+        defaultSymbolName={symbolName}
       />
 
       {createSellForBuy && (
