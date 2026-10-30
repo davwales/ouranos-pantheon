@@ -99,12 +99,34 @@ The pre-commit hook only *checks* formatting; run `automation/format.sh` to appl
 
 - .NET SDK (see `global.json`)
 - Node.js
-- Infrastructure: PostgreSQL with the TimescaleDB extension, RabbitMQ, Flagsmith - the recommended setup is the Docker Compose configuration in the [ouranos-infrastructure](https://github.com/davwales/ouranos-infrastructure) repository
+- Podman (or Docker) with Compose, for the local infrastructure below
 - For Hermes and Hestia AI features: an OpenAI-compatible inference service (OuranosMl)
+
+### Infrastructure
+
+`compose.dev.yaml` runs the gateway's dependencies for local development as ordinary containers (project `ouranos-pantheon-dev`):
+
+```bash
+podman compose -f compose.dev.yaml up -d                       # PostgreSQL/TimescaleDB :5432, RabbitMQ :5672 (UI :15672)
+podman compose -f compose.dev.yaml --profile flagsmith up -d   # also Flagsmith on :8001 (optional)
+podman compose -f compose.dev.yaml down                        # stop; data is kept in named volumes
+podman compose -f compose.dev.yaml down -v                     # stop and delete all data
+```
+
+Host ports can be moved with `POSTGRES_PORT`, `RABBITMQ_PORT`, `RABBITMQ_MANAGEMENT_PORT` and `FLAGSMITH_PORT`. Deployment is not defined here; see [ADR 0011](docs/adr/0011-container-images-on-ghcr.md).
 
 ### Configuration
 
-Local settings go in `src/apps/gateway/Ouranos.Pantheon.Apps.Gateway/appsettings.Development.json` (gitignored); see `appsettings.json` in the same folder for every key under the `Ouranos:` root.
+Local settings go in `src/apps/gateway/Ouranos.Pantheon.Apps.Gateway/appsettings.Development.json` (gitignored); see `appsettings.json` in the same folder for every key under the `Ouranos:` root. The minimum for `compose.dev.yaml` is:
+
+```json
+{
+  "Ouranos": {
+    "Postgres": { "Username": "psql", "Password": "psql" },
+    "RabbitMq": { "Host": "localhost", "Username": "rabbitmq", "Password": "rabbitmq" }
+  }
+}
+```
 
 > **Every data loader defaults to enabled.** Set `Ouranos:Plutus:DataLoaders:<Ffxiv|Osrs|Stocks|Consumer>:IsEnabled` to `false` for any loader you do not want running against live external APIs.
 

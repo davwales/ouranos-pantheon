@@ -91,8 +91,11 @@ Hestia has no EF context: its data lives in Marten. Keep EF migrations schema-on
 
 ### Running Locally
 
-- Infrastructure (PostgreSQL with TimescaleDB, RabbitMQ, Flagsmith) is **not** in this repo; use
-  [ouranos-infrastructure](https://github.com/davwales/ouranos-infrastructure).
+- Infrastructure: `podman compose -f compose.dev.yaml up -d` starts PostgreSQL/TimescaleDB
+  (`psql`/`psql`, database `pantheon`) and RabbitMQ (`rabbitmq`/`rabbitmq`) on their default ports;
+  add `--profile flagsmith` for Flagsmith on `:8001`. Local development only - deployment stays in
+  [ouranos-infrastructure](https://github.com/davwales/ouranos-infrastructure) (ADR 0011). Keep its
+  TimescaleDB tag in step with prod, or `dev/restore-from-prod.sh` refuses to restore.
 - `appsettings.Development.json` is gitignored and absent from a fresh clone; `appsettings.json`
   lists every key under the `Ouranos:` root.
 - The gateway listens on port 8300. Data-loader workers and scheduled jobs are in-process hosted

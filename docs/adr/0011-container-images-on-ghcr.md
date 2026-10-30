@@ -55,3 +55,7 @@ Update (2026-10-23): images are also tagged `sha-<short commit>`, giving every `
 rollback target. The interface no longer inlines the API base URL: the browser targets port 8300
 on the host that served the page and server rendering reads `API_BASE` at runtime
 ([Section 7.3](../architecture/07-deployment-view.md#73-configuration-surface)).
+
+Update (2026-10-29): `compose.dev.yaml` starts the infrastructure dependencies for local development
+only. It defines no application containers or host configuration, so deployment still belongs to
+`ouranos-infrastructure` ([Section 7.2](../architecture/07-deployment-view.md#72-environment-topology)).
