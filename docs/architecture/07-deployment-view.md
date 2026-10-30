@@ -25,17 +25,22 @@ secrets.
 
 Infrastructure (PostgreSQL/TimescaleDB, RabbitMQ, Flagsmith, Loki, Grafana Alloy) is
 provisioned by the separate [`ouranos-infrastructure`](https://github.com/davwales/ouranos-infrastructure)
-repository via Docker Compose. This repository assumes those services exist and configures
+repository as Podman Quadlets. This repository assumes those services exist and configures
 connections through `appsettings.*.json`; service hostnames (e.g. the Loki sink target
-`loki-gateway:3100`) come from that compose project's DNS names. OuranosMl is not part of
+`loki-gateway:3100`) come from that stack's network names. OuranosMl is not part of
 that stack: it is a separate system on its own host.
+
+For local development, `compose.dev.yaml` in this repository starts PostgreSQL/TimescaleDB, RabbitMQ
+and (behind the `flagsmith` profile) Flagsmith as ordinary containers on their default ports. It
+pins the same TimescaleDB version as the host and is never used for deployment
+([ADR 0011](../adr/0011-container-images-on-ghcr.md)).
 
 ```mermaid
 graph TB
     user(["Owner (browser)"])
 
     subgraph lan["Homelab LAN"]
-        subgraph host["Homelab host: ouranos.local (ouranos-infrastructure compose)"]
+        subgraph host["Homelab host: ouranos.local (ouranos-infrastructure Quadlets)"]
             subgraph apps["Application containers"]
                 ifc["Interface container<br/>:3000"]
                 gw["Gateway container<br/>:8300"]
