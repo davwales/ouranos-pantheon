@@ -55,7 +55,7 @@ describe("useBreadcrumbLabel", () => {
     expect(useBreadcrumbStore.getState().labels[SEGMENT]).toBe("New Name");
   });
 
-  it("WhenUnmounted_ShouldClearRegistration", () => {
+  it("WhenUnmounted_ShouldKeepRegistration", () => {
     // Arrange
     const { unmount } = renderHook(() => useBreadcrumbLabel(SEGMENT, "Sandbox Market"));
 
@@ -63,6 +63,6 @@ describe("useBreadcrumbLabel", () => {
     unmount();
 
     // Assert
-    expect(useBreadcrumbStore.getState().labels).toEqual({});
+    expect(useBreadcrumbStore.getState().labels[SEGMENT]).toBe("Sandbox Market");
   });
 });

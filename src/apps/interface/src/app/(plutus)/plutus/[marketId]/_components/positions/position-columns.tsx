@@ -1,6 +1,6 @@
 import { PrettyNumber } from "@/components/shared/pretty-number/pretty-number";
 import { ExtendedColumnDef } from "@/components/shared/responsive-data-table";
-import Link from "next/link";
+import { OriginLink } from "@/components/shared/breadcrumbs";
 
 import { type Position } from "@/lib/api/plutus";
 import {
@@ -76,12 +76,12 @@ export function makePositionColumns(
       header: "Symbol",
       accessorFn: (row) => row.symbolName,
       cell: ({ row }) => (
-        <Link
+        <OriginLink
           href={`/plutus/${marketId}/${row.original.symbolId}`}
           className="hover:underline"
         >
           {row.original.symbolName}
-        </Link>
+        </OriginLink>
       ),
       filterConfig: {
         type: "string",

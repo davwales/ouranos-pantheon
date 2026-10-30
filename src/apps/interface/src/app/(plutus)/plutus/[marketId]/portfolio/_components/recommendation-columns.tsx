@@ -3,7 +3,7 @@ import { type ExtendedColumnDef } from "@/components/shared/responsive-data-tabl
 import { Button } from "@/components/ui/button";
 import { type StrategyRecommendation } from "@/lib/api/plutus";
 import { Plus } from "lucide-react";
-import Link from "next/link";
+import { OriginLink } from "@/components/shared/breadcrumbs";
 import { RecommendationDetailsPopover } from "./recommendation-details-popover";
 import { ScoreBar } from "./score-bar";
 
@@ -20,13 +20,13 @@ function symbolColumn(marketId: string): Column {
     accessorFn: (row) => row.symbolName,
     cell: ({ row }) => (
       <div className="flex items-center gap-1.5 min-w-0">
-        <Link
+        <OriginLink
           href={`/plutus/${marketId}/${row.original.symbolId}`}
           className="font-medium hover:underline truncate"
         >
           {row.original.symbolName}
           {row.original.symbolSubcode ? ` (${row.original.symbolSubcode})` : ""}
-        </Link>
+        </OriginLink>
         <RecommendationDetailsPopover recommendation={row.original} />
       </div>
     ),
