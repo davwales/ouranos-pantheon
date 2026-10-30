@@ -26,7 +26,7 @@ describe("ShoppingListPage", () => {
   it("renders the shopping list returned by the api", async () => {
     vi.mocked(hestiaApi.getShoppingList).mockResolvedValue({
       ...emptyShoppingList,
-      manualItems: [{ id: "m1", text: "milk" }],
+      manualItems: [{ id: "m1", text: "milk", category: null }],
     });
 
     render(<ShoppingListPage />);

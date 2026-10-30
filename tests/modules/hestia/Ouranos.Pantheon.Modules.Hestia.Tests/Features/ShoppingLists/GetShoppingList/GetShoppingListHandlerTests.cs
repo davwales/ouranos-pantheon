@@ -120,9 +120,9 @@ public sealed class GetShoppingListHandlerTests
         lines[2].Name.ShouldBe("Flour");
         lines[2].Unit.ShouldBe("g");
         lines[2].Quantity.ShouldBe(800m);
-        lines[0].Id.ShouldBe("recipe:butter|g");
-        lines[1].Id.ShouldBe("recipe:butter|tbsp");
-        lines[2].Id.ShouldBe("recipe:flour|g");
+        lines[0].Id.ShouldBe("recipe:butter|mass");
+        lines[1].Id.ShouldBe("recipe:butter|volume");
+        lines[2].Id.ShouldBe("recipe:flour|mass");
     }
 
     [Fact]
@@ -192,7 +192,7 @@ public sealed class GetShoppingListHandlerTests
             [new Id<Recipe>(recipeId.ToString())],
             [new ManualItem(manualItemId, "Salt")],
             [
-                "recipe:flour|g",
+                "recipe:flour|mass",
                 ShoppingListNormalizer.ManualLineKey(manualItemId),
                 ShoppingListNormalizer.ManualLineKey(staleManualId),
                 "recipe:stale|stale",
@@ -212,7 +212,7 @@ public sealed class GetShoppingListHandlerTests
 
         // Assert
         result.CheckedItemIds.Count.ShouldBe(2);
-        result.CheckedItemIds.ShouldContain("recipe:flour|g");
+        result.CheckedItemIds.ShouldContain("recipe:flour|mass");
         result.CheckedItemIds.ShouldContain(ShoppingListNormalizer.ManualLineKey(manualItemId));
         result.CheckedItemIds.ShouldNotContain(ShoppingListNormalizer.ManualLineKey(staleManualId));
         result.CheckedItemIds.ShouldNotContain("recipe:stale|stale");
@@ -269,6 +269,44 @@ public sealed class GetShoppingListHandlerTests
         result.ManualItems[0].Text.ShouldBe("Olive oil");
         result.ManualItems[1].Id.ShouldBe(secondId);
         result.ManualItems[1].Text.ShouldBe("Bread");
+    }
+
+    [Fact]
+    public async Task Handle_WhenCategoriesRemembered_ShouldAttachThemByName()
+    {
+        // Arrange
+        var recipeId = Guid.NewGuid();
+        var list = BuildList(
+            [new Id<Recipe>(recipeId.ToString())],
+            [new ManualItem(Guid.NewGuid(), "Bananas"), new ManualItem(Guid.NewGuid(), "Foil")]
+        );
+        list.Categories["egg"] = ShoppingCategory.DairyAndEggs;
+        list.Categories["banana"] = ShoppingCategory.Produce;
+        var recipe = BuildRecipe(
+            recipeId,
+            new Ingredient(2m, "whole", "Eggs"),
+            new Ingredient(1m, "cup", "Rice")
+        );
+
+        _session
+            .LoadAsync<ShoppingList>(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<ShoppingList?>(list));
+        _session
+            .LoadManyAsync<Recipe>(Arg.Any<CancellationToken>(), Arg.Any<Guid[]>())
+            .Returns(Task.FromResult<IReadOnlyList<Recipe>>([recipe]));
+
+        // Act
+        var result = await _handler.Handle(new GetShoppingListInput(), CancellationToken.None);
+
+        // Assert
+        result
+            .ConsolidatedIngredients.Single(l => l.Name == "Eggs")
+            .Category.ShouldBe(ShoppingCategory.DairyAndEggs);
+        result.ConsolidatedIngredients.Single(l => l.Name == "Rice").Category.ShouldBeNull();
+        result
+            .ManualItems.Single(i => i.Text == "Bananas")
+            .Category.ShouldBe(ShoppingCategory.Produce);
+        result.ManualItems.Single(i => i.Text == "Foil").Category.ShouldBeNull();
     }
 
     [Fact]

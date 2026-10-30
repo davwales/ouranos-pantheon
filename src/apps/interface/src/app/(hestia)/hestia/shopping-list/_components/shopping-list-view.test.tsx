@@ -10,6 +10,8 @@ vi.mock("@/lib/api/hestia", () => ({
     addManualItem: vi.fn(),
     deleteManualItem: vi.fn(),
     toggleRecipeInShoppingList: vi.fn(),
+    clearCheckedItems: vi.fn(),
+    setItemCategory: vi.fn(),
   },
 }));
 
@@ -40,9 +42,9 @@ function mockShoppingList(
     recipeIds: ["r1"],
     recipes: [{ id: "r1", title: "Pancakes" }],
     consolidatedIngredients: [
-      { id: "line-1", name: "flour", unit: "cups", quantity: 2 },
+      { id: "line-1", name: "flour", unit: "cups", quantity: 2, category: null },
     ],
-    manualItems: [{ id: "m1", text: "milk" }],
+    manualItems: [{ id: "m1", text: "milk", category: null }],
     checkedItemIds: [],
     ...overrides,
   };
@@ -104,7 +106,7 @@ describe("ShoppingListView", () => {
 
   it("drops a pending checked-items update when the list reloads", async () => {
     const onReload = vi.fn();
-    vi.mocked(hestiaApi.addManualItem).mockResolvedValue({ id: "m2", text: "eggs" });
+    vi.mocked(hestiaApi.addManualItem).mockResolvedValue({ id: "m2", text: "eggs", category: null });
 
     render(<ShoppingListView data={mockShoppingList()} onReload={onReload} />);
 
@@ -125,7 +127,7 @@ describe("ShoppingListView", () => {
 
   it("calls addManualItem and reloads when adding an item", async () => {
     const onReload = vi.fn();
-    vi.mocked(hestiaApi.addManualItem).mockResolvedValue({ id: "m2", text: "eggs" });
+    vi.mocked(hestiaApi.addManualItem).mockResolvedValue({ id: "m2", text: "eggs", category: null });
 
     render(<ShoppingListView data={mockShoppingList()} onReload={onReload} />);
 
@@ -257,5 +259,45 @@ describe("ShoppingListView", () => {
 
     expect(screen.queryByText("Pancakes")).not.toBeInTheDocument();
     expect(screen.getByText("2 cups flour")).toBeInTheDocument();
+  });
+
+  it("disables clear checked until something is checked", () => {
+    render(<ShoppingListView data={mockShoppingList()} onReload={vi.fn()} />);
+
+    expect(screen.getByRole("button", { name: "Clear checked" })).toBeDisabled();
+  });
+
+  it("sends a pending check before clearing checked items, then reloads", async () => {
+    const onReload = vi.fn();
+    vi.mocked(hestiaApi.updateCheckedItems).mockResolvedValue({ checkedItemIds: ["manual:m1"] });
+    vi.mocked(hestiaApi.clearCheckedItems).mockResolvedValue({
+      removedManualItemIds: ["m1"],
+      removedRecipeIds: [],
+    });
+    render(<ShoppingListView data={mockShoppingList()} onReload={onReload} />);
+
+    fireEvent.click(screen.getByRole("checkbox", { name: "milk" }));
+    fireEvent.click(screen.getByRole("button", { name: "Clear checked" }));
+
+    await waitFor(() => expect(hestiaApi.clearCheckedItems).toHaveBeenCalled());
+    expect(hestiaApi.updateCheckedItems).toHaveBeenCalledWith({ checkedItemIds: ["manual:m1"] });
+    expect(
+      vi.mocked(hestiaApi.updateCheckedItems).mock.invocationCallOrder[0],
+    ).toBeLessThan(vi.mocked(hestiaApi.clearCheckedItems).mock.invocationCallOrder[0]);
+    expect(onReload).toHaveBeenCalled();
+  });
+
+  it("sets an item's category and reloads", async () => {
+    const onReload = vi.fn();
+    vi.mocked(hestiaApi.setItemCategory).mockResolvedValue({ name: "milk", category: "DairyAndEggs" });
+    render(<ShoppingListView data={mockShoppingList()} onReload={onReload} />);
+
+    fireEvent.keyDown(screen.getByRole("button", { name: "Set category for milk" }), { key: "Enter" });
+    fireEvent.click(await screen.findByRole("menuitemradio", { name: "Dairy & Eggs" }));
+
+    await waitFor(() =>
+      expect(hestiaApi.setItemCategory).toHaveBeenCalledWith({ name: "milk", category: "DairyAndEggs" }),
+    );
+    expect(onReload).toHaveBeenCalled();
   });
 });

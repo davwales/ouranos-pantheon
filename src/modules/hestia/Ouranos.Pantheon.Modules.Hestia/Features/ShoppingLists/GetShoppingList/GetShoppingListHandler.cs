@@ -29,15 +29,29 @@ public sealed class GetShoppingListHandler(
         using var session = _store.QuerySession();
         var list = await LoadShoppingList(session, cancellationToken);
         var recipes = await LoadRecipes(session, list, cancellationToken);
-        var lines = ConsolidateIngredients(recipes);
+        var lines = ShoppingListConsolidator.Consolidate(recipes.Where(r => r is not null));
         var checkedItemIds = PruneStaleCheckedItemIds(list, lines);
 
         _logger.LogDebug("Successfully handled get shopping list request.");
         return new ShoppingListResponse(
             [.. list.RecipeIds],
             ProjectRecipes(list, recipes),
-            lines,
-            [.. list.ManualItems.Select(i => new ManualItemResponse(i.Id, i.Text))],
+            [
+                .. lines.Select(l => new ConsolidatedIngredientResponse(
+                    l.Id,
+                    l.Name,
+                    l.Unit,
+                    l.Quantity,
+                    CategoryOf(list, l.NameKey)
+                )),
+            ],
+            [
+                .. list.ManualItems.Select(i => new ManualItemResponse(
+                    i.Id,
+                    i.Text,
+                    CategoryOf(list, ShoppingListNormalizer.NameKey(i.Text))
+                )),
+            ],
             checkedItemIds
         );
     }
@@ -66,58 +80,6 @@ public sealed class GetShoppingListHandler(
         return await session.LoadManyAsync<Recipe>(cancellationToken, streamIds);
     }
 
-    private static List<ConsolidatedIngredientResponse> ConsolidateIngredients(
-        IReadOnlyList<Recipe> recipes
-    )
-    {
-        var consolidated = new Dictionary<string, (string Name, string Unit, decimal Quantity)>(
-            StringComparer.Ordinal
-        );
-
-        foreach (var recipe in recipes)
-        {
-            if (recipe is null)
-            {
-                continue;
-            }
-
-            // Optional ingredients are left to the user, who can add them as manual items.
-            foreach (var ingredient in recipe.Ingredients.Where(i => !i.IsOptional))
-            {
-                var key = ShoppingListNormalizer.RecipeLineKey(
-                    ShoppingListNormalizer.Normalize(ingredient.Name),
-                    ShoppingListNormalizer.Normalize(ingredient.Unit)
-                );
-
-                if (consolidated.TryGetValue(key, out var existing))
-                {
-                    consolidated[key] = (
-                        existing.Name,
-                        existing.Unit,
-                        existing.Quantity + ingredient.Quantity
-                    );
-                }
-                else
-                {
-                    consolidated[key] = (ingredient.Name, ingredient.Unit, ingredient.Quantity);
-                }
-            }
-        }
-
-        return
-        [
-            .. consolidated
-                .Select(kv => new ConsolidatedIngredientResponse(
-                    kv.Key,
-                    kv.Value.Name,
-                    kv.Value.Unit,
-                    kv.Value.Quantity
-                ))
-                .OrderBy(l => l.Name, StringComparer.Ordinal)
-                .ThenBy(l => l.Unit, StringComparer.Ordinal),
-        ];
-    }
-
     private static List<ShoppingListRecipeResponse> ProjectRecipes(
         ShoppingList list,
         IReadOnlyList<Recipe> recipes
@@ -137,9 +99,14 @@ public sealed class GetShoppingListHandler(
         return responses;
     }
 
+    private static ShoppingCategory? CategoryOf(ShoppingList list, string nameKey)
+    {
+        return list.Categories.TryGetValue(nameKey, out var category) ? category : null;
+    }
+
     private static List<string> PruneStaleCheckedItemIds(
         ShoppingList list,
-        IReadOnlyList<ConsolidatedIngredientResponse> lines
+        IReadOnlyList<ShoppingListLine> lines
     )
     {
         var validKeys = new HashSet<string>(StringComparer.Ordinal);
