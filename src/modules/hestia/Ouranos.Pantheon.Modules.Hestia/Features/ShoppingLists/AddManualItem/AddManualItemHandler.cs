@@ -39,6 +39,12 @@ public sealed class AddManualItemHandler(
         await session.SaveChangesAsync(cancellationToken);
 
         _logger.LogDebug("Successfully added manual item '{itemId}'.", item.Id);
-        return new ManualItemResponse(item.Id, item.Text);
+        return new ManualItemResponse(
+            item.Id,
+            item.Text,
+            list.Categories.TryGetValue(ShoppingListNormalizer.NameKey(item.Text), out var category)
+                ? category
+                : null
+        );
     }
 }

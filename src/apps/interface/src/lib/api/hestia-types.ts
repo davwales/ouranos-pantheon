@@ -106,16 +106,29 @@ export type RevertRecipeResponse = {
   id: string;
 };
 
+export type ShoppingCategory =
+  | "Produce"
+  | "Bakery"
+  | "MeatAndSeafood"
+  | "DairyAndEggs"
+  | "Frozen"
+  | "Pantry"
+  | "SpicesAndSeasonings"
+  | "Beverages"
+  | "Household";
+
 export type ConsolidatedIngredient = {
   id: string;
   name: string;
   unit: string;
   quantity: number;
+  category: ShoppingCategory | null;
 };
 
 export type ManualItem = {
   id: string;
   text: string;
+  category: ShoppingCategory | null;
 };
 
 export type ShoppingListRecipe = {
@@ -151,6 +164,18 @@ export type UpdateCheckedItemsInput = {
 export type UpdateCheckedItemsResponse = {
   checkedItemIds: string[];
 };
+
+export type ClearCheckedItemsResponse = {
+  removedManualItemIds: string[];
+  removedRecipeIds: string[];
+};
+
+export type SetItemCategoryInput = {
+  name: string;
+  category: ShoppingCategory | null;
+};
+
+export type SetItemCategoryResponse = SetItemCategoryInput;
 
 export type ProposedIngredient = {
   quantity: number;

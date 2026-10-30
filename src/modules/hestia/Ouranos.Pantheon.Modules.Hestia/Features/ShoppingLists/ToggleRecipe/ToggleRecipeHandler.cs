@@ -65,17 +65,10 @@ public sealed class ToggleRecipeHandler(
         Recipe recipe
     )
     {
-        // why: line keys are deterministic (name|unit), so re-adding a recipe would
-        // resurrect previously checked lines; a recipe entering the list always
-        // starts its ingredients unchecked.
-        var recipeLineKeys = recipe
-            .Ingredients.Select(i =>
-                ShoppingListNormalizer.RecipeLineKey(
-                    ShoppingListNormalizer.Normalize(i.Name),
-                    ShoppingListNormalizer.Normalize(i.Unit)
-                )
-            )
-            .ToHashSet(StringComparer.Ordinal);
+        // why: line keys are deterministic, so re-adding a recipe would resurrect
+        // previously checked lines; a recipe entering the list always starts its
+        // ingredients unchecked.
+        var recipeLineKeys = ShoppingListConsolidator.LineIds(recipe);
 
         return [.. checkedItemIds.Where(id => !recipeLineKeys.Contains(id))];
     }

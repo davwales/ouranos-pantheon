@@ -3,6 +3,7 @@ import type { PagedResponse } from "@/lib/api-client";
 import type { AssistantEndpoint } from "@/lib/api/assistant";
 import type {
   AddManualItemInput,
+  ClearCheckedItemsResponse,
   ConsolidatedIngredient,
   CreateRecipeInput,
   CreateRecipeResponse,
@@ -17,6 +18,9 @@ import type {
   ReimportRecipeResponse,
   RevertRecipeInput,
   RevertRecipeResponse,
+  SetItemCategoryInput,
+  SetItemCategoryResponse,
+  ShoppingCategory,
   ShoppingListResponse,
   ToggleRecipeResponse,
   UpdateCheckedItemsInput,
@@ -27,6 +31,7 @@ import type {
 
 export type {
   AddManualItemInput,
+  ClearCheckedItemsResponse,
   ConsolidatedIngredient,
   CreateRecipeInput,
   CreateRecipeResponse,
@@ -44,6 +49,9 @@ export type {
   ReimportRecipeResponse,
   RevertRecipeInput,
   RevertRecipeResponse,
+  SetItemCategoryInput,
+  SetItemCategoryResponse,
+  ShoppingCategory,
   ShoppingListResponse,
   Step,
   ToggleRecipeResponse,
@@ -112,4 +120,10 @@ export const hestiaApi = {
       "/api/hestia/shopping-list/checked-items",
       input,
     ),
+
+  clearCheckedItems: () =>
+    api.del<ClearCheckedItemsResponse>("/api/hestia/shopping-list/checked-items"),
+
+  setItemCategory: (input: SetItemCategoryInput) =>
+    api.put<SetItemCategoryResponse>("/api/hestia/shopping-list/categories", input),
 };
