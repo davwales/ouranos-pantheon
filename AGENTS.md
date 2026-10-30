@@ -306,6 +306,8 @@ touched code**; existing violations are known and are not a licence to copy the 
   the existing `useApi`, or render `<BreadcrumbLabel segment={id} label={name} />` from a server
   layout whose children need it (both in `src/components/shared/breadcrumbs/`). Never fetch just for
   a breadcrumb; an unregistered GUID renders as a skeleton.
+  A detail page whose path parent isn't the list that links to it (e.g. a symbol opened from
+  Explorer) is linked with `<OriginLink>`, which adds `?from=<list path>` so the trail returns there.
 - **Assistants live in the top bar** - a page that offers an AI assistant renders a button built on
   the shared `AssistantButton` (`components/shared/ai-assistant/`) through
   `useNavBarActions().setActions` inside an effect, with `clearActions` as cleanup (combine it with

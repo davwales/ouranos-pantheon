@@ -7,7 +7,7 @@ import { ResponsiveDropdownMenu } from "@/components/shared/responsive-dropdown-
 import { Button } from "@/components/ui/button";
 import { type SymbolGroupSymbol } from "@/lib/api/plutus";
 import { MoreHorizontal, Trash2 } from "lucide-react";
-import Link from "next/link";
+import { OriginLink } from "@/components/shared/breadcrumbs";
 import { useMemo } from "react";
 
 type GroupSymbolsTableProps = {
@@ -28,7 +28,7 @@ export function GroupSymbolsTable({
         header: "Symbol",
         accessorFn: (row) => row.name,
         cell: ({ row, getValue }) => (
-          <Link
+          <OriginLink
             href={`/plutus/${marketId}/${row.original.symbolId}`}
             className="hover:underline"
           >
@@ -38,7 +38,7 @@ export function GroupSymbolsTable({
                 {row.original.subcode}
               </span>
             )}
-          </Link>
+          </OriginLink>
         ),
       },
       {

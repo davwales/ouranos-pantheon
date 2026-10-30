@@ -2,7 +2,7 @@ import ClipboardCopy from "@/components/shared/clipboard-copy";
 import { PrettyNumber } from "@/components/shared/pretty-number";
 import { type ExtendedColumnDef } from "@/components/shared/responsive-data-table";
 import { type GetMarketTradesRow } from "@/lib/api/plutus";
-import Link from "next/link";
+import { OriginLink } from "@/components/shared/breadcrumbs";
 
 export function explorerColumns(
   marketId: string,
@@ -13,12 +13,12 @@ export function explorerColumns(
       header: "Name",
       accessorFn: (row) => row.symbolName,
       cell: ({ cell, row }) => (
-        <Link
+        <OriginLink
           href={`/plutus/${marketId}/${row.original.symbolId}`}
           className="hover:underline"
         >
           {cell.getValue<string>()}
-        </Link>
+        </OriginLink>
       ),
       filterConfig: {
         type: "string",
