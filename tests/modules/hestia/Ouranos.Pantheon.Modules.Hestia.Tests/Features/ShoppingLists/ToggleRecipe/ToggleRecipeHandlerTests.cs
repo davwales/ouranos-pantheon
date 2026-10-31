@@ -77,7 +77,7 @@ public sealed class ToggleRecipeHandlerTests
         {
             CheckedItemIds =
             [
-                "recipe:granulated sugar|tablespoons",
+                "recipe:granulated sugar|volume",
                 "recipe:unrelated|g",
                 ShoppingListNormalizer.ManualLineKey(Guid.NewGuid()),
             ],
@@ -95,7 +95,7 @@ public sealed class ToggleRecipeHandlerTests
 
         // Assert
         result.IsInList.ShouldBeTrue();
-        list.CheckedItemIds.ShouldNotContain("recipe:granulated sugar|tablespoons");
+        list.CheckedItemIds.ShouldNotContain("recipe:granulated sugar|volume");
         list.CheckedItemIds.ShouldContain("recipe:unrelated|g");
         list.CheckedItemIds.Count.ShouldBe(2);
     }
@@ -110,7 +110,7 @@ public sealed class ToggleRecipeHandlerTests
         var list = new ShoppingList
         {
             RecipeIds = [recipeIdValue],
-            CheckedItemIds = ["recipe:granulated sugar|tablespoons"],
+            CheckedItemIds = ["recipe:granulated sugar|volume"],
         };
 
         _session
@@ -125,7 +125,7 @@ public sealed class ToggleRecipeHandlerTests
 
         // Assert
         result.IsInList.ShouldBeFalse();
-        list.CheckedItemIds.ShouldContain("recipe:granulated sugar|tablespoons");
+        list.CheckedItemIds.ShouldContain("recipe:granulated sugar|volume");
     }
 
     [Fact]

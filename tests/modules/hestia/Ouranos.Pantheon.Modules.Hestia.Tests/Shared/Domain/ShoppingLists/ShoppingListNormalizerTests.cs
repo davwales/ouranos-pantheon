@@ -70,17 +70,17 @@ public sealed class ShoppingListNormalizerTests
     }
 
     [Fact]
-    public void RecipeLineKey_WhenCalled_ShouldCombineNormalizedNameAndUnit()
+    public void RecipeLineKey_WhenCalled_ShouldCombineNameKeyAndMeasure()
     {
         // Arrange
-        const string name = "flour";
-        const string unit = "g";
+        const string nameKey = "flour";
+        const string measure = "mass";
 
         // Act
-        var result = ShoppingListNormalizer.RecipeLineKey(name, unit);
+        var result = ShoppingListNormalizer.RecipeLineKey(nameKey, measure);
 
         // Assert
-        result.ShouldBe("recipe:flour|g");
+        result.ShouldBe("recipe:flour|mass");
     }
 
     [Fact]
@@ -94,5 +94,33 @@ public sealed class ShoppingListNormalizerTests
 
         // Assert
         result.ShouldBe("manual:11111111-1111-1111-1111-111111111111");
+    }
+
+    [Theory]
+    [InlineData("Eggs", "egg")]
+    [InlineData("large eggs", "large egg")]
+    [InlineData("Cherry Tomatoes", "cherry tomato")]
+    [InlineData("berries", "berry")]
+    [InlineData("watercress", "watercress")]
+    [InlineData("Flour", "flour")]
+    [InlineData("peas", "pea")]
+    public void NameKey_WhenNamePlural_ShouldSingularizeLastWord(string name, string expected)
+    {
+        // Act
+        var key = ShoppingListNormalizer.NameKey(name);
+
+        // Assert
+        key.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void NameKey_WhenSingularAndPluralSpellings_ShouldMatch()
+    {
+        // Act
+        var plural = ShoppingListNormalizer.NameKey("  Onions ");
+        var singular = ShoppingListNormalizer.NameKey("onion");
+
+        // Assert
+        plural.ShouldBe(singular);
     }
 }

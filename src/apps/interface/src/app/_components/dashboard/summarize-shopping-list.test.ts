@@ -7,14 +7,26 @@ describe("summarizeShoppingList", () => {
       recipeIds: ["r1"],
       recipes: [{ id: "r1", title: "Soup" }],
       consolidatedIngredients: [
-        { id: "i1", name: "Leek", unit: "", quantity: 2 },
-        { id: "i2", name: "Stock", unit: "l", quantity: 1 },
+        { id: "i1", name: "Leek", unit: "", quantity: 2, category: null },
+        { id: "i2", name: "Stock", unit: "l", quantity: 1, category: null },
       ],
-      manualItems: [{ id: "m1", text: "Bread" }],
+      manualItems: [{ id: "m1", text: "Bread", category: null }],
       checkedItemIds: ["i2", "stale-id"],
     });
 
     expect(summary).toEqual({ totalItems: 3, remainingItems: 2 });
+  });
+
+  it("counts a checked manual item as done", () => {
+    const summary = summarizeShoppingList({
+      recipeIds: [],
+      recipes: [],
+      consolidatedIngredients: [],
+      manualItems: [{ id: "m1", text: "Bread", category: null }],
+      checkedItemIds: ["manual:m1"],
+    });
+
+    expect(summary).toEqual({ totalItems: 1, remainingItems: 0 });
   });
 
   it("returns zero for an empty list", () => {
