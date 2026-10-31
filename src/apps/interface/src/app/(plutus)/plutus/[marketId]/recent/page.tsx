@@ -10,7 +10,7 @@ import { errorOf, useApi } from "@/hooks/use-api";
 import useInterval from "@/hooks/use-interval";
 import { Trade, plutusApi } from "@/lib/api/plutus";
 import { formatDistance } from "date-fns";
-import Link from "next/link";
+import { OriginLink } from "@/components/shared/breadcrumbs";
 import { useParams } from "next/navigation";
 import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
@@ -54,12 +54,12 @@ export default function RecentMarketTrades() {
         header: "Name",
         accessorFn: (row) => row.symbolName,
         cell: ({ cell, row }) => (
-          <Link
+          <OriginLink
             href={`/plutus/${marketId}/${row.original.symbolId}`}
             className="hover:underline"
           >
             {cell.getValue<string>()}
-          </Link>
+          </OriginLink>
         ),
       },
       {

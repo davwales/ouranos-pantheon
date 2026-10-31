@@ -7,14 +7,17 @@ const MARKET_ID = "1b2f3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d";
 const STRATEGY_ID = "2b2f3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d";
 
 const mockUsePathname = vi.fn();
+const mockSearchParams = { current: new URLSearchParams() };
 
 vi.mock("next/navigation", () => ({
   usePathname: () => mockUsePathname(),
+  useSearchParams: () => mockSearchParams.current,
 }));
 
 describe("Breadcrumbs", () => {
   beforeEach(() => {
     useBreadcrumbStore.setState({ labels: {} });
+    mockSearchParams.current = new URLSearchParams();
   });
 
   it("WhenTrailShorterThanTwo_ShouldRenderNothing", () => {
@@ -120,6 +123,21 @@ describe("Breadcrumbs", () => {
     expect(within(menu).getByRole("menuitem", { name: "Sandbox Market" })).toHaveAttribute(
       "href",
       `/plutus/${MARKET_ID}`,
+    );
+  });
+
+  it("WhenOpenedFromList_ShouldLinkBackToThatList", () => {
+    // Arrange
+    mockUsePathname.mockReturnValue(`/plutus/${MARKET_ID}/${STRATEGY_ID}`);
+    mockSearchParams.current = new URLSearchParams({ from: `/plutus/${MARKET_ID}/explorer` });
+
+    // Act
+    render(<Breadcrumbs />);
+
+    // Assert
+    expect(screen.getByRole("link", { name: "Explorer" })).toHaveAttribute(
+      "href",
+      `/plutus/${MARKET_ID}/explorer`,
     );
   });
 });
