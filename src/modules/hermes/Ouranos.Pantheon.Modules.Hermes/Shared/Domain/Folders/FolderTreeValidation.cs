@@ -58,4 +58,36 @@ public static class FolderTreeValidation
 
         return depth;
     }
+
+    /// <summary>
+    /// Levels in the folder's subtree, counting the folder itself (a folder without subfolders
+    /// has height 1). Stops counting past <see cref="Folder.MaxDepth"/>.
+    /// </summary>
+    public static async Task<int> CalculateSubtreeHeightAsync(
+        Id<Folder> folderId,
+        HermesDbContext dbContext,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var height = 1;
+        List<Id<Folder>?> level = [folderId];
+
+        while (height <= Folder.MaxDepth)
+        {
+            var children = await dbContext
+                .Folders.Where(f => level.Contains(f.ParentFolderId))
+                .Select(f => (Id<Folder>?)f.Id)
+                .ToListAsync(cancellationToken);
+
+            if (children.Count == 0)
+            {
+                break;
+            }
+
+            height++;
+            level = children;
+        }
+
+        return height;
+    }
 }

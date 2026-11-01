@@ -242,4 +242,93 @@ public sealed class FolderTreeValidationTests
         // Assert
         result.ShouldBe(1);
     }
+
+    [Fact]
+    public async Task CalculateSubtreeHeightAsync_WhenNoSubfolders_ShouldReturnOne()
+    {
+        // Arrange
+        var folder = Folder.Create(
+            DatabaseExtensions.CreateId<Folder>(),
+            _fixture.Create<string>()
+        );
+        await _dbContext.SeedData(folder);
+
+        // Act
+        var result = await FolderTreeValidation.CalculateSubtreeHeightAsync(
+            folder.Id,
+            _dbContext,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task CalculateSubtreeHeightAsync_WhenBranchesDiffer_ShouldReturnDeepestBranch()
+    {
+        // Arrange: root -> (a -> a1 -> a2), (b)
+        var root = Folder.Create(DatabaseExtensions.CreateId<Folder>(), _fixture.Create<string>());
+        var a = Folder.Create(
+            DatabaseExtensions.CreateId<Folder>(),
+            _fixture.Create<string>(),
+            parentFolderId: root.Id
+        );
+        var b = Folder.Create(
+            DatabaseExtensions.CreateId<Folder>(),
+            _fixture.Create<string>(),
+            parentFolderId: root.Id
+        );
+        var a1 = Folder.Create(
+            DatabaseExtensions.CreateId<Folder>(),
+            _fixture.Create<string>(),
+            parentFolderId: a.Id
+        );
+        var a2 = Folder.Create(
+            DatabaseExtensions.CreateId<Folder>(),
+            _fixture.Create<string>(),
+            parentFolderId: a1.Id
+        );
+        await _dbContext.SeedData(root, a, b, a1, a2);
+
+        // Act
+        var result = await FolderTreeValidation.CalculateSubtreeHeightAsync(
+            root.Id,
+            _dbContext,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(4);
+    }
+
+    [Fact]
+    public async Task CalculateSubtreeHeightAsync_WhenDeeperThanMaxDepth_ShouldStopPastMaxDepth()
+    {
+        // Arrange
+        var root = Folder.Create(DatabaseExtensions.CreateId<Folder>(), _fixture.Create<string>());
+        await _dbContext.SeedData(root);
+
+        var current = root;
+        for (var i = 0; i < Folder.MaxDepth + 3; i++)
+        {
+            var next = Folder.Create(
+                DatabaseExtensions.CreateId<Folder>(),
+                _fixture.Create<string>(),
+                parentFolderId: current.Id
+            );
+            await _dbContext.SeedData(next);
+            current = next;
+        }
+
+        // Act
+        var result = await FolderTreeValidation.CalculateSubtreeHeightAsync(
+            root.Id,
+            _dbContext,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBe(Folder.MaxDepth + 1);
+    }
 }
