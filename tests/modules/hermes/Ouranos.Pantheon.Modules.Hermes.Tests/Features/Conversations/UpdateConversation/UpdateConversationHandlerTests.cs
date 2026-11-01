@@ -529,4 +529,37 @@ public sealed class UpdateConversationHandlerTests
             _handler.Handle(command, CancellationToken.None)
         );
     }
+
+    [Fact]
+    public async Task Handle_WhenNameIsNull_ShouldKeepTheCurrentName()
+    {
+        // Arrange
+        var conversation = Conversation.Create(
+            new Id<Conversation>(Guid.NewGuid().ToString()),
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [],
+            [],
+            "Generated name"
+        );
+        await _dbContext.SeedData(conversation);
+
+        var command = new UpdateConversationInput(
+            conversation.Id,
+            null,
+            conversation.PersonaId,
+            conversation.ModelConfigId,
+            [],
+            false
+        );
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var updated = await _dbContext.Conversations.FindAsync(conversation.Id);
+        updated.ShouldNotBeNull();
+        updated.Name.ShouldBe("Generated name");
+        updated.IsPublic.ShouldBeFalse();
+    }
 }

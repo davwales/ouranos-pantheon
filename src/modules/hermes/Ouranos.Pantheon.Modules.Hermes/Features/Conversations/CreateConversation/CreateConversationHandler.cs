@@ -1,9 +1,9 @@
-using System.ClientModel;
 using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.CreateConversation.Schemas;
+using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateConversationName.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
@@ -12,37 +12,35 @@ using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Loras;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
-using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
-using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos;
+using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.CreateConversation;
 
 public sealed class CreateConversationHandler
     : IPantheonHandler<CreateConversationInput, CreateConversationResponse>
 {
-    private const int MaxGeneratedNameLength = 60;
-
     private readonly ILogger<CreateConversationHandler> _logger;
     private readonly HermesDbContext _dbContext;
-    private readonly IOuranosMachineLearningClient _mlClient;
+    private readonly IMessageBus _bus;
     private readonly IOptions<HermesOptions> _options;
 
     public CreateConversationHandler(
         ILogger<CreateConversationHandler> logger,
         HermesDbContext dbContext,
-        IOuranosMachineLearningClient mlClient,
+        IMessageBus bus,
         IOptions<HermesOptions> options
     )
     {
         Guard.Against.Null(logger);
         Guard.Against.Null(dbContext);
-        Guard.Against.Null(mlClient);
+        Guard.Against.Null(bus);
         Guard.Against.Null(options);
 
         _logger = logger;
         _dbContext = dbContext;
-        _mlClient = mlClient;
+        _bus = bus;
         _options = options;
     }
 
@@ -96,17 +94,13 @@ public sealed class CreateConversationHandler
             cancellationToken
         );
 
-        var name = string.IsNullOrWhiteSpace(command.Name)
-            ? await GenerateNameAsync(command, cancellationToken)
-            : command.Name;
-
         var conversation = Conversation.Create(
             conversationId,
             command.PersonaId,
             command.ModelConfigId,
             messages,
             traits,
-            name,
+            command.Name,
             command.IsPublic,
             folderId: command.FolderId,
             folder: folder,
@@ -131,6 +125,15 @@ public sealed class CreateConversationHandler
         await _dbContext.Conversations.AddAsync(conversation, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
+        if (
+            string.IsNullOrWhiteSpace(command.Name)
+            && messages.Count > 0
+            && _options.Value.IsConversationNameGenerationEnabled
+        )
+        {
+            await RequestNameAsync(conversation.Id);
+        }
+
         _logger.LogDebug(
             "Successfully handled create conversation request for conversation '{conversationId}'.",
             conversation.Id
@@ -138,76 +141,21 @@ public sealed class CreateConversationHandler
         return new CreateConversationResponse(conversation.Id, conversation.Name);
     }
 
-    private async Task<string?> GenerateNameAsync(
-        CreateConversationInput command,
-        CancellationToken cancellationToken
-    )
+    private async Task RequestNameAsync(Id<Conversation> conversationId)
     {
-        var options = _options.Value;
-        if (command.Messages.Count == 0 || !options.IsConversationNameGenerationEnabled)
-        {
-            return null;
-        }
-
         try
         {
-            List<ResponseInputItemDto> input =
-            [
-                .. command.Messages.Select(m => new MessageInputItemDto(
-                    new MessageDto(m.Content, m.Role.ToRoleDto())
-                )),
-            ];
-
-            if (command.Messages[^1].Role != Role.User)
-            {
-                input.Add(
-                    new MessageInputItemDto(
-                        new MessageDto("Generate a name using the prior content.", RoleDto.User)
-                    )
-                );
-            }
-
-            var result = await _mlClient.GenerateResponseAsync(
-                options.ConversationNameModel,
-                options.ConversationNameSystemPrompt,
-                input,
-                reasoningEffort: options.ConversationNameReasoningEffort,
-                cancellationToken: cancellationToken
-            );
-
-            var trimmed = result.Content?.Trim();
-            if (string.IsNullOrWhiteSpace(trimmed))
-            {
-                return null;
-            }
-
-            return trimmed.Length > MaxGeneratedNameLength
-                ? trimmed[..MaxGeneratedNameLength]
-                : trimmed;
+            await _bus.PublishAsync(new GenerateConversationNameRequested(conversationId));
         }
-        catch (HttpRequestException ex)
+        catch (Exception ex)
         {
+            // The conversation is already saved, so a lost naming request only leaves the default
+            // name rather than failing the save.
             _logger.LogWarning(
                 ex,
-                "Failed to auto-generate conversation name; falling back to default."
+                "Failed to request a name for conversation '{conversationId}'.",
+                conversationId
             );
-            return null;
-        }
-        catch (ClientResultException ex)
-        {
-            _logger.LogWarning(
-                ex,
-                "Failed to auto-generate conversation name; falling back to default."
-            );
-            return null;
-        }
-        catch (TaskCanceledException ex)
-        {
-            _logger.LogWarning(
-                ex,
-                "Failed to auto-generate conversation name; falling back to default."
-            );
-            return null;
         }
     }
 }

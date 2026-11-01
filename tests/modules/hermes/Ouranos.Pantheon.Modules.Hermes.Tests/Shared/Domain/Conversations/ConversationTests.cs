@@ -372,10 +372,9 @@ public sealed class ConversationTests
     }
 
     [Theory]
-    [InlineData(null)]
     [InlineData("")]
     [InlineData(" ")]
-    public void Update_WhenInvalidName_ShouldDefaultToNewConversation(string? newName)
+    public void Update_WhenInvalidName_ShouldDefaultToNewConversation(string newName)
     {
         // Arrange
         var id = new Id<Conversation>(Guid.NewGuid().ToString());
@@ -389,7 +388,7 @@ public sealed class ConversationTests
 
         // Act
         conversation.Update(
-            newName!,
+            newName,
             new Id<Persona>(Guid.NewGuid().ToString()),
             new Id<ModelConfig>(Guid.NewGuid().ToString()),
             [],
@@ -400,5 +399,97 @@ public sealed class ConversationTests
 
         // Assert
         conversation.Name.ShouldBe("New Conversation");
+    }
+
+    [Fact]
+    public void Update_WhenNameIsNull_ShouldKeepTheName()
+    {
+        // Arrange
+        var conversation = Conversation.Create(
+            new Id<Conversation>(Guid.NewGuid().ToString()),
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [],
+            [],
+            "Generated name"
+        );
+
+        // Act
+        conversation.Update(
+            null,
+            conversation.PersonaId,
+            conversation.ModelConfigId,
+            null,
+            [],
+            true,
+            null
+        );
+
+        // Assert
+        conversation.Name.ShouldBe("Generated name");
+    }
+
+    [Fact]
+    public void ApplyGeneratedName_WhenNameIsDefault_ShouldSetTheName()
+    {
+        // Arrange
+        var conversation = Conversation.Create(
+            new Id<Conversation>(Guid.NewGuid().ToString()),
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [],
+            []
+        );
+
+        // Act
+        var applied = conversation.ApplyGeneratedName("  Trip planning ");
+
+        // Assert
+        applied.ShouldBeTrue();
+        conversation.Name.ShouldBe("Trip planning");
+        conversation.HasDefaultName.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ApplyGeneratedName_WhenRenamedMeanwhile_ShouldKeepTheUsersName()
+    {
+        // Arrange
+        var conversation = Conversation.Create(
+            new Id<Conversation>(Guid.NewGuid().ToString()),
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [],
+            [],
+            "My name"
+        );
+
+        // Act
+        var applied = conversation.ApplyGeneratedName("Trip planning");
+
+        // Assert
+        applied.ShouldBeFalse();
+        conversation.Name.ShouldBe("My name");
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    public void ApplyGeneratedName_WhenNameIsBlank_ShouldKeepTheDefault(string name)
+    {
+        // Arrange
+        var conversation = Conversation.Create(
+            new Id<Conversation>(Guid.NewGuid().ToString()),
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [],
+            []
+        );
+
+        // Act
+        var applied = conversation.ApplyGeneratedName(name);
+
+        // Assert
+        applied.ShouldBeFalse();
+        conversation.HasDefaultName.ShouldBeTrue();
     }
 }
