@@ -5,6 +5,8 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Markets.GetMarket.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketTrades.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Filtering;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Filtering.Schemas;
 using Ouranos.Pantheon.Tests.Utils.NSubstitute;
 using Wolverine;
 using Factory = Ouranos.Pantheon.Modules.Plutus.Tests.Features.Assistants.AskSymbolAnalyst.SymbolAnalystSnapshotFactory;
@@ -33,6 +35,25 @@ public sealed class AssistantToolQueriesTests
             Factory.SymbolId,
             CancellationToken.None
         );
+    }
+
+    [Fact]
+    public void SymbolFilter_ShouldMatchTheSymbolIdExactly()
+    {
+        // Act
+        var filter = AssistantToolQueries.SymbolFilter(Factory.SymbolId);
+
+        // Assert
+        filter.Length.ShouldBe(1);
+        FilterParser
+            .Parse(filter[0])
+            .ShouldBe(
+                new FieldFilterNode(
+                    nameof(GetMarketTradesResponse.SymbolId),
+                    FilterOperator.Eq,
+                    Factory.SymbolId.Value
+                )
+            );
     }
 
     [Theory]
