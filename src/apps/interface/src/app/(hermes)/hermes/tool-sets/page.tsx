@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useApi } from "@/hooks/use-api";
 import { hermesApi, type ToolSetSummary } from "@/lib/api/hermes";
 import Link from "next/link";
+import { usePublicMode } from "@/app/(hermes)/hermes/components/public-mode-context";
 
 function describeToolSet(toolSet: ToolSetSummary): string {
   const tools =
@@ -17,6 +18,7 @@ function describeToolSet(toolSet: ToolSetSummary): string {
 
 export default function ToolSetsPage() {
   const [state] = useApi(() => hermesApi.getAllToolSets());
+  const isPublicMode = usePublicMode();
 
   return (
     <div className="m-4">
@@ -36,9 +38,11 @@ export default function ToolSetsPage() {
         </div>
       )}
 
-      <Button size="lg" variant="link" className="mt-4 w-full">
-        <Link href="/hermes/tool-sets/create">Create New</Link>
-      </Button>
+      {!isPublicMode && (
+        <Button size="lg" variant="link" className="mt-4 w-full">
+          <Link href="/hermes/tool-sets/create">Create New</Link>
+        </Button>
+      )}
     </div>
   );
 }

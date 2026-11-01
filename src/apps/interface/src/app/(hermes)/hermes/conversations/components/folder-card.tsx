@@ -28,14 +28,15 @@ export function FolderCard({
   conversationCount: number;
   subfolderCount: number;
   onClick: () => void;
-  onCreateSubfolder: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
+  onCreateSubfolder?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
   onDropConversation?: (conversationId: string) => Promise<void>;
 }) {
   const [isDragOver, setIsDragOver] = useState(false);
 
   const handleDragOver = (e: React.DragEvent) => {
+    if (!onDropConversation) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
     setIsDragOver(true);
@@ -82,43 +83,51 @@ export function FolderCard({
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <FolderVisibilityBadge isPublic={folder.isPublic} />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                className="p-1.5 rounded-md hover:bg-accent transition-colors"
-                aria-label="Folder actions"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onCreateSubfolder();
-                }}
-              >
-                <Plus className="size-4 mr-2" /> New Subfolder
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit();
-                }}
-              >
-                <Pencil className="size-4 mr-2" /> Edit
-              </DropdownMenuItem>
-              <FolderDeleteButton
-                onConfirm={async () => onDelete()}
-                trigger={
-                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                    <Trash2 className="h-4 w-4 mr-2" /> Delete
+          {(onCreateSubfolder || onEdit || onDelete) && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="p-1.5 rounded-md hover:bg-accent transition-colors"
+                  aria-label="Folder actions"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {onCreateSubfolder && (
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onCreateSubfolder();
+                    }}
+                  >
+                    <Plus className="size-4 mr-2" /> New Subfolder
                   </DropdownMenuItem>
-                }
-              />
-            </DropdownMenuContent>
-          </DropdownMenu>
+                )}
+                {onEdit && (
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit();
+                    }}
+                  >
+                    <Pencil className="size-4 mr-2" /> Edit
+                  </DropdownMenuItem>
+                )}
+                {onDelete && (
+                  <FolderDeleteButton
+                    onConfirm={async () => onDelete()}
+                    trigger={
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                        <Trash2 className="h-4 w-4 mr-2" /> Delete
+                      </DropdownMenuItem>
+                    }
+                  />
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
     </div>

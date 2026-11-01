@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Ouranos.Pantheon.Modules.Hermes.Features.Loras.UpdateLora.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Loras;
+using Ouranos.Pantheon.Modules.Hermes.Shared.PublicMode;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Wolverine;
 
@@ -11,7 +12,9 @@ public static class UpdateLoraEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapPut("/api/hermes/loras/{loraId}", Handle).WithTags("Hermes.Loras");
+        app.MapPut("/api/hermes/loras/{loraId}", Handle)
+            .WithTags("Hermes.Loras")
+            .DisabledInPublicMode();
     }
 
     internal static async Task<IResult> Handle(

@@ -41,6 +41,7 @@ export type {
   SaveToolSetInput,
   FolderSummary,
   UpdateFolderInput,
+  PublicMode,
 } from "./hermes-types";
 export { Role } from "./hermes-types";
 
@@ -69,6 +70,7 @@ import type {
   FolderSummary,
   UpdateFolderInput,
   ImageDetails,
+  PublicMode,
 } from "./hermes-types";
 import type { CompletionChunk, CompactChunk } from "./hermes-types";
 
@@ -77,6 +79,8 @@ export function hermesImagePath(imageId: string): string {
 }
 
 export const hermesApi = {
+  getPublicMode: () => api.get<PublicMode>("/api/hermes/public-mode"),
+
   getAllPersonas: (params?: { filter?: string[] }) =>
     api.get<Persona[]>("/api/hermes/personas", params),
 

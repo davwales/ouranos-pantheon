@@ -6,6 +6,7 @@ import { type LoraFormInput } from "@/app/(hermes)/hermes/types";
 import { hermesApi } from "@/lib/api/hermes";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { PublicModeGate } from "@/app/(hermes)/hermes/components/public-mode-gate";
 
 export default function CreateLoraPage() {
   const router = useRouter();
@@ -30,12 +31,14 @@ export default function CreateLoraPage() {
   };
 
   return (
-    <div className="m-4">
-      <Typography variant="h2" className="border-b-0">
-        Register LoRA
-      </Typography>
+    <PublicModeGate backHref="/hermes/loras" backLabel="Back to LoRAs">
+      <div className="m-4">
+        <Typography variant="h2" className="border-b-0">
+          Register LoRA
+        </Typography>
 
-      <LoraForm onSave={handleSave} loading={loading} />
-    </div>
+        <LoraForm onSave={handleSave} loading={loading} />
+      </div>
+    </PublicModeGate>
   );
 }

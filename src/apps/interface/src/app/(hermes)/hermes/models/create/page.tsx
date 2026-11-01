@@ -6,6 +6,7 @@ import { ModelFormInput } from "@/app/(hermes)/hermes/types";
 import { hermesApi } from "@/lib/api/hermes";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { PublicModeGate } from "@/app/(hermes)/hermes/components/public-mode-gate";
 
 export default function CreateModelPage() {
   const router = useRouter();
@@ -34,12 +35,14 @@ export default function CreateModelPage() {
   };
 
   return (
-    <div className="m-4">
-      <Typography variant="h2" className="border-b-0">
-        Create Model
-      </Typography>
+    <PublicModeGate backHref="/hermes/models" backLabel="Back to Models">
+      <div className="m-4">
+        <Typography variant="h2" className="border-b-0">
+          Create Model
+        </Typography>
 
-      <ModelForm onSave={handleSave} loading={loading} />
-    </div>
+        <ModelForm onSave={handleSave} loading={loading} />
+      </div>
+    </PublicModeGate>
   );
 }

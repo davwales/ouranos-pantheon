@@ -5,8 +5,19 @@
 Hermes reads the Flagsmith flag `hermes.public_mode` through `IFlagsmithClient`
 ([ADR 0012](../../../../docs/adr/0012-feature-flags-via-flagsmith.md)). While it is enabled,
 the read handlers (conversations, folders, personas, traits, models) return only entities
-whose `IsPublic` is set and treat the others as not found. Writes, completion and compaction
-are not gated, so public mode limits what is listed, not what can be done.
+whose `IsPublic` is set and treat the others as not found.
+
+- **Folders hide their subtree.** A folder or conversation is visible only when it and every
+  folder above it are public (`FolderVisibility`), so a private folder hides everything below
+  it, whatever the descendants' own flags say. Folder conversation and subfolder counts count
+  only visible children. Generated images follow the conversations that show them.
+- **Stored data is read-only.** Every create, update and delete endpoint is marked with
+  `DisabledInPublicMode()`, an endpoint filter (`PublicModeWriteFilter`) that answers 403. Chat
+  completion and compaction stay open for unsaved chats but are rejected when they name a
+  saved conversation, because they would append to it. Visitors can chat, not save.
+- **The Interface asks first.** `GET /api/hermes/public-mode` reports the flag, and the
+  Interface hides its create, edit, save, move and delete controls while it is on. A saved
+  conversation opens as an unsaved copy that can be continued but not saved.
 Public mode fails closed: the gateway's base `appsettings.json` lists `hermes.public_mode` as
 enabled under `Ouranos:Flagsmith:DefaultFlags`, so while Flagsmith is unreachable reads are
 limited to public entities instead of failing.
@@ -104,7 +115,7 @@ longer available" when the image returns 404.
 
 **Access.** `GET /api/hermes/images/{imageId}` serves the bytes with a one-day private cache,
 and `GET /api/hermes/images/{imageId}/details` its prompt, model, seed and source.
-In public mode an image referenced by a private conversation, or one in a private folder, is
+In public mode an image referenced by a private conversation, or one under a private folder, is
 treated as not found; an unreferenced image belongs to an unsaved chat and is reachable only
 by its unguessable id.
 

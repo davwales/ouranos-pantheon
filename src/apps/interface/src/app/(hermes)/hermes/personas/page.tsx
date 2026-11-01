@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { useApi } from "@/hooks/use-api";
 import { hermesApi } from "@/lib/api/hermes";
 import Link from "next/link";
+import { usePublicMode } from "@/app/(hermes)/hermes/components/public-mode-context";
 
 export default function PersonasPage() {
   const [state] = useApi(() => hermesApi.getAllPersonas());
+  const isPublicMode = usePublicMode();
 
   return (
     <div className="m-4">
@@ -28,9 +30,11 @@ export default function PersonasPage() {
         </div>
       )}
 
-      <Button size="lg" variant="link" className="mt-4 w-full">
-        <Link href="/hermes/personas/create">Create New</Link>
-      </Button>
+      {!isPublicMode && (
+        <Button size="lg" variant="link" className="mt-4 w-full">
+          <Link href="/hermes/personas/create">Create New</Link>
+        </Button>
+      )}
     </div>
   );
 }

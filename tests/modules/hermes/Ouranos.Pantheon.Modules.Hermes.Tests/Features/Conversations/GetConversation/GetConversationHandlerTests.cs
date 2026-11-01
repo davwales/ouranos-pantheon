@@ -379,6 +379,60 @@ public sealed class GetConversationHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenAncestorFolderPrivateAndPublicModeEnabled_ShouldThrowNotFoundException()
+    {
+        // Arrange
+        var grandparent = Folder.Create(
+            new Id<Folder>(Guid.NewGuid().ToString()),
+            "Private",
+            isPublic: false
+        );
+        var parent = Folder.Create(
+            new Id<Folder>(Guid.NewGuid().ToString()),
+            "Public",
+            parentFolderId: grandparent.Id
+        );
+        var persona = Persona.Create(
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
+        var modelConfig = ModelConfig.Create(
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _fixture.Create<string>(),
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
+        var conversation = Conversation.Create(
+            new Id<Conversation>(Guid.NewGuid().ToString()),
+            persona.Id,
+            modelConfig.Id,
+            [],
+            [],
+            _fixture.Create<string>(),
+            true,
+            folderId: parent.Id
+        );
+
+        await _dbContext.SeedData(grandparent, parent);
+        await _dbContext.SeedData(persona);
+        await _dbContext.SeedData(modelConfig);
+        await _dbContext.SeedData(conversation);
+
+        var flags = Substitute.For<IFlags>();
+        flags.IsFeatureEnabled(HermesFeatureFlags.PublicMode).Returns(Task.FromResult(true));
+        _flagsmith.GetEnvironmentFlags().Returns(Task.FromResult(flags));
+
+        var query = new GetConversationInput(conversation.Id);
+
+        // Act
+        var handle = async () => await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        await handle.ShouldThrowAsync<NotFoundException>();
+    }
+
+    [Fact]
     public async Task Handle_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange

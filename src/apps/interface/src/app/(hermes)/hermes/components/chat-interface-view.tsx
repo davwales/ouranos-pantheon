@@ -5,6 +5,7 @@ import { useNavBarActions } from "@/components/shared/nav-bar-actions-context";
 import ChatInput from "@/app/(hermes)/hermes/components/chat-input";
 import ChatMessageList from "@/app/(hermes)/hermes/components/chat-message-list";
 import { ContextUsageBar } from "@/app/(hermes)/hermes/components/context-usage-bar";
+import { usePublicMode } from "@/app/(hermes)/hermes/components/public-mode-context";
 import { ConversationConfigSheet } from "@/app/(hermes)/hermes/components/conversation-config-sheet";
 import { toImagePart } from "@/app/(hermes)/hermes/components/message-parts";
 import {
@@ -97,6 +98,7 @@ export default function ChatInterfaceView({
     string | null
   >(null);
   const { setActions, clearActions } = useNavBarActions();
+  const isPublicMode = usePublicMode();
 
   const {
     messages,
@@ -212,7 +214,7 @@ export default function ChatInterfaceView({
   useEffect(() => {
     const actions = (
       <div className="flex items-center gap-1">
-        {!conversationId && messages.length > 0 && !isGenerating && (
+        {!isPublicMode && !conversationId && messages.length > 0 && !isGenerating && (
           <button
             onClick={handleSaveConversation}
             className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
@@ -240,6 +242,7 @@ export default function ChatInterfaceView({
     messages.length,
     conversationId,
     isGenerating,
+    isPublicMode,
   ]);
 
   const [toolSetsState] = useApi(() => hermesApi.getAllToolSets());
