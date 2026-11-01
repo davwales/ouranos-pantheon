@@ -4,9 +4,11 @@ import { type StrategyRecommendation } from "@/lib/api/plutus";
 export function RecommendationSummary({
   recommendations,
   budget,
+  volumeParticipationRate,
 }: {
   recommendations: StrategyRecommendation[];
   budget: number;
+  volumeParticipationRate: number;
 }) {
   const allocated = recommendations.reduce(
     (sum, r) => sum + r.suggestedAllocation,
@@ -22,6 +24,7 @@ export function RecommendationSummary({
       {abbreviateNumber(allocated)} of {abbreviateNumber(budget)} allocated
       {profits.length > 0 &&
         ` · est. profit ${abbreviateNumber(profits.reduce((a, b) => a + b, 0))}`}
+      {` · orders capped at ${Number((volumeParticipationRate * 100).toFixed(2))}% of volume`}
     </p>
   );
 }

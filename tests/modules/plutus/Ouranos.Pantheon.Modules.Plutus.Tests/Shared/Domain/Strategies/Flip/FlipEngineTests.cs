@@ -227,6 +227,7 @@ public sealed class FlipEngineTests
             MarketId,
             configuration,
             10_000m,
+            BacktestDataOptions.DefaultVolumeParticipationRate,
             CancellationToken.None
         );
 
@@ -241,6 +242,35 @@ public sealed class FlipEngineTests
         wide.NetMargin.ShouldBe(0.28m);
         wide.ExpectedProfit.ShouldBe(700m);
         wide.LimitedBy.ShouldBe(PositionLimit.Budget);
+    }
+
+    [Fact]
+    public async Task RecommendAsync_WithALowerParticipationRate_ShouldSuggestFewerUnits()
+    {
+        // Arrange
+        ArrangeData(FlipTestData.Bouncing(200, 100f, 130f, name: "Wide"));
+        var configuration = new FlipConfiguration(MaxPositionPercent: 1m);
+
+        // Act
+        var full = await _engine.RecommendAsync(
+            MarketId,
+            configuration,
+            1_000_000m,
+            1m,
+            CancellationToken.None
+        );
+        var capped = await _engine.RecommendAsync(
+            MarketId,
+            configuration,
+            1_000_000m,
+            0.01m,
+            CancellationToken.None
+        );
+
+        // Assert
+        var cappedVolume = capped.ShouldHaveSingleItem().SuggestedVolume;
+        cappedVolume.ShouldBeLessThan(full.ShouldHaveSingleItem().SuggestedVolume);
+        capped[0].LimitedBy.ShouldBe(PositionLimit.Liquidity);
     }
 
     [Fact]
@@ -260,6 +290,7 @@ public sealed class FlipEngineTests
             MarketId,
             configuration,
             10_000m,
+            BacktestDataOptions.DefaultVolumeParticipationRate,
             CancellationToken.None
         );
 
@@ -286,6 +317,7 @@ public sealed class FlipEngineTests
             MarketId,
             configuration,
             10_000m,
+            BacktestDataOptions.DefaultVolumeParticipationRate,
             CancellationToken.None
         );
 
@@ -304,6 +336,7 @@ public sealed class FlipEngineTests
             MarketId,
             new FlipConfiguration(),
             1_000_000m,
+            BacktestDataOptions.DefaultVolumeParticipationRate,
             CancellationToken.None
         );
 
@@ -324,6 +357,7 @@ public sealed class FlipEngineTests
             MarketId,
             new FlipConfiguration(),
             10_000m,
+            BacktestDataOptions.DefaultVolumeParticipationRate,
             CancellationToken.None
         );
 

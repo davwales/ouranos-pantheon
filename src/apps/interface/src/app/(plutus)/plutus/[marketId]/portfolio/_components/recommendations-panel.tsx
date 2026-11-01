@@ -20,7 +20,12 @@ const DEFAULT_BUDGET = 10000;
 
 type RecommendationsResultState =
   | { status: "loading" }
-  | { status: "success"; data: StrategyRecommendation[]; budget: number }
+  | {
+      status: "success";
+      data: StrategyRecommendation[];
+      budget: number;
+      volumeParticipationRate: number;
+    }
   | { status: "error"; error: Error };
 
 function findLatestBacktested(strategies: Strategy[]) {
@@ -94,6 +99,7 @@ function ActiveRecommendationsPanel({
         strategyId,
         budget: submittedBudget,
         recommendations: result.recommendations,
+        volumeParticipationRate: result.volumeParticipationRate,
       };
     },
     [strategyId, marketId, submittedBudget],
@@ -111,6 +117,7 @@ function ActiveRecommendationsPanel({
             status: "success",
             data: apiState.data.recommendations,
             budget: apiState.data.budget,
+            volumeParticipationRate: apiState.data.volumeParticipationRate,
           }
         : { status: "loading" };
 
@@ -159,7 +166,7 @@ function ActiveRecommendationsPanel({
       />
       {selectedStrategy?.lastBacktestAt && (
         <p className="text-xs text-muted-foreground">
-          Budget defaults to the latest completed backtest (
+          Budget and volume participation default to the latest completed backtest (
           {new Date(selectedStrategy.lastBacktestAt).toLocaleDateString()}).
         </p>
       )}
@@ -199,6 +206,7 @@ function RecommendationsResult({
         <RecommendationSummary
           recommendations={recommendations}
           budget={state.budget}
+          volumeParticipationRate={state.volumeParticipationRate}
         />
       )}
       <ResponsiveDataTable

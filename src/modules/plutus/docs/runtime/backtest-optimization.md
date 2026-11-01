@@ -110,4 +110,7 @@ and out-of-sample periods are profitable.
 Recommendations ask the same engine what its simulator would buy right now with the budget
 and nothing held (`SwingSimulator.PlanEntries`, `FlipSimulator.PlanOffers`), so live picks
 are ranked and sized exactly as in backtests. Swing recommendations score today's partial
-trading against signals reconstructed the same way as in a backtest.
+trading against signals reconstructed the same way as in a backtest. Orders are capped at the
+volume participation rate of the strategy's latest completed backtest or optimization (the
+default rate when it has none), or at the `volumeParticipationRate` the caller passes, and the
+response reports the rate used.

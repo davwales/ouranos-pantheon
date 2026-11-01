@@ -66,6 +66,35 @@ public sealed class GetRecommendationsHandlerTests
         return strategy;
     }
 
+    private static Backtest CreateBacktest(
+        Strategy strategy,
+        decimal participationRate,
+        BacktestStatus status
+    )
+    {
+        var backtest = Backtest.Create(
+            strategy.Id,
+            strategy.MarketId,
+            DateTimeOffset.UtcNow.AddDays(-30),
+            DateTimeOffset.UtcNow,
+            1000m,
+            new BacktestRunSettings(participationRate),
+            strategy
+        );
+        backtest.MarkRunning();
+
+        if (status == BacktestStatus.Completed)
+        {
+            backtest.Complete(new BacktestResults());
+        }
+        else
+        {
+            backtest.Fail("Test");
+        }
+
+        return backtest;
+    }
+
     [Fact]
     public async Task Handle_WhenFlipStrategy_ShouldDelegateToFlipEngine()
     {
@@ -82,11 +111,14 @@ public sealed class GetRecommendationsHandlerTests
         // Assert
         result.Recommendations.Select(r => r.SymbolId).ShouldBe(["flip-1", "flip-2"]);
 
-        var (MarketId, Configuration, Budget) = _flipEngine.RecommendCalls.ShouldHaveSingleItem();
+        var (MarketId, Configuration, Budget, ParticipationRate) =
+            _flipEngine.RecommendCalls.ShouldHaveSingleItem();
 
         MarketId.ShouldBe(strategy.MarketId);
         Configuration.ShouldBe(configuration);
         Budget.ShouldBe(5000m);
+        ParticipationRate.ShouldBe(BacktestDataOptions.DefaultVolumeParticipationRate);
+        result.VolumeParticipationRate.ShouldBe(BacktestDataOptions.DefaultVolumeParticipationRate);
         _swingEngine.RecommendCalls.ShouldBeEmpty();
     }
 
@@ -105,6 +137,71 @@ public sealed class GetRecommendationsHandlerTests
         // Assert
         result.Recommendations.ShouldHaveSingleItem().SymbolId.ShouldBe("swing");
         _swingEngine.RecommendCalls.ShouldHaveSingleItem().Budget.ShouldBe(1000m);
+        _flipEngine.RecommendCalls.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Handle_WhenStrategyHasCompletedBacktests_ShouldUseTheLatestParticipationRate()
+    {
+        // Arrange
+        var strategy = await SeedStrategyAsync(new FlipConfiguration());
+        await _dbContext.SeedData(
+            CreateBacktest(strategy, 0.05m, BacktestStatus.Completed),
+            CreateBacktest(strategy, 0.2m, BacktestStatus.Completed),
+            CreateBacktest(strategy, 0.5m, BacktestStatus.Failed)
+        );
+
+        // Act
+        var result = await _handler.Handle(
+            new GetRecommendationsInput(strategy.Id, strategy.MarketId, 1000m),
+            CancellationToken.None
+        );
+
+        // Assert
+        _flipEngine.RecommendCalls.ShouldHaveSingleItem().ParticipationRate.ShouldBe(0.2m);
+        result.VolumeParticipationRate.ShouldBe(0.2m);
+    }
+
+    [Fact]
+    public async Task Handle_WhenParticipationRateGiven_ShouldOverrideTheBacktestRate()
+    {
+        // Arrange
+        var strategy = await SeedStrategyAsync(new FlipConfiguration());
+        await _dbContext.SeedData(CreateBacktest(strategy, 0.2m, BacktestStatus.Completed));
+
+        // Act
+        var result = await _handler.Handle(
+            new GetRecommendationsInput(strategy.Id, strategy.MarketId, 1000m, 0.03m),
+            CancellationToken.None
+        );
+
+        // Assert
+        _flipEngine.RecommendCalls.ShouldHaveSingleItem().ParticipationRate.ShouldBe(0.03m);
+        result.VolumeParticipationRate.ShouldBe(0.03m);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-0.1)]
+    [InlineData(1.5)]
+    public async Task Handle_WhenParticipationRateOutOfRange_ShouldThrowArgumentException(
+        decimal participationRate
+    )
+    {
+        // Arrange
+        var strategy = await SeedStrategyAsync(new FlipConfiguration());
+        var input = new GetRecommendationsInput(
+            strategy.Id,
+            strategy.MarketId,
+            1000m,
+            participationRate
+        );
+
+        // Act
+        var handle = () => _handler.Handle(input, CancellationToken.None);
+
+        // Assert
+        await handle.ShouldThrowAsync<ArgumentException>();
         _flipEngine.RecommendCalls.ShouldBeEmpty();
     }
 

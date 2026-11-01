@@ -308,6 +308,7 @@ public sealed class SwingEngineTests
             _market.Id,
             configuration,
             1000m,
+            BacktestDataOptions.DefaultVolumeParticipationRate,
             CancellationToken.None
         );
 
@@ -322,6 +323,34 @@ public sealed class SwingEngineTests
         recommendations[0].SymbolId.ShouldBe(a.Id.ToString());
         recommendations[1].SuggestedVolume.ShouldBe(25m);
         recommendations.Sum(r => r.SuggestedAllocation).ShouldBeLessThanOrEqualTo(1000m);
+    }
+
+    [Fact]
+    public async Task RecommendAsync_ShouldCapVolumeAtTheParticipationRate()
+    {
+        // Arrange
+        var a = SwingTestData.CreateSymbol(_market, "A");
+        _scores[a.Id] = 0.9m;
+        ArrangeRecentHistory([a]);
+
+        var configuration = new SwingConfiguration(
+            StrategyTestFactory.DefaultWeights(),
+            MaxPositionPercent: 0.5m
+        );
+
+        // Act
+        var recommendations = await _engine.RecommendAsync(
+            _market.Id,
+            configuration,
+            1000m,
+            0.0002m,
+            CancellationToken.None
+        );
+
+        // Assert
+        var recommendation = recommendations.ShouldHaveSingleItem();
+        recommendation.SuggestedVolume.ShouldBe(20m);
+        recommendation.LimitedBy.ShouldBe(PositionLimit.Liquidity);
     }
 
     [Fact]
@@ -345,6 +374,7 @@ public sealed class SwingEngineTests
             _market.Id,
             configuration,
             1000m,
+            BacktestDataOptions.DefaultVolumeParticipationRate,
             CancellationToken.None
         );
 
@@ -365,6 +395,7 @@ public sealed class SwingEngineTests
             _market.Id,
             StrategyTestFactory.Swing(),
             1000m,
+            BacktestDataOptions.DefaultVolumeParticipationRate,
             CancellationToken.None
         );
 
@@ -393,6 +424,7 @@ public sealed class SwingEngineTests
             _market.Id,
             StrategyTestFactory.Swing(),
             1000m,
+            BacktestDataOptions.DefaultVolumeParticipationRate,
             CancellationToken.None
         );
 
