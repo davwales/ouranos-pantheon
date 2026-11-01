@@ -8,6 +8,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetSymbolTrades.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Sorting;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Assistants.Tools.GetPriceHistory;
@@ -43,7 +44,7 @@ public sealed class GetPriceHistoryTool(
             new GetAllTradesInput(
                 TimeFrame.OneYear,
                 nameof(GetAllTradesResponse.Timestamp),
-                "desc",
+                SortDirection.Desc.ToQueryValue(),
                 Take: 1,
                 Filter: AssistantToolQueries.SymbolFilter(context.SymbolId)
             ),

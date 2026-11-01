@@ -27,7 +27,8 @@ every module follows; how a module applies them is documented by that module (se
   slices never call each other's handlers.
 - **Common query contract**: paging (`skip/take`, bounded by `QueryOptions`), sorting, and
   the `field:op:value` filter language, parsed once in the kernel and reused by most list
-  endpoints. A few lists support only part of the contract; the Bruno collection shows
+  endpoints. Code that builds a query input writes filters with `FilterExpression` and sort
+  directions with `SortDirection.ToQueryValue()` rather than string literals. A few lists support only part of the contract; the Bruno collection shows
   each endpoint's parameters.
 - **Table search**: there is no search engine. The frontend data table has one search box.
   Plain words become a text search: an `or(col:like:term|…)` group over the table's

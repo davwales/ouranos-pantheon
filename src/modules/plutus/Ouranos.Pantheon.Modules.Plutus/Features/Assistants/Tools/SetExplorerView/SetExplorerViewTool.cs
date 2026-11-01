@@ -6,6 +6,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Assistants.Tools.SetExplorerView.
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketTrades.Schemas;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Sorting;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Assistants.Tools.SetExplorerView;
@@ -66,9 +67,10 @@ public sealed class SetExplorerViewTool(ILogger<SetExplorerViewTool> logger, IMe
 
     private static string Describe(MarketTradesQuery query, bool descending)
     {
-        var sort = query.SortField is null
-            ? "totalGain desc"
-            : $"{query.SortField} {(descending ? "desc" : "asc")}";
+        var sortField = query.SortField ?? MarketTradesFilter.ColumnId(MarketTradesField.TotalGain);
+        var sortDirection =
+            query.SortField is null || descending ? SortDirection.Desc : SortDirection.Asc;
+        var sort = $"{sortField} {sortDirection.ToQueryValue()}";
 
         return query.Filter.Length == 0
             ? $"sorted by {sort}"

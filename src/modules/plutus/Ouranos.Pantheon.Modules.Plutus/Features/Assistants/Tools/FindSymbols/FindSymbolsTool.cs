@@ -7,6 +7,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketTrades.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Sorting;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Assistants.Tools.FindSymbols;
@@ -41,8 +42,8 @@ public sealed class FindSymbolsTool(
                 context.TimeFrame,
                 query.SortField,
                 query.SortField is null ? null
-                    : arguments.Descending ? "desc"
-                    : "asc",
+                    : arguments.Descending ? SortDirection.Desc.ToQueryValue()
+                    : SortDirection.Asc.ToQueryValue(),
                 Take: _options.Value.AssistantTools.ClampRows(arguments.Take),
                 Filter: query.Filter
             ),
