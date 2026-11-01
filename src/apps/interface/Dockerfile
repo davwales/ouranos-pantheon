@@ -1,11 +1,11 @@
-FROM node:26.12-alpine AS deps
+FROM node:26.13-alpine AS deps
 
 WORKDIR /app
 
 COPY ./src/apps/interface/package*.json ./
 RUN npm ci
 
-FROM node:26.12-alpine AS build
+FROM node:26.13-alpine AS build
 
 WORKDIR /app
 
@@ -15,7 +15,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY ./src/apps/interface .
 RUN npm run build
 
-FROM node:26.12-alpine AS runtime
+FROM node:26.13-alpine AS runtime
 
 WORKDIR /app
 
