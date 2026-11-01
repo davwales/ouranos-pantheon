@@ -1,6 +1,7 @@
 "use client";
 
 import { InfoCard } from "@/components/shared/info-card";
+import { cn } from "@/lib/utils";
 import { GripVertical, MoreHorizontal } from "lucide-react";
 import Link from "next/link";
 
@@ -17,16 +18,19 @@ export function ConversationCard({
   conversation: ConversationSummary;
   folders: ConversationFolder[];
   currentFolderId: string | null;
-  onMove: (folderId: string | null) => Promise<void>;
+  onMove?: (folderId: string | null) => Promise<void>;
 }) {
   return (
     <div
-      draggable
+      draggable={Boolean(onMove)}
       onDragStart={(e) => {
         e.dataTransfer.setData("text/plain", conversation.id);
         e.dataTransfer.effectAllowed = "move";
       }}
-      className="cursor-grab active:cursor-grabbing relative group"
+      className={cn(
+        "relative group",
+        onMove && "cursor-grab active:cursor-grabbing",
+      )}
     >
       <Link href={`/hermes/conversations/${conversation.id}`}>
         <InfoCard
@@ -34,28 +38,32 @@ export function ConversationCard({
           description={new Date(
             conversation.updatedAt,
           ).toLocaleDateString()}
-          className="hover:bg-accent h-full w-full pl-8"
+          className={cn("hover:bg-accent h-full w-full", onMove && "pl-8")}
         />
       </Link>
-      <div className="absolute left-2 top-1/2 -translate-y-1/2 opacity-50 group-hover:opacity-100 transition-opacity pointer-events-none">
-        <GripVertical className="h-4 w-4 text-muted-foreground" />
-      </div>
-      <div className="absolute top-3 right-3 transition-opacity">
-        <MoveToFolderDropdown
-          folders={folders}
-          currentFolderId={currentFolderId}
-          onMove={onMove}
-          trigger={
-            <button
-              className="p-1.5 rounded-md hover:bg-accent transition-colors"
-              aria-label="Move conversation"
-              onMouseDown={(e) => e.stopPropagation()}
-            >
-              <MoreHorizontal className="h-4 w-4" />
-            </button>
-          }
-        />
-      </div>
+      {onMove && (
+        <div className="absolute left-2 top-1/2 -translate-y-1/2 opacity-50 group-hover:opacity-100 transition-opacity pointer-events-none">
+          <GripVertical className="h-4 w-4 text-muted-foreground" />
+        </div>
+      )}
+      {onMove && (
+        <div className="absolute top-3 right-3 transition-opacity">
+          <MoveToFolderDropdown
+            folders={folders}
+            currentFolderId={currentFolderId}
+            onMove={onMove}
+            trigger={
+              <button
+                className="p-1.5 rounded-md hover:bg-accent transition-colors"
+                aria-label="Move conversation"
+                onMouseDown={(e) => e.stopPropagation()}
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
+            }
+          />
+        </div>
+      )}
     </div>
   );
 }

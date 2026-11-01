@@ -5,7 +5,7 @@ type ConversationHeaderProps = {
   name: string;
   folders: ConversationFolder[];
   currentFolderId: string | null;
-  onMove: (folderId: string | null) => Promise<void>;
+  onMove?: (folderId: string | null) => Promise<void>;
 };
 
 export function ConversationHeader({
@@ -17,11 +17,13 @@ export function ConversationHeader({
   return (
     <div className="flex items-center justify-between m-4 mb-0">
       <h1 className="text-lg font-semibold truncate">{name}</h1>
-      <MoveToFolderDropdown
-        folders={folders}
-        currentFolderId={currentFolderId}
-        onMove={onMove}
-      />
+      {onMove && (
+        <MoveToFolderDropdown
+          folders={folders}
+          currentFolderId={currentFolderId}
+          onMove={onMove}
+        />
+      )}
     </div>
   );
 }

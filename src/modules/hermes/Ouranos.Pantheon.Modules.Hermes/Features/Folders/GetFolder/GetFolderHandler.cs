@@ -39,7 +39,7 @@ public sealed class GetFolderHandler(
         var flags = await _flagsmith.GetEnvironmentFlags();
         var isPublicMode = await flags.IsFeatureEnabled(HermesFeatureFlags.PublicMode);
 
-        if (isPublicMode && !folder.IsPublic)
+        if (isPublicMode && await _dbContext.IsFolderHiddenAsync(folder.Id, cancellationToken))
         {
             Guard.Against.NotFound(folder.Id, (Folder?)null);
         }
@@ -51,8 +51,8 @@ public sealed class GetFolderHandler(
             folder.Name,
             folder.IsPublic,
             folder.ParentFolderId,
-            folder.Conversations.Count,
-            folder.ChildFolders.Count,
+            folder.Conversations.Count(c => !isPublicMode || c.IsPublic),
+            folder.ChildFolders.Count(c => !isPublicMode || c.IsPublic),
             folder.CreatedAt,
             folder.UpdatedAt
         );

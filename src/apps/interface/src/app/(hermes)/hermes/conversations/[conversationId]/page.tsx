@@ -8,6 +8,7 @@ import {
   type TraitFormInput,
 } from "@/app/(hermes)/hermes/types";
 import { ConversationHeader } from "@/app/(hermes)/hermes/conversations/components/conversation-header";
+import { usePublicMode } from "@/app/(hermes)/hermes/components/public-mode-context";
 import { useBreadcrumbLabel } from "@/components/shared/breadcrumbs";
 import { useApi } from "@/hooks/use-api";
 import {
@@ -29,6 +30,7 @@ import { NotFoundCard } from "@/components/shared/not-found-card";
 export default function ResumeConversationPage() {
   const { conversationId } = useParams<{ conversationId: string }>();
   const router = useRouter();
+  const isPublicMode = usePublicMode();
   const [savedConversationId, setSavedConversationId] =
     useState<string>(conversationId);
   const [conversationName, setConversationName] = useState<
@@ -184,7 +186,7 @@ export default function ResumeConversationPage() {
         name={conversationName ?? saved.name}
         folders={allFolders}
         currentFolderId={resolvedFolderId}
-        onMove={handleMoveToFolder}
+        onMove={isPublicMode ? undefined : handleMoveToFolder}
       />
 
       <ChatInterfaceView
@@ -202,7 +204,9 @@ export default function ResumeConversationPage() {
         onToolSetChange={setToolSetId}
         initialMessages={saved.messages}
         initialTokenUsage={saved.tokenUsage}
-        conversationId={savedConversationId}
+        // Public mode continues a saved conversation as an unsaved copy: without its id, nothing
+        // the visitor does is written back.
+        conversationId={isPublicMode ? undefined : savedConversationId}
         conversationName={conversationName ?? saved.name}
         conversationIsPublic={isPublic ?? saved.isPublic}
         conversationFolderId={resolvedFolderId}
@@ -210,18 +214,30 @@ export default function ResumeConversationPage() {
           setSavedConversationId(id);
           setConversationName(name);
         }}
-        onRename={async (name) => {
-          await updateConversation({ name });
-          setConversationName(name);
-        }}
-        onDelete={async () => {
-          await hermesApi.deleteConversation(savedConversationId);
-          router.push("/hermes/conversations");
-        }}
-        onVisibilityChange={async (value) => {
-          await updateConversation({ isPublic: value });
-          setIsPublic(value);
-        }}
+        onRename={
+          isPublicMode
+            ? undefined
+            : async (name) => {
+                await updateConversation({ name });
+                setConversationName(name);
+              }
+        }
+        onDelete={
+          isPublicMode
+            ? undefined
+            : async () => {
+                await hermesApi.deleteConversation(savedConversationId);
+                router.push("/hermes/conversations");
+              }
+        }
+        onVisibilityChange={
+          isPublicMode
+            ? undefined
+            : async (value) => {
+                await updateConversation({ isPublic: value });
+                setIsPublic(value);
+              }
+        }
       />
     </>
   );

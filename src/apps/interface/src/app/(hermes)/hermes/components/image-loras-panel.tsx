@@ -1,6 +1,7 @@
 "use client";
 
 import { LoraStatusBadge } from "@/app/(hermes)/hermes/components/lora-status-badge";
+import { usePublicMode } from "@/app/(hermes)/hermes/components/public-mode-context";
 import { type LoraFormInput } from "@/app/(hermes)/hermes/types";
 import { InfoCard } from "@/components/shared/info-card";
 import {
@@ -24,6 +25,7 @@ export function ImageLorasPanel({
 }) {
   const [lorasState] = useApi(() => hermesApi.getAllLoras());
   const [open, setOpen] = useState(false);
+  const isPublicMode = usePublicMode();
 
   const loras = lorasState.data ?? [];
 
@@ -79,10 +81,15 @@ export function ImageLorasPanel({
         })}
         {lorasState.status !== "loading" && loras.length === 0 && (
           <p className="px-2 text-sm text-muted-foreground">
-            No LoRAs registered.{" "}
-            <Link href="/hermes/loras/create" className="underline">
-              Register one
-            </Link>
+            No LoRAs registered.
+            {!isPublicMode && (
+              <>
+                {" "}
+                <Link href="/hermes/loras/create" className="underline">
+                  Register one
+                </Link>
+              </>
+            )}
           </p>
         )}
       </CollapsibleContent>

@@ -4,7 +4,11 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Folders.GetAllFolders;
 using Ouranos.Pantheon.Modules.Hermes.Features.Folders.GetAllFolders.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
+using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
@@ -157,6 +161,94 @@ public sealed class GetAllFoldersHandlerTests
 
         // Assert
         result.Count.ShouldBe(3);
+    }
+
+    [Fact]
+    public async Task Handle_WhenPublicModeAndAncestorPrivate_ShouldExcludeDescendants()
+    {
+        // Arrange
+        SetupPublicMode(true);
+
+        var privateRoot = Folder.Create(
+            DatabaseExtensions.CreateId<Folder>(),
+            "Private",
+            isPublic: false
+        );
+        var child = Folder.Create(
+            DatabaseExtensions.CreateId<Folder>(),
+            "Child",
+            parentFolderId: privateRoot.Id
+        );
+        var grandchild = Folder.Create(
+            DatabaseExtensions.CreateId<Folder>(),
+            "Grandchild",
+            parentFolderId: child.Id
+        );
+        var publicRoot = Folder.Create(DatabaseExtensions.CreateId<Folder>(), "Public");
+        await _dbContext.SeedData(privateRoot, child, grandchild, publicRoot);
+
+        // Act
+        var all = await _handler.Handle(new GetAllFoldersInput(), CancellationToken.None);
+        var children = await _handler.Handle(
+            new GetAllFoldersInput(ParentFolderId: child.Id),
+            CancellationToken.None
+        );
+
+        // Assert
+        all.Select(f => f.Id).ShouldBe([publicRoot.Id]);
+        children.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData(true, 1)]
+    [InlineData(false, 2)]
+    public async Task Handle_ShouldCountOnlyVisibleChildrenInPublicMode(
+        bool isPublicMode,
+        int expectedCount
+    )
+    {
+        // Arrange
+        SetupPublicMode(isPublicMode);
+
+        var folder = Folder.Create(DatabaseExtensions.CreateId<Folder>(), "Parent");
+        var publicChild = Folder.Create(
+            DatabaseExtensions.CreateId<Folder>(),
+            "Public",
+            parentFolderId: folder.Id
+        );
+        var privateChild = Folder.Create(
+            DatabaseExtensions.CreateId<Folder>(),
+            "Private",
+            isPublic: false,
+            parentFolderId: folder.Id
+        );
+        await _dbContext.SeedData(folder, publicChild, privateChild);
+        await _dbContext.SeedData(
+            CreateConversation(isPublic: true, folder.Id),
+            CreateConversation(isPublic: false, folder.Id)
+        );
+
+        // Act
+        var result = await _handler.Handle(new GetAllFoldersInput(), CancellationToken.None);
+
+        // Assert
+        var summary = result.Single(f => f.Id == folder.Id);
+        summary.ConversationCount.ShouldBe(expectedCount);
+        summary.SubfolderCount.ShouldBe(expectedCount);
+    }
+
+    private static Conversation CreateConversation(bool isPublic, Id<Folder> folderId)
+    {
+        return Conversation.Create(
+            new Id<Conversation>(Guid.NewGuid().ToString()),
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [],
+            [],
+            Guid.NewGuid().ToString(),
+            isPublic,
+            folderId: folderId
+        );
     }
 
     [Fact]

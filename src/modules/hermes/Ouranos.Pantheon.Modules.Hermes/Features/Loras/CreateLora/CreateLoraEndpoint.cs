@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Ouranos.Pantheon.Modules.Hermes.Features.Loras.CreateLora.Schemas;
+using Ouranos.Pantheon.Modules.Hermes.Shared.PublicMode;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Loras.CreateLora;
@@ -9,7 +10,7 @@ public static class CreateLoraEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapPost("/api/hermes/loras", Handle).WithTags("Hermes.Loras");
+        app.MapPost("/api/hermes/loras", Handle).WithTags("Hermes.Loras").DisabledInPublicMode();
     }
 
     internal static async Task<IResult> Handle(

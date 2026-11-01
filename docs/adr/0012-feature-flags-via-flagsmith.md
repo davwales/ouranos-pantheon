@@ -46,8 +46,8 @@ unauthenticated viewer can see.
   configured, the client cannot be constructed and those reads fail. An unreachable
   Flagsmith no longer fails them: flags are cached and fall back to configured defaults
   ([§8.9](../architecture/08-crosscutting-concepts.md#89-feature-flags-and-configuration))
-- The filter is only as complete as the handlers that check the flag. Write endpoints,
-  completion, and compaction are not gated, so public mode limits what is listed, not
-  what can be done
+- The filter is only as complete as the handlers that check the flag. Writes were
+  originally left open; Hermes now rejects them while public mode is on (see the
+  [Hermes module docs](../../src/modules/hermes/docs/README.md))
 - It is not a security boundary; the API is still open on the network
   ([§8.13](../architecture/08-crosscutting-concepts.md#813-security))

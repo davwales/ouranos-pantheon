@@ -259,6 +259,10 @@ export type UpdateConversationInput = {
 
 export type CompletionChunk = AssistantEvent;
 
+export type PublicMode = {
+  isEnabled: boolean;
+};
+
 export type UpdateFolderInput = {
   name: string;
   isPublic: boolean;

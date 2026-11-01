@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Ouranos.Pantheon.Modules.Hermes.Features.Folders.UpdateFolder.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
+using Ouranos.Pantheon.Modules.Hermes.Shared.PublicMode;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Wolverine;
@@ -12,7 +13,9 @@ public static class UpdateFolderEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapPut("/api/hermes/folders/{folderId}", Handle).WithTags("Hermes.Folders");
+        app.MapPut("/api/hermes/folders/{folderId}", Handle)
+            .WithTags("Hermes.Folders")
+            .DisabledInPublicMode();
     }
 
     internal static async Task<IResult> Handle(

@@ -8,9 +8,11 @@ import { useApi } from "@/hooks/use-api";
 import { hermesApi } from "@/lib/api/hermes";
 import { AlertTriangle } from "lucide-react";
 import Link from "next/link";
+import { usePublicMode } from "@/app/(hermes)/hermes/components/public-mode-context";
 
 export default function ModelsPage() {
   const [state] = useApi(() => hermesApi.getAllModels());
+  const isPublicMode = usePublicMode();
 
   return (
     <div className="m-4">
@@ -37,9 +39,11 @@ export default function ModelsPage() {
         </div>
       )}
 
-      <Button size="lg" variant="link" className="mt-4 w-full">
-        <Link href="/hermes/models/create">Create New</Link>
-      </Button>
+      {!isPublicMode && (
+        <Button size="lg" variant="link" className="mt-4 w-full">
+          <Link href="/hermes/models/create">Create New</Link>
+        </Button>
+      )}
     </div>
   );
 }

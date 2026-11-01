@@ -11,8 +11,10 @@ import { useApi } from "@/hooks/use-api";
 import { hermesApi } from "@/lib/api/hermes";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
+import { usePublicMode } from "@/app/(hermes)/hermes/components/public-mode-context";
 
 export default function EditLoraPage() {
+  const isPublicMode = usePublicMode();
   const router = useRouter();
   const { loraId } = useParams<{ loraId: string }>();
   const [loading, setLoading] = useState(false);
@@ -79,8 +81,8 @@ export default function EditLoraPage() {
 
       <LoraForm
         initial={state.data}
-        onSave={handleSave}
-        onDelete={handleDelete}
+        onSave={isPublicMode ? undefined : handleSave}
+        onDelete={isPublicMode ? undefined : handleDelete}
         loading={loading}
         className="mt-4"
       />

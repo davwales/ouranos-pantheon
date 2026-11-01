@@ -37,6 +37,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Personas.DeletePersona;
 using Ouranos.Pantheon.Modules.Hermes.Features.Personas.GetAllPersonas;
 using Ouranos.Pantheon.Modules.Hermes.Features.Personas.GetPersona;
 using Ouranos.Pantheon.Modules.Hermes.Features.Personas.UpdatePersona;
+using Ouranos.Pantheon.Modules.Hermes.Features.PublicMode.GetPublicMode;
 using Ouranos.Pantheon.Modules.Hermes.Features.ToolSets.CreateToolSet;
 using Ouranos.Pantheon.Modules.Hermes.Features.ToolSets.DeleteToolSet;
 using Ouranos.Pantheon.Modules.Hermes.Features.ToolSets.GetAllToolSets;
@@ -144,5 +145,7 @@ public sealed class HermesModule : IPantheonModule
         CreateFolderEndpoint.Map(app);
         UpdateFolderEndpoint.Map(app);
         DeleteFolderEndpoint.Map(app);
+
+        GetPublicModeEndpoint.Map(app);
     }
 }

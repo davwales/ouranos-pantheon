@@ -1,5 +1,6 @@
 "use client";
 
+import { usePublicMode } from "@/app/(hermes)/hermes/components/public-mode-context";
 import { useApi } from "@/hooks/use-api";
 import { hermesApi } from "@/lib/api/hermes";
 import type { MessageInput } from "@/lib/api/hermes-types";
@@ -20,6 +21,7 @@ export default function ConversationsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentFolderId = searchParams.get("folder") || null;
+  const isPublicMode = usePublicMode();
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingFolder, setEditingFolder] = useState<ConversationFolder | null>(
@@ -141,18 +143,20 @@ export default function ConversationsPage() {
         allFolders={allFolders}
         onNavigate={handleNavigate}
       >
-        <FolderCreateDialog
-          onSubmit={handleSubmitCreate}
-          parentFolderId={createParentId}
-          parentFolder={allFolders.find((f) => f.id === createParentId)}
-          open={createDialogOpen}
-          onOpenChange={(open) => {
-            if (open) {
-              setCreateParentId(currentFolderId ?? undefined);
-            }
-            setCreateDialogOpen(open);
-          }}
-        />
+        {!isPublicMode && (
+          <FolderCreateDialog
+            onSubmit={handleSubmitCreate}
+            parentFolderId={createParentId}
+            parentFolder={allFolders.find((f) => f.id === createParentId)}
+            open={createDialogOpen}
+            onOpenChange={(open) => {
+              if (open) {
+                setCreateParentId(currentFolderId ?? undefined);
+              }
+              setCreateDialogOpen(open);
+            }}
+          />
+        )}
       </ConversationToolbar>
 
       {deleteError && <FolderErrorBanner message={deleteError} />}
@@ -178,10 +182,10 @@ export default function ConversationsPage() {
         conversations={conversationsState.data}
         currentFolderId={currentFolderId}
         onNavigate={handleNavigate}
-        onCreateFolder={handleCreateFolder}
-        onEditFolder={handleEditFolder}
-        onDeleteFolder={handleDeleteFolder}
-        onDropConversation={handleDropConversation}
+        onCreateFolder={isPublicMode ? undefined : handleCreateFolder}
+        onEditFolder={isPublicMode ? undefined : handleEditFolder}
+        onDeleteFolder={isPublicMode ? undefined : handleDeleteFolder}
+        onDropConversation={isPublicMode ? undefined : handleDropConversation}
       />
 
       <FolderEditDialog

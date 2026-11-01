@@ -28,14 +28,14 @@ down. Platform-wide concepts are described in the
   OuranosMl over SSE
 - Generate images for the chat model through OuranosMl and serve them to the Interface
 - Keep the lists of available models and image LoRAs in sync with OuranosMl
-- Limit reads to public entities while public mode is on
+- Limit reads to public entities and reject writes while public mode is on
 
 ## Context
 
 | Neighbour | Channel | Purpose | Code entry point |
 |-----------|---------|---------|------------------|
 | OuranosMl | Outbound HTTP (OpenAI-compatible Responses, model list, streamed `/images/generations` and `/images/edits`, `/images/loras`, `/images/models`) | Chat, compaction, conversation naming, model and LoRA sync, image generation and editing | `Features/Conversations/`, `Features/Models/`, `Features/Loras/`, `Features/Assistants/Tools/` |
-| Flagsmith | Outbound HTTP (via the Shared module's client) | `hermes.public_mode` flag | Read handlers |
+| Flagsmith | Outbound HTTP (via the Shared module's client) | `hermes.public_mode` flag | Read handlers, `Shared/PublicMode/`, `Features/PublicMode/` |
 | Interface | Inbound REST + SSE | Hermes pages under `src/apps/interface/src/app/hermes/` | Every `*Endpoint.cs` |
 
 Code paths are relative to `Ouranos.Pantheon.Modules.Hermes/`. Hermes depends only on the

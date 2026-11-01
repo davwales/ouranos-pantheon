@@ -12,8 +12,10 @@ import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { FormSkeleton } from "@/components/shared/skeletons/form-skeleton";
 import { NotFoundCard } from "@/components/shared/not-found-card";
+import { usePublicMode } from "@/app/(hermes)/hermes/components/public-mode-context";
 
 export default function EditModelPage() {
+  const isPublicMode = usePublicMode();
   const router = useRouter();
   const { modelId } = useParams<{ modelId: string }>();
   const [loading, setLoading] = useState(false);
@@ -88,8 +90,8 @@ export default function EditModelPage() {
 
       <ModelForm
         initial={model}
-        onSave={handleSave}
-        onDelete={handleDelete}
+        onSave={isPublicMode ? undefined : handleSave}
+        onDelete={isPublicMode ? undefined : handleDelete}
         loading={loading || fetching}
         className="mt-4"
       />

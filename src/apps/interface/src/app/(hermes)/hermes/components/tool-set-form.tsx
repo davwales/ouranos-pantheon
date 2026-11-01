@@ -91,7 +91,7 @@ export function ToolSetForm({
   loading,
   ...props
 }: Omit<React.ComponentProps<"form">, "onSubmit"> & {
-  onSave: (input: ToolSetFormInput) => void;
+  onSave?: (input: ToolSetFormInput) => void;
   onDelete?: () => void;
   initial?: ToolSetFormInput;
   availableTools: AvailableTool[];
@@ -158,7 +158,7 @@ export function ToolSetForm({
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     if (isValid) {
-      onSave(toolSet);
+      onSave?.(toolSet);
     }
   };
 
@@ -257,13 +257,15 @@ export function ToolSetForm({
       <Separator className="my-4" />
 
       <div className="grid grid-cols-1 gap-4 md:flex md:justify-between">
-        <Button
-          type="submit"
-          disabled={loading || !isValid}
-          className="w-full md:w-40"
-        >
-          Save
-        </Button>
+        {onSave && (
+          <Button
+            type="submit"
+            disabled={loading || !isValid}
+            className="w-full md:w-40"
+          >
+            Save
+          </Button>
+        )}
         {onDelete && (
           <ConfirmationButton
             title="Delete Tool Set"

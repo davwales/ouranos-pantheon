@@ -10,8 +10,10 @@ import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { FormSkeleton } from "@/components/shared/skeletons/form-skeleton";
 import { NotFoundCard } from "@/components/shared/not-found-card";
+import { usePublicMode } from "@/app/(hermes)/hermes/components/public-mode-context";
 
 export default function EditPersonaPage() {
+  const isPublicMode = usePublicMode();
   const router = useRouter();
   const { personaId } = useParams<{ personaId: string }>();
   const [loading, setLoading] = useState(false);
@@ -75,8 +77,8 @@ export default function EditPersonaPage() {
 
       <PersonaForm
         initial={persona}
-        onSave={handleSave}
-        onDelete={handleDelete}
+        onSave={isPublicMode ? undefined : handleSave}
+        onDelete={isPublicMode ? undefined : handleDelete}
         loading={loading || fetching}
         className="mt-4"
       />
