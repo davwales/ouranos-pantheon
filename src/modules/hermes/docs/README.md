@@ -53,7 +53,7 @@ shared kernel.
 
 | Job | Schedule | Purpose |
 |-----|----------|---------|
-| `SyncModelsJob` | hourly | Sync available LLM models from OuranosMl |
+| `SyncModelsJob` | hourly | Sync available LLM models from OuranosMl; keeps the catalogue and config availability when OuranosMl lists none |
 | `SyncLorasJob` | hourly | Sync the image server's LoRAs into the available-LoRA catalogue; keeps it when OuranosMl lists none |
 | `PurgeImagesJob` | hourly (minute 15) | Delete generated images no saved conversation references once older than the unsaved retention |
 

@@ -138,7 +138,9 @@ public sealed class SyncModelsJobTests
         );
         await seedDb.SeedData(staleAvailableModel);
 
-        _mlClient.GetAvailableModelsAsync(Arg.Any<CancellationToken>()).Returns([]);
+        _mlClient
+            .GetAvailableModelsAsync(Arg.Any<CancellationToken>())
+            .Returns([new AvailableModelDto("other-model", "some-org")]);
 
         var job = new SyncModelsJob(_logger, _mlClient, dbFactory);
 
@@ -151,7 +153,79 @@ public sealed class SyncModelsJobTests
         // Assert
         await using var verifyDb = DbContextExtensions.Mock<HermesDbContext>(_dbName);
         var availableModels = await verifyDb.AvailableModels.ToListAsync();
-        availableModels.ShouldBeEmpty();
+        availableModels.ShouldHaveSingleItem().ModelIdentifier.ShouldBe("other-model");
+    }
+
+    [Fact]
+    public async Task Execute_WhenRemoteListsNoModels_ShouldKeepCatalogueAndConfigAvailability()
+    {
+        // Arrange
+        await using var seedDb = DbContextExtensions.Mock<HermesDbContext>(_dbName);
+        var dbFactory = DbContextExtensions.MockFactory<HermesDbContext>(_dbName);
+
+        var availableModel = AvailableModel.Create(
+            new Id<AvailableModel>(Guid.NewGuid().ToString()),
+            "kept-model",
+            "some-org"
+        );
+        var modelConfig = ModelConfig.Create(
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            "Kept Model",
+            "kept-model",
+            "system prompt"
+        );
+        await seedDb.SeedData(availableModel);
+        await seedDb.SeedData(modelConfig);
+
+        _mlClient.GetAvailableModelsAsync(Arg.Any<CancellationToken>()).Returns([]);
+
+        var job = new SyncModelsJob(_logger, _mlClient, dbFactory);
+
+        // Act
+        await job.Execute(
+            Substitute.For<TickerQ.Utilities.Base.TickerFunctionContext>(),
+            CancellationToken.None
+        );
+
+        // Assert
+        await using var verifyDb = DbContextExtensions.Mock<HermesDbContext>(_dbName);
+        (await verifyDb.AvailableModels.ToListAsync())
+            .ShouldHaveSingleItem()
+            .ModelIdentifier.ShouldBe("kept-model");
+        (await verifyDb.ModelConfigs.FirstAsync()).IsUnavailable.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Execute_WhenFetchFails_ShouldLeaveCatalogueUnchanged()
+    {
+        // Arrange
+        await using var seedDb = DbContextExtensions.Mock<HermesDbContext>(_dbName);
+        var dbFactory = DbContextExtensions.MockFactory<HermesDbContext>(_dbName);
+
+        var availableModel = AvailableModel.Create(
+            new Id<AvailableModel>(Guid.NewGuid().ToString()),
+            "kept-model",
+            "some-org"
+        );
+        await seedDb.SeedData(availableModel);
+
+        _mlClient
+            .GetAvailableModelsAsync(Arg.Any<CancellationToken>())
+            .Returns<List<AvailableModelDto>>(_ => throw new HttpRequestException("down"));
+
+        var job = new SyncModelsJob(_logger, _mlClient, dbFactory);
+
+        // Act
+        var execute = async () =>
+            await job.Execute(
+                Substitute.For<TickerQ.Utilities.Base.TickerFunctionContext>(),
+                CancellationToken.None
+            );
+
+        // Assert
+        await execute.ShouldThrowAsync<HttpRequestException>();
+        await using var verifyDb = DbContextExtensions.Mock<HermesDbContext>(_dbName);
+        (await verifyDb.AvailableModels.ToListAsync()).ShouldHaveSingleItem();
     }
 
     [Fact]
