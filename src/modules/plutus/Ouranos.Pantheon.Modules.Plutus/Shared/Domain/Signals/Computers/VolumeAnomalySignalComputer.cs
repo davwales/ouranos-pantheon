@@ -1,6 +1,5 @@
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Options;
-using Ouranos.Pantheon.Modules.Plutus.Features.Signals.Shared;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals.Computers;
 
@@ -28,14 +27,14 @@ public sealed class VolumeAnomalySignalComputer : ISignalComputer
             InvestmentIntent.Merch,
         ];
 
-    public Task<decimal?> ComputeAsync(SignalComputeContext context, CancellationToken ct)
+    public decimal? Compute(SignalComputeContext context)
     {
         var shortSnap = context.ShortSnapshot;
         var longSnap = context.LongSnapshot;
 
         if (shortSnap is null || longSnap is null)
         {
-            return Task.FromResult<decimal?>(null);
+            return null;
         }
 
         var shortWindowMinutes = (decimal)(
@@ -46,13 +45,13 @@ public sealed class VolumeAnomalySignalComputer : ISignalComputer
         );
         if (shortWindowMinutes == 0 || longWindowMinutes == 0)
         {
-            return Task.FromResult<decimal?>(null);
+            return null;
         }
 
         var longRate = longSnap.TotalVolume / longWindowMinutes;
         if (longRate == 0 || _options.Value.VolumeAnomalyThreshold <= 1)
         {
-            return Task.FromResult<decimal?>(null);
+            return null;
         }
 
         var shortRate = shortSnap.TotalVolume / shortWindowMinutes;
@@ -63,6 +62,6 @@ public sealed class VolumeAnomalySignalComputer : ISignalComputer
             1m
         );
 
-        return Task.FromResult<decimal?>(value);
+        return value;
     }
 }

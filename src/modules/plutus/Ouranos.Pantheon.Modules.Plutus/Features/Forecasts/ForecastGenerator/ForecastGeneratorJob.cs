@@ -41,6 +41,9 @@ public sealed class ForecastGeneratorJob
     [TickerFunction("ForecastGenerator", "0 0 0 * * *")]
     public async Task Execute(TickerFunctionContext _, CancellationToken ct)
     {
+        _logger.LogTrace("Starting forecast generation.");
+        ct.ThrowIfCancellationRequested();
+
         if (!_options.Value.Forecasting.IsEnabled)
         {
             _logger.LogInformation("Forecasting is disabled. Skipping execution.");

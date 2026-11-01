@@ -54,6 +54,9 @@ public sealed class OsrsDataLoaderJob
     [TickerFunction(nameof(OsrsDataLoaderJob), "0 */5 * * * *")]
     public async Task Execute(TickerFunctionContext _, CancellationToken cancellationToken)
     {
+        _logger.LogTrace("Starting OSRS price load.");
+        cancellationToken.ThrowIfCancellationRequested();
+
         if (!_options.Value.IsEnabled)
         {
             return;
@@ -78,6 +81,8 @@ public sealed class OsrsDataLoaderJob
             _logger,
             cancellationToken
         );
+
+        _logger.LogDebug("OSRS price load completed.");
     }
 
     private async Task<DateTimeOffset?> LoadLastProcessed(CancellationToken ct)
@@ -91,7 +96,8 @@ public sealed class OsrsDataLoaderJob
     {
         await using var db = await _dbContextFactory.CreateDbContextAsync(ct);
         var state = await db.OsrsDataLoaderStates.FindAsync([OsrsDataLoaderState.SingletonId], ct);
-        state!.LastProcessed = timestamp;
+        Guard.Against.Null(state);
+        state.LastProcessed = timestamp;
         await db.SaveChangesAsync(ct);
     }
 

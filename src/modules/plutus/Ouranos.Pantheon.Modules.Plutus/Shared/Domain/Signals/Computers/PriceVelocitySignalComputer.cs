@@ -1,6 +1,5 @@
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Options;
-using Ouranos.Pantheon.Modules.Plutus.Features.Signals.Shared;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals.Computers;
 
@@ -27,24 +26,24 @@ public sealed class PriceVelocitySignalComputer : ISignalComputer
             InvestmentIntent.Merch,
         ];
 
-    public Task<decimal?> ComputeAsync(SignalComputeContext context, CancellationToken ct)
+    public decimal? Compute(SignalComputeContext context)
     {
         var buckets = context.PriceBuckets;
         if (buckets.Count < 2)
         {
-            return Task.FromResult<decimal?>(null);
+            return null;
         }
 
         var firstPrice = buckets[0].AveragePrice;
         if (firstPrice == 0 || _options.Value.PriceVelocityThreshold == 0)
         {
-            return Task.FromResult<decimal?>(null);
+            return null;
         }
 
         var lastPrice = buckets[^1].AveragePrice;
         var velocity = (lastPrice - firstPrice) / firstPrice;
         var value = Math.Clamp(velocity / _options.Value.PriceVelocityThreshold, -1m, 1m);
 
-        return Task.FromResult<decimal?>(value);
+        return value;
     }
 }
