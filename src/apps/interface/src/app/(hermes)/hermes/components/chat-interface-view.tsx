@@ -31,7 +31,7 @@ import {
   Role,
   type UpdateConversationInput,
 } from "@/lib/api/hermes";
-import { useMessageController } from "@/hooks/use-message-controller";
+import { toMessageInput, useMessageController } from "@/hooks/use-message-controller";
 import { Bookmark, SlidersHorizontal } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -186,7 +186,7 @@ export default function ChatInterfaceView({
           .filter((t) => t.id && !t.isEphemeral)
           .map((t) => t.id!),
         loraIds: loraIdsOf(activeLoras),
-        messages: messages,
+        messages: messages.map(toMessageInput),
         inputTokenCount: tokenUsage?.inputTokens ?? null,
         outputTokenCount: tokenUsage?.outputTokens ?? null,
         totalTokenCount: tokenUsage?.totalTokens ?? null,

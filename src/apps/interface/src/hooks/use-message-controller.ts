@@ -26,6 +26,17 @@ import { generateID } from "@/lib/utils";
 
 const FALLBACK_ERROR = "The response could not be generated. Please try again.";
 
+/** A message with a client-side id that stays stable while it streams and when it is edited. */
+export type ChatMessage = MessageInput & { clientId: string };
+
+export function toChatMessage(message: MessageInput): ChatMessage {
+  return { ...message, clientId: generateID() };
+}
+
+export function toMessageInput({ clientId: _clientId, ...message }: ChatMessage): MessageInput {
+  return message;
+}
+
 export type TokenUsage = {
   inputTokens: number;
   outputTokens: number;
@@ -56,7 +67,7 @@ export function useMessageController(params: {
   onSystemPromptChange?: (prompt: string | null) => void;
   onMessagesPersist?: (messages: MessageInput[]) => void;
 }): {
-  messages: MessageInput[];
+  messages: ChatMessage[];
   streamingParts: AssistantChatPart[] | null;
   isGenerating: boolean;
   generationError: string | null;
@@ -68,8 +79,8 @@ export function useMessageController(params: {
   updateMessageContent: (index: number, content: string) => void;
   deleteMessage: (index: number) => void;
   retryMessage: (index: number) => Promise<void>;
-  compactMessages: (messagesToCompact: MessageInput[]) => Promise<void>;
-  setMessages: React.Dispatch<React.SetStateAction<MessageInput[]>>;
+  compactMessages: (messagesToCompact: ChatMessage[]) => Promise<void>;
+  setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
 } {
   const {
     initialMessages,
@@ -86,7 +97,9 @@ export function useMessageController(params: {
     onMessagesPersist,
   } = params;
 
-  const [messages, setMessages] = useState<MessageInput[]>(initialMessages);
+  const [messages, setMessages] = useState<ChatMessage[]>(() =>
+    initialMessages.map(toChatMessage),
+  );
   const [isCompacting, setIsCompacting] = useState(false);
   const [compactionError, setCompactionError] = useState<string | null>(null);
   const [tokenUsage, setTokenUsage] = useState<TokenUsage | null>(
@@ -121,14 +134,15 @@ export function useMessageController(params: {
   );
 
   const generateCompletion = useCallback(
-    async (currentMessages: MessageInput[]) => {
+    async (currentMessages: ChatMessage[]) => {
       if (isGenerating) return;
 
       const controller = new AbortController();
       abortRef.current = controller;
+      const clientId = generateID();
       setGenerationError(null);
       setStreamingParts([]);
-      setMessages((prev) => [...prev, { role: Role.Assistant, content: "" }]);
+      setMessages((prev) => [...prev, { clientId, role: Role.Assistant, content: "" }]);
 
       let parts: AssistantChatPart[] = [];
       let failure: string | null = null;
@@ -214,7 +228,10 @@ export function useMessageController(params: {
       setMessages((prev) => {
         const updated = prev.slice(0, -1);
         return isAnswered
-          ? [...updated, { role: Role.Assistant, content, parts: toMessageParts(finished) }]
+          ? [
+              ...updated,
+              { clientId, role: Role.Assistant, content, parts: toMessageParts(finished) },
+            ]
           : updated;
       });
 
@@ -244,9 +261,9 @@ export function useMessageController(params: {
     async (content: string, image?: ImageMessagePart) => {
       if (!content.trim() || isCompacting || isGenerating) return;
 
-      const userMessage: MessageInput = image
-        ? { role: Role.User, content, parts: [image] }
-        : { role: Role.User, content };
+      const userMessage = toChatMessage(
+        image ? { role: Role.User, content, parts: [image] } : { role: Role.User, content },
+      );
       const updatedMessages = [...messages, userMessage];
       setMessages(updatedMessages);
       await generateCompletion(updatedMessages);
@@ -265,7 +282,7 @@ export function useMessageController(params: {
           parts: withEditedText(message.parts, content),
         };
         if (conversationId) {
-          onMessagesPersist?.(updatedMessages);
+          onMessagesPersist?.(updatedMessages.map(toMessageInput));
         }
         return updatedMessages;
       });
@@ -281,7 +298,7 @@ export function useMessageController(params: {
             ? prev.filter((_, i) => i !== index)
             : prev.filter((_, i) => i < index);
         if (conversationId) {
-          onMessagesPersist?.(updatedMessages);
+          onMessagesPersist?.(updatedMessages.map(toMessageInput));
         }
         return updatedMessages;
       });
@@ -289,7 +306,7 @@ export function useMessageController(params: {
     [conversationId, onMessagesPersist],
   );
 
-  const compactMessages = useCallback(async (messagesToCompact: MessageInput[]) => {
+  const compactMessages = useCallback(async (messagesToCompact: ChatMessage[]) => {
     if (isCompacting || isGenerating) return;
 
     const compactableMessages = messagesToCompact.filter(
@@ -300,10 +317,7 @@ export function useMessageController(params: {
     setIsCompacting(true);
     setCompactionError(null);
 
-    const summaryMessage: MessageInput = {
-      role: Role.Summary,
-      content: "",
-    };
+    const summaryMessage = toChatMessage({ role: Role.Summary, content: "" });
     setMessages((prev) => [...prev, summaryMessage]);
 
     const failCompaction = (message: string) => {
@@ -321,7 +335,7 @@ export function useMessageController(params: {
           modelIdentifier: model.modelIdentifier,
           personaName: persona.name,
           personaDescription: persona.description,
-          messages: messagesToCompact,
+          messages: messagesToCompact.map(toMessageInput),
         }),
       chunkHandlers: {
         onContent: (content) => {
