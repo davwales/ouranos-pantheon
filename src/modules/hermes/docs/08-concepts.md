@@ -133,7 +133,8 @@ completion request sends their ids.
 rejects unknown LoRAs, which would fail the whole image) and puts the rest on the tool context
 (`IConversationScope.ImageLoras`). Both image tools send them in OuranosMl's typed `loras` field
 and prepend each trigger phrase the prompt doesn't already contain. The chat model never sees the
-LoRAs: phrases are added after the prompt is capped at `MaxPromptLength`, and the stored prompt
-and alt text keep the model's own wording, so "more like this" doesn't repeat them. An
+LoRAs: phrases are added after the prompt is capped at `MaxPromptLength` (on a word boundary,
+without dangling separators or a half tag), and the stored prompt and alt text keep the model's
+own wording, so "more like this" doesn't repeat them. An
 incompatible LoRA is still sent if the user switched it on; OuranosMl only logs a warning.
 

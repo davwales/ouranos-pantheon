@@ -220,6 +220,29 @@ public sealed class GenerateImageToolTests
     }
 
     [Fact]
+    public async Task InvokeAsync_WhenTheCapFallsMidWord_ShouldCapOnTheWordBoundary()
+    {
+        // Arrange
+        SetupStream(new ImageGenerationDoneDto("flux"));
+        var tool = CreateTool(new HermesImageGenerationOptions { MaxPromptLength = 12 });
+
+        // Act
+        await tool.InvokeAsync(
+            Context,
+            """{"prompt":"A red, fluffy fox","orientation":null}""",
+            CancellationToken.None
+        );
+
+        // Assert
+        _mlClient
+            .Received(1)
+            .StreamImageGenerationAsync(
+                Arg.Is<GenerateImageRequest>(r => r.Prompt == "A red"),
+                Arg.Any<CancellationToken>()
+            );
+    }
+
+    [Fact]
     public async Task InvokeAsync_WhenLorasAreActive_ShouldSendThemAndPrependTheirTriggerPhrasesToTheRequestPromptOnly()
     {
         // Arrange
