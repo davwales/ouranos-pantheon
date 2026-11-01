@@ -125,6 +125,7 @@ public sealed class FlipEngine(IFlipDataQueryService dataService)
         Id<Market> marketId,
         FlipConfiguration configuration,
         decimal budget,
+        decimal participationRate,
         CancellationToken cancellationToken
     )
     {
@@ -144,7 +145,7 @@ public sealed class FlipEngine(IFlipDataQueryService dataService)
             endHour,
             configuration,
             data.Rules,
-            BacktestDataOptions.DefaultVolumeParticipationRate
+            participationRate
         );
 
         var positionBudget = budget * configuration.MaxPositionPercent;

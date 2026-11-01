@@ -125,6 +125,7 @@ public sealed class SwingEngine(
         Id<Market> marketId,
         SwingConfiguration configuration,
         decimal budget,
+        decimal participationRate,
         CancellationToken cancellationToken
     )
     {
@@ -182,7 +183,7 @@ public sealed class SwingEngine(
                     positionBudget,
                     Math.Floor(
                         market.GetTypicalDailyVolume(candidate.Symbol.Id, decisionDate)
-                            * BacktestDataOptions.DefaultVolumeParticipationRate
+                            * participationRate
                     ),
                     candidate.Symbol.AdditionalFields.Limit,
                     _options.LimitWindowsPerDay,

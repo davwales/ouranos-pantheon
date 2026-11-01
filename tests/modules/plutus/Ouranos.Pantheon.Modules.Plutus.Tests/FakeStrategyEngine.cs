@@ -42,7 +42,8 @@ internal sealed class FakeStrategyEngine(StrategyMode mode = StrategyMode.Flip) 
     public List<(
         Id<Market> MarketId,
         StrategyConfiguration Configuration,
-        decimal Budget
+        decimal Budget,
+        decimal ParticipationRate
     )> RecommendCalls { get; } = [];
 
     public IReadOnlyCollection<SimulationSettings> Simulations => _simulations;
@@ -96,10 +97,11 @@ internal sealed class FakeStrategyEngine(StrategyMode mode = StrategyMode.Flip) 
         Id<Market> marketId,
         StrategyConfiguration configuration,
         decimal budget,
+        decimal participationRate,
         CancellationToken cancellationToken
     )
     {
-        RecommendCalls.Add((marketId, configuration, budget));
+        RecommendCalls.Add((marketId, configuration, budget, participationRate));
         return Task.FromResult(Recommendations);
     }
 

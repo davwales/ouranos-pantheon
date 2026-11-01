@@ -371,6 +371,7 @@ export const plutusApi = {
     input: {
       marketId: string;
       budget: number;
+      volumeParticipationRate?: number;
     },
   ) =>
     api.get<GetRecommendationsResponse>(

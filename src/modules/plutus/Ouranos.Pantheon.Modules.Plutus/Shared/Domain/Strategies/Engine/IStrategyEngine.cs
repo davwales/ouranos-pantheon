@@ -36,11 +36,15 @@ public interface IStrategyEngine
     /// </summary>
     ParameterSpace CreateParameterSpace(StrategyConfiguration seed);
 
-    /// <summary>What the strategy would buy right now with <paramref name="budget" /> and nothing held.</summary>
+    /// <summary>
+    ///     What the strategy would buy right now with <paramref name="budget" /> and nothing held,
+    ///     each order capped at <paramref name="participationRate" /> of the symbol's volume.
+    /// </summary>
     Task<IReadOnlyList<StrategyRecommendation>> RecommendAsync(
         Id<Market> marketId,
         StrategyConfiguration configuration,
         decimal budget,
+        decimal participationRate,
         CancellationToken cancellationToken
     );
 }
