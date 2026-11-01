@@ -23,7 +23,7 @@ public sealed class RsiSignalComputerTests
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenFewerBucketsThanRsiPeriod_ReturnsNull()
+    public void Compute_WhenFewerBucketsThanRsiPeriod_ReturnsNull()
     {
         // Arrange
         var buckets = Enumerable.Range(0, 10).Select(_ => Bucket(100m)).ToList();
@@ -39,14 +39,14 @@ public sealed class RsiSignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer().Compute(context);
 
         // Assert
         result.ShouldBeNull();
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenPricesRiseConsistently_ReturnsBearish()
+    public void Compute_WhenPricesRiseConsistently_ReturnsBearish()
     {
         // Arrange
         var buckets = Enumerable.Range(1, 20).Select(i => Bucket(i * 10m)).ToList();
@@ -62,7 +62,7 @@ public sealed class RsiSignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer().Compute(context);
 
         // Assert
         result.ShouldNotBeNull();
@@ -70,7 +70,7 @@ public sealed class RsiSignalComputerTests
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenPricesFallConsistently_ReturnsBullish()
+    public void Compute_WhenPricesFallConsistently_ReturnsBullish()
     {
         // Arrange
         var buckets = Enumerable.Range(1, 20).Select(i => Bucket(200m - i * 10m)).ToList();
@@ -86,7 +86,7 @@ public sealed class RsiSignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer().Compute(context);
 
         // Assert
         result.ShouldNotBeNull();
@@ -94,7 +94,7 @@ public sealed class RsiSignalComputerTests
     }
 
     [Fact]
-    public async Task ComputeAsync_ResultIsAlwaysWithinBounds()
+    public void Compute_ResultIsAlwaysWithinBounds()
     {
         // Arrange
         var buckets = Enumerable.Range(1, 30).Select(i => Bucket(i * 5m)).ToList();
@@ -110,7 +110,7 @@ public sealed class RsiSignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer().Compute(context);
 
         // Assert
         result.ShouldNotBeNull();
@@ -118,7 +118,7 @@ public sealed class RsiSignalComputerTests
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenNoLosses_ReturnsMaxBearish()
+    public void Compute_WhenNoLosses_ReturnsMaxBearish()
     {
         // Arrange
         var buckets = Enumerable.Range(1, 20).Select(i => Bucket(i * 10m)).ToList();
@@ -134,7 +134,7 @@ public sealed class RsiSignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer().Compute(context);
 
         // Assert
         result.ShouldBe(-1m);
@@ -154,7 +154,7 @@ public sealed class RsiSignalComputerTests
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenPricesAreFlat_ReturnsNeutral()
+    public void Compute_WhenPricesAreFlat_ReturnsNeutral()
     {
         // Arrange
         var buckets = Enumerable.Range(0, 20).Select(_ => Bucket(100m)).ToList();
@@ -170,14 +170,14 @@ public sealed class RsiSignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer().Compute(context);
 
         // Assert
         result.ShouldBe(0m);
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenPricesOnlyRiseAfterAFlatStart_ReturnsFullyBearish()
+    public void Compute_WhenPricesOnlyRiseAfterAFlatStart_ReturnsFullyBearish()
     {
         // Arrange
         var buckets = Enumerable
@@ -196,7 +196,7 @@ public sealed class RsiSignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer().Compute(context);
 
         // Assert
         result.ShouldBe(-1m);

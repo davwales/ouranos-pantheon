@@ -48,7 +48,7 @@ public sealed class SwingEngine(
             cancellationToken
         );
 
-        var signals = await _signalReconstructor.BuildAsync(
+        var signals = _signalReconstructor.Build(
             market,
             DateOnly.FromDateTime(start.UtcDateTime),
             DateOnly.FromDateTime(end.UtcDateTime),
@@ -145,12 +145,7 @@ public sealed class SwingEngine(
             cancellationToken
         );
 
-        var signals = await _signalReconstructor.BuildAsync(
-            market,
-            firstDay,
-            decisionDay,
-            cancellationToken
-        );
+        var signals = _signalReconstructor.Build(market, firstDay, decisionDay, cancellationToken);
 
         var inputs = SwingScoring.ScoreInputs(signals, firstDay, decisionDay)[decisionDay];
 

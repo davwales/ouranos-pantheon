@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Options;
-using Ouranos.Pantheon.Modules.Plutus.Features.Signals.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
@@ -42,7 +41,7 @@ public sealed class VolumeAnomalySignalComputerTests
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenShortRateEqualsThresholdMultipleOfLongRate_ReturnsOne()
+    public void Compute_WhenShortRateEqualsThresholdMultipleOfLongRate_ReturnsOne()
     {
         // Arrange
         var shortSnap = SnapshotWithRate(TimeFrame.OneHour, ratePerMinute: 3m);
@@ -59,15 +58,14 @@ public sealed class VolumeAnomalySignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer(threshold: 3.0m)
-            .ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer(threshold: 3.0m).Compute(context);
 
         // Assert
         result.ShouldBe(1m);
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenShortAndLongRateAreEqual_ReturnsZero()
+    public void Compute_WhenShortAndLongRateAreEqual_ReturnsZero()
     {
         // Arrange
         var shortSnap = SnapshotWithRate(TimeFrame.OneHour, ratePerMinute: 1m);
@@ -84,14 +82,14 @@ public sealed class VolumeAnomalySignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer().Compute(context);
 
         // Assert
         result.ShouldBe(0m);
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenShortSnapshotIsMissing_ReturnsNull()
+    public void Compute_WhenShortSnapshotIsMissing_ReturnsNull()
     {
         // Arrange
         var context = new SignalComputeContext(
@@ -106,14 +104,14 @@ public sealed class VolumeAnomalySignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer().Compute(context);
 
         // Assert
         result.ShouldBeNull();
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenLongVolumeIsZero_ReturnsNull()
+    public void Compute_WhenLongVolumeIsZero_ReturnsNull()
     {
         // Arrange
         var shortSnap = SnapshotWithRate(TimeFrame.OneHour, ratePerMinute: 5m);
@@ -130,14 +128,14 @@ public sealed class VolumeAnomalySignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer().Compute(context);
 
         // Assert
         result.ShouldBeNull();
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenThresholdIsOne_ReturnsNull()
+    public void Compute_WhenThresholdIsOne_ReturnsNull()
     {
         // Arrange
         var shortSnap = SnapshotWithRate(TimeFrame.OneHour, ratePerMinute: 3m);
@@ -154,15 +152,14 @@ public sealed class VolumeAnomalySignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer(threshold: 1m)
-            .ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer(threshold: 1m).Compute(context);
 
         // Assert
         result.ShouldBeNull();
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenShortRateIsBelowLongRate_ReturnsBearish()
+    public void Compute_WhenShortRateIsBelowLongRate_ReturnsBearish()
     {
         // Arrange
         var shortSnap = SnapshotWithRate(TimeFrame.OneHour, ratePerMinute: 0.5m);
@@ -179,8 +176,7 @@ public sealed class VolumeAnomalySignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer(threshold: 3.0m)
-            .ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer(threshold: 3.0m).Compute(context);
 
         // Assert
         result.ShouldNotBeNull();
@@ -188,7 +184,7 @@ public sealed class VolumeAnomalySignalComputerTests
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenTimeFrameIsAllTime_ReturnsNull()
+    public void Compute_WhenTimeFrameIsAllTime_ReturnsNull()
     {
         // Arrange
         var shortSnap = SnapshotWithRate(TimeFrame.OneHour, ratePerMinute: 3m);
@@ -213,7 +209,7 @@ public sealed class VolumeAnomalySignalComputerTests
         );
 
         // Act
-        var result = await computer.ComputeAsync(context, CancellationToken.None);
+        var result = computer.Compute(context);
 
         // Assert
         result.ShouldBeNull();

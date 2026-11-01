@@ -10,12 +10,12 @@ public sealed class RsiSignalComputer : ISignalComputer
         "RSI below 30 indicates oversold (bullish), above 70 indicates overbought (bearish).";
     public IReadOnlyList<InvestmentIntent> Intents => [InvestmentIntent.Buy, InvestmentIntent.Sell];
 
-    public Task<decimal?> ComputeAsync(SignalComputeContext context, CancellationToken ct)
+    public decimal? Compute(SignalComputeContext context)
     {
         var buckets = context.PriceBuckets;
         if (buckets.Count < Period + 1)
         {
-            return Task.FromResult<decimal?>(null);
+            return null;
         }
 
         var prices = buckets.Select(b => b.AveragePrice).ToArray();
@@ -58,6 +58,6 @@ public sealed class RsiSignalComputer : ISignalComputer
         // RSI < 30 = +1 (oversold/bullish), RSI > 70 = -1 (overbought/bearish)
         var value = Math.Clamp((50m - rsi) / 20m, -1m, 1m);
 
-        return Task.FromResult<decimal?>(value);
+        return value;
     }
 }

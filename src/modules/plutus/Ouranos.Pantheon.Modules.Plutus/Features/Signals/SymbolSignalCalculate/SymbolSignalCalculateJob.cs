@@ -2,7 +2,6 @@ using Ardalis.GuardClauses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Ouranos.Pantheon.Modules.Plutus.Features.Signals.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Features.Signals.SymbolSignalCalculate.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database.Functions;
@@ -44,6 +43,9 @@ public class SymbolSignalCalculateJob
     [TickerFunction("SymbolSignalCalculate", "0 */5 * * * *")]
     public async Task Execute(TickerFunctionContext _, CancellationToken ct)
     {
+        _logger.LogTrace("Starting symbol signal calculation.");
+        ct.ThrowIfCancellationRequested();
+
         if (Interlocked.Exchange(ref _executing, 1) == 1)
         {
             _logger.LogWarning("SymbolSignalCalculate already running; skipping tick.");
@@ -103,7 +105,7 @@ public class SymbolSignalCalculateJob
 
                 foreach (var computer in _computers)
                 {
-                    var value = await computer.ComputeAsync(context, ct);
+                    var value = computer.Compute(context);
                     if (value is not null)
                     {
                         signals.Add(

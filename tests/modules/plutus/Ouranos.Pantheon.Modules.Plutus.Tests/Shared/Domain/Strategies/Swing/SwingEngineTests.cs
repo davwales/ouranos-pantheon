@@ -25,9 +25,9 @@ public sealed class SwingEngineTests
         _computer.Type.Returns(SignalType.TaxAdjustedRoi);
 
         _computer
-            .ComputeAsync(Arg.Any<SignalComputeContext>(), Arg.Any<CancellationToken>())
+            .Compute(Arg.Any<SignalComputeContext>())
             .Returns(call =>
-                Task.FromResult<decimal?>(
+                (decimal?)(
                     _scores.TryGetValue(call.Arg<SignalComputeContext>().SymbolId, out var score)
                         ? score
                         : null

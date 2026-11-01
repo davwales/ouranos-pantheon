@@ -17,9 +17,7 @@ public sealed class SwingSignalReconstructorTests
     {
         _computer.Type.Returns(SignalType.Rsi);
 
-        _computer
-            .ComputeAsync(Arg.Do<SignalComputeContext>(_contexts.Add), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<decimal?>(0.4m));
+        _computer.Compute(Arg.Do<SignalComputeContext>(_contexts.Add)).Returns(0.4m);
     }
 
     [Fact]
@@ -30,7 +28,7 @@ public sealed class SwingSignalReconstructorTests
     }
 
     [Fact]
-    public async Task BuildAsync_ShouldOnlySeeTradesBeforeTheDecisionDay()
+    public void Build_ShouldOnlySeeTradesBeforeTheDecisionDay()
     {
         // Arrange
         var a = SwingTestData.CreateSymbol(_market, "A");
@@ -43,7 +41,7 @@ public sealed class SwingSignalReconstructorTests
         var reconstructor = new SwingSignalReconstructor([_computer]);
 
         // Act
-        var table = await reconstructor.BuildAsync(data, Day0, Day0, CancellationToken.None);
+        var table = reconstructor.Build(data, Day0, Day0, CancellationToken.None);
 
         // Assert
         table.On(Day0)[a.Id].Price.ShouldBe(10m);
@@ -55,7 +53,7 @@ public sealed class SwingSignalReconstructorTests
     }
 
     [Fact]
-    public async Task BuildAsync_ShouldPassTheSymbolBuyLimitAndMarketTaxRate()
+    public void Build_ShouldPassTheSymbolBuyLimitAndMarketTaxRate()
     {
         // Arrange
         var limited = SwingTestData.CreateSymbol(_market, "Limited", limit: 70m);
@@ -75,7 +73,7 @@ public sealed class SwingSignalReconstructorTests
         var reconstructor = new SwingSignalReconstructor([_computer]);
 
         // Act
-        await reconstructor.BuildAsync(data, Day0, Day0, CancellationToken.None);
+        reconstructor.Build(data, Day0, Day0, CancellationToken.None);
 
         // Assert
         _contexts.Count.ShouldBe(2);
@@ -85,7 +83,7 @@ public sealed class SwingSignalReconstructorTests
     }
 
     [Fact]
-    public async Task BuildAsync_WhenSymbolHasNoTradesInTheSignalWindow_ShouldSkipIt()
+    public void Build_WhenSymbolHasNoTradesInTheSignalWindow_ShouldSkipIt()
     {
         // Arrange
         var silent = SwingTestData.CreateSymbol(_market, "Silent");
@@ -104,7 +102,7 @@ public sealed class SwingSignalReconstructorTests
         var reconstructor = new SwingSignalReconstructor([_computer]);
 
         // Act
-        var table = await reconstructor.BuildAsync(data, Day0, Day0, CancellationToken.None);
+        var table = reconstructor.Build(data, Day0, Day0, CancellationToken.None);
 
         // Assert
         table.On(Day0).ShouldBeEmpty();
@@ -112,7 +110,7 @@ public sealed class SwingSignalReconstructorTests
     }
 
     [Fact]
-    public async Task BuildAsync_ShouldMarkSymbolsWithoutRecentVolumeIneligible()
+    public void Build_ShouldMarkSymbolsWithoutRecentVolumeIneligible()
     {
         // Arrange
         var liquid = SwingTestData.CreateSymbol(_market, "Liquid");
@@ -130,7 +128,7 @@ public sealed class SwingSignalReconstructorTests
         var reconstructor = new SwingSignalReconstructor([_computer]);
 
         // Act
-        var table = await reconstructor.BuildAsync(data, Day0, Day0, CancellationToken.None);
+        var table = reconstructor.Build(data, Day0, Day0, CancellationToken.None);
 
         // Assert
         table.On(Day0)[liquid.Id].IsEligible.ShouldBeTrue();
@@ -140,15 +138,13 @@ public sealed class SwingSignalReconstructorTests
     }
 
     [Fact]
-    public async Task BuildAsync_ShouldKeepOnlySignalsThatHadEnoughData()
+    public void Build_ShouldKeepOnlySignalsThatHadEnoughData()
     {
         // Arrange
         var missing = Substitute.For<ISignalComputer>();
         missing.Type.Returns(SignalType.PriceVelocity);
 
-        missing
-            .ComputeAsync(Arg.Any<SignalComputeContext>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<decimal?>(null));
+        missing.Compute(Arg.Any<SignalComputeContext>()).Returns((decimal?)null);
 
         var a = SwingTestData.CreateSymbol(_market, "A");
 
@@ -161,7 +157,7 @@ public sealed class SwingSignalReconstructorTests
         var reconstructor = new SwingSignalReconstructor([_computer, missing]);
 
         // Act
-        var table = await reconstructor.BuildAsync(data, Day0, Day0, CancellationToken.None);
+        var table = reconstructor.Build(data, Day0, Day0, CancellationToken.None);
 
         // Assert
         table
@@ -170,7 +166,7 @@ public sealed class SwingSignalReconstructorTests
     }
 
     [Fact]
-    public async Task BuildAsync_ShouldBuildEveryDayInTheRange()
+    public void Build_ShouldBuildEveryDayInTheRange()
     {
         // Arrange
         var a = SwingTestData.CreateSymbol(_market, "A");
@@ -184,12 +180,7 @@ public sealed class SwingSignalReconstructorTests
         var reconstructor = new SwingSignalReconstructor([_computer]);
 
         // Act
-        var table = await reconstructor.BuildAsync(
-            data,
-            Day0,
-            Day0.AddDays(2),
-            CancellationToken.None
-        );
+        var table = reconstructor.Build(data, Day0, Day0.AddDays(2), CancellationToken.None);
 
         // Assert
         table.On(Day0).ShouldContainKey(a.Id);
@@ -199,7 +190,7 @@ public sealed class SwingSignalReconstructorTests
     }
 
     [Fact]
-    public async Task BuildAsync_WhenCancelled_ShouldThrowOperationCanceledException()
+    public async Task Build_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange
         var data = SwingMarketData.FromRaw(_market, [], []);
@@ -208,8 +199,8 @@ public sealed class SwingSignalReconstructorTests
         await cancellation.CancelAsync();
 
         // Act & Assert
-        await Should.ThrowAsync<OperationCanceledException>(() =>
-            reconstructor.BuildAsync(data, Day0, Day0, cancellation.Token)
+        Should.Throw<OperationCanceledException>(() =>
+            reconstructor.Build(data, Day0, Day0, cancellation.Token)
         );
     }
 }
