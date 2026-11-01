@@ -245,7 +245,8 @@ export type CreateConversationInput = {
 };
 
 export type UpdateConversationInput = {
-  name: string;
+  /** Omit to keep the current name, e.g. one generated after the conversation was saved. */
+  name?: string;
   personaId: string;
   modelConfigId: string;
   traitIds: string[];
