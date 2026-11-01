@@ -34,7 +34,7 @@ public sealed class CreateFolderHandler(
                 cancellationToken
             );
 
-            Guard.Against.Null(parentFolder);
+            Guard.Against.NotFound(command.ParentFolderId.Value, parentFolder);
 
             var depth = await FolderTreeValidation.CalculateDepthAsync(
                 command.ParentFolderId.Value,

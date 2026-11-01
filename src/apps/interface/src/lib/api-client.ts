@@ -39,7 +39,7 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   });
   if (!res.ok) {
     const problem = await res.json().catch(() => ({ title: res.statusText }));
-    throw new ApiError(res.status, problem.title ?? res.statusText);
+    throw new ApiError(res.status, problem.detail ?? problem.title ?? res.statusText);
   }
   return res.json() as Promise<T>;
 }

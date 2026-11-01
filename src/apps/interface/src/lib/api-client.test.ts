@@ -1,5 +1,42 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ApiError, apiUrl, isNotFound } from "./api-client";
+import { api, ApiError, apiUrl, isNotFound } from "./api-client";
+
+describe("api errors", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("uses the problem detail so the reason reaches the user", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({ status: 409, title: "Conflict", detail: "The persona 'Sage' is in use." }),
+          { status: 409 },
+        ),
+      ),
+    );
+
+    await expect(api.del("/api/hermes/personas/1")).rejects.toMatchObject({
+      status: 409,
+      message: "The persona 'Sage' is in use.",
+    });
+  });
+
+  it("falls back to the problem title without a detail", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ status: 400, title: "Bad request" }), { status: 400 }),
+      ),
+    );
+
+    await expect(api.get("/api/hermes/personas")).rejects.toMatchObject({
+      status: 400,
+      message: "Bad request",
+    });
+  });
+});
 
 describe("isNotFound", () => {
   it("is true only for a 404 ApiError", () => {

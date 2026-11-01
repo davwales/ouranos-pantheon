@@ -7,7 +7,10 @@ using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Loras;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
@@ -60,9 +63,29 @@ public sealed class UpdateConversationHandler
             );
         }
 
-        var traits = await _dbContext
-            .Traits.Where(t => command.TraitIds.Contains(t.Id))
-            .ToListAsync(cancellationToken);
+        if (command.PersonaId != conversation.PersonaId)
+        {
+            await PersonaValidation.ValidatePersonaExistsAsync(
+                _dbContext,
+                command.PersonaId,
+                cancellationToken
+            );
+        }
+
+        if (command.ModelConfigId != conversation.ModelConfigId)
+        {
+            await ModelConfigValidation.ValidateModelConfigExistsAsync(
+                _dbContext,
+                command.ModelConfigId,
+                cancellationToken
+            );
+        }
+
+        var traits = await TraitValidation.LoadByIdsAsync(
+            _dbContext,
+            command.TraitIds,
+            cancellationToken
+        );
 
         var loras = await LoraValidation.LoadByIdsAsync(
             _dbContext,

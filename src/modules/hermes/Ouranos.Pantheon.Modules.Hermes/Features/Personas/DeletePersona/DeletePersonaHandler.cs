@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Hermes.Features.Personas.DeletePersona.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Personas.DeletePersona;
@@ -36,6 +37,12 @@ public sealed class DeletePersonaHandler
         );
 
         Guard.Against.NotFound(command.PersonaId, persona);
+
+        await PersonaValidation.ValidatePersonaIsUnusedAsync(
+            _dbContext,
+            persona,
+            cancellationToken
+        );
 
         _dbContext.Personas.Remove(persona);
         await _dbContext.SaveChangesAsync(cancellationToken);

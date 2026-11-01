@@ -15,6 +15,7 @@ export default function EditPersonaPage() {
   const router = useRouter();
   const { personaId } = useParams<{ personaId: string }>();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [state] = useApi(() => hermesApi.getPersona(personaId), [personaId]);
   useBreadcrumbLabel(personaId, state.data?.name, state.status === "error");
@@ -29,11 +30,12 @@ export default function EditPersonaPage() {
 
   const handleDelete = async () => {
     setLoading(true);
+    setError(null);
     try {
       await hermesApi.deletePersona(personaId);
       router.push("/hermes/personas");
     } catch (err) {
-      console.error(err);
+      setError(err instanceof Error ? err.message : "Failed to delete persona");
     } finally {
       setLoading(false);
     }
@@ -41,6 +43,7 @@ export default function EditPersonaPage() {
 
   const handleSave = async (input: PersonaFormInput) => {
     setLoading(true);
+    setError(null);
     try {
       await hermesApi.updatePersona({
         personaId: personaId,
@@ -53,7 +56,7 @@ export default function EditPersonaPage() {
       });
       router.push("/hermes/personas");
     } catch (err) {
-      console.error(err);
+      setError(err instanceof Error ? err.message : "Failed to save persona");
     } finally {
       setLoading(false);
     }
@@ -72,6 +75,12 @@ export default function EditPersonaPage() {
       <Typography variant="h2" className="border-b-0">
         Edit Persona
       </Typography>
+
+      {error && (
+        <div className="mt-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+          {error}
+        </div>
+      )}
 
       <PersonaForm
         initial={persona}

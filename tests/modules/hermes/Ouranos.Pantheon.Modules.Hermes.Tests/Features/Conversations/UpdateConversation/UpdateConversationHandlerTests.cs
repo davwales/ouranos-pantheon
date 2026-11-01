@@ -11,6 +11,7 @@ using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Loras;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.ToolSets;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Modules.Shared.Contract.Extensions;
@@ -52,8 +53,21 @@ public sealed class UpdateConversationHandlerTests
         await _dbContext.SeedData(conversation);
 
         var newName = _fixture.Create<string>();
-        var newPersonaId = new Id<Persona>(Guid.NewGuid().ToString());
-        var newModelConfigId = new Id<ModelConfig>(Guid.NewGuid().ToString());
+        var newPersona = Persona.Create(
+            DatabaseExtensions.CreateId<Persona>(),
+            "New Persona",
+            "A persona."
+        );
+        var newModelConfig = ModelConfig.Create(
+            DatabaseExtensions.CreateId<ModelConfig>(),
+            "New Model",
+            "model-identifier",
+            "System prompt."
+        );
+        await _dbContext.SeedData(newPersona);
+        await _dbContext.SeedData(newModelConfig);
+        var newPersonaId = newPersona.Id;
+        var newModelConfigId = newModelConfig.Id;
         var command = new UpdateConversationInput(
             conversation.Id,
             newName,
@@ -528,5 +542,42 @@ public sealed class UpdateConversationHandlerTests
         await Should.ThrowAsync<NotFoundException>(() =>
             _handler.Handle(command, CancellationToken.None)
         );
+    }
+
+    [Theory]
+    [InlineData("persona")]
+    [InlineData("model")]
+    [InlineData("trait")]
+    public async Task Handle_WhenAReferencedIdIsUnknown_ShouldThrowNotFoundException(string unknown)
+    {
+        // Arrange
+        var conversation = Conversation.Create(
+            new Id<Conversation>(Guid.NewGuid().ToString()),
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [],
+            [],
+            _fixture.Create<string>()
+        );
+        await _dbContext.SeedData(conversation);
+
+        var command = new UpdateConversationInput(
+            conversation.Id,
+            conversation.Name,
+            unknown == "persona"
+                ? new Id<Persona>(Guid.NewGuid().ToString())
+                : conversation.PersonaId,
+            unknown == "model"
+                ? new Id<ModelConfig>(Guid.NewGuid().ToString())
+                : conversation.ModelConfigId,
+            unknown == "trait" ? [new Id<Trait>(Guid.NewGuid().ToString())] : [],
+            true
+        );
+
+        // Act & Assert
+        var exception = await Should.ThrowAsync<NotFoundException>(() =>
+            _handler.Handle(command, CancellationToken.None)
+        );
+        exception.Message.ShouldContain(unknown);
     }
 }
