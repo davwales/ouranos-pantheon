@@ -1,3 +1,4 @@
+using Ardalis.GuardClauses;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Hermes.Features.Folders.CreateFolder;
 using Ouranos.Pantheon.Modules.Hermes.Features.Folders.CreateFolder.Schemas;
@@ -82,7 +83,7 @@ public sealed class CreateFolderHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenParentFolderNotFound_ShouldThrowArgumentException()
+    public async Task Handle_WhenParentFolderNotFound_ShouldThrowNotFoundException()
     {
         // Arrange
         var parentId = DatabaseExtensions.CreateId<Folder>();
@@ -92,7 +93,7 @@ public sealed class CreateFolderHandlerTests
         var handle = async () => await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await handle.ShouldThrowAsync<ArgumentException>();
+        await handle.ShouldThrowAsync<NotFoundException>();
     }
 
     [Fact]

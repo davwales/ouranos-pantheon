@@ -3,7 +3,10 @@ using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Hermes.Features.Personas.DeletePersona;
 using Ouranos.Pantheon.Modules.Hermes.Features.Personas.DeletePersona.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
@@ -76,5 +79,35 @@ public sealed class DeletePersonaHandlerTests
 
         // Assert
         await handle.ShouldThrowAsync<OperationCanceledException>();
+    }
+
+    [Fact]
+    public async Task Handle_WhenPersonaIsUsedByAConversation_ShouldThrowConflictException()
+    {
+        // Arrange
+        var persona = Persona.Create(
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            "Sage",
+            _fixture.Create<string>()
+        );
+        var conversation = Conversation.Create(
+            new Id<Conversation>(Guid.NewGuid().ToString()),
+            persona.Id,
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [],
+            [],
+            _fixture.Create<string>()
+        );
+        await _dbContext.SeedData(persona);
+        await _dbContext.SeedData(conversation);
+
+        // Act
+        var handle = async () =>
+            await _handler.Handle(new DeletePersonaInput(persona.Id), CancellationToken.None);
+
+        // Assert
+        var exception = await handle.ShouldThrowAsync<ConflictException>();
+        exception.Message.ShouldContain("'Sage' is used by 1 conversation.");
+        (await _dbContext.Personas.FindAsync(persona.Id)).ShouldNotBeNull();
     }
 }
