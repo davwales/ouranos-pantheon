@@ -17,7 +17,7 @@
     <PackageVersion Include="TickerQ.EntityFrameworkCore" Version="10.4.0" />
     <PackageVersion Include="TickerQ.Dashboard" Version="10.4.0" />
     <PackageVersion Include="TickerQ.Instrumentation.OpenTelemetry" Version="10.4.0" />
-    <PackageVersion Include="CsvHelper" Version="33.1.0" />
+    <PackageVersion Include="CsvHelper" Version="34.0.0" />
     <PackageVersion Include="Flagsmith" Version="9.0.0" />
     <PackageVersion Include="EFCore.NamingConventions" Version="10.0.1" />
     <PackageVersion Include="WolverineFx" Version="6.54.0" />
