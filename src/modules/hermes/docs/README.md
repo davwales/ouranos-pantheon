@@ -47,7 +47,11 @@ shared kernel.
   `bruno/ouranos-pantheon/collections/API/Hermes/`.
 - **SSE**: chat completion (the shared assistant event contract, see the
   [Shared concepts](../../shared/docs/08-concepts.md)) and conversation compaction.
-- **Messages**: none; Hermes has no async messaging.
+- **Messages**: module-internal only. `GenerateConversationNameRequested` runs on the in-process
+  Wolverine queue `hermes-conversation-name`: saving a conversation without a name returns at
+  once with the default name, and the consumer names it from its messages afterwards. Naming is
+  best-effort, so a failed or lost request (e.g. on restart) keeps the default name, and a
+  conversation renamed in the meantime keeps the user's name.
 
 ### Scheduled Jobs
 
@@ -67,8 +71,9 @@ lifetime. The synced LoRA catalogue lives in `available_loras`; LoRA configs liv
 (matched to the catalogue by `identifier`) and attach to conversations through the
 `conversation_lora` join table, like traits. Tool sets live in `tool_sets`, with their enabled
 tools in `tool_set_tools` (unique per set on source and name). `PUT /api/hermes/conversations/{id}` sets every
-metadata field exactly (a `null` `folderId` means the root folder) but replaces the messages only
-when `messages` is supplied, so metadata updates leave turns persisted by completions untouched.
+metadata field exactly (a `null` `folderId` means the root folder) but keeps the name when `name`
+is omitted and replaces the messages only when `messages` is supplied, so metadata updates leave
+a generated name and turns persisted by completions untouched.
 
 ## Configuration
 

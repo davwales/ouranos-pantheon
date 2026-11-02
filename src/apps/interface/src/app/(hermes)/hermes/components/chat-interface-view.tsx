@@ -147,7 +147,6 @@ export default function ChatInterfaceView({
       reasoningEffort?: ReasoningEffort | null;
       toolSetId?: string | null;
     }): UpdateConversationInput => ({
-      name: conversationName ?? "New Conversation",
       personaId: overrides.personaId ?? persona.id!,
       modelConfigId: overrides.modelConfigId ?? model.id!,
       traitIds:
@@ -165,7 +164,6 @@ export default function ChatInterfaceView({
         overrides.toolSetId !== undefined ? overrides.toolSetId : toolSetId,
     }),
     [
-      conversationName,
       conversationIsPublic,
       conversationFolderId,
       reasoningEffort,

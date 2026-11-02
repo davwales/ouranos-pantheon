@@ -13,7 +13,6 @@ export function useMoveConversation({
     async (conversationId: string, folderId: string | null) => {
       const conversation = await hermesApi.getConversation(conversationId);
       await hermesApi.updateConversation(conversationId, {
-        name: conversation.name,
         personaId: conversation.persona.id,
         modelConfigId: conversation.model.id,
         traitIds: conversation.traits.map((t) => t.id),
