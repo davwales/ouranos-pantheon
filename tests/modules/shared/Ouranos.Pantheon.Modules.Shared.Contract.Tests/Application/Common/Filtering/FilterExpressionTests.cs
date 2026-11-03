@@ -8,8 +8,12 @@ public sealed class FilterExpressionTests
     [Fact]
     public void For_ShouldWriteFieldOperatorAndValue()
     {
+        // Arrange
+        const string field = "SymbolId";
+        const string value = "abc";
+
         // Act
-        var expression = FilterExpression.For("SymbolId", FilterOperator.Eq, "abc");
+        var expression = FilterExpression.For(field, FilterOperator.Eq, value);
 
         // Assert
         expression.ShouldBe("SymbolId:eq:abc");
@@ -40,8 +44,11 @@ public sealed class FilterExpressionTests
     [Fact]
     public void Operator_ShouldBeLowerCase()
     {
+        // Arrange
+        const FilterOperator filterOperator = FilterOperator.StartsWith;
+
         // Act
-        var token = FilterExpression.Operator(FilterOperator.StartsWith);
+        var token = FilterExpression.Operator(filterOperator);
 
         // Assert
         token.ShouldBe("startswith");

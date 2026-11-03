@@ -13,7 +13,7 @@ public sealed class SortDirectionExtensionsTests
         string expected
     )
     {
-        // Act
+        // Arrange & Act
         var value = sortDirection.ToQueryValue();
 
         // Assert

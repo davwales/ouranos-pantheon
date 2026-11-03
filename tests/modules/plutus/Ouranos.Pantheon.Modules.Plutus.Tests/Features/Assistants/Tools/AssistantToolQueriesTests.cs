@@ -40,8 +40,11 @@ public sealed class AssistantToolQueriesTests
     [Fact]
     public void SymbolFilter_ShouldMatchTheSymbolIdExactly()
     {
+        // Arrange
+        var symbolId = Factory.SymbolId;
+
         // Act
-        var filter = AssistantToolQueries.SymbolFilter(Factory.SymbolId);
+        var filter = AssistantToolQueries.SymbolFilter(symbolId);
 
         // Assert
         filter.Length.ShouldBe(1);
@@ -51,7 +54,7 @@ public sealed class AssistantToolQueriesTests
                 new FieldFilterNode(
                     nameof(GetMarketTradesResponse.SymbolId),
                     FilterOperator.Eq,
-                    Factory.SymbolId.Value
+                    symbolId.Value
                 )
             );
     }
