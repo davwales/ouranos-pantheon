@@ -10,7 +10,7 @@ using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning.Dtos
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.UpdateConversation.Schemas;
 
 public sealed record UpdateConversationBody(
-    string Name,
+    string? Name,
     Id<Persona> PersonaId,
     Id<ModelConfig> ModelConfigId,
     Id<Trait>[] TraitIds,

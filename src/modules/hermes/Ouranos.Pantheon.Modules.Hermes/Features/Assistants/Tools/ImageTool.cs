@@ -51,17 +51,13 @@ public abstract class ImageTool<TArguments>(
     }
 
     /// <summary>
-    /// The trimmed prompt capped at the configured length, or null when it is blank.
+    /// The trimmed prompt capped on a word boundary at the configured length, or null when it is
+    /// blank.
     /// </summary>
     protected string? CapPrompt(string prompt)
     {
-        prompt = prompt.Trim();
-        if (prompt.Length == 0)
-        {
-            return null;
-        }
-
-        return prompt.Length > Options.MaxPromptLength ? prompt[..Options.MaxPromptLength] : prompt;
+        prompt = prompt.Trim().TruncateAtWordBoundary(Options.MaxPromptLength);
+        return prompt.Length == 0 ? null : prompt;
     }
 
     /// <summary>
