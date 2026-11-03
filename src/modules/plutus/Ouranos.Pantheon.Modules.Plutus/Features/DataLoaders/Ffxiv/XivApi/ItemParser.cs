@@ -1,30 +1,49 @@
 using System.Globalization;
 using CsvHelper;
-using CsvHelper.Configuration;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Ffxiv.XivApi;
 
 public sealed class ItemParser
 {
+    // Item.csv starts with three metadata rows followed by a column header row.
+    private const int LeadingRows = 4;
+    private const int KeyColumn = 0;
+    private const int NameColumn = 4;
+    private const int CanBeHqColumn = 88;
+    private const string UnknownItemName = "Unknown Item";
+
     public static List<ItemResponse> ParseItemCsv(Stream stream)
     {
-        using var reader = new StreamReader(stream);
-        using var csv = new CsvReader(
-            reader,
-            new CsvConfiguration(CultureInfo.InvariantCulture)
+        using var csv = CsvReader.Create(
+            stream,
+            new CsvReaderOptions
             {
-                HasHeaderRecord = true,
-                MissingFieldFound = null,
-                HeaderValidated = null,
+                HasHeader = false,
+                FieldCountMismatch = CsvFieldCountHandling.Allow,
+                FormatProvider = CultureInfo.InvariantCulture,
             }
         );
 
-        // The top 3 lines are garbage so we skip them.
-        csv.Read();
-        csv.Read();
-        csv.Read();
+        var items = new List<ItemResponse>();
+        var rowsToSkip = LeadingRows;
+        while (csv.Read())
+        {
+            if (rowsToSkip > 0)
+            {
+                rowsToSkip--;
+                continue;
+            }
 
-        csv.Context.RegisterClassMap<ItemMap>();
-        return [.. csv.GetRecords<ItemResponse>()];
+            items.Add(
+                new ItemResponse
+                {
+                    Key = csv.Parse<int>(KeyColumn),
+                    Name = csv.IsEmpty(NameColumn) ? UnknownItemName : csv.GetString(NameColumn),
+                    CanBeHq = csv.Parse<bool>(CanBeHqColumn),
+                }
+            );
+        }
+
+        return items;
     }
 }
