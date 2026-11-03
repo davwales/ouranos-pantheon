@@ -6,7 +6,7 @@ import { ResponsiveDropdownMenu } from "@/components/shared/responsive-dropdown-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MoreHorizontal, Plus, Trash2 } from "lucide-react";
-import Link from "next/link";
+import { OriginLink } from "@/components/shared/breadcrumbs";
 import { useCallback, useMemo, useState } from "react";
 import {
   SelectedSymbol,
@@ -126,12 +126,12 @@ export function SymbolTable({
         header: "Symbol",
         accessorFn: (row: TableSymbol) => row.name,
         cell: ({ row, getValue }) => (
-          <Link
+          <OriginLink
             href={`/plutus/${marketId}/${row.original.symbolId}`}
             className="hover:underline"
           >
             {getValue<string>()}
-          </Link>
+          </OriginLink>
         ),
       },
       {

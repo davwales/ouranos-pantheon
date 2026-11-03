@@ -22,7 +22,7 @@ These constraints are inputs to the decisions recorded in [Section 4](04-solutio
 | No external contributions | No contributions from developers other than the owner are allowed  | No public API stability guarantees or deprecation processes are required |
 | Portfolio showcase | The project demonstrates modern .NET architecture patterns | Idiomatic, explainable patterns are preferred over clever one-offs; documentation quality matters |
 | Cost-free external data | Market data comes from free/community APIs (Universalis, OSRS Wiki, Alpaca IEX) | Rate limits and data coverage are accepted as-is; no paid data vendors |
-| Separate infrastructure repository | Provisioning lives in [`ouranos-infrastructure`](https://github.com/davwales/ouranos-infrastructure) (Docker Compose) | This repository contains no compose/Kubernetes manifests; deployment topology is documented but not versioned here |
+| Separate infrastructure repository | Provisioning lives in [`ouranos-infrastructure`](https://github.com/davwales/ouranos-infrastructure) (Podman Quadlets) | This repository contains no deployment manifests (`compose.dev.yaml` only starts local development dependencies); deployment topology is documented but not versioned here |
 
 ## 2.3 Development Process Constraints
 

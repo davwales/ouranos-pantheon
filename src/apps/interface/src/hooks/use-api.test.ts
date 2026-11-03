@@ -21,6 +21,43 @@ describe("useApi", () => {
     expect(result.current[0].data).toBe("first");
     expect(errorOf(result.current[0])).toBe(error);
   });
+
+  it("keeps the previous data reference when a refetch returns equal data", async () => {
+    // Arrange
+    const first = { trades: [{ price: 1 }] };
+    const fetcher = vi
+      .fn<() => Promise<typeof first>>()
+      .mockResolvedValueOnce(first)
+      .mockResolvedValueOnce({ trades: [{ price: 1 }] });
+    const { result } = renderHook(() => useApi(fetcher));
+    await waitFor(() => expect(result.current[0].status).toBe("success"));
+
+    // Act
+    act(() => result.current[1]());
+    await waitFor(() => expect(result.current[0].status).toBe("success"));
+
+    // Assert
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(result.current[0].data).toBe(first);
+  });
+
+  it("replaces the data when a refetch returns changed data", async () => {
+    // Arrange
+    const second = { trades: [{ price: 2 }] };
+    const fetcher = vi
+      .fn<() => Promise<typeof second>>()
+      .mockResolvedValueOnce({ trades: [{ price: 1 }] })
+      .mockResolvedValueOnce(second);
+    const { result } = renderHook(() => useApi(fetcher));
+    await waitFor(() => expect(result.current[0].status).toBe("success"));
+
+    // Act
+    act(() => result.current[1]());
+    await waitFor(() => expect(result.current[0].data).toBe(second));
+
+    // Assert
+    expect(result.current[0].status).toBe("success");
+  });
 });
 
 describe("errorOf", () => {

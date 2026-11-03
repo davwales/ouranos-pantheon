@@ -1,5 +1,6 @@
 "use client";
 
+import { hasChanges } from "@/lib/has-changes";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
 export type ApiState<T> =
@@ -39,7 +40,15 @@ export function useApi<T>(
     fetcherRef
       .current()
       .then((data) => {
-        if (!cancelled) setState({ status: "success", data });
+        if (!cancelled)
+          setState((prev) => ({
+            status: "success",
+            // Keep the old reference on unchanged refetches so memoised values and charts don't update.
+            data:
+              prev.data === undefined || hasChanges(data, prev.data)
+                ? data
+                : prev.data,
+          }));
       })
       .catch((error) => {
         if (!cancelled)

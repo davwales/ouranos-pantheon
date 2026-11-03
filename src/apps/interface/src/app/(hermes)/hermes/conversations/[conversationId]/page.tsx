@@ -18,6 +18,7 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import { buildFolderTree, flattenFolders } from "../lib/folder-utils";
+import { useGeneratedConversationName } from "../lib/use-generated-conversation-name";
 import {
   toModelFormInput,
   toPersonaFormInput,
@@ -57,10 +58,16 @@ export default function ResumeConversationPage() {
     () => hermesApi.getConversation(conversationId),
     [conversationId],
   );
-  useBreadcrumbLabel(conversationId, state.data?.name, state.status === "error");
   const [foldersState] = useApi(() => hermesApi.getAllFolders());
 
   const saved = state.data;
+  const generatedName = useGeneratedConversationName(
+    savedConversationId,
+    conversationName ?? saved?.name,
+    saved?.createdAt,
+  );
+  const displayName = conversationName ?? generatedName ?? saved?.name;
+  useBreadcrumbLabel(conversationId, displayName, state.status === "error");
 
   const resolvedReasoningEffort =
     reasoningEffort !== undefined ? reasoningEffort : saved?.reasoningEffort ?? null;
@@ -115,7 +122,6 @@ export default function ResumeConversationPage() {
       if (!saved || !resolvedPersona || !resolvedModel) return;
 
       await hermesApi.updateConversation(savedConversationId, {
-        name: conversationName ?? saved.name,
         personaId: resolvedPersona.id!,
         modelConfigId: resolvedModel.id!,
         traitIds: resolvedTraits
@@ -134,7 +140,6 @@ export default function ResumeConversationPage() {
       resolvedPersona,
       resolvedModel,
       savedConversationId,
-      conversationName,
       resolvedTraits,
       resolvedLoraIds,
       isPublic,
@@ -181,7 +186,7 @@ export default function ResumeConversationPage() {
   return (
     <>
       <ConversationHeader
-        name={conversationName ?? saved.name}
+        name={displayName ?? saved.name}
         folders={allFolders}
         currentFolderId={resolvedFolderId}
         onMove={handleMoveToFolder}
@@ -203,7 +208,7 @@ export default function ResumeConversationPage() {
         initialMessages={saved.messages}
         initialTokenUsage={saved.tokenUsage}
         conversationId={savedConversationId}
-        conversationName={conversationName ?? saved.name}
+        conversationName={displayName ?? saved.name}
         conversationIsPublic={isPublic ?? saved.isPublic}
         conversationFolderId={resolvedFolderId}
         onConversationSaved={(id, name) => {

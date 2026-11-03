@@ -1,0 +1,83 @@
+# Local development dependencies for the gateway. Deployment lives in ouranos-infrastructure (ADR 0011).
+#
+#   podman compose -f compose.dev.yaml up -d                         # postgres + rabbitmq
+#   podman compose -f compose.dev.yaml --profile flagsmith up -d     # also Flagsmith on :8001
+#   podman compose -f compose.dev.yaml down                          # stop, keep data
+#   podman compose -f compose.dev.yaml down -v                       # stop and delete all data
+#
+# Credentials match the local defaults in AGENTS.md / README.md. Host ports can be moved with
+# POSTGRES_PORT, RABBITMQ_PORT, RABBITMQ_MANAGEMENT_PORT and FLAGSMITH_PORT.
+name: ouranos-pantheon-dev
+
+services:
+  postgres:
+    # Keep the TimescaleDB version in step with prod, or dev/restore-from-prod.sh refuses to restore.
+    image: docker.io/timescale/timescaledb:2.21.1-pg17
+    command: postgres -c max_connections=200
+    environment:
+      POSTGRES_USER: psql
+      POSTGRES_PASSWORD: psql
+      POSTGRES_DB: pantheon
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "psql", "-d", "pantheon"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # Room for postgres's shutdown checkpoint instead of being killed after 10s.
+    stop_grace_period: 2m
+
+  rabbitmq:
+    image: docker.io/library/rabbitmq:3.13.7-management-alpine
+    # RabbitMQ stores its node name (rabbit@<hostname>) in the data volume; a new hostname orphans the queues.
+    hostname: pantheon-messaging
+    environment:
+      RABBITMQ_DEFAULT_USER: rabbitmq
+      RABBITMQ_DEFAULT_PASS: rabbitmq
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      # rabbitmq-diagnostics would run as root and can create the Erlang cookie before the broker can read it.
+      test: ["CMD", "nc", "-z", "127.0.0.1", "5672"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  # Creates Flagsmith's database in the shared postgres; idempotent, so it also works on existing data.
+  flagsmith-db:
+    profiles: [flagsmith]
+    image: docker.io/timescale/timescaledb:2.21.1-pg17
+    environment:
+      PGHOST: postgres
+      PGUSER: psql
+      PGPASSWORD: psql
+      PGDATABASE: postgres
+    command: >
+      sh -c "psql -tAc \"SELECT 1 FROM pg_database WHERE datname = 'flagsmith'\" | grep -q 1
+      || psql -c 'CREATE DATABASE flagsmith'"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  flagsmith:
+    profiles: [flagsmith]
+    image: docker.io/flagsmith/flagsmith:2.284.0
+    environment:
+      DATABASE_URL: postgresql://psql:psql@postgres:5432/flagsmith
+      DJANGO_ALLOWED_HOSTS: "*"
+      ENV: prod
+    ports:
+      - "${FLAGSMITH_PORT:-8001}:8000"
+    depends_on:
+      flagsmith-db:
+        condition: service_completed_successfully
+
+volumes:
+  postgres_data:
+  rabbitmq_data:

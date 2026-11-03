@@ -10,9 +10,10 @@ import {
 import { cn } from "@/lib/utils";
 import { ChevronRight, MoreHorizontal } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { useBreadcrumbStore } from "@/stores/breadcrumb-store";
-import { buildBreadcrumbTrail, type BreadcrumbCrumb } from "./breadcrumb-trail";
+import { buildBreadcrumbTrail, ORIGIN_PARAM, type BreadcrumbCrumb } from "./breadcrumb-trail";
 
 const INLINE_CRUMBS_ON_MOBILE = 2;
 
@@ -106,8 +107,7 @@ function CrumbItem({
   );
 }
 
-export function Breadcrumbs() {
-  const crumbs = buildBreadcrumbTrail(usePathname());
+function BreadcrumbBar({ crumbs }: { crumbs: BreadcrumbCrumb[] }) {
   if (crumbs.length < 2) {
     return null;
   }
@@ -134,5 +134,20 @@ export function Breadcrumbs() {
         ))}
       </ol>
     </nav>
+  );
+}
+
+function OriginBreadcrumbs({ pathname }: { pathname: string }) {
+  const origin = useSearchParams().get(ORIGIN_PARAM);
+  const labels = useBreadcrumbStore((state) => state.labels);
+  return <BreadcrumbBar crumbs={buildBreadcrumbTrail(pathname, origin, labels)} />;
+}
+
+export function Breadcrumbs() {
+  const pathname = usePathname();
+  return (
+    <Suspense fallback={<BreadcrumbBar crumbs={buildBreadcrumbTrail(pathname)} />}>
+      <OriginBreadcrumbs pathname={pathname} />
+    </Suspense>
   );
 }

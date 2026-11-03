@@ -25,16 +25,16 @@ export default function MarketOverview({ marketId }: { marketId: string }) {
 
   useInterval(reexecute, 60000);
 
-  const formattedTrades = useMemo(() => {
-    if (overviewState.status !== "success") return [];
-    return overviewState.data.trades.map((t) => ({
-      ...t,
-      date: new Date(t.date),
-    }));
-  }, [overviewState]);
+  const overview = overviewState.data;
 
-  const overview =
-    overviewState.status === "success" ? overviewState.data : null;
+  const formattedTrades = useMemo(
+    () =>
+      overview?.trades.map((t) => ({
+        ...t,
+        date: new Date(t.date),
+      })) ?? [],
+    [overview?.trades],
+  );
 
   if (overviewState.status === "loading" && !overview) {
     return (

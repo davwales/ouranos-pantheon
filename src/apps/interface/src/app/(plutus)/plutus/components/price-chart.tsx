@@ -11,7 +11,7 @@ import {
   formatDuration,
   intervalToDuration,
 } from "date-fns";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import * as RechartsPrimitive from "recharts";
 import {
   Bar,
@@ -112,6 +112,10 @@ export default function PriceChart({
   const showMinMax = data.some((d) => d.minPrice != null || d.maxPrice != null);
 
   const chartConfig = showMinMax ? chartConfigFull : chartConfigAvgOnly;
+
+  // Polling replaces the data; only the first render should play the entry animation.
+  const [isAnimationActive, setIsAnimationActive] = useState(true);
+  const endAnimation = () => setIsAnimationActive(false);
 
   const { data: processedData, gaps } = useMemo(
     () => processChartData(data),
@@ -217,6 +221,7 @@ export default function PriceChart({
           yAxisId="right"
           dataKey="volume"
           fill="var(--color-volume)"
+          isAnimationActive={isAnimationActive}
           activeBar={(p: BarShapeProps) => barShape(1, p)}
           shape={(p: BarShapeProps) => barShape(0.5, p)}
         />
@@ -227,6 +232,7 @@ export default function PriceChart({
             stroke="var(--color-minPrice)"
             strokeWidth={2}
             dot={false}
+            isAnimationActive={isAnimationActive}
           />
         )}
         <Line
@@ -235,6 +241,8 @@ export default function PriceChart({
           stroke="var(--color-price)"
           strokeWidth={2}
           dot={false}
+          isAnimationActive={isAnimationActive}
+          onAnimationEnd={endAnimation}
         />
         {showMinMax && (
           <Line
@@ -243,6 +251,7 @@ export default function PriceChart({
             stroke="var(--color-maxPrice)"
             strokeWidth={2}
             dot={false}
+            isAnimationActive={isAnimationActive}
           />
         )}
       </ComposedChart>
