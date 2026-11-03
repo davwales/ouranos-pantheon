@@ -22,6 +22,8 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
 
     public string Name { get; private set; }
 
+    public bool HasDefaultName => Name == DefaultName;
+
     public Id<Persona> PersonaId { get; private set; }
 
     public Id<ModelConfig> ModelConfigId { get; private set; }
@@ -121,7 +123,7 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
     }
 
     public void Update(
-        string name,
+        string? name,
         Id<Persona> personaId,
         Id<ModelConfig> modelConfigId,
         IEnumerable<Message>? messages,
@@ -136,7 +138,11 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
         Guard.Against.Null(personaId);
         Guard.Against.Null(modelConfigId);
 
-        Name = string.IsNullOrWhiteSpace(name) ? DefaultName : name.Trim();
+        if (name is not null)
+        {
+            Name = string.IsNullOrWhiteSpace(name) ? DefaultName : name.Trim();
+        }
+
         PersonaId = personaId;
         ModelConfigId = modelConfigId;
         if (messages is not null)
@@ -151,6 +157,21 @@ public sealed class Conversation : BaseEntity<Id<Conversation>>
         Loras = [.. loras ?? []];
         ToolSetId = toolSetId;
         Update();
+    }
+
+    /// <summary>
+    /// Sets a generated name unless the conversation was renamed while it was being generated.
+    /// </summary>
+    public bool ApplyGeneratedName(string name)
+    {
+        if (!HasDefaultName || string.IsNullOrWhiteSpace(name))
+        {
+            return false;
+        }
+
+        Name = name.Trim();
+        Update();
+        return true;
     }
 
     public void RecordTokenUsage(int inputTokens, int outputTokens, int totalTokens)
