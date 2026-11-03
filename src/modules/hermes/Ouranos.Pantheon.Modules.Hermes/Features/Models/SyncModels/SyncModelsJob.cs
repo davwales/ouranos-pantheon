@@ -38,6 +38,15 @@ public sealed class SyncModelsJob
         cancellationToken.ThrowIfCancellationRequested();
 
         var availableModels = await _mlClient.GetAvailableModelsAsync(cancellationToken);
+
+        // An empty list is far likelier to be a misconfigured or restarting model server than
+        // every model being removed, so the catalogue and config availability are kept.
+        if (availableModels.Count == 0)
+        {
+            _logger.LogWarning("Skipped model sync: Ouranos ML listed no models.");
+            return;
+        }
+
         var remoteIdentifiers = availableModels.Select(m => m.ModelIdentifier).ToHashSet();
 
         await using var db = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
