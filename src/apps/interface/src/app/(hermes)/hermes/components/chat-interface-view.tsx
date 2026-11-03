@@ -31,7 +31,7 @@ import {
   Role,
   type UpdateConversationInput,
 } from "@/lib/api/hermes";
-import { useMessageController } from "@/hooks/use-message-controller";
+import { toMessageInput, useMessageController } from "@/hooks/use-message-controller";
 import { Bookmark, SlidersHorizontal } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -147,7 +147,6 @@ export default function ChatInterfaceView({
       reasoningEffort?: ReasoningEffort | null;
       toolSetId?: string | null;
     }): UpdateConversationInput => ({
-      name: conversationName ?? "New Conversation",
       personaId: overrides.personaId ?? persona.id!,
       modelConfigId: overrides.modelConfigId ?? model.id!,
       traitIds:
@@ -165,7 +164,6 @@ export default function ChatInterfaceView({
         overrides.toolSetId !== undefined ? overrides.toolSetId : toolSetId,
     }),
     [
-      conversationName,
       conversationIsPublic,
       conversationFolderId,
       reasoningEffort,
@@ -186,7 +184,7 @@ export default function ChatInterfaceView({
           .filter((t) => t.id && !t.isEphemeral)
           .map((t) => t.id!),
         loraIds: loraIdsOf(activeLoras),
-        messages: messages,
+        messages: messages.map(toMessageInput),
         inputTokenCount: tokenUsage?.inputTokens ?? null,
         outputTokenCount: tokenUsage?.outputTokens ?? null,
         totalTokenCount: tokenUsage?.totalTokens ?? null,
