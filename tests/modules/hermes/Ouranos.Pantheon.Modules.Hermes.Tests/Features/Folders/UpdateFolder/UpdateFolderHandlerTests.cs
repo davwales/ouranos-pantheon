@@ -21,12 +21,44 @@ public sealed class UpdateFolderHandlerTests
         ILogger<UpdateFolderHandler>
     >();
     private readonly HermesDbContext _dbContext;
+    private readonly IFolderTreeQueryService _folderTreeQueryService =
+        Substitute.For<IFolderTreeQueryService>();
 
     public UpdateFolderHandlerTests()
     {
         _fixture.Customize(new IdCustomization());
         _dbContext = DbContextExtensions.Mock<HermesDbContext>();
-        _handler = new UpdateFolderHandler(_logger, _dbContext);
+        _folderTreeQueryService
+            .CalculateSubtreeHeightAsync(Arg.Any<Id<Folder>>(), Arg.Any<CancellationToken>())
+            .Returns(1);
+        _handler = new UpdateFolderHandler(_logger, _dbContext, _folderTreeQueryService);
+    }
+
+    [Fact]
+    public void Constructor_WhenLoggerIsNull_ShouldThrowArgumentNullException()
+    {
+        // Act & Assert
+        Should.Throw<ArgumentNullException>(() =>
+            new UpdateFolderHandler(null!, _dbContext, _folderTreeQueryService)
+        );
+    }
+
+    [Fact]
+    public void Constructor_WhenDbContextIsNull_ShouldThrowArgumentNullException()
+    {
+        // Act & Assert
+        Should.Throw<ArgumentNullException>(() =>
+            new UpdateFolderHandler(_logger, null!, _folderTreeQueryService)
+        );
+    }
+
+    [Fact]
+    public void Constructor_WhenFolderTreeQueryServiceIsNull_ShouldThrowArgumentNullException()
+    {
+        // Act & Assert
+        Should.Throw<ArgumentNullException>(() =>
+            new UpdateFolderHandler(_logger, _dbContext, null!)
+        );
     }
 
     [Fact]
@@ -160,6 +192,9 @@ public sealed class UpdateFolderHandlerTests
         // Arrange
         var target = await SeedChainAsync(Folder.MaxDepth - 2);
         var mover = await SeedChainAsync(3);
+        _folderTreeQueryService
+            .CalculateSubtreeHeightAsync(mover[0].Id, Arg.Any<CancellationToken>())
+            .Returns(mover.Count);
 
         var command = new UpdateFolderInput(
             mover[0].Id,
@@ -182,6 +217,9 @@ public sealed class UpdateFolderHandlerTests
         // Arrange
         var target = await SeedChainAsync(Folder.MaxDepth - 3);
         var mover = await SeedChainAsync(3);
+        _folderTreeQueryService
+            .CalculateSubtreeHeightAsync(mover[0].Id, Arg.Any<CancellationToken>())
+            .Returns(mover.Count);
 
         var command = new UpdateFolderInput(
             mover[0].Id,

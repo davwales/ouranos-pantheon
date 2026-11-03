@@ -12,10 +12,14 @@ namespace Ouranos.Pantheon.Modules.Hermes.Features.Folders.UpdateFolder;
 
 public sealed class UpdateFolderHandler(
     ILogger<UpdateFolderHandler> logger,
-    HermesDbContext dbContext
+    HermesDbContext dbContext,
+    IFolderTreeQueryService folderTreeQueryService
 ) : IPantheonHandler<UpdateFolderInput, IdResponse<Folder>>
 {
     private readonly HermesDbContext _dbContext = Guard.Against.Null(dbContext);
+    private readonly IFolderTreeQueryService _folderTreeQueryService = Guard.Against.Null(
+        folderTreeQueryService
+    );
     private readonly ILogger<UpdateFolderHandler> _logger = Guard.Against.Null(logger);
 
     public async Task<IdResponse<Folder>> Handle(
@@ -90,9 +94,8 @@ public sealed class UpdateFolderHandler(
             _dbContext,
             cancellationToken
         );
-        var subtreeHeight = await FolderTreeValidation.CalculateSubtreeHeightAsync(
+        var subtreeHeight = await _folderTreeQueryService.CalculateSubtreeHeightAsync(
             folderId,
-            _dbContext,
             cancellationToken
         );
 

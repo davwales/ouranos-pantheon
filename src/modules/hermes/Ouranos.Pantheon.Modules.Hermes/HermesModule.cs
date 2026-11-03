@@ -51,6 +51,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Traits.GetTrait;
 using Ouranos.Pantheon.Modules.Hermes.Features.Traits.UpdateTrait;
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
 using Ouranos.Pantheon.Modules.Shared.Contract;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres;
@@ -69,7 +70,8 @@ public sealed class HermesModule : IPantheonModule
             .AddCorePostgresModule<HermesDbContext>(
                 builder.Configuration,
                 typeof(HermesModule).Assembly
-            );
+            )
+            .AddScoped<IFolderTreeQueryService, FolderTreeQueryService>();
 
         ConfigureAssistantTools(builder);
 
