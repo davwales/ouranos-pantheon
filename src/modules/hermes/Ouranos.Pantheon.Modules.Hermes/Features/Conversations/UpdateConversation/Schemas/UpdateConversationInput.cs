@@ -12,7 +12,7 @@ namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.UpdateConversat
 
 public sealed record UpdateConversationInput(
     Id<Conversation> ConversationId,
-    string Name,
+    string? Name,
     Id<Persona> PersonaId,
     Id<ModelConfig> ModelConfigId,
     Id<Trait>[] TraitIds,

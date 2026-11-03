@@ -10,6 +10,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.CreateConversation;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.DeleteConversation;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateCompletion.Schemas;
+using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GenerateConversationName.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GetAllConversations;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GetConversation;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.UpdateConversation;
@@ -92,6 +93,11 @@ public sealed class HermesModule : IPantheonModule
     public void ConfigureWolverine(WolverineOptions opts, IConfiguration configuration)
     {
         opts.CodeGeneration.AlwaysUseServiceLocationFor<HermesDbContext>();
+
+        // Naming is best-effort, so an in-process queue suffices: a request lost on restart only
+        // leaves the default name.
+        opts.PublishMessage<GenerateConversationNameRequested>()
+            .ToLocalQueue(GenerateConversationNameRequested.Queue);
     }
 
     public void MapEndpoints(WebApplication app)
