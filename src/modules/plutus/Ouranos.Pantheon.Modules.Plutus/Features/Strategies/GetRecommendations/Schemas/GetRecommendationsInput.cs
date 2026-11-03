@@ -4,6 +4,9 @@ using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Strategies.GetRecommendations.Schemas;
 
+/// <param name="StrategyId">Strategy to recommend orders for.</param>
+/// <param name="MarketId">Market the strategy must belong to.</param>
+/// <param name="Budget">Currency available for new orders.</param>
 /// <param name="VolumeParticipationRate">
 ///     Share of a symbol's volume an order may take; defaults to the rate of the strategy's latest
 ///     completed backtest, so recommendations are sized the way that backtest was.

@@ -146,9 +146,12 @@ public sealed class GetRecommendationsHandlerTests
         // Arrange
         var strategy = await SeedStrategyAsync(new FlipConfiguration());
         await _dbContext.SeedData(
-            CreateBacktest(strategy, 0.05m, BacktestStatus.Completed),
-            CreateBacktest(strategy, 0.2m, BacktestStatus.Completed),
+            CreateBacktest(strategy, 0.05m, BacktestStatus.Completed)
+                .WithCreatedAt(DateTimeOffset.UtcNow.AddDays(-2)),
+            CreateBacktest(strategy, 0.2m, BacktestStatus.Completed)
+                .WithCreatedAt(DateTimeOffset.UtcNow.AddDays(-1)),
             CreateBacktest(strategy, 0.5m, BacktestStatus.Failed)
+                .WithCreatedAt(DateTimeOffset.UtcNow)
         );
 
         // Act

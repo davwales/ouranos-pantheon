@@ -245,7 +245,7 @@ public sealed class FlipEngineTests
     }
 
     [Fact]
-    public async Task RecommendAsync_WithALowerParticipationRate_ShouldSuggestFewerUnits()
+    public async Task RecommendAsync_WhenParticipationRateIsLower_ShouldSuggestFewerUnits()
     {
         // Arrange
         ArrangeData(FlipTestData.Bouncing(200, 100f, 130f, name: "Wide"));
