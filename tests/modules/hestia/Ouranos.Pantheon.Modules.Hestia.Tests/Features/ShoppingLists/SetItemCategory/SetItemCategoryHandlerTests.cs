@@ -88,4 +88,13 @@ public sealed class SetItemCategoryHandlerTests
             new SetItemCategoryHandler(Substitute.For<ILogger<SetItemCategoryHandler>>(), null!)
         );
     }
+
+    [Fact]
+    public void Constructor_WhenLoggerIsNull_ShouldThrowArgumentNullException()
+    {
+        // Act & Assert
+        Should.Throw<ArgumentNullException>(() =>
+            new SetItemCategoryHandler(null!, Substitute.For<IHestiaMartenStore>())
+        );
+    }
 }

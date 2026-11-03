@@ -116,9 +116,13 @@ public sealed class ShoppingListNormalizerTests
     [Fact]
     public void NameKey_WhenSingularAndPluralSpellings_ShouldMatch()
     {
+        // Arrange
+        const string pluralName = "  Onions ";
+        const string singularName = "onion";
+
         // Act
-        var plural = ShoppingListNormalizer.NameKey("  Onions ");
-        var singular = ShoppingListNormalizer.NameKey("onion");
+        var plural = ShoppingListNormalizer.NameKey(pluralName);
+        var singular = ShoppingListNormalizer.NameKey(singularName);
 
         // Assert
         plural.ShouldBe(singular);

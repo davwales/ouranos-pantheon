@@ -39,9 +39,13 @@ public sealed class MeasurementUnitsTests
     [Fact]
     public void Find_WhenVolumeAndMassUnits_ShouldReportTheirDimension()
     {
+        // Arrange
+        const string volumeSpelling = "cup";
+        const string massSpelling = "oz";
+
         // Act
-        var cup = MeasurementUnits.Find("cup");
-        var ounce = MeasurementUnits.Find("oz");
+        var cup = MeasurementUnits.Find(volumeSpelling);
+        var ounce = MeasurementUnits.Find(massSpelling);
 
         // Assert
         cup.ShouldNotBeNull();

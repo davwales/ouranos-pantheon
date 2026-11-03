@@ -167,4 +167,13 @@ public sealed class ClearCheckedItemsHandlerTests
             new ClearCheckedItemsHandler(Substitute.For<ILogger<ClearCheckedItemsHandler>>(), null!)
         );
     }
+
+    [Fact]
+    public void Constructor_WhenLoggerIsNull_ShouldThrowArgumentNullException()
+    {
+        // Act & Assert
+        Should.Throw<ArgumentNullException>(() =>
+            new ClearCheckedItemsHandler(null!, Substitute.For<IHestiaMartenStore>())
+        );
+    }
 }
