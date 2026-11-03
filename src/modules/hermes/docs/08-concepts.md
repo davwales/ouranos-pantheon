@@ -18,9 +18,10 @@ whose `IsPublic` is set and treat the others as not found.
 - **The Interface asks first.** `GET /api/hermes/public-mode` reports the flag, and the
   Interface hides its create, edit, save, move and delete controls while it is on. A saved
   conversation opens as an unsaved copy that can be continued but not saved.
+
 Public mode fails closed: the gateway's base `appsettings.json` lists `hermes.public_mode` as
 enabled under `Ouranos:Flagsmith:DefaultFlags`, so while Flagsmith is unreachable reads are
-limited to public entities instead of failing.
+limited to public entities and writes are rejected, instead of failing.
 
 ## 8.2 Reply Parts and History Replay
 

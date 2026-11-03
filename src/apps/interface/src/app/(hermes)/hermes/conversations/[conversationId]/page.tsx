@@ -1,30 +1,16 @@
 "use client";
 
 import ChatInterfaceView from "@/app/(hermes)/hermes/components/chat-interface-view";
-import {
-  type LoraFormInput,
-  type ModelFormInput,
-  type PersonaFormInput,
-  type TraitFormInput,
-} from "@/app/(hermes)/hermes/types";
 import { ConversationHeader } from "@/app/(hermes)/hermes/conversations/components/conversation-header";
 import { usePublicMode } from "@/app/(hermes)/hermes/components/public-mode-context";
 import { useBreadcrumbLabel } from "@/components/shared/breadcrumbs";
 import { useApi } from "@/hooks/use-api";
-import {
-  hermesApi,
-  type ReasoningEffort,
-  type UpdateConversationInput,
-} from "@/lib/api/hermes";
+import { hermesApi, type UpdateConversationInput } from "@/lib/api/hermes";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import { buildFolderTree, flattenFolders } from "../lib/folder-utils";
 import { useGeneratedConversationName } from "../lib/use-generated-conversation-name";
-import {
-  toModelFormInput,
-  toPersonaFormInput,
-  toTraitFormInputs,
-} from "../lib/saved-conversation-inputs";
+import { useSavedConversationSettings } from "../lib/use-saved-conversation-settings";
 import { ChatMessageSkeleton } from "@/components/shared/skeletons/chat-message-skeleton";
 import { NotFoundCard } from "@/components/shared/not-found-card";
 
@@ -37,24 +23,6 @@ export default function ResumeConversationPage() {
   const [conversationName, setConversationName] = useState<
     string | undefined
   >();
-  const [folderId, setFolderId] = useState<string | null | undefined>(
-    undefined,
-  );
-  const [persona, setPersona] = useState<PersonaFormInput | undefined>();
-  const [model, setModel] = useState<ModelFormInput | undefined>();
-  const [activeTraits, setActiveTraits] = useState<
-    TraitFormInput[] | undefined
-  >();
-  const [activeLoras, setActiveLoras] = useState<
-    LoraFormInput[] | undefined
-  >();
-  const [isPublic, setIsPublic] = useState<boolean | undefined>();
-  const [reasoningEffort, setReasoningEffort] = useState<
-    ReasoningEffort | null | undefined
-  >(undefined);
-  const [toolSetId, setToolSetId] = useState<string | null | undefined>(
-    undefined,
-  );
 
   const [state] = useApi(
     () => hermesApi.getConversation(conversationId),
@@ -63,6 +31,19 @@ export default function ResumeConversationPage() {
   const [foldersState] = useApi(() => hermesApi.getAllFolders());
 
   const saved = state.data;
+  const settings = useSavedConversationSettings(saved);
+  const {
+    persona: resolvedPersona,
+    model: resolvedModel,
+    traits: resolvedTraits,
+    loraIds: resolvedLoraIds,
+    reasoningEffort: resolvedReasoningEffort,
+    toolSetId: resolvedToolSetId,
+    folderId: resolvedFolderId,
+    isPublic,
+    setFolderId,
+    setIsPublic,
+  } = settings;
   const generatedName = useGeneratedConversationName(
     savedConversationId,
     conversationName ?? saved?.name,
@@ -70,16 +51,6 @@ export default function ResumeConversationPage() {
   );
   const displayName = conversationName ?? generatedName ?? saved?.name;
   useBreadcrumbLabel(conversationId, displayName, state.status === "error");
-
-  const resolvedReasoningEffort =
-    reasoningEffort !== undefined ? reasoningEffort : saved?.reasoningEffort ?? null;
-  const resolvedToolSetId =
-    toolSetId !== undefined ? toolSetId : saved?.toolSetId ?? null;
-
-  const resolvedFolderId = useMemo(
-    () => (folderId !== undefined ? folderId : saved?.folderId ?? null),
-    [folderId, saved?.folderId],
-  );
 
   const folderTree = useMemo(
     () => buildFolderTree(foldersState.data ?? []),
@@ -89,33 +60,6 @@ export default function ResumeConversationPage() {
   const allFolders = useMemo(
     () => flattenFolders(folderTree),
     [folderTree],
-  );
-
-  const resolvedPersona = useMemo<PersonaFormInput | undefined>(() => {
-    if (persona) return persona;
-    if (!saved) return undefined;
-    return toPersonaFormInput(saved.persona);
-  }, [persona, saved]);
-
-  const resolvedModel = useMemo<ModelFormInput | undefined>(() => {
-    if (model) return model;
-    if (!saved) return undefined;
-    return toModelFormInput(saved.model);
-  }, [model, saved]);
-
-  const resolvedTraits = useMemo<TraitFormInput[]>(() => {
-    if (activeTraits) return activeTraits;
-    return saved ? toTraitFormInputs(saved.traits) : [];
-  }, [activeTraits, saved]);
-
-  const resolvedLoras = useMemo<LoraFormInput[]>(() => {
-    if (activeLoras) return activeLoras;
-    return saved?.loras.map((l) => ({ ...l, isPublic: false })) ?? [];
-  }, [activeLoras, saved]);
-
-  const resolvedLoraIds = useMemo(
-    () => resolvedLoras.flatMap((l) => (l.id ? [l.id] : [])),
-    [resolvedLoras],
   );
 
   /** Saves the conversation's current settings, with the given fields overridden. */
@@ -158,7 +102,7 @@ export default function ResumeConversationPage() {
       await updateConversation({ folderId: targetFolderId });
       setFolderId(targetFolderId);
     },
-    [saved, resolvedPersona, resolvedModel, updateConversation],
+    [saved, resolvedPersona, resolvedModel, updateConversation, setFolderId],
   );
 
   if (state.status === "loading") {
@@ -198,15 +142,15 @@ export default function ResumeConversationPage() {
         persona={resolvedPersona}
         model={resolvedModel}
         activeTraits={resolvedTraits}
-        activeLoras={resolvedLoras}
+        activeLoras={settings.loras}
         reasoningEffort={resolvedReasoningEffort}
         toolSetId={resolvedToolSetId}
-        onPersonaChange={setPersona}
-        onModelChange={setModel}
-        onTraitsChange={setActiveTraits}
-        onLorasChange={setActiveLoras}
-        onReasoningEffortChange={setReasoningEffort}
-        onToolSetChange={setToolSetId}
+        onPersonaChange={settings.setPersona}
+        onModelChange={settings.setModel}
+        onTraitsChange={settings.setActiveTraits}
+        onLorasChange={settings.setActiveLoras}
+        onReasoningEffortChange={settings.setReasoningEffort}
+        onToolSetChange={settings.setToolSetId}
         initialMessages={saved.messages}
         initialTokenUsage={saved.tokenUsage}
         // Public mode continues a saved conversation as an unsaved copy: without its id, nothing
