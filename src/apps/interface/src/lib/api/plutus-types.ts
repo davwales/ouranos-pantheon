@@ -479,6 +479,7 @@ export type PositionLimit = "Budget" | "Liquidity" | "BuyLimit";
 
 export type GetRecommendationsResponse = {
   recommendations: StrategyRecommendation[];
+  volumeParticipationRate: number;
 };
 
 export type PositionSide = "Buy" | "Sell";

@@ -50,10 +50,17 @@ public abstract class StrategyEngine<TConfiguration, TData> : IStrategyEngine
         Id<Market> marketId,
         StrategyConfiguration configuration,
         decimal budget,
+        decimal participationRate,
         CancellationToken cancellationToken
     )
     {
-        return RecommendAsync(marketId, Cast(configuration), budget, cancellationToken);
+        return RecommendAsync(
+            marketId,
+            Cast(configuration),
+            budget,
+            participationRate,
+            cancellationToken
+        );
     }
 
     protected abstract Task<TData> LoadAsync(
@@ -76,6 +83,7 @@ public abstract class StrategyEngine<TConfiguration, TData> : IStrategyEngine
         Id<Market> marketId,
         TConfiguration configuration,
         decimal budget,
+        decimal participationRate,
         CancellationToken cancellationToken
     );
 

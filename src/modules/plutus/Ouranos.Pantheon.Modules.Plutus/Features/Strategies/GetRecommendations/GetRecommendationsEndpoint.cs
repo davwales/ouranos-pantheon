@@ -18,7 +18,8 @@ public static class GetRecommendationsEndpoint
                     .Expire(RecommendationCache.Duration)
                     .SetVaryByQuery(
                         nameof(GetRecommendationsInput.MarketId),
-                        nameof(GetRecommendationsInput.Budget)
+                        nameof(GetRecommendationsInput.Budget),
+                        nameof(GetRecommendationsInput.VolumeParticipationRate)
                     )
             )
             .WithTags("Plutus.Strategies");

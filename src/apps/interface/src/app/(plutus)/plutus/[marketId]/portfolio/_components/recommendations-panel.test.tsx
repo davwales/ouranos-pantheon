@@ -52,6 +52,7 @@ describe("RecommendationsPanel", () => {
     vi.clearAllMocks();
     vi.mocked(plutusApi.getRecommendations).mockResolvedValue({
       recommendations: [],
+      volumeParticipationRate: 0.1,
     } as unknown as Awaited<ReturnType<typeof plutusApi.getRecommendations>>);
   });
 
