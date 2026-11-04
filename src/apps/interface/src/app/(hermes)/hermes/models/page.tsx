@@ -8,7 +8,7 @@ import { useApi } from "@/hooks/use-api";
 import { hermesApi } from "@/lib/api/hermes";
 import { AlertTriangle } from "lucide-react";
 import Link from "next/link";
-import { usePublicMode } from "@/app/(hermes)/hermes/components/public-mode-context";
+import { usePublicMode } from "@/app/(hermes)/hermes/components/use-public-mode";
 
 export default function ModelsPage() {
   const [state] = useApi(() => hermesApi.getAllModels());

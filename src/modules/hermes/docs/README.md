@@ -35,7 +35,7 @@ down. Platform-wide concepts are described in the
 | Neighbour | Channel | Purpose | Code entry point |
 |-----------|---------|---------|------------------|
 | OuranosMl | Outbound HTTP (OpenAI-compatible Responses, model list, streamed `/images/generations` and `/images/edits`, `/images/loras`, `/images/models`) | Chat, compaction, conversation naming, model and LoRA sync, image generation and editing | `Features/Conversations/`, `Features/Models/`, `Features/Loras/`, `Features/Assistants/Tools/` |
-| Flagsmith | Outbound HTTP (via the Shared module's client) | `hermes.public_mode` flag | Read handlers, `Shared/PublicMode/`, `Features/PublicMode/` |
+| Flagsmith | Outbound HTTP (via the Shared module's client) | `hermes.public_mode` flag | Read handlers, `Shared/PublicMode/` |
 | Interface | Inbound REST + SSE | Hermes pages under `src/apps/interface/src/app/hermes/` | Every `*Endpoint.cs` |
 
 Code paths are relative to `Ouranos.Pantheon.Modules.Hermes/`. Hermes depends only on the

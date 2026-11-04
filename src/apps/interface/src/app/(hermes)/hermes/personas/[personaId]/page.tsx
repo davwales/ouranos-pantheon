@@ -10,7 +10,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { FormSkeleton } from "@/components/shared/skeletons/form-skeleton";
 import { NotFoundCard } from "@/components/shared/not-found-card";
-import { usePublicMode } from "@/app/(hermes)/hermes/components/public-mode-context";
+import { usePublicMode } from "@/app/(hermes)/hermes/components/use-public-mode";
 
 export default function EditPersonaPage() {
   const isPublicMode = usePublicMode();

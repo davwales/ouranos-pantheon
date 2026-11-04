@@ -2,7 +2,7 @@
 
 import ChatInterfaceView from "@/app/(hermes)/hermes/components/chat-interface-view";
 import { ConversationHeader } from "@/app/(hermes)/hermes/conversations/components/conversation-header";
-import { usePublicMode } from "@/app/(hermes)/hermes/components/public-mode-context";
+import { usePublicMode } from "@/app/(hermes)/hermes/components/use-public-mode";
 import { useBreadcrumbLabel } from "@/components/shared/breadcrumbs";
 import { useApi } from "@/hooks/use-api";
 import { hermesApi, type UpdateConversationInput } from "@/lib/api/hermes";

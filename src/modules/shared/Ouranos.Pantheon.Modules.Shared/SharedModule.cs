@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Ouranos.Pantheon.Modules.Shared.Contract;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres;
+using Ouranos.Pantheon.Modules.Shared.Features.FeatureFlags;
 using Ouranos.Pantheon.Modules.Shared.Features.Health;
 using Ouranos.Pantheon.Modules.Shared.Infra.Postgres;
 using Ouranos.Pantheon.Modules.Shared.Infra.Postgres.Notifications;
@@ -38,6 +39,7 @@ public sealed class SharedModule : IPantheonModule
 
     public void MapEndpoints(WebApplication app)
     {
+        FeatureFlagsEndpoint.Map(app);
         HealthEndpoint.Map(app);
     }
 }

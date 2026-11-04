@@ -1,6 +1,6 @@
 "use client";
 
-import { usePublicMode } from "@/app/(hermes)/hermes/components/public-mode-context";
+import { usePublicMode } from "@/app/(hermes)/hermes/components/use-public-mode";
 import { NotFoundCard } from "@/components/shared/not-found-card";
 import React from "react";
 

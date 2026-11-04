@@ -1,7 +1,7 @@
 info:
-  name: Public Mode
+  name: Feature Flags
   type: folder
-  seq: 9
+  seq: 5
 
 request:
   auth: inherit

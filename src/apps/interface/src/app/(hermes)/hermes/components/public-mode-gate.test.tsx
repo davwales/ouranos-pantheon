@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 
 const isPublicMode = vi.hoisted(() => ({ value: false }));
 
-vi.mock("@/app/(hermes)/hermes/components/public-mode-context", () => ({
+vi.mock("@/app/(hermes)/hermes/components/use-public-mode", () => ({
   usePublicMode: () => isPublicMode.value,
 }));
 

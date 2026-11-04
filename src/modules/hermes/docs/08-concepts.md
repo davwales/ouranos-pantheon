@@ -15,9 +15,10 @@ whose `IsPublic` is set and treat the others as not found.
   `DisabledInPublicMode()`, an endpoint filter (`PublicModeWriteFilter`) that answers 403. Chat
   completion and compaction stay open for unsaved chats but are rejected when they name a
   saved conversation, because they would append to it. Visitors can chat, not save.
-- **The Interface asks first.** `GET /api/hermes/public-mode` reports the flag, and the
-  Interface hides its create, edit, save, move and delete controls while it is on. A saved
-  conversation opens as an unsaved copy that can be continued but not saved.
+- **The Interface asks first.** `usePublicMode()` reads the flag through the app-wide
+  `useFeatureFlag` (Shared module, `GET /api/feature-flags`), treating it as on until the flags
+  have loaded, and the Interface hides its create, edit, save, move and delete controls while
+  it is on. A saved conversation opens as an unsaved copy that can be continued but not saved.
 
 Public mode fails closed: the gateway's base `appsettings.json` lists `hermes.public_mode` as
 enabled under `Ouranos:Flagsmith:DefaultFlags`, so while Flagsmith is unreachable reads are

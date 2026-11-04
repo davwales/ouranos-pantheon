@@ -1,6 +1,6 @@
 "use client";
 
-import { usePublicMode } from "@/app/(hermes)/hermes/components/public-mode-context";
+import { usePublicMode } from "@/app/(hermes)/hermes/components/use-public-mode";
 import { useApi } from "@/hooks/use-api";
 import { hermesApi } from "@/lib/api/hermes";
 import type { MessageInput } from "@/lib/api/hermes-types";

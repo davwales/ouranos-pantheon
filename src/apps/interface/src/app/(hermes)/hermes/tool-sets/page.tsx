@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useApi } from "@/hooks/use-api";
 import { hermesApi, type ToolSetSummary } from "@/lib/api/hermes";
 import Link from "next/link";
-import { usePublicMode } from "@/app/(hermes)/hermes/components/public-mode-context";
+import { usePublicMode } from "@/app/(hermes)/hermes/components/use-public-mode";
 
 function describeToolSet(toolSet: ToolSetSummary): string {
   const tools =

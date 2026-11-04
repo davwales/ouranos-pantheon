@@ -1,7 +1,7 @@
 "use client";
 
 import { LoraStatusBadge } from "@/app/(hermes)/hermes/components/lora-status-badge";
-import { usePublicMode } from "@/app/(hermes)/hermes/components/public-mode-context";
+import { usePublicMode } from "@/app/(hermes)/hermes/components/use-public-mode";
 import { type LoraFormInput } from "@/app/(hermes)/hermes/types";
 import { InfoCard } from "@/components/shared/info-card";
 import {

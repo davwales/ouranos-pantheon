@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: "{{BASE_URL}}/api/hermes/public-mode"
+  url: "{{BASE_URL}}/api/feature-flags"
   auth: inherit
 
 settings:

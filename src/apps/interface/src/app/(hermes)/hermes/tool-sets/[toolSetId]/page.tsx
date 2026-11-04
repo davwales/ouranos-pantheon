@@ -14,7 +14,7 @@ import { useApi } from "@/hooks/use-api";
 import { hermesApi } from "@/lib/api/hermes";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { usePublicMode } from "@/app/(hermes)/hermes/components/public-mode-context";
+import { usePublicMode } from "@/app/(hermes)/hermes/components/use-public-mode";
 
 export default function EditToolSetPage() {
   const isPublicMode = usePublicMode();

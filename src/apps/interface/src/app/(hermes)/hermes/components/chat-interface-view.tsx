@@ -5,7 +5,7 @@ import { useNavBarActions } from "@/components/shared/nav-bar-actions-context";
 import ChatInput from "@/app/(hermes)/hermes/components/chat-input";
 import ChatMessageList from "@/app/(hermes)/hermes/components/chat-message-list";
 import { ContextUsageBar } from "@/app/(hermes)/hermes/components/context-usage-bar";
-import { usePublicMode } from "@/app/(hermes)/hermes/components/public-mode-context";
+import { usePublicMode } from "@/app/(hermes)/hermes/components/use-public-mode";
 import { ConversationConfigSheet } from "@/app/(hermes)/hermes/components/conversation-config-sheet";
 import { toImagePart } from "@/app/(hermes)/hermes/components/message-parts";
 import {
