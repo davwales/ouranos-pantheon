@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.DeleteModel.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Models.DeleteModel;
@@ -35,6 +36,12 @@ public sealed class DeleteModelHandler : IPantheonHandler<DeleteModelInput, Dele
         );
 
         Guard.Against.NotFound(command.ModelId, model);
+
+        await ModelConfigValidation.ValidateModelConfigIsUnusedAsync(
+            _dbContext,
+            model,
+            cancellationToken
+        );
 
         _dbContext.ModelConfigs.Remove(model);
         await _dbContext.SaveChangesAsync(cancellationToken);

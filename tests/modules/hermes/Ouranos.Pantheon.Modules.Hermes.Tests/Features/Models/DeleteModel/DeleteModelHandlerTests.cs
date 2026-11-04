@@ -3,7 +3,10 @@ using Microsoft.Extensions.Logging;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.DeleteModel;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.DeleteModel.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Ouranos.Pantheon.Tests.Utils.AutoFixture.IdConfiguration;
 using Ouranos.Pantheon.Tests.Utils.Extensions;
@@ -77,5 +80,40 @@ public sealed class DeleteModelHandlerTests
 
         // Assert
         await handle.ShouldThrowAsync<OperationCanceledException>();
+    }
+
+    [Fact]
+    public async Task Handle_WhenModelIsUsedByConversations_ShouldThrowConflictException()
+    {
+        // Arrange
+        var model = ModelConfig.Create(
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            "Llama",
+            _fixture.Create<string>(),
+            _fixture.Create<string>()
+        );
+        await _dbContext.SeedData(model);
+        foreach (var _ in Enumerable.Range(0, 2))
+        {
+            await _dbContext.SeedData(
+                Conversation.Create(
+                    new Id<Conversation>(Guid.NewGuid().ToString()),
+                    new Id<Persona>(Guid.NewGuid().ToString()),
+                    model.Id,
+                    [],
+                    [],
+                    _fixture.Create<string>()
+                )
+            );
+        }
+
+        // Act
+        var handle = async () =>
+            await _handler.Handle(new DeleteModelInput(model.Id), CancellationToken.None);
+
+        // Assert
+        var exception = await handle.ShouldThrowAsync<ConflictException>();
+        exception.Message.ShouldContain("'Llama' is used by 2 conversations.");
+        (await _dbContext.ModelConfigs.FindAsync(model.Id)).ShouldNotBeNull();
     }
 }

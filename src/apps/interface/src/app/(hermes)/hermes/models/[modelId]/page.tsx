@@ -17,6 +17,7 @@ export default function EditModelPage() {
   const router = useRouter();
   const { modelId } = useParams<{ modelId: string }>();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [state] = useApi(() => hermesApi.getModel(modelId), [modelId]);
   useBreadcrumbLabel(modelId, state.data?.name, state.status === "error");
@@ -31,11 +32,12 @@ export default function EditModelPage() {
 
   const handleDelete = async () => {
     setLoading(true);
+    setError(null);
     try {
       await hermesApi.deleteModel(modelId);
       router.push("/hermes/models");
     } catch (err) {
-      console.error(err);
+      setError(err instanceof Error ? err.message : "Failed to delete model");
     } finally {
       setLoading(false);
     }
@@ -43,6 +45,7 @@ export default function EditModelPage() {
 
   const handleSave = async (input: ModelFormInput) => {
     setLoading(true);
+    setError(null);
     try {
       await hermesApi.updateModel({
         modelId: modelId,
@@ -58,7 +61,7 @@ export default function EditModelPage() {
       });
       router.push("/hermes/models");
     } catch (err) {
-      console.error(err);
+      setError(err instanceof Error ? err.message : "Failed to save model");
     } finally {
       setLoading(false);
     }
@@ -85,6 +88,12 @@ export default function EditModelPage() {
           </Badge>
         )}
       </div>
+
+      {error && (
+        <div className="mt-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+          {error}
+        </div>
+      )}
 
       <ModelForm
         initial={model}

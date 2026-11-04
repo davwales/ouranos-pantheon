@@ -34,11 +34,25 @@ public sealed class CreateConversationHandlerTests
     >();
     private readonly HermesDbContext _dbContext;
     private readonly IMessageBus _bus = Substitute.For<IMessageBus>();
+    private readonly Persona _persona = Persona.Create(
+        DatabaseExtensions.CreateId<Persona>(),
+        "Persona",
+        "A persona."
+    );
+    private readonly ModelConfig _modelConfig = ModelConfig.Create(
+        DatabaseExtensions.CreateId<ModelConfig>(),
+        "Model",
+        "model-identifier",
+        "System prompt."
+    );
 
     public CreateConversationHandlerTests()
     {
         _fixture.Customize(new IdCustomization());
         _dbContext = DbContextExtensions.Mock<HermesDbContext>();
+        _dbContext.Personas.Add(_persona);
+        _dbContext.ModelConfigs.Add(_modelConfig);
+        _dbContext.SaveChanges();
         var options = Options.Create(new HermesOptions());
         _handler = new CreateConversationHandler(_logger, _dbContext, _bus, options);
     }
@@ -47,8 +61,8 @@ public sealed class CreateConversationHandlerTests
     public async Task Handle_WhenHappyPath_ShouldCreateConversationAndReturnResponse()
     {
         // Arrange
-        var personaId = new Id<Persona>(Guid.NewGuid().ToString());
-        var modelConfigId = new Id<ModelConfig>(Guid.NewGuid().ToString());
+        var personaId = _persona.Id;
+        var modelConfigId = _modelConfig.Id;
         var name = _fixture.Create<string>();
         var command = new CreateConversationInput(personaId, modelConfigId, [], [], name);
 
@@ -70,8 +84,8 @@ public sealed class CreateConversationHandlerTests
     {
         // Arrange
         var command = new CreateConversationInput(
-            new Id<Persona>(Guid.NewGuid().ToString()),
-            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _persona.Id,
+            _modelConfig.Id,
             [],
             [],
             _fixture.Create<string>(),
@@ -91,8 +105,8 @@ public sealed class CreateConversationHandlerTests
     public async Task Handle_WhenNameIsNull_ShouldDefaultToNewConversation()
     {
         // Arrange
-        var personaId = new Id<Persona>(Guid.NewGuid().ToString());
-        var modelConfigId = new Id<ModelConfig>(Guid.NewGuid().ToString());
+        var personaId = _persona.Id;
+        var modelConfigId = _modelConfig.Id;
         var command = new CreateConversationInput(personaId, modelConfigId, [], []);
 
         // Act
@@ -118,8 +132,8 @@ public sealed class CreateConversationHandlerTests
         );
         await _dbContext.SeedData(trait1, trait2);
 
-        var personaId = new Id<Persona>(Guid.NewGuid().ToString());
-        var modelConfigId = new Id<ModelConfig>(Guid.NewGuid().ToString());
+        var personaId = _persona.Id;
+        var modelConfigId = _modelConfig.Id;
         var command = new CreateConversationInput(
             personaId,
             modelConfigId,
@@ -150,8 +164,8 @@ public sealed class CreateConversationHandlerTests
         await _dbContext.SeedData(lora);
 
         var command = new CreateConversationInput(
-            new Id<Persona>(Guid.NewGuid().ToString()),
-            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _persona.Id,
+            _modelConfig.Id,
             [],
             [],
             _fixture.Create<string>(),
@@ -171,8 +185,8 @@ public sealed class CreateConversationHandlerTests
     public async Task Handle_WhenMessagesProvided_ShouldAssignSequentialSortOrder()
     {
         // Arrange
-        var personaId = new Id<Persona>(Guid.NewGuid().ToString());
-        var modelConfigId = new Id<ModelConfig>(Guid.NewGuid().ToString());
+        var personaId = _persona.Id;
+        var modelConfigId = _modelConfig.Id;
 
         var command = new CreateConversationInput(
             personaId,
@@ -204,8 +218,8 @@ public sealed class CreateConversationHandlerTests
     {
         // Arrange
         var command = new CreateConversationInput(
-            new Id<Persona>(Guid.NewGuid().ToString()),
-            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _persona.Id,
+            _modelConfig.Id,
             [],
             [
                 new CreateConversationMessageInput("Hi", Role.User),
@@ -239,8 +253,8 @@ public sealed class CreateConversationHandlerTests
     public async Task Handle_WhenTokenCountsProvided_ShouldRecordTokenUsage()
     {
         // Arrange
-        var personaId = new Id<Persona>(Guid.NewGuid().ToString());
-        var modelConfigId = new Id<ModelConfig>(Guid.NewGuid().ToString());
+        var personaId = _persona.Id;
+        var modelConfigId = _modelConfig.Id;
         var command = new CreateConversationInput(
             personaId,
             modelConfigId,
@@ -267,8 +281,8 @@ public sealed class CreateConversationHandlerTests
     public async Task Handle_WhenTokenCountsNotProvided_ShouldNotRecordTokenUsage()
     {
         // Arrange
-        var personaId = new Id<Persona>(Guid.NewGuid().ToString());
-        var modelConfigId = new Id<ModelConfig>(Guid.NewGuid().ToString());
+        var personaId = _persona.Id;
+        var modelConfigId = _modelConfig.Id;
         var command = new CreateConversationInput(
             personaId,
             modelConfigId,
@@ -296,8 +310,8 @@ public sealed class CreateConversationHandlerTests
         await _dbContext.SeedData(folder);
 
         var command = new CreateConversationInput(
-            new Id<Persona>(Guid.NewGuid().ToString()),
-            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _persona.Id,
+            _modelConfig.Id,
             [],
             [],
             _fixture.Create<string>(),
@@ -321,8 +335,8 @@ public sealed class CreateConversationHandlerTests
     {
         // Arrange
         var command = new CreateConversationInput(
-            new Id<Persona>(Guid.NewGuid().ToString()),
-            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _persona.Id,
+            _modelConfig.Id,
             [],
             [],
             _fixture.Create<string>()
@@ -356,8 +370,8 @@ public sealed class CreateConversationHandlerTests
         // Arrange
         var toolSetId = await SeedToolSetAsync();
         var command = new CreateConversationInput(
-            DatabaseExtensions.CreateId<Persona>(),
-            DatabaseExtensions.CreateId<ModelConfig>(),
+            _persona.Id,
+            _modelConfig.Id,
             [],
             [],
             _fixture.Create<string>(),
@@ -378,8 +392,8 @@ public sealed class CreateConversationHandlerTests
     {
         // Arrange
         var command = new CreateConversationInput(
-            DatabaseExtensions.CreateId<Persona>(),
-            DatabaseExtensions.CreateId<ModelConfig>(),
+            _persona.Id,
+            _modelConfig.Id,
             [],
             [],
             _fixture.Create<string>(),
@@ -399,8 +413,8 @@ public sealed class CreateConversationHandlerTests
     {
         // Arrange
         var command = new CreateConversationInput(
-            new Id<Persona>(Guid.NewGuid().ToString()),
-            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _persona.Id,
+            _modelConfig.Id,
             [],
             [],
             _fixture.Create<string>(),
@@ -411,6 +425,31 @@ public sealed class CreateConversationHandlerTests
         await Should.ThrowAsync<NotFoundException>(() =>
             _handler.Handle(command, CancellationToken.None)
         );
+    }
+
+    [Theory]
+    [InlineData("persona")]
+    [InlineData("model")]
+    [InlineData("trait")]
+    public async Task Handle_WhenAReferencedIdIsUnknown_ShouldThrowNotFoundException(string unknown)
+    {
+        // Arrange
+        var command = new CreateConversationInput(
+            unknown == "persona" ? new Id<Persona>(Guid.NewGuid().ToString()) : _persona.Id,
+            unknown == "model" ? new Id<ModelConfig>(Guid.NewGuid().ToString()) : _modelConfig.Id,
+            unknown == "trait" ? [new Id<Trait>(Guid.NewGuid().ToString())] : [],
+            [],
+            _fixture.Create<string>()
+        );
+
+        // Act & Assert
+        var exception = await Should.ThrowAsync<NotFoundException>(() =>
+            _handler.Handle(command, CancellationToken.None)
+        );
+        exception.Message.ShouldContain(unknown);
+        (await _dbContext.Conversations.CountAsync()).ShouldBe(0);
+        await _bus.DidNotReceiveWithAnyArgs()
+            .PublishAsync(default(GenerateConversationNameRequested));
     }
 
     [Fact]
@@ -424,8 +463,8 @@ public sealed class CreateConversationHandlerTests
             Options.Create(NamingEnabledOptions())
         );
         var command = new CreateConversationInput(
-            new Id<Persona>(Guid.NewGuid().ToString()),
-            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _persona.Id,
+            _modelConfig.Id,
             [],
             [new CreateConversationMessageInput("Hello", Role.User)]
         );
@@ -452,8 +491,8 @@ public sealed class CreateConversationHandlerTests
             Options.Create(NamingEnabledOptions())
         );
         var command = new CreateConversationInput(
-            new Id<Persona>(Guid.NewGuid().ToString()),
-            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _persona.Id,
+            _modelConfig.Id,
             [],
             [new CreateConversationMessageInput("Hello", Role.User)],
             "My chat"
@@ -472,8 +511,8 @@ public sealed class CreateConversationHandlerTests
     {
         // Arrange
         var command = new CreateConversationInput(
-            new Id<Persona>(Guid.NewGuid().ToString()),
-            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _persona.Id,
+            _modelConfig.Id,
             [],
             [new CreateConversationMessageInput("Hello", Role.User)]
         );
@@ -499,8 +538,8 @@ public sealed class CreateConversationHandlerTests
             Options.Create(NamingEnabledOptions())
         );
         var command = new CreateConversationInput(
-            new Id<Persona>(Guid.NewGuid().ToString()),
-            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            _persona.Id,
+            _modelConfig.Id,
             [],
             [new CreateConversationMessageInput("Hello", Role.User)]
         );
