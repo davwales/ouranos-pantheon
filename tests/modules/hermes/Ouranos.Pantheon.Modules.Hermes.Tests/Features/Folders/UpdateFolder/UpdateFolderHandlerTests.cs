@@ -21,12 +21,44 @@ public sealed class UpdateFolderHandlerTests
         ILogger<UpdateFolderHandler>
     >();
     private readonly HermesDbContext _dbContext;
+    private readonly IFolderTreeQueryService _folderTreeQueryService =
+        Substitute.For<IFolderTreeQueryService>();
 
     public UpdateFolderHandlerTests()
     {
         _fixture.Customize(new IdCustomization());
         _dbContext = DbContextExtensions.Mock<HermesDbContext>();
-        _handler = new UpdateFolderHandler(_logger, _dbContext);
+        _folderTreeQueryService
+            .CalculateSubtreeHeightAsync(Arg.Any<Id<Folder>>(), Arg.Any<CancellationToken>())
+            .Returns(1);
+        _handler = new UpdateFolderHandler(_logger, _dbContext, _folderTreeQueryService);
+    }
+
+    [Fact]
+    public void Constructor_WhenLoggerIsNull_ShouldThrowArgumentNullException()
+    {
+        // Act & Assert
+        Should.Throw<ArgumentNullException>(() =>
+            new UpdateFolderHandler(null!, _dbContext, _folderTreeQueryService)
+        );
+    }
+
+    [Fact]
+    public void Constructor_WhenDbContextIsNull_ShouldThrowArgumentNullException()
+    {
+        // Act & Assert
+        Should.Throw<ArgumentNullException>(() =>
+            new UpdateFolderHandler(_logger, null!, _folderTreeQueryService)
+        );
+    }
+
+    [Fact]
+    public void Constructor_WhenFolderTreeQueryServiceIsNull_ShouldThrowArgumentNullException()
+    {
+        // Act & Assert
+        Should.Throw<ArgumentNullException>(() =>
+            new UpdateFolderHandler(_logger, _dbContext, null!)
+        );
     }
 
     [Fact]
@@ -53,7 +85,7 @@ public sealed class UpdateFolderHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenSelfReferenceParent_ShouldThrowArgumentException()
+    public async Task Handle_WhenSelfReferenceParent_ShouldThrowBadRequestException()
     {
         // Arrange
         var folder = Folder.Create(
@@ -73,11 +105,11 @@ public sealed class UpdateFolderHandlerTests
         var handle = async () => await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await handle.ShouldThrowAsync<ArgumentException>();
+        await handle.ShouldThrowAsync<BadRequestException>();
     }
 
     [Fact]
-    public async Task Handle_WhenCycleDetected_ShouldThrowArgumentException()
+    public async Task Handle_WhenCycleDetected_ShouldThrowBadRequestException()
     {
         // Arrange
         var parent = Folder.Create(DatabaseExtensions.CreateId<Folder>(), "Parent");
@@ -99,11 +131,11 @@ public sealed class UpdateFolderHandlerTests
         var handle = async () => await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await handle.ShouldThrowAsync<ArgumentException>();
+        await handle.ShouldThrowAsync<BadRequestException>();
     }
 
     [Fact]
-    public async Task Handle_WhenMaxDepthExceededByMoving_ShouldThrowArgumentException()
+    public async Task Handle_WhenMaxDepthExceededByMoving_ShouldThrowBadRequestException()
     {
         // Arrange
         var root = Folder.Create(DatabaseExtensions.CreateId<Folder>(), "root");
@@ -151,7 +183,100 @@ public sealed class UpdateFolderHandlerTests
         var handle = async () => await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await handle.ShouldThrowAsync<ArgumentException>();
+        await handle.ShouldThrowAsync<BadRequestException>();
+    }
+
+    [Fact]
+    public async Task Handle_WhenMovedSubtreeWouldExceedMaxDepth_ShouldThrowBadRequestException()
+    {
+        // Arrange
+        var target = await SeedChainAsync(Folder.MaxDepth - 2);
+        var mover = await SeedChainAsync(3);
+        _folderTreeQueryService
+            .CalculateSubtreeHeightAsync(mover[0].Id, Arg.Any<CancellationToken>())
+            .Returns(mover.Count);
+
+        var command = new UpdateFolderInput(
+            mover[0].Id,
+            _fixture.Create<string>(),
+            IsPublic: true,
+            ParentFolderId: target[^1].Id
+        );
+
+        // Act
+        var handle = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var exception = await handle.ShouldThrowAsync<BadRequestException>();
+        exception.Message.ShouldContain(Folder.MaxDepth.ToString());
+    }
+
+    [Fact]
+    public async Task Handle_WhenMovedSubtreeFitsExactlyAtMaxDepth_ShouldMoveFolder()
+    {
+        // Arrange
+        var target = await SeedChainAsync(Folder.MaxDepth - 3);
+        var mover = await SeedChainAsync(3);
+        _folderTreeQueryService
+            .CalculateSubtreeHeightAsync(mover[0].Id, Arg.Any<CancellationToken>())
+            .Returns(mover.Count);
+
+        var command = new UpdateFolderInput(
+            mover[0].Id,
+            _fixture.Create<string>(),
+            IsPublic: true,
+            ParentFolderId: target[^1].Id
+        );
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var moved = await _dbContext.Folders.FindAsync(mover[0].Id);
+        moved.ShouldNotBeNull();
+        moved.ParentFolderId.ShouldBe(target[^1].Id);
+    }
+
+    [Fact]
+    public async Task Handle_WhenMovedIntoGrandchild_ShouldThrowBadRequestException()
+    {
+        // Arrange
+        var chain = await SeedChainAsync(3);
+
+        var command = new UpdateFolderInput(
+            chain[0].Id,
+            _fixture.Create<string>(),
+            IsPublic: true,
+            ParentFolderId: chain[2].Id
+        );
+
+        // Act
+        var handle = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await handle.ShouldThrowAsync<BadRequestException>();
+    }
+
+    [Fact]
+    public async Task Handle_WhenParentUnchangedInOverDeepTree_ShouldStillRename()
+    {
+        // Arrange
+        var chain = await SeedChainAsync(Folder.MaxDepth + 1);
+
+        var command = new UpdateFolderInput(
+            chain[1].Id,
+            "Renamed",
+            IsPublic: true,
+            ParentFolderId: chain[0].Id
+        );
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        var updated = await _dbContext.Folders.FindAsync(chain[1].Id);
+        updated.ShouldNotBeNull();
+        updated.Name.ShouldBe("Renamed");
     }
 
     [Fact]
@@ -218,5 +343,25 @@ public sealed class UpdateFolderHandlerTests
 
         // Assert
         await handle.ShouldThrowAsync<OperationCanceledException>();
+    }
+
+    private async Task<List<Folder>> SeedChainAsync(int length)
+    {
+        var chain = new List<Folder>();
+        Id<Folder>? parentId = null;
+
+        for (var i = 0; i < length; i++)
+        {
+            var folder = Folder.Create(
+                DatabaseExtensions.CreateId<Folder>(),
+                _fixture.Create<string>(),
+                parentFolderId: parentId
+            );
+            await _dbContext.SeedData(folder);
+            chain.Add(folder);
+            parentId = folder.Id;
+        }
+
+        return chain;
     }
 }

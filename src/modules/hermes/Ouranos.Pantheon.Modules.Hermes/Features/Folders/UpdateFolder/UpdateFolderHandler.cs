@@ -12,10 +12,14 @@ namespace Ouranos.Pantheon.Modules.Hermes.Features.Folders.UpdateFolder;
 
 public sealed class UpdateFolderHandler(
     ILogger<UpdateFolderHandler> logger,
-    HermesDbContext dbContext
+    HermesDbContext dbContext,
+    IFolderTreeQueryService folderTreeQueryService
 ) : IPantheonHandler<UpdateFolderInput, IdResponse<Folder>>
 {
     private readonly HermesDbContext _dbContext = Guard.Against.Null(dbContext);
+    private readonly IFolderTreeQueryService _folderTreeQueryService = Guard.Against.Null(
+        folderTreeQueryService
+    );
     private readonly ILogger<UpdateFolderHandler> _logger = Guard.Against.Null(logger);
 
     public async Task<IdResponse<Folder>> Handle(
@@ -41,11 +45,14 @@ public sealed class UpdateFolderHandler(
             );
             Guard.Against.NotFound(command.ParentFolderId.Value, parentFolder);
 
-            await ValidateParentFolderChange(
-                command.FolderId,
-                command.ParentFolderId.Value,
-                cancellationToken
-            );
+            if (command.ParentFolderId != folder.ParentFolderId)
+            {
+                await ValidateParentFolderChange(
+                    command.FolderId,
+                    command.ParentFolderId.Value,
+                    cancellationToken
+                );
+            }
         }
 
         folder.Update(command.Name, command.IsPublic, command.ParentFolderId);
@@ -65,12 +72,10 @@ public sealed class UpdateFolderHandler(
         CancellationToken cancellationToken
     )
     {
-        Guard.Against.InvalidInput(
-            parentFolderId,
-            nameof(parentFolderId),
-            id => id != folderId,
-            "A folder cannot be its own parent."
-        );
+        if (parentFolderId == folderId)
+        {
+            throw new BadRequestException("A folder cannot be moved into itself.");
+        }
 
         var hasLoop = await FolderTreeValidation.CheckForLoopAsync(
             parentFolderId,
@@ -81,23 +86,23 @@ public sealed class UpdateFolderHandler(
 
         if (hasLoop)
         {
-            throw new ArgumentException(
-                "Moving this folder would create an infinite loop.",
-                nameof(parentFolderId)
-            );
+            throw new BadRequestException("A folder cannot be moved into one of its subfolders.");
         }
 
-        var depth = await FolderTreeValidation.CalculateDepthAsync(
+        var parentDepth = await FolderTreeValidation.CalculateDepthAsync(
             parentFolderId,
             _dbContext,
             cancellationToken
         );
+        var subtreeHeight = await _folderTreeQueryService.CalculateSubtreeHeightAsync(
+            folderId,
+            cancellationToken
+        );
 
-        if (depth >= Folder.MaxDepth)
+        if (parentDepth + subtreeHeight > Folder.MaxDepth)
         {
-            throw new ArgumentException(
-                $"Folder nesting depth cannot exceed {Folder.MaxDepth} levels.",
-                nameof(parentFolderId)
+            throw new BadRequestException(
+                $"Moving this folder here would nest folders more than {Folder.MaxDepth} levels deep."
             );
         }
     }

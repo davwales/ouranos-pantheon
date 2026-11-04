@@ -23,7 +23,7 @@ the [platform glossary](../../../../docs/architecture/12-glossary.md).
 | **LoRA** | A config for one available LoRA (name, weight, trigger phrase) that a conversation can switch on to restyle its images; reads as unavailable when its LoRA leaves the image server |
 | **Available LoRA** | A LoRA on the image server, discovered by the hourly sync job, with its compat class and whether it suits the configured image model |
 | **Unsaved retention** | How long an image no saved conversation references survives before `PurgeImagesJob` deletes it (24 hours by default) |
-| **Folder** | Nestable container for conversations (`ParentFolderId`) |
+| **Folder** | Nestable container for conversations (`ParentFolderId`), at most `Folder.MaxDepth` levels deep; a move that would push the moved subtree past it is rejected |
 | **Compaction** | Summarizing a conversation's messages since the last summary into a single `Summary`-role message so long chats fit the context window; streamed over SSE |
 | **Available model** | An LLM served by OuranosMl, discovered by the hourly sync job |
 | **Default** | `IsDefault` on a persona or model config: the one preselected for new conversations |
