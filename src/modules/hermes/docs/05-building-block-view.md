@@ -17,3 +17,4 @@ are relative to `Ouranos.Pantheon.Modules.Hermes/`.
 | `Features/Loras/` | The LoRA catalogue synced from OuranosMl (`SyncLorasJob`, `GET /api/hermes/available-loras`) and the LoRA configs a conversation can switch on to restyle generated images |
 | `Features/Models/` | Model configuration CRUD and the hourly available-model sync from OuranosMl |
 | `Features/Folders/` | Folders for organizing conversations |
+| `Shared/PublicMode/` | `DisabledInPublicMode()` and its endpoint filter, which reject writes with 403 while public mode is on |

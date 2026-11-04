@@ -11,6 +11,7 @@ import { useApi } from "@/hooks/use-api";
 import { hermesApi } from "@/lib/api/hermes";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { PublicModeGate } from "@/app/(hermes)/hermes/components/public-mode-gate";
 
 export default function CreateToolSetPage() {
   const router = useRouter();
@@ -30,20 +31,22 @@ export default function CreateToolSetPage() {
   };
 
   return (
-    <div className="m-4">
-      <Typography variant="h2" className="border-b-0">
-        Create Tool Set
-      </Typography>
+    <PublicModeGate backHref="/hermes/tool-sets" backLabel="Back to Tool Sets">
+      <div className="m-4">
+        <Typography variant="h2" className="border-b-0">
+          Create Tool Set
+        </Typography>
 
-      {toolsState.status === "loading" && !toolsState.data ? (
-        <FormSkeleton fields={3} checkboxes={1} />
-      ) : (
-        <ToolSetForm
-          availableTools={toolsState.data ?? []}
-          onSave={handleSave}
-          loading={loading}
-        />
-      )}
-    </div>
+        {toolsState.status === "loading" && !toolsState.data ? (
+          <FormSkeleton fields={3} checkboxes={1} />
+        ) : (
+          <ToolSetForm
+            availableTools={toolsState.data ?? []}
+            onSave={handleSave}
+            loading={loading}
+          />
+        )}
+      </div>
+    </PublicModeGate>
   );
 }

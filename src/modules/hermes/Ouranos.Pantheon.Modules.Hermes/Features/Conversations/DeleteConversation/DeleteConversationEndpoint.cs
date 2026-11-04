@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.DeleteConversation.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
+using Ouranos.Pantheon.Modules.Hermes.Shared.PublicMode;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Wolverine;
@@ -13,7 +14,8 @@ public static class DeleteConversationEndpoint
     public static void Map(WebApplication app)
     {
         app.MapDelete("/api/hermes/conversations/{conversationId}", Handle)
-            .WithTags("Hermes.Conversations");
+            .WithTags("Hermes.Conversations")
+            .DisabledInPublicMode();
     }
 
     internal static async Task<IResult> Handle(

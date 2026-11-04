@@ -31,7 +31,7 @@ export function LoraForm({
   loading,
   ...props
 }: React.ComponentProps<"form"> & {
-  onSave: (input: LoraFormInput) => void;
+  onSave?: (input: LoraFormInput) => void;
   onDelete?: () => void;
   initial?: LoraFormInput;
   loading?: boolean;
@@ -77,7 +77,7 @@ export function LoraForm({
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     if (isValid) {
-      onSave(lora);
+      onSave?.(lora);
     }
   };
 
@@ -183,13 +183,15 @@ export function LoraForm({
       <Separator className="my-4" />
 
       <div className="grid grid-cols-1 gap-4 md:flex md:justify-between">
-        <Button
-          type="submit"
-          disabled={loading || !isValid}
-          className="w-full md:w-40"
-        >
-          Save
-        </Button>
+        {onSave && (
+          <Button
+            type="submit"
+            disabled={loading || !isValid}
+            className="w-full md:w-40"
+          >
+            Save
+          </Button>
+        )}
         {onDelete && (
           <ConfirmationButton
             title="Delete LoRA"

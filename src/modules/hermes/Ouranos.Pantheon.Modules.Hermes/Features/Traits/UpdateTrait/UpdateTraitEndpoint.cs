@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Ouranos.Pantheon.Modules.Hermes.Features.Traits.UpdateTrait.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Traits;
+using Ouranos.Pantheon.Modules.Hermes.Shared.PublicMode;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Wolverine;
 
@@ -11,7 +12,9 @@ public static class UpdateTraitEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapPut("/api/hermes/traits/{traitId}", Handle).WithTags("Hermes.Traits");
+        app.MapPut("/api/hermes/traits/{traitId}", Handle)
+            .WithTags("Hermes.Traits")
+            .DisabledInPublicMode();
     }
 
     internal static async Task<IResult> Handle(

@@ -1,6 +1,7 @@
 import { CommandPalette } from "@/app/_components/command-palette";
 import { Footer } from "@/components/shared/footer";
 import { Breadcrumbs } from "@/components/shared/breadcrumbs";
+import { FeatureFlagsProvider } from "@/components/shared/feature-flags-context";
 import { NavBarActionsProvider } from "@/components/shared/nav-bar-actions-context";
 import { NAVIGATION_ITEMS } from "@/components/shared/responsive-navigation-bar";
 import ResponsiveNavigationBar from "@/components/shared/responsive-navigation-bar/responsive-navigation-bar";
@@ -32,24 +33,28 @@ export default function RootLayout({ children }: React.PropsWithChildren) {
           enableSystem
           disableTransitionOnChange
         >
-          <NavBarActionsProvider>
-            <SidebarProvider>
-              <div className="w-full flex flex-col min-h-dvh h-dvh">
-                <ResponsiveNavigationBar
-                  items={NAVIGATION_ITEMS}
-                  utilities={
-                    <>
-                      <CommandPalette />
-                      <ThemeToggle />
-                    </>
-                  }
-                />
-                <Breadcrumbs />
-                <main className="relative flex-auto overflow-auto">{children}</main>
-                <Footer />
-              </div>
-            </SidebarProvider>
-          </NavBarActionsProvider>
+          <FeatureFlagsProvider>
+            <NavBarActionsProvider>
+              <SidebarProvider>
+                <div className="w-full flex flex-col min-h-dvh h-dvh">
+                  <ResponsiveNavigationBar
+                    items={NAVIGATION_ITEMS}
+                    utilities={
+                      <>
+                        <CommandPalette />
+                        <ThemeToggle />
+                      </>
+                    }
+                  />
+                  <Breadcrumbs />
+                  <main className="relative flex-auto overflow-auto">
+                    {children}
+                  </main>
+                  <Footer />
+                </div>
+              </SidebarProvider>
+            </NavBarActionsProvider>
+          </FeatureFlagsProvider>
         </ThemeProvider>
       </body>
     </html>

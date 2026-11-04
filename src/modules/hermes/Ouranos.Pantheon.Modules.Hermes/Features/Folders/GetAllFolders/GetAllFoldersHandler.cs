@@ -53,7 +53,8 @@ public sealed class GetAllFoldersHandler(
 
         if (isPublicMode)
         {
-            dbQuery = dbQuery.Where(f => f.IsPublic);
+            var hiddenFolderIds = await _dbContext.GetHiddenFolderIdsAsync(cancellationToken);
+            dbQuery = dbQuery.Where(f => !hiddenFolderIds.Contains(f.Id));
         }
 
         var folders = await dbQuery
@@ -64,8 +65,8 @@ public sealed class GetAllFoldersHandler(
                 f.Name,
                 f.IsPublic,
                 f.ParentFolderId,
-                f.Conversations.Count,
-                f.ChildFolders.Count,
+                f.Conversations.Count(c => !isPublicMode || c.IsPublic),
+                f.ChildFolders.Count(c => !isPublicMode || c.IsPublic),
                 f.CreatedAt,
                 f.UpdatedAt
             ))

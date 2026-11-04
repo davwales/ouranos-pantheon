@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Ouranos.Pantheon.Modules.Hermes.Features.Models.UpdateModel.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Models;
+using Ouranos.Pantheon.Modules.Hermes.Shared.PublicMode;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Wolverine;
 
@@ -11,7 +12,9 @@ public static class UpdateModelEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapPut("/api/hermes/models/{modelId}", Handle).WithTags("Hermes.Models");
+        app.MapPut("/api/hermes/models/{modelId}", Handle)
+            .WithTags("Hermes.Models")
+            .DisabledInPublicMode();
     }
 
     internal static async Task<IResult> Handle(

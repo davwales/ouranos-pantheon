@@ -7,6 +7,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GetConversation;
@@ -44,7 +45,13 @@ public sealed class GetConversationHandler(
         var flags = await _flagsmith.GetEnvironmentFlags();
         var isPublicMode = await flags.IsFeatureEnabled(HermesFeatureFlags.PublicMode);
 
-        if (isPublicMode && (!conversation.IsPublic || conversation.Folder?.IsPublic == false))
+        if (
+            isPublicMode
+            && (
+                !conversation.IsPublic
+                || await _dbContext.IsFolderHiddenAsync(conversation.FolderId, cancellationToken)
+            )
+        )
         {
             Guard.Against.NotFound(query.ConversationId, (Conversation?)null);
         }

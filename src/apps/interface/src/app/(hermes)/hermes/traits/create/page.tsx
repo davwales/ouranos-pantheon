@@ -6,6 +6,7 @@ import { TraitFormInput } from "@/app/(hermes)/hermes/types";
 import { hermesApi } from "@/lib/api/hermes";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { PublicModeGate } from "@/app/(hermes)/hermes/components/public-mode-gate";
 
 export default function CreateTraitPage() {
   const router = useRouter();
@@ -28,12 +29,14 @@ export default function CreateTraitPage() {
   };
 
   return (
-    <div className="m-4">
-      <Typography variant="h2" className="border-b-0">
-        Create Trait
-      </Typography>
+    <PublicModeGate backHref="/hermes/traits" backLabel="Back to Traits">
+      <div className="m-4">
+        <Typography variant="h2" className="border-b-0">
+          Create Trait
+        </Typography>
 
-      <TraitForm onSave={handleSave} loading={loading} />
-    </div>
+        <TraitForm onSave={handleSave} loading={loading} />
+      </div>
+    </PublicModeGate>
   );
 }

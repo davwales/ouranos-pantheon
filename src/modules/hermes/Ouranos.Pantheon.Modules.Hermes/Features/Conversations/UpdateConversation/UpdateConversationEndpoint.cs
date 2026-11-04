@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.UpdateConversation.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
+using Ouranos.Pantheon.Modules.Hermes.Shared.PublicMode;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Wolverine;
@@ -13,7 +14,8 @@ public static class UpdateConversationEndpoint
     public static void Map(WebApplication app)
     {
         app.MapPut("/api/hermes/conversations/{conversationId}", Handle)
-            .WithTags("Hermes.Conversations");
+            .WithTags("Hermes.Conversations")
+            .DisabledInPublicMode();
     }
 
     internal static async Task<IResult> Handle(

@@ -27,4 +27,4 @@ the [platform glossary](../../../../docs/architecture/12-glossary.md).
 | **Compaction** | Summarizing a conversation's messages since the last summary into a single `Summary`-role message so long chats fit the context window; streamed over SSE |
 | **Available model** | An LLM served by OuranosMl, discovered by the hourly sync job |
 | **Default** | `IsDefault` on a persona or model config: the one preselected for new conversations |
-| **Public mode** | Flagsmith flag `hermes.public_mode`: when on, Hermes read endpoints return only items marked `IsPublic` |
+| **Public mode** | Flagsmith flag `hermes.public_mode`: when on, Hermes read endpoints return only items marked `IsPublic` (and not under a private folder) and writes return 403 |

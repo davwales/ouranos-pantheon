@@ -147,6 +147,8 @@ retries. When Flagsmith is unreachable, or a flag does not exist, the client fal
 `Ouranos:Flagsmith:DefaultFlags` (flag name to enabled state); flags not listed there read as
 disabled. A module whose flag guards data exposure lists it there as enabled so that it fails
 closed. The fallback result is cached like any other, so recovery takes up to one interval.
+`GET /api/feature-flags` (Shared module) reports every flag's effective state, defaults
+included; the Interface fetches it once app-wide and pages read flags with `useFeatureFlag`.
 Configuration binds through typed option classes per section under the `Ouranos:` root
 (e.g. `RabbitMqOptions`, `PostgresOptions`, `QueryOptions`, `HealthOptions`); each module
 binds its own section `Ouranos:<Module>` and documents it in its module README.

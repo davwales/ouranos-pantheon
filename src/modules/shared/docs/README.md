@@ -25,7 +25,7 @@ in the [platform documentation](../../../../docs/architecture/README.md), mainly
 - Provide the kernel abstractions and generic infrastructure modules build on
 - Compose the host: Serilog, REST conventions, Wolverine and RabbitMQ, TickerQ, caching,
   observability, Flagsmith, health checks (`AddOuranosCore` / `UseOuranosCore`)
-- Expose `GET /health` and the TickerQ dashboard
+- Expose `GET /health`, `GET /api/feature-flags` and the TickerQ dashboard
 - Hold notification entities and their dispatch job
 
 ## Context
@@ -41,7 +41,9 @@ in the [platform documentation](../../../../docs/architecture/README.md), mainly
 ## Provided Interfaces
 
 - **REST**: `GET /health` (unprefixed; 503 when any check is Unhealthy, otherwise 200 with the
-  same per-check report), TickerQ dashboard at `/tickerq/dashboard`.
+  same per-check report); `GET /api/feature-flags` (every flag's enabled state, keyed by name,
+  as handlers see it: Flagsmith's flags over the configured `DefaultFlags`); TickerQ dashboard
+  at `/tickerq/dashboard`.
 - **Kernel API** for modules: see the [building block view](05-building-block-view.md).
 - **Messages**: none.
 

@@ -6,6 +6,7 @@ using Ouranos.Pantheon.Modules.Hermes.Features.Conversations.GetAllConversations
 using Ouranos.Pantheon.Modules.Hermes.Shared;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Database;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Conversations;
+using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Folders;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Filtering;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Sorting;
@@ -55,7 +56,10 @@ public sealed class GetAllConversationsHandler(
 
         if (isPublicMode)
         {
-            dbQuery = dbQuery.Where(c => c.IsPublic && (c.FolderId == null || c.Folder.IsPublic));
+            var hiddenFolderIds = await _dbContext.GetHiddenFolderIdsAsync(cancellationToken);
+            dbQuery = dbQuery.Where(c =>
+                c.IsPublic && (c.FolderId == null || !hiddenFolderIds.Contains(c.FolderId.Value))
+            );
         }
 
         var conversations = await dbQuery

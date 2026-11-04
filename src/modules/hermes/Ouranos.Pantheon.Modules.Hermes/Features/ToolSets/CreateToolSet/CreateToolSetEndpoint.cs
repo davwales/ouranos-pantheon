@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Ouranos.Pantheon.Modules.Hermes.Features.ToolSets.CreateToolSet.Schemas;
+using Ouranos.Pantheon.Modules.Hermes.Shared.PublicMode;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Hermes.Features.ToolSets.CreateToolSet;
@@ -9,7 +10,9 @@ public static class CreateToolSetEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapPost("/api/hermes/tool-sets", Handle).WithTags("Hermes.ToolSets");
+        app.MapPost("/api/hermes/tool-sets", Handle)
+            .WithTags("Hermes.ToolSets")
+            .DisabledInPublicMode();
     }
 
     internal static async Task<IResult> Handle(

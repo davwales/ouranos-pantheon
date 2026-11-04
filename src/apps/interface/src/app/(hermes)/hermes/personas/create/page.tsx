@@ -6,6 +6,7 @@ import { PersonaFormInput } from "@/app/(hermes)/hermes/types";
 import { hermesApi } from "@/lib/api/hermes";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { PublicModeGate } from "@/app/(hermes)/hermes/components/public-mode-gate";
 
 export default function CreatePersonaPage() {
   const router = useRouter();
@@ -31,12 +32,14 @@ export default function CreatePersonaPage() {
   };
 
   return (
-    <div className="m-4">
-      <Typography variant="h2" className="border-b-0">
-        Create Persona
-      </Typography>
+    <PublicModeGate backHref="/hermes/personas" backLabel="Back to Personas">
+      <div className="m-4">
+        <Typography variant="h2" className="border-b-0">
+          Create Persona
+        </Typography>
 
-      <PersonaForm onSave={handleSave} loading={loading} />
-    </div>
+        <PersonaForm onSave={handleSave} loading={loading} />
+      </div>
+    </PublicModeGate>
   );
 }

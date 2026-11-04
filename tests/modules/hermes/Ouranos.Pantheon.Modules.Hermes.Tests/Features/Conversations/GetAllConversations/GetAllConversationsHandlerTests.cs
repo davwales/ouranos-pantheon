@@ -108,6 +108,48 @@ public sealed class GetAllConversationsHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenPublicModeAndAncestorFolderPrivate_ShouldExcludeConversation()
+    {
+        // Arrange
+        var grandparent = Folder.Create(
+            new Id<Folder>(Guid.NewGuid().ToString()),
+            "Private",
+            isPublic: false
+        );
+        var parent = Folder.Create(
+            new Id<Folder>(Guid.NewGuid().ToString()),
+            "Public",
+            isPublic: true,
+            parentFolderId: grandparent.Id
+        );
+        var hidden = Conversation.Create(
+            new Id<Conversation>(Guid.NewGuid().ToString()),
+            new Id<Persona>(Guid.NewGuid().ToString()),
+            new Id<ModelConfig>(Guid.NewGuid().ToString()),
+            [],
+            [],
+            Guid.NewGuid().ToString(),
+            true,
+            folderId: parent.Id
+        );
+        var visible = CreateConversation(true);
+        await _dbContext.SeedData(grandparent, parent);
+        await _dbContext.SeedData(hidden, visible);
+
+        var flags = Substitute.For<IFlags>();
+        flags.IsFeatureEnabled(HermesFeatureFlags.PublicMode).Returns(Task.FromResult(true));
+        _flagsmith.GetEnvironmentFlags().Returns(Task.FromResult(flags));
+
+        var query = new GetAllConversationsInput();
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Select(c => c.Id).ShouldBe([visible.Id]);
+    }
+
+    [Fact]
     public async Task Handle_WhenCancelled_ShouldThrowOperationCanceledException()
     {
         // Arrange

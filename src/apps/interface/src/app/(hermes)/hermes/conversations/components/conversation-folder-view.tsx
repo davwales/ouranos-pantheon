@@ -27,10 +27,10 @@ export function ConversationFolderView({
   conversations: ConversationSummary[] | undefined;
   currentFolderId: string | null;
   onNavigate: (folderId: string) => void;
-  onCreateFolder: (parentFolderId?: string) => void;
-  onEditFolder: (folder: ConversationFolder) => void;
-  onDeleteFolder: (folder: ConversationFolder) => void;
-  onDropConversation: (
+  onCreateFolder?: (parentFolderId?: string) => void;
+  onEditFolder?: (folder: ConversationFolder) => void;
+  onDeleteFolder?: (folder: ConversationFolder) => void;
+  onDropConversation?: (
     conversationId: string,
     folderId: string | null,
   ) => Promise<void>;
@@ -64,7 +64,9 @@ export function ConversationFolderView({
         <FolderEmptyState
           folderName={currentFolder?.name}
           onCreateSubfolder={
-            currentFolderId ? () => onCreateFolder(currentFolderId) : undefined
+            currentFolderId && onCreateFolder
+              ? () => onCreateFolder(currentFolderId)
+              : undefined
           }
         />
       ) : (
@@ -76,11 +78,15 @@ export function ConversationFolderView({
               conversationCount={folder.conversationCount}
               subfolderCount={folder.subfolderCount}
               onClick={() => onNavigate(folder.id)}
-              onCreateSubfolder={() => onCreateFolder(folder.id)}
-              onEdit={() => onEditFolder(folder)}
-              onDelete={() => onDeleteFolder(folder)}
-              onDropConversation={(conversationId) =>
-                onDropConversation(conversationId, folder.id)
+              onCreateSubfolder={
+                onCreateFolder && (() => onCreateFolder(folder.id))
+              }
+              onEdit={onEditFolder && (() => onEditFolder(folder))}
+              onDelete={onDeleteFolder && (() => onDeleteFolder(folder))}
+              onDropConversation={
+                onDropConversation &&
+                ((conversationId) =>
+                  onDropConversation(conversationId, folder.id))
               }
             />
           ))}
@@ -90,8 +96,10 @@ export function ConversationFolderView({
               conversation={conversation}
               folders={allFolders}
               currentFolderId={currentFolderId}
-              onMove={async (folderId) =>
-                onDropConversation(conversation.id, folderId)
+              onMove={
+                onDropConversation &&
+                (async (folderId) =>
+                  onDropConversation(conversation.id, folderId))
               }
             />
           ))}

@@ -97,6 +97,34 @@ public sealed class ImageVisibilityTests
     }
 
     [Fact]
+    public async Task IsImageInPrivateConversationAsync_WhenAnAncestorFolderIsPrivate_ShouldBeTrue()
+    {
+        // Arrange
+        var grandparent = Folder.Create(
+            new Id<Folder>(Guid.NewGuid().ToString()),
+            "Private",
+            isPublic: false
+        );
+        var parent = Folder.Create(
+            new Id<Folder>(Guid.NewGuid().ToString()),
+            "Public",
+            isPublic: true,
+            parentFolderId: grandparent.Id
+        );
+        await _dbContext.SeedData(grandparent);
+        await SeedConversationAsync(Role.Assistant, isPublic: true, parent);
+
+        // Act
+        var result = await _dbContext.IsImageInPrivateConversationAsync(
+            _imageId,
+            CancellationToken.None
+        );
+
+        // Assert
+        result.ShouldBeTrue();
+    }
+
+    [Fact]
     public async Task IsImageInPrivateConversationAsync_WhenOnlyPublicOrNoConversationsShowIt_ShouldBeFalse()
     {
         // Arrange

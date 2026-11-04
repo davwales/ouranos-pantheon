@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Ouranos.Pantheon.Modules.Hermes.Features.Personas.DeletePersona.Schemas;
 using Ouranos.Pantheon.Modules.Hermes.Shared.Domain.Personas;
+using Ouranos.Pantheon.Modules.Hermes.Shared.PublicMode;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Wolverine;
 
@@ -11,7 +12,9 @@ public static class DeletePersonaEndpoint
 {
     public static void Map(WebApplication app)
     {
-        app.MapDelete("/api/hermes/personas/{personaId}", Handle).WithTags("Hermes.Personas");
+        app.MapDelete("/api/hermes/personas/{personaId}", Handle)
+            .WithTags("Hermes.Personas")
+            .DisabledInPublicMode();
     }
 
     internal static async Task<IResult> Handle(

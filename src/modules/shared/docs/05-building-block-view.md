@@ -26,6 +26,7 @@ The first entry in the gateway's module array, referenced only by the gateway.
 | `API/Extensions/CoreExtensions.cs` | Core composition (`AddOuranosCore`, `UseOuranosCore`) and the Wolverine error policy |
 | `API/ExceptionHandlers/` | Maps `InvalidFilterException` to 400 ProblemDetails |
 | `Infra/RabbitMq/` | RabbitMQ option wiring |
+| `Features/FeatureFlags/` | `GET /api/feature-flags`: every flag's state, so the Interface can follow the same flags as the gateway |
 | `Features/Health/` | The health endpoint and its checks (Postgres, RabbitMQ, OuranosMl, WebSocket, TickerQ) |
 | `Infra/Observability/` | OpenTelemetry tracing and metrics registration |
 | `Infra/Flagsmith/` | Flagsmith client registration |
@@ -37,3 +38,9 @@ The first entry in the gateway's module array, referenced only by the gateway.
 The assistant UI that every module page uses lives in the Interface app at
 `src/apps/interface/src/components/shared/ai-assistant/`; it is documented with the
 assistant framework in [Concepts](08-concepts.md#82-frontend).
+
+`FeatureFlagsProvider` (`components/shared/feature-flags-context.tsx`), mounted in the root
+layout, fetches `GET /api/feature-flags` once for the whole app. Any page reads a flag with
+`useFeatureFlag(name, { whileUnknown })`: a flag the gateway does not report is off, as on the
+gateway, and `whileUnknown` (default off) applies until the flags have loaded, so a flag that
+hides controls can fail closed.
