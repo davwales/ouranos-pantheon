@@ -7,6 +7,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSignalRankings.Schemas
 using Ouranos.Pantheon.Modules.Plutus.Shared;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Sorting;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Assistants.Tools.GetSignalRankings;
@@ -47,7 +48,7 @@ public sealed class GetSignalRankingsTool(
             new GetSignalRankingsInput(
                 context.MarketId,
                 sortField,
-                "desc",
+                SortDirection.Desc.ToQueryValue(),
                 Take: _options.Value.AssistantTools.ClampRows(arguments.Take)
             ),
             cancellationToken

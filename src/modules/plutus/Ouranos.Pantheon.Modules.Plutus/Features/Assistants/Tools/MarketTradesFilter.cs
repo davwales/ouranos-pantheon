@@ -1,6 +1,8 @@
 using System.Globalization;
 using System.Text.Json;
 using Ouranos.Pantheon.Modules.Plutus.Features.Assistants.Tools.Schemas;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Filtering;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Filtering.Schemas;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Assistants.Tools;
 
@@ -40,6 +42,7 @@ internal static class MarketTradesFilter
     {
         var problems = new List<string>();
         var valid = new List<ExplorerCondition>();
+        var filter = new List<string>();
 
         foreach (var condition in conditions ?? [])
         {
@@ -47,6 +50,13 @@ internal static class MarketTradesFilter
             if (problem is null)
             {
                 valid.Add(explorerCondition);
+                filter.Add(
+                    FilterExpression.For(
+                        explorerCondition.Field,
+                        ToFilterOperator(condition.Operator),
+                        explorerCondition.Value
+                    )
+                );
             }
             else
             {
@@ -69,9 +79,7 @@ internal static class MarketTradesFilter
             }
         }
 
-        string[] filter = [.. valid.Select(c => $"{c.Field}:{c.Operator}:{c.Value}")];
-
-        return new MarketTradesQuery(valid, filter, sortField, problems);
+        return new MarketTradesQuery(valid, [.. filter], sortField, problems);
     }
 
     public static string ColumnId(MarketTradesField field)
@@ -83,7 +91,7 @@ internal static class MarketTradesFilter
     {
         result = new ExplorerCondition(
             ColumnId(condition.Field),
-            condition.Operator.ToString().ToLowerInvariant(),
+            FilterExpression.Operator(ToFilterOperator(condition.Operator)),
             condition.Value
         );
 
@@ -133,6 +141,21 @@ internal static class MarketTradesFilter
             Value = normalized.ToString(PlainNumberFormat, CultureInfo.InvariantCulture),
         };
         return null;
+    }
+
+    private static FilterOperator ToFilterOperator(MarketTradesOperator marketTradesOperator)
+    {
+        return marketTradesOperator switch
+        {
+            MarketTradesOperator.Eq => FilterOperator.Eq,
+            MarketTradesOperator.Neq => FilterOperator.Neq,
+            MarketTradesOperator.Gt => FilterOperator.Gt,
+            MarketTradesOperator.Gte => FilterOperator.Gte,
+            MarketTradesOperator.Lt => FilterOperator.Lt,
+            MarketTradesOperator.Lte => FilterOperator.Lte,
+            MarketTradesOperator.Like => FilterOperator.Like,
+            _ => throw new ArgumentOutOfRangeException(nameof(marketTradesOperator)),
+        };
     }
 
     private static bool TryParseNumber(string value, out decimal number)

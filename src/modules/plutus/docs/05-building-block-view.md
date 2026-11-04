@@ -23,4 +23,8 @@ are relative to `Ouranos.Pantheon.Modules.Plutus/`.
 
 Within the module, coupling between slices is data coupling: the trade and backtest
 handoffs travel over RabbitMQ (see [Messages](README.md#messages)), and everything else is
-one slice reading what another has written to the `plutus` schema.
+one slice reading what another has written to the `plutus` schema. Types that several slices
+of a feature return live in that feature's `Shared/` folder (`Features/Signals/Shared/`,
+`Features/Strategies/Shared/`). Assistants and their tools are the one deliberate exception:
+they read through the other slices' handlers, invoking them over `IMessageBus` with those
+slices' input and response types and mapping the responses to compact `*Data` projections.

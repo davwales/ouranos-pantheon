@@ -1,6 +1,6 @@
 using Ouranos.Pantheon.Modules.Plutus.Features.Assistants.Tools;
 using Ouranos.Pantheon.Modules.Plutus.Features.Assistants.Tools.Schemas;
-using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSymbolSignals.Schemas;
+using Ouranos.Pantheon.Modules.Plutus.Features.Signals.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Factory = Ouranos.Pantheon.Modules.Plutus.Tests.Features.Assistants.AskSymbolAnalyst.SymbolAnalystSnapshotFactory;
 

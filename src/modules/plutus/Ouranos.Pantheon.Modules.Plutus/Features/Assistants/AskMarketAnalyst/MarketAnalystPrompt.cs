@@ -3,6 +3,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Assistants.AskMarketAnalyst.Schem
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketOverview.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Trades.GetMarketTrades.Schemas;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Sorting;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Assistants.AskMarketAnalyst;
 
@@ -126,8 +127,8 @@ internal static class MarketAnalystPrompt
         var last = context.Skip + items.Count;
 
         var sort = context.SortField is null
-            ? "Gain desc"
-            : $"{context.SortField} {context.SortDirection ?? "desc"}";
+            ? $"Gain {SortDirection.Desc.ToQueryValue()}"
+            : $"{context.SortField} {context.SortDirection ?? SortDirection.Desc.ToQueryValue()}";
 
         var filter = context.Filter is { Length: > 0 } f
             ? $"; filter {string.Join(" and ", f)}"

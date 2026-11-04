@@ -7,6 +7,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetMarketForecast.Schem
 using Ouranos.Pantheon.Modules.Plutus.Shared;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Sorting;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Assistants.Tools.GetForecastLeaders;
@@ -54,7 +55,7 @@ public sealed class GetForecastLeadersTool(
             new GetMarketForecastInput(
                 context.MarketId,
                 DayOneGain,
-                "desc",
+                SortDirection.Desc.ToQueryValue(),
                 Take: _options.Value.AssistantTools.ClampRows(arguments.Take)
             ),
             cancellationToken

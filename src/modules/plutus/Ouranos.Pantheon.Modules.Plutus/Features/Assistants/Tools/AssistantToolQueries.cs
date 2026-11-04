@@ -6,6 +6,8 @@ using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Symbols;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Filtering;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Filtering.Schemas;
 using Ouranos.Pantheon.Modules.Shared.Contract.Domain;
 using Wolverine;
 
@@ -25,9 +27,12 @@ internal static class AssistantToolQueries
         TimeFrame.OneMonth,
     ];
 
+    // Every list query that takes this filter registers its symbol field under this name.
+    private const string SymbolIdField = nameof(GetMarketTradesResponse.SymbolId);
+
     public static string[] SymbolFilter(Id<Symbol> symbolId)
     {
-        return [$"SymbolId:eq:{symbolId}"];
+        return [FilterExpression.For(SymbolIdField, FilterOperator.Eq, symbolId.ToString())];
     }
 
     public static async Task<bool> IsForecastingEnabledAsync(

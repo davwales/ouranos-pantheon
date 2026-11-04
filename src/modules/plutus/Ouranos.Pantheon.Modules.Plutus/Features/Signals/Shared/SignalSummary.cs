@@ -1,4 +1,4 @@
-namespace Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSymbolSignals.Schemas;
+namespace Ouranos.Pantheon.Modules.Plutus.Features.Signals.Shared;
 
 public sealed record SignalSummary(
     decimal AggregatedScore,

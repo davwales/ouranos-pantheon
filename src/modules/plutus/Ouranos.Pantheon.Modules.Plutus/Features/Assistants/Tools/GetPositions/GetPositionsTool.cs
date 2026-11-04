@@ -7,6 +7,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Positions.GetAllPositions.Schemas
 using Ouranos.Pantheon.Modules.Plutus.Shared;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common;
+using Ouranos.Pantheon.Modules.Shared.Contract.Application.Common.Sorting;
 using Wolverine;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Features.Assistants.Tools.GetPositions;
@@ -40,7 +41,7 @@ public sealed class GetPositionsTool(
                 context.MarketId,
                 Status: arguments.Status,
                 SortField: nameof(GetAllPositionsResponse.CreatedAt),
-                SortDirection: "desc",
+                SortDirection: SortDirection.Desc.ToQueryValue(),
                 Take: _options.Value.AssistantTools.MaxPositions,
                 Filter: AssistantToolQueries.SymbolFilter(context.SymbolId)
             ),
