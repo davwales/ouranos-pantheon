@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Options;
-using Ouranos.Pantheon.Modules.Plutus.Features.Signals.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
@@ -46,21 +45,20 @@ public sealed class TaxAdjustedRoiSignalComputerTests
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenRoiEqualsThreshold_ReturnsOne()
+    public void Compute_WhenRoiEqualsThreshold_ReturnsOne()
     {
         // Arrange
         var context = BuildContext(minPrice: 1000m, maxPrice: 1100m);
 
         // Act
-        var result = await BuildComputer(roiThreshold: 0.1m)
-            .ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer(roiThreshold: 0.1m).Compute(context);
 
         // Assert
         result.ShouldBe(1m);
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenTaxEliminatesSpread_ReturnsBearish()
+    public void Compute_WhenTaxEliminatesSpread_ReturnsBearish()
     {
         // Arrange
         var context = BuildContext(
@@ -70,8 +68,7 @@ public sealed class TaxAdjustedRoiSignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer(roiThreshold: 0.1m)
-            .ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer(roiThreshold: 0.1m).Compute(context);
 
         // Assert
         result.ShouldBe(-1m);
@@ -82,7 +79,7 @@ public sealed class TaxAdjustedRoiSignalComputerTests
     [InlineData(1000, 1025.5)]
     [InlineData(40, 49)]
     [InlineData(290000000, 300000000)]
-    public async Task ComputeAsync_WhenMarketIsTaxed_ShouldApplyTheMarketTaxRule(
+    public void Compute_WhenMarketIsTaxed_ShouldApplyTheMarketTaxRule(
         decimal minPrice,
         decimal maxPrice
     )
@@ -93,30 +90,28 @@ public sealed class TaxAdjustedRoiSignalComputerTests
         var expectedTax = new MarketRules(tax).UnitTax(maxPrice);
 
         // Act
-        var result = await BuildComputer(roiThreshold: 10m)
-            .ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer(roiThreshold: 10m).Compute(context);
 
         // Assert
         result.ShouldBe((maxPrice - minPrice - expectedTax) / minPrice / 10m);
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenTaxIsCapped_ShouldChargeTheMaximumNotTheFlatRate()
+    public void Compute_WhenTaxIsCapped_ShouldChargeTheMaximumNotTheFlatRate()
     {
         // Arrange
         var tax = new FlatTax(Minimum: 1m, Maximum: 5_000_000m, Rate: 0.02m);
         var context = BuildContext(minPrice: 290_000_000m, maxPrice: 300_000_000m, tax);
 
         // Act
-        var result = await BuildComputer(roiThreshold: 1m)
-            .ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer(roiThreshold: 1m).Compute(context);
 
         // Assert
         result.ShouldBe(5_000_000m / 290_000_000m);
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenMediumSnapshotIsMissing_ReturnsNull()
+    public void Compute_WhenMediumSnapshotIsMissing_ReturnsNull()
     {
         // Arrange
         var context = new SignalComputeContext(
@@ -131,34 +126,33 @@ public sealed class TaxAdjustedRoiSignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer().Compute(context);
 
         // Assert
         result.ShouldBeNull();
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenMinPriceIsZero_ReturnsNull()
+    public void Compute_WhenMinPriceIsZero_ReturnsNull()
     {
         // Arrange
         var context = BuildContext(minPrice: 0m, maxPrice: 1000m);
 
         // Act
-        var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer().Compute(context);
 
         // Assert
         result.ShouldBeNull();
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenRoiThresholdIsZero_ReturnsNull()
+    public void Compute_WhenRoiThresholdIsZero_ReturnsNull()
     {
         // Arrange
         var context = BuildContext(minPrice: 1000m, maxPrice: 1100m);
 
         // Act
-        var result = await BuildComputer(roiThreshold: 0m)
-            .ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer(roiThreshold: 0m).Compute(context);
 
         // Assert
         result.ShouldBeNull();

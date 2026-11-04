@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Options;
-using Ouranos.Pantheon.Modules.Plutus.Features.Signals.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals.Computers;
@@ -26,7 +25,7 @@ public sealed class PriceVelocitySignalComputerTests
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenOnlyOneBucket_ReturnsNull()
+    public void Compute_WhenOnlyOneBucket_ReturnsNull()
     {
         // Arrange
         var context = new SignalComputeContext(
@@ -41,14 +40,14 @@ public sealed class PriceVelocitySignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer().Compute(context);
 
         // Assert
         result.ShouldBeNull();
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenFirstPriceIsZero_ReturnsNull()
+    public void Compute_WhenFirstPriceIsZero_ReturnsNull()
     {
         // Arrange
         var buckets = new List<PriceBucket> { Bucket(0m), Bucket(100m) };
@@ -64,14 +63,14 @@ public sealed class PriceVelocitySignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer().Compute(context);
 
         // Assert
         result.ShouldBeNull();
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenPriceIsUnchanged_ReturnsZero()
+    public void Compute_WhenPriceIsUnchanged_ReturnsZero()
     {
         // Arrange
         var buckets = new List<PriceBucket> { Bucket(100m), Bucket(100m) };
@@ -87,14 +86,14 @@ public sealed class PriceVelocitySignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer().Compute(context);
 
         // Assert
         result.ShouldBe(0m);
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenPriceRiseEqualsThreshold_ReturnsOne()
+    public void Compute_WhenPriceRiseEqualsThreshold_ReturnsOne()
     {
         // Arrange
         var buckets = new List<PriceBucket> { Bucket(100m), Bucket(103m) };
@@ -110,15 +109,14 @@ public sealed class PriceVelocitySignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer(threshold: 0.03m)
-            .ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer(threshold: 0.03m).Compute(context);
 
         // Assert
         result.ShouldBe(1m);
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenPriceFallEqualsThreshold_ReturnsNegativeOne()
+    public void Compute_WhenPriceFallEqualsThreshold_ReturnsNegativeOne()
     {
         // Arrange
         var buckets = new List<PriceBucket> { Bucket(100m), Bucket(97m) };
@@ -134,15 +132,14 @@ public sealed class PriceVelocitySignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer(threshold: 0.03m)
-            .ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer(threshold: 0.03m).Compute(context);
 
         // Assert
         result.ShouldBe(-1m);
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenThresholdIsZero_ReturnsNull()
+    public void Compute_WhenThresholdIsZero_ReturnsNull()
     {
         // Arrange
         var buckets = new List<PriceBucket> { Bucket(100m), Bucket(103m) };
@@ -158,8 +155,7 @@ public sealed class PriceVelocitySignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer(threshold: 0m)
-            .ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer(threshold: 0m).Compute(context);
 
         // Assert
         result.ShouldBeNull();

@@ -1,6 +1,4 @@
-using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
-
-namespace Ouranos.Pantheon.Modules.Plutus.Features.Signals.Shared;
+namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 
 /// <summary>Configuration options for signal processing.</summary>
 public sealed record SignalOptions(

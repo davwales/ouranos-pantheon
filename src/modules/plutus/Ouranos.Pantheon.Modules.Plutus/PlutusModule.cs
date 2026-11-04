@@ -2,8 +2,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Ouranos.Pantheon.Modules.Plutus.Features.Assistants.AskMarketAnalyst;
 using Ouranos.Pantheon.Modules.Plutus.Features.Assistants.AskMarketAnalyst.Schemas;
 using Ouranos.Pantheon.Modules.Plutus.Features.Assistants.AskSymbolAnalyst;
@@ -18,15 +16,7 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Assistants.Tools.GetSignalRanking
 using Ouranos.Pantheon.Modules.Plutus.Features.Assistants.Tools.GetSignals;
 using Ouranos.Pantheon.Modules.Plutus.Features.Assistants.Tools.GetSymbol;
 using Ouranos.Pantheon.Modules.Plutus.Features.Assistants.Tools.SetExplorerView;
-using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Consumer;
-using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Ffxiv;
-using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Ffxiv.Messages;
-using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Ffxiv.Serializers;
-using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Ffxiv.XivApi;
-using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Osrs;
-using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Shared;
-using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Stocks;
-using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders.Stocks.Messages;
+using Ouranos.Pantheon.Modules.Plutus.Features.DataLoaders;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.ForecastGenerator;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetAllForecasts;
 using Ouranos.Pantheon.Modules.Plutus.Features.Forecasts.GetForecastEfficacy;
@@ -50,7 +40,6 @@ using Ouranos.Pantheon.Modules.Plutus.Features.Recipes.UpdateRecipe;
 using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSignalRankings;
 using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSymbolSignalHistory;
 using Ouranos.Pantheon.Modules.Plutus.Features.Signals.GetSymbolSignals;
-using Ouranos.Pantheon.Modules.Plutus.Features.Signals.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.CancelBacktest;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.CreateStrategy;
 using Ouranos.Pantheon.Modules.Plutus.Features.Strategies.DeleteStrategy;
@@ -94,12 +83,6 @@ using Ouranos.Pantheon.Modules.Shared.Contract;
 using Ouranos.Pantheon.Modules.Shared.Contract.Application.Assistants;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.OuranosMachineLearning;
 using Ouranos.Pantheon.Modules.Shared.Contract.Infra.Postgres;
-using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets;
-using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.Listeners;
-using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.Serializers;
-using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.Serializers.Converters;
-using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.Serializers.TypeResolvers;
-using Ouranos.Pantheon.Modules.Shared.Contract.WebSockets.WebSocketClients;
 using Wolverine;
 using Wolverine.RabbitMQ;
 
@@ -116,6 +99,7 @@ public sealed class PlutusModule : IPantheonModule
                 builder.Configuration,
                 typeof(PlutusModule).Assembly
             )
+            .Configure<PlutusOptions>(plutusOptionsSection)
             .Configure<OptimizationOptions>(
                 plutusOptionsSection.GetSection(OptimizationOptions.SectionName)
             )
@@ -130,7 +114,7 @@ public sealed class PlutusModule : IPantheonModule
             OuranosMachineLearningModule.ConfigureHttpClient
         );
 
-        ConfigureDataLoaders(builder);
+        builder.AddDataLoaders();
         ConfigureSignalComputers(builder);
         ConfigureStrategyEngines(builder);
         ConfigureAssistantTools(builder);
@@ -258,37 +242,7 @@ public sealed class PlutusModule : IPantheonModule
         opts.ListenToRabbitQueue(OptimizeStrategyMessage.Queue)
             .DeadLetterQueueing(new DeadLetterQueue(OptimizeStrategyMessage.DeadLetterQueue));
 
-        var dataLoadersSection = configuration
-            .GetSection(PlutusOptions.SectionName)
-            .GetSection(DataLoadersOptions.SectionName);
-
-        var loaders = dataLoadersSection.Get<DataLoadersOptions>() ?? new DataLoadersOptions();
-
-        if (
-            !loaders.Ffxiv.IsEnabled
-            && !loaders.Osrs.IsEnabled
-            && !loaders.Stocks.IsEnabled
-            && !loaders.Consumer.IsEnabled
-        )
-        {
-            return;
-        }
-
-        opts.PublishMessage<TradeMessage>()
-            .ToRabbitExchange(
-                TradeMessage.Exchange,
-                e =>
-                {
-                    e.BindQueue(TradeMessage.Queue);
-                }
-            );
-
-        if (loaders.Consumer.IsEnabled)
-        {
-            opts.ListenToRabbitQueue(TradeMessage.Queue)
-                .ListenerCount(4)
-                .DeadLetterQueueing(new DeadLetterQueue(TradeMessage.DeadLetterQueue));
-        }
+        opts.ConfigureDataLoaderMessaging(configuration);
     }
 
     private static void ConfigureSignalComputers(IHostApplicationBuilder builder)
@@ -320,145 +274,5 @@ public sealed class PlutusModule : IPantheonModule
             .AddSingleton<StrategyOptimizer>()
             .AddSingleton<BacktestJobRunner>()
             .AddSingleton<BacktestRecovery>();
-    }
-
-    private static void ConfigureDataLoaders(IHostApplicationBuilder builder)
-    {
-        var plutusOptionsSection = builder.Configuration.GetSection(PlutusOptions.SectionName);
-        var dataLoadersSection = plutusOptionsSection.GetSection(DataLoadersOptions.SectionName);
-
-        builder
-            .Services.Configure<PlutusOptions>(plutusOptionsSection)
-            .Configure<DataLoadersOptions>(dataLoadersSection)
-            .Configure<FfxivDataLoaderOptions>(
-                dataLoadersSection.GetSection(FfxivDataLoaderOptions.SectionName)
-            )
-            .Configure<OsrsDataLoaderOptions>(
-                dataLoadersSection.GetSection(OsrsDataLoaderOptions.SectionName)
-            )
-            .Configure<StocksDataLoaderOptions>(
-                dataLoadersSection.GetSection(StocksDataLoaderOptions.SectionName)
-            )
-            .Configure<ConsumerDataLoaderOptions>(
-                dataLoadersSection.GetSection(ConsumerDataLoaderOptions.SectionName)
-            )
-            .AddSingleton<IQueueTradeMessages, QueueTradeMessages>()
-            .AddTransient<FfxivListener>()
-            .AddTransient<FfxivSubscriptionInitializer>()
-            .AddSingleton<IGetItems, GetItems>()
-            .AddTransient<StocksTradeListener>()
-            .AddTransient<StocksSuccessListener>()
-            .AddTransient<StocksSubscriptionListener>()
-            .AddTransient<StocksErrorListener>();
-
-        builder.Services.AddHttpClient<IGithubClient, GithubClient>(
-            (sp, client) =>
-            {
-                var options = sp.GetRequiredService<IOptions<FfxivDataLoaderOptions>>();
-                client.BaseAddress = new Uri(options.Value.XivApi.BaseAddress);
-            }
-        );
-
-        builder.Services.AddHttpClient<IWikiClient, OsrsWikiClient>(
-            (sp, client) =>
-            {
-                var options = sp.GetRequiredService<IOptions<OsrsDataLoaderOptions>>();
-                client.BaseAddress = new Uri(options.Value.Wiki.BaseAddress);
-            }
-        );
-
-        var loaders = dataLoadersSection.Get<DataLoadersOptions>() ?? new DataLoadersOptions();
-
-        if (loaders.Ffxiv.IsEnabled)
-        {
-            builder.Services.AddHostedService(BuildFfxivWorker);
-        }
-
-        if (loaders.Stocks.IsEnabled)
-        {
-            builder.Services.AddHostedService(BuildStocksWorker);
-        }
-    }
-
-    private static WebSocketWorker BuildFfxivWorker(IServiceProvider sp)
-    {
-        var wsOptions = sp.GetRequiredService<IOptions<FfxivDataLoaderOptions>>().Value.WebSocket;
-        var healthState = sp.GetService<WebSocketHealthState>();
-
-        var converter = new BsonMessageConverter();
-        var typeResolver = new ConstantTypeResolver(typeof(SaleMessage));
-        var serializer = new MessageSerializer(typeResolver, converter);
-        var registry = new ListenerRegistry(
-            serializer,
-            sp.GetRequiredService<WebSocketTelemetry>()
-        );
-
-        var listener = sp.GetRequiredService<FfxivListener>();
-        registry.RegisterListener(listener);
-
-        var initializer = sp.GetRequiredService<FfxivSubscriptionInitializer>();
-
-        var client = new WebSocketClient(
-            sp.GetRequiredService<ILogger<WebSocketClient>>(),
-            wsOptions.Host,
-            wsOptions.BufferSize,
-            serializer,
-            [initializer],
-            registry,
-            sp.GetRequiredService<WebSocketTelemetry>()
-        );
-
-        return new WebSocketWorker(
-            sp.GetRequiredService<ILogger<WebSocketWorker>>(),
-            client,
-            Options.Create(wsOptions),
-            "ffxiv",
-            healthState
-        );
-    }
-
-    private static WebSocketWorker BuildStocksWorker(IServiceProvider sp)
-    {
-        var wsOptions = sp.GetRequiredService<IOptions<StocksDataLoaderOptions>>().Value.WebSocket;
-        var healthState = sp.GetService<WebSocketHealthState>();
-
-        var typeMap = new Dictionary<string, Type>
-        {
-            [ErrorMessage.TypeIndicator] = typeof(ErrorMessage),
-            [SuccessMessage.TypeIndicator] = typeof(SuccessMessage),
-            [SubscriptionAckMessage.TypeIndicator] = typeof(SubscriptionAckMessage),
-            [AlpacaTradeMessage.TypeIndicator] = typeof(AlpacaTradeMessage),
-        };
-
-        var converter = new JsonMessageConverter();
-        var typeResolver = new JsonTypeResolver("T", typeMap);
-        var serializer = new MessageSerializer(typeResolver, converter);
-        var registry = new ListenerRegistry(
-            serializer,
-            sp.GetRequiredService<WebSocketTelemetry>()
-        );
-
-        registry.RegisterListener(sp.GetRequiredService<StocksErrorListener>());
-        registry.RegisterListener(sp.GetRequiredService<StocksSuccessListener>());
-        registry.RegisterListener(sp.GetRequiredService<StocksSubscriptionListener>());
-        registry.RegisterListener(sp.GetRequiredService<StocksTradeListener>());
-
-        var client = new WebSocketClient(
-            sp.GetRequiredService<ILogger<WebSocketClient>>(),
-            wsOptions.Host,
-            wsOptions.BufferSize,
-            serializer,
-            [],
-            registry,
-            sp.GetRequiredService<WebSocketTelemetry>()
-        );
-
-        return new WebSocketWorker(
-            sp.GetRequiredService<ILogger<WebSocketWorker>>(),
-            client,
-            Options.Create(wsOptions),
-            "stocks",
-            healthState
-        );
     }
 }

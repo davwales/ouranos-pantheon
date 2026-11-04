@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Options;
-using Ouranos.Pantheon.Modules.Plutus.Features.Signals.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals.Computers;
@@ -26,7 +25,7 @@ public sealed class BollingerBandsSignalComputerTests
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenOnlyOneBucket_ReturnsNull()
+    public void Compute_WhenOnlyOneBucket_ReturnsNull()
     {
         // Arrange
         var context = new SignalComputeContext(
@@ -41,14 +40,14 @@ public sealed class BollingerBandsSignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer().Compute(context);
 
         // Assert
         result.ShouldBeNull();
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenAllPricesEqual_ReturnsZero()
+    public void Compute_WhenAllPricesEqual_ReturnsZero()
     {
         // Arrange
         var buckets = Enumerable.Range(0, 10).Select(_ => Bucket(100m)).ToList();
@@ -64,14 +63,14 @@ public sealed class BollingerBandsSignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer().Compute(context);
 
         // Assert
         result.ShouldBe(0m);
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenCurrentPriceIsAtBandMidpoint_ReturnsNeutral()
+    public void Compute_WhenCurrentPriceIsAtBandMidpoint_ReturnsNeutral()
     {
         // Arrange
         var buckets = new List<PriceBucket>
@@ -100,8 +99,7 @@ public sealed class BollingerBandsSignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer(multiplier: 2)
-            .ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer(multiplier: 2).Compute(context);
 
         // Assert
         result.ShouldNotBeNull();
@@ -109,7 +107,7 @@ public sealed class BollingerBandsSignalComputerTests
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenCurrentPriceDropsBelowLowerBand_ReturnsBullish()
+    public void Compute_WhenCurrentPriceDropsBelowLowerBand_ReturnsBullish()
     {
         // Arrange
         var buckets = Enumerable.Range(0, 9).Select(_ => Bucket(100m)).Append(Bucket(60m)).ToList();
@@ -125,8 +123,7 @@ public sealed class BollingerBandsSignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer(multiplier: 2)
-            .ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer(multiplier: 2).Compute(context);
 
         // Assert
         result.ShouldNotBeNull();
@@ -134,7 +131,7 @@ public sealed class BollingerBandsSignalComputerTests
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenCurrentPriceRisesAboveUpperBand_ReturnsBearish()
+    public void Compute_WhenCurrentPriceRisesAboveUpperBand_ReturnsBearish()
     {
         // Arrange
         var buckets = Enumerable
@@ -154,8 +151,7 @@ public sealed class BollingerBandsSignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer(multiplier: 2)
-            .ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer(multiplier: 2).Compute(context);
 
         // Assert
         result.ShouldNotBeNull();
@@ -163,7 +159,7 @@ public sealed class BollingerBandsSignalComputerTests
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenMultiplierIsZero_ReturnsNull()
+    public void Compute_WhenMultiplierIsZero_ReturnsNull()
     {
         // Arrange
         var buckets = Enumerable
@@ -183,8 +179,7 @@ public sealed class BollingerBandsSignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer(multiplier: 0)
-            .ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer(multiplier: 0).Compute(context);
 
         // Assert
         result.ShouldBeNull();

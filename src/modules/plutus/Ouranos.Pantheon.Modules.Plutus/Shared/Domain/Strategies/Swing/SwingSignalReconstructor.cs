@@ -19,7 +19,7 @@ public sealed class SwingSignalReconstructor(IEnumerable<ISignalComputer> signal
         .. Guard.Against.Null(signalComputers),
     ];
 
-    public async Task<SwingSignalTable> BuildAsync(
+    public SwingSignalTable Build(
         SwingMarketData data,
         DateOnly first,
         DateOnly last,
@@ -32,17 +32,13 @@ public sealed class SwingSignalReconstructor(IEnumerable<ISignalComputer> signal
         for (var day = first; day <= last; day = day.AddDays(1))
         {
             cancellationToken.ThrowIfCancellationRequested();
-            days[day] = await BuildDayAsync(data, day, cancellationToken);
+            days[day] = BuildDay(data, day);
         }
 
         return new SwingSignalTable(days);
     }
 
-    private async Task<Dictionary<Id<Symbol>, SwingSignalDay>> BuildDayAsync(
-        SwingMarketData data,
-        DateOnly day,
-        CancellationToken cancellationToken
-    )
+    private Dictionary<Id<Symbol>, SwingSignalDay> BuildDay(SwingMarketData data, DateOnly day)
     {
         var decisionDate = new DateTimeOffset(day.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
         var signalDate = decisionDate.AddDays(-1);
@@ -84,7 +80,7 @@ public sealed class SwingSignalReconstructor(IEnumerable<ISignalComputer> signal
             var signals = new Dictionary<SignalType, decimal>();
             foreach (var computer in _signalComputers)
             {
-                var value = await computer.ComputeAsync(context, cancellationToken);
+                var value = computer.Compute(context);
                 if (value.HasValue)
                 {
                     signals[computer.Type] = value.Value;

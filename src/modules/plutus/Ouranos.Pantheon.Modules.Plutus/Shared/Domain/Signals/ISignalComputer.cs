@@ -11,5 +11,5 @@ public interface ISignalComputer
     IReadOnlyList<InvestmentIntent> Intents { get; }
 
     /// <summary>Returns null if insufficient data.</summary>
-    Task<decimal?> ComputeAsync(SignalComputeContext context, CancellationToken ct);
+    decimal? Compute(SignalComputeContext context);
 }

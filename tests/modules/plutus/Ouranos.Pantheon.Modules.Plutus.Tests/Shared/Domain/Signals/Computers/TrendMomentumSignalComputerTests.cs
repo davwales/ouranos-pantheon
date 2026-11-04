@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Options;
-using Ouranos.Pantheon.Modules.Plutus.Features.Signals.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
@@ -43,7 +42,7 @@ public sealed class TrendMomentumSignalComputerTests
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenShortAverageDeltaEqualsThreshold_ReturnsOne()
+    public void Compute_WhenShortAverageDeltaEqualsThreshold_ReturnsOne()
     {
         // Arrange
         var shortSnap = MakeSnapshot(TimeFrame.OneHour, avgPrice: 105m);
@@ -60,15 +59,14 @@ public sealed class TrendMomentumSignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer(threshold: 0.05m)
-            .ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer(threshold: 0.05m).Compute(context);
 
         // Assert
         result.ShouldBe(1m);
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenShortAverageIsLessThanLong_ReturnsBearish()
+    public void Compute_WhenShortAverageIsLessThanLong_ReturnsBearish()
     {
         // Arrange
         var shortSnap = MakeSnapshot(TimeFrame.OneHour, avgPrice: 95m);
@@ -85,15 +83,14 @@ public sealed class TrendMomentumSignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer(threshold: 0.05m)
-            .ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer(threshold: 0.05m).Compute(context);
 
         // Assert
         result.ShouldBe(-1m);
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenShortAndLongAveragesAreEqual_ReturnsZero()
+    public void Compute_WhenShortAndLongAveragesAreEqual_ReturnsZero()
     {
         // Arrange
         var shortSnap = MakeSnapshot(TimeFrame.OneHour, avgPrice: 100m);
@@ -110,14 +107,14 @@ public sealed class TrendMomentumSignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer().Compute(context);
 
         // Assert
         result.ShouldBe(0m);
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenSnapshotsAreMissing_ReturnsNull()
+    public void Compute_WhenSnapshotsAreMissing_ReturnsNull()
     {
         // Arrange
         var context = new SignalComputeContext(
@@ -132,14 +129,14 @@ public sealed class TrendMomentumSignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer().Compute(context);
 
         // Assert
         result.ShouldBeNull();
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenMomentumThresholdIsZero_ReturnsNull()
+    public void Compute_WhenMomentumThresholdIsZero_ReturnsNull()
     {
         // Arrange
         var shortSnap = MakeSnapshot(TimeFrame.OneHour, avgPrice: 105m);
@@ -156,15 +153,14 @@ public sealed class TrendMomentumSignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer(threshold: 0m)
-            .ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer(threshold: 0m).Compute(context);
 
         // Assert
         result.ShouldBeNull();
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenLongSnapshotHasZeroVolume_ReturnsNull()
+    public void Compute_WhenLongSnapshotHasZeroVolume_ReturnsNull()
     {
         // Arrange
         var shortSnap = MakeSnapshot(TimeFrame.OneHour, avgPrice: 105m, volume: 1000m);
@@ -181,7 +177,7 @@ public sealed class TrendMomentumSignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer().Compute(context);
 
         // Assert
         result.ShouldBeNull();

@@ -1,6 +1,5 @@
 using Ardalis.GuardClauses;
 using Microsoft.Extensions.Options;
-using Ouranos.Pantheon.Modules.Plutus.Features.Signals.Shared;
 
 namespace Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals.Computers;
 
@@ -22,12 +21,12 @@ public sealed class BollingerBandsSignalComputer : ISignalComputer
     public IReadOnlyList<InvestmentIntent> Intents =>
         [InvestmentIntent.Buy, InvestmentIntent.Sell, InvestmentIntent.Merch];
 
-    public Task<decimal?> ComputeAsync(SignalComputeContext context, CancellationToken ct)
+    public decimal? Compute(SignalComputeContext context)
     {
         var buckets = context.PriceBuckets;
         if (buckets.Count < 2)
         {
-            return Task.FromResult<decimal?>(null);
+            return null;
         }
 
         var prices = buckets.Select(b => b.AveragePrice).ToArray();
@@ -37,7 +36,7 @@ public sealed class BollingerBandsSignalComputer : ISignalComputer
 
         if (stdDev == 0)
         {
-            return Task.FromResult<decimal?>(0m);
+            return 0m;
         }
 
         var multiplier = (decimal)_options.Value.BollingerMultiplier;
@@ -46,7 +45,7 @@ public sealed class BollingerBandsSignalComputer : ISignalComputer
 
         if (upper == lower)
         {
-            return Task.FromResult<decimal?>(null);
+            return null;
         }
 
         var currentPrice = buckets[^1].AveragePrice;
@@ -55,6 +54,6 @@ public sealed class BollingerBandsSignalComputer : ISignalComputer
         // Below lower band (%B < 0) = +1 (bullish), above upper band (%B > 1) = -1 (bearish)
         var value = Math.Clamp(1m - 2m * percentB, -1m, 1m);
 
-        return Task.FromResult<decimal?>(value);
+        return value;
     }
 }

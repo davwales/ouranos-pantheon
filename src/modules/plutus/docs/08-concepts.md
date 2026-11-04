@@ -30,8 +30,9 @@ deleting a strategy evicts only its own entries.
 
 ## 8.3 WebSocket Feeds
 
-Plutus hosts the kernel's `WebSocketWorker` twice (FFXIV, Stocks) via factory methods in
-`PlutusModule.Build`. Connection state is surfaced to the platform health check through
+Plutus hosts the kernel's `WebSocketWorker` twice (FFXIV, Stocks), built by
+`FfxivWebSocketWorkerFactory` and `StocksWebSocketWorkerFactory` and registered, with the rest
+of the loaders and the trade queue, by `DataLoaderModuleExtensions`. Connection state is surfaced to the platform health check through
 `WebSocketHealthState`. The Universalis feed is BSON; `MongoDB.Bson` is used as a parser only
 (`Features/DataLoaders/Ffxiv/Serializers/BsonMessageConverter.cs`), and no MongoDB server is
 involved.

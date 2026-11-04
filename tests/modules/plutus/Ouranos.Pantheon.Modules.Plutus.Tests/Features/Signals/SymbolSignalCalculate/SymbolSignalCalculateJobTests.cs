@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Ouranos.Pantheon.Modules.Plutus.Features.Signals.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Features.Signals.SymbolSignalCalculate;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Database;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
@@ -73,9 +72,7 @@ public sealed class SymbolSignalCalculateJobTests
         );
 
         var computer = Substitute.For<ISignalComputer>();
-        computer
-            .ComputeAsync(Arg.Any<SignalComputeContext>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<decimal?>(null));
+        computer.Compute(Arg.Any<SignalComputeContext>()).Returns((decimal?)null);
 
         var job = CreateJob([computer]);
 
@@ -109,9 +106,7 @@ public sealed class SymbolSignalCalculateJobTests
 
         var computer = Substitute.For<ISignalComputer>();
         computer.Type.Returns(SignalType.TaxAdjustedRoi);
-        computer
-            .ComputeAsync(Arg.Any<SignalComputeContext>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<decimal?>(0.15m));
+        computer.Compute(Arg.Any<SignalComputeContext>()).Returns(0.15m);
 
         var job = CreateJob([computer]);
 
@@ -160,11 +155,8 @@ public sealed class SymbolSignalCalculateJobTests
         var computer = Substitute.For<ISignalComputer>();
         computer.Type.Returns(SignalType.TaxAdjustedRoi);
         computer
-            .ComputeAsync(
-                Arg.Is<SignalComputeContext>(ctx => ctx.PriceBuckets.Count > 0),
-                Arg.Any<CancellationToken>()
-            )
-            .Returns(Task.FromResult<decimal?>(0.10m));
+            .Compute(Arg.Is<SignalComputeContext>(ctx => ctx.PriceBuckets.Count > 0))
+            .Returns(0.10m);
 
         var job = CreateJob([computer]);
 
@@ -176,12 +168,9 @@ public sealed class SymbolSignalCalculateJobTests
         await job.Execute(_context, CancellationToken.None);
 
         // Assert
-        await computer
+        computer
             .Received()
-            .ComputeAsync(
-                Arg.Is<SignalComputeContext>(ctx => ctx.PriceBuckets.Count > 0),
-                Arg.Any<CancellationToken>()
-            );
+            .Compute(Arg.Is<SignalComputeContext>(ctx => ctx.PriceBuckets.Count > 0));
     }
 
     [Fact]
@@ -213,11 +202,8 @@ public sealed class SymbolSignalCalculateJobTests
         var computer = Substitute.For<ISignalComputer>();
         computer.Type.Returns(SignalType.TaxAdjustedRoi);
         computer
-            .ComputeAsync(
-                Arg.Do<SignalComputeContext>(ctx => capturedBuckets = ctx.PriceBuckets),
-                Arg.Any<CancellationToken>()
-            )
-            .Returns(Task.FromResult<decimal?>(0.05m));
+            .Compute(Arg.Do<SignalComputeContext>(ctx => capturedBuckets = ctx.PriceBuckets))
+            .Returns(0.05m);
 
         var job = CreateJob([computer]);
 
@@ -256,9 +242,7 @@ public sealed class SymbolSignalCalculateJobTests
 
         var computer = Substitute.For<ISignalComputer>();
         computer.Type.Returns(SignalType.Rsi);
-        computer
-            .ComputeAsync(Arg.Any<SignalComputeContext>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<decimal?>(0.5m));
+        computer.Compute(Arg.Any<SignalComputeContext>()).Returns(0.5m);
 
         var job = CreateJob([computer]);
 
@@ -295,9 +279,7 @@ public sealed class SymbolSignalCalculateJobTests
 
         var computer = Substitute.For<ISignalComputer>();
         computer.Type.Returns(SignalType.TaxAdjustedRoi);
-        computer
-            .ComputeAsync(Arg.Any<SignalComputeContext>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<decimal?>(0.15m));
+        computer.Compute(Arg.Any<SignalComputeContext>()).Returns(0.15m);
 
         var job = CreateJob([computer]);
 
@@ -331,9 +313,7 @@ public sealed class SymbolSignalCalculateJobTests
 
         var computer = Substitute.For<ISignalComputer>();
         computer.Type.Returns(SignalType.TaxAdjustedRoi);
-        computer
-            .ComputeAsync(Arg.Any<SignalComputeContext>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<decimal?>(0.15m));
+        computer.Compute(Arg.Any<SignalComputeContext>()).Returns(0.15m);
 
         var job = CreateJob([computer]);
         job.RefreshLatestSignalsException = new InvalidOperationException("refresh failed");

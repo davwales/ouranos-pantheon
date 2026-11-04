@@ -161,8 +161,8 @@ public sealed class GetAllSymbolGroupsHandler
         var memberIds = group.Members.Select(m => m.SymbolId).ToList();
 
         var groupSnapshots = memberIds
-            .Select(id => snapshotLookup.TryGetValue(id, out var snap) ? snap : null)
-            .Where(s => s is not null)
+            .Where(id => snapshotLookup.ContainsKey(id))
+            .Select(id => snapshotLookup[id])
             .ToList();
 
         var groupSignalScores = memberIds
@@ -176,17 +176,17 @@ public sealed class GetAllSymbolGroupsHandler
             group.Name,
             group.Description,
             SymbolCount: memberIds.Count,
-            TotalVolume: groupSnapshots.Count > 0 ? groupSnapshots.Sum(s => s!.TotalVolume) : null,
+            TotalVolume: groupSnapshots.Count > 0 ? groupSnapshots.Sum(s => s.TotalVolume) : null,
             TotalGain: groupSnapshots.Count > 0
                 ? groupSnapshots.Sum(s =>
-                    (s!.MaxPrice - s.MinPrice - s.Tax)
+                    (s.MaxPrice - s.MinPrice - s.Tax)
                     * (s.TotalVolume > s.Limit ? s.Limit : s.TotalVolume)
                 )
                 : null,
-            AverageRoi: groupSnapshots.Count > 0 && groupSnapshots.Any(s => s!.MinPrice > 0)
+            AverageRoi: groupSnapshots.Count > 0 && groupSnapshots.Any(s => s.MinPrice > 0)
                 ? groupSnapshots
-                    .Where(s => s!.MinPrice > 0)
-                    .Average(s => (s!.MaxPrice - s.MinPrice - s.Tax) / s.MinPrice)
+                    .Where(s => s.MinPrice > 0)
+                    .Average(s => (s.MaxPrice - s.MinPrice - s.Tax) / s.MinPrice)
                 : null,
             AverageOverallScore: groupSignalScores.Count > 0 ? groupSignalScores.Average() : null,
             BullishCount: groupSignalScores.Count(score => score > 0),

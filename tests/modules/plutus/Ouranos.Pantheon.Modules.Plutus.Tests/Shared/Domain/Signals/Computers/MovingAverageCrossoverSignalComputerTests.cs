@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Options;
-using Ouranos.Pantheon.Modules.Plutus.Features.Signals.Shared;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Markets;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals;
 using Ouranos.Pantheon.Modules.Plutus.Shared.Domain.Signals.Computers;
@@ -26,7 +25,7 @@ public sealed class MovingAverageCrossoverSignalComputerTests
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenFewerBucketsThanLongPeriod_ReturnsNull()
+    public void Compute_WhenFewerBucketsThanLongPeriod_ReturnsNull()
     {
         // Arrange
         var buckets = Enumerable.Range(0, 10).Select(_ => Bucket(100m)).ToList();
@@ -42,14 +41,14 @@ public sealed class MovingAverageCrossoverSignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer().Compute(context);
 
         // Assert
         result.ShouldBeNull();
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenAllPricesEqual_ReturnsZero()
+    public void Compute_WhenAllPricesEqual_ReturnsZero()
     {
         // Arrange
         var buckets = Enumerable.Range(0, 25).Select(_ => Bucket(100m)).ToList();
@@ -65,14 +64,14 @@ public sealed class MovingAverageCrossoverSignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer().Compute(context);
 
         // Assert
         result.ShouldBe(0m);
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenShortMaIsAboveLongMa_ReturnsBullish()
+    public void Compute_WhenShortMaIsAboveLongMa_ReturnsBullish()
     {
         // Arrange
         var buckets = Enumerable
@@ -92,8 +91,7 @@ public sealed class MovingAverageCrossoverSignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer(threshold: 0.02m)
-            .ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer(threshold: 0.02m).Compute(context);
 
         // Assert
         result.ShouldNotBeNull();
@@ -101,7 +99,7 @@ public sealed class MovingAverageCrossoverSignalComputerTests
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenShortMaIsBelowLongMa_ReturnsBearish()
+    public void Compute_WhenShortMaIsBelowLongMa_ReturnsBearish()
     {
         // Arrange
         var buckets = Enumerable
@@ -121,8 +119,7 @@ public sealed class MovingAverageCrossoverSignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer(threshold: 0.02m)
-            .ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer(threshold: 0.02m).Compute(context);
 
         // Assert
         result.ShouldNotBeNull();
@@ -130,7 +127,7 @@ public sealed class MovingAverageCrossoverSignalComputerTests
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenThresholdIsZero_ReturnsNull()
+    public void Compute_WhenThresholdIsZero_ReturnsNull()
     {
         // Arrange
         var buckets = Enumerable.Range(0, 25).Select(_ => Bucket(100m)).ToList();
@@ -146,15 +143,14 @@ public sealed class MovingAverageCrossoverSignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer(threshold: 0m)
-            .ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer(threshold: 0m).Compute(context);
 
         // Assert
         result.ShouldBeNull();
     }
 
     [Fact]
-    public async Task ComputeAsync_WhenSma20IsZero_ReturnsNull()
+    public void Compute_WhenSma20IsZero_ReturnsNull()
     {
         // Arrange
         var buckets = Enumerable.Range(0, 25).Select(_ => Bucket(0m)).ToList();
@@ -170,7 +166,7 @@ public sealed class MovingAverageCrossoverSignalComputerTests
         );
 
         // Act
-        var result = await BuildComputer().ComputeAsync(context, CancellationToken.None);
+        var result = BuildComputer().Compute(context);
 
         // Assert
         result.ShouldBeNull();
