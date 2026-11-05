@@ -1,0 +1,15 @@
+info:
+  name: ClearCheckedItems
+  type: http
+  seq: 6
+
+http:
+  method: DELETE
+  url: "{{BASE_URL}}/api/hestia/shopping-list/checked-items"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -22,8 +22,10 @@ using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.ReimportRecipe;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.RevertRecipe;
 using Ouranos.Pantheon.Modules.Hestia.Features.Recipes.UpdateRecipe;
 using Ouranos.Pantheon.Modules.Hestia.Features.ShoppingLists.AddManualItem;
+using Ouranos.Pantheon.Modules.Hestia.Features.ShoppingLists.ClearCheckedItems;
 using Ouranos.Pantheon.Modules.Hestia.Features.ShoppingLists.DeleteManualItem;
 using Ouranos.Pantheon.Modules.Hestia.Features.ShoppingLists.GetShoppingList;
+using Ouranos.Pantheon.Modules.Hestia.Features.ShoppingLists.SetItemCategory;
 using Ouranos.Pantheon.Modules.Hestia.Features.ShoppingLists.ToggleRecipe;
 using Ouranos.Pantheon.Modules.Hestia.Features.ShoppingLists.UpdateCheckedItems;
 using Ouranos.Pantheon.Modules.Hestia.Shared;
@@ -104,6 +106,8 @@ public sealed class HestiaModule : IPantheonModule
         AddManualItemEndpoint.Map(app);
         DeleteManualItemEndpoint.Map(app);
         UpdateCheckedItemsEndpoint.Map(app);
+        ClearCheckedItemsEndpoint.Map(app);
+        SetItemCategoryEndpoint.Map(app);
     }
 
     public void ConfigureWolverine(WolverineOptions opts, IConfiguration configuration)

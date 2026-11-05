@@ -4,11 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Typography } from "@/components/shared/typography";
 import { hestiaApi } from "@/lib/api/hestia";
-import type { ShoppingListResponse } from "@/lib/api/hestia-types";
+import type { ShoppingCategory, ShoppingListResponse } from "@/lib/api/hestia-types";
 import { useEffect, useRef, useState } from "react";
 import { AddManualItemForm } from "./add-manual-item-form";
-import { IngredientChecklist } from "./ingredient-checklist";
-import { ManualItemsList } from "./manual-items-list";
+import { toChecklistItems } from "./checklist-items";
+import { ShoppingChecklist } from "./shopping-checklist";
 import { ShoppingListRecipes } from "./shopping-list-recipes";
 import Link from "next/link";
 
@@ -55,6 +55,16 @@ export function ShoppingListView({ data, onReload }: ShoppingListViewProps) {
       );
       reload();
     }
+  };
+
+  // Sends a debounced checked-items update now, so a request that depends on it sees the latest state.
+  const flushPendingUpdate = async () => {
+    if (!debounceRef.current) {
+      return;
+    }
+    clearTimeout(debounceRef.current);
+    debounceRef.current = null;
+    await hestiaApi.updateCheckedItems({ checkedItemIds: Array.from(checked) });
   };
 
   const handleToggle = (lineId: string) => {
@@ -135,6 +145,35 @@ export function ShoppingListView({ data, onReload }: ShoppingListViewProps) {
     }
   };
 
+  const handleClearChecked = async () => {
+    setUpdateError(null);
+    try {
+      await flushPendingUpdate();
+      await hestiaApi.clearCheckedItems();
+    } catch (err) {
+      setUpdateError(
+        err instanceof Error ? err.message : "Failed to clear checked items",
+      );
+    }
+    reload();
+  };
+
+  const handleCategoryChange = async (
+    name: string,
+    category: ShoppingCategory | null,
+  ) => {
+    setUpdateError(null);
+    try {
+      await flushPendingUpdate();
+      await hestiaApi.setItemCategory({ name, category });
+      reload();
+    } catch (err) {
+      setUpdateError(
+        err instanceof Error ? err.message : "Failed to set category",
+      );
+    }
+  };
+
   useEffect(() => {
     return () => {
       if (debounceRef.current) {
@@ -143,9 +182,8 @@ export function ShoppingListView({ data, onReload }: ShoppingListViewProps) {
     };
   }, []);
 
-  const hasIngredients = data.consolidatedIngredients.length > 0;
-  const hasManualItems = data.manualItems.length > 0;
-  const isEmpty = !hasIngredients && !hasManualItems;
+  const items = toChecklistItems(data);
+  const isEmpty = items.length === 0;
 
   return (
     <div className="space-y-4">
@@ -189,35 +227,28 @@ export function ShoppingListView({ data, onReload }: ShoppingListViewProps) {
               onClearAll={handleClearRecipes}
             />
           )}
-          {hasIngredients && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Ingredients</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <IngredientChecklist
-                  ingredients={data.consolidatedIngredients}
-                  checked={checked}
-                  onToggle={handleToggle}
-                />
-              </CardContent>
-            </Card>
-          )}
-          {hasManualItems && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Manual Items</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ManualItemsList
-                  items={data.manualItems}
-                  checked={checked}
-                  onToggle={handleToggle}
-                  onDelete={handleDeleteManualItem}
-                />
-              </CardContent>
-            </Card>
-          )}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Items</CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={checked.size === 0}
+                onClick={handleClearChecked}
+              >
+                Clear checked
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <ShoppingChecklist
+                items={items}
+                checked={checked}
+                onToggle={handleToggle}
+                onDelete={handleDeleteManualItem}
+                onCategoryChange={handleCategoryChange}
+              />
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>

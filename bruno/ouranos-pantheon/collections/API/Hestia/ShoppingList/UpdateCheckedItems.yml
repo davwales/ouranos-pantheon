@@ -11,7 +11,7 @@ http:
     data: |-
       {
         "checkedItemIds": [
-          "recipe:flour|g",
+          "recipe:flour|mass",
           "manual:11111111-1111-1111-1111-111111111111"
         ]
       }

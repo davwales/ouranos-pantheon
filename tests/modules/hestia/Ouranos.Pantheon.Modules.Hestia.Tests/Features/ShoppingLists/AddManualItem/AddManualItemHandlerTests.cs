@@ -60,6 +60,23 @@ public sealed class AddManualItemHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenCategoryRemembered_ShouldReturnIt()
+    {
+        // Arrange
+        var list = new ShoppingList();
+        list.Categories["milk"] = ShoppingCategory.DairyAndEggs;
+        _session
+            .LoadAsync<ShoppingList>(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<ShoppingList?>(list));
+
+        // Act
+        var result = await _handler.Handle(new AddManualItemInput("Milk"), CancellationToken.None);
+
+        // Assert
+        result.Category.ShouldBe(ShoppingCategory.DairyAndEggs);
+    }
+
+    [Fact]
     public async Task Handle_WhenTextIsWhiteSpace_ShouldThrowArgumentException()
     {
         // Arrange

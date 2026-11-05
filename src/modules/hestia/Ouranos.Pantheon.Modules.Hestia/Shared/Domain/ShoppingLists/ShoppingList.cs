@@ -11,4 +11,7 @@ public sealed class ShoppingList
     public List<Id<Recipe>> RecipeIds { get; set; } = [];
     public List<ManualItem> ManualItems { get; set; } = [];
     public List<string> CheckedItemIds { get; set; } = [];
+
+    // Keyed by ShoppingListNormalizer.NameKey and kept after an item leaves the list, so it is remembered next time.
+    public Dictionary<string, ShoppingCategory> Categories { get; set; } = [];
 }

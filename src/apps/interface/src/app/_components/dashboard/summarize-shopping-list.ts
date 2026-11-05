@@ -1,4 +1,5 @@
 import { type ShoppingListResponse } from "@/lib/api/hestia-types";
+import { manualLineId } from "@/app/(hestia)/hestia/shopping-list/_components/checklist-items";
 
 export type ShoppingListSummary = {
   totalItems: number;
@@ -10,7 +11,7 @@ export function summarizeShoppingList(
 ): ShoppingListSummary {
   const itemIds = [
     ...list.consolidatedIngredients.map((i) => i.id),
-    ...list.manualItems.map((i) => i.id),
+    ...list.manualItems.map((i) => manualLineId(i.id)),
   ];
   const checked = new Set(list.checkedItemIds);
   return {

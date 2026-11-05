@@ -16,7 +16,7 @@ public sealed class AddManualItemEndpointTests
         // Arrange
         var ct = CancellationToken.None;
         var body = new AddManualItemBody("Milk");
-        var expected = new ManualItemResponse(Guid.NewGuid(), "Milk");
+        var expected = new ManualItemResponse(Guid.NewGuid(), "Milk", null);
 
         _bus.InvokeAsync<ManualItemResponse>(Arg.Any<object>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expected));
